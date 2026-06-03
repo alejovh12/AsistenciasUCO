@@ -1,0 +1,28 @@
+package co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.primaryports.mapper;
+
+import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.primaryports.dto.SolicitarRevisionAsistenciaDTO;
+import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.usecase.domain.SolicitarRevisionAsistenciaDomain;
+import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
+import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+
+/**
+ * Mapper para convertir el DTO de entrada al dominio del caso de uso.
+ */
+public final class SolicitarRevisionAsistenciaMapper {
+
+    private SolicitarRevisionAsistenciaMapper() {
+        throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
+    }
+
+    public static SolicitarRevisionAsistenciaDomain toDomain(final SolicitarRevisionAsistenciaDTO dto) {
+        if (ObjectHelper.isNull(dto)) {
+            throw new CrosscuttingException("El DTO para solicitar revision de asistencia es obligatorio.");
+        }
+
+        return new SolicitarRevisionAsistenciaDomain(
+                dto.getAsistencia(),
+                dto.getMotivo(),
+                dto.getIdCorrelacion()
+        );
+    }
+}
