@@ -1,0 +1,26 @@
+package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository;
+
+import co.edu.uco.asistenciasuco.application.secondaryports.TipoIdentificacionRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.TipoIdentificacionRepositoryEntity;
+
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * Adaptador mock temporal para consulta del catalogo de tipos de identificacion.
+ */
+public final class TipoIdentificacionRepositoryMockAdapter implements TipoIdentificacionRepositoryPort {
+
+    private static final UUID CC = UUID.fromString("13641bab-e3cd-485c-b275-47e7b731e18c");
+    private static final UUID PA = UUID.fromString("796a6c0f-f9fd-4327-a322-efd4d90bb81d");
+    private static final UUID TI = UUID.fromString("67a3d514-ab1b-4ce7-b661-1a99ea18fd9d");
+
+    @Override
+    public List<TipoIdentificacionRepositoryEntity> consultarTiposIdentificacion() {
+        return List.of(
+                new TipoIdentificacionRepositoryEntity(CC, "CC", "Cédula de ciudadanía"),
+                new TipoIdentificacionRepositoryEntity(PA, "PA", "Pasaporte"),
+                new TipoIdentificacionRepositoryEntity(TI, "TI", "Tarjeta de identidad")
+        );
+    }
+}

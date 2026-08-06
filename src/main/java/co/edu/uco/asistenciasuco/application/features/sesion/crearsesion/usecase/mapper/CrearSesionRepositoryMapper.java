@@ -1,0 +1,29 @@
+package co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.usecase.mapper;
+
+import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.usecase.domain.CrearSesionDomain;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.CrearSesionRepositoryDTO;
+import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
+import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+
+/**
+ * Mapper entre el dominio del caso de uso y el contrato del puerto secundario.
+ */
+public final class CrearSesionRepositoryMapper {
+
+    private CrearSesionRepositoryMapper() {
+        throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
+    }
+
+    public static CrearSesionRepositoryDTO toRepositoryDTO(final CrearSesionDomain domain) {
+        if (ObjectHelper.isNull(domain)) {
+            throw new CrosscuttingException("El dominio para crear sesion es obligatorio.");
+        }
+
+        return new CrearSesionRepositoryDTO(
+                domain.getGrupo(),
+                domain.getTema(),
+                domain.getDescripcion(),
+                domain.getIdCorrelacion()
+        );
+    }
+}
