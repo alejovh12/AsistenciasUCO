@@ -12,19 +12,15 @@ public final class CerrarSesionDomain {
 
     private final UUID sesion;
     private final String observacionCierre;
-    private final UUID idCorrelacion;
 
     public CerrarSesionDomain(
             final UUID sesion,
-            final String observacionCierre,
-            final UUID idCorrelacion
+            final String observacionCierre
     ) {
         validarSesion(sesion);
         this.observacionCierre = validarObservacionCierre(observacionCierre);
-        validarIdCorrelacion(idCorrelacion);
 
         this.sesion = sesion;
-        this.idCorrelacion = idCorrelacion;
     }
 
     private void validarSesion(final UUID sesion) {
@@ -47,12 +43,6 @@ public final class CerrarSesionDomain {
         return observacionNormalizada;
     }
 
-    private void validarIdCorrelacion(final UUID idCorrelacion) {
-        if (ObjectHelper.isNull(idCorrelacion)) {
-            throw new IllegalArgumentException("El id de correlacion es obligatorio.");
-        }
-    }
-
     public UUID getSesion() {
         return sesion;
     }
@@ -61,7 +51,4 @@ public final class CerrarSesionDomain {
         return observacionCierre;
     }
 
-    public UUID getIdCorrelacion() {
-        return idCorrelacion;
-    }
 }

@@ -12,19 +12,15 @@ public final class SolicitarRevisionAsistenciaDomain {
 
     private final UUID asistencia;
     private final String motivo;
-    private final UUID idCorrelacion;
 
     public SolicitarRevisionAsistenciaDomain(
             final UUID asistencia,
-            final String motivo,
-            final UUID idCorrelacion
+            final String motivo
     ) {
         validarAsistencia(asistencia);
         this.motivo = validarMotivo(motivo);
-        validarIdCorrelacion(idCorrelacion);
 
         this.asistencia = asistencia;
-        this.idCorrelacion = idCorrelacion;
     }
 
     private void validarAsistencia(final UUID asistencia) {
@@ -47,12 +43,6 @@ public final class SolicitarRevisionAsistenciaDomain {
         return motivoNormalizado;
     }
 
-    private void validarIdCorrelacion(final UUID idCorrelacion) {
-        if (ObjectHelper.isNull(idCorrelacion)) {
-            throw new IllegalArgumentException("El id de correlacion es obligatorio.");
-        }
-    }
-
     public UUID getAsistencia() {
         return asistencia;
     }
@@ -61,7 +51,4 @@ public final class SolicitarRevisionAsistenciaDomain {
         return motivo;
     }
 
-    public UUID getIdCorrelacion() {
-        return idCorrelacion;
-    }
 }

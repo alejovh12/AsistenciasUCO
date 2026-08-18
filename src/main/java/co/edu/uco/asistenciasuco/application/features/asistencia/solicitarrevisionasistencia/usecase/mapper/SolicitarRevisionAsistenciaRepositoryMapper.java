@@ -23,8 +23,7 @@ public final class SolicitarRevisionAsistenciaRepositoryMapper {
 
         return new SolicitarRevisionAsistenciaRepositoryDTO(
                 domain.getAsistencia(),
-                domain.getMotivo(),
-                domain.getIdCorrelacion()
+                domain.getMotivo()
         );
     }
 }

@@ -21,8 +21,7 @@ public final class SolicitarRevisionAsistenciaMapper {
 
         return new SolicitarRevisionAsistenciaDomain(
                 dto.getAsistencia(),
-                dto.getMotivo(),
-                dto.getIdCorrelacion()
+                dto.getMotivo()
         );
     }
 }

@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.grupo.registrarestudiante
 
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.primaryports.RegistrarEstudianteInputPort;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.primaryports.dto.RegistrarEstudianteDTO;
+import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.primaryports.dto.RegistrarEstudianteResultadoDTO;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.primaryports.mapper.RegistrarEstudianteMapper;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.RegistrarEstudianteUseCase;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.domain.RegistrarEstudianteDomain;
@@ -23,8 +24,8 @@ public final class RegistrarEstudianteInteractor implements RegistrarEstudianteI
     }
 
     @Override
-    public void execute(final RegistrarEstudianteDTO dto) {
+    public RegistrarEstudianteResultadoDTO execute(final RegistrarEstudianteDTO dto) {
         final RegistrarEstudianteDomain domain = RegistrarEstudianteMapper.toDomain(dto);
-        useCase.execute(domain);
+        return RegistrarEstudianteMapper.toDTO(useCase.execute(domain));
     }
 }

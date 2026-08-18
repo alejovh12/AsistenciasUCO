@@ -28,8 +28,7 @@ public final class ConsultarAsistenciasPorGrupoRepositoryMapper {
 
         return new ConsultarAsistenciasPorGrupoRepositoryDTO(
                 domain.getGrupo(),
-                domain.getSesion(),
-                domain.getIdCorrelacion()
+                domain.getSesion()
         );
     }
 

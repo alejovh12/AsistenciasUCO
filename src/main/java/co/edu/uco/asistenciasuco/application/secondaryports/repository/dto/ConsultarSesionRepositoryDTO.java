@@ -8,15 +8,13 @@ import java.util.UUID;
 public final class ConsultarSesionRepositoryDTO {
 
     private UUID sesion;
-    private UUID idCorrelacion;
 
     public ConsultarSesionRepositoryDTO() {
         super();
     }
 
-    public ConsultarSesionRepositoryDTO(final UUID sesion, final UUID idCorrelacion) {
+    public ConsultarSesionRepositoryDTO(final UUID sesion) {
         setSesion(sesion);
-        setIdCorrelacion(idCorrelacion);
     }
 
     public UUID getSesion() {
@@ -27,11 +25,4 @@ public final class ConsultarSesionRepositoryDTO {
         this.sesion = sesion;
     }
 
-    public UUID getIdCorrelacion() {
-        return idCorrelacion;
-    }
-
-    public void setIdCorrelacion(final UUID idCorrelacion) {
-        this.idCorrelacion = idCorrelacion;
-    }
 }

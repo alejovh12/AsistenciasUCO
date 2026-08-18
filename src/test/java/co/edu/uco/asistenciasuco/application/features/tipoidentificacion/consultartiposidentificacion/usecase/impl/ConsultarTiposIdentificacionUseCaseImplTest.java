@@ -1,6 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.usecase.impl;
 
-import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.usecase.entity.TipoIdentificacionConsultadoEntity;
+import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.domain.TipoIdentificacionDomain;
 import co.edu.uco.asistenciasuco.application.secondaryports.TipoIdentificacionRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.TipoIdentificacionRepositoryEntity;
 import org.junit.jupiter.api.Test;
@@ -38,7 +38,7 @@ class ConsultarTiposIdentificacionUseCaseImplTest {
         final ConsultarTiposIdentificacionUseCaseImpl useCase =
                 new ConsultarTiposIdentificacionUseCaseImpl(repositoryPort);
 
-        final List<TipoIdentificacionConsultadoEntity> resultado = useCase.execute();
+        final List<TipoIdentificacionDomain> resultado = useCase.execute();
 
         assertNotNull(resultado);
         assertEquals(3, resultado.size());
@@ -54,7 +54,7 @@ class ConsultarTiposIdentificacionUseCaseImplTest {
         final ConsultarTiposIdentificacionUseCaseImpl useCase =
                 new ConsultarTiposIdentificacionUseCaseImpl(repositoryPort);
 
-        final List<TipoIdentificacionConsultadoEntity> resultado = useCase.execute();
+        final List<TipoIdentificacionDomain> resultado = useCase.execute();
 
         assertNotNull(resultado);
         assertEquals(0, resultado.size());

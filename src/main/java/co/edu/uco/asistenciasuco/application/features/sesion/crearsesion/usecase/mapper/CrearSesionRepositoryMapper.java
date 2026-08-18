@@ -22,8 +22,7 @@ public final class CrearSesionRepositoryMapper {
         return new CrearSesionRepositoryDTO(
                 domain.getGrupo(),
                 domain.getTema(),
-                domain.getDescripcion(),
-                domain.getIdCorrelacion()
+                domain.getDescripcion()
         );
     }
 }

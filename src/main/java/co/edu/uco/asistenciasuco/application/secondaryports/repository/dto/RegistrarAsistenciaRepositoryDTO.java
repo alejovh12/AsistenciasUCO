@@ -12,7 +12,6 @@ public final class RegistrarAsistenciaRepositoryDTO {
     private UUID sesion;
     private Boolean presente;
     private String observacion;
-    private UUID idCorrelacion;
 
     public RegistrarAsistenciaRepositoryDTO() {
         super();
@@ -23,15 +22,13 @@ public final class RegistrarAsistenciaRepositoryDTO {
             final UUID grupo,
             final UUID sesion,
             final Boolean presente,
-            final String observacion,
-            final UUID idCorrelacion
+            final String observacion
     ) {
         setEstudiante(estudiante);
         setGrupo(grupo);
         setSesion(sesion);
         setPresente(presente);
         setObservacion(observacion);
-        setIdCorrelacion(idCorrelacion);
     }
 
     public UUID getEstudiante() {
@@ -74,11 +71,4 @@ public final class RegistrarAsistenciaRepositoryDTO {
         this.observacion = observacion;
     }
 
-    public UUID getIdCorrelacion() {
-        return idCorrelacion;
-    }
-
-    public void setIdCorrelacion(final UUID idCorrelacion) {
-        this.idCorrelacion = idCorrelacion;
-    }
 }

@@ -21,10 +21,7 @@ public final class ConsultarSesionRepositoryMapper {
             throw new CrosscuttingException("El dominio para consultar sesion es obligatorio.");
         }
 
-        return new ConsultarSesionRepositoryDTO(
-                domain.getSesion(),
-                domain.getIdCorrelacion()
-        );
+        return new ConsultarSesionRepositoryDTO(domain.getSesion());
     }
 
     public static SesionConsultadaEntity toUseCaseEntity(final SesionRepositoryEntity entity) {

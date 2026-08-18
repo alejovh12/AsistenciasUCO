@@ -11,30 +11,20 @@ public final class ConsultarAsistenciasPorGrupoDomain {
 
     private final UUID grupo;
     private final UUID sesion;
-    private final UUID idCorrelacion;
 
     public ConsultarAsistenciasPorGrupoDomain(
             final UUID grupo,
-            final UUID sesion,
-            final UUID idCorrelacion
+            final UUID sesion
     ) {
         validarGrupo(grupo);
-        validarIdCorrelacion(idCorrelacion);
 
         this.grupo = grupo;
         this.sesion = sesion;
-        this.idCorrelacion = idCorrelacion;
     }
 
     private void validarGrupo(final UUID grupo) {
         if (ObjectHelper.isNull(grupo)) {
             throw new IllegalArgumentException("El grupo es obligatorio.");
-        }
-    }
-
-    private void validarIdCorrelacion(final UUID idCorrelacion) {
-        if (ObjectHelper.isNull(idCorrelacion)) {
-            throw new IllegalArgumentException("El id de correlacion es obligatorio.");
         }
     }
 
@@ -46,7 +36,4 @@ public final class ConsultarAsistenciasPorGrupoDomain {
         return sesion;
     }
 
-    public UUID getIdCorrelacion() {
-        return idCorrelacion;
-    }
 }

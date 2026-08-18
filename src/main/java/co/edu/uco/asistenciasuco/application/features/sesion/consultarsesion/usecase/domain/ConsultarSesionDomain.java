@@ -10,14 +10,11 @@ import java.util.UUID;
 public final class ConsultarSesionDomain {
 
     private final UUID sesion;
-    private final UUID idCorrelacion;
 
-    public ConsultarSesionDomain(final UUID sesion, final UUID idCorrelacion) {
+    public ConsultarSesionDomain(final UUID sesion) {
         validarSesion(sesion);
-        validarIdCorrelacion(idCorrelacion);
 
         this.sesion = sesion;
-        this.idCorrelacion = idCorrelacion;
     }
 
     private void validarSesion(final UUID sesion) {
@@ -26,17 +23,8 @@ public final class ConsultarSesionDomain {
         }
     }
 
-    private void validarIdCorrelacion(final UUID idCorrelacion) {
-        if (ObjectHelper.isNull(idCorrelacion)) {
-            throw new IllegalArgumentException("El id de correlacion es obligatorio.");
-        }
-    }
-
     public UUID getSesion() {
         return sesion;
     }
 
-    public UUID getIdCorrelacion() {
-        return idCorrelacion;
-    }
 }

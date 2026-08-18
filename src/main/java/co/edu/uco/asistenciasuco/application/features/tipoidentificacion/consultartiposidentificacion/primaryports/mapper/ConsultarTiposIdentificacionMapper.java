@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.primaryports.mapper;
 
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.primaryports.dto.TipoIdentificacionDTO;
-import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.usecase.entity.TipoIdentificacionConsultadoEntity;
+import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.domain.TipoIdentificacionDomain;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 
@@ -17,18 +17,18 @@ public final class ConsultarTiposIdentificacionMapper {
         throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
     }
 
-    public static List<TipoIdentificacionDTO> toDTOs(final List<TipoIdentificacionConsultadoEntity> entities) {
-        if (ObjectHelper.isNull(entities)) {
+    public static List<TipoIdentificacionDTO> toDTOs(final List<TipoIdentificacionDomain> domains) {
+        if (ObjectHelper.isNull(domains)) {
             return List.of();
         }
 
         final List<TipoIdentificacionDTO> resultado = new ArrayList<>();
 
-        for (final TipoIdentificacionConsultadoEntity entity : entities) {
+        for (final TipoIdentificacionDomain domain : domains) {
             resultado.add(new TipoIdentificacionDTO(
-                    entity.getId(),
-                    entity.getTipoIdentificacion(),
-                    entity.getNombre()
+                    domain.getId(),
+                    domain.getTipoIdentificacion(),
+                    domain.getNombre()
             ));
         }
 

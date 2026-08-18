@@ -13,21 +13,17 @@ public final class CrearSesionDomain {
     private final UUID grupo;
     private final String tema;
     private final String descripcion;
-    private final UUID idCorrelacion;
 
     public CrearSesionDomain(
             final UUID grupo,
             final String tema,
-            final String descripcion,
-            final UUID idCorrelacion
+            final String descripcion
     ) {
         validarGrupo(grupo);
         this.tema = validarTema(tema);
         this.descripcion = validarDescripcion(descripcion);
-        validarIdCorrelacion(idCorrelacion);
 
         this.grupo = grupo;
-        this.idCorrelacion = idCorrelacion;
     }
 
     private void validarGrupo(final UUID grupo) {
@@ -64,12 +60,6 @@ public final class CrearSesionDomain {
         return descripcionNormalizada;
     }
 
-    private void validarIdCorrelacion(final UUID idCorrelacion) {
-        if (ObjectHelper.isNull(idCorrelacion)) {
-            throw new IllegalArgumentException("El id de correlacion es obligatorio.");
-        }
-    }
-
     public UUID getGrupo() {
         return grupo;
     }
@@ -82,7 +72,4 @@ public final class CrearSesionDomain {
         return descripcion;
     }
 
-    public UUID getIdCorrelacion() {
-        return idCorrelacion;
-    }
 }

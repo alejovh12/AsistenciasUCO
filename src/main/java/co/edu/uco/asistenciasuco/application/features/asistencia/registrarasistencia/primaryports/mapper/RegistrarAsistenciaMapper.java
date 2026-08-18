@@ -24,8 +24,7 @@ public final class RegistrarAsistenciaMapper {
                 dto.getGrupo(),
                 dto.getSesion(),
                 dto.getPresente(),
-                dto.getObservacion(),
-                dto.getIdCorrelacion()
+                dto.getObservacion()
         );
     }
 }

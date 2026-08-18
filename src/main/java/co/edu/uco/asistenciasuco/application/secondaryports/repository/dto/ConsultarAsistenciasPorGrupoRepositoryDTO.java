@@ -9,16 +9,14 @@ public final class ConsultarAsistenciasPorGrupoRepositoryDTO {
 
     private UUID grupo;
     private UUID sesion;
-    private UUID idCorrelacion;
 
     public ConsultarAsistenciasPorGrupoRepositoryDTO() {
         super();
     }
 
-    public ConsultarAsistenciasPorGrupoRepositoryDTO(final UUID grupo, final UUID sesion, final UUID idCorrelacion) {
+    public ConsultarAsistenciasPorGrupoRepositoryDTO(final UUID grupo, final UUID sesion) {
         setGrupo(grupo);
         setSesion(sesion);
-        setIdCorrelacion(idCorrelacion);
     }
 
     public UUID getGrupo() {
@@ -37,11 +35,4 @@ public final class ConsultarAsistenciasPorGrupoRepositoryDTO {
         this.sesion = sesion;
     }
 
-    public UUID getIdCorrelacion() {
-        return idCorrelacion;
-    }
-
-    public void setIdCorrelacion(final UUID idCorrelacion) {
-        this.idCorrelacion = idCorrelacion;
-    }
 }

@@ -15,15 +15,13 @@ public final class RegistrarAsistenciaDomain {
     private final UUID sesion;
     private final boolean presente;
     private final String observacion;
-    private final UUID idCorrelacion;
 
     public RegistrarAsistenciaDomain(
             final UUID estudiante,
             final UUID grupo,
             final UUID sesion,
             final Boolean presente,
-            final String observacion,
-            final UUID idCorrelacion
+            final String observacion
     ) {
         validarEstudiante(estudiante);
         validarGrupo(grupo);
@@ -33,12 +31,10 @@ public final class RegistrarAsistenciaDomain {
         this.observacion = normalizarObservacion(observacion);
 
         validarObservacionSegunAsistencia(this.presente, this.observacion);
-        validarIdCorrelacion(idCorrelacion);
 
         this.estudiante = estudiante;
         this.grupo = grupo;
         this.sesion = sesion;
-        this.idCorrelacion = idCorrelacion;
     }
 
     private void validarEstudiante(final UUID estudiante) {
@@ -86,12 +82,6 @@ public final class RegistrarAsistenciaDomain {
         }
     }
 
-    private void validarIdCorrelacion(final UUID idCorrelacion) {
-        if (ObjectHelper.isNull(idCorrelacion)) {
-            throw new IllegalArgumentException("El id de correlacion es obligatorio.");
-        }
-    }
-
     public UUID getEstudiante() {
         return estudiante;
     }
@@ -112,7 +102,4 @@ public final class RegistrarAsistenciaDomain {
         return observacion;
     }
 
-    public UUID getIdCorrelacion() {
-        return idCorrelacion;
-    }
 }

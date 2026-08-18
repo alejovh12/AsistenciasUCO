@@ -10,7 +10,6 @@ public final class CrearSesionRepositoryDTO {
     private UUID grupo;
     private String tema;
     private String descripcion;
-    private UUID idCorrelacion;
 
     public CrearSesionRepositoryDTO() {
         super();
@@ -19,13 +18,11 @@ public final class CrearSesionRepositoryDTO {
     public CrearSesionRepositoryDTO(
             final UUID grupo,
             final String tema,
-            final String descripcion,
-            final UUID idCorrelacion
+            final String descripcion
     ) {
         setGrupo(grupo);
         setTema(tema);
         setDescripcion(descripcion);
-        setIdCorrelacion(idCorrelacion);
     }
 
     public UUID getGrupo() {
@@ -52,11 +49,4 @@ public final class CrearSesionRepositoryDTO {
         this.descripcion = descripcion;
     }
 
-    public UUID getIdCorrelacion() {
-        return idCorrelacion;
-    }
-
-    public void setIdCorrelacion(final UUID idCorrelacion) {
-        this.idCorrelacion = idCorrelacion;
-    }
 }

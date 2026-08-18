@@ -26,8 +26,7 @@ public final class ConsultarAsistenciasPorGrupoMapper {
 
         return new ConsultarAsistenciasPorGrupoDomain(
                 dto.getGrupo(),
-                dto.getSesion(),
-                dto.getIdCorrelacion()
+                dto.getSesion()
         );
     }
 

@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.domain;
 
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import co.edu.uco.asistenciasuco.application.exception.ValidationException;
+import co.edu.uco.asistenciasuco.application.features.usuario.domain.UsuarioRegistroDomain;
 
 import java.util.UUID;
 
@@ -9,51 +10,76 @@ import java.util.UUID;
  */
 public final class RegistrarEstudianteDomain {
 
-    private final UUID estudiante;
-    private final UUID grupo;
-    private final UUID idCorrelacion;
+    private final UsuarioRegistroDomain usuarioRegistro;
+    private final UUID grupoId;
 
     public RegistrarEstudianteDomain(
-            final UUID estudiante,
-            final UUID grupo,
-            final UUID idCorrelacion
+            final UUID tipoIdentificacionId,
+            final Integer numeroIdentificacion,
+            final String primerApellido,
+            final String segundoApellido,
+            final String primerNombre,
+            final String segundoNombre,
+            final String correo,
+            final String password,
+            final UUID grupoId
     ) {
-        validarEstudiante(estudiante);
-        validarGrupo(grupo);
-        validarIdCorrelacion(idCorrelacion);
-
-        this.estudiante = estudiante;
-        this.grupo = grupo;
-        this.idCorrelacion = idCorrelacion;
+        this.usuarioRegistro = UsuarioRegistroDomain.crear(
+                tipoIdentificacionId,
+                numeroIdentificacion,
+                primerApellido,
+                segundoApellido,
+                primerNombre,
+                segundoNombre,
+                correo,
+                password
+        );
+        this.grupoId = validarGrupo(grupoId);
     }
 
-    private void validarEstudiante(final UUID estudiante) {
-        if (ObjectHelper.isNull(estudiante)) {
-            throw new IllegalArgumentException("El estudiante es obligatorio.");
+    private UUID validarGrupo(final UUID grupoId) {
+        if (grupoId == null) {
+            throw new ValidationException("ERR_GRUPO_REQUERIDO", "El grupo es obligatorio.");
         }
-    }
-
-    private void validarGrupo(final UUID grupo) {
-        if (ObjectHelper.isNull(grupo)) {
-            throw new IllegalArgumentException("El grupo es obligatorio.");
+        if (new UUID(0L, 0L).equals(grupoId)) {
+            throw new ValidationException("ERR_GRUPO_INVALIDO", "Debe seleccionar un grupo valido.");
         }
+        return grupoId;
     }
 
-    private void validarIdCorrelacion(final UUID idCorrelacion) {
-        if (ObjectHelper.isNull(idCorrelacion)) {
-            throw new IllegalArgumentException("El id de correlacion es obligatorio.");
-        }
+    public UUID getTipoIdentificacionId() {
+        return usuarioRegistro.getTipoIdentificacionId();
     }
 
-    public UUID getEstudiante() {
-        return estudiante;
+    public Integer getNumeroIdentificacion() {
+        return usuarioRegistro.getNumeroIdentificacion();
     }
 
-    public UUID getGrupo() {
-        return grupo;
+    public String getPrimerApellido() {
+        return usuarioRegistro.getPrimerApellido();
     }
 
-    public UUID getIdCorrelacion() {
-        return idCorrelacion;
+    public String getSegundoApellido() {
+        return usuarioRegistro.getSegundoApellido();
+    }
+
+    public String getPrimerNombre() {
+        return usuarioRegistro.getPrimerNombre();
+    }
+
+    public String getSegundoNombre() {
+        return usuarioRegistro.getSegundoNombre();
+    }
+
+    public String getCorreo() {
+        return usuarioRegistro.getCorreo();
+    }
+
+    public String getPassword() {
+        return usuarioRegistro.getPassword();
+    }
+
+    public UUID getGrupoId() {
+        return grupoId;
     }
 }

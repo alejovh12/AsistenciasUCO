@@ -24,8 +24,7 @@ public final class RegistrarAsistenciaRepositoryMapper {
                 domain.getGrupo(),
                 domain.getSesion(),
                 domain.isPresente(),
-                domain.getObservacion(),
-                domain.getIdCorrelacion()
+                domain.getObservacion()
         );
     }
 }

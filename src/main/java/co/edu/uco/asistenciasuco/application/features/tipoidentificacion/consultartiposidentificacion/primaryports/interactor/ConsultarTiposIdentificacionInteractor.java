@@ -4,7 +4,7 @@ import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consult
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.primaryports.dto.TipoIdentificacionDTO;
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.primaryports.mapper.ConsultarTiposIdentificacionMapper;
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.usecase.ConsultarTiposIdentificacionUseCase;
-import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.usecase.entity.TipoIdentificacionConsultadoEntity;
+import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.domain.TipoIdentificacionDomain;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 
@@ -26,7 +26,7 @@ public final class ConsultarTiposIdentificacionInteractor implements ConsultarTi
 
     @Override
     public List<TipoIdentificacionDTO> execute() {
-        final List<TipoIdentificacionConsultadoEntity> resultado = useCase.execute();
+        final List<TipoIdentificacionDomain> resultado = useCase.execute();
         return ConsultarTiposIdentificacionMapper.toDTOs(resultado);
     }
 }

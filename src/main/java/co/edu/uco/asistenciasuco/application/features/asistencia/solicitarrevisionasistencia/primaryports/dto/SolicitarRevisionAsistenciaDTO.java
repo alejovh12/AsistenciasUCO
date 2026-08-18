@@ -9,16 +9,14 @@ public final class SolicitarRevisionAsistenciaDTO {
 
     private UUID asistencia;
     private String motivo;
-    private UUID idCorrelacion;
 
     public SolicitarRevisionAsistenciaDTO() {
         super();
     }
 
-    public SolicitarRevisionAsistenciaDTO(final UUID asistencia, final String motivo, final UUID idCorrelacion) {
+    public SolicitarRevisionAsistenciaDTO(final UUID asistencia, final String motivo) {
         setAsistencia(asistencia);
         setMotivo(motivo);
-        setIdCorrelacion(idCorrelacion);
     }
 
     public UUID getAsistencia() {
@@ -37,11 +35,4 @@ public final class SolicitarRevisionAsistenciaDTO {
         this.motivo = motivo;
     }
 
-    public UUID getIdCorrelacion() {
-        return idCorrelacion;
-    }
-
-    public void setIdCorrelacion(final UUID idCorrelacion) {
-        this.idCorrelacion = idCorrelacion;
-    }
 }

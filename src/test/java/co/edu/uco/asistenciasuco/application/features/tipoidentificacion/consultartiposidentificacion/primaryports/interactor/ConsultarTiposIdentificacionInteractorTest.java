@@ -2,7 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consul
 
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.primaryports.dto.TipoIdentificacionDTO;
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.usecase.ConsultarTiposIdentificacionUseCase;
-import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.usecase.entity.TipoIdentificacionConsultadoEntity;
+import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.domain.TipoIdentificacionDomain;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -21,17 +21,17 @@ class ConsultarTiposIdentificacionInteractorTest {
         final ConsultarTiposIdentificacionUseCase useCase = () -> {
             useCaseInvocado.set(true);
             return List.of(
-                    new TipoIdentificacionConsultadoEntity(
+                    TipoIdentificacionDomain.reconstruir(
                             UUID.fromString("13641bab-e3cd-485c-b275-47e7b731e18c"),
                             "CC",
                             "Cédula de ciudadanía"
                     ),
-                    new TipoIdentificacionConsultadoEntity(
+                    TipoIdentificacionDomain.reconstruir(
                             UUID.fromString("796a6c0f-f9fd-4327-a322-efd4d90bb81d"),
                             "PA",
                             "Pasaporte"
                     ),
-                    new TipoIdentificacionConsultadoEntity(
+                    TipoIdentificacionDomain.reconstruir(
                             UUID.fromString("67a3d514-ab1b-4ce7-b661-1a99ea18fd9d"),
                             "TI",
                             "Tarjeta de identidad"

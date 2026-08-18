@@ -1,6 +1,17 @@
 spring:
   application:
     name: asistencias-uco
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  sql:
+    init:
+      mode: never
+  main:
+    web-application-type: servlet
+    keep-alive: true
   threads:
     virtual:
       enabled: true
@@ -18,10 +29,6 @@ management:
       probability: 1.0
 
 app:
-  database:
-    mode: fake
-  catalogs:
-    mode: fake
   security:
     mode: fake
   cache:

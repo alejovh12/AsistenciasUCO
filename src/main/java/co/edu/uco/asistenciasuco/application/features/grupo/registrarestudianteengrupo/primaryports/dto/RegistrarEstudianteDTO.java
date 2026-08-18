@@ -7,41 +7,111 @@ import java.util.UUID;
  */
 public final class RegistrarEstudianteDTO {
 
-    private UUID estudiante;
-    private UUID grupo;
-    private UUID idCorrelacion;
+    private UUID tipoIdentificacionId;
+    private Integer numeroIdentificacion;
+    private String primerApellido;
+    private String segundoApellido;
+    private String primerNombre;
+    private String segundoNombre;
+    private String correo;
+    private String password;
+    private UUID grupoId;
 
     public RegistrarEstudianteDTO() {
         super();
     }
 
-    public RegistrarEstudianteDTO(final UUID estudiante, final UUID grupo, final UUID idCorrelacion) {
-        setEstudiante(estudiante);
-        setGrupo(grupo);
-        setIdCorrelacion(idCorrelacion);
+    public RegistrarEstudianteDTO(
+            final UUID tipoIdentificacionId,
+            final Integer numeroIdentificacion,
+            final String primerApellido,
+            final String segundoApellido,
+            final String primerNombre,
+            final String segundoNombre,
+            final String correo,
+            final String password,
+            final UUID grupoId
+    ) {
+        setTipoIdentificacionId(tipoIdentificacionId);
+        setNumeroIdentificacion(numeroIdentificacion);
+        setPrimerApellido(primerApellido);
+        setSegundoApellido(segundoApellido);
+        setPrimerNombre(primerNombre);
+        setSegundoNombre(segundoNombre);
+        setCorreo(correo);
+        setPassword(password);
+        setGrupoId(grupoId);
     }
 
-    public UUID getEstudiante() {
-        return estudiante;
+    public UUID getTipoIdentificacionId() {
+        return tipoIdentificacionId;
     }
 
-    public void setEstudiante(final UUID estudiante) {
-        this.estudiante = estudiante;
+    public void setTipoIdentificacionId(final UUID tipoIdentificacionId) {
+        this.tipoIdentificacionId = tipoIdentificacionId;
     }
 
-    public UUID getGrupo() {
-        return grupo;
+    public Integer getNumeroIdentificacion() {
+        return numeroIdentificacion;
     }
 
-    public void setGrupo(final UUID grupo) {
-        this.grupo = grupo;
+    public void setNumeroIdentificacion(final Integer numeroIdentificacion) {
+        this.numeroIdentificacion = numeroIdentificacion;
     }
 
-    public UUID getIdCorrelacion() {
-        return idCorrelacion;
+    public String getPrimerApellido() {
+        return primerApellido;
     }
 
-    public void setIdCorrelacion(final UUID idCorrelacion) {
-        this.idCorrelacion = idCorrelacion;
+    public void setPrimerApellido(final String primerApellido) {
+        this.primerApellido = primerApellido;
+    }
+
+    public String getSegundoApellido() {
+        return segundoApellido;
+    }
+
+    public void setSegundoApellido(final String segundoApellido) {
+        this.segundoApellido = segundoApellido;
+    }
+
+    public String getPrimerNombre() {
+        return primerNombre;
+    }
+
+    public void setPrimerNombre(final String primerNombre) {
+        this.primerNombre = primerNombre;
+    }
+
+    public String getSegundoNombre() {
+        return segundoNombre;
+    }
+
+    public void setSegundoNombre(final String segundoNombre) {
+        this.segundoNombre = segundoNombre;
+    }
+
+    public String getCorreo() {
+        return correo;
+    }
+
+    public void setCorreo(final String correo) {
+        this.correo = correo;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(final String password) {
+        this.password = password;
+    }
+
+    public UUID getGrupoId() {
+        return grupoId;
+    }
+
+    public void setGrupoId(final UUID grupoId) {
+        this.grupoId = grupoId;
     }
 }
