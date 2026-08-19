@@ -1,0 +1,68 @@
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+otelcol.receiver.otlp "asistencias_uco" {
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+
+  output {
+    traces = [otelcol.exporter.otlp.tempo.input]
+  }
+}
+
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "tempo:4317"
+
+    tls {
+      insecure = true
+    }
+  }
+}
+
+local.file_match "asistencias_uco_logs" {
+  path_targets = [
+    {
+      "__path__"    = "/var/log/asistencias-uco/*.jsonl",
+      "service"     = "asistencias-uco",
+      "environment" = "local",
+    },
+  ]
+}
+
+loki.source.file "asistencias_uco" {
+  targets    = local.file_match.asistencias_uco_logs.targets
+  forward_to = [loki.process.asistencias_uco.receiver]
+}
+
+loki.process "asistencias_uco" {
+  stage.json {
+    expressions = {
+      level         = "level",
+      traceId       = "traceId",
+      spanId        = "spanId",
+      correlationId = "correlationId",
+    }
+  }
+
+  stage.labels {
+    values = {
+      level = "",
+    }
+  }
+
+  stage.label_keep {
+    values = ["service", "environment", "level"]
+  }
+
+  forward_to = [loki.write.default.receiver]
+}
+
+loki.write "default" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

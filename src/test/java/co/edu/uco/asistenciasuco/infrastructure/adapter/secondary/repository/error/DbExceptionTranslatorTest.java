@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.error;
 
 import co.edu.uco.asistenciasuco.application.exception.ConflictException;
+import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.InternalApplicationException;
 import co.edu.uco.asistenciasuco.application.exception.ResourceNotFoundException;
@@ -19,7 +20,8 @@ class DbExceptionTranslatorTest {
     private static final String TECHNICAL_MESSAGE = "SQLException password token stackTrace";
     private static final String CORRELATION_ID = "93641bab-e3cd-485c-b275-47e7b731e18c";
     private static final String OPERATION = "operacionPrueba";
-    private static final String SAFE_INTERNAL_MESSAGE = "No fue posible completar la operacion.";
+    private static final String SAFE_INTERNAL_MESSAGE =
+            "Ocurrio un error interno. Utilice el codigo de seguimiento para soporte.";
 
     @ParameterizedTest
     @CsvSource({
@@ -37,7 +39,7 @@ class DbExceptionTranslatorTest {
         final ConflictException exception = assertThrows(ConflictException.class, () -> translateFailure(userMessage, OPERATION));
 
         assertEquals(expectedCode, exception.getCode());
-        assertEquals(userMessage, exception.getMessage());
+        assertCatalogMessage(expectedCode, exception.getMessage());
     }
 
     @Test
@@ -68,7 +70,7 @@ class DbExceptionTranslatorTest {
         );
 
         assertEquals("ERR_CUPO_SUPERADO", exception.getCode());
-        assertEquals("No fue posible registrar el estudiante.", exception.getMessage());
+        assertEquals(ErrorCode.ERR_CUPO_SUPERADO.defaultMessage(), exception.getMessage());
     }
 
     @Test
@@ -108,7 +110,7 @@ class DbExceptionTranslatorTest {
         );
 
         assertEquals(expectedCode, exception.getCode());
-        assertEquals(userMessage, exception.getMessage());
+        assertCatalogMessage(expectedCode, exception.getMessage());
     }
 
     @ParameterizedTest
@@ -123,7 +125,7 @@ class DbExceptionTranslatorTest {
         );
 
         assertEquals("ERR_NOMBRE_PERSONA_INVALIDO", exception.getCode());
-        assertEquals(userMessage, exception.getMessage());
+        assertEquals(ErrorCode.ERR_NOMBRE_PERSONA_INVALIDO.defaultMessage(), exception.getMessage());
     }
 
     @Test
@@ -201,7 +203,7 @@ class DbExceptionTranslatorTest {
         );
 
         assertEquals("ERR_UNICIDAD_CORREO", exception.getCode());
-        assertEquals("El correo ya existe.", exception.getMessage());
+        assertEquals(ErrorCode.ERR_UNICIDAD_CORREO.defaultMessage(), exception.getMessage());
     }
 
     @Test
@@ -237,5 +239,9 @@ class DbExceptionTranslatorTest {
                 CORRELATION_ID,
                 operation
         );
+    }
+
+    private void assertCatalogMessage(final String expectedCode, final String actualMessage) {
+        assertEquals(ErrorCode.fromCode(expectedCode).orElseThrow().defaultMessage(), actualMessage);
     }
 }

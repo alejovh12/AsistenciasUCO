@@ -23,10 +23,49 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        include: health,prometheus
+  otlp:
+    metrics:
+      export:
+        enabled: false
   tracing:
     sampling:
-      probability: 1.0
+      probability: ${MANAGEMENT_TRACING_SAMPLING_PROBABILITY:1.0}
+    export:
+      otlp:
+        enabled: true
+  logging:
+    export:
+      otlp:
+        enabled: false
+  opentelemetry:
+    resource-attributes:
+      service.name: ${spring.application.name}
+    tracing:
+      export:
+        otlp:
+          endpoint: ${MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+          transport: http
+
+logging:
+  file:
+    name: ${ASISTENCIAS_UCO_LOG_FILE:infra/observability/logs/asistencias-uco.jsonl}
+  logback:
+    rollingpolicy:
+      file-name-pattern: ${ASISTENCIAS_UCO_LOG_FILE_PATTERN:infra/observability/logs/asistencias-uco.%d{yyyy-MM-dd}.%i.jsonl}
+      max-file-size: ${ASISTENCIAS_UCO_LOG_MAX_FILE_SIZE:10MB}
+      max-history: ${ASISTENCIAS_UCO_LOG_MAX_HISTORY:7}
+      total-size-cap: ${ASISTENCIAS_UCO_LOG_TOTAL_SIZE_CAP:1GB}
+      clean-history-on-start: false
+  pattern:
+    level: "%5p [correlationId:%X{correlationId:-},traceId:%X{traceId:-},spanId:%X{spanId:-}]"
+  structured:
+    format:
+      file: logstash
+    json:
+      add:
+        service: ${spring.application.name}
+        environment: ${ASISTENCIAS_UCO_ENVIRONMENT:local}
 
 app:
   security:

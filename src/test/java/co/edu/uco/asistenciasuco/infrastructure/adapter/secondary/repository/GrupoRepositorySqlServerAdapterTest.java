@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository;
 
 import co.edu.uco.asistenciasuco.application.exception.DatabaseOperationException;
 import co.edu.uco.asistenciasuco.application.exception.ConflictException;
+import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.InternalApplicationException;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarEstudianteRepositoryDTO;
@@ -106,7 +107,7 @@ class GrupoRepositorySqlServerAdapterTest {
         );
 
         assertEquals("ERR_MATRICULA_DUPLICADA", exception.getCode());
-        assertEquals("La matricula ya se encuentra registrada.", exception.getMessage());
+        assertEquals(ErrorCode.ERR_MATRICULA_DUPLICADA.defaultMessage(), exception.getMessage());
     }
 
     @Test
@@ -128,7 +129,7 @@ class GrupoRepositorySqlServerAdapterTest {
         );
 
         assertEquals("ERR_DB_UNCLASSIFIED", exception.getCode());
-        assertEquals("No fue posible completar la operacion.", exception.getMessage());
+        assertEquals(ErrorCode.ERR_DB_UNCLASSIFIED.defaultMessage(), exception.getMessage());
     }
 
     @Test

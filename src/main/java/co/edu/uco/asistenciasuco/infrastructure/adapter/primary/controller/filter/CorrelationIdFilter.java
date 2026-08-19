@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Locale;
+import java.util.regex.Pattern;
 import java.util.UUID;
 
 @Component
@@ -17,6 +19,10 @@ public final class CorrelationIdFilter extends OncePerRequestFilter implements O
 
     public static final String HEADER_NAME = "X-Correlation-Id";
     public static final String MDC_KEY = CorrelationIdContext.MDC_KEY;
+    private static final UUID ZERO_UUID = new UUID(0L, 0L);
+    private static final Pattern CANONICAL_UUID_PATTERN = Pattern.compile(
+            "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+    );
 
     @Override
     protected void doFilterInternal(
@@ -24,9 +30,9 @@ public final class CorrelationIdFilter extends OncePerRequestFilter implements O
             final HttpServletResponse response,
             final FilterChain filterChain
     ) throws ServletException, IOException {
-        final UUID correlationId = resolveCorrelationId(request);
+        final String correlationId = resolveCorrelationId(request);
         CorrelationIdContext.set(correlationId);
-        response.setHeader(HEADER_NAME, correlationId.toString());
+        response.setHeader(HEADER_NAME, correlationId);
         try {
             filterChain.doFilter(request, response);
         } finally {
@@ -34,17 +40,27 @@ public final class CorrelationIdFilter extends OncePerRequestFilter implements O
         }
     }
 
-    private UUID resolveCorrelationId(final HttpServletRequest request) {
+    private String resolveCorrelationId(final HttpServletRequest request) {
         final String headerValue = request.getHeader(HEADER_NAME);
+        if (!isAcceptedCorrelationId(headerValue)) {
+            return UUID.randomUUID().toString();
+        }
+        final UUID correlationId = UUID.fromString(headerValue);
+        return ZERO_UUID.equals(correlationId) ? UUID.randomUUID().toString() : headerValue;
+    }
+
+    private boolean isAcceptedCorrelationId(final String headerValue) {
         if (headerValue == null || headerValue.isBlank()) {
-            return UUID.randomUUID();
+            return false;
         }
-        try {
-            final UUID correlationId = UUID.fromString(headerValue.trim());
-            return new UUID(0L, 0L).equals(correlationId) ? UUID.randomUUID() : correlationId;
-        } catch (IllegalArgumentException exception) {
-            return UUID.randomUUID();
+        if (!headerValue.equals(headerValue.trim())) {
+            return false;
         }
+        if (!CANONICAL_UUID_PATTERN.matcher(headerValue).matches()) {
+            return false;
+        }
+        return !headerValue.toLowerCase(Locale.ROOT).contains("%0a")
+                && !headerValue.toLowerCase(Locale.ROOT).contains("%0d");
     }
 
     @Override

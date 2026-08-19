@@ -130,13 +130,16 @@ public final class UsuarioRepositorySqlServerAdapter implements UsuarioRepositor
                     OPERATION_CREAR_USUARIO
             );
 
-            return new CrearUsuarioRepositoryEntity(toString(result.get(OUT_MENSAJE_USUARIO)));
+            final UUID usuarioId = consultarUsuarioPorIdentificacion(
+                    dto.getTipoIdIdentificacion(),
+                    dto.getNumeroIdentificacion()
+            ).map(UsuarioIdentidadRepositoryEntity::id).orElse(null);
+            return new CrearUsuarioRepositoryEntity(usuarioId, toString(result.get(OUT_MENSAJE_USUARIO)));
         } catch (DataAccessException exception) {
             LOGGER.error(
-                    "SQL operation failed. operation={}, correlationId={}, exceptionType={}",
+                    "SQL operation failed. operation={}, correlationId={}",
                     OPERATION_CREAR_USUARIO,
-                    CorrelationIdContext.getAsString(),
-                    exception.getClass().getSimpleName()
+                    CorrelationIdContext.getAsString()
             );
             throw new DatabaseOperationException("No fue posible ejecutar el procedimiento de creacion de usuario.", exception);
         }
@@ -155,10 +158,9 @@ public final class UsuarioRepositorySqlServerAdapter implements UsuarioRepositor
             ).stream().findFirst();
         } catch (DataAccessException exception) {
             LOGGER.error(
-                    "SQL operation failed. operation={}, correlationId={}, exceptionType={}",
+                    "SQL operation failed. operation={}, correlationId={}",
                     "consultarUsuarioPorCorreo",
-                    CorrelationIdContext.getAsString(),
-                    exception.getClass().getSimpleName()
+                    CorrelationIdContext.getAsString()
             );
             throw new DatabaseOperationException("No fue posible consultar el usuario por correo.", exception);
         }
@@ -182,10 +184,9 @@ public final class UsuarioRepositorySqlServerAdapter implements UsuarioRepositor
             ).stream().findFirst();
         } catch (DataAccessException exception) {
             LOGGER.error(
-                    "SQL operation failed. operation={}, correlationId={}, exceptionType={}",
+                    "SQL operation failed. operation={}, correlationId={}",
                     "consultarUsuarioPorIdentificacion",
-                    CorrelationIdContext.getAsString(),
-                    exception.getClass().getSimpleName()
+                    CorrelationIdContext.getAsString()
             );
             throw new DatabaseOperationException("No fue posible consultar el usuario por identificacion.", exception);
         }

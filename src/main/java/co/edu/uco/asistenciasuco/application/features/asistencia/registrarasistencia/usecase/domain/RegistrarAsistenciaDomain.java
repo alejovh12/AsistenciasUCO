@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.usecase.domain;
 
+import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.ValidationException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
 
@@ -39,25 +41,25 @@ public final class RegistrarAsistenciaDomain {
 
     private void validarEstudiante(final UUID estudiante) {
         if (ObjectHelper.isNull(estudiante)) {
-            throw new IllegalArgumentException("El estudiante es obligatorio.");
+            throw new ValidationException(ErrorCode.ERR_ESTUDIANTE_ID_REQUERIDO);
         }
     }
 
     private void validarGrupo(final UUID grupo) {
         if (ObjectHelper.isNull(grupo)) {
-            throw new IllegalArgumentException("El grupo es obligatorio.");
+            throw new ValidationException(ErrorCode.ERR_GRUPO_REQUERIDO);
         }
     }
 
     private void validarSesion(final UUID sesion) {
         if (ObjectHelper.isNull(sesion)) {
-            throw new IllegalArgumentException("La sesion es obligatoria.");
+            throw new ValidationException(ErrorCode.ERR_SESION_REQUERIDA);
         }
     }
 
     private boolean validarPresente(final Boolean presente) {
         if (ObjectHelper.isNull(presente)) {
-            throw new IllegalArgumentException("El indicador de presencia es obligatorio.");
+            throw new ValidationException(ErrorCode.ERR_PRESENTE_REQUERIDO);
         }
         return presente;
     }
@@ -70,7 +72,7 @@ public final class RegistrarAsistenciaDomain {
         }
 
         if (!TextHelper.hasLengthBetween(observacionNormalizada, 5, 250)) {
-            throw new IllegalArgumentException("La observacion debe tener entre 5 y 250 caracteres.");
+            throw new ValidationException(ErrorCode.ERR_OBSERVACION_ASISTENCIA_LONGITUD_INVALIDA);
         }
 
         return observacionNormalizada;
@@ -78,7 +80,7 @@ public final class RegistrarAsistenciaDomain {
 
     private void validarObservacionSegunAsistencia(final boolean presente, final String observacion) {
         if (!presente && TextHelper.isNullOrBlank(observacion)) {
-            throw new IllegalArgumentException("Debe indicar una observacion cuando el estudiante no asiste.");
+            throw new ValidationException(ErrorCode.ERR_OBSERVACION_ASISTENCIA_REQUERIDA);
         }
     }
 

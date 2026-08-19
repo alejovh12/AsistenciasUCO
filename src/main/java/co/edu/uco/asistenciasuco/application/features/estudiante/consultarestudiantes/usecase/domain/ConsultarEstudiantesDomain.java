@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudiantes.usecase.domain;
 
+import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.ValidationException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
 
@@ -41,30 +42,30 @@ public record ConsultarEstudiantesDomain(
         final int pageValue = page == null ? DEFAULT_PAGE : page;
         final int sizeValue = size == null ? DEFAULT_SIZE : size;
         if (pageValue < 0) {
-            throw new ValidationException("ERR_PAGE_INVALIDA", "La pagina debe ser mayor o igual que cero.");
+            throw new ValidationException(ErrorCode.ERR_PAGE_INVALIDA);
         }
         if (sizeValue < MIN_SIZE || sizeValue > MAX_SIZE) {
-            throw new ValidationException("ERR_SIZE_INVALIDO", "El tamano de pagina debe estar entre 1 y 100.");
+            throw new ValidationException(ErrorCode.ERR_SIZE_INVALIDO);
         }
 
         return new ConsultarEstudiantesDomain(
-                validarUuidOpcional(tipoIdentificacionId, "ERR_TIPO_IDENTIFICACION_INVALIDA"),
+                validarUuidOpcional(tipoIdentificacionId, ErrorCode.ERR_TIPO_IDENTIFICACION_INVALIDA),
                 numeroIdentificacion,
                 TextHelper.trim(nombre),
                 TextHelper.normalizeTrimLower(correo),
-                validarUuidOpcional(institucionId, "ERR_INSTITUCION_INVALIDA"),
-                validarUuidOpcional(facultadId, "ERR_FACULTAD_INVALIDA"),
-                validarUuidOpcional(programaId, "ERR_PROGRAMA_INVALIDO"),
-                validarUuidOpcional(grupoId, "ERR_GRUPO_INVALIDO"),
+                validarUuidOpcional(institucionId, ErrorCode.ERR_INSTITUCION_INVALIDA),
+                validarUuidOpcional(facultadId, ErrorCode.ERR_FACULTAD_INVALIDA),
+                validarUuidOpcional(programaId, ErrorCode.ERR_PROGRAMA_INVALIDO),
+                validarUuidOpcional(grupoId, ErrorCode.ERR_GRUPO_INVALIDO),
                 activo,
                 pageValue,
                 sizeValue
         );
     }
 
-    private static UUID validarUuidOpcional(final UUID value, final String code) {
+    private static UUID validarUuidOpcional(final UUID value, final ErrorCode code) {
         if (EMPTY_UUID.equals(value)) {
-            throw new ValidationException(code, "El identificador del filtro no es valido.");
+            throw new ValidationException(code);
         }
         return value;
     }

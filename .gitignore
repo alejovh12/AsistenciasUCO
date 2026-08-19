@@ -55,9 +55,15 @@ ehthumbs.db
 # Local env / secrets
 .env
 .env.*
+.env.local
+.env.*.local
 !.env.example
 
+# Keycloak local secrets
+infra/keycloak/.env
+
 # Temporary/editor files
+.tmp-log-metadata/
 *.swp
 *.swo
 *~

@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.usecase.entity;
 
+import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.ValidationException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
 
@@ -25,8 +27,8 @@ public final class SesionConsultadaEntity {
             final boolean cerrada,
             final String observacionCierre
     ) {
-        validarIdentificador(sesion, "La sesion es obligatoria.");
-        validarIdentificador(grupo, "El grupo es obligatorio.");
+        validarIdentificador(sesion, ErrorCode.ERR_SESION_REQUERIDA);
+        validarIdentificador(grupo, ErrorCode.ERR_GRUPO_REQUERIDO);
 
         this.tema = validarTema(tema);
         this.descripcion = normalizarDescripcion(descripcion);
@@ -36,9 +38,9 @@ public final class SesionConsultadaEntity {
         this.grupo = grupo;
     }
 
-    private void validarIdentificador(final UUID valor, final String mensaje) {
+    private void validarIdentificador(final UUID valor, final ErrorCode code) {
         if (ObjectHelper.isNull(valor)) {
-            throw new IllegalArgumentException(mensaje);
+            throw new ValidationException(code);
         }
     }
 
@@ -46,11 +48,11 @@ public final class SesionConsultadaEntity {
         final String temaNormalizado = TextHelper.trim(tema);
 
         if (TextHelper.isNullOrBlank(temaNormalizado)) {
-            throw new IllegalArgumentException("El tema de la sesion es obligatorio.");
+            throw new ValidationException(ErrorCode.ERR_TEMA_SESION_REQUERIDO);
         }
 
         if (!TextHelper.hasLengthBetween(temaNormalizado, 5, 100)) {
-            throw new IllegalArgumentException("El tema de la sesion debe tener entre 5 y 100 caracteres.");
+            throw new ValidationException(ErrorCode.ERR_TEMA_SESION_LONGITUD_INVALIDA);
         }
 
         return temaNormalizado;
@@ -64,7 +66,7 @@ public final class SesionConsultadaEntity {
         }
 
         if (!TextHelper.hasLengthBetween(descripcionNormalizada, 10, 250)) {
-            throw new IllegalArgumentException("La descripcion de la sesion debe tener entre 10 y 250 caracteres.");
+            throw new ValidationException(ErrorCode.ERR_DESCRIPCION_SESION_LONGITUD_INVALIDA);
         }
 
         return descripcionNormalizada;
@@ -78,7 +80,7 @@ public final class SesionConsultadaEntity {
         }
 
         if (!TextHelper.hasLengthBetween(observacionNormalizada, 5, 250)) {
-            throw new IllegalArgumentException("La observacion de cierre debe tener entre 5 y 250 caracteres.");
+            throw new ValidationException(ErrorCode.ERR_OBSERVACION_CIERRE_LONGITUD_INVALIDA);
         }
 
         return observacionNormalizada;

@@ -63,6 +63,17 @@ public final class DocenteRepositorySqlServerAdapter implements DocenteRepositor
             FROM dbo.uv_docente_identidad
             WHERE id = ?
             """;
+    static final String SQL_CONSULTAR_POR_USUARIO = """
+            SELECT
+                id,
+                idUsuario,
+                numeroIdentificacion,
+                nombreCompleto,
+                estaActivoUsuario
+            FROM dbo.uv_docente_identidad
+            WHERE idUsuario = ?
+            ORDER BY id
+            """;
 
     static final String SQL_CONSULTAR_ASIGNACIONES = """
             SELECT
@@ -165,10 +176,9 @@ public final class DocenteRepositorySqlServerAdapter implements DocenteRepositor
             return consultarDocentesExecutor.query(SQL_CONSULTAR_TODOS);
         } catch (DataAccessException exception) {
             LOGGER.error(
-                    "SQL operation failed. operation={}, correlationId={}, exceptionType={}",
+                    "SQL operation failed. operation={}, correlationId={}",
                     OPERATION_CONSULTAR_DOCENTES,
-                    CorrelationIdContext.getAsString(),
-                    exception.getClass().getSimpleName()
+                    CorrelationIdContext.getAsString()
             );
             throw new DatabaseOperationException("No fue posible consultar los docentes.", exception);
         }
@@ -188,10 +198,9 @@ public final class DocenteRepositorySqlServerAdapter implements DocenteRepositor
             return resultado.isEmpty() ? Optional.empty() : Optional.of(resultado.get(0));
         } catch (DataAccessException exception) {
             LOGGER.error(
-                    "SQL operation failed. operation={}, correlationId={}, exceptionType={}",
+                    "SQL operation failed. operation={}, correlationId={}",
                     OPERATION_CONSULTAR_DOCENTE_POR_ID,
-                    CorrelationIdContext.getAsString(),
-                    exception.getClass().getSimpleName()
+                    CorrelationIdContext.getAsString()
             );
             throw new DatabaseOperationException("No fue posible consultar el docente por ID.", exception);
         }
@@ -209,10 +218,9 @@ public final class DocenteRepositorySqlServerAdapter implements DocenteRepositor
             return consultarAsignacionesExecutor.query(SQL_CONSULTAR_ASIGNACIONES, dto.getDocente().toString());
         } catch (DataAccessException exception) {
             LOGGER.error(
-                    "SQL operation failed. operation={}, correlationId={}, exceptionType={}",
+                    "SQL operation failed. operation={}, correlationId={}",
                     OPERATION_CONSULTAR_ASIGNACIONES,
-                    CorrelationIdContext.getAsString(),
-                    exception.getClass().getSimpleName()
+                    CorrelationIdContext.getAsString()
             );
             throw new DatabaseOperationException(
                     "No fue posible consultar las asignaciones academicas del docente.",
@@ -234,13 +242,12 @@ public final class DocenteRepositorySqlServerAdapter implements DocenteRepositor
             final Map<String, Object> result = registrarDocenteExecutor.execute(
                     buildRegistrarDocenteParameters(dto, correlationId)
             );
-            return toOperacionEntity(result, correlationId, OPERATION_REGISTRAR_DOCENTE);
+            return toOperacionEntity(result, correlationId, OPERATION_REGISTRAR_DOCENTE, dto.getUsuario());
         } catch (DataAccessException exception) {
             LOGGER.error(
-                    "SQL operation failed. operation={}, correlationId={}, exceptionType={}",
+                    "SQL operation failed. operation={}, correlationId={}",
                     OPERATION_REGISTRAR_DOCENTE,
-                    CorrelationIdContext.getAsString(),
-                    exception.getClass().getSimpleName()
+                    CorrelationIdContext.getAsString()
             );
             throw new DatabaseOperationException(
                     "No fue posible ejecutar el procedimiento de registro de docente desde usuario.",
@@ -258,13 +265,12 @@ public final class DocenteRepositorySqlServerAdapter implements DocenteRepositor
         try {
             final UUID correlationId = CorrelationIdContext.require();
             final Map<String, Object> result = asignarDocenteExecutor.execute(buildAsignarDocenteParameters(dto, correlationId));
-            return toOperacionEntity(result, correlationId, OPERATION_ASIGNAR_DOCENTE);
+            return toOperacionEntity(result, correlationId, OPERATION_ASIGNAR_DOCENTE, null);
         } catch (DataAccessException exception) {
             LOGGER.error(
-                    "SQL operation failed. operation={}, correlationId={}, exceptionType={}",
+                    "SQL operation failed. operation={}, correlationId={}",
                     OPERATION_ASIGNAR_DOCENTE,
-                    CorrelationIdContext.getAsString(),
-                    exception.getClass().getSimpleName()
+                    CorrelationIdContext.getAsString()
             );
             throw new DatabaseOperationException(
                     "No fue posible ejecutar el procedimiento de asignacion de docente a grupo.",
@@ -363,7 +369,8 @@ public final class DocenteRepositorySqlServerAdapter implements DocenteRepositor
     private DocenteOperacionRepositoryEntity toOperacionEntity(
             final Map<String, Object> result,
             final UUID correlationId,
-            final String operation
+            final String operation,
+            final UUID usuarioId
     ) {
         DbExceptionTranslator.throwIfFailed(
                 toBoolean(result.get(OUT_ESTADO)),
@@ -372,7 +379,23 @@ public final class DocenteRepositorySqlServerAdapter implements DocenteRepositor
                 correlationId.toString(),
                 operation
         );
-        return new DocenteOperacionRepositoryEntity(toString(result.get(OUT_MENSAJE_USUARIO)));
+        final UUID docenteId = usuarioId == null ? null : consultarDocenteIdPorUsuario(usuarioId);
+        return new DocenteOperacionRepositoryEntity(docenteId, toString(result.get(OUT_MENSAJE_USUARIO)));
+    }
+
+    private UUID consultarDocenteIdPorUsuario(final UUID usuarioId) {
+        try {
+            final List<DocenteIdentidadRepositoryEntity> resultado =
+                    consultarDocentePorIdExecutor.query(SQL_CONSULTAR_POR_USUARIO, usuarioId.toString());
+            return resultado.isEmpty() ? null : resultado.get(0).getId();
+        } catch (DataAccessException exception) {
+            LOGGER.warn(
+                    "Audit helper query failed. operation={}, correlationId={}",
+                    "consultarDocenteIdPorUsuario",
+                    CorrelationIdContext.getAsString()
+            );
+            return null;
+        }
     }
 
     private static UUID toUuid(final Object value) {

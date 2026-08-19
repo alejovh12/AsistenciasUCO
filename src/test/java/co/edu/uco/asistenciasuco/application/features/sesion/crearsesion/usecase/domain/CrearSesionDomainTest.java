@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.usecase.domain;
 
+import co.edu.uco.asistenciasuco.application.exception.ValidationException;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -29,11 +30,11 @@ class CrearSesionDomainTest {
 
     @Test
     void rechaza_grupo_tema_y_descripcion_invalidos() {
-        assertThrows(IllegalArgumentException.class, () -> new CrearSesionDomain(null, "Tema valido", null));
-        assertThrows(IllegalArgumentException.class, () -> new CrearSesionDomain(GRUPO, null, null));
-        assertThrows(IllegalArgumentException.class, () -> new CrearSesionDomain(GRUPO, "abcd", null));
-        assertThrows(IllegalArgumentException.class, () -> new CrearSesionDomain(GRUPO, "a".repeat(101), null));
-        assertThrows(IllegalArgumentException.class, () -> new CrearSesionDomain(GRUPO, "Tema valido", "corta"));
-        assertThrows(IllegalArgumentException.class, () -> new CrearSesionDomain(GRUPO, "Tema valido", "a".repeat(251)));
+        assertThrows(ValidationException.class, () -> new CrearSesionDomain(null, "Tema valido", null));
+        assertThrows(ValidationException.class, () -> new CrearSesionDomain(GRUPO, null, null));
+        assertThrows(ValidationException.class, () -> new CrearSesionDomain(GRUPO, "abcd", null));
+        assertThrows(ValidationException.class, () -> new CrearSesionDomain(GRUPO, "a".repeat(101), null));
+        assertThrows(ValidationException.class, () -> new CrearSesionDomain(GRUPO, "Tema valido", "corta"));
+        assertThrows(ValidationException.class, () -> new CrearSesionDomain(GRUPO, "Tema valido", "a".repeat(251)));
     }
 }

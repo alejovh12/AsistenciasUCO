@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.docente.asignardocenteagrupo.usecase.domain;
 
+import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.ValidationException;
 
 import java.util.Objects;
@@ -35,35 +36,29 @@ public final class AsignarDocenteAGrupoDomain {
     private static void validarDocente(final UUID docente) {
         validarIdentificador(
                 docente,
-                "ERR_DOCENTE_REQUERIDO",
-                "El docente es obligatorio.",
-                "ERR_DOCENTE_INVALIDO",
-                "Debe seleccionar un docente valido."
+                ErrorCode.ERR_DOCENTE_REQUERIDO,
+                ErrorCode.ERR_DOCENTE_INVALIDO
         );
     }
 
     private static void validarGrupo(final UUID grupo) {
         validarIdentificador(
                 grupo,
-                "ERR_GRUPO_REQUERIDO",
-                "El grupo es obligatorio.",
-                "ERR_GRUPO_INVALIDO",
-                "El grupo debe ser valido."
+                ErrorCode.ERR_GRUPO_REQUERIDO,
+                ErrorCode.ERR_GRUPO_INVALIDO
         );
     }
 
     private static void validarIdentificador(
             final UUID valor,
-            final String codigoNull,
-            final String mensajeNull,
-            final String codigoVacio,
-            final String mensajeVacio
+            final ErrorCode codigoNull,
+            final ErrorCode codigoVacio
     ) {
         if (Objects.isNull(valor)) {
-            throw new ValidationException(codigoNull, mensajeNull);
+            throw new ValidationException(codigoNull);
         }
         if (EMPTY_UUID.equals(valor)) {
-            throw new ValidationException(codigoVacio, mensajeVacio);
+            throw new ValidationException(codigoVacio);
         }
     }
 

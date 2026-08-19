@@ -10,7 +10,6 @@ import org.springframework.core.Ordered;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,7 +30,7 @@ class CorrelationIdFilterTest {
         final MockHttpServletResponse response = new MockHttpServletResponse();
         final AtomicReference<String> correlationIdDuranteCadena = new AtomicReference<>();
         final AtomicReference<String> contextDuranteCadena = new AtomicReference<>();
-        request.addHeader(CorrelationIdFilter.HEADER_NAME, " " + VALID_CORRELATION_ID + " ");
+        request.addHeader(CorrelationIdFilter.HEADER_NAME, VALID_CORRELATION_ID);
         final FilterChain chain = (servletRequest, servletResponse) -> {
             correlationIdDuranteCadena.set(MDC.get(CorrelationIdFilter.MDC_KEY));
             contextDuranteCadena.set(CorrelationIdContext.require().toString());
@@ -64,6 +63,24 @@ class CorrelationIdFilterTest {
     }
 
     @Test
+    void doFilter_reutiliza_exactamente_header_uuid_valido_en_mayusculas() throws Exception {
+        final String headerValido = "93641BAB-E3CD-485C-B275-47E7B731E18C";
+        final MockHttpServletRequest request = new MockHttpServletRequest();
+        final MockHttpServletResponse response = new MockHttpServletResponse();
+        final AtomicReference<String> correlationIdDuranteCadena = new AtomicReference<>();
+        request.addHeader(CorrelationIdFilter.HEADER_NAME, headerValido);
+        final FilterChain chain = (servletRequest, servletResponse) ->
+                correlationIdDuranteCadena.set(MDC.get(CorrelationIdFilter.MDC_KEY));
+
+        filter.doFilter(request, response, chain);
+
+        assertEquals(headerValido, response.getHeader(CorrelationIdFilter.HEADER_NAME));
+        assertEquals(headerValido, correlationIdDuranteCadena.get());
+        assertNull(MDC.get(CorrelationIdFilter.MDC_KEY));
+        assertNull(CorrelationIdContext.get());
+    }
+
+    @Test
     void doFilter_genera_correlationId_cuando_header_es_invalido() throws Exception {
         final MockHttpServletRequest request = new MockHttpServletRequest();
         final MockHttpServletResponse response = new MockHttpServletResponse();
@@ -80,6 +97,37 @@ class CorrelationIdFilterTest {
         assertNotNull(java.util.UUID.fromString(response.getHeader(CorrelationIdFilter.HEADER_NAME)));
         assertNull(MDC.get(CorrelationIdFilter.MDC_KEY));
         assertNull(CorrelationIdContext.get());
+    }
+
+    @Test
+    void doFilter_genera_correlationId_cuando_header_tiene_espacios() throws Exception {
+        final MockHttpServletRequest request = new MockHttpServletRequest();
+        final MockHttpServletResponse response = new MockHttpServletResponse();
+        final AtomicReference<String> correlationIdDuranteCadena = new AtomicReference<>();
+        request.addHeader(CorrelationIdFilter.HEADER_NAME, " " + VALID_CORRELATION_ID + " ");
+        final FilterChain chain = (servletRequest, servletResponse) ->
+                correlationIdDuranteCadena.set(MDC.get(CorrelationIdFilter.MDC_KEY));
+
+        filter.doFilter(request, response, chain);
+
+        assertNotEquals(VALID_CORRELATION_ID, response.getHeader(CorrelationIdFilter.HEADER_NAME));
+        assertEquals(response.getHeader(CorrelationIdFilter.HEADER_NAME), correlationIdDuranteCadena.get());
+    }
+
+    @Test
+    void doFilter_genera_correlationId_cuando_header_contiene_crlf() throws Exception {
+        final MockHttpServletRequest request = new MockHttpServletRequest();
+        final MockHttpServletResponse response = new MockHttpServletResponse();
+        final AtomicReference<String> correlationIdDuranteCadena = new AtomicReference<>();
+        request.addHeader(CorrelationIdFilter.HEADER_NAME, VALID_CORRELATION_ID + "\r\nX-Evil: injected");
+        final FilterChain chain = (servletRequest, servletResponse) ->
+                correlationIdDuranteCadena.set(MDC.get(CorrelationIdFilter.MDC_KEY));
+
+        filter.doFilter(request, response, chain);
+
+        assertNotEquals(VALID_CORRELATION_ID + "\r\nX-Evil: injected", response.getHeader(CorrelationIdFilter.HEADER_NAME));
+        assertEquals(response.getHeader(CorrelationIdFilter.HEADER_NAME), correlationIdDuranteCadena.get());
+        assertNotNull(java.util.UUID.fromString(response.getHeader(CorrelationIdFilter.HEADER_NAME)));
     }
 
     @Test
@@ -117,6 +165,27 @@ class CorrelationIdFilterTest {
         assertNull(MDC.get(CorrelationIdFilter.MDC_KEY));
         assertNull(CorrelationIdContext.get());
         assertEquals(VALID_CORRELATION_ID, response.getHeader(CorrelationIdFilter.HEADER_NAME));
+    }
+
+    @Test
+    void doFilter_requests_consecutivos_no_comparten_correlationId() throws Exception {
+        final AtomicReference<String> correlationA = new AtomicReference<>();
+        final AtomicReference<String> correlationB = new AtomicReference<>();
+
+        final MockHttpServletRequest requestA = new MockHttpServletRequest();
+        requestA.addHeader(CorrelationIdFilter.HEADER_NAME, VALID_CORRELATION_ID);
+        filter.doFilter(requestA, new MockHttpServletResponse(), (servletRequest, servletResponse) ->
+                correlationA.set(MDC.get(CorrelationIdFilter.MDC_KEY)));
+
+        final MockHttpServletRequest requestB = new MockHttpServletRequest();
+        filter.doFilter(requestB, new MockHttpServletResponse(), (servletRequest, servletResponse) ->
+                correlationB.set(MDC.get(CorrelationIdFilter.MDC_KEY)));
+
+        assertEquals(VALID_CORRELATION_ID, correlationA.get());
+        assertNotNull(correlationB.get());
+        assertNotEquals(correlationA.get(), correlationB.get());
+        assertNull(MDC.get(CorrelationIdFilter.MDC_KEY));
+        assertNull(CorrelationIdContext.get());
     }
 
     @Test

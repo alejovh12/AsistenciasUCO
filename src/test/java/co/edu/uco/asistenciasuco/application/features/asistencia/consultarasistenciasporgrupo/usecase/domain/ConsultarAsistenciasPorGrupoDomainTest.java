@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.domain;
 
+import co.edu.uco.asistenciasuco.application.exception.ValidationException;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -22,6 +23,6 @@ class ConsultarAsistenciasPorGrupoDomainTest {
 
     @Test
     void rechaza_grupo_obligatorio() {
-        assertThrows(IllegalArgumentException.class, () -> new ConsultarAsistenciasPorGrupoDomain(null, SESION));
+        assertThrows(ValidationException.class, () -> new ConsultarAsistenciasPorGrupoDomain(null, SESION));
     }
 }

@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.domain;
 
+import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.ValidationException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 
 import java.util.UUID;
@@ -24,7 +26,7 @@ public final class ConsultarAsistenciasPorGrupoDomain {
 
     private void validarGrupo(final UUID grupo) {
         if (ObjectHelper.isNull(grupo)) {
-            throw new IllegalArgumentException("El grupo es obligatorio.");
+            throw new ValidationException(ErrorCode.ERR_GRUPO_REQUERIDO);
         }
     }
 

@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.docente.consultardocenteporid.usecase.domain;
 
+import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.ValidationException;
 
 import java.util.Objects;
@@ -25,10 +26,10 @@ public final class ConsultarDocentePorIdDomain {
 
     private static void validarDocente(final UUID docente) {
         if (Objects.isNull(docente)) {
-            throw new ValidationException("ERR_DOCENTE_REQUERIDO", "El docente es obligatorio.");
+            throw new ValidationException(ErrorCode.ERR_DOCENTE_REQUERIDO);
         }
         if (EMPTY_UUID.equals(docente)) {
-            throw new ValidationException("ERR_DOCENTE_INVALIDO", "Debe seleccionar un docente valido.");
+            throw new ValidationException(ErrorCode.ERR_DOCENTE_INVALIDO);
         }
     }
 

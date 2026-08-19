@@ -37,6 +37,10 @@ public final class RegistrarDocenteDesdeUsuarioRepositoryMapper {
             throw new CrosscuttingException("El dominio para registrar docente desde usuario es obligatorio.");
         }
 
-        return new RegistrarDocenteDesdeUsuarioResultadoEntity(true, repositoryEntity.getMensajeUsuario());
+        return new RegistrarDocenteDesdeUsuarioResultadoEntity(
+                repositoryEntity.getDocenteId(),
+                true,
+                repositoryEntity.getMensajeUsuario()
+        );
     }
 }

@@ -9,6 +9,7 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisi
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.primaryports.dto.SolicitarRevisionAsistenciaDTO;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.audit.AuditableOperation;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -54,6 +55,7 @@ public final class AsistenciaController {
     }
 
     @PostMapping
+    @AuditableOperation(action = "REGISTRAR_ASISTENCIA", resourceType = "SESION", resourceIdRequestField = "sesion")
     public ResponseEntity<Map<String, Object>> registrarAsistencia(
             @RequestBody final RegistrarAsistenciaDTO dto
     ) {
@@ -81,6 +83,11 @@ public final class AsistenciaController {
     }
 
     @PostMapping("/revisiones")
+    @AuditableOperation(
+            action = "SOLICITAR_REVISION_ASISTENCIA",
+            resourceType = "ASISTENCIA",
+            resourceIdRequestField = "asistencia"
+    )
     public ResponseEntity<Map<String, Object>> solicitarRevision(
             @RequestBody final SolicitarRevisionAsistenciaDTO dto
     ) {

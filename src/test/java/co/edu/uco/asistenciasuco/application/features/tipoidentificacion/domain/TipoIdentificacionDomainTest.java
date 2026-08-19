@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.tipoidentificacion.domain;
 
+import co.edu.uco.asistenciasuco.application.exception.ValidationException;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Modifier;
@@ -26,9 +27,9 @@ class TipoIdentificacionDomainTest {
 
     @Test
     void reconstruir_rechaza_id_codigo_y_nombre_invalidos() {
-        assertThrows(IllegalArgumentException.class, () -> TipoIdentificacionDomain.reconstruir(null, "CC", "Cedula"));
-        assertThrows(IllegalArgumentException.class, () -> TipoIdentificacionDomain.reconstruir(ID, "ABCDEF", "Cedula"));
-        assertThrows(IllegalArgumentException.class, () -> TipoIdentificacionDomain.reconstruir(ID, "CC", ""));
+        assertThrows(ValidationException.class, () -> TipoIdentificacionDomain.reconstruir(null, "CC", "Cedula"));
+        assertThrows(ValidationException.class, () -> TipoIdentificacionDomain.reconstruir(ID, "ABCDEF", "Cedula"));
+        assertThrows(ValidationException.class, () -> TipoIdentificacionDomain.reconstruir(ID, "CC", ""));
     }
 
     @Test

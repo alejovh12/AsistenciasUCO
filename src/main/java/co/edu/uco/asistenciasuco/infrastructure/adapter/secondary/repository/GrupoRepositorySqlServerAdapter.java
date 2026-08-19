@@ -133,10 +133,9 @@ public final class GrupoRepositorySqlServerAdapter implements GrupoRepositoryPor
             return transactionOperations.execute(status -> ejecutarRegistro(dto));
         } catch (DataAccessException exception) {
             LOGGER.error(
-                    "SQL operation failed. operation={}, correlationId={}, exceptionType={}",
+                    "SQL operation failed. operation={}, correlationId={}",
                     OPERATION_REGISTRAR_ESTUDIANTE,
-                    CorrelationIdContext.getAsString(),
-                    exception.getClass().getSimpleName()
+                    CorrelationIdContext.getAsString()
             );
             throw new DatabaseOperationException(
                     "No fue posible ejecutar el procedimiento de registro de estudiante en grupo.",
@@ -151,10 +150,9 @@ public final class GrupoRepositorySqlServerAdapter implements GrupoRepositoryPor
             return grupoQueryExecutor.query(SQL_CONSULTAR_GRUPOS, GrupoRepositorySqlServerAdapter::mapGrupoRow);
         } catch (DataAccessException exception) {
             LOGGER.error(
-                    "SQL operation failed. operation={}, correlationId={}, exceptionType={}",
+                    "SQL operation failed. operation={}, correlationId={}",
                     OPERATION_CONSULTAR_GRUPOS,
-                    CorrelationIdContext.getAsString(),
-                    exception.getClass().getSimpleName()
+                    CorrelationIdContext.getAsString()
             );
             throw new DatabaseOperationException("No fue posible consultar los grupos.", exception);
         }

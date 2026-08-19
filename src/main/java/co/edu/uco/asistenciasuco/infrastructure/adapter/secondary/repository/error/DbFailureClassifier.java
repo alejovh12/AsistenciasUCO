@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.error;
 
+import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
 
 import java.text.Normalizer;
@@ -10,27 +11,6 @@ import java.util.Locale;
  */
 final class DbFailureClassifier {
 
-    static final String ERR_MATRICULA_DUPLICADA = "ERR_MATRICULA_DUPLICADA";
-    static final String ERR_CUPO_SUPERADO = "ERR_CUPO_SUPERADO";
-    static final String ERR_CRUCE_HORARIO_ESTUDIANTE = "ERR_CRUCE_HORARIO_ESTUDIANTE";
-    static final String ERR_CRUCE_HORARIO_DOCENTE = "ERR_CRUCE_HORARIO_DOCENTE";
-    static final String ERR_UNICIDAD_CORREO = "ERR_UNICIDAD_CORREO";
-    static final String ERR_UNICIDAD_DOCUMENTO = "ERR_UNICIDAD_DOCUMENTO";
-    static final String ERR_GRUPO_NO_EXISTE = "ERR_GRUPO_NO_EXISTE";
-    static final String ERR_GRUPO_NO_HABILITADO = "ERR_GRUPO_NO_HABILITADO";
-    static final String ERR_TIPO_IDENTIFICACION_NO_EXISTE = "ERR_TIPO_IDENTIFICACION_NO_EXISTE";
-    static final String ERR_ESTUDIANTE_NO_EXISTE = "ERR_ESTUDIANTE_NO_EXISTE";
-    static final String ERR_USUARIO_NO_EXISTE = "ERR_USUARIO_NO_EXISTE";
-    static final String ERR_DOCENTE_NO_EXISTE = "ERR_DOCENTE_NO_EXISTE";
-    static final String ERR_SESION_NO_EXISTE = "ERR_SESION_NO_EXISTE";
-    static final String ERR_ESTUDIANTE_NO_PERTENECE_SESION = "ERR_ESTUDIANTE_NO_PERTENECE_SESION";
-    static final String ERR_USUARIO_INACTIVO = "ERR_USUARIO_INACTIVO";
-    static final String ERR_ESTUDIANTE_INACTIVO = "ERR_ESTUDIANTE_INACTIVO";
-    static final String ERR_DOCENTE_INACTIVO = "ERR_DOCENTE_INACTIVO";
-    static final String ERR_DOCENTE_YA_REGISTRADO = "ERR_DOCENTE_YA_REGISTRADO";
-    static final String ERR_NOMBRE_PERSONA_INVALIDO = "ERR_NOMBRE_PERSONA_INVALIDO";
-    static final String ERR_DB_UNCLASSIFIED = "ERR_DB_UNCLASSIFIED";
-
     private static final String OPERATION_ASIGNAR_DOCENTE = "asignarDocenteAGrupo";
     private static final String OPERATION_REGISTRAR_ESTUDIANTE = "registrarEstudianteEnGrupo";
 
@@ -38,53 +18,53 @@ final class DbFailureClassifier {
         throw new IllegalStateException("No es permitido instanciar un clasificador de errores de persistencia.");
     }
 
-    static String classify(final String userMessage, final String technicalMessage, final String operation) {
+    static ErrorCode classify(final String userMessage, final String technicalMessage, final String operation) {
         final String message = normalize(userMessage + " " + technicalMessage);
         final String normalizedOperation = normalize(operation);
 
         if (TextHelper.isNullOrBlank(message)) {
-            return ERR_DB_UNCLASSIFIED;
+            return ErrorCode.ERR_DB_UNCLASSIFIED;
         }
         if (containsAny(message, "nombre", "nombres", "apellido", "apellidos")
                 && containsAny(message, "caracteres no permitidos", "formato invalido")) {
-            return ERR_NOMBRE_PERSONA_INVALIDO;
+            return ErrorCode.ERR_NOMBRE_PERSONA_INVALIDO;
         }
         if (contains(message, "usuario") && contains(message, "registrado como docente")) {
-            return ERR_DOCENTE_YA_REGISTRADO;
+            return ErrorCode.ERR_DOCENTE_YA_REGISTRADO;
         }
         if (contains(message, "estudiante") && contains(message, "inactivo")) {
-            return ERR_ESTUDIANTE_INACTIVO;
+            return ErrorCode.ERR_ESTUDIANTE_INACTIVO;
         }
         if (contains(message, "docente") && contains(message, "inactivo")) {
-            return ERR_DOCENTE_INACTIVO;
+            return ErrorCode.ERR_DOCENTE_INACTIVO;
         }
         if (contains(message, "usuario") && contains(message, "inactivo")) {
-            return ERR_USUARIO_INACTIVO;
+            return ErrorCode.ERR_USUARIO_INACTIVO;
         }
         if (contains(message, "matricula") && containsAny(message, "duplicad", "ya existe", "ya se encuentra", "registrad", "inscrit")) {
-            return ERR_MATRICULA_DUPLICADA;
+            return ErrorCode.ERR_MATRICULA_DUPLICADA;
         }
         if (containsAny(message, "tamaoo moximo", "tamano maximo")) {
-            return ERR_CUPO_SUPERADO;
+            return ErrorCode.ERR_CUPO_SUPERADO;
         }
         if (containsAny(message, "cupo", "cupos")
                 && containsAny(message, "superad", "sin", "no hay", "agotad", "maxim", "moximo", "capacidad", "lleno", "llena")) {
-            return ERR_CUPO_SUPERADO;
+            return ErrorCode.ERR_CUPO_SUPERADO;
         }
         if (isScheduleConflict(message)) {
             if (contains(message, "estudiante") || contains(normalizedOperation, OPERATION_REGISTRAR_ESTUDIANTE.toLowerCase(Locale.ROOT))) {
-                return ERR_CRUCE_HORARIO_ESTUDIANTE;
+                return ErrorCode.ERR_CRUCE_HORARIO_ESTUDIANTE;
             }
             if (contains(message, "docente") || contains(normalizedOperation, OPERATION_ASIGNAR_DOCENTE.toLowerCase(Locale.ROOT))) {
-                return ERR_CRUCE_HORARIO_DOCENTE;
+                return ErrorCode.ERR_CRUCE_HORARIO_DOCENTE;
             }
         }
         if (containsAny(message, "correo", "email", "e-mail") && containsAny(message, "duplicad", "ya existe", "ya se encuentra", "registrad", "unico")) {
-            return ERR_UNICIDAD_CORREO;
+            return ErrorCode.ERR_UNICIDAD_CORREO;
         }
         if (containsAny(message, "documento", "identificacion", "numero de identificacion")
                 && containsAny(message, "duplicad", "ya existe", "ya se encuentra", "registrad", "unico")) {
-            return ERR_UNICIDAD_DOCUMENTO;
+            return ErrorCode.ERR_UNICIDAD_DOCUMENTO;
         }
         if (contains(message, "grupo") && containsAny(
                 message,
@@ -94,7 +74,7 @@ final class DbFailureClassifier {
                 "no esta habilitado",
                 "no se encuentra habilitado"
         )) {
-            return ERR_GRUPO_NO_HABILITADO;
+            return ErrorCode.ERR_GRUPO_NO_HABILITADO;
         }
         if (containsAny(
                 message,
@@ -106,29 +86,29 @@ final class DbFailureClassifier {
                 "uv_tipo_identificacion"
         )
                 && containsAny(message, "no existe", "no encontrado", "no encontrada", "inexistente")) {
-            return ERR_TIPO_IDENTIFICACION_NO_EXISTE;
+            return ErrorCode.ERR_TIPO_IDENTIFICACION_NO_EXISTE;
         }
         if (doesNotExist(message, "grupo")) {
-            return ERR_GRUPO_NO_EXISTE;
+            return ErrorCode.ERR_GRUPO_NO_EXISTE;
         }
         if (doesNotExist(message, "estudiante")) {
-            return ERR_ESTUDIANTE_NO_EXISTE;
+            return ErrorCode.ERR_ESTUDIANTE_NO_EXISTE;
         }
         if (doesNotExist(message, "usuario")) {
-            return ERR_USUARIO_NO_EXISTE;
+            return ErrorCode.ERR_USUARIO_NO_EXISTE;
         }
         if (doesNotExist(message, "docente")) {
-            return ERR_DOCENTE_NO_EXISTE;
+            return ErrorCode.ERR_DOCENTE_NO_EXISTE;
         }
         if (doesNotExist(message, "sesion")) {
-            return ERR_SESION_NO_EXISTE;
+            return ErrorCode.ERR_SESION_NO_EXISTE;
         }
         if (contains(message, "estudiante") && contains(message, "sesion")
                 && containsAny(message, "no pertenece", "no esta asociado", "no se encuentra asociado")) {
-            return ERR_ESTUDIANTE_NO_PERTENECE_SESION;
+            return ErrorCode.ERR_ESTUDIANTE_NO_PERTENECE_SESION;
         }
 
-        return ERR_DB_UNCLASSIFIED;
+        return ErrorCode.ERR_DB_UNCLASSIFIED;
     }
 
     private static boolean doesNotExist(final String message, final String resource) {

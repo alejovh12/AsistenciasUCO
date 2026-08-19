@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudianteporid.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudianteporid.usecase.ConsultarEstudiantePorIdUseCase;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudianteporid.usecase.domain.ConsultarEstudiantePorIdDomain;
@@ -27,9 +28,6 @@ public final class ConsultarEstudiantePorIdUseCaseImpl implements ConsultarEstud
         }
         return estudianteRepositoryPort.consultarEstudiantePorId(domain.estudianteId())
                 .map(ConsultarEstudiantePorIdRepositoryMapper::toUseCaseEntity)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "ERR_ESTUDIANTE_NO_EXISTE",
-                        "El estudiante consultado no existe."
-                ));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ERR_ESTUDIANTE_NO_EXISTE));
     }
 }

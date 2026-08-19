@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.usecase.domain;
 
+import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.ValidationException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 
 import java.util.UUID;
@@ -19,7 +21,7 @@ public final class ConsultarSesionDomain {
 
     private void validarSesion(final UUID sesion) {
         if (ObjectHelper.isNull(sesion)) {
-            throw new IllegalArgumentException("La sesion es obligatoria.");
+            throw new ValidationException(ErrorCode.ERR_SESION_REQUERIDA);
         }
     }
 

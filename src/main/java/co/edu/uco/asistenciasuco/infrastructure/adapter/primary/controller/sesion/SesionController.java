@@ -9,6 +9,7 @@ import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.primary
 import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.primaryports.dto.CrearSesionDTO;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.audit.AuditableOperation;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -53,6 +54,7 @@ public final class SesionController {
     }
 
     @PostMapping
+    @AuditableOperation(action = "CREAR_SESION", resourceType = "GRUPO", resourceIdRequestField = "grupo")
     public ResponseEntity<Map<String, Object>> crearSesion(@RequestBody final CrearSesionDTO dto) {
         crearSesionInputPort.execute(dto);
 
@@ -75,6 +77,7 @@ public final class SesionController {
     }
 
     @PostMapping("/cierres")
+    @AuditableOperation(action = "CERRAR_SESION", resourceType = "SESION", resourceIdRequestField = "sesion")
     public ResponseEntity<Map<String, Object>> cerrarSesion(@RequestBody final CerrarSesionDTO dto) {
         cerrarSesionInputPort.execute(dto);
 

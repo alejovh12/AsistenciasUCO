@@ -127,10 +127,9 @@ public final class AuthenticationRepositorySqlServerAdapter implements Authentic
 
     private void logSqlFailure(final String operation, final DataAccessException exception) {
         LOGGER.error(
-                "SQL operation failed. operation={}, correlationId={}, exceptionType={}",
+                "SQL operation failed. operation={}, correlationId={}",
                 operation,
-                CorrelationIdContext.getAsString(),
-                exception.getClass().getSimpleName()
+                CorrelationIdContext.getAsString()
         );
     }
 

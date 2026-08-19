@@ -48,6 +48,10 @@ public final class CrearUsuarioRepositoryMapper {
             throw new CrosscuttingException("El dominio para crear usuario es obligatorio.");
         }
 
-        return new CrearUsuarioResultadoEntity(true, repositoryEntity.getMensajeUsuario());
+        return new CrearUsuarioResultadoEntity(
+                repositoryEntity.getUsuarioId(),
+                true,
+                repositoryEntity.getMensajeUsuario()
+        );
     }
 }

@@ -39,6 +39,7 @@ public final class CrearUsuarioMapper {
         }
 
         return new CrearUsuarioResultadoDTO(
+                entity.getUsuarioId(),
                 entity.isExitoso(),
                 entity.getMensajeUsuario()
         );

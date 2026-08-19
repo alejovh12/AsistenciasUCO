@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.ConflictException;
+import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.RegistrarEstudianteUseCase;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.domain.RegistrarEstudianteDomain;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.entity.RegistrarEstudianteResultadoEntity;
@@ -69,10 +70,7 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
         if (usuarioPorCorreo.isPresent()
                 && usuarioPorIdentificacion.isPresent()
                 && !usuarioPorCorreo.get().id().equals(usuarioPorIdentificacion.get().id())) {
-            throw new ConflictException(
-                    "ERR_IDENTIDAD_USUARIO_CONFLICTO",
-                    "El correo y la identificacion corresponden a usuarios diferentes."
-            );
+            throw new ConflictException(ErrorCode.ERR_IDENTIDAD_USUARIO_CONFLICTO);
         }
         return usuarioPorCorreo.isPresent() || usuarioPorIdentificacion.isPresent();
     }

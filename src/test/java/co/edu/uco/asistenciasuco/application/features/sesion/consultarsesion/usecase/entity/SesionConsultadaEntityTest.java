@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.usecase.entity;
 
+import co.edu.uco.asistenciasuco.application.exception.ValidationException;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -46,11 +47,11 @@ class SesionConsultadaEntityTest {
 
     @Test
     void rechaza_identificadores_y_textos_invalidos() {
-        assertThrows(IllegalArgumentException.class, () -> new SesionConsultadaEntity(null, GRUPO, "Tema valido", null, false, null));
-        assertThrows(IllegalArgumentException.class, () -> new SesionConsultadaEntity(SESION, null, "Tema valido", null, false, null));
-        assertThrows(IllegalArgumentException.class, () -> new SesionConsultadaEntity(SESION, GRUPO, null, null, false, null));
-        assertThrows(IllegalArgumentException.class, () -> new SesionConsultadaEntity(SESION, GRUPO, "abcd", null, false, null));
-        assertThrows(IllegalArgumentException.class, () -> new SesionConsultadaEntity(SESION, GRUPO, "Tema valido", "corta", false, null));
-        assertThrows(IllegalArgumentException.class, () -> new SesionConsultadaEntity(SESION, GRUPO, "Tema valido", null, false, "abcd"));
+        assertThrows(ValidationException.class, () -> new SesionConsultadaEntity(null, GRUPO, "Tema valido", null, false, null));
+        assertThrows(ValidationException.class, () -> new SesionConsultadaEntity(SESION, null, "Tema valido", null, false, null));
+        assertThrows(ValidationException.class, () -> new SesionConsultadaEntity(SESION, GRUPO, null, null, false, null));
+        assertThrows(ValidationException.class, () -> new SesionConsultadaEntity(SESION, GRUPO, "abcd", null, false, null));
+        assertThrows(ValidationException.class, () -> new SesionConsultadaEntity(SESION, GRUPO, "Tema valido", "corta", false, null));
+        assertThrows(ValidationException.class, () -> new SesionConsultadaEntity(SESION, GRUPO, "Tema valido", null, false, "abcd"));
     }
 }

@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.usecase.domain;
 
+import co.edu.uco.asistenciasuco.application.exception.ValidationException;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -21,9 +22,9 @@ class SolicitarRevisionAsistenciaDomainTest {
 
     @Test
     void rechaza_asistencia_y_motivo_invalidos() {
-        assertThrows(IllegalArgumentException.class, () -> new SolicitarRevisionAsistenciaDomain(null, "motivo valido"));
-        assertThrows(IllegalArgumentException.class, () -> new SolicitarRevisionAsistenciaDomain(ASISTENCIA, null));
-        assertThrows(IllegalArgumentException.class, () -> new SolicitarRevisionAsistenciaDomain(ASISTENCIA, "corto"));
-        assertThrows(IllegalArgumentException.class, () -> new SolicitarRevisionAsistenciaDomain(ASISTENCIA, "a".repeat(301)));
+        assertThrows(ValidationException.class, () -> new SolicitarRevisionAsistenciaDomain(null, "motivo valido"));
+        assertThrows(ValidationException.class, () -> new SolicitarRevisionAsistenciaDomain(ASISTENCIA, null));
+        assertThrows(ValidationException.class, () -> new SolicitarRevisionAsistenciaDomain(ASISTENCIA, "corto"));
+        assertThrows(ValidationException.class, () -> new SolicitarRevisionAsistenciaDomain(ASISTENCIA, "a".repeat(301)));
     }
 }

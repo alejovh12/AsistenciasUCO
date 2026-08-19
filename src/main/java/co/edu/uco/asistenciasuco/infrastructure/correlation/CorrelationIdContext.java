@@ -9,19 +9,28 @@ public final class CorrelationIdContext {
 
     public static final String MDC_KEY = "correlationId";
 
-    private static final ThreadLocal<UUID> CURRENT_ID = new ThreadLocal<>();
+    private static final ThreadLocal<String> CURRENT_ID = new ThreadLocal<>();
 
     private CorrelationIdContext() {
         throw new IllegalStateException("No es permitido instanciar el contexto de correlacion.");
     }
 
     public static void set(final UUID correlationId) {
+        set(correlationId == null ? null : correlationId.toString());
+    }
+
+    public static void set(final String correlationId) {
         CURRENT_ID.set(correlationId);
-        MDC.put(MDC_KEY, String.valueOf(correlationId));
+        if (correlationId == null) {
+            MDC.remove(MDC_KEY);
+            return;
+        }
+        MDC.put(MDC_KEY, correlationId);
     }
 
     public static UUID get() {
-        return CURRENT_ID.get();
+        final String correlationId = CURRENT_ID.get();
+        return correlationId == null ? null : UUID.fromString(correlationId);
     }
 
     public static UUID require() {
@@ -33,8 +42,7 @@ public final class CorrelationIdContext {
     }
 
     public static String getAsString() {
-        final UUID correlationId = get();
-        return correlationId == null ? null : correlationId.toString();
+        return CURRENT_ID.get();
     }
 
     public static void clear() {

@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.tipoidentificacion.domain;
 
+import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.ValidationException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
 
 import java.util.Objects;
@@ -42,10 +44,10 @@ public final class TipoIdentificacionDomain {
 
     private static UUID validarId(final UUID id) {
         if (Objects.isNull(id)) {
-            throw new IllegalArgumentException("El tipo de identificacion es obligatorio.");
+            throw new ValidationException(ErrorCode.ERR_TIPO_IDENTIFICACION_REQUERIDA);
         }
         if (EMPTY_UUID.equals(id)) {
-            throw new IllegalArgumentException("Debe seleccionar un tipo de identificacion valido.");
+            throw new ValidationException(ErrorCode.ERR_TIPO_IDENTIFICACION_INVALIDA);
         }
         return id;
     }
@@ -53,10 +55,10 @@ public final class TipoIdentificacionDomain {
     private static String validarCodigo(final String tipoIdentificacion) {
         final String normalizado = TextHelper.trim(tipoIdentificacion);
         if (TextHelper.isNullOrBlank(normalizado)) {
-            throw new IllegalArgumentException("El codigo del tipo de identificacion es obligatorio.");
+            throw new ValidationException(ErrorCode.ERR_TIPO_IDENTIFICACION_CODIGO_REQUERIDO);
         }
         if (normalizado.length() > MAX_LENGTH_CODIGO) {
-            throw new IllegalArgumentException("El codigo del tipo de identificacion debe tener maximo 5 caracteres.");
+            throw new ValidationException(ErrorCode.ERR_TIPO_IDENTIFICACION_CODIGO_LONGITUD_INVALIDA);
         }
         return normalizado;
     }
@@ -64,10 +66,10 @@ public final class TipoIdentificacionDomain {
     private static String validarNombre(final String nombre) {
         final String normalizado = TextHelper.trim(nombre);
         if (TextHelper.isNullOrBlank(normalizado)) {
-            throw new IllegalArgumentException("El nombre del tipo de identificacion es obligatorio.");
+            throw new ValidationException(ErrorCode.ERR_TIPO_IDENTIFICACION_NOMBRE_REQUERIDO);
         }
         if (normalizado.length() > MAX_LENGTH_NOMBRE) {
-            throw new IllegalArgumentException("El nombre del tipo de identificacion debe tener maximo 50 caracteres.");
+            throw new ValidationException(ErrorCode.ERR_TIPO_IDENTIFICACION_NOMBRE_LONGITUD_INVALIDA);
         }
         return normalizado;
     }

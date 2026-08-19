@@ -55,10 +55,9 @@ public final class TipoIdentificacionRepositorySqlServerAdapter implements TipoI
             return queryExecutor.query(SQL_CONSULTAR_TODOS);
         } catch (DataAccessException exception) {
             LOGGER.error(
-                    "SQL operation failed. operation={}, correlationId={}, exceptionType={}",
+                    "SQL operation failed. operation={}, correlationId={}",
                     OPERATION_CONSULTAR_TIPOS_IDENTIFICACION,
-                    CorrelationIdContext.getAsString(),
-                    exception.getClass().getSimpleName()
+                    CorrelationIdContext.getAsString()
             );
             throw new DatabaseOperationException("No fue posible consultar los tipos de identificacion.", exception);
         }

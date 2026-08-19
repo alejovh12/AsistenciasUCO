@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository;
 
 import co.edu.uco.asistenciasuco.application.exception.DatabaseOperationException;
+import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.AsignarDocenteAGrupoRepositoryDTO;
@@ -170,7 +171,7 @@ class DocenteRepositorySqlServerAdapterTest {
         );
 
         assertEquals("ERR_DOCENTE_NO_EXISTE", exception.getCode());
-        assertEquals("El docente no existe.", exception.getMessage());
+        assertEquals(ErrorCode.ERR_DOCENTE_NO_EXISTE.defaultMessage(), exception.getMessage());
     }
 
     @Test

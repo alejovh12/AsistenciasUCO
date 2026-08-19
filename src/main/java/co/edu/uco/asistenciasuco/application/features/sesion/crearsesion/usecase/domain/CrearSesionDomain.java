@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.usecase.domain;
 
+import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.ValidationException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
 
@@ -28,7 +30,7 @@ public final class CrearSesionDomain {
 
     private void validarGrupo(final UUID grupo) {
         if (ObjectHelper.isNull(grupo)) {
-            throw new IllegalArgumentException("El grupo es obligatorio.");
+            throw new ValidationException(ErrorCode.ERR_GRUPO_REQUERIDO);
         }
     }
 
@@ -36,11 +38,11 @@ public final class CrearSesionDomain {
         final String temaNormalizado = TextHelper.trim(tema);
 
         if (TextHelper.isNullOrBlank(temaNormalizado)) {
-            throw new IllegalArgumentException("El tema de la sesion es obligatorio.");
+            throw new ValidationException(ErrorCode.ERR_TEMA_SESION_REQUERIDO);
         }
 
         if (!TextHelper.hasLengthBetween(temaNormalizado, 5, 100)) {
-            throw new IllegalArgumentException("El tema de la sesion debe tener entre 5 y 100 caracteres.");
+            throw new ValidationException(ErrorCode.ERR_TEMA_SESION_LONGITUD_INVALIDA);
         }
 
         return temaNormalizado;
@@ -54,7 +56,7 @@ public final class CrearSesionDomain {
         }
 
         if (!TextHelper.hasLengthBetween(descripcionNormalizada, 10, 250)) {
-            throw new IllegalArgumentException("La descripcion de la sesion debe tener entre 10 y 250 caracteres.");
+            throw new ValidationException(ErrorCode.ERR_DESCRIPCION_SESION_LONGITUD_INVALIDA);
         }
 
         return descripcionNormalizada;

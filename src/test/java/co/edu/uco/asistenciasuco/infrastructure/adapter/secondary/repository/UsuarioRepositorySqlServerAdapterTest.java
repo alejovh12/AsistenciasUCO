@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository;
 
 import co.edu.uco.asistenciasuco.application.exception.ConflictException;
+import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.CrearUsuarioRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.CrearUsuarioRepositoryEntity;
@@ -113,7 +114,7 @@ class UsuarioRepositorySqlServerAdapterTest {
 
         final ConflictException exception = assertThrows(ConflictException.class, () -> adapter.crearUsuario(dtoValido()));
         assertEquals("ERR_UNICIDAD_CORREO", exception.getCode());
-        assertEquals("El correo ya existe.", exception.getMessage());
+        assertEquals(ErrorCode.ERR_UNICIDAD_CORREO.defaultMessage(), exception.getMessage());
     }
 
     @Test

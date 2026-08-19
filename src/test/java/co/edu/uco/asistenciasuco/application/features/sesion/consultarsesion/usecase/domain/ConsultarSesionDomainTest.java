@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.usecase.domain;
 
+import co.edu.uco.asistenciasuco.application.exception.ValidationException;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -19,6 +20,6 @@ class ConsultarSesionDomainTest {
 
     @Test
     void rechaza_sesion_obligatoria() {
-        assertThrows(IllegalArgumentException.class, () -> new ConsultarSesionDomain(null));
+        assertThrows(ValidationException.class, () -> new ConsultarSesionDomain(null));
     }
 }

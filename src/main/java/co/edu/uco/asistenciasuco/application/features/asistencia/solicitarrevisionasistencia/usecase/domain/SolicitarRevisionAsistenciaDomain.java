@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.usecase.domain;
 
+import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.ValidationException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
 
@@ -25,7 +27,7 @@ public final class SolicitarRevisionAsistenciaDomain {
 
     private void validarAsistencia(final UUID asistencia) {
         if (ObjectHelper.isNull(asistencia)) {
-            throw new IllegalArgumentException("La asistencia es obligatoria.");
+            throw new ValidationException(ErrorCode.ERR_ASISTENCIA_REQUERIDA);
         }
     }
 
@@ -33,11 +35,11 @@ public final class SolicitarRevisionAsistenciaDomain {
         final String motivoNormalizado = TextHelper.trim(motivo);
 
         if (TextHelper.isNullOrBlank(motivoNormalizado)) {
-            throw new IllegalArgumentException("El motivo de revision es obligatorio.");
+            throw new ValidationException(ErrorCode.ERR_MOTIVO_REVISION_REQUERIDO);
         }
 
         if (!TextHelper.hasLengthBetween(motivoNormalizado, 10, 300)) {
-            throw new IllegalArgumentException("El motivo de revision debe tener entre 10 y 300 caracteres.");
+            throw new ValidationException(ErrorCode.ERR_MOTIVO_REVISION_LONGITUD_INVALIDA);
         }
 
         return motivoNormalizado;

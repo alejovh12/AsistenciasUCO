@@ -7,6 +7,7 @@ import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudiantee
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.primaryports.dto.RegistrarEstudianteResultadoDTO;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.audit.AuditableOperation;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo.mapper.RegistrarEstudianteHttpMapper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo.request.RegistrarEstudianteRequest;
 import jakarta.validation.Valid;
@@ -52,6 +53,11 @@ public final class GrupoController {
     }
 
     @PostMapping("/{grupoId}/estudiantes")
+    @AuditableOperation(
+            action = "REGISTRAR_ESTUDIANTE_EN_GRUPO",
+            resourceType = "GRUPO",
+            resourceIdPathVariable = "grupoId"
+    )
     public ResponseEntity<RegistrarEstudianteResultadoDTO> registrarEstudiante(
             @PathVariable final UUID grupoId,
             @Valid @RequestBody final RegistrarEstudianteRequest request

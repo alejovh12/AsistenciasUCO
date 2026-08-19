@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.usecase.domain;
 
+import co.edu.uco.asistenciasuco.application.exception.ValidationException;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -33,7 +34,7 @@ class RegistrarAsistenciaDomainTest {
 
         assertEquals("Llego tarde", domain.getObservacion());
         assertThrows(
-                IllegalArgumentException.class,
+                ValidationException.class,
                 () -> new RegistrarAsistenciaDomain(ESTUDIANTE, GRUPO, SESION, false, null)
         );
     }
@@ -41,19 +42,19 @@ class RegistrarAsistenciaDomainTest {
     @Test
     void rechaza_identificadores_y_presencia_obligatorios() {
         assertThrows(
-                IllegalArgumentException.class,
+                ValidationException.class,
                 () -> new RegistrarAsistenciaDomain(null, GRUPO, SESION, true, null)
         );
         assertThrows(
-                IllegalArgumentException.class,
+                ValidationException.class,
                 () -> new RegistrarAsistenciaDomain(ESTUDIANTE, null, SESION, true, null)
         );
         assertThrows(
-                IllegalArgumentException.class,
+                ValidationException.class,
                 () -> new RegistrarAsistenciaDomain(ESTUDIANTE, GRUPO, null, true, null)
         );
         assertThrows(
-                IllegalArgumentException.class,
+                ValidationException.class,
                 () -> new RegistrarAsistenciaDomain(ESTUDIANTE, GRUPO, SESION, null, null)
         );
     }
@@ -61,11 +62,11 @@ class RegistrarAsistenciaDomainTest {
     @Test
     void rechaza_observacion_fuera_de_rango() {
         assertThrows(
-                IllegalArgumentException.class,
+                ValidationException.class,
                 () -> new RegistrarAsistenciaDomain(ESTUDIANTE, GRUPO, SESION, true, "abcd")
         );
         assertThrows(
-                IllegalArgumentException.class,
+                ValidationException.class,
                 () -> new RegistrarAsistenciaDomain(ESTUDIANTE, GRUPO, SESION, true, "a".repeat(251))
         );
     }

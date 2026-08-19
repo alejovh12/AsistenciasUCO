@@ -5,6 +5,6 @@ public final class DatabaseOperationException extends InternalApplicationExcepti
     private static final long serialVersionUID = 1L;
 
     public DatabaseOperationException(final String message, final Throwable cause) {
-        super("DATABASE_OPERATION_ERROR", message, cause);
+        super(ErrorCode.DATABASE_OPERATION_ERROR, message, cause);
     }
 }

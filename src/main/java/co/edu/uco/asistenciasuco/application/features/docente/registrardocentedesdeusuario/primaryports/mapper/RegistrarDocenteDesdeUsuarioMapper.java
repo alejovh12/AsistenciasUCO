@@ -32,6 +32,7 @@ public final class RegistrarDocenteDesdeUsuarioMapper {
         }
 
         return new RegistrarDocenteDesdeUsuarioResultadoDTO(
+                entity.getDocenteId(),
                 entity.isExitoso(),
                 entity.getMensajeUsuario()
         );

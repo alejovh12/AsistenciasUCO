@@ -15,6 +15,9 @@ import co.edu.uco.asistenciasuco.application.features.docente.registrardocentede
 import co.edu.uco.asistenciasuco.application.features.docente.registrardocentedesdeusuario.primaryports.dto.RegistrarDocenteDesdeUsuarioResultadoDTO;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.audit.AuditableOperation;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.response.RegistrarDocenteDesdeUsuarioResponse;
+import co.edu.uco.asistenciasuco.infrastructure.audit.AuditRequestAttributes;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -108,13 +111,22 @@ public final class DocenteController {
     }
 
     @PostMapping
-    public ResponseEntity<RegistrarDocenteDesdeUsuarioResultadoDTO> registrarDocenteDesdeUsuario(
+    @AuditableOperation(
+            action = "REGISTRAR_DOCENTE_DESDE_USUARIO",
+            resourceType = "DOCENTE"
+    )
+    public ResponseEntity<RegistrarDocenteDesdeUsuarioResponse> registrarDocenteDesdeUsuario(
             @RequestBody final RegistrarDocenteDesdeUsuarioDTO dto
     ) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(registrarDocenteDesdeUsuarioInputPort.execute(dto));
+        final RegistrarDocenteDesdeUsuarioResultadoDTO resultado = registrarDocenteDesdeUsuarioInputPort.execute(dto);
+        if (!ObjectHelper.isNull(resultado.getDocenteId())) {
+            AuditRequestAttributes.storeResourceId(resultado.getDocenteId().toString());
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(RegistrarDocenteDesdeUsuarioResponse.from(resultado));
     }
 
     @PostMapping("/asignaciones/grupo")
+    @AuditableOperation(action = "ASIGNAR_DOCENTE_A_GRUPO", resourceType = "GRUPO", resourceIdRequestField = "grupo")
     public ResponseEntity<AsignarDocenteAGrupoResultadoDTO> asignarDocenteAGrupo(
             @RequestBody final AsignarDocenteAGrupoDTO dto
     ) {

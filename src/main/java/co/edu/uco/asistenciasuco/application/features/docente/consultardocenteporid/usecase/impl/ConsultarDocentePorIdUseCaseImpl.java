@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.docente.consultardocenteporid.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardocentes.usecase.entity.DocenteIdentidadEntity;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardocentes.usecase.mapper.ConsultarDocentesRepositoryMapper;
@@ -34,9 +35,6 @@ public final class ConsultarDocentePorIdUseCaseImpl implements ConsultarDocenteP
                         ConsultarDocentePorIdRepositoryMapper.toRepositoryDTO(domain)
                 )
                 .map(ConsultarDocentesRepositoryMapper::toUseCaseEntity)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "ERR_DOCENTE_NO_EXISTE",
-                        "El docente consultado no existe."
-                ));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ERR_DOCENTE_NO_EXISTE));
     }
 }

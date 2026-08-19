@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.usuario.domain;
 
+import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.usuario.domain.rules.PasswordRegistroRule;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
@@ -62,14 +63,12 @@ public final class UsuarioRegistroDomain {
                 numeroIdentificacionValidado,
                 validarNombreObligatorio(
                         primerApellido,
-                        "ERR_PRIMER_APELLIDO_REQUERIDO",
-                        "El primer apellido es obligatorio."
+                        ErrorCode.ERR_PRIMER_APELLIDO_REQUERIDO
                 ),
                 validarNombreOpcional(segundoApellido),
                 validarNombreObligatorio(
                         primerNombre,
-                        "ERR_PRIMER_NOMBRE_REQUERIDO",
-                        "El primer nombre es obligatorio."
+                        ErrorCode.ERR_PRIMER_NOMBRE_REQUERIDO
                 ),
                 validarNombreOpcional(segundoNombre),
                 validarCorreo(correo),
@@ -79,51 +78,35 @@ public final class UsuarioRegistroDomain {
 
     private static UUID validarTipoIdentificacion(final UUID tipoIdentificacionId) {
         if (tipoIdentificacionId == null) {
-            throw new ValidationException(
-                    "ERR_TIPO_IDENTIFICACION_REQUERIDA",
-                    "El tipo de identificacion es obligatorio."
-            );
+            throw new ValidationException(ErrorCode.ERR_TIPO_IDENTIFICACION_REQUERIDA);
         }
         if (EMPTY_UUID.equals(tipoIdentificacionId)) {
-            throw new ValidationException(
-                    "ERR_TIPO_IDENTIFICACION_INVALIDA",
-                    "Debe seleccionar un tipo de identificacion valido."
-            );
+            throw new ValidationException(ErrorCode.ERR_TIPO_IDENTIFICACION_INVALIDA);
         }
         return tipoIdentificacionId;
     }
 
     private static Integer validarNumeroIdentificacion(final Integer numeroIdentificacion) {
         if (numeroIdentificacion == null) {
-            throw new ValidationException(
-                    "ERR_NUMERO_IDENTIFICACION_REQUERIDO",
-                    "El numero de identificacion es obligatorio."
-            );
+            throw new ValidationException(ErrorCode.ERR_NUMERO_IDENTIFICACION_REQUERIDO);
         }
         if (numeroIdentificacion <= 0) {
-            throw new ValidationException(
-                    "ERR_NUMERO_IDENTIFICACION_INVALIDO",
-                    "El numero de identificacion debe ser mayor que cero."
-            );
+            throw new ValidationException(ErrorCode.ERR_NUMERO_IDENTIFICACION_INVALIDO);
         }
         final int digits = String.valueOf(numeroIdentificacion).length();
         if (digits < MIN_DIGITS_NUMERO_IDENTIFICACION || digits > MAX_DIGITS_NUMERO_IDENTIFICACION) {
-            throw new ValidationException(
-                    "ERR_NUMERO_IDENTIFICACION_INVALIDO",
-                    "El numero de identificacion debe tener entre 6 y 10 digitos."
-            );
+            throw new ValidationException(ErrorCode.ERR_NUMERO_IDENTIFICACION_INVALIDO);
         }
         return numeroIdentificacion;
     }
 
     private static String validarNombreObligatorio(
             final String valor,
-            final String requiredCode,
-            final String requiredMessage
+            final ErrorCode requiredCode
     ) {
         final String normalizado = TextHelper.normalizeTrimUpper(valor);
         if (TextHelper.isNullOrBlank(normalizado)) {
-            throw new ValidationException(requiredCode, requiredMessage);
+            throw new ValidationException(requiredCode);
         }
         return validarLongitudNombre(normalizado);
     }
@@ -134,10 +117,7 @@ public final class UsuarioRegistroDomain {
 
     private static String validarLongitudNombre(final String valor) {
         if (valor.length() > MAX_LENGTH_NOMBRE_PERSONA) {
-            throw new ValidationException(
-                    "ERR_NOMBRE_PERSONA_LONGITUD_INVALIDA",
-                    "Los nombres y apellidos deben tener maximo 50 caracteres."
-            );
+            throw new ValidationException(ErrorCode.ERR_NOMBRE_PERSONA_LONGITUD_INVALIDA);
         }
         return valor;
     }
@@ -145,18 +125,15 @@ public final class UsuarioRegistroDomain {
     private static String validarCorreo(final String correo) {
         final String normalizado = TextHelper.normalizeTrimLower(correo);
         if (TextHelper.isNullOrBlank(normalizado)) {
-            throw new ValidationException("ERR_CORREO_REQUERIDO", "El correo es obligatorio.");
+            throw new ValidationException(ErrorCode.ERR_CORREO_REQUERIDO);
         }
         if (normalizado.length() > MAX_LENGTH_CORREO) {
-            throw new ValidationException(
-                    "ERR_CORREO_LONGITUD_INVALIDA",
-                    "El correo debe tener maximo 100 caracteres."
-            );
+            throw new ValidationException(ErrorCode.ERR_CORREO_LONGITUD_INVALIDA);
         }
         try {
             return TextHelper.requireEmailFormat(normalizado, "El correo no tiene un formato valido.");
         } catch (IllegalArgumentException exception) {
-            throw new ValidationException("ERR_CORREO_FORMATO_INVALIDO", exception.getMessage());
+            throw new ValidationException(ErrorCode.ERR_CORREO_FORMATO_INVALIDO, exception.getMessage());
         }
     }
 

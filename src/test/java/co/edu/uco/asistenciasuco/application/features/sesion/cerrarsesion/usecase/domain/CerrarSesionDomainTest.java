@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.sesion.cerrarsesion.usecase.domain;
 
+import co.edu.uco.asistenciasuco.application.exception.ValidationException;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -21,9 +22,9 @@ class CerrarSesionDomainTest {
 
     @Test
     void rechaza_sesion_y_observacion_invalidas() {
-        assertThrows(IllegalArgumentException.class, () -> new CerrarSesionDomain(null, "Observacion valida"));
-        assertThrows(IllegalArgumentException.class, () -> new CerrarSesionDomain(SESION, null));
-        assertThrows(IllegalArgumentException.class, () -> new CerrarSesionDomain(SESION, "corta"));
-        assertThrows(IllegalArgumentException.class, () -> new CerrarSesionDomain(SESION, "a".repeat(251)));
+        assertThrows(ValidationException.class, () -> new CerrarSesionDomain(null, "Observacion valida"));
+        assertThrows(ValidationException.class, () -> new CerrarSesionDomain(SESION, null));
+        assertThrows(ValidationException.class, () -> new CerrarSesionDomain(SESION, "corta"));
+        assertThrows(ValidationException.class, () -> new CerrarSesionDomain(SESION, "a".repeat(251)));
     }
 }

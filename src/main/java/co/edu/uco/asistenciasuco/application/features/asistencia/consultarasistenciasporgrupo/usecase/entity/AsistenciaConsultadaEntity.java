@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.entity;
 
+import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.ValidationException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
 
@@ -25,10 +27,10 @@ public final class AsistenciaConsultadaEntity {
             final boolean presente,
             final String observacion
     ) {
-        validarIdentificador(asistencia, "La asistencia es obligatoria.");
-        validarIdentificador(estudiante, "El estudiante es obligatorio.");
-        validarIdentificador(grupo, "El grupo es obligatorio.");
-        validarIdentificador(sesion, "La sesion es obligatoria.");
+        validarIdentificador(asistencia, ErrorCode.ERR_ASISTENCIA_REQUERIDA);
+        validarIdentificador(estudiante, ErrorCode.ERR_ESTUDIANTE_ID_REQUERIDO);
+        validarIdentificador(grupo, ErrorCode.ERR_GRUPO_REQUERIDO);
+        validarIdentificador(sesion, ErrorCode.ERR_SESION_REQUERIDA);
 
         this.asistencia = asistencia;
         this.estudiante = estudiante;
@@ -38,9 +40,9 @@ public final class AsistenciaConsultadaEntity {
         this.observacion = normalizarObservacion(observacion);
     }
 
-    private void validarIdentificador(final UUID valor, final String mensaje) {
+    private void validarIdentificador(final UUID valor, final ErrorCode code) {
         if (ObjectHelper.isNull(valor)) {
-            throw new IllegalArgumentException(mensaje);
+            throw new ValidationException(code);
         }
     }
 
@@ -52,7 +54,7 @@ public final class AsistenciaConsultadaEntity {
         }
 
         if (!TextHelper.hasLengthBetween(observacionNormalizada, 5, 250)) {
-            throw new IllegalArgumentException("La observacion de la asistencia debe tener entre 5 y 250 caracteres.");
+            throw new ValidationException(ErrorCode.ERR_OBSERVACION_ASISTENCIA_LONGITUD_INVALIDA);
         }
 
         return observacionNormalizada;
