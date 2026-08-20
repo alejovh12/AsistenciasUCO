@@ -12,13 +12,16 @@ import co.edu.uco.asistenciasuco.infrastructure.tracing.TraceContextSnapshot;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerMapping;
 
+import java.time.Instant;
+import java.util.List;
 import java.lang.reflect.Method;
-import java.security.Principal;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
@@ -49,7 +52,7 @@ class AuditInterceptorTest {
         final MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/v1/grupos/" + CORRELATION_ID + "/estudiantes");
         request.setQueryString("password=secreto&pagina=1");
         request.setRemoteAddr("10.0.0.7");
-        request.setUserPrincipal((Principal) () -> "docente@uco.edu");
+        request.setUserPrincipal(jwtAuthentication("usuario-123"));
         request.setAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE, Map.of("grupoId", CORRELATION_ID.toString()));
         final MockHttpServletResponse response = new MockHttpServletResponse();
         response.setStatus(201);
@@ -59,7 +62,7 @@ class AuditInterceptorTest {
         interceptor.afterCompletion(request, response, handlerMethod("registrarEstudiante"), null);
 
         final AuditEvent event = publisher.event.get();
-        assertEquals("docente@uco.edu", event.actorId());
+        assertEquals("usuario-123", event.actorId());
         assertEquals(AuditActorType.USER, event.actorType());
         assertEquals("REGISTRAR_ESTUDIANTE_EN_GRUPO", event.action());
         assertEquals("GRUPO", event.resourceType());
@@ -127,6 +130,21 @@ class AuditInterceptorTest {
         final Controller controller = new Controller();
         final Method method = Controller.class.getDeclaredMethod(methodName);
         return new HandlerMethod(controller, method);
+    }
+
+    private JwtAuthenticationToken jwtAuthentication(final String idUsuario) {
+        final Instant now = Instant.now();
+        final Jwt jwt = Jwt.withTokenValue("token")
+                .header("alg", "none")
+                .issuer("http://127.0.0.1:8081/realms/asistencias-uco")
+                .subject("keycloak-sub-123")
+                .issuedAt(now.minusSeconds(60))
+                .notBefore(now.minusSeconds(60))
+                .expiresAt(now.plusSeconds(300))
+                .audience(List.of("asistencias-api"))
+                .claim("idUsuario", idUsuario)
+                .build();
+        return new JwtAuthenticationToken(jwt, List.of(), idUsuario);
     }
 
     private static final class CapturingAuditEventPublisher implements AuditEventPublisher {

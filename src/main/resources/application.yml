@@ -75,6 +75,7 @@ logging:
 
 app:
   security:
+    # Legacy flag: HTTP security is handled by OAuth2 Resource Server/Keycloak.
     mode: fake
   cache:
     mode: fake
