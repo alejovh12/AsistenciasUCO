@@ -15,4 +15,6 @@ foreach ($variable in $requiredVariables) {
     }
 }
 
+Set-Location "$PSScriptRoot\.."
+
 .\mvnw.cmd spring-boot:run

@@ -1,0 +1,9 @@
+services:
+  backend:
+    build: .
+    image: asistencias-backend:latest
+    container_name: backend_asistencias
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=default

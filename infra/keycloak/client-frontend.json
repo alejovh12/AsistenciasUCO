@@ -1,0 +1,16 @@
+{
+  "clientId": "asistencias-uco-frontend",
+  "enabled": true,
+  "publicClient": true,
+  "standardFlowEnabled": true,
+  "directAccessGrantsEnabled": true,
+  "redirectUris": [
+    "http://localhost:4200/*",
+    "http://127.0.0.1:4200/*"
+  ],
+  "webOrigins": [
+    "http://localhost:4200",
+    "http://127.0.0.1:4200",
+    "+"
+  ]
+}

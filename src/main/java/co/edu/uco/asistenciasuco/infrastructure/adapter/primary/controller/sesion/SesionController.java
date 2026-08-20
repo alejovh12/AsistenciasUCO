@@ -25,7 +25,6 @@ import java.util.Map;
  * Adaptador primario REST para operaciones relacionadas con sesiones.
  */
 @RestController
-@Profile("mock")
 @RequestMapping("/api/v1/sesiones")
 public final class SesionController {
 

@@ -9,6 +9,12 @@ spring:
   sql:
     init:
       mode: never
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://127.0.0.1:8081/realms/asistencias-uco}
+          audiences: ${KEYCLOAK_AUDIENCE:asistencias-api}
   main:
     web-application-type: servlet
     keep-alive: true
