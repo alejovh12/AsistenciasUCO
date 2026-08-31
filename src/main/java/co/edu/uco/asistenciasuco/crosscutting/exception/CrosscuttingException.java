@@ -3,7 +3,7 @@ package co.edu.uco.asistenciasuco.crosscutting.exception;
 /**
  * Excepción base para errores técnicos/utilitarios de la capa crosscutting.
  */
-public class CrosscuttingException extends RuntimeException {
+public class CrosscuttingException extends TechnicalException {
 
     private static final long serialVersionUID = 1L;
 

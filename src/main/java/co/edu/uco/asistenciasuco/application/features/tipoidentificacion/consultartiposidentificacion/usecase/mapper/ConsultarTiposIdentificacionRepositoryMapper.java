@@ -1,8 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.usecase.mapper;
 
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.domain.TipoIdentificacionDomain;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.TipoIdentificacionRepositoryEntity;
-import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.TipoIdentificacionRepositoryProjection;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 
 import java.util.ArrayList;
@@ -14,11 +13,10 @@ import java.util.List;
 public final class ConsultarTiposIdentificacionRepositoryMapper {
 
     private ConsultarTiposIdentificacionRepositoryMapper() {
-        throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
     }
 
     public static List<TipoIdentificacionDomain> toDomains(
-            final List<TipoIdentificacionRepositoryEntity> entities
+            final List<TipoIdentificacionRepositoryProjection> entities
     ) {
         if (ObjectHelper.isNull(entities)) {
             return List.of();
@@ -26,7 +24,7 @@ public final class ConsultarTiposIdentificacionRepositoryMapper {
 
         final List<TipoIdentificacionDomain> resultado = new ArrayList<>();
 
-        for (final TipoIdentificacionRepositoryEntity entity : entities) {
+        for (final TipoIdentificacionRepositoryProjection entity : entities) {
             resultado.add(TipoIdentificacionDomain.reconstruir(
                     entity.getId(),
                     entity.getTipoIdentificacion(),

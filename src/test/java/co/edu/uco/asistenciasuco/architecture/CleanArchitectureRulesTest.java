@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class CleanArchitectureRulesTest {
 
     private static final String BASE_PACKAGE = "co.edu.uco.asistenciasuco";
+    private static final String DOMAIN_PACKAGE = "..application..domain..";
 
     @Test
     void application_no_depende_de_infrastructure() {
@@ -25,15 +26,15 @@ class CleanArchitectureRulesTest {
     @Test
     void domain_no_depende_de_spring() {
         noClasses()
-                .that().resideInAPackage("..usecase.domain..")
-                .should().dependOnClassesThat().resideInAnyPackage("org.springframework..", "jakarta.persistence..")
+                .that().resideInAPackage(DOMAIN_PACKAGE)
+                .should().dependOnClassesThat().resideInAnyPackage("org.springframework..", "jakarta..", "javax..")
                 .check(importedClasses());
     }
 
     @Test
     void domain_no_depende_de_output_ports() {
         noClasses()
-                .that().resideInAPackage("..usecase.domain..")
+                .that().resideInAPackage(DOMAIN_PACKAGE)
                 .should().dependOnClassesThat().resideInAPackage("..application.secondaryports..")
                 .check(importedClasses());
     }
@@ -73,7 +74,7 @@ class CleanArchitectureRulesTest {
     }
 
     @Test
-    void tracing_web_en_infrastructure_config_tracing() {
+    void tracing_web_en_infrastructure_observability_tracing() {
         boolean hasTracingOutsideInfrastructure = importedClasses().stream()
                 .filter(javaClass -> javaClass.getSimpleName().startsWith("Correlation"))
                 .anyMatch(javaClass -> !javaClass.getPackageName().contains(".infrastructure."));

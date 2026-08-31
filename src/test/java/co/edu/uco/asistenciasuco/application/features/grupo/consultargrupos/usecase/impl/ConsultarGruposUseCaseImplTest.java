@@ -1,10 +1,10 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.consultargrupos.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.features.grupo.consultargrupos.usecase.entity.GrupoEntity;
-import co.edu.uco.asistenciasuco.application.secondaryports.GrupoRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarEstudianteRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.GrupoRepositoryEntity;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.RegistrarEstudianteRepositoryEntity;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.GrupoRepositoryProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.RegistrarEstudianteRepositoryProjection;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -24,13 +24,13 @@ class ConsultarGruposUseCaseImplTest {
     void execute_consulta_puerto_secundario_y_mapea_grupos() {
         final GrupoRepositoryPort repositoryPort = new GrupoRepositoryPort() {
             @Override
-            public RegistrarEstudianteRepositoryEntity registrarEstudianteEnGrupo(final RegistrarEstudianteRepositoryDTO dto) {
-                return new RegistrarEstudianteRepositoryEntity("ok");
+            public RegistrarEstudianteRepositoryProjection registrarEstudianteEnGrupo(final RegistrarEstudianteRepositoryDTO dto) {
+                return new RegistrarEstudianteRepositoryProjection("ok");
             }
 
             @Override
-            public List<GrupoRepositoryEntity> consultarGrupos() {
-                return List.of(new GrupoRepositoryEntity(
+            public List<GrupoRepositoryProjection> consultarGrupos() {
+                return List.of(new GrupoRepositoryProjection(
                         GRUPO,
                         "G1",
                         "Grupo 1",

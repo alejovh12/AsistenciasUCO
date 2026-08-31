@@ -7,8 +7,7 @@ import co.edu.uco.asistenciasuco.application.features.docente.consultardocentepo
 import co.edu.uco.asistenciasuco.application.features.docente.consultardocenteporid.primaryports.mapper.ConsultarDocentePorIdMapper;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardocenteporid.usecase.ConsultarDocentePorIdUseCase;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardocenteporid.usecase.domain.ConsultarDocentePorIdDomain;
-import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import java.util.Objects;
 
 /**
  * Interactor del puerto de entrada para consultar un docente por ID.
@@ -18,10 +17,7 @@ public final class ConsultarDocentePorIdInteractor implements ConsultarDocentePo
     private final ConsultarDocentePorIdUseCase useCase;
 
     public ConsultarDocentePorIdInteractor(final ConsultarDocentePorIdUseCase useCase) {
-        if (ObjectHelper.isNull(useCase)) {
-            throw new CrosscuttingException("El caso de uso ConsultarDocentePorIdUseCase es obligatorio.");
-        }
-        this.useCase = useCase;
+        this.useCase = Objects.requireNonNull(useCase, "El caso de uso ConsultarDocentePorIdUseCase es obligatorio.");
     }
 
     @Override

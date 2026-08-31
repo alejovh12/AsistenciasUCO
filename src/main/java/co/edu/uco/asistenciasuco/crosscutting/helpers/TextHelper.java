@@ -1,21 +1,16 @@
 package co.edu.uco.asistenciasuco.crosscutting.helpers;
 
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
+import co.edu.uco.asistenciasuco.crosscutting.helpers.validation.ValidationHelper;
 
 import java.util.Locale;
-import java.util.regex.Pattern;
 
 /**
  * Utilidades para validación y normalización de texto.
  */
 public final class TextHelper {
 
-    private static final Pattern EMAIL_PATTERN = Pattern.compile(
-            "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,63}$"
-    );
-
     private TextHelper() {
-        throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
     }
 
     public static String trim(final String value) {
@@ -95,7 +90,7 @@ public final class TextHelper {
     }
 
     public static String requireEmailFormat(final String value, final String message) {
-        if (isNull(value) || !EMAIL_PATTERN.matcher(value).matches()) {
+        if (!ValidationHelper.hasText(value) || !ValidationHelper.isValidEmail(value)) {
             throw new IllegalArgumentException(message);
         }
         return value;

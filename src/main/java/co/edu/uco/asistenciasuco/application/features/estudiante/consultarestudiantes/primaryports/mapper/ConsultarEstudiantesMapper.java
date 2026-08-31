@@ -14,7 +14,6 @@ import java.util.List;
 public final class ConsultarEstudiantesMapper {
 
     private ConsultarEstudiantesMapper() {
-        throw new CrosscuttingException("No es permitido instanciar un mapper de estudiantes.");
     }
 
     public static ConsultarEstudiantesDomain toDomain(final ConsultarEstudiantesDTO dto) {

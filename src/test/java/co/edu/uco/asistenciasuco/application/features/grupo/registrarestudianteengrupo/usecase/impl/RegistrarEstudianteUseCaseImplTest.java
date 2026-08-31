@@ -1,16 +1,16 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.impl;
 
-import co.edu.uco.asistenciasuco.application.exception.ConflictException;
+import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.domain.RegistrarEstudianteDomain;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.entity.RegistrarEstudianteResultadoEntity;
-import co.edu.uco.asistenciasuco.application.secondaryports.GrupoRepositoryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.UsuarioRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.CrearUsuarioRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarEstudianteRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.CrearUsuarioRepositoryEntity;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.GrupoRepositoryEntity;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.RegistrarEstudianteRepositoryEntity;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.UsuarioIdentidadRepositoryEntity;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.CrearUsuarioRepositoryProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.GrupoRepositoryProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.RegistrarEstudianteRepositoryProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.UsuarioIdentidadRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import org.junit.jupiter.api.Test;
 
@@ -38,7 +38,7 @@ class RegistrarEstudianteUseCaseImplTest {
         final RegistrarEstudianteUseCaseImpl useCase = new RegistrarEstudianteUseCaseImpl(
                 grupoRepositoryPort(dto -> {
                     dtoCapturado.set(dto);
-                    return new RegistrarEstudianteRepositoryEntity("Estudiante registrado.");
+                    return new RegistrarEstudianteRepositoryProjection("Estudiante registrado.");
                 }),
                 usuarioRepositoryPortSinUsuarios(),
                 passwordEncoderPort
@@ -81,7 +81,7 @@ class RegistrarEstudianteUseCaseImplTest {
         final RegistrarEstudianteUseCaseImpl useCase = new RegistrarEstudianteUseCaseImpl(
                 grupoRepositoryPort(dto -> {
                     spEjecutado.set(true);
-                    return new RegistrarEstudianteRepositoryEntity("Estudiante registrado.");
+                    return new RegistrarEstudianteRepositoryProjection("Estudiante registrado.");
                 }),
                 usuarioRepositoryPort(usuarioCorreo, usuarioDocumento),
                 passwordEncoderPort
@@ -102,7 +102,7 @@ class RegistrarEstudianteUseCaseImplTest {
         final RegistrarEstudianteUseCaseImpl useCase = new RegistrarEstudianteUseCaseImpl(
                 grupoRepositoryPort(dto -> {
                     dtoCapturado.set(dto);
-                    return new RegistrarEstudianteRepositoryEntity("Estudiante registrado.");
+                    return new RegistrarEstudianteRepositoryProjection("Estudiante registrado.");
                 }),
                 usuarioRepositoryPort(usuario, usuario),
                 passwordEncoderPort
@@ -131,12 +131,12 @@ class RegistrarEstudianteUseCaseImplTest {
     private GrupoRepositoryPort grupoRepositoryPort(final RegistrarEstudianteExecutor executor) {
         return new GrupoRepositoryPort() {
             @Override
-            public RegistrarEstudianteRepositoryEntity registrarEstudianteEnGrupo(final RegistrarEstudianteRepositoryDTO dto) {
+            public RegistrarEstudianteRepositoryProjection registrarEstudianteEnGrupo(final RegistrarEstudianteRepositoryDTO dto) {
                 return executor.registrarEstudiante(dto);
             }
 
             @Override
-            public List<GrupoRepositoryEntity> consultarGrupos() {
+            public List<GrupoRepositoryProjection> consultarGrupos() {
                 return List.of();
             }
         };
@@ -149,21 +149,21 @@ class RegistrarEstudianteUseCaseImplTest {
     private UsuarioRepositoryPort usuarioRepositoryPort(final UUID usuarioPorCorreo, final UUID usuarioPorDocumento) {
         return new UsuarioRepositoryPort() {
             @Override
-            public CrearUsuarioRepositoryEntity crearUsuario(final CrearUsuarioRepositoryDTO dto) {
-                return new CrearUsuarioRepositoryEntity("ok");
+            public CrearUsuarioRepositoryProjection crearUsuario(final CrearUsuarioRepositoryDTO dto) {
+                return new CrearUsuarioRepositoryProjection("ok");
             }
 
             @Override
-            public Optional<UsuarioIdentidadRepositoryEntity> consultarUsuarioPorCorreo(final String correo) {
-                return Optional.ofNullable(usuarioPorCorreo).map(UsuarioIdentidadRepositoryEntity::new);
+            public Optional<UsuarioIdentidadRepositoryProjection> consultarUsuarioPorCorreo(final String correo) {
+                return Optional.ofNullable(usuarioPorCorreo).map(UsuarioIdentidadRepositoryProjection::new);
             }
 
             @Override
-            public Optional<UsuarioIdentidadRepositoryEntity> consultarUsuarioPorIdentificacion(
+            public Optional<UsuarioIdentidadRepositoryProjection> consultarUsuarioPorIdentificacion(
                     final UUID tipoIdentificacionId,
                     final Integer numeroIdentificacion
             ) {
-                return Optional.ofNullable(usuarioPorDocumento).map(UsuarioIdentidadRepositoryEntity::new);
+                return Optional.ofNullable(usuarioPorDocumento).map(UsuarioIdentidadRepositoryProjection::new);
             }
         };
     }
@@ -171,7 +171,7 @@ class RegistrarEstudianteUseCaseImplTest {
     @FunctionalInterface
     private interface RegistrarEstudianteExecutor {
 
-        RegistrarEstudianteRepositoryEntity registrarEstudiante(RegistrarEstudianteRepositoryDTO dto);
+        RegistrarEstudianteRepositoryProjection registrarEstudiante(RegistrarEstudianteRepositoryDTO dto);
     }
 
     private static final class FakePasswordEncoderPort implements PasswordEncoderPort {

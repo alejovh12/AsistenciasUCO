@@ -5,8 +5,7 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasiste
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.primaryports.mapper.RegistrarAsistenciaMapper;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.usecase.RegistrarAsistenciaUseCase;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.usecase.domain.RegistrarAsistenciaDomain;
-import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import java.util.Objects;
 
 /**
  * Interactor del puerto de entrada para registrar asistencia.
@@ -16,10 +15,7 @@ public final class RegistrarAsistenciaInteractor implements RegistrarAsistenciaI
     private final RegistrarAsistenciaUseCase useCase;
 
     public RegistrarAsistenciaInteractor(final RegistrarAsistenciaUseCase useCase) {
-        if (ObjectHelper.isNull(useCase)) {
-            throw new CrosscuttingException("El caso de uso RegistrarAsistenciaUseCase es obligatorio.");
-        }
-        this.useCase = useCase;
+        this.useCase = Objects.requireNonNull(useCase, "El caso de uso RegistrarAsistenciaUseCase es obligatorio.");
     }
 
     @Override

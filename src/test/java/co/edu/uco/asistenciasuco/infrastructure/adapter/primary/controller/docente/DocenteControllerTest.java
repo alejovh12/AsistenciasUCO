@@ -1,7 +1,8 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente;
 
-import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
-import co.edu.uco.asistenciasuco.application.exception.ResourceNotFoundException;
+
+import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.features.docente.asignardocenteagrupo.primaryports.AsignarDocenteAGrupoInputPort;
 import co.edu.uco.asistenciasuco.application.features.docente.asignardocenteagrupo.primaryports.dto.AsignarDocenteAGrupoResultadoDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignacionesacademicas.primaryports.ConsultarAsignacionesAcademicasDocenteInputPort;
@@ -12,7 +13,7 @@ import co.edu.uco.asistenciasuco.application.features.docente.consultardocentepo
 import co.edu.uco.asistenciasuco.application.features.docente.registrardocentedesdeusuario.primaryports.RegistrarDocenteDesdeUsuarioInputPort;
 import co.edu.uco.asistenciasuco.application.features.docente.registrardocentedesdeusuario.primaryports.dto.RegistrarDocenteDesdeUsuarioResultadoDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler;
-import co.edu.uco.asistenciasuco.infrastructure.correlation.CorrelationIdContext;
+import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -65,7 +66,7 @@ class DocenteControllerTest {
     @Test
     void consultar_docente_por_id_inexistente_responde_404_con_codigo_especifico() throws Exception {
         mockMvc(dto -> {
-            throw new ResourceNotFoundException(ErrorCode.ERR_DOCENTE_NO_EXISTE);
+            throw new ResourceNotFoundException(DocenteErrorCode.ERR_DOCENTE_NO_EXISTE);
         }).perform(post("/api/v1/docentes/consultas/id")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""

@@ -10,6 +10,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 class DomainShouldNotDependOnSpringTest {
 
     private static final String BASE_PACKAGE = "co.edu.uco.asistenciasuco";
+    private static final String DOMAIN_PACKAGE = "..application..domain..";
 
     @Test
     void usecase_domain_should_not_depend_on_spring() {
@@ -18,20 +19,20 @@ class DomainShouldNotDependOnSpringTest {
                 .importPackages(BASE_PACKAGE);
 
         noClasses()
-                .that().resideInAPackage("..usecase.domain..")
+                .that().resideInAPackage(DOMAIN_PACKAGE)
                 .should().dependOnClassesThat().resideInAnyPackage("org.springframework..")
                 .check(classes);
     }
 
     @Test
-    void usecase_domain_should_not_depend_on_jakarta_persistence() {
+    void usecase_domain_should_not_depend_on_jakarta_or_javax() {
         var classes = new ClassFileImporter()
                 .withImportOption(new ImportOption.DoNotIncludeTests())
                 .importPackages(BASE_PACKAGE);
 
         noClasses()
-                .that().resideInAPackage("..usecase.domain..")
-                .should().dependOnClassesThat().resideInAnyPackage("jakarta.persistence..")
+                .that().resideInAPackage(DOMAIN_PACKAGE)
+                .should().dependOnClassesThat().resideInAnyPackage("jakarta..", "javax..")
                 .check(classes);
     }
 

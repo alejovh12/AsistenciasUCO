@@ -110,7 +110,7 @@ class GrupoControllerTest {
                         .content(bodyValido()))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
-                .andExpect(jsonPath("$.message").value("La solicitud no es valida."));
+                .andExpect(jsonPath("$.message").value("No fue posible interpretar la solicitud. Revise el formato y el tipo de los campos enviados."));
     }
 
     @Test
@@ -123,7 +123,7 @@ class GrupoControllerTest {
                                   "correo":
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("La solicitud no es valida."))
+                .andExpect(jsonPath("$.message").value("No fue posible interpretar la solicitud. Revise el formato y el tipo de los campos enviados."))
                 .andExpect(jsonPath("$.message", not(containsString("password"))))
                 .andExpect(jsonPath("$.message", not(containsString("SQLException"))))
                 .andExpect(jsonPath("$.message", not(containsString("stacktrace"))));
@@ -144,10 +144,10 @@ class GrupoControllerTest {
                                   "segundoNombre": "Maria",
                                   "correo": "ana.perez@uco.edu.co",
                                   "password": "Clave123!"
-                                }
-                                """.formatted(TIPO_IDENTIFICACION)))
+                }
+                """.formatted(TIPO_IDENTIFICACION)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("La solicitud no es valida."));
+                .andExpect(jsonPath("$.message").value("No fue posible interpretar la solicitud. Revise el formato y el tipo de los campos enviados."));
     }
 
     @Test
@@ -157,7 +157,7 @@ class GrupoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(bodyValido().replace("ana.perez@uco.edu.co", "correo-invalido")))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("La solicitud no es valida."));
+                .andExpect(jsonPath("$.message").value("Hay campos con informacion invalida. Revise los datos enviados."));
     }
 
     @Test
@@ -177,7 +177,7 @@ class GrupoControllerTest {
                                 }
                                 """.formatted(TIPO_IDENTIFICACION)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("La solicitud no es valida."));
+                .andExpect(jsonPath("$.message").value("Hay campos con informacion invalida. Revise los datos enviados."));
     }
 
     private MockMvc mockMvc(

@@ -11,7 +11,6 @@ import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 public final class CerrarSesionMapper {
 
     private CerrarSesionMapper() {
-        throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
     }
 
     public static CerrarSesionDomain toDomain(final CerrarSesionDTO dto) {

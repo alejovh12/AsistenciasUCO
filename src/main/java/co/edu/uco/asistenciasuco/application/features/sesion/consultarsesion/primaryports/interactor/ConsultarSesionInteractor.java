@@ -7,8 +7,7 @@ import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.pri
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.usecase.ConsultarSesionUseCase;
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.usecase.domain.ConsultarSesionDomain;
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.usecase.entity.SesionConsultadaEntity;
-import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import java.util.Objects;
 
 /**
  * Interactor del puerto de entrada para consultar sesion.
@@ -18,10 +17,7 @@ public final class ConsultarSesionInteractor implements ConsultarSesionInputPort
     private final ConsultarSesionUseCase useCase;
 
     public ConsultarSesionInteractor(final ConsultarSesionUseCase useCase) {
-        if (ObjectHelper.isNull(useCase)) {
-            throw new CrosscuttingException("El caso de uso ConsultarSesionUseCase es obligatorio.");
-        }
-        this.useCase = useCase;
+        this.useCase = Objects.requireNonNull(useCase, "El caso de uso ConsultarSesionUseCase es obligatorio.");
     }
 
     @Override

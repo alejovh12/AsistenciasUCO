@@ -3,7 +3,7 @@ package co.edu.uco.asistenciasuco.application.features.asistencia.consultarasist
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.domain.ConsultarAsistenciasPorGrupoDomain;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.entity.AsistenciaConsultadaEntity;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarAsistenciasPorGrupoRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.AsistenciaRepositoryEntity;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.AsistenciaRepositoryProjection;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 
@@ -16,7 +16,6 @@ import java.util.List;
 public final class ConsultarAsistenciasPorGrupoRepositoryMapper {
 
     private ConsultarAsistenciasPorGrupoRepositoryMapper() {
-        throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
     }
 
     public static ConsultarAsistenciasPorGrupoRepositoryDTO toRepositoryDTO(
@@ -32,14 +31,14 @@ public final class ConsultarAsistenciasPorGrupoRepositoryMapper {
         );
     }
 
-    public static List<AsistenciaConsultadaEntity> toUseCaseEntities(final List<AsistenciaRepositoryEntity> entities) {
+    public static List<AsistenciaConsultadaEntity> toUseCaseEntities(final List<AsistenciaRepositoryProjection> entities) {
         if (ObjectHelper.isNull(entities)) {
             return List.of();
         }
 
         final List<AsistenciaConsultadaEntity> resultado = new ArrayList<>();
 
-        for (final AsistenciaRepositoryEntity entity : entities) {
+        for (final AsistenciaRepositoryProjection entity : entities) {
             resultado.add(new AsistenciaConsultadaEntity(
                     entity.getAsistencia(),
                     entity.getEstudiante(),

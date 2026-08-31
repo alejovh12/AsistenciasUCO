@@ -11,7 +11,6 @@ import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 public final class CrearSesionRepositoryMapper {
 
     private CrearSesionRepositoryMapper() {
-        throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
     }
 
     public static CrearSesionRepositoryDTO toRepositoryDTO(final CrearSesionDomain domain) {

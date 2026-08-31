@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.docente.consultardocentes.usecase.mapper;
 
 import co.edu.uco.asistenciasuco.application.features.docente.consultardocentes.usecase.entity.DocenteIdentidadEntity;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.DocenteIdentidadRepositoryEntity;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.DocenteIdentidadRepositoryProjection;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 
@@ -14,24 +14,23 @@ import java.util.List;
 public final class ConsultarDocentesRepositoryMapper {
 
     private ConsultarDocentesRepositoryMapper() {
-        throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
     }
 
     public static List<DocenteIdentidadEntity> toUseCaseEntities(
-            final List<DocenteIdentidadRepositoryEntity> entities
+            final List<DocenteIdentidadRepositoryProjection> entities
     ) {
         if (ObjectHelper.isNull(entities)) {
             return List.of();
         }
 
         final List<DocenteIdentidadEntity> resultado = new ArrayList<>();
-        for (final DocenteIdentidadRepositoryEntity entity : entities) {
+        for (final DocenteIdentidadRepositoryProjection entity : entities) {
             resultado.add(toUseCaseEntity(entity));
         }
         return resultado;
     }
 
-    public static DocenteIdentidadEntity toUseCaseEntity(final DocenteIdentidadRepositoryEntity entity) {
+    public static DocenteIdentidadEntity toUseCaseEntity(final DocenteIdentidadRepositoryProjection entity) {
         if (ObjectHelper.isNull(entity)) {
             throw new CrosscuttingException("La identidad del docente consultado es obligatoria.");
         }

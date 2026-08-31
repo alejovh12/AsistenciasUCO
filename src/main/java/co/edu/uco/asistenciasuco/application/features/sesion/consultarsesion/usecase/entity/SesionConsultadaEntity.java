@@ -1,7 +1,12 @@
 package co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.usecase.entity;
 
-import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
-import co.edu.uco.asistenciasuco.application.exception.ValidationException;
+
+
+
+import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorDefinition;
+import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
+import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
 
@@ -27,8 +32,8 @@ public final class SesionConsultadaEntity {
             final boolean cerrada,
             final String observacionCierre
     ) {
-        validarIdentificador(sesion, ErrorCode.ERR_SESION_REQUERIDA);
-        validarIdentificador(grupo, ErrorCode.ERR_GRUPO_REQUERIDO);
+        validarIdentificador(sesion, SesionErrorCode.ERR_SESION_REQUERIDA);
+        validarIdentificador(grupo, GrupoErrorCode.ERR_GRUPO_REQUERIDO);
 
         this.tema = validarTema(tema);
         this.descripcion = normalizarDescripcion(descripcion);
@@ -38,7 +43,7 @@ public final class SesionConsultadaEntity {
         this.grupo = grupo;
     }
 
-    private void validarIdentificador(final UUID valor, final ErrorCode code) {
+    private void validarIdentificador(final UUID valor, final ErrorDefinition code) {
         if (ObjectHelper.isNull(valor)) {
             throw new ValidationException(code);
         }
@@ -48,11 +53,11 @@ public final class SesionConsultadaEntity {
         final String temaNormalizado = TextHelper.trim(tema);
 
         if (TextHelper.isNullOrBlank(temaNormalizado)) {
-            throw new ValidationException(ErrorCode.ERR_TEMA_SESION_REQUERIDO);
+            throw new ValidationException(SesionErrorCode.ERR_TEMA_SESION_REQUERIDO);
         }
 
         if (!TextHelper.hasLengthBetween(temaNormalizado, 5, 100)) {
-            throw new ValidationException(ErrorCode.ERR_TEMA_SESION_LONGITUD_INVALIDA);
+            throw new ValidationException(SesionErrorCode.ERR_TEMA_SESION_LONGITUD_INVALIDA);
         }
 
         return temaNormalizado;
@@ -66,7 +71,7 @@ public final class SesionConsultadaEntity {
         }
 
         if (!TextHelper.hasLengthBetween(descripcionNormalizada, 10, 250)) {
-            throw new ValidationException(ErrorCode.ERR_DESCRIPCION_SESION_LONGITUD_INVALIDA);
+            throw new ValidationException(SesionErrorCode.ERR_DESCRIPCION_SESION_LONGITUD_INVALIDA);
         }
 
         return descripcionNormalizada;
@@ -80,7 +85,7 @@ public final class SesionConsultadaEntity {
         }
 
         if (!TextHelper.hasLengthBetween(observacionNormalizada, 5, 250)) {
-            throw new ValidationException(ErrorCode.ERR_OBSERVACION_CIERRE_LONGITUD_INVALIDA);
+            throw new ValidationException(SesionErrorCode.ERR_OBSERVACION_CIERRE_LONGITUD_INVALIDA);
         }
 
         return observacionNormalizada;

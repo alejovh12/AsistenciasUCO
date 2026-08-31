@@ -14,7 +14,6 @@ import java.util.List;
 public final class ConsultarGruposMapper {
 
     private ConsultarGruposMapper() {
-        throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
     }
 
     public static List<GrupoDTO> toDTOs(final List<GrupoEntity> entities) {

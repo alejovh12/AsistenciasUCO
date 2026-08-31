@@ -7,8 +7,7 @@ import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.prima
 import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.usecase.CrearUsuarioUseCase;
 import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.usecase.domain.CrearUsuarioDomain;
 import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.usecase.entity.CrearUsuarioResultadoEntity;
-import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import java.util.Objects;
 
 /**
  * Interactor del puerto de entrada para crear usuario.
@@ -18,10 +17,7 @@ public final class CrearUsuarioInteractor implements CrearUsuarioInputPort {
     private final CrearUsuarioUseCase useCase;
 
     public CrearUsuarioInteractor(final CrearUsuarioUseCase useCase) {
-        if (ObjectHelper.isNull(useCase)) {
-            throw new CrosscuttingException("El caso de uso CrearUsuarioUseCase es obligatorio.");
-        }
-        this.useCase = useCase;
+        this.useCase = Objects.requireNonNull(useCase, "El caso de uso CrearUsuarioUseCase es obligatorio.");
     }
 
     @Override

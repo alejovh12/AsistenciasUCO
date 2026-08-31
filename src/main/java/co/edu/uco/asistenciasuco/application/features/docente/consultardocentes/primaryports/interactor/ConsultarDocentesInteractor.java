@@ -4,10 +4,9 @@ import co.edu.uco.asistenciasuco.application.features.docente.consultardocentes.
 import co.edu.uco.asistenciasuco.application.features.docente.consultardocentes.primaryports.dto.DocenteIdentidadDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardocentes.primaryports.mapper.ConsultarDocentesMapper;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardocentes.usecase.ConsultarDocentesUseCase;
-import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Interactor del puerto de entrada para consultar docentes.
@@ -17,10 +16,7 @@ public final class ConsultarDocentesInteractor implements ConsultarDocentesInput
     private final ConsultarDocentesUseCase useCase;
 
     public ConsultarDocentesInteractor(final ConsultarDocentesUseCase useCase) {
-        if (ObjectHelper.isNull(useCase)) {
-            throw new CrosscuttingException("El caso de uso ConsultarDocentesUseCase es obligatorio.");
-        }
-        this.useCase = useCase;
+        this.useCase = Objects.requireNonNull(useCase, "El caso de uso ConsultarDocentesUseCase es obligatorio.");
     }
 
     @Override

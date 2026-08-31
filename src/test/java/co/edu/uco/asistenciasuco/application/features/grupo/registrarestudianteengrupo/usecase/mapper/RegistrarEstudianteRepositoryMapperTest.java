@@ -3,7 +3,7 @@ package co.edu.uco.asistenciasuco.application.features.grupo.registrarestudiante
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.domain.RegistrarEstudianteDomain;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.entity.RegistrarEstudianteResultadoEntity;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarEstudianteRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.RegistrarEstudianteRepositoryEntity;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.RegistrarEstudianteRepositoryProjection;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -34,7 +34,7 @@ class RegistrarEstudianteRepositoryMapperTest {
     @Test
     void toUseCaseEntity_mapea_mensaje_publico() {
         final RegistrarEstudianteResultadoEntity entity = RegistrarEstudianteRepositoryMapper.toUseCaseEntity(
-                new RegistrarEstudianteRepositoryEntity("Estudiante registrado.")
+                new RegistrarEstudianteRepositoryProjection("Estudiante registrado.")
         );
 
         assertTrue(entity.isExitoso());

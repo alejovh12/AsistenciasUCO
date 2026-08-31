@@ -7,10 +7,9 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasiste
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.ConsultarAsistenciasPorGrupoUseCase;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.domain.ConsultarAsistenciasPorGrupoDomain;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.entity.AsistenciaConsultadaEntity;
-import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Interactor del puerto de entrada para consultar asistencias por grupo.
@@ -20,10 +19,7 @@ public final class ConsultarAsistenciasPorGrupoInteractor implements ConsultarAs
     private final ConsultarAsistenciasPorGrupoUseCase useCase;
 
     public ConsultarAsistenciasPorGrupoInteractor(final ConsultarAsistenciasPorGrupoUseCase useCase) {
-        if (ObjectHelper.isNull(useCase)) {
-            throw new CrosscuttingException("El caso de uso ConsultarAsistenciasPorGrupoUseCase es obligatorio.");
-        }
-        this.useCase = useCase;
+        this.useCase = Objects.requireNonNull(useCase, "El caso de uso ConsultarAsistenciasPorGrupoUseCase es obligatorio.");
     }
 
     @Override

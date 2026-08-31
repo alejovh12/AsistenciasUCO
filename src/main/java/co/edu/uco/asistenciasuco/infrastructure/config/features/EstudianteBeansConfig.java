@@ -8,8 +8,8 @@ import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudi
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudiantes.primaryports.interactor.ConsultarEstudiantesInteractor;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudiantes.usecase.ConsultarEstudiantesUseCase;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudiantes.usecase.impl.ConsultarEstudiantesUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.secondaryports.EstudianteRepositoryPort;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.EstudianteRepositorySqlServerAdapter;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.EstudianteRepositoryPort;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.EstudianteRepositorySqlServerAdapter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;

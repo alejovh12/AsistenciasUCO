@@ -1,7 +1,8 @@
 package co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.domain;
 
-import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
-import co.edu.uco.asistenciasuco.application.exception.ValidationException;
+
+import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 
 import java.util.UUID;
@@ -26,7 +27,7 @@ public final class ConsultarAsistenciasPorGrupoDomain {
 
     private void validarGrupo(final UUID grupo) {
         if (ObjectHelper.isNull(grupo)) {
-            throw new ValidationException(ErrorCode.ERR_GRUPO_REQUERIDO);
+            throw new ValidationException(GrupoErrorCode.ERR_GRUPO_REQUERIDO);
         }
     }
 

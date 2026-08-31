@@ -1,15 +1,17 @@
 package co.edu.uco.asistenciasuco.application.features.docente.consultardocenteporid.usecase.impl;
 
-import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
-import co.edu.uco.asistenciasuco.application.exception.ResourceNotFoundException;
+
+import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardocentes.usecase.entity.DocenteIdentidadEntity;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardocentes.usecase.mapper.ConsultarDocentesRepositoryMapper;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardocenteporid.usecase.ConsultarDocentePorIdUseCase;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardocenteporid.usecase.domain.ConsultarDocentePorIdDomain;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardocenteporid.usecase.mapper.ConsultarDocentePorIdRepositoryMapper;
-import co.edu.uco.asistenciasuco.application.secondaryports.DocenteRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.DocenteRepositoryPort;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import java.util.Objects;
 
 /**
  * Implementacion del caso de uso consultar docente por ID.
@@ -19,10 +21,7 @@ public final class ConsultarDocentePorIdUseCaseImpl implements ConsultarDocenteP
     private final DocenteRepositoryPort docenteRepositoryPort;
 
     public ConsultarDocentePorIdUseCaseImpl(final DocenteRepositoryPort docenteRepositoryPort) {
-        if (ObjectHelper.isNull(docenteRepositoryPort)) {
-            throw new CrosscuttingException("El puerto de salida DocenteRepositoryPort es obligatorio.");
-        }
-        this.docenteRepositoryPort = docenteRepositoryPort;
+        this.docenteRepositoryPort = Objects.requireNonNull(docenteRepositoryPort, "El puerto de salida DocenteRepositoryPort es obligatorio.");
     }
 
     @Override
@@ -35,6 +34,6 @@ public final class ConsultarDocentePorIdUseCaseImpl implements ConsultarDocenteP
                         ConsultarDocentePorIdRepositoryMapper.toRepositoryDTO(domain)
                 )
                 .map(ConsultarDocentesRepositoryMapper::toUseCaseEntity)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ERR_DOCENTE_NO_EXISTE));
+                .orElseThrow(() -> new ResourceNotFoundException(DocenteErrorCode.ERR_DOCENTE_NO_EXISTE));
     }
 }

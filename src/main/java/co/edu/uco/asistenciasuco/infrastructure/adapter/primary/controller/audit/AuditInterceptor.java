@@ -1,18 +1,16 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.audit;
 
-import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
 import co.edu.uco.asistenciasuco.crosscutting.sanitization.SensitiveDataSanitizer;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.ClientIpResolver;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.RequestActorResolver;
-import co.edu.uco.asistenciasuco.infrastructure.audit.AuditEvent;
-import co.edu.uco.asistenciasuco.infrastructure.audit.AuditEventPublisher;
-import co.edu.uco.asistenciasuco.infrastructure.audit.AuditOutcome;
-import co.edu.uco.asistenciasuco.infrastructure.audit.AuditRequestAttributes;
-import co.edu.uco.asistenciasuco.infrastructure.audit.RequestActor;
-import co.edu.uco.asistenciasuco.infrastructure.correlation.CorrelationIdContext;
-import co.edu.uco.asistenciasuco.infrastructure.tracing.TraceContextSnapshot;
+import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditEvent;
+import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditEventPublisher;
+import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditOutcome;
+import co.edu.uco.asistenciasuco.infrastructure.observability.audit.RequestActor;
+import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
+import co.edu.uco.asistenciasuco.infrastructure.observability.tracing.TraceContextSnapshot;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.BeanWrapperImpl;
@@ -24,6 +22,7 @@ import org.springframework.web.servlet.HandlerMapping;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Objects;
 
 @Component
 public final class AuditInterceptor implements HandlerInterceptor {
@@ -37,18 +36,9 @@ public final class AuditInterceptor implements HandlerInterceptor {
             final ClientIpResolver clientIpResolver,
             final RequestActorResolver actorResolver
     ) {
-        if (ObjectHelper.isNull(auditEventPublisher)) {
-            throw new CrosscuttingException("El publicador de auditoria es obligatorio.");
-        }
-        if (ObjectHelper.isNull(clientIpResolver)) {
-            throw new CrosscuttingException("El resolvedor de IP de cliente es obligatorio.");
-        }
-        if (ObjectHelper.isNull(actorResolver)) {
-            throw new CrosscuttingException("El resolvedor de actor del request es obligatorio.");
-        }
-        this.auditEventPublisher = auditEventPublisher;
-        this.clientIpResolver = clientIpResolver;
-        this.actorResolver = actorResolver;
+        this.auditEventPublisher = Objects.requireNonNull(auditEventPublisher, "El publicador de auditoria es obligatorio.");
+        this.clientIpResolver = Objects.requireNonNull(clientIpResolver, "El resolvedor de IP de cliente es obligatorio.");
+        this.actorResolver = Objects.requireNonNull(actorResolver, "El resolvedor de actor del request es obligatorio.");
     }
 
     @Override

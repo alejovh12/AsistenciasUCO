@@ -1,6 +1,4 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.audit;
-
-import co.edu.uco.asistenciasuco.infrastructure.audit.AuditRequestAttributes;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;

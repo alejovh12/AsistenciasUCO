@@ -1,7 +1,8 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.domain;
 
-import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
-import co.edu.uco.asistenciasuco.application.exception.ValidationException;
+
+import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.usuario.domain.UsuarioRegistroDomain;
 
 import java.util.UUID;
@@ -40,10 +41,10 @@ public final class RegistrarEstudianteDomain {
 
     private UUID validarGrupo(final UUID grupoId) {
         if (grupoId == null) {
-            throw new ValidationException(ErrorCode.ERR_GRUPO_REQUERIDO);
+            throw new ValidationException(GrupoErrorCode.ERR_GRUPO_REQUERIDO);
         }
         if (new UUID(0L, 0L).equals(grupoId)) {
-            throw new ValidationException(ErrorCode.ERR_GRUPO_INVALIDO);
+            throw new ValidationException(GrupoErrorCode.ERR_GRUPO_INVALIDO);
         }
         return grupoId;
     }

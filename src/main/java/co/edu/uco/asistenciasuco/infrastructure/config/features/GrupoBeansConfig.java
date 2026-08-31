@@ -8,10 +8,10 @@ import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudiantee
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.primaryports.interactor.RegistrarEstudianteInteractor;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.RegistrarEstudianteUseCase;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.impl.RegistrarEstudianteUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.secondaryports.GrupoRepositoryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.UsuarioRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.GrupoRepositorySqlServerAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.GrupoRepositorySqlServerAdapter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;

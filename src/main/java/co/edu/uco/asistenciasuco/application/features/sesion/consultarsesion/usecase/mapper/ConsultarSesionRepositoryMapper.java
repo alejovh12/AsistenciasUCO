@@ -3,7 +3,7 @@ package co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.us
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.usecase.domain.ConsultarSesionDomain;
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.usecase.entity.SesionConsultadaEntity;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarSesionRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.SesionRepositoryEntity;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.SesionRepositoryProjection;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 
@@ -13,7 +13,6 @@ import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 public final class ConsultarSesionRepositoryMapper {
 
     private ConsultarSesionRepositoryMapper() {
-        throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
     }
 
     public static ConsultarSesionRepositoryDTO toRepositoryDTO(final ConsultarSesionDomain domain) {
@@ -24,7 +23,7 @@ public final class ConsultarSesionRepositoryMapper {
         return new ConsultarSesionRepositoryDTO(domain.getSesion());
     }
 
-    public static SesionConsultadaEntity toUseCaseEntity(final SesionRepositoryEntity entity) {
+    public static SesionConsultadaEntity toUseCaseEntity(final SesionRepositoryProjection entity) {
         if (ObjectHelper.isNull(entity)) {
             throw new CrosscuttingException("La entidad de sesion consultada es obligatoria.");
         }

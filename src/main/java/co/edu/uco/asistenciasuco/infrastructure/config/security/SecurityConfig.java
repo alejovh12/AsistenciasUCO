@@ -1,5 +1,8 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.security;
 
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.ApiAccessDeniedHandler;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.ApiAuthenticationEntryPoint;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.KeycloakGrantedAuthoritiesConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -116,12 +119,10 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         final CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of("http://localhost:4200", "http://127.0.0.1:4200"));
+        // CORS expone únicamente los métodos HTTP utilizados actualmente por la API: GET, POST y OPTIONS.
         configuration.setAllowedMethods(List.of(
                 HttpMethod.GET.name(),
                 HttpMethod.POST.name(),
-                HttpMethod.PUT.name(),
-                HttpMethod.PATCH.name(),
-                HttpMethod.DELETE.name(),
                 HttpMethod.OPTIONS.name()
         ));
         configuration.setAllowedHeaders(List.of(

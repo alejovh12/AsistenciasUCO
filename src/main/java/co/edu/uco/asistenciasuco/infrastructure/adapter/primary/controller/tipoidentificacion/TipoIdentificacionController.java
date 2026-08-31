@@ -2,14 +2,13 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.tipo
 
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.primaryports.ConsultarTiposIdentificacionInputPort;
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.primaryports.dto.TipoIdentificacionDTO;
-import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Adaptador primario REST para consulta del catalogo de tipos de identificacion.
@@ -23,12 +22,7 @@ public final class TipoIdentificacionController {
     public TipoIdentificacionController(
             final ConsultarTiposIdentificacionInputPort consultarTiposIdentificacionInputPort
     ) {
-        if (ObjectHelper.isNull(consultarTiposIdentificacionInputPort)) {
-            throw new CrosscuttingException(
-                    "El puerto de entrada ConsultarTiposIdentificacionInputPort es obligatorio."
-            );
-        }
-        this.consultarTiposIdentificacionInputPort = consultarTiposIdentificacionInputPort;
+        this.consultarTiposIdentificacionInputPort = Objects.requireNonNull(consultarTiposIdentificacionInputPort, "El puerto de entrada ConsultarTiposIdentificacionInputPort es obligatorio.");
     }
 
     @GetMapping

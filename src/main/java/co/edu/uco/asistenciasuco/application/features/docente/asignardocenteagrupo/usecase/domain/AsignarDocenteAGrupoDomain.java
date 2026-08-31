@@ -1,7 +1,12 @@
 package co.edu.uco.asistenciasuco.application.features.docente.asignardocenteagrupo.usecase.domain;
 
-import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
-import co.edu.uco.asistenciasuco.application.exception.ValidationException;
+
+
+
+import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorDefinition;
+import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
+import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -36,23 +41,23 @@ public final class AsignarDocenteAGrupoDomain {
     private static void validarDocente(final UUID docente) {
         validarIdentificador(
                 docente,
-                ErrorCode.ERR_DOCENTE_REQUERIDO,
-                ErrorCode.ERR_DOCENTE_INVALIDO
+                DocenteErrorCode.ERR_DOCENTE_REQUERIDO,
+                DocenteErrorCode.ERR_DOCENTE_INVALIDO
         );
     }
 
     private static void validarGrupo(final UUID grupo) {
         validarIdentificador(
                 grupo,
-                ErrorCode.ERR_GRUPO_REQUERIDO,
-                ErrorCode.ERR_GRUPO_INVALIDO
+                GrupoErrorCode.ERR_GRUPO_REQUERIDO,
+                GrupoErrorCode.ERR_GRUPO_INVALIDO
         );
     }
 
     private static void validarIdentificador(
             final UUID valor,
-            final ErrorCode codigoNull,
-            final ErrorCode codigoVacio
+            final ErrorDefinition codigoNull,
+            final ErrorDefinition codigoVacio
     ) {
         if (Objects.isNull(valor)) {
             throw new ValidationException(codigoNull);

@@ -3,7 +3,7 @@ package co.edu.uco.asistenciasuco.application.features.grupo.registrarestudiante
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.domain.RegistrarEstudianteDomain;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.entity.RegistrarEstudianteResultadoEntity;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarEstudianteRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.RegistrarEstudianteRepositoryEntity;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.RegistrarEstudianteRepositoryProjection;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 
@@ -13,7 +13,6 @@ import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 public final class RegistrarEstudianteRepositoryMapper {
 
     private RegistrarEstudianteRepositoryMapper() {
-        throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
     }
 
     public static RegistrarEstudianteRepositoryDTO toRepositoryDTO(final RegistrarEstudianteDomain domain) {
@@ -42,7 +41,7 @@ public final class RegistrarEstudianteRepositoryMapper {
     }
 
     public static RegistrarEstudianteResultadoEntity toUseCaseEntity(
-            final RegistrarEstudianteRepositoryEntity repositoryEntity
+            final RegistrarEstudianteRepositoryProjection repositoryEntity
     ) {
         if (ObjectHelper.isNull(repositoryEntity)) {
             throw new CrosscuttingException("El resultado de registrar estudiante en grupo es obligatorio.");

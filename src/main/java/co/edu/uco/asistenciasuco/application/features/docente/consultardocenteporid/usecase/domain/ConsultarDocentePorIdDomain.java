@@ -1,7 +1,8 @@
 package co.edu.uco.asistenciasuco.application.features.docente.consultardocenteporid.usecase.domain;
 
-import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
-import co.edu.uco.asistenciasuco.application.exception.ValidationException;
+
+import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -26,10 +27,10 @@ public final class ConsultarDocentePorIdDomain {
 
     private static void validarDocente(final UUID docente) {
         if (Objects.isNull(docente)) {
-            throw new ValidationException(ErrorCode.ERR_DOCENTE_REQUERIDO);
+            throw new ValidationException(DocenteErrorCode.ERR_DOCENTE_REQUERIDO);
         }
         if (EMPTY_UUID.equals(docente)) {
-            throw new ValidationException(ErrorCode.ERR_DOCENTE_INVALIDO);
+            throw new ValidationException(DocenteErrorCode.ERR_DOCENTE_INVALIDO);
         }
     }
 

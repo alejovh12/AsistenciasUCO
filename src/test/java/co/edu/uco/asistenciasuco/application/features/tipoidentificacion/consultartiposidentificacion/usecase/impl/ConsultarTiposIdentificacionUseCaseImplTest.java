@@ -1,8 +1,8 @@
 package co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.domain.TipoIdentificacionDomain;
-import co.edu.uco.asistenciasuco.application.secondaryports.TipoIdentificacionRepositoryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.TipoIdentificacionRepositoryEntity;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.TipoIdentificacionRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.TipoIdentificacionRepositoryProjection;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -18,17 +18,17 @@ class ConsultarTiposIdentificacionUseCaseImplTest {
     @Test
     void execute_transforma_los_resultados_del_repositorio() {
         final TipoIdentificacionRepositoryPort repositoryPort = () -> List.of(
-                new TipoIdentificacionRepositoryEntity(
+                new TipoIdentificacionRepositoryProjection(
                         UUID.fromString("13641bab-e3cd-485c-b275-47e7b731e18c"),
                         "CC",
                         "Cédula de ciudadanía"
                 ),
-                new TipoIdentificacionRepositoryEntity(
+                new TipoIdentificacionRepositoryProjection(
                         UUID.fromString("796a6c0f-f9fd-4327-a322-efd4d90bb81d"),
                         "PA",
                         "Pasaporte"
                 ),
-                new TipoIdentificacionRepositoryEntity(
+                new TipoIdentificacionRepositoryProjection(
                         UUID.fromString("67a3d514-ab1b-4ce7-b661-1a99ea18fd9d"),
                         "TI",
                         "Tarjeta de identidad"

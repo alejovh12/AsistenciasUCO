@@ -1,18 +1,16 @@
 package co.edu.uco.asistenciasuco.infrastructure.config;
 
-import co.edu.uco.asistenciasuco.application.secondaryports.DocenteRepositoryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.EstudianteRepositoryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.GrupoRepositoryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.TipoIdentificacionRepositoryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.UsuarioRepositoryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.AuthenticationRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.DocenteRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.EstudianteRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.TipoIdentificacionRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.DocenteRepositorySqlServerAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.EstudianteRepositorySqlServerAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.GrupoRepositorySqlServerAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.TipoIdentificacionRepositorySqlServerAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.UsuarioRepositorySqlServerAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.security.AuthenticationRepositorySqlServerAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.DocenteRepositorySqlServerAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.EstudianteRepositorySqlServerAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.GrupoRepositorySqlServerAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.TipoIdentificacionRepositorySqlServerAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.UsuarioRepositorySqlServerAdapter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.security.SpringPasswordEncoderAdapter;
 import co.edu.uco.asistenciasuco.infrastructure.config.features.DocenteBeansConfig;
 import co.edu.uco.asistenciasuco.infrastructure.config.features.EstudianteBeansConfig;
@@ -89,15 +87,5 @@ class FeaturesBeansConfigTest {
         final PasswordEncoderPort passwordEncoderPort = config.passwordEncoderPort();
 
         assertInstanceOf(SpringPasswordEncoderAdapter.class, passwordEncoderPort);
-    }
-
-    @Test
-    void authenticationRepositoryPort_usa_adapter_sqlserver_de_seguridad() {
-        final SecurityBeansConfig config = new SecurityBeansConfig();
-        final JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
-
-        final AuthenticationRepositoryPort repositoryPort = config.authenticationRepositoryPort(jdbcTemplate);
-
-        assertInstanceOf(AuthenticationRepositorySqlServerAdapter.class, repositoryPort);
     }
 }

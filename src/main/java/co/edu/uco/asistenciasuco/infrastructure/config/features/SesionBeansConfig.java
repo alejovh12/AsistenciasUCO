@@ -12,12 +12,14 @@ import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.primary
 import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.primaryports.interactor.CrearSesionInteractor;
 import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.usecase.CrearSesionUseCase;
 import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.usecase.impl.CrearSesionUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.secondaryports.SesionRepositoryPort;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.SesionRepositoryMockAdapter;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.SesionRepositoryMockAdapter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 @Configuration(proxyBeanMethods = false)
+@Profile("mock")
 public class SesionBeansConfig {
 
     @Bean

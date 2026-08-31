@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.docente;
 
-import co.edu.uco.asistenciasuco.application.exception.ConflictException;
-import co.edu.uco.asistenciasuco.application.exception.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
+import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.features.docente.asignardocenteagrupo.primaryports.dto.AsignarDocenteAGrupoDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.asignardocenteagrupo.primaryports.dto.AsignarDocenteAGrupoResultadoDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.asignardocenteagrupo.primaryports.interactor.AsignarDocenteAGrupoInteractor;
@@ -14,14 +14,14 @@ import co.edu.uco.asistenciasuco.application.features.docente.registrardocentede
 import co.edu.uco.asistenciasuco.application.features.docente.registrardocentedesdeusuario.primaryports.interactor.RegistrarDocenteDesdeUsuarioInteractor;
 import co.edu.uco.asistenciasuco.application.features.docente.registrardocentedesdeusuario.usecase.domain.RegistrarDocenteDesdeUsuarioDomain;
 import co.edu.uco.asistenciasuco.application.features.docente.registrardocentedesdeusuario.usecase.impl.RegistrarDocenteDesdeUsuarioUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.secondaryports.DocenteRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.DocenteRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.AsignarDocenteAGrupoRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarAsignacionesAcademicasDocenteRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarDocentePorIdRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarDocenteDesdeUsuarioRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.DocenteAsignacionAcademicaRepositoryEntity;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.DocenteIdentidadRepositoryEntity;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.DocenteOperacionRepositoryEntity;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.DocenteAsignacionAcademicaRepositoryProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.DocenteIdentidadRepositoryProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.DocenteOperacionRepositoryProjection;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
@@ -46,11 +46,11 @@ class DocenteOperacionesUseCaseTest {
         final AtomicReference<RegistrarDocenteDesdeUsuarioRepositoryDTO> dtoCapturado = new AtomicReference<>();
         final DocenteRepositoryPort port = new StubDocenteRepositoryPort() {
             @Override
-            public DocenteOperacionRepositoryEntity registrarDocenteDesdeUsuario(
+            public DocenteOperacionRepositoryProjection registrarDocenteDesdeUsuario(
                     final RegistrarDocenteDesdeUsuarioRepositoryDTO dto
             ) {
                 dtoCapturado.set(dto);
-                return new DocenteOperacionRepositoryEntity("Docente registrado.");
+                return new DocenteOperacionRepositoryProjection("Docente registrado.");
             }
         };
 
@@ -67,7 +67,7 @@ class DocenteOperacionesUseCaseTest {
     void registrar_docente_desde_usuario_propaga_error_funcional_del_repositorio() {
         final DocenteRepositoryPort port = new StubDocenteRepositoryPort() {
             @Override
-            public DocenteOperacionRepositoryEntity registrarDocenteDesdeUsuario(
+            public DocenteOperacionRepositoryProjection registrarDocenteDesdeUsuario(
                     final RegistrarDocenteDesdeUsuarioRepositoryDTO dto
             ) {
                 throw new ConflictException("El usuario ya es docente.");
@@ -90,9 +90,9 @@ class DocenteOperacionesUseCaseTest {
         final AtomicReference<AsignarDocenteAGrupoRepositoryDTO> dtoCapturado = new AtomicReference<>();
         final DocenteRepositoryPort port = new StubDocenteRepositoryPort() {
             @Override
-            public DocenteOperacionRepositoryEntity asignarDocenteAGrupo(final AsignarDocenteAGrupoRepositoryDTO dto) {
+            public DocenteOperacionRepositoryProjection asignarDocenteAGrupo(final AsignarDocenteAGrupoRepositoryDTO dto) {
                 dtoCapturado.set(dto);
-                return new DocenteOperacionRepositoryEntity("Docente asignado.");
+                return new DocenteOperacionRepositoryProjection("Docente asignado.");
             }
         };
 
@@ -110,7 +110,7 @@ class DocenteOperacionesUseCaseTest {
     void asignar_docente_a_grupo_propaga_error_funcional_del_repositorio() {
         final DocenteRepositoryPort port = new StubDocenteRepositoryPort() {
             @Override
-            public DocenteOperacionRepositoryEntity asignarDocenteAGrupo(final AsignarDocenteAGrupoRepositoryDTO dto) {
+            public DocenteOperacionRepositoryProjection asignarDocenteAGrupo(final AsignarDocenteAGrupoRepositoryDTO dto) {
                 throw new ConflictException("Existe cruce de horario.");
             }
         };
@@ -182,33 +182,33 @@ class DocenteOperacionesUseCaseTest {
     private abstract static class StubDocenteRepositoryPort implements DocenteRepositoryPort {
 
         @Override
-        public List<DocenteIdentidadRepositoryEntity> consultarDocentes() {
+        public List<DocenteIdentidadRepositoryProjection> consultarDocentes() {
             return List.of();
         }
 
         @Override
-        public Optional<DocenteIdentidadRepositoryEntity> consultarDocentePorId(
+        public Optional<DocenteIdentidadRepositoryProjection> consultarDocentePorId(
                 final ConsultarDocentePorIdRepositoryDTO dto
         ) {
             return Optional.empty();
         }
 
         @Override
-        public List<DocenteAsignacionAcademicaRepositoryEntity> consultarAsignacionesAcademicas(
+        public List<DocenteAsignacionAcademicaRepositoryProjection> consultarAsignacionesAcademicas(
                 final ConsultarAsignacionesAcademicasDocenteRepositoryDTO dto
         ) {
             return List.of();
         }
 
         @Override
-        public DocenteOperacionRepositoryEntity registrarDocenteDesdeUsuario(
+        public DocenteOperacionRepositoryProjection registrarDocenteDesdeUsuario(
                 final RegistrarDocenteDesdeUsuarioRepositoryDTO dto
         ) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public DocenteOperacionRepositoryEntity asignarDocenteAGrupo(final AsignarDocenteAGrupoRepositoryDTO dto) {
+        public DocenteOperacionRepositoryProjection asignarDocenteAGrupo(final AsignarDocenteAGrupoRepositoryDTO dto) {
             throw new UnsupportedOperationException();
         }
     }

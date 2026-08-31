@@ -1,10 +1,8 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter;
 
-import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 import co.edu.uco.asistenciasuco.crosscutting.sanitization.SensitiveDataSanitizer;
-import co.edu.uco.asistenciasuco.infrastructure.correlation.CorrelationIdContext;
-import co.edu.uco.asistenciasuco.infrastructure.tracing.TraceContextSnapshot;
+import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
+import co.edu.uco.asistenciasuco.infrastructure.observability.tracing.TraceContextSnapshot;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,23 +23,6 @@ public final class HttpRequestTraceFilter extends OncePerRequestFilter implement
     private static final String RESULT_SUCCESS = "SUCCESS";
     private static final String RESULT_CLIENT_ERROR = "CLIENT_ERROR";
     private static final String RESULT_SERVER_ERROR = "SERVER_ERROR";
-
-    private final ClientIpResolver clientIpResolver;
-    private final RequestActorResolver actorResolver;
-
-    public HttpRequestTraceFilter(
-            final ClientIpResolver clientIpResolver,
-            final RequestActorResolver actorResolver
-    ) {
-        if (ObjectHelper.isNull(clientIpResolver)) {
-            throw new CrosscuttingException("El resolvedor de IP de cliente es obligatorio.");
-        }
-        if (ObjectHelper.isNull(actorResolver)) {
-            throw new CrosscuttingException("El resolvedor de actor del request es obligatorio.");
-        }
-        this.clientIpResolver = clientIpResolver;
-        this.actorResolver = actorResolver;
-    }
 
     @Override
     protected void doFilterInternal(

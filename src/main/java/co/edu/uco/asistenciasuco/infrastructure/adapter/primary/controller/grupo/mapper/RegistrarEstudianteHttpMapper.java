@@ -1,10 +1,9 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo.mapper;
 
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.primaryports.dto.RegistrarEstudianteDTO;
-import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo.request.RegistrarEstudianteRequest;
 
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -13,16 +12,14 @@ import java.util.UUID;
 public final class RegistrarEstudianteHttpMapper {
 
     private RegistrarEstudianteHttpMapper() {
-        throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
     }
 
     public static RegistrarEstudianteDTO toApplicationDTO(
             final UUID grupoId,
             final RegistrarEstudianteRequest request
     ) {
-        if (ObjectHelper.isNull(request)) {
-            throw new CrosscuttingException("El request HTTP para registrar estudiante en grupo es obligatorio.");
-        }
+        Objects.requireNonNull(grupoId, "El identificador del grupo es obligatorio para realizar el mapping.");
+        Objects.requireNonNull(request, "El request HTTP para registrar estudiante en grupo es obligatorio.");
         return new RegistrarEstudianteDTO(
                 request.getTipoIdentificacionId(),
                 request.getNumeroIdentificacion(),

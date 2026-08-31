@@ -3,9 +3,10 @@ package co.edu.uco.asistenciasuco.application.features.sesion.cerrarsesion.useca
 import co.edu.uco.asistenciasuco.application.features.sesion.cerrarsesion.usecase.CerrarSesionUseCase;
 import co.edu.uco.asistenciasuco.application.features.sesion.cerrarsesion.usecase.domain.CerrarSesionDomain;
 import co.edu.uco.asistenciasuco.application.features.sesion.cerrarsesion.usecase.mapper.CerrarSesionRepositoryMapper;
-import co.edu.uco.asistenciasuco.application.secondaryports.SesionRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import java.util.Objects;
 
 /**
  * Implementacion del caso de uso cerrar sesion.
@@ -15,10 +16,7 @@ public final class CerrarSesionUseCaseImpl implements CerrarSesionUseCase {
     private final SesionRepositoryPort sesionRepositoryPort;
 
     public CerrarSesionUseCaseImpl(final SesionRepositoryPort sesionRepositoryPort) {
-        if (ObjectHelper.isNull(sesionRepositoryPort)) {
-            throw new CrosscuttingException("El puerto de salida SesionRepositoryPort es obligatorio.");
-        }
-        this.sesionRepositoryPort = sesionRepositoryPort;
+        this.sesionRepositoryPort = Objects.requireNonNull(sesionRepositoryPort, "El puerto de salida SesionRepositoryPort es obligatorio.");
     }
 
     @Override

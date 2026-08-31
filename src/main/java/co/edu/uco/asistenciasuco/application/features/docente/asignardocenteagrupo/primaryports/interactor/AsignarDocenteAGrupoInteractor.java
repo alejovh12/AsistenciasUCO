@@ -6,8 +6,7 @@ import co.edu.uco.asistenciasuco.application.features.docente.asignardocenteagru
 import co.edu.uco.asistenciasuco.application.features.docente.asignardocenteagrupo.primaryports.mapper.AsignarDocenteAGrupoMapper;
 import co.edu.uco.asistenciasuco.application.features.docente.asignardocenteagrupo.usecase.AsignarDocenteAGrupoUseCase;
 import co.edu.uco.asistenciasuco.application.features.docente.asignardocenteagrupo.usecase.domain.AsignarDocenteAGrupoDomain;
-import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import java.util.Objects;
 
 /**
  * Interactor del puerto de entrada para asignar docente a grupo.
@@ -17,10 +16,7 @@ public final class AsignarDocenteAGrupoInteractor implements AsignarDocenteAGrup
     private final AsignarDocenteAGrupoUseCase useCase;
 
     public AsignarDocenteAGrupoInteractor(final AsignarDocenteAGrupoUseCase useCase) {
-        if (ObjectHelper.isNull(useCase)) {
-            throw new CrosscuttingException("El caso de uso AsignarDocenteAGrupoUseCase es obligatorio.");
-        }
-        this.useCase = useCase;
+        this.useCase = Objects.requireNonNull(useCase, "El caso de uso AsignarDocenteAGrupoUseCase es obligatorio.");
     }
 
     @Override

@@ -1,54 +1,57 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error;
 
 import co.edu.uco.asistenciasuco.application.exception.ApplicationException;
-import co.edu.uco.asistenciasuco.application.exception.ConflictException;
-import co.edu.uco.asistenciasuco.application.exception.DatabaseOperationException;
-import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
-import co.edu.uco.asistenciasuco.application.exception.ErrorKind;
-import co.edu.uco.asistenciasuco.application.exception.ForbiddenException;
-import co.edu.uco.asistenciasuco.application.exception.InternalApplicationException;
-import co.edu.uco.asistenciasuco.application.exception.ResourceNotFoundException;
-import co.edu.uco.asistenciasuco.application.exception.ValidationException;
-import co.edu.uco.asistenciasuco.crosscutting.sanitization.SensitiveDataSanitizer;
+import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
+import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
+import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorDefinition;
+import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorKind;
+import co.edu.uco.asistenciasuco.crosscutting.exception.TechnicalException;
+import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.CommonErrorCode;
 import org.springframework.http.HttpStatus;
 
 final class ApiErrorCatalog {
 
     private ApiErrorCatalog() {
-        throw new IllegalStateException("No es permitido instanciar el catalogo de errores HTTP.");
     }
 
     static ApiErrorDescriptor fromApplicationException(final ApplicationException exception) {
-        final ErrorCode errorCode = exception.getErrorCode().orElse(null);
-        if (errorCode == null) {
-            return fromUnknownApplicationException(exception);
-        }
-        return from(errorCode);
+        return exception.getErrorDefinition()
+                .map(ApiErrorCatalog::from)
+                .orElseGet(() -> fromUnknownApplicationException(exception));
+    }
+
+    static ApiErrorDescriptor fromTechnicalException(final TechnicalException exception) {
+        return exception.getErrorDefinition()
+                .map(ApiErrorCatalog::from)
+                .orElseGet(ApiErrorCatalog::internalError);
     }
 
     static ApiErrorDescriptor invalidRequest() {
-        return from(ErrorCode.INVALID_REQUEST);
+        return from(CommonErrorCode.INVALID_REQUEST);
+    }
+
+    static ApiErrorDescriptor requestValidationError() {
+        return from(CommonErrorCode.VALIDATION_ERROR);
     }
 
     static ApiErrorDescriptor resourceNotFound() {
-        return from(ErrorCode.RESOURCE_NOT_FOUND);
+        return from(CommonErrorCode.RESOURCE_NOT_FOUND);
     }
 
     static ApiErrorDescriptor internalError() {
-        return from(ErrorCode.INTERNAL_ERROR);
+        return from(CommonErrorCode.INTERNAL_ERROR);
     }
 
-    static ApiErrorDescriptor from(final ErrorCode errorCode) {
-        return new ApiErrorDescriptor(errorCode.code(), errorCode.defaultMessage(), statusFor(errorCode.kind()));
+    static ApiErrorDescriptor from(final ErrorDefinition errorDefinition) {
+        return new ApiErrorDescriptor(errorDefinition.code(), errorDefinition.defaultMessage(), statusFor(errorDefinition.kind()));
     }
 
     private static ApiErrorDescriptor fromUnknownApplicationException(final ApplicationException exception) {
         final HttpStatus status = statusForExceptionType(exception);
-        final String message = SensitiveDataSanitizer.sanitizePublicMessage(
-                exception.getMessage(),
-                ErrorCode.BUSINESS_ERROR.defaultMessage()
-        );
-        return new ApiErrorDescriptor(exception.getCode(), message, status);
+        return new ApiErrorDescriptor(exception.getCode(), CommonErrorCode.BUSINESS_ERROR.defaultMessage(), status);
     }
 
     private static HttpStatus statusForExceptionType(final ApplicationException exception) {
@@ -64,10 +67,10 @@ final class ApiErrorCatalog {
         if (exception instanceof ForbiddenException) {
             return HttpStatus.FORBIDDEN;
         }
-        if (exception instanceof InternalApplicationException || exception instanceof DatabaseOperationException) {
+        if (exception instanceof InternalApplicationException) {
             return HttpStatus.INTERNAL_SERVER_ERROR;
         }
-        return HttpStatus.UNPROCESSABLE_ENTITY;
+        return HttpStatus.UNPROCESSABLE_CONTENT;
     }
 
     private static HttpStatus statusFor(final ErrorKind kind) {
@@ -78,7 +81,7 @@ final class ApiErrorCatalog {
             case FORBIDDEN -> HttpStatus.FORBIDDEN;
             case UNAUTHORIZED -> HttpStatus.UNAUTHORIZED;
             case TECHNICAL -> HttpStatus.INTERNAL_SERVER_ERROR;
-            case BUSINESS -> HttpStatus.UNPROCESSABLE_ENTITY;
+            case BUSINESS -> HttpStatus.UNPROCESSABLE_CONTENT;
         };
     }
 

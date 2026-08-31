@@ -3,9 +3,10 @@ package co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.usecas
 import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.usecase.CrearSesionUseCase;
 import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.usecase.domain.CrearSesionDomain;
 import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.usecase.mapper.CrearSesionRepositoryMapper;
-import co.edu.uco.asistenciasuco.application.secondaryports.SesionRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import java.util.Objects;
 
 /**
  * Implementacion del caso de uso crear sesion.
@@ -15,10 +16,7 @@ public final class CrearSesionUseCaseImpl implements CrearSesionUseCase {
     private final SesionRepositoryPort sesionRepositoryPort;
 
     public CrearSesionUseCaseImpl(final SesionRepositoryPort sesionRepositoryPort) {
-        if (ObjectHelper.isNull(sesionRepositoryPort)) {
-            throw new CrosscuttingException("El puerto de salida SesionRepositoryPort es obligatorio.");
-        }
-        this.sesionRepositoryPort = sesionRepositoryPort;
+        this.sesionRepositoryPort = Objects.requireNonNull(sesionRepositoryPort, "El puerto de salida SesionRepositoryPort es obligatorio.");
     }
 
     @Override

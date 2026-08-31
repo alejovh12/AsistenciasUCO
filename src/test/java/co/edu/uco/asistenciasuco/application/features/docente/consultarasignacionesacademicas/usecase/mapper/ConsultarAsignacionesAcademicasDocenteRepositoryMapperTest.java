@@ -3,7 +3,7 @@ package co.edu.uco.asistenciasuco.application.features.docente.consultarasignaci
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignacionesacademicas.usecase.domain.ConsultarAsignacionesAcademicasDocenteDomain;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignacionesacademicas.usecase.entity.DocenteAsignacionAcademicaEntity;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarAsignacionesAcademicasDocenteRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.DocenteAsignacionAcademicaRepositoryEntity;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.DocenteAsignacionAcademicaRepositoryProjection;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import org.junit.jupiter.api.Test;
 
@@ -58,8 +58,8 @@ class ConsultarAsignacionesAcademicasDocenteRepositoryMapperTest {
         );
     }
 
-    private DocenteAsignacionAcademicaRepositoryEntity entity(final Integer estadoDocente) {
-        return new DocenteAsignacionAcademicaRepositoryEntity(
+    private DocenteAsignacionAcademicaRepositoryProjection entity(final Integer estadoDocente) {
+        return new DocenteAsignacionAcademicaRepositoryProjection(
                 DOCENTE,
                 USUARIO,
                 123456789,

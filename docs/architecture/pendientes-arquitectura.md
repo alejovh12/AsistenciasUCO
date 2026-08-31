@@ -1,109 +1,29 @@
-# Foundation backend actual
+# Pendientes de arquitectura dependientes de DB
 
-## Arquitectura congelada
+Este documento registra deuda tecnica real que requiere cambios coordinados con base de datos, Stored Procedures, Views o contratos persistentes.
 
-```text
-Domain
-   ^
-Application
-   ^
-Infrastructure
-```
+## Identificacion
 
-El core actual es imperativo:
+`numeroIdentificacion` permanece temporalmente como `Integer` en Java y `INT` en SQL. La migracion futura debe llevarlo a `String` / `VARCHAR` para soportar correctamente identificadores y posibles tipos alfanumericos.
 
-- Spring MVC.
-- Virtual threads.
-- Spring JDBC.
-- SQL Server JDBC.
-- Stored Procedures para commands.
-- Views para queries.
+## Codigos de resultado DB
 
-WebFlux/Reactor quedan disponibles para adapters futuros de borde, como WebClient, WebSocket, SSE, eventos, notificaciones o streams. No se usan en domain/application ni en persistencia JDBC.
+Los Stored Procedures todavia no entregan un codigo de error estable y machine-readable. `DbFailureClassifier` puede necesitar clasificar algunos errores mediante mensajes hasta que los SP expongan algo equivalente a `codigoResultado`, ademas de `estadoResultado`, `mensajeUsuarioResultado` y `mensajeTecnicoResultado`.
 
-## Persistencia real default
+Caso conocido: `usp_validar_tipo_identificacion_exista_por_id_interno` puede producir `GEN_001` con informacion que Java no puede clasificar semanticamente y termina en `ERR_DB_UNCLASSIFIED`. Debe existir un codigo DB estable para ese caso.
 
-| Feature | Estado default | Contrato |
-|---------|----------------|----------|
-| TipoIdentificacion | Real SQL | `dbo.uv_tipo_identificacion` |
-| Usuario | Real SQL | `dbo.usp_sincronizar_usuario_interno` |
-| Docente | Real SQL | `dbo.uv_docente_identidad`, `dbo.uv_docente`, SPs internos confirmados |
-| Grupo | Real SQL | `dbo.uv_grupo`, `dbo.usp_registrar_estudiante_en_grupo_usuario_no_existente` |
-| Sesion | Sin mock productivo | Pendiente adapter SQL real |
-| Asistencia | Sin mock productivo | Pendiente adapter SQL real |
+## Sesion
 
-Sesion y Asistencia solo cargan mocks con `spring.profiles.active=mock`.
+La persistencia real de Sesion sigue pendiente. Actualmente Sesion opera solo bajo profile `mock`.
 
-## Correlation ID
+## Asistencia
 
-El correlation ID es infraestructura:
+La persistencia real de Asistencia sigue pendiente. Actualmente Asistencia opera solo bajo profile `mock`.
 
-```text
-HTTP -> CorrelationIdFilter -> CorrelationIdContext/MDC -> SQL Adapter -> @idCorrelacion
-```
+## Estados de asistencia
 
-No existe `IdCorrelacion` en application/domain. Los DTOs, mappers, use cases y repository DTOs de application no transportan correlacion tecnica. `ApiErrorResponse.correlationId` se llena desde infraestructura.
+Existe una incompatibilidad pendiente entre estados reales actuales `AN`, `SJC`, `EX` y logica/SP que historicamente esperaba `A`, `T`. Debe resolverse cuando se pueda modificar DB.
 
-## Registro de estudiante en grupo
+## Transactional Outbox
 
-Contrato HTTP:
-
-```http
-POST /api/v1/grupos/{grupoId}/estudiantes
-```
-
-El body no contiene `grupoId`; el controller une path + request mediante mapper de infraestructura hacia el input de application.
-
-Flujo:
-
-```text
-Controller
--> Primary Port
--> Interactor
--> Use Case
--> GrupoRepositoryPort
--> GrupoRepositorySqlServerAdapter
--> TransactionTemplate
--> dbo.usp_registrar_estudiante_en_grupo_usuario_no_existente
-```
-
-El typo historico `grupoEstaHablitado` solo vive en el adapter SQL y se publica en Java como `grupoHabilitado`.
-
-## Excepciones
-
-El flujo objetivo es:
-
-```text
-SQL Adapter -> ApplicationException -> GlobalExceptionHandler
-```
-
-Los use cases no interpretan `estadoResultado`, `mensajeUsuarioResultado`, `mensajeTecnicoResultado`, SQL, JDBC ni Stored Procedures.
-
-`GlobalExceptionHandler` es el unico punto que traduce excepciones semanticas a HTTP. Los 500 usan mensaje seguro y no exponen mensajes tecnicos.
-
-## Contrato DB de errores
-
-El contrato real confirmado para SPs es:
-
-```text
-estadoResultado
-mensajeUsuarioResultado
-mensajeTecnicoResultado
-```
-
-No existe `codigoResultado`. La clasificacion por mensajes conocidos vive solo en `DbFailureClassifier`, dentro de infraestructura, y convierte fallos SQL a codigos internos `ERR_*`.
-
-## Security Debt - Alta Prioridad
-
-El contrato inspeccionado define `dbo.Usuario.password` como `nvarchar(500) NOT NULL`; no hay evidencia suficiente de hashing robusto en la frontera DB/backend actual.
-
-No se corrige unilateralmente en esta foundation. Requiere coordinacion:
-
-- Backend.
-- DB.
-- Autenticacion.
-
-## Pendientes funcionales
-
-- Implementar Sesion SQL real en tarea separada.
-- Implementar Asistencia SQL real en tarea separada.
+Transactional Outbox puede requerir nueva estructura DB. Queda documentado como evolucion dependiente de DB y no se implementa todavia.

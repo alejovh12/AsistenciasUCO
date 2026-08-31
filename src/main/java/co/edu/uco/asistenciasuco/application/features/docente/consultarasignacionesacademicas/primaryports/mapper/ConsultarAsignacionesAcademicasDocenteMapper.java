@@ -16,7 +16,6 @@ import java.util.List;
 public final class ConsultarAsignacionesAcademicasDocenteMapper {
 
     private ConsultarAsignacionesAcademicasDocenteMapper() {
-        throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
     }
 
     public static ConsultarAsignacionesAcademicasDocenteDomain toDomain(

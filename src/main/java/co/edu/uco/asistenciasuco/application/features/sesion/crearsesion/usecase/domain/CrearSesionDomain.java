@@ -1,7 +1,10 @@
 package co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.usecase.domain;
 
-import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
-import co.edu.uco.asistenciasuco.application.exception.ValidationException;
+
+
+import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
+import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
 
@@ -30,7 +33,7 @@ public final class CrearSesionDomain {
 
     private void validarGrupo(final UUID grupo) {
         if (ObjectHelper.isNull(grupo)) {
-            throw new ValidationException(ErrorCode.ERR_GRUPO_REQUERIDO);
+            throw new ValidationException(GrupoErrorCode.ERR_GRUPO_REQUERIDO);
         }
     }
 
@@ -38,11 +41,11 @@ public final class CrearSesionDomain {
         final String temaNormalizado = TextHelper.trim(tema);
 
         if (TextHelper.isNullOrBlank(temaNormalizado)) {
-            throw new ValidationException(ErrorCode.ERR_TEMA_SESION_REQUERIDO);
+            throw new ValidationException(SesionErrorCode.ERR_TEMA_SESION_REQUERIDO);
         }
 
         if (!TextHelper.hasLengthBetween(temaNormalizado, 5, 100)) {
-            throw new ValidationException(ErrorCode.ERR_TEMA_SESION_LONGITUD_INVALIDA);
+            throw new ValidationException(SesionErrorCode.ERR_TEMA_SESION_LONGITUD_INVALIDA);
         }
 
         return temaNormalizado;
@@ -56,7 +59,7 @@ public final class CrearSesionDomain {
         }
 
         if (!TextHelper.hasLengthBetween(descripcionNormalizada, 10, 250)) {
-            throw new ValidationException(ErrorCode.ERR_DESCRIPCION_SESION_LONGITUD_INVALIDA);
+            throw new ValidationException(SesionErrorCode.ERR_DESCRIPCION_SESION_LONGITUD_INVALIDA);
         }
 
         return descripcionNormalizada;

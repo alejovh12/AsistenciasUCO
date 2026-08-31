@@ -3,7 +3,7 @@ package co.edu.uco.asistenciasuco.application.features.docente.asignardocenteagr
 import co.edu.uco.asistenciasuco.application.features.docente.asignardocenteagrupo.usecase.domain.AsignarDocenteAGrupoDomain;
 import co.edu.uco.asistenciasuco.application.features.docente.asignardocenteagrupo.usecase.entity.AsignarDocenteAGrupoResultadoEntity;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.AsignarDocenteAGrupoRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.DocenteOperacionRepositoryEntity;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.DocenteOperacionRepositoryProjection;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 
@@ -13,7 +13,6 @@ import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 public final class AsignarDocenteAGrupoRepositoryMapper {
 
     private AsignarDocenteAGrupoRepositoryMapper() {
-        throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
     }
 
     public static AsignarDocenteAGrupoRepositoryDTO toRepositoryDTO(final AsignarDocenteAGrupoDomain domain) {
@@ -28,7 +27,7 @@ public final class AsignarDocenteAGrupoRepositoryMapper {
     }
 
     public static AsignarDocenteAGrupoResultadoEntity toUseCaseEntity(
-            final DocenteOperacionRepositoryEntity repositoryEntity,
+            final DocenteOperacionRepositoryProjection repositoryEntity,
             final AsignarDocenteAGrupoDomain domain
     ) {
         if (ObjectHelper.isNull(repositoryEntity)) {

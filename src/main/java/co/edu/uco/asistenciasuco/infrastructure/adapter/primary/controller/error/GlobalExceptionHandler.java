@@ -1,13 +1,13 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error;
 
 import co.edu.uco.asistenciasuco.application.exception.ApplicationException;
-import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
+import co.edu.uco.asistenciasuco.crosscutting.exception.TechnicalException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
 import co.edu.uco.asistenciasuco.crosscutting.sanitization.SensitiveDataSanitizer;
-import co.edu.uco.asistenciasuco.infrastructure.audit.AuditRequestAttributes;
-import co.edu.uco.asistenciasuco.infrastructure.correlation.CorrelationIdContext;
+import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationIssue;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.audit.AuditRequestAttributes;
+import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.TypeMismatchException;
@@ -25,21 +25,58 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @RestControllerAdvice
 public final class GlobalExceptionHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiErrorResponse> handleUnreadableMessage(
+            final HttpMessageNotReadableException exception,
+            final HttpServletRequest request
+    ) {
+        final ApiErrorDescriptor descriptor = ApiErrorCatalog.invalidRequest();
+        final Optional<ResolvedInputError> resolvedError = JacksonInputErrorResolver.resolve(exception);
+        logFrameworkBadRequest(descriptor, exception, request, resolvedError.map(ResolvedInputError::field).stream().toList());
+        return resolvedError
+                .map(error -> buildResponse(descriptor, request, List.of(toFieldError(error))))
+                .orElseGet(() -> buildResponse(descriptor, request));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiErrorResponse> handleMethodArgumentTypeMismatch(
+            final MethodArgumentTypeMismatchException exception,
+            final HttpServletRequest request
+    ) {
+        final ApiErrorDescriptor descriptor = ApiErrorCatalog.invalidRequest();
+        logFrameworkBadRequest(descriptor, exception, request, List.of(exception.getName()));
+        return buildResponse(descriptor, request, resolveTypeMismatchFieldError(exception.getName(), exception.getRequiredType()));
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiErrorResponse> handleMissingRequestParameter(
+            final MissingServletRequestParameterException exception,
+            final HttpServletRequest request
+    ) {
+        final ApiErrorDescriptor descriptor = ApiErrorCatalog.requestValidationError();
+        final String field = exception.getParameterName();
+        logFrameworkBadRequest(descriptor, exception, request, List.of(field));
+        return buildResponse(descriptor, request, List.of(new ApiFieldError(
+                field,
+                ApiFieldErrorCode.FIELD_REQUIRED.name(),
+                "El parametro '" + field + "' es obligatorio."
+        )));
+    }
+
     @ExceptionHandler({
-            HttpMessageNotReadableException.class,
-            MethodArgumentTypeMismatchException.class,
             TypeMismatchException.class,
             MethodArgumentNotValidException.class,
             HandlerMethodValidationException.class,
-            ConstraintViolationException.class,
-            BindException.class,
-            MissingServletRequestParameterException.class
+            BindException.class
     })
     public ResponseEntity<ApiErrorResponse> handleFrameworkBadRequest(
             final Exception exception,
@@ -48,6 +85,20 @@ public final class GlobalExceptionHandler {
         final ApiErrorDescriptor descriptor = ApiErrorCatalog.invalidRequest();
         logFrameworkBadRequest(descriptor, exception, request);
         return buildResponse(descriptor, request);
+    }
+
+    @ExceptionHandler(RequestValidationException.class)
+    public ResponseEntity<ApiErrorResponse> handleRequestValidation(
+            final RequestValidationException exception,
+            final HttpServletRequest request
+    ) {
+        final ApiErrorDescriptor descriptor = ApiErrorCatalog.requestValidationError();
+        logRequestValidation(descriptor, exception, request);
+        return buildResponse(
+                descriptor,
+                request,
+                exception.getValidationResult().issues().stream().map(ApiFieldErrorMapper::from).toList()
+        );
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
@@ -74,12 +125,12 @@ public final class GlobalExceptionHandler {
         return buildResponse(descriptor, request);
     }
 
-    @ExceptionHandler(CrosscuttingException.class)
-    public ResponseEntity<ApiErrorResponse> handleCrosscutting(
-            final CrosscuttingException exception,
+    @ExceptionHandler(TechnicalException.class)
+    public ResponseEntity<ApiErrorResponse> handleTechnical(
+            final TechnicalException exception,
             final HttpServletRequest request
     ) {
-        final ApiErrorDescriptor descriptor = ApiErrorCatalog.internalError();
+        final ApiErrorDescriptor descriptor = ApiErrorCatalog.fromTechnicalException(exception);
         logInternal(descriptor, exception, request);
         return buildResponse(descriptor, request);
     }
@@ -95,6 +146,14 @@ public final class GlobalExceptionHandler {
     }
 
     private ResponseEntity<ApiErrorResponse> buildResponse(final ApiErrorDescriptor descriptor, final HttpServletRequest request) {
+        return buildResponse(descriptor, request, List.of());
+    }
+
+    private ResponseEntity<ApiErrorResponse> buildResponse(
+            final ApiErrorDescriptor descriptor,
+            final HttpServletRequest request,
+            final List<ApiFieldError> details
+    ) {
         AuditRequestAttributes.storeErrorCode(request, descriptor.code());
         return ResponseEntity.status(descriptor.status()).body(new ApiErrorResponse(
                 OffsetDateTime.now(),
@@ -103,7 +162,8 @@ public final class GlobalExceptionHandler {
                 descriptor.code(),
                 TextHelper.isNullOrBlank(descriptor.message()) ? descriptor.status().getReasonPhrase() : descriptor.message(),
                 safePath(request),
-                CorrelationIdContext.getAsString()
+                CorrelationIdContext.getAsString(),
+                details == null ? List.of() : details
         ));
     }
 
@@ -113,12 +173,33 @@ public final class GlobalExceptionHandler {
             final HttpServletRequest request
     ) {
         LOGGER.warn(
-                "Handled application exception. status={}, code={}, path={}, correlationId={}, message={}",
+                "Handled application exception. status={}, code={}, path={}, correlationId={}",
+                descriptor.status().value(),
+                descriptor.code(),
+                safePath(request),
+                CorrelationIdContext.getAsString()
+        );
+    }
+
+    private void logRequestValidation(
+            final ApiErrorDescriptor descriptor,
+            final RequestValidationException exception,
+            final HttpServletRequest request
+    ) {
+        final List<String> validationFields = exception.getValidationResult()
+                .issues()
+                .stream()
+                .map(ValidationIssue::field)
+                .distinct()
+                .sorted()
+                .toList();
+        LOGGER.warn(
+                "Handled request validation. status={}, code={}, path={}, correlationId={}, validationFields={}",
                 descriptor.status().value(),
                 descriptor.code(),
                 safePath(request),
                 CorrelationIdContext.getAsString(),
-                SensitiveDataSanitizer.sanitizeForLog(exception.getMessage())
+                validationFields
         );
     }
 
@@ -127,6 +208,26 @@ public final class GlobalExceptionHandler {
             final Exception exception,
             final HttpServletRequest request
     ) {
+        logFrameworkBadRequest(descriptor, exception, request, List.of());
+    }
+
+    private void logFrameworkBadRequest(
+            final ApiErrorDescriptor descriptor,
+            final Exception exception,
+            final HttpServletRequest request,
+            final List<String> validationFields
+    ) {
+        if (validationFields != null && !validationFields.isEmpty()) {
+            LOGGER.warn(
+                    "Handled invalid request. status={}, code={}, path={}, correlationId={}, validationFields={}",
+                    descriptor.status().value(),
+                    descriptor.code(),
+                    safePath(request),
+                    CorrelationIdContext.getAsString(),
+                    validationFields
+            );
+            return;
+        }
         LOGGER.warn(
                 "Handled invalid request. status={}, code={}, path={}, correlationId={}",
                 descriptor.status().value(),
@@ -134,6 +235,39 @@ public final class GlobalExceptionHandler {
                 safePath(request),
                 CorrelationIdContext.getAsString()
         );
+    }
+
+    private List<ApiFieldError> resolveTypeMismatchFieldError(final String field, final Class<?> requiredType) {
+        if (requiredType == null) {
+            return List.of();
+        }
+        if (UUID.class.equals(requiredType)) {
+            return List.of(new ApiFieldError(
+                    field,
+                    ApiFieldErrorCode.FIELD_INVALID_UUID.name(),
+                    "El identificador '" + field + "' debe tener un formato UUID valido."
+            ));
+        }
+        if (Integer.class.equals(requiredType) || int.class.equals(requiredType)
+                || Long.class.equals(requiredType) || long.class.equals(requiredType)) {
+            return List.of(new ApiFieldError(
+                    field,
+                    ApiFieldErrorCode.FIELD_INVALID_TYPE.name(),
+                    "El campo '" + field + "' debe contener un valor numerico valido."
+            ));
+        }
+        if (Boolean.class.equals(requiredType) || boolean.class.equals(requiredType)) {
+            return List.of(new ApiFieldError(
+                    field,
+                    ApiFieldErrorCode.FIELD_INVALID_TYPE.name(),
+                    "El campo '" + field + "' debe contener true o false."
+            ));
+        }
+        return List.of();
+    }
+
+    private ApiFieldError toFieldError(final ResolvedInputError error) {
+        return new ApiFieldError(error.field(), error.code().name(), error.message());
     }
 
     private void logFrameworkNotFound(

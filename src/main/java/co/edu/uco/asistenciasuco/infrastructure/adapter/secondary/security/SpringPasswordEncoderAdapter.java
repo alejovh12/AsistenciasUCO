@@ -1,10 +1,10 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.security;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
-import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.Objects;
 
 /**
  * Adaptador de Spring Security Crypto para codificar passwords.
@@ -18,10 +18,10 @@ public final class SpringPasswordEncoderAdapter implements PasswordEncoderPort {
     }
 
     SpringPasswordEncoderAdapter(final PasswordEncoder passwordEncoder) {
-        if (ObjectHelper.isNull(passwordEncoder)) {
-            throw new CrosscuttingException("El PasswordEncoder de Spring es obligatorio.");
-        }
-        this.passwordEncoder = passwordEncoder;
+        this.passwordEncoder = Objects.requireNonNull(
+                passwordEncoder,
+                "El PasswordEncoder de Spring es obligatorio."
+        );
     }
 
     @Override

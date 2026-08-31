@@ -4,8 +4,8 @@ import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudi
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudiantes.usecase.entity.EstudiantePaginaEntity;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudiantes.usecase.entity.EstudianteResumenEntity;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarEstudiantesRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.EstudiantePaginaRepositoryEntity;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.EstudianteResumenRepositoryEntity;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.EstudiantePaginaRepositoryProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.EstudianteResumenRepositoryProjection;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 
@@ -14,7 +14,6 @@ import java.util.List;
 public final class ConsultarEstudiantesRepositoryMapper {
 
     private ConsultarEstudiantesRepositoryMapper() {
-        throw new CrosscuttingException("No es permitido instanciar un mapper de estudiantes.");
     }
 
     public static ConsultarEstudiantesRepositoryDTO toRepositoryDTO(final ConsultarEstudiantesDomain domain) {
@@ -36,7 +35,7 @@ public final class ConsultarEstudiantesRepositoryMapper {
         );
     }
 
-    public static EstudiantePaginaEntity toUseCaseEntity(final EstudiantePaginaRepositoryEntity entity) {
+    public static EstudiantePaginaEntity toUseCaseEntity(final EstudiantePaginaRepositoryProjection entity) {
         if (ObjectHelper.isNull(entity)) {
             throw new CrosscuttingException("La pagina de estudiantes consultada es obligatoria.");
         }
@@ -49,14 +48,14 @@ public final class ConsultarEstudiantesRepositoryMapper {
         );
     }
 
-    static List<EstudianteResumenEntity> toUseCaseEntities(final List<EstudianteResumenRepositoryEntity> entities) {
+    static List<EstudianteResumenEntity> toUseCaseEntities(final List<EstudianteResumenRepositoryProjection> entities) {
         if (ObjectHelper.isNull(entities)) {
             return List.of();
         }
         return entities.stream().map(ConsultarEstudiantesRepositoryMapper::toUseCaseEntity).toList();
     }
 
-    public static EstudianteResumenEntity toUseCaseEntity(final EstudianteResumenRepositoryEntity entity) {
+    public static EstudianteResumenEntity toUseCaseEntity(final EstudianteResumenRepositoryProjection entity) {
         if (ObjectHelper.isNull(entity)) {
             throw new CrosscuttingException("El estudiante consultado es obligatorio.");
         }

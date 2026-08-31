@@ -1,11 +1,5 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo.request;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
-
 import java.util.UUID;
 
 /**
@@ -13,34 +7,20 @@ import java.util.UUID;
  */
 public final class RegistrarEstudianteRequest {
 
-    @NotNull
     private UUID tipoIdentificacionId;
 
-    @NotNull
-    @Positive
     private Integer numeroIdentificacion;
 
-    @NotBlank
-    @Size(max = 50)
     private String primerApellido;
 
-    @Size(max = 50)
     private String segundoApellido;
 
-    @NotBlank
-    @Size(max = 50)
     private String primerNombre;
 
-    @Size(max = 50)
     private String segundoNombre;
 
-    @NotBlank
-    @Email
-    @Size(max = 100)
     private String correo;
 
-    @NotBlank
-    @Size(max = 255)
     private String password;
 
     public UUID getTipoIdentificacionId() {

@@ -16,7 +16,6 @@ import java.util.List;
 public final class ConsultarAsistenciasPorGrupoMapper {
 
     private ConsultarAsistenciasPorGrupoMapper() {
-        throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
     }
 
     public static ConsultarAsistenciasPorGrupoDomain toDomain(final ConsultarAsistenciasPorGrupoDTO dto) {

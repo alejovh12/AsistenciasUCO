@@ -1,6 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.tipoidentificacion.domain;
 
-import co.edu.uco.asistenciasuco.application.exception.ValidationException;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Modifier;

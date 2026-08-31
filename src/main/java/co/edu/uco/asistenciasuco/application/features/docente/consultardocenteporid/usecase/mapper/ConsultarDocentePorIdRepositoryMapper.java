@@ -11,7 +11,6 @@ import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 public final class ConsultarDocentePorIdRepositoryMapper {
 
     private ConsultarDocentePorIdRepositoryMapper() {
-        throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
     }
 
     public static ConsultarDocentePorIdRepositoryDTO toRepositoryDTO(final ConsultarDocentePorIdDomain domain) {

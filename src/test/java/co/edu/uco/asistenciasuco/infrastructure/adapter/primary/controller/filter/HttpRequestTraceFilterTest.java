@@ -1,6 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter;
 
-import co.edu.uco.asistenciasuco.infrastructure.tracing.TraceContextSnapshot;
+import co.edu.uco.asistenciasuco.infrastructure.observability.tracing.TraceContextSnapshot;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import jakarta.servlet.ServletException;
@@ -25,10 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class HttpRequestTraceFilterTest {
 
-    private final HttpRequestTraceFilter filter = new HttpRequestTraceFilter(
-            new ClientIpResolver(),
-            new RequestActorResolver()
-    );
+    private final HttpRequestTraceFilter filter = new HttpRequestTraceFilter();
 
     @Test
     void doFilter_registra_ciclo_y_limpia_trace_mdc() throws Exception {

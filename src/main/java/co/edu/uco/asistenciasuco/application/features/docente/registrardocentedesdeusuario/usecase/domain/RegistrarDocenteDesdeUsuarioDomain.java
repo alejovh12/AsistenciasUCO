@@ -1,7 +1,8 @@
 package co.edu.uco.asistenciasuco.application.features.docente.registrardocentedesdeusuario.usecase.domain;
 
-import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
-import co.edu.uco.asistenciasuco.application.exception.ValidationException;
+
+import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -26,10 +27,10 @@ public final class RegistrarDocenteDesdeUsuarioDomain {
 
     private static void validarUsuario(final UUID usuario) {
         if (Objects.isNull(usuario)) {
-            throw new ValidationException(ErrorCode.ERR_USUARIO_REQUERIDO);
+            throw new ValidationException(UsuarioErrorCode.ERR_USUARIO_REQUERIDO);
         }
         if (EMPTY_UUID.equals(usuario)) {
-            throw new ValidationException(ErrorCode.ERR_USUARIO_INVALIDO);
+            throw new ValidationException(UsuarioErrorCode.ERR_USUARIO_INVALIDO);
         }
     }
 

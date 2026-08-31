@@ -4,9 +4,9 @@ import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.prima
 import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.primaryports.interactor.CrearUsuarioInteractor;
 import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.usecase.CrearUsuarioUseCase;
 import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.usecase.impl.CrearUsuarioUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.secondaryports.UsuarioRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.UsuarioRepositorySqlServerAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.UsuarioRepositorySqlServerAdapter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;

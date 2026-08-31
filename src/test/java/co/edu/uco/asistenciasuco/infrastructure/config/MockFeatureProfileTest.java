@@ -1,9 +1,9 @@
 package co.edu.uco.asistenciasuco.infrastructure.config;
 
-import co.edu.uco.asistenciasuco.application.secondaryports.AsistenciaRepositoryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.SesionRepositoryPort;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.AsistenciaRepositoryMockAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.SesionRepositoryMockAdapter;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.AsistenciaRepositoryMockAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.SesionRepositoryMockAdapter;
 import co.edu.uco.asistenciasuco.infrastructure.config.features.AsistenciaBeansConfig;
 import co.edu.uco.asistenciasuco.infrastructure.config.features.SesionBeansConfig;
 import org.junit.jupiter.api.Test;

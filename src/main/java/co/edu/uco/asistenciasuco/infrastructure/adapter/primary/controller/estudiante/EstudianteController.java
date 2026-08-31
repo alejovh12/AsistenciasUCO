@@ -5,8 +5,10 @@ import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudi
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudiantes.primaryports.ConsultarEstudiantesInputPort;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudiantes.primaryports.dto.ConsultarEstudiantesDTO;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudiantes.primaryports.dto.EstudiantePaginaDTO;
-import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.estudiante.mapper.EstudianteHttpMapper;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.estudiante.request.ConsultarEstudiantesRequest;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.estudiante.validation.ConsultarEstudiantesRequestValidator;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,10 +17,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/v1/estudiantes")
 public final class EstudianteController {
+
+    private static final ConsultarEstudiantesRequestValidator CONSULT_STUDENTS_VALIDATOR =
+            new ConsultarEstudiantesRequestValidator();
 
     private final ConsultarEstudiantesInputPort consultarEstudiantesInputPort;
     private final ConsultarEstudiantePorIdInputPort consultarEstudiantePorIdInputPort;
@@ -27,14 +33,8 @@ public final class EstudianteController {
             final ConsultarEstudiantesInputPort consultarEstudiantesInputPort,
             final ConsultarEstudiantePorIdInputPort consultarEstudiantePorIdInputPort
     ) {
-        if (ObjectHelper.isNull(consultarEstudiantesInputPort)) {
-            throw new CrosscuttingException("El puerto de entrada ConsultarEstudiantesInputPort es obligatorio.");
-        }
-        if (ObjectHelper.isNull(consultarEstudiantePorIdInputPort)) {
-            throw new CrosscuttingException("El puerto de entrada ConsultarEstudiantePorIdInputPort es obligatorio.");
-        }
-        this.consultarEstudiantesInputPort = consultarEstudiantesInputPort;
-        this.consultarEstudiantePorIdInputPort = consultarEstudiantePorIdInputPort;
+        this.consultarEstudiantesInputPort = Objects.requireNonNull(consultarEstudiantesInputPort, "El puerto de entrada ConsultarEstudiantesInputPort es obligatorio.");
+        this.consultarEstudiantePorIdInputPort = Objects.requireNonNull(consultarEstudiantePorIdInputPort, "El puerto de entrada ConsultarEstudiantePorIdInputPort es obligatorio.");
     }
 
     @GetMapping
@@ -51,7 +51,7 @@ public final class EstudianteController {
             @RequestParam(defaultValue = "0") final Integer page,
             @RequestParam(defaultValue = "20") final Integer size
     ) {
-        return ResponseEntity.ok(consultarEstudiantesInputPort.execute(new ConsultarEstudiantesDTO(
+        final ConsultarEstudiantesRequest request = new ConsultarEstudiantesRequest(
                 tipoIdentificacionId,
                 numeroIdentificacion,
                 nombre,
@@ -63,11 +63,15 @@ public final class EstudianteController {
                 activo,
                 page,
                 size
-        )));
+        );
+        RequestValidationGuard.validate(CONSULT_STUDENTS_VALIDATOR.validate(request));
+        final ConsultarEstudiantesDTO dto = EstudianteHttpMapper.toApplicationDTO(request);
+        return ResponseEntity.ok(consultarEstudiantesInputPort.execute(dto));
     }
 
     @GetMapping("/{estudianteId}")
     public ResponseEntity<EstudianteDetalleDTO> consultarEstudiantePorId(@PathVariable final UUID estudianteId) {
+        RequestValidationGuard.validate(CONSULT_STUDENTS_VALIDATOR.validateEstudianteId(estudianteId));
         return ResponseEntity.ok(consultarEstudiantePorIdInputPort.execute(estudianteId));
     }
 }

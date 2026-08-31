@@ -1,11 +1,16 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.error;
 
-import co.edu.uco.asistenciasuco.application.exception.ConflictException;
-import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
-import co.edu.uco.asistenciasuco.application.exception.ForbiddenException;
-import co.edu.uco.asistenciasuco.application.exception.InternalApplicationException;
-import co.edu.uco.asistenciasuco.application.exception.ResourceNotFoundException;
-import co.edu.uco.asistenciasuco.application.exception.ValidationException;
+
+
+import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
+import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
+import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
+import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
+import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
+import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
+import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorDefinition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -70,7 +75,7 @@ class DbExceptionTranslatorTest {
         );
 
         assertEquals("ERR_CUPO_SUPERADO", exception.getCode());
-        assertEquals(ErrorCode.ERR_CUPO_SUPERADO.defaultMessage(), exception.getMessage());
+        assertEquals(GrupoErrorCode.ERR_CUPO_SUPERADO.defaultMessage(), exception.getMessage());
     }
 
     @Test
@@ -125,7 +130,7 @@ class DbExceptionTranslatorTest {
         );
 
         assertEquals("ERR_NOMBRE_PERSONA_INVALIDO", exception.getCode());
-        assertEquals(ErrorCode.ERR_NOMBRE_PERSONA_INVALIDO.defaultMessage(), exception.getMessage());
+        assertEquals(UsuarioErrorCode.ERR_NOMBRE_PERSONA_INVALIDO.defaultMessage(), exception.getMessage());
     }
 
     @Test
@@ -174,9 +179,9 @@ class DbExceptionTranslatorTest {
     }
 
     @Test
-    void mensaje_desconocido_lanza_internalApplicationException_con_err_db_unclassified() {
-        final InternalApplicationException exception = assertThrows(
-                InternalApplicationException.class,
+    void mensaje_desconocido_lanza_databaseOperationException_con_err_db_unclassified() {
+        final DatabaseOperationException exception = assertThrows(
+                DatabaseOperationException.class,
                 () -> translateFailure("La operacion no pudo completarse por una regla nueva.", OPERATION)
         );
 
@@ -185,9 +190,9 @@ class DbExceptionTranslatorTest {
     }
 
     @Test
-    void mensaje_null_lanza_internalApplicationException_con_err_db_unclassified() {
-        final InternalApplicationException exception = assertThrows(
-                InternalApplicationException.class,
+    void mensaje_null_lanza_databaseOperationException_con_err_db_unclassified() {
+        final DatabaseOperationException exception = assertThrows(
+                DatabaseOperationException.class,
                 () -> translateFailure(null, OPERATION)
         );
 
@@ -203,13 +208,13 @@ class DbExceptionTranslatorTest {
         );
 
         assertEquals("ERR_UNICIDAD_CORREO", exception.getCode());
-        assertEquals(ErrorCode.ERR_UNICIDAD_CORREO.defaultMessage(), exception.getMessage());
+        assertEquals(UsuarioErrorCode.ERR_UNICIDAD_CORREO.defaultMessage(), exception.getMessage());
     }
 
     @Test
     void mensaje_tecnico_no_se_usa_como_mensaje_publico_de_la_excepcion() {
-        final InternalApplicationException exception = assertThrows(
-                InternalApplicationException.class,
+        final DatabaseOperationException exception = assertThrows(
+                DatabaseOperationException.class,
                 () -> translateFailure(null, OPERATION)
         );
 
@@ -242,6 +247,26 @@ class DbExceptionTranslatorTest {
     }
 
     private void assertCatalogMessage(final String expectedCode, final String actualMessage) {
-        assertEquals(ErrorCode.fromCode(expectedCode).orElseThrow().defaultMessage(), actualMessage);
+        assertEquals(catalogMessage(expectedCode), actualMessage);
+    }
+
+    private String catalogMessage(final String expectedCode) {
+        for (final ErrorDefinition errorDefinition : new ErrorDefinition[] {
+                GrupoErrorCode.ERR_MATRICULA_DUPLICADA,
+                GrupoErrorCode.ERR_CUPO_SUPERADO,
+                GrupoErrorCode.ERR_CRUCE_HORARIO_ESTUDIANTE,
+                GrupoErrorCode.ERR_CRUCE_HORARIO_DOCENTE,
+                UsuarioErrorCode.ERR_UNICIDAD_CORREO,
+                UsuarioErrorCode.ERR_UNICIDAD_DOCUMENTO,
+                UsuarioErrorCode.ERR_USUARIO_INACTIVO,
+                EstudianteErrorCode.ERR_ESTUDIANTE_INACTIVO,
+                DocenteErrorCode.ERR_DOCENTE_INACTIVO,
+                DocenteErrorCode.ERR_DOCENTE_YA_REGISTRADO
+        }) {
+            if (errorDefinition.code().equals(expectedCode)) {
+                return errorDefinition.defaultMessage();
+            }
+        }
+        throw new IllegalArgumentException(expectedCode);
     }
 }

@@ -6,10 +6,9 @@ import co.edu.uco.asistenciasuco.application.features.docente.consultarasignacio
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignacionesacademicas.primaryports.mapper.ConsultarAsignacionesAcademicasDocenteMapper;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignacionesacademicas.usecase.ConsultarAsignacionesAcademicasDocenteUseCase;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignacionesacademicas.usecase.domain.ConsultarAsignacionesAcademicasDocenteDomain;
-import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Interactor del puerto de entrada para consultar asignaciones academicas de un docente.
@@ -22,12 +21,7 @@ public final class ConsultarAsignacionesAcademicasDocenteInteractor
     public ConsultarAsignacionesAcademicasDocenteInteractor(
             final ConsultarAsignacionesAcademicasDocenteUseCase useCase
     ) {
-        if (ObjectHelper.isNull(useCase)) {
-            throw new CrosscuttingException(
-                    "El caso de uso ConsultarAsignacionesAcademicasDocenteUseCase es obligatorio."
-            );
-        }
-        this.useCase = useCase;
+        this.useCase = Objects.requireNonNull(useCase, "El caso de uso ConsultarAsignacionesAcademicasDocenteUseCase es obligatorio.");
     }
 
     @Override

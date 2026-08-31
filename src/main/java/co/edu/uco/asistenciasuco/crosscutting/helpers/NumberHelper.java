@@ -8,7 +8,6 @@ import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 public final class NumberHelper {
 
     private NumberHelper() {
-        throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
     }
 
     public static Integer requirePositive(final Integer value, final String nullMessage, final String notPositiveMessage) {

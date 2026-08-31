@@ -1,12 +1,18 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.error;
 
+import co.edu.uco.asistenciasuco.application.features.asistencia.exception.AsistenciaErrorCode;
+import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
+import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
+import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
+import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
+import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.exception.TipoIdentificacionErrorCode;
+import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.ApplicationException;
-import co.edu.uco.asistenciasuco.application.exception.ConflictException;
-import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
-import co.edu.uco.asistenciasuco.application.exception.ForbiddenException;
-import co.edu.uco.asistenciasuco.application.exception.InternalApplicationException;
-import co.edu.uco.asistenciasuco.application.exception.ResourceNotFoundException;
-import co.edu.uco.asistenciasuco.application.exception.ValidationException;
+import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
+import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
+import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorDefinition;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
 import co.edu.uco.asistenciasuco.crosscutting.sanitization.SensitiveDataSanitizer;
 import org.slf4j.Logger;
@@ -21,35 +27,35 @@ import java.util.Set;
 public final class DbExceptionTranslator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DbExceptionTranslator.class);
-    private static final Set<ErrorCode> FORBIDDEN_CODES = Set.of(
-            ErrorCode.ERR_ESTUDIANTE_NO_PERTENECE_SESION
+    private static final Set<ErrorDefinition> FORBIDDEN_CODES = Set.of(
+            AsistenciaErrorCode.ERR_ESTUDIANTE_NO_PERTENECE_SESION
     );
-    private static final Set<ErrorCode> NOT_FOUND_CODES = Set.of(
-            ErrorCode.ERR_USUARIO_NO_EXISTE,
-            ErrorCode.ERR_ESTUDIANTE_NO_EXISTE,
-            ErrorCode.ERR_DOCENTE_NO_EXISTE,
-            ErrorCode.ERR_GRUPO_NO_EXISTE,
-            ErrorCode.ERR_TIPO_IDENTIFICACION_NO_EXISTE,
-            ErrorCode.ERR_SESION_NO_EXISTE
+    private static final Set<ErrorDefinition> NOT_FOUND_CODES = Set.of(
+            UsuarioErrorCode.ERR_USUARIO_NO_EXISTE,
+            EstudianteErrorCode.ERR_ESTUDIANTE_NO_EXISTE,
+            DocenteErrorCode.ERR_DOCENTE_NO_EXISTE,
+            GrupoErrorCode.ERR_GRUPO_NO_EXISTE,
+            TipoIdentificacionErrorCode.ERR_TIPO_IDENTIFICACION_NO_EXISTE,
+            SesionErrorCode.ERR_SESION_NO_EXISTE
     );
-    private static final Set<ErrorCode> CONFLICT_CODES = Set.of(
-            ErrorCode.ERR_UNICIDAD_CORREO,
-            ErrorCode.ERR_UNICIDAD_DOCUMENTO,
-            ErrorCode.ERR_CUPO_SUPERADO,
-            ErrorCode.ERR_CRUCE_HORARIO_ESTUDIANTE,
-            ErrorCode.ERR_CRUCE_HORARIO_DOCENTE,
-            ErrorCode.ERR_MATRICULA_DUPLICADA,
-            ErrorCode.ERR_GRUPO_NO_HABILITADO,
-            ErrorCode.ERR_USUARIO_INACTIVO,
-            ErrorCode.ERR_ESTUDIANTE_INACTIVO,
-            ErrorCode.ERR_DOCENTE_INACTIVO,
-            ErrorCode.ERR_DOCENTE_YA_REGISTRADO
+    private static final Set<ErrorDefinition> CONFLICT_CODES = Set.of(
+            UsuarioErrorCode.ERR_UNICIDAD_CORREO,
+            UsuarioErrorCode.ERR_UNICIDAD_DOCUMENTO,
+            GrupoErrorCode.ERR_CUPO_SUPERADO,
+            GrupoErrorCode.ERR_CRUCE_HORARIO_ESTUDIANTE,
+            GrupoErrorCode.ERR_CRUCE_HORARIO_DOCENTE,
+            GrupoErrorCode.ERR_MATRICULA_DUPLICADA,
+            GrupoErrorCode.ERR_GRUPO_NO_HABILITADO,
+            UsuarioErrorCode.ERR_USUARIO_INACTIVO,
+            EstudianteErrorCode.ERR_ESTUDIANTE_INACTIVO,
+            DocenteErrorCode.ERR_DOCENTE_INACTIVO,
+            DocenteErrorCode.ERR_DOCENTE_YA_REGISTRADO
     );
-    private static final Set<ErrorCode> VALIDATION_CODES = Set.of(
-            ErrorCode.ERR_NOMBRE_PERSONA_INVALIDO
+    private static final Set<ErrorDefinition> VALIDATION_CODES = Set.of(
+            UsuarioErrorCode.ERR_NOMBRE_PERSONA_INVALIDO
     );
 
-    private static final Map<Set<ErrorCode>, ExceptionFactory> EXCEPTION_BY_CODES = Map.of(
+    private static final Map<Set<ErrorDefinition>, ExceptionFactory> EXCEPTION_BY_CODES = Map.of(
             FORBIDDEN_CODES, ForbiddenException::new,
             NOT_FOUND_CODES, ResourceNotFoundException::new,
             CONFLICT_CODES, ConflictException::new,
@@ -57,7 +63,6 @@ public final class DbExceptionTranslator {
     );
 
     private DbExceptionTranslator() {
-        throw new IllegalStateException("No es permitido instanciar un traductor de errores de persistencia.");
     }
 
     public static void throwIfFailed(
@@ -71,27 +76,27 @@ public final class DbExceptionTranslator {
             return;
         }
 
-        final ErrorCode code = DbFailureClassifier.classify(userMessage, technicalMessage, operation);
+        final ErrorDefinition code = DbFailureClassifier.classify(userMessage, technicalMessage, operation);
         logFailedResult(code, userMessage, technicalMessage, correlationId, operation);
 
-        for (final Map.Entry<Set<ErrorCode>, ExceptionFactory> entry : EXCEPTION_BY_CODES.entrySet()) {
+        for (final Map.Entry<Set<ErrorDefinition>, ExceptionFactory> entry : EXCEPTION_BY_CODES.entrySet()) {
             if (entry.getKey().contains(code)) {
                 throw entry.getValue().create(code);
             }
         }
 
-        throw new InternalApplicationException(ErrorCode.ERR_DB_UNCLASSIFIED);
+        throw new DatabaseOperationException(DatabaseErrorCode.ERR_DB_UNCLASSIFIED);
     }
 
     private static void logFailedResult(
-            final ErrorCode internalCode,
+            final ErrorDefinition internalCode,
             final String userMessage,
             final String technicalMessage,
             final String correlationId,
             final String operation
     ) {
         final String normalizedOperation = TextHelper.isNullOrBlank(operation) ? "unknown" : operation;
-        if (ErrorCode.ERR_DB_UNCLASSIFIED.equals(internalCode)) {
+        if (DatabaseErrorCode.ERR_DB_UNCLASSIFIED.equals(internalCode)) {
             LOGGER.error(
                     "SQL operation failed. operation={}, correlationId={}, dbCode={}, userMessage={}, technicalMessage={}",
                     normalizedOperation,
@@ -115,6 +120,6 @@ public final class DbExceptionTranslator {
     @FunctionalInterface
     private interface ExceptionFactory {
 
-        ApplicationException create(ErrorCode code);
+        ApplicationException create(ErrorDefinition code);
     }
 }

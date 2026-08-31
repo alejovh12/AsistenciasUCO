@@ -13,7 +13,6 @@ import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 public final class RegistrarEstudianteMapper {
 
     private RegistrarEstudianteMapper() {
-        throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
     }
 
     public static RegistrarEstudianteDomain toDomain(final RegistrarEstudianteDTO dto) {

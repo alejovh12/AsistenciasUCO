@@ -3,7 +3,7 @@ package co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.usec
 import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.usecase.domain.CrearUsuarioDomain;
 import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.usecase.entity.CrearUsuarioResultadoEntity;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.CrearUsuarioRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.CrearUsuarioRepositoryEntity;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.CrearUsuarioRepositoryProjection;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 
@@ -13,7 +13,6 @@ import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 public final class CrearUsuarioRepositoryMapper {
 
     private CrearUsuarioRepositoryMapper() {
-        throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
     }
 
     public static CrearUsuarioRepositoryDTO toRepositoryDTO(final CrearUsuarioDomain domain) {
@@ -38,7 +37,7 @@ public final class CrearUsuarioRepositoryMapper {
     }
 
     public static CrearUsuarioResultadoEntity toUseCaseEntity(
-            final CrearUsuarioRepositoryEntity repositoryEntity,
+            final CrearUsuarioRepositoryProjection repositoryEntity,
             final CrearUsuarioDomain domain
     ) {
         if (ObjectHelper.isNull(repositoryEntity)) {

@@ -1,7 +1,8 @@
 package co.edu.uco.asistenciasuco.application.features.tipoidentificacion.domain;
 
-import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
-import co.edu.uco.asistenciasuco.application.exception.ValidationException;
+
+import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.exception.TipoIdentificacionErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
 
 import java.util.Objects;
@@ -44,10 +45,10 @@ public final class TipoIdentificacionDomain {
 
     private static UUID validarId(final UUID id) {
         if (Objects.isNull(id)) {
-            throw new ValidationException(ErrorCode.ERR_TIPO_IDENTIFICACION_REQUERIDA);
+            throw new ValidationException(TipoIdentificacionErrorCode.ERR_TIPO_IDENTIFICACION_REQUERIDA);
         }
         if (EMPTY_UUID.equals(id)) {
-            throw new ValidationException(ErrorCode.ERR_TIPO_IDENTIFICACION_INVALIDA);
+            throw new ValidationException(TipoIdentificacionErrorCode.ERR_TIPO_IDENTIFICACION_INVALIDA);
         }
         return id;
     }
@@ -55,10 +56,10 @@ public final class TipoIdentificacionDomain {
     private static String validarCodigo(final String tipoIdentificacion) {
         final String normalizado = TextHelper.trim(tipoIdentificacion);
         if (TextHelper.isNullOrBlank(normalizado)) {
-            throw new ValidationException(ErrorCode.ERR_TIPO_IDENTIFICACION_CODIGO_REQUERIDO);
+            throw new ValidationException(TipoIdentificacionErrorCode.ERR_TIPO_IDENTIFICACION_CODIGO_REQUERIDO);
         }
         if (normalizado.length() > MAX_LENGTH_CODIGO) {
-            throw new ValidationException(ErrorCode.ERR_TIPO_IDENTIFICACION_CODIGO_LONGITUD_INVALIDA);
+            throw new ValidationException(TipoIdentificacionErrorCode.ERR_TIPO_IDENTIFICACION_CODIGO_LONGITUD_INVALIDA);
         }
         return normalizado;
     }
@@ -66,10 +67,10 @@ public final class TipoIdentificacionDomain {
     private static String validarNombre(final String nombre) {
         final String normalizado = TextHelper.trim(nombre);
         if (TextHelper.isNullOrBlank(normalizado)) {
-            throw new ValidationException(ErrorCode.ERR_TIPO_IDENTIFICACION_NOMBRE_REQUERIDO);
+            throw new ValidationException(TipoIdentificacionErrorCode.ERR_TIPO_IDENTIFICACION_NOMBRE_REQUERIDO);
         }
         if (normalizado.length() > MAX_LENGTH_NOMBRE) {
-            throw new ValidationException(ErrorCode.ERR_TIPO_IDENTIFICACION_NOMBRE_LONGITUD_INVALIDA);
+            throw new ValidationException(TipoIdentificacionErrorCode.ERR_TIPO_IDENTIFICACION_NOMBRE_LONGITUD_INVALIDA);
         }
         return normalizado;
     }

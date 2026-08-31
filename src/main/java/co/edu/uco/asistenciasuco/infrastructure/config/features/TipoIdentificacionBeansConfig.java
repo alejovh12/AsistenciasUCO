@@ -4,8 +4,8 @@ import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consult
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.primaryports.interactor.ConsultarTiposIdentificacionInteractor;
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.usecase.ConsultarTiposIdentificacionUseCase;
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.usecase.impl.ConsultarTiposIdentificacionUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.secondaryports.TipoIdentificacionRepositoryPort;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.TipoIdentificacionRepositorySqlServerAdapter;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.TipoIdentificacionRepositoryPort;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.TipoIdentificacionRepositorySqlServerAdapter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;

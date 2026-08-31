@@ -15,7 +15,6 @@ import java.util.UUID;
 public final class ConsultarEstudiantePorIdMapper {
 
     private ConsultarEstudiantePorIdMapper() {
-        throw new CrosscuttingException("No es permitido instanciar un mapper de estudiante por id.");
     }
 
     public static ConsultarEstudiantePorIdDomain toDomain(final UUID estudianteId) {

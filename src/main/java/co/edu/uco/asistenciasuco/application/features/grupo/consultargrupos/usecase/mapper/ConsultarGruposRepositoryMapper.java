@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.consultargrupos.usecase.mapper;
 
 import co.edu.uco.asistenciasuco.application.features.grupo.consultargrupos.usecase.entity.GrupoEntity;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.GrupoRepositoryEntity;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.GrupoRepositoryProjection;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 
@@ -14,22 +14,21 @@ import java.util.List;
 public final class ConsultarGruposRepositoryMapper {
 
     private ConsultarGruposRepositoryMapper() {
-        throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
     }
 
-    public static List<GrupoEntity> toUseCaseEntities(final List<GrupoRepositoryEntity> entities) {
+    public static List<GrupoEntity> toUseCaseEntities(final List<GrupoRepositoryProjection> entities) {
         if (ObjectHelper.isNull(entities)) {
             return List.of();
         }
 
         final List<GrupoEntity> resultado = new ArrayList<>();
-        for (final GrupoRepositoryEntity entity : entities) {
+        for (final GrupoRepositoryProjection entity : entities) {
             resultado.add(toUseCaseEntity(entity));
         }
         return resultado;
     }
 
-    private static GrupoEntity toUseCaseEntity(final GrupoRepositoryEntity entity) {
+    private static GrupoEntity toUseCaseEntity(final GrupoRepositoryProjection entity) {
         if (ObjectHelper.isNull(entity)) {
             throw new CrosscuttingException("El grupo consultado es obligatorio.");
         }

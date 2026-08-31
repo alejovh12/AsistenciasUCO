@@ -1,12 +1,14 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error;
 
-import co.edu.uco.asistenciasuco.application.exception.ConflictException;
-import co.edu.uco.asistenciasuco.application.exception.DatabaseOperationException;
-import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
-import co.edu.uco.asistenciasuco.application.exception.InternalApplicationException;
-import co.edu.uco.asistenciasuco.application.exception.ResourceNotFoundException;
-import co.edu.uco.asistenciasuco.application.exception.ValidationException;
-import co.edu.uco.asistenciasuco.infrastructure.correlation.CorrelationIdContext;
+import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
+import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
+import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
+import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
+import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.CommonErrorCode;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.error.DatabaseOperationException;
+import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
@@ -37,13 +39,13 @@ class GlobalExceptionHandlerTest {
         CorrelationIdContext.set(java.util.UUID.fromString(CORRELATION_ID));
 
         final ResponseEntity<ApiErrorResponse> response = handler.handleApplication(
-                new ValidationException(ErrorCode.ERR_CORREO_FORMATO_INVALIDO, "Dato invalido tecnico."),
+                new ValidationException(UsuarioErrorCode.ERR_CORREO_FORMATO_INVALIDO, "Dato invalido tecnico."),
                 request()
         );
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("ERR_CORREO_FORMATO_INVALIDO", response.getBody().code());
-        assertEquals("El correo no tiene un formato valido.", response.getBody().message());
+        assertEquals("Ingrese un correo valido, por ejemplo nombre@dominio.com.", response.getBody().message());
         assertEquals("/api/prueba", response.getBody().path());
         assertEquals(CORRELATION_ID, response.getBody().correlationId());
     }
@@ -53,7 +55,7 @@ class GlobalExceptionHandlerTest {
         CorrelationIdContext.set(java.util.UUID.fromString(CORRELATION_ID));
 
         final ResponseEntity<ApiErrorResponse> response = handler.handleApplication(
-                new ConflictException(ErrorCode.ERR_UNICIDAD_CORREO, "El correo ya existe tecnico."),
+                new ConflictException(UsuarioErrorCode.ERR_UNICIDAD_CORREO, "El correo ya existe tecnico."),
                 request()
         );
 
@@ -68,7 +70,7 @@ class GlobalExceptionHandlerTest {
         CorrelationIdContext.set(java.util.UUID.fromString(CORRELATION_ID));
 
         final ResponseEntity<ApiErrorResponse> response = handler.handleApplication(
-                new ResourceNotFoundException(ErrorCode.ERR_ESTUDIANTE_NO_EXISTE, "Detalle tecnico interno."),
+                new ResourceNotFoundException(EstudianteErrorCode.ERR_ESTUDIANTE_NO_EXISTE, "Detalle tecnico interno."),
                 request("/api/v1/estudiantes/13641bab-e3cd-485c-b275-47e7b731e18c")
         );
 
@@ -81,7 +83,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void handleDatabaseOperation_retorna_internalServerError_con_mensaje_seguro() {
-        final ResponseEntity<ApiErrorResponse> response = handler.handleApplication(
+        final ResponseEntity<ApiErrorResponse> response = handler.handleTechnical(
                 new DatabaseOperationException("Stored Procedure fallo por SQLException password", new RuntimeException("sql")),
                 request()
         );
@@ -93,14 +95,14 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void handleInternalApplication_con_err_db_unclassified_retorna_500_sin_mensaje_tecnico() {
+    void handleInternalApplication_retorna_500_sin_mensaje_tecnico() {
         final ResponseEntity<ApiErrorResponse> response = handler.handleApplication(
-                new InternalApplicationException(ErrorCode.ERR_DB_UNCLASSIFIED, "mensajeTecnicoResultado SQLException password stackTrace"),
+                new InternalApplicationException(CommonErrorCode.INTERNAL_APPLICATION_ERROR, "mensajeTecnicoResultado SQLException password stackTrace"),
                 request()
         );
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals("ERR_DB_UNCLASSIFIED", response.getBody().code());
+        assertEquals("INTERNAL_APPLICATION_ERROR", response.getBody().code());
         assertEquals(SAFE_INTERNAL_MESSAGE, response.getBody().message());
         assertDoesNotContainSensitiveDetail(response.getBody().message());
     }
@@ -167,7 +169,7 @@ class GlobalExceptionHandlerTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("INVALID_REQUEST", response.getBody().code());
-        assertEquals("La solicitud no es valida.", response.getBody().message());
+        assertEquals("No fue posible interpretar la solicitud. Revise el formato y el tipo de los campos enviados.", response.getBody().message());
         assertEquals(CORRELATION_ID, response.getBody().correlationId());
     }
 
@@ -186,7 +188,7 @@ class GlobalExceptionHandlerTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("INVALID_REQUEST", response.getBody().code());
-        assertEquals("La solicitud no es valida.", response.getBody().message());
+        assertEquals("No fue posible interpretar la solicitud. Revise el formato y el tipo de los campos enviados.", response.getBody().message());
         assertEquals(CORRELATION_ID, response.getBody().correlationId());
         assertDoesNotContainSensitiveDetail(response.getBody().message());
     }

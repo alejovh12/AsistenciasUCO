@@ -5,18 +5,14 @@ import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudi
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudiantes.primaryports.dto.EstudiantePaginaDTO;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudiantes.primaryports.mapper.ConsultarEstudiantesMapper;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudiantes.usecase.ConsultarEstudiantesUseCase;
-import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import java.util.Objects;
 
 public final class ConsultarEstudiantesInteractor implements ConsultarEstudiantesInputPort {
 
     private final ConsultarEstudiantesUseCase useCase;
 
     public ConsultarEstudiantesInteractor(final ConsultarEstudiantesUseCase useCase) {
-        if (ObjectHelper.isNull(useCase)) {
-            throw new CrosscuttingException("El caso de uso ConsultarEstudiantesUseCase es obligatorio.");
-        }
-        this.useCase = useCase;
+        this.useCase = Objects.requireNonNull(useCase, "El caso de uso ConsultarEstudiantesUseCase es obligatorio.");
     }
 
     @Override

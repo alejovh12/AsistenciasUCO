@@ -1,6 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.domain;
 
-import co.edu.uco.asistenciasuco.application.exception.ValidationException;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.usecase.domain.CrearUsuarioDomain;
 import org.junit.jupiter.api.Test;
 

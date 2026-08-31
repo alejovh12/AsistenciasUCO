@@ -11,7 +11,6 @@ import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 public final class SolicitarRevisionAsistenciaRepositoryMapper {
 
     private SolicitarRevisionAsistenciaRepositoryMapper() {
-        throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
     }
 
     public static SolicitarRevisionAsistenciaRepositoryDTO toRepositoryDTO(

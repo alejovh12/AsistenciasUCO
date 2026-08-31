@@ -1,7 +1,16 @@
 package co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.entity;
 
-import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
-import co.edu.uco.asistenciasuco.application.exception.ValidationException;
+
+
+
+
+
+import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorDefinition;
+import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
+import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
+import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
+import co.edu.uco.asistenciasuco.application.features.asistencia.exception.AsistenciaErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
 
@@ -27,10 +36,10 @@ public final class AsistenciaConsultadaEntity {
             final boolean presente,
             final String observacion
     ) {
-        validarIdentificador(asistencia, ErrorCode.ERR_ASISTENCIA_REQUERIDA);
-        validarIdentificador(estudiante, ErrorCode.ERR_ESTUDIANTE_ID_REQUERIDO);
-        validarIdentificador(grupo, ErrorCode.ERR_GRUPO_REQUERIDO);
-        validarIdentificador(sesion, ErrorCode.ERR_SESION_REQUERIDA);
+        validarIdentificador(asistencia, AsistenciaErrorCode.ERR_ASISTENCIA_REQUERIDA);
+        validarIdentificador(estudiante, EstudianteErrorCode.ERR_ESTUDIANTE_ID_REQUERIDO);
+        validarIdentificador(grupo, GrupoErrorCode.ERR_GRUPO_REQUERIDO);
+        validarIdentificador(sesion, SesionErrorCode.ERR_SESION_REQUERIDA);
 
         this.asistencia = asistencia;
         this.estudiante = estudiante;
@@ -40,7 +49,7 @@ public final class AsistenciaConsultadaEntity {
         this.observacion = normalizarObservacion(observacion);
     }
 
-    private void validarIdentificador(final UUID valor, final ErrorCode code) {
+    private void validarIdentificador(final UUID valor, final ErrorDefinition code) {
         if (ObjectHelper.isNull(valor)) {
             throw new ValidationException(code);
         }
@@ -54,7 +63,7 @@ public final class AsistenciaConsultadaEntity {
         }
 
         if (!TextHelper.hasLengthBetween(observacionNormalizada, 5, 250)) {
-            throw new ValidationException(ErrorCode.ERR_OBSERVACION_ASISTENCIA_LONGITUD_INVALIDA);
+            throw new ValidationException(AsistenciaErrorCode.ERR_OBSERVACION_ASISTENCIA_LONGITUD_INVALIDA);
         }
 
         return observacionNormalizada;

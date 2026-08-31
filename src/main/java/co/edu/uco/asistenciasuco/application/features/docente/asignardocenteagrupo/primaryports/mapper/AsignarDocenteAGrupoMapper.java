@@ -13,7 +13,6 @@ import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 public final class AsignarDocenteAGrupoMapper {
 
     private AsignarDocenteAGrupoMapper() {
-        throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
     }
 
     public static AsignarDocenteAGrupoDomain toDomain(final AsignarDocenteAGrupoDTO dto) {

@@ -1,6 +1,13 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.error;
 
-import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
+import co.edu.uco.asistenciasuco.application.features.asistencia.exception.AsistenciaErrorCode;
+import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
+import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
+import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
+import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
+import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.exception.TipoIdentificacionErrorCode;
+import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
+import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorDefinition;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
 
 import java.text.Normalizer;
@@ -15,56 +22,55 @@ final class DbFailureClassifier {
     private static final String OPERATION_REGISTRAR_ESTUDIANTE = "registrarEstudianteEnGrupo";
 
     private DbFailureClassifier() {
-        throw new IllegalStateException("No es permitido instanciar un clasificador de errores de persistencia.");
     }
 
-    static ErrorCode classify(final String userMessage, final String technicalMessage, final String operation) {
+    static ErrorDefinition classify(final String userMessage, final String technicalMessage, final String operation) {
         final String message = normalize(userMessage + " " + technicalMessage);
         final String normalizedOperation = normalize(operation);
 
         if (TextHelper.isNullOrBlank(message)) {
-            return ErrorCode.ERR_DB_UNCLASSIFIED;
+            return DatabaseErrorCode.ERR_DB_UNCLASSIFIED;
         }
         if (containsAny(message, "nombre", "nombres", "apellido", "apellidos")
                 && containsAny(message, "caracteres no permitidos", "formato invalido")) {
-            return ErrorCode.ERR_NOMBRE_PERSONA_INVALIDO;
+            return UsuarioErrorCode.ERR_NOMBRE_PERSONA_INVALIDO;
         }
         if (contains(message, "usuario") && contains(message, "registrado como docente")) {
-            return ErrorCode.ERR_DOCENTE_YA_REGISTRADO;
+            return DocenteErrorCode.ERR_DOCENTE_YA_REGISTRADO;
         }
         if (contains(message, "estudiante") && contains(message, "inactivo")) {
-            return ErrorCode.ERR_ESTUDIANTE_INACTIVO;
+            return EstudianteErrorCode.ERR_ESTUDIANTE_INACTIVO;
         }
         if (contains(message, "docente") && contains(message, "inactivo")) {
-            return ErrorCode.ERR_DOCENTE_INACTIVO;
+            return DocenteErrorCode.ERR_DOCENTE_INACTIVO;
         }
         if (contains(message, "usuario") && contains(message, "inactivo")) {
-            return ErrorCode.ERR_USUARIO_INACTIVO;
+            return UsuarioErrorCode.ERR_USUARIO_INACTIVO;
         }
         if (contains(message, "matricula") && containsAny(message, "duplicad", "ya existe", "ya se encuentra", "registrad", "inscrit")) {
-            return ErrorCode.ERR_MATRICULA_DUPLICADA;
+            return GrupoErrorCode.ERR_MATRICULA_DUPLICADA;
         }
         if (containsAny(message, "tamaoo moximo", "tamano maximo")) {
-            return ErrorCode.ERR_CUPO_SUPERADO;
+            return GrupoErrorCode.ERR_CUPO_SUPERADO;
         }
         if (containsAny(message, "cupo", "cupos")
                 && containsAny(message, "superad", "sin", "no hay", "agotad", "maxim", "moximo", "capacidad", "lleno", "llena")) {
-            return ErrorCode.ERR_CUPO_SUPERADO;
+            return GrupoErrorCode.ERR_CUPO_SUPERADO;
         }
         if (isScheduleConflict(message)) {
             if (contains(message, "estudiante") || contains(normalizedOperation, OPERATION_REGISTRAR_ESTUDIANTE.toLowerCase(Locale.ROOT))) {
-                return ErrorCode.ERR_CRUCE_HORARIO_ESTUDIANTE;
+                return GrupoErrorCode.ERR_CRUCE_HORARIO_ESTUDIANTE;
             }
             if (contains(message, "docente") || contains(normalizedOperation, OPERATION_ASIGNAR_DOCENTE.toLowerCase(Locale.ROOT))) {
-                return ErrorCode.ERR_CRUCE_HORARIO_DOCENTE;
+                return GrupoErrorCode.ERR_CRUCE_HORARIO_DOCENTE;
             }
         }
         if (containsAny(message, "correo", "email", "e-mail") && containsAny(message, "duplicad", "ya existe", "ya se encuentra", "registrad", "unico")) {
-            return ErrorCode.ERR_UNICIDAD_CORREO;
+            return UsuarioErrorCode.ERR_UNICIDAD_CORREO;
         }
         if (containsAny(message, "documento", "identificacion", "numero de identificacion")
                 && containsAny(message, "duplicad", "ya existe", "ya se encuentra", "registrad", "unico")) {
-            return ErrorCode.ERR_UNICIDAD_DOCUMENTO;
+            return UsuarioErrorCode.ERR_UNICIDAD_DOCUMENTO;
         }
         if (contains(message, "grupo") && containsAny(
                 message,
@@ -74,7 +80,7 @@ final class DbFailureClassifier {
                 "no esta habilitado",
                 "no se encuentra habilitado"
         )) {
-            return ErrorCode.ERR_GRUPO_NO_HABILITADO;
+            return GrupoErrorCode.ERR_GRUPO_NO_HABILITADO;
         }
         if (containsAny(
                 message,
@@ -86,29 +92,29 @@ final class DbFailureClassifier {
                 "uv_tipo_identificacion"
         )
                 && containsAny(message, "no existe", "no encontrado", "no encontrada", "inexistente")) {
-            return ErrorCode.ERR_TIPO_IDENTIFICACION_NO_EXISTE;
+            return TipoIdentificacionErrorCode.ERR_TIPO_IDENTIFICACION_NO_EXISTE;
         }
         if (doesNotExist(message, "grupo")) {
-            return ErrorCode.ERR_GRUPO_NO_EXISTE;
+            return GrupoErrorCode.ERR_GRUPO_NO_EXISTE;
         }
         if (doesNotExist(message, "estudiante")) {
-            return ErrorCode.ERR_ESTUDIANTE_NO_EXISTE;
+            return EstudianteErrorCode.ERR_ESTUDIANTE_NO_EXISTE;
         }
         if (doesNotExist(message, "usuario")) {
-            return ErrorCode.ERR_USUARIO_NO_EXISTE;
+            return UsuarioErrorCode.ERR_USUARIO_NO_EXISTE;
         }
         if (doesNotExist(message, "docente")) {
-            return ErrorCode.ERR_DOCENTE_NO_EXISTE;
+            return DocenteErrorCode.ERR_DOCENTE_NO_EXISTE;
         }
         if (doesNotExist(message, "sesion")) {
-            return ErrorCode.ERR_SESION_NO_EXISTE;
+            return SesionErrorCode.ERR_SESION_NO_EXISTE;
         }
         if (contains(message, "estudiante") && contains(message, "sesion")
                 && containsAny(message, "no pertenece", "no esta asociado", "no se encuentra asociado")) {
-            return ErrorCode.ERR_ESTUDIANTE_NO_PERTENECE_SESION;
+            return AsistenciaErrorCode.ERR_ESTUDIANTE_NO_PERTENECE_SESION;
         }
 
-        return ErrorCode.ERR_DB_UNCLASSIFIED;
+        return DatabaseErrorCode.ERR_DB_UNCLASSIFIED;
     }
 
     private static boolean doesNotExist(final String message, final String resource) {

@@ -6,8 +6,7 @@ import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudiantee
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.primaryports.mapper.RegistrarEstudianteMapper;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.RegistrarEstudianteUseCase;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.domain.RegistrarEstudianteDomain;
-import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import java.util.Objects;
 
 /**
  * Interactor del puerto de entrada para registrar estudiante en grupo.
@@ -17,10 +16,7 @@ public final class RegistrarEstudianteInteractor implements RegistrarEstudianteI
     private final RegistrarEstudianteUseCase useCase;
 
     public RegistrarEstudianteInteractor(final RegistrarEstudianteUseCase useCase) {
-        if (ObjectHelper.isNull(useCase)) {
-            throw new CrosscuttingException("El caso de uso RegistrarEstudianteUseCase es obligatorio.");
-        }
-        this.useCase = useCase;
+        this.useCase = Objects.requireNonNull(useCase, "El caso de uso RegistrarEstudianteUseCase es obligatorio.");
     }
 
     @Override

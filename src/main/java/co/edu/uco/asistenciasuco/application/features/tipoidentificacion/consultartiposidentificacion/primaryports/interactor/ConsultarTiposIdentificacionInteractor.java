@@ -5,10 +5,9 @@ import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consult
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.primaryports.mapper.ConsultarTiposIdentificacionMapper;
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.usecase.ConsultarTiposIdentificacionUseCase;
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.domain.TipoIdentificacionDomain;
-import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Interactor del puerto de entrada para consultar tipos de identificacion.
@@ -18,10 +17,7 @@ public final class ConsultarTiposIdentificacionInteractor implements ConsultarTi
     private final ConsultarTiposIdentificacionUseCase useCase;
 
     public ConsultarTiposIdentificacionInteractor(final ConsultarTiposIdentificacionUseCase useCase) {
-        if (ObjectHelper.isNull(useCase)) {
-            throw new CrosscuttingException("El caso de uso ConsultarTiposIdentificacionUseCase es obligatorio.");
-        }
-        this.useCase = useCase;
+        this.useCase = Objects.requireNonNull(useCase, "El caso de uso ConsultarTiposIdentificacionUseCase es obligatorio.");
     }
 
     @Override

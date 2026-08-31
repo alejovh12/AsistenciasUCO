@@ -4,19 +4,17 @@ import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudi
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudiantes.usecase.domain.ConsultarEstudiantesDomain;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudiantes.usecase.entity.EstudiantePaginaEntity;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudiantes.usecase.mapper.ConsultarEstudiantesRepositoryMapper;
-import co.edu.uco.asistenciasuco.application.secondaryports.EstudianteRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.EstudianteRepositoryPort;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import java.util.Objects;
 
 public final class ConsultarEstudiantesUseCaseImpl implements ConsultarEstudiantesUseCase {
 
     private final EstudianteRepositoryPort estudianteRepositoryPort;
 
     public ConsultarEstudiantesUseCaseImpl(final EstudianteRepositoryPort estudianteRepositoryPort) {
-        if (ObjectHelper.isNull(estudianteRepositoryPort)) {
-            throw new CrosscuttingException("El puerto de salida EstudianteRepositoryPort es obligatorio.");
-        }
-        this.estudianteRepositoryPort = estudianteRepositoryPort;
+        this.estudianteRepositoryPort = Objects.requireNonNull(estudianteRepositoryPort, "El puerto de salida EstudianteRepositoryPort es obligatorio.");
     }
 
     @Override

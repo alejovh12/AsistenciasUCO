@@ -3,7 +3,7 @@ package co.edu.uco.asistenciasuco.application.features.docente.consultarasignaci
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignacionesacademicas.usecase.domain.ConsultarAsignacionesAcademicasDocenteDomain;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignacionesacademicas.usecase.entity.DocenteAsignacionAcademicaEntity;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarAsignacionesAcademicasDocenteRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.DocenteAsignacionAcademicaRepositoryEntity;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.DocenteAsignacionAcademicaRepositoryProjection;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 
@@ -16,7 +16,6 @@ import java.util.List;
 public final class ConsultarAsignacionesAcademicasDocenteRepositoryMapper {
 
     private ConsultarAsignacionesAcademicasDocenteRepositoryMapper() {
-        throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
     }
 
     public static ConsultarAsignacionesAcademicasDocenteRepositoryDTO toRepositoryDTO(
@@ -32,21 +31,21 @@ public final class ConsultarAsignacionesAcademicasDocenteRepositoryMapper {
     }
 
     public static List<DocenteAsignacionAcademicaEntity> toUseCaseEntities(
-            final List<DocenteAsignacionAcademicaRepositoryEntity> entities
+            final List<DocenteAsignacionAcademicaRepositoryProjection> entities
     ) {
         if (ObjectHelper.isNull(entities)) {
             return List.of();
         }
 
         final List<DocenteAsignacionAcademicaEntity> resultado = new ArrayList<>();
-        for (final DocenteAsignacionAcademicaRepositoryEntity entity : entities) {
+        for (final DocenteAsignacionAcademicaRepositoryProjection entity : entities) {
             resultado.add(toUseCaseEntity(entity));
         }
         return resultado;
     }
 
     private static DocenteAsignacionAcademicaEntity toUseCaseEntity(
-            final DocenteAsignacionAcademicaRepositoryEntity entity
+            final DocenteAsignacionAcademicaRepositoryProjection entity
     ) {
         if (ObjectHelper.isNull(entity)) {
             throw new CrosscuttingException("La asignacion academica del docente consultado es obligatoria.");

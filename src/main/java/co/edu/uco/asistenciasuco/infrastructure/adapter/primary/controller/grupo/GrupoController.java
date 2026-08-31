@@ -5,12 +5,11 @@ import co.edu.uco.asistenciasuco.application.features.grupo.consultargrupos.prim
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.primaryports.RegistrarEstudianteInputPort;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.primaryports.dto.RegistrarEstudianteDTO;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.primaryports.dto.RegistrarEstudianteResultadoDTO;
-import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.audit.AuditableOperation;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo.mapper.RegistrarEstudianteHttpMapper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo.request.RegistrarEstudianteRequest;
-import jakarta.validation.Valid;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo.validation.RegistrarEstudianteRequestValidator;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.Objects;
 
 /**
  * Adaptador primario REST para operaciones relacionadas con grupos.
@@ -30,6 +30,8 @@ import java.util.UUID;
 @RequestMapping("/api/v1/grupos")
 public final class GrupoController {
 
+    private static final RegistrarEstudianteRequestValidator REQUEST_VALIDATOR = new RegistrarEstudianteRequestValidator();
+
     private final RegistrarEstudianteInputPort registrarEstudianteInputPort;
     private final ConsultarGruposInputPort consultarGruposInputPort;
 
@@ -37,14 +39,8 @@ public final class GrupoController {
             final RegistrarEstudianteInputPort registrarEstudianteInputPort,
             final ConsultarGruposInputPort consultarGruposInputPort
     ) {
-        if (ObjectHelper.isNull(registrarEstudianteInputPort)) {
-            throw new CrosscuttingException("El puerto de entrada RegistrarEstudianteInputPort es obligatorio.");
-        }
-        if (ObjectHelper.isNull(consultarGruposInputPort)) {
-            throw new CrosscuttingException("El puerto de entrada ConsultarGruposInputPort es obligatorio.");
-        }
-        this.registrarEstudianteInputPort = registrarEstudianteInputPort;
-        this.consultarGruposInputPort = consultarGruposInputPort;
+        this.registrarEstudianteInputPort = Objects.requireNonNull(registrarEstudianteInputPort, "El puerto de entrada RegistrarEstudianteInputPort es obligatorio.");
+        this.consultarGruposInputPort = Objects.requireNonNull(consultarGruposInputPort, "El puerto de entrada ConsultarGruposInputPort es obligatorio.");
     }
 
     @GetMapping
@@ -60,8 +56,9 @@ public final class GrupoController {
     )
     public ResponseEntity<RegistrarEstudianteResultadoDTO> registrarEstudiante(
             @PathVariable final UUID grupoId,
-            @Valid @RequestBody final RegistrarEstudianteRequest request
+            @RequestBody final RegistrarEstudianteRequest request
     ) {
+        RequestValidationGuard.validate(REQUEST_VALIDATOR.validate(grupoId, request));
         final RegistrarEstudianteDTO dto = RegistrarEstudianteHttpMapper.toApplicationDTO(grupoId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(registrarEstudianteInputPort.execute(dto));
     }

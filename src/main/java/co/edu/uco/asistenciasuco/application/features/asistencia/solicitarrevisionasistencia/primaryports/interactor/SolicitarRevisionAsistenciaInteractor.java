@@ -5,8 +5,7 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisi
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.primaryports.mapper.SolicitarRevisionAsistenciaMapper;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.usecase.SolicitarRevisionAsistenciaUseCase;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.usecase.domain.SolicitarRevisionAsistenciaDomain;
-import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import java.util.Objects;
 
 /**
  * Interactor del puerto de entrada para solicitar revision de asistencia.
@@ -16,10 +15,7 @@ public final class SolicitarRevisionAsistenciaInteractor implements SolicitarRev
     private final SolicitarRevisionAsistenciaUseCase useCase;
 
     public SolicitarRevisionAsistenciaInteractor(final SolicitarRevisionAsistenciaUseCase useCase) {
-        if (ObjectHelper.isNull(useCase)) {
-            throw new CrosscuttingException("El caso de uso SolicitarRevisionAsistenciaUseCase es obligatorio.");
-        }
-        this.useCase = useCase;
+        this.useCase = Objects.requireNonNull(useCase, "El caso de uso SolicitarRevisionAsistenciaUseCase es obligatorio.");
     }
 
     @Override

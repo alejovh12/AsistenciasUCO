@@ -14,7 +14,6 @@ import java.util.List;
 public final class ConsultarDocentesMapper {
 
     private ConsultarDocentesMapper() {
-        throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
     }
 
     public static List<DocenteIdentidadDTO> toDTOs(final List<DocenteIdentidadEntity> entities) {

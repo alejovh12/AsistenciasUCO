@@ -1,7 +1,8 @@
 package co.edu.uco.asistenciasuco.application.features.docente.consultardocentes.usecase.entity;
 
-import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
-import co.edu.uco.asistenciasuco.application.exception.ValidationException;
+
+import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
 
@@ -40,32 +41,32 @@ public final class DocenteIdentidadEntity {
 
     private UUID validarDocente(final UUID id) {
         if (ObjectHelper.isNull(id)) {
-            throw new ValidationException(ErrorCode.ERR_DOCENTE_REQUERIDO);
+            throw new ValidationException(DocenteErrorCode.ERR_DOCENTE_REQUERIDO);
         }
         if (EMPTY_UUID.equals(id)) {
-            throw new ValidationException(ErrorCode.ERR_DOCENTE_INVALIDO);
+            throw new ValidationException(DocenteErrorCode.ERR_DOCENTE_INVALIDO);
         }
         return id;
     }
 
     private void validarUsuario(final UUID idUsuario) {
         if (ObjectHelper.isNull(idUsuario)) {
-            throw new ValidationException(ErrorCode.ERR_USUARIO_DOCENTE_REQUERIDO);
+            throw new ValidationException(DocenteErrorCode.ERR_USUARIO_DOCENTE_REQUERIDO);
         }
         if (EMPTY_UUID.equals(idUsuario)) {
-            throw new ValidationException(ErrorCode.ERR_USUARIO_DOCENTE_INVALIDO);
+            throw new ValidationException(DocenteErrorCode.ERR_USUARIO_DOCENTE_INVALIDO);
         }
     }
 
     private void validarNumeroIdentificacion(final Integer numeroIdentificacion) {
         if (ObjectHelper.isNull(numeroIdentificacion)) {
-            throw new ValidationException(ErrorCode.ERR_NUMERO_IDENTIFICACION_DOCENTE_REQUERIDO);
+            throw new ValidationException(DocenteErrorCode.ERR_NUMERO_IDENTIFICACION_DOCENTE_REQUERIDO);
         }
     }
 
     private void validarNombreCompleto(final String nombreCompleto) {
         if (TextHelper.isNullOrBlank(nombreCompleto)) {
-            throw new ValidationException(ErrorCode.ERR_NOMBRE_COMPLETO_DOCENTE_REQUERIDO);
+            throw new ValidationException(DocenteErrorCode.ERR_NOMBRE_COMPLETO_DOCENTE_REQUERIDO);
         }
     }
 

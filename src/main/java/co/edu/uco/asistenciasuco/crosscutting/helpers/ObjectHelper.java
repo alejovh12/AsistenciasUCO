@@ -1,6 +1,5 @@
 package co.edu.uco.asistenciasuco.crosscutting.helpers;
 
-import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 
 import java.util.UUID;
 
@@ -10,7 +9,6 @@ import java.util.UUID;
 public final class ObjectHelper {
 
     private ObjectHelper() {
-        throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
     }
 
     public static boolean isNull(final Object value) {

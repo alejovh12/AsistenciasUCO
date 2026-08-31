@@ -1,6 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.usecase.domain;
 
-import co.edu.uco.asistenciasuco.application.exception.ValidationException;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;

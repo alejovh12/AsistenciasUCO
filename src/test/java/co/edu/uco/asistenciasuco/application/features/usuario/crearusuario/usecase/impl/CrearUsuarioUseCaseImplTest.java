@@ -1,13 +1,13 @@
 package co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.usecase.impl;
 
-import co.edu.uco.asistenciasuco.application.exception.ConflictException;
-import co.edu.uco.asistenciasuco.application.exception.ValidationException;
+import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.usecase.domain.CrearUsuarioDomain;
 import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.usecase.entity.CrearUsuarioResultadoEntity;
-import co.edu.uco.asistenciasuco.application.secondaryports.UsuarioRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.CrearUsuarioRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.CrearUsuarioRepositoryEntity;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.UsuarioIdentidadRepositoryEntity;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.CrearUsuarioRepositoryProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.UsuarioIdentidadRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +31,7 @@ class CrearUsuarioUseCaseImplTest {
         final FakePasswordEncoderPort passwordEncoderPort = new FakePasswordEncoderPort();
         final UsuarioRepositoryPort repositoryPort = usuarioRepositoryPort(dto -> {
             dtoCapturado.set(dto);
-            return new CrearUsuarioRepositoryEntity("Usuario registrado exitosamente.");
+            return new CrearUsuarioRepositoryProjection("Usuario registrado exitosamente.");
         });
 
         final CrearUsuarioUseCaseImpl useCase = new CrearUsuarioUseCaseImpl(repositoryPort, passwordEncoderPort);
@@ -71,7 +71,7 @@ class CrearUsuarioUseCaseImplTest {
         final CrearUsuarioUseCaseImpl useCase = new CrearUsuarioUseCaseImpl(
                 usuarioRepositoryPort(dto -> {
                     dtoCapturado.set(dto);
-                    return new CrearUsuarioRepositoryEntity("ok");
+                    return new CrearUsuarioRepositoryProjection("ok");
                 }),
                 passwordEncoderPort
         );
@@ -106,17 +106,17 @@ class CrearUsuarioUseCaseImplTest {
     private UsuarioRepositoryPort usuarioRepositoryPort(final CrearUsuarioExecutor executor) {
         return new UsuarioRepositoryPort() {
             @Override
-            public CrearUsuarioRepositoryEntity crearUsuario(final CrearUsuarioRepositoryDTO dto) {
+            public CrearUsuarioRepositoryProjection crearUsuario(final CrearUsuarioRepositoryDTO dto) {
                 return executor.crearUsuario(dto);
             }
 
             @Override
-            public Optional<UsuarioIdentidadRepositoryEntity> consultarUsuarioPorCorreo(final String correo) {
+            public Optional<UsuarioIdentidadRepositoryProjection> consultarUsuarioPorCorreo(final String correo) {
                 return Optional.empty();
             }
 
             @Override
-            public Optional<UsuarioIdentidadRepositoryEntity> consultarUsuarioPorIdentificacion(
+            public Optional<UsuarioIdentidadRepositoryProjection> consultarUsuarioPorIdentificacion(
                     final UUID tipoIdentificacionId,
                     final Integer numeroIdentificacion
             ) {
@@ -128,7 +128,7 @@ class CrearUsuarioUseCaseImplTest {
     @FunctionalInterface
     private interface CrearUsuarioExecutor {
 
-        CrearUsuarioRepositoryEntity crearUsuario(CrearUsuarioRepositoryDTO dto);
+        CrearUsuarioRepositoryProjection crearUsuario(CrearUsuarioRepositoryDTO dto);
     }
 
     private static final class FakePasswordEncoderPort implements PasswordEncoderPort {

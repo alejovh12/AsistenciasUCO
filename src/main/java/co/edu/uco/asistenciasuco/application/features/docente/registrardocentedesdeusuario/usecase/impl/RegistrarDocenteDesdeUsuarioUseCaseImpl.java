@@ -4,10 +4,11 @@ import co.edu.uco.asistenciasuco.application.features.docente.registrardocentede
 import co.edu.uco.asistenciasuco.application.features.docente.registrardocentedesdeusuario.usecase.domain.RegistrarDocenteDesdeUsuarioDomain;
 import co.edu.uco.asistenciasuco.application.features.docente.registrardocentedesdeusuario.usecase.entity.RegistrarDocenteDesdeUsuarioResultadoEntity;
 import co.edu.uco.asistenciasuco.application.features.docente.registrardocentedesdeusuario.usecase.mapper.RegistrarDocenteDesdeUsuarioRepositoryMapper;
-import co.edu.uco.asistenciasuco.application.secondaryports.DocenteRepositoryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.entity.DocenteOperacionRepositoryEntity;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.DocenteRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.DocenteOperacionRepositoryProjection;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import java.util.Objects;
 
 /**
  * Implementacion del caso de uso registrar docente desde usuario.
@@ -17,10 +18,7 @@ public final class RegistrarDocenteDesdeUsuarioUseCaseImpl implements RegistrarD
     private final DocenteRepositoryPort docenteRepositoryPort;
 
     public RegistrarDocenteDesdeUsuarioUseCaseImpl(final DocenteRepositoryPort docenteRepositoryPort) {
-        if (ObjectHelper.isNull(docenteRepositoryPort)) {
-            throw new CrosscuttingException("El puerto de salida DocenteRepositoryPort es obligatorio.");
-        }
-        this.docenteRepositoryPort = docenteRepositoryPort;
+        this.docenteRepositoryPort = Objects.requireNonNull(docenteRepositoryPort, "El puerto de salida DocenteRepositoryPort es obligatorio.");
     }
 
     @Override
@@ -29,7 +27,7 @@ public final class RegistrarDocenteDesdeUsuarioUseCaseImpl implements RegistrarD
             throw new CrosscuttingException("El dominio para registrar docente desde usuario es obligatorio.");
         }
 
-        final DocenteOperacionRepositoryEntity resultado = docenteRepositoryPort.registrarDocenteDesdeUsuario(
+        final DocenteOperacionRepositoryProjection resultado = docenteRepositoryPort.registrarDocenteDesdeUsuario(
                 RegistrarDocenteDesdeUsuarioRepositoryMapper.toRepositoryDTO(domain)
         );
 

@@ -1,6 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter;
 
-import co.edu.uco.asistenciasuco.infrastructure.correlation.CorrelationIdContext;
+import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

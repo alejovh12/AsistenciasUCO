@@ -2,7 +2,6 @@ package co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consul
 
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.primaryports.dto.TipoIdentificacionDTO;
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.domain.TipoIdentificacionDomain;
-import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 
 import java.util.ArrayList;
@@ -14,7 +13,6 @@ import java.util.List;
 public final class ConsultarTiposIdentificacionMapper {
 
     private ConsultarTiposIdentificacionMapper() {
-        throw new CrosscuttingException("No es permitido instanciar una clase utilitaria.");
     }
 
     public static List<TipoIdentificacionDTO> toDTOs(final List<TipoIdentificacionDomain> domains) {

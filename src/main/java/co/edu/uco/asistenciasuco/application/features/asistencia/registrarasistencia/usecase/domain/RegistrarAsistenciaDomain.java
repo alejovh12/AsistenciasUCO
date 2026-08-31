@@ -1,7 +1,14 @@
 package co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.usecase.domain;
 
-import co.edu.uco.asistenciasuco.application.exception.ErrorCode;
-import co.edu.uco.asistenciasuco.application.exception.ValidationException;
+
+
+
+
+import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
+import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
+import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
+import co.edu.uco.asistenciasuco.application.features.asistencia.exception.AsistenciaErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
 
@@ -41,25 +48,25 @@ public final class RegistrarAsistenciaDomain {
 
     private void validarEstudiante(final UUID estudiante) {
         if (ObjectHelper.isNull(estudiante)) {
-            throw new ValidationException(ErrorCode.ERR_ESTUDIANTE_ID_REQUERIDO);
+            throw new ValidationException(EstudianteErrorCode.ERR_ESTUDIANTE_ID_REQUERIDO);
         }
     }
 
     private void validarGrupo(final UUID grupo) {
         if (ObjectHelper.isNull(grupo)) {
-            throw new ValidationException(ErrorCode.ERR_GRUPO_REQUERIDO);
+            throw new ValidationException(GrupoErrorCode.ERR_GRUPO_REQUERIDO);
         }
     }
 
     private void validarSesion(final UUID sesion) {
         if (ObjectHelper.isNull(sesion)) {
-            throw new ValidationException(ErrorCode.ERR_SESION_REQUERIDA);
+            throw new ValidationException(SesionErrorCode.ERR_SESION_REQUERIDA);
         }
     }
 
     private boolean validarPresente(final Boolean presente) {
         if (ObjectHelper.isNull(presente)) {
-            throw new ValidationException(ErrorCode.ERR_PRESENTE_REQUERIDO);
+            throw new ValidationException(AsistenciaErrorCode.ERR_PRESENTE_REQUERIDO);
         }
         return presente;
     }
@@ -72,7 +79,7 @@ public final class RegistrarAsistenciaDomain {
         }
 
         if (!TextHelper.hasLengthBetween(observacionNormalizada, 5, 250)) {
-            throw new ValidationException(ErrorCode.ERR_OBSERVACION_ASISTENCIA_LONGITUD_INVALIDA);
+            throw new ValidationException(AsistenciaErrorCode.ERR_OBSERVACION_ASISTENCIA_LONGITUD_INVALIDA);
         }
 
         return observacionNormalizada;
@@ -80,7 +87,7 @@ public final class RegistrarAsistenciaDomain {
 
     private void validarObservacionSegunAsistencia(final boolean presente, final String observacion) {
         if (!presente && TextHelper.isNullOrBlank(observacion)) {
-            throw new ValidationException(ErrorCode.ERR_OBSERVACION_ASISTENCIA_REQUERIDA);
+            throw new ValidationException(AsistenciaErrorCode.ERR_OBSERVACION_ASISTENCIA_REQUERIDA);
         }
     }
 

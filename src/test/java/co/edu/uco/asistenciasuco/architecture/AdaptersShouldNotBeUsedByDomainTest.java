@@ -12,6 +12,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 class AdaptersShouldNotBeUsedByDomainTest {
 
     private static final String BASE_PACKAGE = "co.edu.uco.asistenciasuco";
+    private static final String DOMAIN_PACKAGE = "..application..domain..";
 
     @Test
     void usecase_domain_should_not_depend_on_infrastructure() {
@@ -20,7 +21,7 @@ class AdaptersShouldNotBeUsedByDomainTest {
                 .importPackages(BASE_PACKAGE);
 
         noClasses()
-                .that().resideInAPackage("..application.usecase.domain..")
+                .that().resideInAPackage(DOMAIN_PACKAGE)
                 .should().dependOnClassesThat().resideInAPackage("..infrastructure..")
                 .check(classes);
     }

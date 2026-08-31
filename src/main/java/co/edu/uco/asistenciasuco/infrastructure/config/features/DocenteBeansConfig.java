@@ -20,8 +20,8 @@ import co.edu.uco.asistenciasuco.application.features.docente.registrardocentede
 import co.edu.uco.asistenciasuco.application.features.docente.registrardocentedesdeusuario.primaryports.interactor.RegistrarDocenteDesdeUsuarioInteractor;
 import co.edu.uco.asistenciasuco.application.features.docente.registrardocentedesdeusuario.usecase.RegistrarDocenteDesdeUsuarioUseCase;
 import co.edu.uco.asistenciasuco.application.features.docente.registrardocentedesdeusuario.usecase.impl.RegistrarDocenteDesdeUsuarioUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.secondaryports.DocenteRepositoryPort;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.DocenteRepositorySqlServerAdapter;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.DocenteRepositoryPort;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.DocenteRepositorySqlServerAdapter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
