@@ -72,3 +72,15 @@ logging:
       add:
         service: ${spring.application.name}
         environment: ${ASISTENCIAS_UCO_ENVIRONMENT:local}
+
+# ──────────────────────────────────────────────────────────────
+# Proveedor de Identidad Institucional (actualmente Keycloak)
+# Para cambiar de IdP: ajustar IdentityProviderBeansConfig.java
+# ──────────────────────────────────────────────────────────────
+keycloak:
+  admin:
+    server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8081}
+    realm: ${KEYCLOAK_REALM:asistencias-uco}
+    admin-username: ${KEYCLOAK_ADMIN_USER:admin}
+    admin-password: ${KEYCLOAK_ADMIN_PASSWORD:admin}
+    client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:admin-cli}

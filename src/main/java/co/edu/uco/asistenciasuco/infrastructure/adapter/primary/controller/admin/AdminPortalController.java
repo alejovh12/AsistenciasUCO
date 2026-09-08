@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin;
 
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CrearCuentaIdentidadDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
@@ -183,13 +185,16 @@ public final class AdminPortalController {
 
     private final JdbcTemplate jdbcTemplate;
     private final PasswordEncoderPort passwordEncoderPort;
+    private final IdentityProviderPort identityProviderPort;
 
     public AdminPortalController(
             final JdbcTemplate jdbcTemplate,
-            final PasswordEncoderPort passwordEncoderPort
+            final PasswordEncoderPort passwordEncoderPort,
+            final IdentityProviderPort identityProviderPort
     ) {
         this.jdbcTemplate = Objects.requireNonNull(jdbcTemplate, "JdbcTemplate es obligatorio.");
         this.passwordEncoderPort = Objects.requireNonNull(passwordEncoderPort, "PasswordEncoderPort es obligatorio.");
+        this.identityProviderPort = Objects.requireNonNull(identityProviderPort, "IdentityProviderPort es obligatorio.");
     }
 
     @GetMapping("/decanos")
@@ -281,6 +286,24 @@ public final class AdminPortalController {
         } catch (DataAccessException ex) {
             LOGGER.error("Error ejecutando usp_crear_decano", ex);
             throw new ConflictException("Error al registrar el decano en la base de datos.");
+        }
+
+        // Crear cuenta en el proveedor de identidad para habilitar el login del decano
+        try {
+            final var cuentaDTO = new CrearCuentaIdentidadDTO(
+                    String.valueOf(numeroIdentificacion),
+                    correo,
+                    finalPrimerNombre,
+                    finalPrimerApellido,
+                    rawPassword.isEmpty() ? "Test1234!" : rawPassword,
+                    "decano"
+            );
+            final var cuentaCreada = identityProviderPort.crearCuenta(cuentaDTO);
+            LOGGER.info("Cuenta de decano creada en IdP: username={}, idExterno={}", cuentaDTO.username(), cuentaCreada.idExterno());
+        } catch (IdentityProviderPort.IdentityProviderException ex) {
+            LOGGER.error("No se pudo crear la cuenta del decano en el proveedor de identidad. " +
+                    "El usuario existe en BD pero no podrá iniciar sesión hasta que se resuelva. " +
+                    "numeroIdentificacion={}, correo={}", numeroIdentificacion, correo, ex);
         }
 
         final Map<String, Object> result = new HashMap<>(payload);

@@ -4,6 +4,8 @@ import co.edu.uco.asistenciasuco.application.exception.business.ConflictExceptio
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CrearCuentaIdentidadDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
@@ -220,17 +222,20 @@ public final class CoordinadorPortalController {
     private final UserScopeService userScopeService;
     private final co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.realtime.RealtimeEventHub realtimeEventHub;
     private final PasswordEncoderPort passwordEncoderPort;
+    private final IdentityProviderPort identityProviderPort;
 
     public CoordinadorPortalController(
             final JdbcTemplate jdbcTemplate,
             final UserScopeService userScopeService,
             final co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.realtime.RealtimeEventHub realtimeEventHub,
-            final PasswordEncoderPort passwordEncoderPort
+            final PasswordEncoderPort passwordEncoderPort,
+            final IdentityProviderPort identityProviderPort
     ) {
         this.jdbcTemplate = Objects.requireNonNull(jdbcTemplate, "JdbcTemplate es obligatorio.");
         this.userScopeService = Objects.requireNonNull(userScopeService, "UserScopeService es obligatorio.");
         this.realtimeEventHub = Objects.requireNonNull(realtimeEventHub, "RealtimeEventHub es obligatorio.");
         this.passwordEncoderPort = Objects.requireNonNull(passwordEncoderPort, "PasswordEncoderPort es obligatorio.");
+        this.identityProviderPort = Objects.requireNonNull(identityProviderPort, "IdentityProviderPort es obligatorio.");
     }
 
     @GetMapping("/docentes")
@@ -294,7 +299,7 @@ public final class CoordinadorPortalController {
                 rs -> rs.next() ? UUID.fromString(rs.getString(1)) : UUID.fromString("A1B2C3D4-0000-0000-0000-000000000001")
         );
 
-        // 2. Insertar Usuario con hash activo de la clave
+        // 2. Insertar en SQL Server (BD es la fuente de verdad de negocio)
         final String rawPassword = Objects.toString(payload.get("password"), "Test1234!").trim();
         final String passwordToHash = rawPassword.isEmpty() ? "Test1234!" : rawPassword;
         final String hashedPassword = passwordEncoderPort.encode(passwordToHash);
@@ -307,7 +312,6 @@ public final class CoordinadorPortalController {
                 usuarioId, tipoId, numeroIdentificacion, primerApellido, segundoApellido, primerNombre, segundoNombre, correo, hashedPassword
         );
 
-        // 3. Insertar Docente
         jdbcTemplate.update(
                 """
                 INSERT INTO dbo.Docente (id, usuario)
@@ -315,6 +319,28 @@ public final class CoordinadorPortalController {
                 """,
                 docenteId, usuarioId
         );
+
+        // 3. Crear cuenta en el proveedor de identidad para habilitar el login
+        // Si el IdP falla se loguea la advertencia pero no se revierte el registro en BD
+        // (el administrador puede completar la cuenta en el IdP manualmente si fuera necesario)
+        String idExternoIdP = null;
+        try {
+            final var cuentaDTO = new CrearCuentaIdentidadDTO(
+                    String.valueOf(numeroIdentificacion),
+                    correo,
+                    primerNombre,
+                    primerApellido,
+                    rawPassword.isEmpty() ? "Test1234!" : rawPassword,
+                    "docente"
+            );
+            final var cuentaCreada = identityProviderPort.crearCuenta(cuentaDTO);
+            idExternoIdP = cuentaCreada.idExterno();
+            LOGGER.info("Cuenta de docente creada en IdP: username={}, idExterno={}", cuentaDTO.username(), idExternoIdP);
+        } catch (IdentityProviderPort.IdentityProviderException ex) {
+            LOGGER.error("No se pudo crear la cuenta del docente en el proveedor de identidad. " +
+                    "El usuario existe en BD pero no podrá iniciar sesión hasta que se resuelva. " +
+                    "numeroIdentificacion={}, correo={}", numeroIdentificacion, correo, ex);
+        }
 
         final Map<String, Object> result = new HashMap<>();
         result.put("id", docenteId.toString());

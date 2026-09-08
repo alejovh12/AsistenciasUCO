@@ -3,6 +3,8 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.deca
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CrearCuentaIdentidadDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
@@ -80,15 +82,18 @@ public final class DecanoPortalController {
     private final JdbcTemplate jdbcTemplate;
     private final UserScopeService userScopeService;
     private final PasswordEncoderPort passwordEncoderPort;
+    private final IdentityProviderPort identityProviderPort;
 
     public DecanoPortalController(
             final JdbcTemplate jdbcTemplate,
             final UserScopeService userScopeService,
-            final PasswordEncoderPort passwordEncoderPort
+            final PasswordEncoderPort passwordEncoderPort,
+            final IdentityProviderPort identityProviderPort
     ) {
         this.jdbcTemplate = Objects.requireNonNull(jdbcTemplate, "JdbcTemplate es obligatorio.");
         this.userScopeService = Objects.requireNonNull(userScopeService, "UserScopeService es obligatorio.");
         this.passwordEncoderPort = Objects.requireNonNull(passwordEncoderPort, "PasswordEncoderPort es obligatorio.");
+        this.identityProviderPort = Objects.requireNonNull(identityProviderPort, "IdentityProviderPort es obligatorio.");
     }
 
     @GetMapping("/coordinadores")
@@ -216,6 +221,24 @@ public final class DecanoPortalController {
             res.put("id", id.toString());
             res.put("estado", "ACTIVO");
             res.put("mensajeUsuario", mensajeUsuario);
+
+            // Crear cuenta en el proveedor de identidad para habilitar el login del coordinador
+            try {
+                final var cuentaDTO = new CrearCuentaIdentidadDTO(
+                        String.valueOf(numeroIdentificacion),
+                        correo,
+                        primerNombre,
+                        primerApellido,
+                        rawPassword.isEmpty() ? "Test1234!" : rawPassword,
+                        "coordinador"
+                );
+                final var cuentaCreada = identityProviderPort.crearCuenta(cuentaDTO);
+                LOGGER.info("Cuenta de coordinador creada en IdP: username={}, idExterno={}", cuentaDTO.username(), cuentaCreada.idExterno());
+            } catch (IdentityProviderPort.IdentityProviderException ex) {
+                LOGGER.error("No se pudo crear la cuenta del coordinador en el proveedor de identidad. " +
+                        "El usuario existe en BD pero no podrá iniciar sesión hasta que se resuelva. " +
+                        "numeroIdentificacion={}, correo={}", numeroIdentificacion, correo, ex);
+            }
 
             return ResponseEntity.status(HttpStatus.CREATED).body(new ApiDataResponse<>(true, res));
         } catch (ConflictException | ForbiddenException ex) {
