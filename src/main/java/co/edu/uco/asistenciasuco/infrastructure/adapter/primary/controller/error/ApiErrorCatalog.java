@@ -10,6 +10,7 @@ import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorDefinition;
 import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorKind;
 import co.edu.uco.asistenciasuco.crosscutting.exception.TechnicalException;
 import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.CommonErrorCode;
+import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
 import org.springframework.http.HttpStatus;
 
 final class ApiErrorCatalog {
@@ -18,9 +19,14 @@ final class ApiErrorCatalog {
     }
 
     static ApiErrorDescriptor fromApplicationException(final ApplicationException exception) {
-        return exception.getErrorDefinition()
+        final ApiErrorDescriptor descriptor = exception.getErrorDefinition()
                 .map(ApiErrorCatalog::from)
                 .orElseGet(() -> fromUnknownApplicationException(exception));
+
+        if (!TextHelper.isNullOrBlank(exception.getMessage()) && !exception.getMessage().equals(descriptor.code())) {
+            return new ApiErrorDescriptor(descriptor.code(), exception.getMessage(), descriptor.status());
+        }
+        return descriptor;
     }
 
     static ApiErrorDescriptor fromTechnicalException(final TechnicalException exception) {
@@ -51,7 +57,10 @@ final class ApiErrorCatalog {
 
     private static ApiErrorDescriptor fromUnknownApplicationException(final ApplicationException exception) {
         final HttpStatus status = statusForExceptionType(exception);
-        return new ApiErrorDescriptor(exception.getCode(), CommonErrorCode.BUSINESS_ERROR.defaultMessage(), status);
+        final String message = TextHelper.isNullOrBlank(exception.getMessage())
+                ? CommonErrorCode.BUSINESS_ERROR.defaultMessage()
+                : exception.getMessage();
+        return new ApiErrorDescriptor(exception.getCode(), message, status);
     }
 
     private static HttpStatus statusForExceptionType(final ApplicationException exception) {

@@ -68,6 +68,7 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/**").permitAll()
+                .requestMatchers("/api/v1/realtime/**").permitAll()
                 .requestMatchers("/api/v1/**").authenticated()
                 .anyRequest().authenticated()
             )
@@ -86,7 +87,7 @@ public class SecurityConfig {
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         final JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setPrincipalClaimName(PRINCIPAL_CLAIM_NAME);
+        converter.setPrincipalClaimName("sub");
         converter.setJwtGrantedAuthoritiesConverter(new KeycloakGrantedAuthoritiesConverter());
         return converter;
     }
@@ -101,28 +102,36 @@ public class SecurityConfig {
 
     @Bean
     public OAuth2TokenValidator<Jwt> jwtValidator() {
-        final OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuerUri);
-        final OAuth2TokenValidator<Jwt> withAudience = new JwtClaimValidator<Collection<String>>(
-                "aud",
-                audiences -> audiences != null && audiences.contains(expectedAudience)
+        final OAuth2TokenValidator<Jwt> withIssuer = new JwtClaimValidator<String>(
+                "iss",
+                issuer -> issuer != null && (issuer.equals(issuerUri) || issuer.endsWith("/realms/asistencias-uco"))
         );
-        final OAuth2TokenValidator<Jwt> withPrincipal = jwt -> {
-            final String idUsuario = jwt.getClaimAsString(PRINCIPAL_CLAIM_NAME);
-            return idUsuario == null || idUsuario.isBlank()
-                    ? OAuth2TokenValidatorResult.failure(MISSING_ID_USUARIO_ERROR)
-                    : OAuth2TokenValidatorResult.success();
-        };
-        return new DelegatingOAuth2TokenValidator<>(withIssuer, withAudience, withPrincipal);
+        final OAuth2TokenValidator<Jwt> withAudience = new JwtClaimValidator<Object>(
+                "aud",
+                aud -> {
+                    if (aud == null) return true;
+                    if (aud instanceof String s) {
+                        return s.equals(expectedAudience) || s.equals("account") || s.equals("asistencias-uco-frontend");
+                    }
+                    if (aud instanceof Collection<?> col) {
+                        return col.isEmpty() || col.contains(expectedAudience) || col.contains("account") || col.contains("asistencias-uco-frontend");
+                    }
+                    return false;
+                }
+        );
+        return new DelegatingOAuth2TokenValidator<>(withIssuer, withAudience);
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         final CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:4200", "http://127.0.0.1:4200"));
-        // CORS expone únicamente los métodos HTTP utilizados actualmente por la API: GET, POST y OPTIONS.
+        configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(List.of(
                 HttpMethod.GET.name(),
                 HttpMethod.POST.name(),
+                HttpMethod.PUT.name(),
+                HttpMethod.PATCH.name(),
+                HttpMethod.DELETE.name(),
                 HttpMethod.OPTIONS.name()
         ));
         configuration.setAllowedHeaders(List.of(

@@ -25,7 +25,6 @@ import java.util.UUID;
  * Adaptador primario REST para consultas de asistencias.
  */
 @RestController
-@Profile("mock")
 public final class AsistenciaQueryController {
 
     private static final ConsultarAsistenciasPorGrupoRequestValidator CONSULT_BY_GROUP_VALIDATOR =

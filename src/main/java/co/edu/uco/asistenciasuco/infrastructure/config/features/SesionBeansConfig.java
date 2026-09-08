@@ -14,16 +14,24 @@ import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.usecase
 import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.usecase.impl.CrearSesionUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.SesionRepositoryMockAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.SesionRepositorySqlServerAdapter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 @Configuration(proxyBeanMethods = false)
-@Profile("mock")
 public class SesionBeansConfig {
 
     @Bean
-    public SesionRepositoryPort sesionRepositoryPort() {
+    @Profile("!mock")
+    public SesionRepositoryPort sesionRepositoryPort(final JdbcTemplate jdbcTemplate) {
+        return new SesionRepositorySqlServerAdapter(jdbcTemplate);
+    }
+
+    @Bean
+    @Profile("mock")
+    public SesionRepositoryPort sesionRepositoryMockPort() {
         return new SesionRepositoryMockAdapter();
     }
 

@@ -7,6 +7,8 @@ import java.util.UUID;
  */
 public final class RegistrarEstudianteRequest {
 
+    private UUID estudianteId;
+
     private UUID tipoIdentificacionId;
 
     private Integer numeroIdentificacion;
@@ -22,6 +24,14 @@ public final class RegistrarEstudianteRequest {
     private String correo;
 
     private String password;
+
+    public UUID getEstudianteId() {
+        return estudianteId;
+    }
+
+    public void setEstudianteId(final UUID estudianteId) {
+        this.estudianteId = estudianteId;
+    }
 
     public UUID getTipoIdentificacionId() {
         return tipoIdentificacionId;
@@ -80,7 +90,7 @@ public final class RegistrarEstudianteRequest {
     }
 
     public String getPassword() {
-        return password;
+        return (password == null || password.isBlank()) ? "Test1234!" : password;
     }
 
     public void setPassword(final String password) {

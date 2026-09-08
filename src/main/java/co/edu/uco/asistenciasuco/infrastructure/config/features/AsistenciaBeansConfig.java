@@ -14,16 +14,24 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisi
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.usecase.impl.SolicitarRevisionAsistenciaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.AsistenciaRepositoryMockAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.AsistenciaRepositorySqlServerAdapter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 @Configuration(proxyBeanMethods = false)
-@Profile("mock")
 public class AsistenciaBeansConfig {
 
     @Bean
-    public AsistenciaRepositoryPort asistenciaRepositoryPort() {
+    @Profile("!mock")
+    public AsistenciaRepositoryPort asistenciaRepositoryPort(final JdbcTemplate jdbcTemplate) {
+        return new AsistenciaRepositorySqlServerAdapter(jdbcTemplate);
+    }
+
+    @Bean
+    @Profile("mock")
+    public AsistenciaRepositoryPort asistenciaRepositoryMockPort() {
         return new AsistenciaRepositoryMockAdapter();
     }
 
