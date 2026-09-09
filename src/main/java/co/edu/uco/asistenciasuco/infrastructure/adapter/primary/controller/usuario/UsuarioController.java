@@ -195,6 +195,26 @@ public final class UsuarioController {
             AuditRequestAttributes.storeResourceId(resultado.getUsuarioId().toString());
         }
 
+        // Asegurar que el usuario quede registrado en dbo.Estudiante
+        if (jdbcTemplate != null && resultado.getUsuarioId() != null) {
+            try {
+                final Integer countEst = jdbcTemplate.queryForObject(
+                        "SELECT COUNT(1) FROM dbo.Estudiante WHERE usuario = ?",
+                        Integer.class, resultado.getUsuarioId()
+                );
+                if (countEst == null || countEst == 0) {
+                    jdbcTemplate.update(
+                            "INSERT INTO dbo.Estudiante (id, usuario) VALUES (NEWID(), ?)",
+                            resultado.getUsuarioId()
+                    );
+                    LOGGER.info("Perfil de estudiante registrado en dbo.Estudiante para usuarioId={}", resultado.getUsuarioId());
+                }
+            } catch (Exception ex) {
+                LOGGER.warn("No fue posible registrar perfil en dbo.Estudiante para usuarioId={}: {}",
+                        resultado.getUsuarioId(), ex.getMessage());
+            }
+        }
+
         // Crear cuenta en el proveedor de identidad para habilitar el login del estudiante
         if (identityProviderPort != null) {
             try {
@@ -203,7 +223,7 @@ public final class UsuarioController {
                         request.getCorreo(),
                         request.getPrimerNombre(),
                         request.getPrimerApellido(),
-                        request.getPassword(),
+                        (request.getPassword() != null && !request.getPassword().isBlank()) ? request.getPassword() : "Test1234!",
                         "ESTUDIANTE"
                 );
                 final var cuentaCreada = identityProviderPort.crearCuenta(cuentaDTO);

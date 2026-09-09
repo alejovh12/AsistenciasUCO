@@ -21,7 +21,11 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CrearCuentaIdentidadDTO;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CuentaIdentidadDTO;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -100,6 +104,31 @@ class GrupoControllerTest {
                 .andExpect(status().isCreated());
 
         assertEquals(GRUPO, dtoCapturado.get().getGrupoId());
+    }
+
+    @Test
+    void registrarEstudiante_sincroniza_con_keycloak_cuando_se_proporcionan_datos_personales() throws Exception {
+        final RegistrarEstudianteInputPort registrarPort = dto -> new RegistrarEstudianteResultadoDTO(true, "Estudiante registrado.");
+        final IdentityProviderPort idpPort = mock(IdentityProviderPort.class);
+        when(idpPort.crearCuenta(org.mockito.ArgumentMatchers.any()))
+                .thenReturn(new CuentaIdentidadDTO("kc-id", "123456789", "OK"));
+
+        final MockMvc mockMvc = MockMvcBuilders.standaloneSetup(new GrupoController(null, null, registrarPort, List::of, idpPort))
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
+
+        mockMvc.perform(post("/api/v1/grupos/{grupoId}/estudiantes", GRUPO)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bodyValido()))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.exitoso").value(true));
+
+        final org.mockito.ArgumentCaptor<CrearCuentaIdentidadDTO> captor =
+                org.mockito.ArgumentCaptor.forClass(CrearCuentaIdentidadDTO.class);
+        verify(idpPort).crearCuenta(captor.capture());
+        assertEquals("123456789", captor.getValue().username());
+        assertEquals("ESTUDIANTE", captor.getValue().rolInstitucional());
+        assertEquals("ana.perez@uco.edu.co", captor.getValue().correo());
     }
 
     @Test

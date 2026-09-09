@@ -8,6 +8,8 @@ import co.edu.uco.asistenciasuco.application.features.grupo.consultargrupos.prim
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.primaryports.RegistrarEstudianteInputPort;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.primaryports.dto.RegistrarEstudianteDTO;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.primaryports.dto.RegistrarEstudianteResultadoDTO;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CrearCuentaIdentidadDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo.mapper.RegistrarEstudianteHttpMapper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo.request.RegistrarEstudianteRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo.validation.RegistrarEstudianteRequestValidator;
@@ -99,6 +101,7 @@ public final class GrupoController {
     private final UserScopeService userScopeService;
     private final RegistrarEstudianteInputPort registrarEstudianteInputPort;
     private final ConsultarGruposInputPort consultarGruposInputPort;
+    private final IdentityProviderPort identityProviderPort;
 
     @org.springframework.beans.factory.annotation.Autowired
     public GrupoController(
@@ -107,19 +110,22 @@ public final class GrupoController {
             @org.springframework.beans.factory.annotation.Autowired(required = false)
             final RegistrarEstudianteInputPort registrarEstudianteInputPort,
             @org.springframework.beans.factory.annotation.Autowired(required = false)
-            final ConsultarGruposInputPort consultarGruposInputPort
+            final ConsultarGruposInputPort consultarGruposInputPort,
+            @org.springframework.beans.factory.annotation.Autowired(required = false)
+            final IdentityProviderPort identityProviderPort
     ) {
         this.jdbcTemplate = jdbcTemplate;
         this.userScopeService = userScopeService;
         this.registrarEstudianteInputPort = registrarEstudianteInputPort;
         this.consultarGruposInputPort = consultarGruposInputPort;
+        this.identityProviderPort = identityProviderPort;
     }
 
     public GrupoController(
             final RegistrarEstudianteInputPort registrarEstudianteInputPort,
             final ConsultarGruposInputPort consultarGruposInputPort
     ) {
-        this(null, null, registrarEstudianteInputPort, consultarGruposInputPort);
+        this(null, null, registrarEstudianteInputPort, consultarGruposInputPort, null);
     }
 
     @GetMapping
@@ -589,6 +595,10 @@ public final class GrupoController {
                         "INSERT INTO dbo.EstudianteGrupo (id, estudiante, grupo, estado) VALUES (NEWID(), ?, ?, ?)",
                         existingEstudianteId, grupoId, estadoActivoId
                 );
+
+                // Asegurar sincronización en Keycloak para estudiante existente
+                sincronizarCuentaKeycloakEstudiante(request);
+
                 return ResponseEntity.status(HttpStatus.CREATED)
                         .body(new RegistrarEstudianteResultadoDTO(true, "Estudiante matriculado exitosamente en el grupo."));
             }
@@ -599,7 +609,33 @@ public final class GrupoController {
                 ? registrarEstudianteInputPort.execute(dto)
                 : new RegistrarEstudianteResultadoDTO(true, "Estudiante registrado exitosamente en el grupo.");
 
+        // Crear/sincronizar cuenta en Keycloak tras registro exitoso del estudiante
+        if (request.getNumeroIdentificacion() != null) {
+            sincronizarCuentaKeycloakEstudiante(request);
+        }
+
         return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
+    }
+
+    private void sincronizarCuentaKeycloakEstudiante(final RegistrarEstudianteRequest request) {
+        if (identityProviderPort != null && request.getNumeroIdentificacion() != null) {
+            try {
+                final var cuentaDTO = new CrearCuentaIdentidadDTO(
+                        String.valueOf(request.getNumeroIdentificacion()),
+                        request.getCorreo(),
+                        request.getPrimerNombre(),
+                        request.getPrimerApellido(),
+                        (request.getPassword() != null && !request.getPassword().isBlank()) ? request.getPassword() : "Test1234!",
+                        "ESTUDIANTE"
+                );
+                final var cuentaCreada = identityProviderPort.crearCuenta(cuentaDTO);
+                LOGGER.info("Cuenta de estudiante creada/sincronizada en Keycloak: username={}, idExterno={}",
+                        cuentaDTO.username(), cuentaCreada.idExterno());
+            } catch (IdentityProviderPort.IdentityProviderException ex) {
+                LOGGER.error("No se pudo registrar/sincronizar la cuenta del estudiante en Keycloak. " +
+                        "numeroIdentificacion={}, correo={}", request.getNumeroIdentificacion(), request.getCorreo(), ex);
+            }
+        }
     }
 
     @DeleteMapping("/{grupoId}/estudiantes/{estudianteId}")
