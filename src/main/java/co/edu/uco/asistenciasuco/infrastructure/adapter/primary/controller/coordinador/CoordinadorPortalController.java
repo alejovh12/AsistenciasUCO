@@ -331,7 +331,7 @@ public final class CoordinadorPortalController {
                     primerNombre,
                     primerApellido,
                     rawPassword.isEmpty() ? "Test1234!" : rawPassword,
-                    "docente"
+                    "DOCENTE"
             );
             final var cuentaCreada = identityProviderPort.crearCuenta(cuentaDTO);
             idExternoIdP = cuentaCreada.idExterno();

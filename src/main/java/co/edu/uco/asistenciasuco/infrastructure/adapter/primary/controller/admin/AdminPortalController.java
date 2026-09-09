@@ -296,7 +296,7 @@ public final class AdminPortalController {
                     finalPrimerNombre,
                     finalPrimerApellido,
                     rawPassword.isEmpty() ? "Test1234!" : rawPassword,
-                    "decano"
+                    "DECANO"
             );
             final var cuentaCreada = identityProviderPort.crearCuenta(cuentaDTO);
             LOGGER.info("Cuenta de decano creada en IdP: username={}, idExterno={}", cuentaDTO.username(), cuentaCreada.idExterno());

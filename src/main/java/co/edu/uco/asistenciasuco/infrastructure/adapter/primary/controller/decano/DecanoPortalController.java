@@ -230,7 +230,7 @@ public final class DecanoPortalController {
                         primerNombre,
                         primerApellido,
                         rawPassword.isEmpty() ? "Test1234!" : rawPassword,
-                        "coordinador"
+                        "COORDINADOR"
                 );
                 final var cuentaCreada = identityProviderPort.crearCuenta(cuentaDTO);
                 LOGGER.info("Cuenta de coordinador creada en IdP: username={}, idExterno={}", cuentaDTO.username(), cuentaCreada.idExterno());

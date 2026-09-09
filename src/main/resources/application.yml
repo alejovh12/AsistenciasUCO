@@ -81,6 +81,6 @@ keycloak:
   admin:
     server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8081}
     realm: ${KEYCLOAK_REALM:asistencias-uco}
-    admin-username: ${KEYCLOAK_ADMIN_USER:admin}
-    admin-password: ${KEYCLOAK_ADMIN_PASSWORD:admin}
+    admin-username: ${KEYCLOAK_ADMIN_USER:kcadmin}
+    admin-password: ${KEYCLOAK_ADMIN_PASSWORD:change-me}
     client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:admin-cli}
