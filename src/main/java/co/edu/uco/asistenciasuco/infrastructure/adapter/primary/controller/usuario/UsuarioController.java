@@ -3,6 +3,8 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.usua
 import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.primaryports.CrearUsuarioInputPort;
 import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.primaryports.dto.CrearUsuarioDTO;
 import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.primaryports.dto.CrearUsuarioResultadoDTO;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CrearCuentaIdentidadDTO;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.audit.AuditableOperation;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.usuario.response.CrearUsuarioResponse;
@@ -46,20 +48,23 @@ public final class UsuarioController {
     private final CrearUsuarioInputPort crearUsuarioInputPort;
     private final JdbcTemplate jdbcTemplate;
     private final UserScopeService userScopeService;
+    private final IdentityProviderPort identityProviderPort;
 
     @Autowired
     public UsuarioController(
             final CrearUsuarioInputPort crearUsuarioInputPort,
             final JdbcTemplate jdbcTemplate,
-            final UserScopeService userScopeService
+            final UserScopeService userScopeService,
+            final IdentityProviderPort identityProviderPort
     ) {
         this.crearUsuarioInputPort = Objects.requireNonNull(crearUsuarioInputPort, "El puerto de entrada CrearUsuarioInputPort es obligatorio.");
         this.jdbcTemplate = jdbcTemplate;
         this.userScopeService = userScopeService;
+        this.identityProviderPort = identityProviderPort;
     }
 
     public UsuarioController(final CrearUsuarioInputPort crearUsuarioInputPort) {
-        this(crearUsuarioInputPort, null, null);
+        this(crearUsuarioInputPort, null, null, null);
     }
 
     @GetMapping("/perfil")
@@ -189,6 +194,28 @@ public final class UsuarioController {
         if (!ObjectHelper.isNull(resultado.getUsuarioId())) {
             AuditRequestAttributes.storeResourceId(resultado.getUsuarioId().toString());
         }
+
+        // Crear cuenta en el proveedor de identidad para habilitar el login del estudiante
+        if (identityProviderPort != null) {
+            try {
+                final var cuentaDTO = new CrearCuentaIdentidadDTO(
+                        String.valueOf(request.getNumeroIdentificacion()),
+                        request.getCorreo(),
+                        request.getPrimerNombre(),
+                        request.getPrimerApellido(),
+                        request.getPassword(),
+                        "ESTUDIANTE"
+                );
+                final var cuentaCreada = identityProviderPort.crearCuenta(cuentaDTO);
+                LOGGER.info("Cuenta de estudiante creada en IdP: username={}, idExterno={}",
+                        cuentaDTO.username(), cuentaCreada.idExterno());
+            } catch (IdentityProviderPort.IdentityProviderException ex) {
+                LOGGER.error("No se pudo crear la cuenta del estudiante en el proveedor de identidad. " +
+                        "El usuario existe en BD pero no podrá iniciar sesión hasta que se resuelva. " +
+                        "numeroIdentificacion={}", request.getNumeroIdentificacion(), ex);
+            }
+        }
+
         return ResponseEntity.status(HttpStatus.CREATED).body(CrearUsuarioResponse.from(resultado));
     }
 }
