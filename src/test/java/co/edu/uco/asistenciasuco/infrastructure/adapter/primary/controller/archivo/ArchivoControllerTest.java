@@ -120,6 +120,54 @@ class ArchivoControllerTest {
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
     }
 
+    @Test
+    void subeYDescargaImagenPngConTipoDeContenidoCorrecto() throws IOException {
+        final byte[] content = "imagen".getBytes();
+        final ResponseEntity<ApiDataResponse<Map<String, Object>>> upload = controller.subirArchivo(
+                new MockMultipartFile("archivo", "captura.png", "image/png", content));
+        final String savedName = (String) upload.getBody().datos().get("nombreGuardado");
+
+        final ResponseEntity<Resource> download = controller.descargarArchivo(savedName);
+
+        assertEquals("image/png", download.getHeaders().getContentType().toString());
+    }
+
+    @Test
+    void subeYDescargaImagenJpgConTipoDeContenidoCorrecto() throws IOException {
+        final byte[] content = "imagen".getBytes();
+        final ResponseEntity<ApiDataResponse<Map<String, Object>>> upload = controller.subirArchivo(
+                new MockMultipartFile("archivo", "captura.jpg", "image/jpeg", content));
+        final String savedName = (String) upload.getBody().datos().get("nombreGuardado");
+
+        final ResponseEntity<Resource> download = controller.descargarArchivo(savedName);
+
+        assertEquals("image/jpeg", download.getHeaders().getContentType().toString());
+    }
+
+    @Test
+    void nombreDeArchivoSinExtensionUsaOctetStreamPorDefecto() throws IOException {
+        final Path fileWithoutExtension = storageDirectory.resolve("sinextension");
+        Files.write(fileWithoutExtension, "contenido".getBytes());
+
+        final ResponseEntity<Resource> download = controller.descargarArchivo("sinextension");
+
+        assertEquals("application/octet-stream", download.getHeaders().getContentType().toString());
+    }
+
+    @Test
+    void nombreNuloOEnBlancoEsRechazadoEnDescarga() {
+        assertEquals(HttpStatus.NOT_FOUND,
+                assertThrows(ResponseStatusException.class, () -> controller.descargarArchivo("   ")).getStatusCode());
+    }
+
+    @Test
+    void archivoConNombreOriginalNuloUsaValorPorDefectoYRechazaPorSinExtension() {
+        final ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> controller.subirArchivo(new MockMultipartFile("archivo", null, "application/pdf", "contenido".getBytes())));
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+    }
+
     private MockMultipartFile file(final String name, final String extension) {
         return new MockMultipartFile("archivo", name, "application/" + extension, "contenido".getBytes());
     }
