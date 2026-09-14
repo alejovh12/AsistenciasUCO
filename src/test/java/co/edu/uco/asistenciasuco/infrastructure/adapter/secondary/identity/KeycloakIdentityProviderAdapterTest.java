@@ -241,6 +241,21 @@ class KeycloakIdentityProviderAdapterTest {
     class AdminTokenTests {
 
         @Test
+        void interrupcionDuranteEnvioHttpConservaEstadoDelHilo() {
+            Thread.currentThread().interrupt();
+            try {
+                final IdentityProviderPort.IdentityProviderException exception = assertThrows(
+                        IdentityProviderPort.IdentityProviderException.class,
+                        () -> adapter.asignarRol(EXTERNAL_ID, ROLE));
+
+                assertTrue(exception.getCause() instanceof InterruptedException);
+                assertTrue(Thread.currentThread().isInterrupted());
+            } finally {
+                Thread.interrupted();
+            }
+        }
+
+        @Test
         void client_credentials_correcto_envia_credenciales_esperadas_y_nunca_password_grant() {
             stubCreacionExitosaCompleta();
 

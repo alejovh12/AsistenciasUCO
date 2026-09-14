@@ -10,14 +10,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -33,7 +32,7 @@ public class ArchivoController {
     private static final Logger LOGGER = LoggerFactory.getLogger(ArchivoController.class);
 
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("pdf", "png", "jpg", "jpeg");
-    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+    private static final long MAX_FILE_SIZE = 5L * 1024 * 1024; // 5 MB
 
     private final Path storageDirectory;
 
@@ -58,7 +57,10 @@ public class ArchivoController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El archivo excede el tamaño máximo permitido (5 MB).");
         }
 
-        final String originalFilename = StringUtils.cleanPath(Objects.requireNonNullElse(file.getOriginalFilename(), "archivo"));
+        final String originalFilename = Objects.requireNonNullElse(file.getOriginalFilename(), "archivo");
+        if (!isSimpleFilename(originalFilename)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nombre de archivo no válido.");
+        }
         final String extension = getExtension(originalFilename).toLowerCase();
 
         if (!ALLOWED_EXTENSIONS.contains(extension)) {
@@ -91,9 +93,15 @@ public class ArchivoController {
 
     @GetMapping("/{nombreArchivo:.+}")
     public ResponseEntity<Resource> descargarArchivo(@PathVariable final String nombreArchivo) {
+        if (!isSimpleFilename(nombreArchivo)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "El archivo solicitado no existe.");
+        }
         try {
             final Path filePath = this.storageDirectory.resolve(nombreArchivo).normalize();
             if (!filePath.startsWith(this.storageDirectory) || !Files.exists(filePath)) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "El archivo solicitado no existe.");
+            }
+            if (!filePath.toRealPath().startsWith(this.storageDirectory.toRealPath()) || !Files.isRegularFile(filePath)) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "El archivo solicitado no existe.");
             }
 
@@ -109,9 +117,22 @@ public class ArchivoController {
                     .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
                     .body(resource);
 
-        } catch (MalformedURLException ex) {
+        } catch (IOException ex) {
             LOGGER.error("Error resolviendo URL de archivo: {}", nombreArchivo, ex);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Archivo no encontrado.");
+        }
+    }
+
+    private static boolean isSimpleFilename(final String filename) {
+        if (filename == null || filename.isBlank() || filename.equals(".") || filename.contains("..")
+                || filename.indexOf('/') >= 0 || filename.indexOf('\\') >= 0 || filename.indexOf(':') >= 0) {
+            return false;
+        }
+        try {
+            final Path path = Paths.get(filename);
+            return !path.isAbsolute() && path.getNameCount() == 1;
+        } catch (InvalidPathException exception) {
+            return false;
         }
     }
 

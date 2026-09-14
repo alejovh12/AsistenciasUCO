@@ -1,5 +1,24 @@
 # Arquitectura de Runtime Security (independiente del proveedor)
 
+## CSRF en la API JWT
+
+La API usa `Authorization: Bearer <jwt>` y sesiones `STATELESS`; no autentica mediante
+cookies ni Basic Auth. Un sitio externo no puede hacer que el navegador adjunte el JWT
+Bearer de la aplicación automáticamente. Por eso las peticiones con Bearer válido no
+requieren un token CSRF adicional. Sin embargo, `SecurityConfig` conserva la protección
+CSRF de Spring para peticiones inseguras que no presentan el encabezado Bearer. Una
+petición que solo lleva cookies no puede aprovechar esta excepción. La autorización JWT
+y los controles de roles siguen aplicándose también a las peticiones exentas de CSRF.
+
+Esto responde al hallazgo CodeQL `java/spring-disabled-csrf-protection` del PR #6 sin
+exigir al cliente Angular un token CSRF en sus peticiones Bearer. Spring Security
+advierte que `STATELESS` por sí solo no elimina el riesgo cuando la autenticación se
+envía automáticamente mediante cookies o Basic Auth; la excepción se limita por eso
+al encabezado Bearer explícito.
+
+Referencias: [Spring Security: CSRF](https://docs.spring.io/spring-security/reference/features/exploits/csrf.html),
+[CodeQL: Disabled Spring CSRF protection](https://codeql.github.com/codeql-query-help/java/java-spring-disabled-csrf-protection/).
+
 Este documento describe cómo AsistenciasUCO valida y autoriza requests HTTP sin que la capa
 de seguridad conozca la estructura específica de los tokens de Keycloak. Complementa
 `docs/architecture/adapter-composition-standard.md` (que cubre el Composition Root general).

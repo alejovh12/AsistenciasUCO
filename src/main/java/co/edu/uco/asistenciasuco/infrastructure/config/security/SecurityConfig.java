@@ -20,6 +20,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.List;
 
@@ -55,7 +56,10 @@ public class SecurityConfig {
     ) throws Exception {
         http
             .cors(Customizer.withDefaults())
-            .csrf(csrf -> csrf.disable())
+            // El cliente envía JWT en Authorization: Bearer. Ese header no se adjunta
+            // automáticamente en una petición cross-site, a diferencia de una cookie.
+            // Mantenemos CSRF para cualquier petición insegura sin Bearer.
+            .csrf(csrf -> csrf.ignoringRequestMatchers(SecurityConfig::hasBearerAuthorization))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .exceptionHandling(exceptionHandling -> exceptionHandling
                 .authenticationEntryPoint(authenticationEntryPoint)
@@ -118,6 +122,11 @@ public class SecurityConfig {
             );
 
         return http.build();
+    }
+
+    private static boolean hasBearerAuthorization(final HttpServletRequest request) {
+        final String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
+        return authorization != null && authorization.regionMatches(true, 0, "Bearer ", 0, 7);
     }
 
     @Bean

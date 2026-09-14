@@ -549,6 +549,9 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
     private HttpResponse<String> send(final HttpRequest request) {
         try {
             return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (final InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new IdentityProviderException("Error de comunicacion con Keycloak.", exception);
         } catch (final Exception exception) {
             throw new IdentityProviderException("Error de comunicacion con Keycloak.", exception);
         }

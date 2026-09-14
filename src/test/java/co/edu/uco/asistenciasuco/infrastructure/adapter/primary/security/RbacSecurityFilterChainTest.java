@@ -8,6 +8,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.spi.Jwt
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.validation.AudienceValidator;
 import co.edu.uco.asistenciasuco.infrastructure.config.security.SecurityConfig;
 import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditEventPublisher;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -110,6 +111,20 @@ class RbacSecurityFilterChainTest {
     @Test
     void crear_grupo_coordinador_es_permitido_por_security_filter_chain() throws Exception {
         mockMvc.perform(post("/api/v1/grupos").header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void peticion_insegura_solo_con_cookie_requiere_csrf() throws Exception {
+        mockMvc.perform(post("/api/v1/grupos").cookie(new Cookie("JSESSIONID", "session-de-prueba")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void peticion_insegura_con_bearer_y_cookie_sigue_permitida() throws Exception {
+        mockMvc.perform(post("/api/v1/grupos")
+                        .cookie(new Cookie("JSESSIONID", "session-de-prueba"))
+                        .header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
                 .andExpect(status().isOk());
     }
 
