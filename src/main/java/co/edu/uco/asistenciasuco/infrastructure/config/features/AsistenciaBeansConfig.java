@@ -24,6 +24,7 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisi
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.primaryports.interactor.SolicitarRevisionAsistenciaInteractor;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.usecase.SolicitarRevisionAsistenciaUseCase;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.usecase.impl.SolicitarRevisionAsistenciaUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import org.springframework.context.annotation.Bean;
@@ -33,8 +34,11 @@ import org.springframework.context.annotation.Configuration;
 public class AsistenciaBeansConfig {
 
     @Bean
-    public RegistrarAsistenciaUseCase registrarAsistenciaUseCase(final AsistenciaRepositoryPort asistenciaRepositoryPort) {
-        return new RegistrarAsistenciaUseCaseImpl(asistenciaRepositoryPort);
+    public RegistrarAsistenciaUseCase registrarAsistenciaUseCase(
+            final AsistenciaRepositoryPort asistenciaRepositoryPort,
+            final RealtimePublisherPort realtimePublisherPort
+    ) {
+        return new RegistrarAsistenciaUseCaseImpl(asistenciaRepositoryPort, realtimePublisherPort);
     }
 
     @Bean
