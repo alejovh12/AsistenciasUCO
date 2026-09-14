@@ -37,6 +37,28 @@ class CleanArchitectureRulesTest {
     }
 
     @Test
+    void application_no_depende_de_reactor() {
+        noClasses()
+                .that().resideInAPackage("..application..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "reactor..",
+                        "org.reactivestreams.."
+                )
+                .check(importedClasses());
+    }
+
+    @Test
+    void application_no_depende_de_webflux_reactivo() {
+        noClasses()
+                .that().resideInAPackage("..application..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "org.springframework.web.reactive..",
+                        "org.springframework.http.codec.."
+                )
+                .check(importedClasses());
+    }
+
+    @Test
     void domain_no_depende_de_spring() {
         noClasses()
                 .that().resideInAPackage(DOMAIN_PACKAGE)

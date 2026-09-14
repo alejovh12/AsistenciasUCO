@@ -12,6 +12,7 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicit
 import co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicitudrevisionasistencia.usecase.impl.ResolverSolicitudRevisionAsistenciaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.primaryports.interactor.SolicitarRevisionAsistenciaInteractor;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.usecase.impl.SolicitarRevisionAsistenciaUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import org.junit.jupiter.api.Test;
@@ -24,10 +25,11 @@ class AsistenciaBeansConfigTest {
     private final AsistenciaBeansConfig config = new AsistenciaBeansConfig();
     private final AsistenciaRepositoryPort asistenciaRepositoryPort = mock(AsistenciaRepositoryPort.class);
     private final InstitutionalScopePort scopePort = mock(InstitutionalScopePort.class);
+    private final RealtimePublisherPort realtimePublisherPort = mock(RealtimePublisherPort.class);
 
     @Test
     void todos_los_beans_se_construyen_con_el_adapter_esperado() {
-        final var registrarAsistenciaUseCase = config.registrarAsistenciaUseCase(asistenciaRepositoryPort);
+        final var registrarAsistenciaUseCase = config.registrarAsistenciaUseCase(asistenciaRepositoryPort, realtimePublisherPort);
         assertInstanceOf(RegistrarAsistenciaUseCaseImpl.class, registrarAsistenciaUseCase);
         assertInstanceOf(RegistrarAsistenciaInteractor.class, config.registrarAsistenciaInputPort(registrarAsistenciaUseCase));
 
