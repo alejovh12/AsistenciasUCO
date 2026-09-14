@@ -48,6 +48,15 @@ jobs:
         shell: bash
         run: ./mvnw -B -ntp --no-transfer-progress clean verify
 
+      - name: Assert JaCoCo coverage report exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s target/site/jacoco/jacoco.xml
+          test -s target/site/jacoco/index.html
+          echo "JaCoCo XML: target/site/jacoco/jacoco.xml"
+          echo "JaCoCo HTML: target/site/jacoco/index.html"
+
       - name: Assert packaged application artifact exists
         shell: bash
         run: |
@@ -73,6 +82,16 @@ jobs:
           path: |
             target/surefire-reports/**
           if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload JaCoCo coverage report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: backend-jacoco-report-${{ github.run_id }}
+          path: |
+            target/site/jacoco/**
+          if-no-files-found: error
           retention-days: 14
 
       - name: Upload packaged JAR
