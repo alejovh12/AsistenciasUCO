@@ -1,77 +1,36 @@
 # Estándar de Composition Root y selección de adapters
 
-Este documento describe cómo AsistenciasUCO selecciona la tecnología detrás de cada
-capability (persistencia, identidad, seguridad, almacenamiento, tiempo real, auditoría) y
-cómo incorporar una tecnología nueva sin tocar Domain ni Application.
+## 1. Propósito
 
-## 1. Objetivo del Composition Root
+AsistenciasUCO usa Clean Architecture / Ports & Adapters. Domain y Application expresan
+**capacidades** mediante contratos neutrales; Infrastructure decide **qué tecnología** satisface
+cada capacidad.
 
-Domain y Application definen **qué** capability necesitan (a través de un Port) pero nunca
-**qué tecnología** la implementa. Esa decisión se toma una sola vez, al iniciar Spring, en un
-conjunto de clases `@Configuration` agrupadas bajo `infrastructure.config.adapters.*`: el
-**Composition Root**.
-
-```
-                    DOMAIN
-                       ▲
-                       │
-                  APPLICATION
-                       │
-              Secondary Port
-                       │
-        ┌──────────────┼──────────────┐
-        │              │              │
-        ▼              ▼              ▼
-   Adapter A       Adapter B       Adapter C
-   Tecnología 1    Tecnología 2    Local/NoOp
-        │              │              │
-        └──────────────┼──────────────┘
-                       │
-                COMPOSITION ROOT
-                       │
-                CONFIGURACIÓN
-```
-
-Application, Domain y los Controllers dependen únicamente del Port. Ninguno de ellos sabe
-si detrás hay SQL Server, Keycloak, almacenamiento local o cualquier otra tecnología.
-
-Regla general de dirección de dependencias:
+La selección tecnológica ocurre una sola vez al construir el contexto de Spring:
 
 ```text
-Primary Adapter -> InputPort
-Application UseCase -> SecondaryPort
-Secondary Adapter -> SecondaryPort
+Domain
+  ↑
+Application
+  |
+  +--> Secondary Port
+           |
+           v
+      Composition Root
+           |
+    +------+------+
+    |             |
+ Adapter A     Adapter B
 ```
 
-## 2. Diferencia entre Port y Adapter
+Regla principal:
 
-- **Port**: interfaz en `application.secondaryports.*` que expresa una *capability*
-  (`GrupoRepositoryPort`, `IdentityProviderPort`, `InstitutionalScopePort`...). Nunca lleva el
-  nombre de una tecnología.
-- **Adapter**: implementación concreta de un Port para una tecnología específica
-  (`GrupoRepositorySqlServerAdapter`, `KeycloakIdentityProviderAdapter`). Vive en
-  `infrastructure.adapter.secondary.*` y no se autoregistra con `@Repository`, `@Component` ni
-  `@Service`: quien decide instanciarlo es el Composition Root.
+```text
+PROFILE  = entorno
+PROVIDER = tecnología
+```
 
-## 3. PROFILE vs PROVIDER
-
-Estos dos conceptos se mezclaban antes de este prompt y ahora están separados:
-
-| Concepto  | Responde a...              | Mecanismo                                   |
-|-----------|-----------------------------|----------------------------------------------|
-| PROFILE   | ¿En qué **entorno** corro? (local, test, staging, prod) | `spring.profiles.active` |
-| PROVIDER  | ¿Con qué **tecnología** cumplo una capability? | `app.adapters.<capability>.provider` + `@ConditionalOnProperty` |
-
-**Antes** (incorrecto): `@Profile("mock")`, `@Profile("!mock")` decidían la tecnología del
-repositorio de Sesión/Asistencia. Un profile de entorno terminaba seleccionando tecnología.
-
-**Ahora**: la tecnología se selecciona exclusivamente con `app.adapters.*.provider`, evaluado
-por `@ConditionalOnProperty` en las clases del Composition Root. El profile de Spring solo
-describe el entorno y no participa en la selección de adapters.
-
-## 4. Estructura `app.adapters.*`
-
-Selecciona **qué** adapter implementa cada capability:
+Los perfiles (`local`, `test`, `staging`, `prod`) no seleccionan tecnologías. Los providers sí:
 
 ```yaml
 app:
@@ -90,13 +49,107 @@ app:
       provider: ${APP_ADAPTERS_AUDIT_PROVIDER:logging}
 ```
 
-Cada valor está tipado en `infrastructure.config.properties.adapters` mediante
-`@ConfigurationProperties` (nunca `@Value`), con un enum `Provider` por capability y
-validación de "no nulo" en el constructor compacto del record.
+---
 
-## 5. Estructura `app.providers.*`
+## 2. Reglas obligatorias
 
-Configura **cómo** se conecta la tecnología ya elegida (no decide cuál usar):
+### 2.1 Dirección de dependencias
+
+```text
+Primary Adapter -> InputPort
+Application UseCase -> SecondaryPort
+Secondary Adapter -> SecondaryPort
+Composition Root -> adapters concretos
+```
+
+Nunca:
+
+```text
+Application -> Infrastructure
+Application -> Keycloak
+Application -> Reactor
+Application -> RabbitMQ
+Application -> Redis
+Application -> MinIO
+```
+
+### 2.2 Ports neutrales
+
+Un Port representa una capacidad del sistema, no una herramienta.
+
+Correcto:
+
+```text
+IdentityProviderPort
+RealtimePublisherPort
+FileStoragePort
+EventPublisherPort
+```
+
+Incorrecto:
+
+```text
+KeycloakPort
+ReactorPort
+RabbitMqPort
+MinioPort
+```
+
+### 2.3 El adapter concreto no se autoregistra
+
+Cuando una capability tiene provider seleccionable, el adapter tecnológico no debe usar:
+
+```java
+@Component
+@Service
+@Repository
+```
+
+para decidir por sí mismo que debe existir.
+
+El registro pertenece al Composition Root:
+
+```java
+@Configuration(proxyBeanMethods = false)
+@ConditionalOnProperty(
+    prefix = "app.adapters.realtime",
+    name = "provider",
+    havingValue = "local-sse"
+)
+class LocalSseRealtimeAdapterConfiguration {
+    // @Bean ...
+}
+```
+
+Así cambiar un provider no exige tocar Domain, Application ni Controllers.
+
+### 2.4 No Service Locator
+
+Prohibido:
+
+```java
+Map<String, IdentityProviderPort> providers;
+AdapterFactory.get(provider);
+applicationContext.getBean(provider);
+```
+
+También está prohibido leer `Environment`, `@ConfigurationProperties` o hacer `switch(provider)`
+desde un UseCase.
+
+---
+
+## 3. `app.adapters.*` vs `app.providers.*`
+
+`app.adapters.*` selecciona **qué implementación** se usa.
+
+```yaml
+app:
+  adapters:
+    realtime:
+      provider: local-sse
+```
+
+`app.providers.*` contiene **cómo se configura** una tecnología ya seleccionada.
 
 ```yaml
 app:
@@ -105,227 +158,424 @@ app:
       server-url: ...
       realm: ...
       admin-client-id: ...
-      admin-client-secret: ...
-      api-client-id: ...
-      user-id-attribute: ...
     keycloak-security:
       issuer-uri: ...
-      api-client-id: ...
       expected-audience: ...
-      user-id-claim: ...
     local-storage:
       upload-directory: ...
 ```
 
-Tipado en `infrastructure.config.properties.providers` (p.ej.
-`KeycloakIdentityProviderProperties` y `KeycloakSecurityProviderProperties`).
+No deben mezclarse.
 
-No mezclar responsabilidades: `app.adapters.identity.provider=keycloak` dice *qué* adapter
-usar; `app.providers.keycloak-identity.*` dice *cómo* se conecta el adapter administrativo.
-Runtime security usa su propio bloque `app.providers.keycloak-security.*`.
+---
 
-## 6. Cómo agregar un nuevo adapter
+## 4. Properties tipadas
 
-Ejemplo: agregar un nuevo proveedor de identidad `auth0` sin tocar nada de Application:
+Las selectors están representadas mediante `@ConfigurationProperties` bajo:
 
-1. Implementar `IdentityProviderPort` en un nuevo adapter (`infrastructure.adapter.secondary.identity`).
-2. Crear `Auth0ProviderProperties` bajo `infrastructure.config.properties.providers`.
-3. Crear `Auth0IdentityAdapterConfiguration` bajo `infrastructure.config.adapters.identity.auth0`,
-   con `@ConditionalOnProperty(prefix = "app.adapters.identity", name = "provider", havingValue = "auth0")`.
-4. Agregar `AUTH0` al enum `IdentityAdapterProperties.Provider`.
-5. Configurar `app.adapters.identity.provider=auth0` y las properties de `app.providers.auth0.*`.
-6. Agregar pruebas del nuevo adapter.
+```text
+infrastructure.config.properties.adapters
+```
 
-**Nunca** se debe:
-- Modificar `UseCase`, `Interactor` o `InputPort`.
-- Modificar `Controller`.
-- Modificar Domain.
-- Agregar un `if`/`switch` sobre el nombre del provider en Application o en el UseCase.
+Por ejemplo:
 
-## 7. Capas que NO cambian al sustituir tecnología
+```text
+RealtimeAdapterProperties.Provider.LOCAL_SSE
+IdentityAdapterProperties.Provider.KEYCLOAK
+```
 
-Al cambiar de tecnología para una capability, estas capas permanecen intactas:
+Las properties específicas de tecnología viven bajo:
 
-- Domain (`usecase.domain`)
-- Application (`UseCase`, `Interactor`, `InputPort`, `SecondaryPort`)
-- Controllers (`infrastructure.adapter.primary.controller`)
+```text
+infrastructure.config.properties.providers
+```
 
-Solo cambian: el adapter concreto, sus properties tipadas y la clase de Composition Root que
-lo registra.
+El objetivo es fallar temprano ante configuración inválida y evitar strings tecnológicos
+dispersos por Application.
 
-## 8. Fail-fast
+---
 
-`@ConditionalOnProperty(..., matchIfMissing = true)` solo aplica al valor por defecto actual
-(`sqlserver`, `keycloak`, `local`, `local-sse`, `logging`). Si se configura un provider que no
-tiene una configuración condicional que lo satisfaga (p.ej. `app.adapters.identity.provider=auth0`
-sin haber creado `Auth0IdentityAdapterConfiguration`), Spring simplemente no encuentra un bean
-para el Port correspondiente y el contexto falla al iniciar (`UnsatisfiedDependencyException`).
-No existe fallback silencioso a Keycloak o SQL Server.
+## 5. Patrón de Composition Root
 
-En esta fase se conserva `matchIfMissing = true` por compatibilidad con configuraciones
-existentes. Una vez todos los ambientes declaren `app.adapters.*.provider` explicitamente,
-deberia evaluarse eliminar `matchIfMissing` para maximizar el fail-fast.
+Estructura esperada:
 
-## 9. Ejemplo: Keycloak → otro IdP
+```text
+infrastructure/config/adapters/
+├── identity/
+│   └── keycloak/
+├── persistence/
+│   └── sqlserver/
+├── security/
+│   └── keycloak/
+└── realtime/
+    └── localsse/
+```
 
-Ver sección 6. El único punto de cambio es `KeycloakIdentityAdapterConfiguration` (o su
-equivalente para el nuevo IdP) y `app.adapters.identity.provider`. `IdentityProviderPort`,
-`ProvisionarUsuarioUseCase`, `CrearUsuarioUseCase` y los controllers no se tocan.
+Cada provider implementado debe tener:
 
-## 10. Ejemplo: Local Storage → MinIO
+1. adapter concreto;
+2. properties específicas si las necesita;
+3. configuración `@ConditionalOnProperty`;
+4. tests de wiring con `ApplicationContextRunner`;
+5. documentación de reemplazo y limitaciones.
 
-Hoy `ArchivoController` accede al filesystem local directamente (no hay todavía un
-`GuardarArchivoInputPort` ni un `FileStoragePort`); por eso este prompt solo introdujo
-`app.adapters.storage.provider=local` y `app.providers.local-storage.upload-directory` sin
-refactorizar el controller. Cuando se introduzca `FileStoragePort`, el flujo correcto es:
+Ejemplo ya existente:
+
+```text
+IdentityProviderPort
+  -> KeycloakIdentityProviderAdapter
+  -> KeycloakIdentityAdapterConfiguration
+```
+
+Ejemplo realtime desde Fase 3.1:
+
+```text
+RealtimePublisherPort
+  -> ReactorRealtimeAdapter
+  -> LocalSseRealtimeAdapterConfiguration
+```
+
+---
+
+## 6. Fail-fast
+
+Para providers actuales se mantiene `matchIfMissing = true` cuando existe un default explícito en
+`application.yml`, por compatibilidad con ambientes existentes.
+
+Si se configura un provider distinto sin Composition Root compatible, el sistema debe fallar al
+crear las dependencias requeridas; no debe existir fallback silencioso a otra tecnología.
+
+Antes de incorporar providers alternativos en producción debe evaluarse eliminar gradualmente
+`matchIfMissing` cuando todos los ambientes declaren explícitamente su provider.
+
+---
+
+## 7. Realtime — estado actual
+
+### 7.1 Contrato
+
+Application define:
+
+```text
+application.secondaryports.realtime.RealtimePublisherPort
+application.secondaryports.realtime.RealtimeEvent
+```
+
+El puerto no expone Reactor ni SSE.
+
+### 7.2 Provider implementado
+
+```text
+app.adapters.realtime.provider=local-sse
+```
+
+Composition Root:
+
+```text
+infrastructure.config.adapters.realtime.localsse
+└── LocalSseRealtimeAdapterConfiguration
+```
+
+Tecnología:
+
+```text
+Project Reactor
+Sinks.Many<RealtimeEvent>
+Spring MVC SSE
+```
+
+Adapter:
+
+```text
+ReactorRealtimeAdapter
+```
+
+El adapter no se autoregistra; el Composition Root crea la única instancia usada tanto por
+Application (`RealtimePublisherPort`) como por la salida SSE local.
+
+### 7.3 Capa HTTP
+
+El controller no depende del adapter secundario concreto. Usa:
+
+```text
+RealtimeEventsController
+  -> RealtimeStreamGateway
+```
+
+El gateway es una interfaz interna de Infrastructure para adaptar la salida reactiva al contrato
+HTTP. El Composition Root registra su implementación para el provider local-sse.
+
+### 7.4 Semántica
+
+El provider `local-sse` es:
+
+- local a una JVM;
+- best-effort;
+- sin durabilidad;
+- sin replay;
+- sin entrega garantizada a clientes desconectados;
+- orientado a fan-out de eventos a conexiones SSE activas.
+
+La fuente de verdad continúa siendo la API/DB, no SSE.
+
+### 7.5 Evolución prevista
+
+Hoy:
+
+```text
+UseCase
+  -> RealtimePublisherPort
+  -> ReactorRealtimeAdapter
+  -> SSE
+```
+
+Futuro distribuido:
+
+```text
+UseCase
+  -> EventPublisherPort
+  -> RabbitMQ
+  -> Consumer
+  -> RealtimePublisherPort
+  -> ReactorRealtimeAdapter
+  -> SSE
+```
+
+RabbitMQ resolverá distribución/durabilidad; Reactor seguirá resolviendo fan-out local.
+
+Más detalle:
+
+```text
+docs/architecture/reactive-realtime.md
+```
+
+---
+
+## 8. Identity Provisioning
+
+Capability:
+
+```text
+IdentityProviderPort
+```
+
+Provider actual:
+
+```text
+app.adapters.identity.provider=keycloak
+```
+
+Composition Root:
+
+```text
+KeycloakIdentityAdapterConfiguration
+```
+
+Adapter:
+
+```text
+KeycloakIdentityProviderAdapter
+```
+
+Identity provisioning administrativo y Runtime Security son capabilities separadas aunque hoy
+usen el mismo Keycloak.
+
+Deudas actuales se mantienen documentadas en:
+
+```text
+docs/security/keycloak-identity-provider.md
+```
+
+---
+
+## 9. Runtime Security
+
+Runtime Security usa:
+
+```text
+JwtClaimsAdapter
+JwtDecoder
+InstitutionalJwtAuthenticationConverter
+```
+
+Provider:
+
+```text
+app.adapters.security.provider=keycloak
+```
+
+El adapter Keycloak interpreta claims; `SecurityConfig` mantiene reglas HTTP neutrales.
+
+No se deben introducir ports por vendor en Application.
+
+Ver:
+
+```text
+docs/security/runtime-security-provider-architecture.md
+```
+
+---
+
+## 10. Persistence
+
+SQL Server es el único provider implementado actualmente.
+
+Application depende de:
+
+```text
+*RepositoryPort
+*QueryPort
+*CommandPort
+InstitutionalScopePort
+```
+
+Adapters SQL viven bajo Infrastructure.
+
+Antes de incorporar una segunda DB debe hacerse provider-specific también el ownership del
+`DataSource`, de modo que un provider no JDBC no fuerce la creación de un datasource SQL Server.
+
+No se modifica la regla contractual actual:
+
+- Java productivo invoca procedimientos públicos `usp_*`;
+- no invoca `usp_*_interno`;
+- lecturas respetan las views/contratos definidos;
+- la DB no se modifica desde esta fase de infraestructura.
+
+---
+
+## 11. Storage
+
+Estado actual:
+
+```text
+ArchivoController -> filesystem local
+```
+
+Todavía falta extraer:
+
+```text
+GuardarArchivoInputPort
+GuardarArchivoUseCase
+FileStoragePort
+LocalFileStorageAdapter
+```
+
+Antes de MinIO el flujo objetivo es:
 
 ```text
 ArchivoController
-        ↓
-GuardarArchivoInputPort
-        ↓
-GuardarArchivoInteractor
-        ↓
-GuardarArchivoUseCase
-        ↓
-FileStoragePort
-        ↓
-LocalFileStorageAdapter / MinioFileStorageAdapter
+  -> GuardarArchivoInputPort
+  -> UseCase
+  -> FileStoragePort
+  -> LocalFileStorageAdapter / MinioFileStorageAdapter
 ```
 
-Pasos esperados:
+El controller nunca debe depender directamente de `FileStoragePort`.
 
-1. Crear el caso de uso de Application (`GuardarArchivoUseCase`) y su `GuardarArchivoInputPort`.
-2. Cambiar `ArchivoController` para depender del `GuardarArchivoInputPort`, nunca del `FileStoragePort`.
-3. Extraer la lógica de almacenamiento a `LocalFileStorageAdapter implements FileStoragePort`.
-4. Crear `MinioFileStorageAdapter implements FileStoragePort` + `MinioProviderProperties`.
-5. Crear `MinioStorageAdapterConfiguration` condicionada a `app.adapters.storage.provider=minio`.
+---
 
-## 11. Ejemplo: SQL Server → otra persistencia
+## 12. Audit y observabilidad
 
-1. Implementar cada `*RepositoryPort` / `*QueryPort` / `*CommandPort` en adapters de la nueva
-   tecnología (p.ej. `GrupoRepositoryPostgresAdapter`).
-2. Crear las configuraciones equivalentes a `SqlServerCoreRepositoryAdapterConfiguration`,
-   `SqlServerAcademicAdapterConfiguration`, `SqlServerSecurityScopeAdapterConfiguration` y
-   `SqlServerReportAdapterConfiguration`, condicionadas a
-   `app.adapters.persistence.provider=postgres`.
-3. Agregar `POSTGRES` a `PersistenceAdapterProperties.Provider`.
-4. Las Feature Configs (`GrupoBeansConfig`, etc.) no cambian: solo conocen el Port.
+Observabilidad utiliza estándares:
 
-## 12. Observabilidad como estándar OTel, no ports por vendor
+```text
+OpenTelemetry
+Micrometer
+logging estructurado
+OTLP
+```
 
-Observabilidad (trazas, métricas, logs) se basa en OpenTelemetry, Micrometer y logging
-estructurado con exportación OTLP. Deliberadamente **no** existen `GrafanaPort`, `LokiPort`,
-`TempoPort` ni `PrometheusPort`: el backend de observabilidad se selecciona externamente, vía
-configuración del collector, no desde código Java.
+No se crean ports como:
+
+```text
+GrafanaPort
+TempoPort
+LokiPort
+PrometheusPort
+```
+
+porque esos backends se seleccionan externamente mediante collectors/configuración.
+
+Realtime usa el mismo contexto de observabilidad sin introducir OpenTelemetry dentro de
+Application.
+
+---
 
 ## 13. Source/package consistency
 
-La estructura de directorios bajo `src/main/java` debe reflejar el `package` Java declarado
-por cada archivo. Por ejemplo, una clase con:
+La ruta física debe coincidir con el package Java.
+
+Ejemplo:
 
 ```java
 package co.edu.uco.asistenciasuco.application.features.coordinador.common.dto;
 ```
 
-debe vivir bajo:
+debe vivir en:
 
 ```text
 src/main/java/co/edu/uco/asistenciasuco/application/features/coordinador/common/dto/
 ```
 
-No se aceptan archivos que compilen por casualidad aunque su ruta fisica contradiga el
-package declarado. El test `SourcePackageConsistencyTest` protege esta regla.
+`SourcePackageConsistencyTest` protege esta regla.
 
-## 14. Datasource ownership
+---
 
-Estado actual:
+## 14. Matriz actual de capabilities
 
-- SQL Server es el unico provider de persistencia implementado.
-- `spring.datasource.*` continua siendo configuracion global de Spring Boot.
-- `spring.datasource.driver-class-name` es configurable mediante
-  `${SPRING_DATASOURCE_DRIVER_CLASS_NAME:com.microsoft.sqlserver.jdbc.SQLServerDriver}`.
+| Capability | Port / SPI | Adapter actual | Selector | Estado | Trabajo pendiente |
+|---|---|---|---|---|---|
+| Persistence | `*RepositoryPort`, `*QueryPort`, `*CommandPort`, `InstitutionalScopePort` | SQL Server adapters | `app.adapters.persistence.provider=sqlserver` | Ports desacoplados; solo SQL Server | DataSource provider-specific antes de otra DB |
+| Identity Provisioning | `IdentityProviderPort` | `KeycloakIdentityProviderAdapter` | `app.adapters.identity.provider=keycloak` | Reemplazable por provider; solo Keycloak | E2E y completar integración de roles/flujos institucionales pendientes |
+| Runtime Security | `JwtClaimsAdapter` | `KeycloakJwtClaimsAdapter` | `app.adapters.security.provider=keycloak` | Reemplazable por SPI; solo Keycloak | E2E y authorization hardening contextual |
+| Password Encoding | `PasswordEncoderPort` | Spring password adapter | configuración existente | Desacoplado | Sin deuda de provider relevante en esta fase |
+| Storage | `FileStoragePort` pendiente | filesystem dentro de `ArchivoController` | `app.adapters.storage.provider=local` preparado | Todavía no reemplazable | Extraer InputPort/UseCase/Port antes de MinIO |
+| Realtime | `RealtimePublisherPort` | `ReactorRealtimeAdapter` + SSE gateway | `app.adapters.realtime.provider=local-sse` | Provider seleccionado por Composition Root; solo `local-sse` | Angular SSE autenticado, API First, distribución/durabilidad con RabbitMQ |
+| Audit | `AuditEventPublisher` | logging + soporte SQL existente | `app.adapters.audit.provider=logging` | Parcialmente desacoplado | Durable provider si se requiere |
+| Observability | APIs OTel/Micrometer/logging | OTel + Micrometer + logs estructurados | configuración externa | Provider-neutral | Validación operacional continua |
 
-Estado objetivo antes de incorporar una segunda persistencia:
+---
 
-- `SqlServerDataSourceConfiguration` debera crear el `DataSource` de manera condicional cuando
-  `app.adapters.persistence.provider=sqlserver`.
-- La configuracion propia de SQL Server se movera a `app.providers.sqlserver.*`.
-- Un provider no JDBC no debe obligar a crear `DataSource`.
+## 15. Deuda conocida vigente
 
-## 15. Matriz actual de capabilities
+1. **Identity:** completar validación E2E y flujos de provisioning institucional pendientes.
+2. **Storage:** introducir `GuardarArchivoInputPort`/`FileStoragePort` y ownership/autorización
+   contextual antes de MinIO.
+3. **Realtime frontend:** Angular aún debe consumir SSE con `Authorization: Bearer`, reconexión y
+   refresh de token.
+4. **Realtime distribuido:** `local-sse` vive en una sola JVM; RabbitMQ será necesario para
+   distribución entre instancias y eventos durables.
+5. **Realtime contract:** formalizar SSE/eventos en la fase API First / Contract First.
+6. **Persistence:** hacer `DataSource` provider-specific antes de una segunda DB.
+7. **Authorization contextual:** completar Layer 2 en endpoints documentados en
+   `runtime-security-provider-architecture.md`.
+8. **Storage security:** `/api/v1/archivos/**` mantiene deuda de ownership/contexto hasta la fase
+   Storage.
+9. **Endpoint diagnóstico realtime:** decidir antes de producción si `/api/v1/realtime/emit`
+   permanece, se condiciona por property o se elimina.
 
-| Capability | Port | Current Adapter | Provider property | Replaceable today? | Remaining work |
-| ---------- | ---- | --------------- | ----------------- | ------------------ | -------------- |
-| Persistence | `*RepositoryPort`, academic `*QueryPort`/`*CommandPort`, `InstitutionalScopePort` | SQL Server adapters bajo `infrastructure.adapter.secondary.*` | `app.adapters.persistence.provider=sqlserver` | Parcialmente, por ports; solo SQL Server implementado | DataSource provider-specific antes de incorporar otra DB |
-| Identity Provisioning | `IdentityProviderPort` | `KeycloakIdentityProviderAdapter` | `app.adapters.identity.provider=keycloak` | Sí, por port; solo Keycloak implementado — protocolo admin ya es `client_credentials`/service account (no password grant), roles institucionales como client roles del client `asistencias-api`; implementación estática disponible, pendiente runtime/E2E | Integrar el port con `CrearDecanoUseCase`/`CrearCoordinadorUseCase`/registro de docentes (hoy solo el flujo de estudiante provisiona identidad); ver `docs/security/keycloak-identity-provider.md` sección 7 |
-| Runtime Security | `JwtClaimsAdapter` (SPI, `infrastructure.adapter.primary.security.spi`) | `KeycloakJwtClaimsAdapter` | `app.adapters.security.provider` | Sí, por SPI; solo Keycloak implementado — no es "multi-provider" hoy | Validación runtime/E2E y deudas de autorización contextual; ver `docs/security/runtime-security-provider-architecture.md` |
-| Password Encoding | `PasswordEncoderPort` | `SpringPasswordEncoderAdapter` | Configuracion de adapter password actual | Si | Sin deuda de provider conocida en este bloque |
-| Storage | Pendiente `GuardarArchivoInputPort`/`FileStoragePort` | Filesystem directo en `ArchivoController` | `app.adapters.storage.provider=local` preparado | No | Introducir InputPort, UseCase y `FileStoragePort` |
-| Realtime | Pendiente `RealtimePublisherPort`/`EventPublisherPort` | SSE local en `RealtimeEventHub` | `app.adapters.realtime.provider=local-sse` preparado | No | Extraer port y adapter de publicacion |
-| Audit | `AuditEventPublisher` | `LoggingAuditEventPublisher` + soporte SQL opcional | `app.adapters.audit.provider=logging` | Parcialmente; logging funciona sin repositorio SQL | Separar providers si se requiere auditoria durable dedicada |
-| Observability | APIs estandar OTel/Micrometer/logging | OpenTelemetry, Micrometer, logging estructurado | Configuracion Spring/OTLP externa | Si, por configuracion externa | Validacion runtime/operacional |
+---
 
-## 16. Regla contra Service Locator
+## 16. Checklist para un nuevo provider
 
-Prohibido:
+Antes de considerar integrado un provider nuevo:
 
-```java
-Map<String, IdentityProviderPort> providersPorNombre; // NO
-AdapterFactory.get(provider); // NO
+```text
+[ ] existe un Port/SPI neutral
+[ ] el adapter concreto vive en Infrastructure
+[ ] el adapter no se autoregistra si la capability es seleccionable
+[ ] existe Composition Root con @ConditionalOnProperty
+[ ] existen properties tipadas cuando aplican
+[ ] Application no conoce el provider
+[ ] no se usa @Profile para seleccionar tecnología
+[ ] no hay Service Locator
+[ ] existen tests ApplicationContextRunner del wiring
+[ ] ArchUnit sigue verde
+[ ] JaCoCo global sigue por encima del gate
+[ ] Sonar New Code pasa
+[ ] CodeQL/Dependency Review pasan
+[ ] documentación y matriz de capabilities están actualizadas
 ```
 
-y prohibido que Application consulte `Environment`, `ApplicationContext` o
-`@ConfigurationProperties` para decidir en tiempo de ejecución qué implementación usar. La
-resolución del provider ocurre una sola vez, al construir el contexto de Spring.
-
-## 17. Regla contra switch/provider dentro de UseCases
-
-Prohibido:
-
-```java
-if (provider.equals("keycloak")) { ... }
-switch (provider) { ... }
-new KeycloakIdentityProviderAdapter(...); // dentro de un UseCase o Feature Config
-```
-
-Un `UseCase` o `Interactor` que necesite ramificar por tecnología es una señal de que el Port
-está mal diseñado (expone detalles de la tecnología) o de que la selección se está haciendo en
-la capa equivocada.
-
-## 18. Deuda conocida (siguiente bloque Identity provisioning — Prompt 2B.2)
-
-Runtime security (`SecurityConfig`, `JwtClaimsAdapter`, `KeycloakJwtClaimsAdapter`,
-`InstitutionalJwtAuthenticationConverter`, validadores JWT neutros) quedó completamente
-desacoplado de Keycloak en el Prompt 2A — ver
-`docs/security/runtime-security-provider-architecture.md` para el detalle. Identity
-Provisioning (`KeycloakIdentityProviderAdapter`) ya usa `client_credentials` contra un service
-account, verifica cuentas existentes y asegura client roles de `asistencias-api` (no password
-grant, no realm roles) — ver
-`docs/security/keycloak-identity-provider.md` y `docs/security/keycloak-service-account.md`.
-Pendiente:
-
-1. Integrar `IdentityProviderPort` con los casos de uso que hoy no lo llaman
-   (`CrearDecanoUseCase`, `CrearCoordinadorUseCase`, registro de docentes) — hoy solo
-   `ProvisionarUsuarioUseCaseImpl` (flujo de estudiante) provisiona identidad en Keycloak; ver
-   deuda detallada en `docs/security/keycloak-identity-provider.md` sección 7.
-2. Revisar provisioning institucional para que las reglas de alcance y datos de identidad sean
-   consistentes entre SQL Server y Keycloak (compensación DB↔Keycloak a nivel de UseCase).
-3. `ArchivoController` sigue accediendo al filesystem local directamente, sin un
-  `GuardarArchivoInputPort`/`FileStoragePort`. El correctivo pendiente debe introducir el
-  InputPort antes del SecondaryPort; el controller nunca debe depender del `FileStoragePort`.
-4. `RealtimeEventHub`/SSE no están detrás de un Port todavía. `app.adapters.realtime.provider=local-sse`
-  está preparado para cuando se introduzca un `RealtimePublisherPort`. El endpoint
-  `POST /api/v1/realtime/emit` es una utilidad de desarrollo sin rol funcional propio; se
-  restringió a `ADMINISTRADOR` en el Prompt 2A como medida provisional (ver documento de
-  runtime security).
-5. El `DataSource` debe pasar a ser provider-specific antes de incorporar una segunda DB.
-6. Los mocks de repositorio (`*RepositoryMockAdapter`) permanecen en `src/main/java` (no se
-  movieron a `src/test/java`) para minimizar el impacto. Ya no se autoregistran ni se
-  seleccionan por profile: los tests que los necesiten deben importarlos explícitamente (ver
-  `MockRepositoryTestConfiguration` en `src/test/java/.../infrastructure/config`).
-7. Directorios generales sin contrato de rol claro, restringidos con criterio conservador en
-   el Prompt 2A (`/api/v1/docentes/**` → `COORDINADOR`/`ADMINISTRADOR`) y directorios
-   equivalentes aún sin revisar (`/api/v1/estudiantes/**`, plural): ver duda documentada en
-   `docs/security/runtime-security-provider-architecture.md`.
-8. Validar en runtime/CI el Composition Root completo.
+Este documento representa el estado vigente después de la Fase 3.1 de realtime y debe
+actualizarse cada vez que una capability pasa de "preparada" a "implementada".

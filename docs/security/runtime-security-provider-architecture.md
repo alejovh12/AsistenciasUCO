@@ -1,161 +1,105 @@
 # Arquitectura de Runtime Security (independiente del proveedor)
 
-## CSRF en la API JWT
+## 1. Alcance
 
-La API usa `Authorization: Bearer <jwt>` y sesiones `STATELESS`; no autentica mediante
-cookies ni Basic Auth. Un sitio externo no puede hacer que el navegador adjunte el JWT
-Bearer de la aplicación automáticamente. Por eso las peticiones con Bearer válido no
-requieren un token CSRF adicional. Sin embargo, `SecurityConfig` conserva la protección
-CSRF de Spring para peticiones inseguras que no presentan el encabezado Bearer. Una
-petición que solo lleva cookies no puede aprovechar esta excepción. La autorización JWT
-y los controles de roles siguen aplicándose también a las peticiones exentas de CSRF.
+Este documento describe la seguridad **runtime** de AsistenciasUCO:
 
-Esto responde al hallazgo CodeQL `java/spring-disabled-csrf-protection` del PR #6 sin
-exigir al cliente Angular un token CSRF en sus peticiones Bearer. Spring Security
-advierte que `STATELESS` por sí solo no elimina el riesgo cuando la autenticación se
-envía automáticamente mediante cookies o Basic Auth; la excepción se limita por eso
-al encabezado Bearer explícito.
+- validación de JWT;
+- resolución del usuario institucional;
+- extracción de roles;
+- autorización HTTP por rol;
+- autorización contextual pendiente o implementada a nivel Application;
+- CSRF/CORS;
+- implicaciones de seguridad del canal realtime/SSE.
 
-Referencias: [Spring Security: CSRF](https://docs.spring.io/spring-security/reference/features/exploits/csrf.html),
-[CodeQL: Disabled Spring CSRF protection](https://codeql.github.com/codeql-query-help/java/java-spring-disabled-csrf-protection/).
-
-Este documento describe cómo AsistenciasUCO valida y autoriza requests HTTP sin que la capa
-de seguridad conozca la estructura específica de los tokens de Keycloak. Complementa
-`docs/architecture/adapter-composition-standard.md` (que cubre el Composition Root general).
-
-**Alcance de este documento**: únicamente *runtime authentication/authorization* (validar un
-JWT ya emitido y resolver quién es el usuario y qué roles tiene). El *provisioning*
-administrativo de usuarios (crear/verificar/eliminar usuarios en Keycloak, service account con
-`client_credentials`, client roles y compensación DB↔Keycloak) es un tema distinto, cubierto por
-`IdentityProviderPort`/`KeycloakIdentityProviderAdapter`, y no se toca aquí.
-
-## 1. Runtime authentication vs. identity provisioning
-
-Son dos capabilities distintas que hoy comparten el mismo IdP (Keycloak) pero no tienen por
-qué evolucionar juntas:
-
-| | Runtime authentication | Identity provisioning |
-| --- | --- | --- |
-| Pregunta que responde | ¿Quién hizo este request y qué puede hacer? | ¿Cómo se crea/gestiona una cuenta en el IdP? |
-| Port/SPI | `JwtClaimsAdapter` | `IdentityProviderPort` |
-| Adapter Keycloak | `KeycloakJwtClaimsAdapter` | `KeycloakIdentityProviderAdapter` |
-| Selector | `app.adapters.security.provider` | `app.adapters.identity.provider` |
-| Properties | `app.providers.keycloak-security.*` | `app.providers.keycloak-identity.*` |
-| Se ejecuta | En cada request autenticado | Al crear/provisionar un usuario |
-
-Antes de este prompt, `SecurityConfig` mezclaba ambas responsabilidades al leer
-`app.security.keycloak.api-client-id` directamente. Ya no: `SecurityConfig` no importa nada
-de `app.providers.keycloak.*` (admin) ni de `app.providers.keycloak-security.*` directamente;
-solo depende de los beans neutrales `JwtDecoder` y `JwtClaimsAdapter`.
-
-## 2. Flujo end-to-end
+No describe el provisioning administrativo de cuentas en Keycloak. Ese flujo usa
+`IdentityProviderPort` y está documentado en:
 
 ```text
-HTTP Request (Authorization: Bearer <jwt>)
-        ↓
-Spring Security (BearerTokenAuthenticationFilter)
-        ↓
-JwtDecoder                              ← valida firma + issuer + audience + claim idUsuario
-        ↓
-InstitutionalJwtAuthenticationConverter ← SecurityConfig, neutral
-        ↓
-JwtClaimsAdapter                        ← SPI de infraestructura, neutral
-        ↓
-KeycloakJwtClaimsAdapter                ← ÚNICA clase que conoce Keycloak
-        ↓
-JwtAuthenticationToken(principal = idUsuario.toString(), authorities = ROLE_*)
-        ↓
+docs/security/keycloak-identity-provider.md
+```
+
+Runtime Security e Identity Provisioning son capabilities distintas aunque hoy compartan
+Keycloak.
+
+---
+
+## 2. Modelo de autenticación
+
+La API es un OAuth2 Resource Server.
+
+Flujo:
+
+```text
+HTTP Request
+Authorization: Bearer <jwt>
+        |
+        v
+BearerTokenAuthenticationFilter
+        |
+        v
+JwtDecoder
+  - firma
+  - issuer
+  - audience
+  - claim institucional requerido
+        |
+        v
+InstitutionalJwtAuthenticationConverter
+        |
+        v
+JwtClaimsAdapter
+        |
+        v
+KeycloakJwtClaimsAdapter
+        |
+        v
+JwtAuthenticationToken
+principal = idUsuario UUID
+authorities = ROLE_*
+        |
+        v
 SecurityContextHolder
-        ↓
-AuthenticatedUserProvider.requireAuthenticatedUserId() ← lee Authentication.getName(), nada más
 ```
 
-`SecurityConfig` conoce: `JwtDecoder`, `InstitutionalJwtAuthenticationConverter`, CORS,
-`AuthenticationEntryPoint`/`AccessDeniedHandler`. No conoce Keycloak.
+La aplicación no autentica usuarios mediante sesión de servidor.
 
-## 3. `JwtClaimsAdapter`
+Configuración:
 
-SPI de infraestructura (`infrastructure.adapter.primary.security.spi.JwtClaimsAdapter`):
-
-```java
-public interface JwtClaimsAdapter {
-    UUID requireUserId(Jwt jwt);
-    Set<InstitutionalRole> extractRoles(Jwt jwt);
-}
+```text
+SessionCreationPolicy.STATELESS
 ```
 
-Conoce `Jwt` (Spring Security) porque eso es infraestructura; no conoce ningún proveedor
-concreto ni lógica de negocio de Application. Deliberadamente **no** se llama `KeycloakPort`,
-`Auth0Port` ni similar — el contrato representa una capability ("dame el usuario y sus roles a
-partir de un JWT"), no una tecnología.
+---
 
-## 4. `KeycloakJwtClaimsAdapter`
+## 3. Separación de responsabilidades
 
-Única clase de todo el runtime de seguridad que conoce cómo Keycloak estructura sus claims:
+| Capability | Contrato | Provider actual | Selector |
+|---|---|---|---|
+| Runtime authentication | `JwtClaimsAdapter`, `JwtDecoder` | Keycloak | `app.adapters.security.provider=keycloak` |
+| Identity provisioning | `IdentityProviderPort` | Keycloak Admin API | `app.adapters.identity.provider=keycloak` |
 
-- **idUsuario**: lee el claim configurado (`app.providers.keycloak-security.user-id-claim`,
-  default `idUsuario`). Si está ausente, vacío o no es UUID, lanza
-  `OAuth2AuthenticationException` (se traduce a 401 genérico por `ApiAuthenticationEntryPoint`,
-  nunca un 500).
-- **roles**: lee exclusivamente `resource_access[apiClientId].roles`, donde `apiClientId` viene
-  de `app.providers.keycloak-security.api-client-id` (default `asistencias-api`).
-  Deliberadamente **no** lee `realm_access` ni combina roles de otros clients (`account`, el
-  client de frontend, etc.) — solo los roles del client de la API cuentan para autorización.
-- **parsing defensivo**: cada nivel (`resource_access`, la entrada del client, `roles`, cada
-  rol individual) se valida con `instanceof` antes de castear. Un token mal formado nunca
-  produce `ClassCastException` — en el peor caso, `extractRoles` devuelve un `Set` vacío.
-- **mapping token→rol exacto y controlado**: solo se reconocen los 5 nombres institucionales
-  **literales** (`ADMINISTRADOR`, `DECANO`, `COORDINADOR`, `DOCENTE`, `ESTUDIANTE`). NO se
-  aceptan códigos cortos (`AD`, `DE`, `CD`, `DO`, `ES`), NO se acepta el prefijo `ROLE_`
-  (`ROLE_DOCENTE` no es un rol de token válido, es una authority de Spring), y NO hay
-  normalización de mayúsculas/minúsculas — el mapping es una comparación exacta contra el
-  conjunto de nombres válidos, nunca `contains`/`startsWith`/fuzzy matching. Cualquier otro
-  string (roles técnicos de Keycloak como `offline_access`, `uma_authorization`, `account`,
-  `default-roles-*`, o cualquier rol ajeno) se ignora en silencio — nunca lanza error por un
-  rol adicional desconocido.
+`SecurityConfig` es neutral respecto a Keycloak. Depende de:
 
-## 5. `InstitutionalJwtAuthenticationConverter`
+- `JwtDecoder`;
+- `InstitutionalJwtAuthenticationConverter`;
+- `AuthenticationEntryPoint`;
+- `AccessDeniedHandler`;
+- configuración CORS.
 
-Vive en `infrastructure.adapter.primary.security` (no en `.keycloak`, porque es neutral).
-Responsabilidad única: `Jwt` → (vía `JwtClaimsAdapter`) → `UUID idUsuario` + `Set<InstitutionalRole>`
-→ `GrantedAuthority` → `JwtAuthenticationToken(jwt, authorities, idUsuario.toString())`.
+La interpretación específica de claims Keycloak está aislada en `KeycloakJwtClaimsAdapter`.
 
-Depende de la interfaz `JwtClaimsAdapter`, nunca de `KeycloakJwtClaimsAdapter` directamente —
-Spring inyecta lo que el Composition Root de seguridad haya registrado.
+---
 
-**Este converter es el ÚNICO lugar de todo el runtime de seguridad donde existe la convención
-`ROLE_` de Spring Security** (`new SimpleGrantedAuthority("ROLE_" + role.name())`).
-`InstitutionalRole` (Application, `application.security.InstitutionalRole`) es un enum puro —
-solo las 5 constantes, sin métodos, sin `authority()`, sin mapping de token, sin ningún import
-de Spring/JWT/Keycloak. `KeycloakJwtClaimsAdapter` hace la traducción token→rol (string exacto
-→ `InstitutionalRole`); este converter hace la traducción rol→authority
-(`InstitutionalRole`→`ROLE_*`). Ninguna de las dos responsabilidades vive en Application.
+## 4. Selección de provider
 
-## 6. `idUsuario` como principal — sin contradicción `sub`
-
-Antes existía una contradicción real: una constante `PRINCIPAL_CLAIM_NAME = "idUsuario"`
-(declarada pero nunca usada) convivía con `converter.setPrincipalClaimName("sub")` (la que
-realmente se ejecutaba). El principal resultante era el `sub` de Keycloak, no el UUID
-institucional.
-
-Ahora el principal es **siempre** `idUsuario.toString()`, sin excepción y sin fallback a
-`sub`, `email` ni `preferred_username`. `AuthenticatedUserProvider` (ver más abajo) confía en
-esa normalización: solo lee `Authentication.getName()` y lo parsea como UUID.
-
-## 7. Roles de client, no roles de realm
-
-Autorización de la API usa exclusivamente `resource_access[asistencias-api].roles`. Un rol que
-solo exista en `realm_access.roles` (p.ej. asignado directamente en el realm en lugar del
-client) **no** otorga ninguna autoridad. Esto es intencional: evita que roles de otro contexto
-(p.ej. roles de administración de Keycloak en el realm) se filtren como autorización de la API.
-
-## 8. Selección de provider
+Configuración:
 
 ```yaml
 app:
   adapters:
     security:
-      provider: ${APP_ADAPTERS_SECURITY_PROVIDER:keycloak}   # YA EXISTÍA — reutilizado, no duplicado
+      provider: ${APP_ADAPTERS_SECURITY_PROVIDER:keycloak}
 
   providers:
     keycloak-security:
@@ -165,187 +109,465 @@ app:
       user-id-claim: ${KEYCLOAK_USER_ID_CLAIM:idUsuario}
 ```
 
-**`KEYCLOAK_ISSUER_URI` es la única fuente de verdad para el issuer.** Debe coincidir
-**exactamente** con el claim `iss` emitido por Keycloak — la validación de issuer usa
-`JwtValidators.createDefaultWithIssuer(...)` (comparación exacta, sin `endsWith`/`contains`).
-Este documento, `application.yml` y `.env.example` usan `127.0.0.1` como ejemplo local por
-consistencia entre sí; eso no cambia el issuer real de ningún ambiente, que siempre viene de
-la variable de entorno.
-
-`KeycloakSecurityAdapterConfiguration` (bajo `infrastructure.config.adapters.security.keycloak`)
-registra, condicionado a `app.adapters.security.provider=keycloak`:
-
-- `KeycloakSecurityProviderProperties` (fail-fast: las 4 properties son `@NotNull`/no-blank).
-- `JwtClaimsAdapter` = `KeycloakJwtClaimsAdapter`.
-- `JwtDecoder`, con el validador compuesto (ver sección 9).
-
-**No** registra reglas HTTP ni el `InstitutionalJwtAuthenticationConverter` — ambos son
-neutrales y viven en `SecurityConfig`.
-
-**Ownership del `JwtDecoder`**: el bean productivo `jwtDecoder(...)` de
-`KeycloakSecurityAdapterConfiguration` NO lleva `@ConditionalOnMissingBean`. Cuando
-`app.adapters.security.provider=keycloak`, esta clase es la propietaria inequívoca del decoder
-y de su política de validación (issuer + audience + claim UUID requerido) — ningún otro bean
-puede sustituirlo silenciosamente y saltarse esa política. Los tests que necesitan un
-`JwtDecoder` de prueba lo hacen sin cargar esta clase (slices `@WebMvcTest` con `@Import`
-explícito, como `SecurityConfigTest`/`RbacSecurityFilterChainTest`), o habilitando
-`spring.main.allow-bean-definition-overriding=true` únicamente en su propio contexto de
-prueba (`KeycloakSecurityAdapterConfigurationTest`) — nunca debilitando la configuración
-productiva.
-
-## 9. Validadores JWT neutros
-
-`infrastructure.adapter.primary.security.validation`:
-
-- **`AudienceValidator`**: exige que `aud` contenga la audiencia esperada. Rechaza `aud` nulo,
-  vacío, o que solo contenga otra audiencia (p.ej. `account` o el client de frontend) como
-  sustituto.
-- **`RequiredUuidClaimValidator`**: reutilizable — recibe el nombre del claim por constructor,
-  no conoce `idUsuario` como valor hardcodeado. Exige que el claim exista, tenga texto y sea un
-  UUID válido.
-
-El `JwtDecoder` de Keycloak compone, vía `DelegatingOAuth2TokenValidator`:
+Composition Root:
 
 ```text
-JwtValidators.createDefaultWithIssuer(issuerUri)   // issuer exacto, sin endsWith/contains
-+ AudienceValidator(expectedAudience)
-+ RequiredUuidClaimValidator(userIdClaim)
+infrastructure.config.adapters.security.keycloak
+└── KeycloakSecurityAdapterConfiguration
 ```
 
-El issuer se valida con el validador estándar de Spring (comparación exacta), nunca con
-`endsWith`/`contains`/regex parcial.
+El provider se selecciona con `@ConditionalOnProperty`; nunca con `@Profile`, service locator o
+un `if` dentro de Application.
 
-## 10. `AuthenticatedUserProvider`
+---
 
-Responsabilidad reducida a una sola línea conceptual:
+## 5. Validación JWT
 
-```java
-UUID requireAuthenticatedUserId();
-```
-
-Fuente: `SecurityContextHolder` → `Authentication.getName()` → `UUID.fromString(...)`. No lee
-claims de `Jwt`, no conoce el nombre del claim `idUsuario`, no conoce Keycloak, no consulta la
-base de datos, no busca por email ni `preferred_username`, no hace fallback a `sub`. Confía en
-que `InstitutionalJwtAuthenticationConverter` ya dejó el principal normalizado.
-
-## 11. Cómo agregar otro runtime IdP
-
-Ejemplo: agregar Auth0 como proveedor de runtime security (no de provisioning):
-
-1. Implementar `JwtClaimsAdapter` en `Auth0JwtClaimsAdapter` (bajo
-   `infrastructure.adapter.primary.security.auth0`), interpretando la forma en que Auth0
-   estructura sus claims/roles.
-2. Crear `Auth0SecurityProviderProperties` (issuer, audience, claim de usuario, lo que Auth0
-   requiera) bajo `infrastructure.config.properties.providers`.
-3. Crear `Auth0SecurityAdapterConfiguration` condicionada a
-   `app.adapters.security.provider=auth0`, registrando `JwtClaimsAdapter` y `JwtDecoder`.
-4. Agregar `AUTH0` a `SecurityAdapterProperties.Provider`.
-5. Configurar `app.adapters.security.provider=auth0` y sus properties.
-
-`SecurityConfig`, `InstitutionalJwtAuthenticationConverter`, `AuthenticatedUserProvider`,
-`AudienceValidator` y `RequiredUuidClaimValidator` **no cambian**. Solo se agrega un nuevo
-adapter + su configuración condicional — igual que con cualquier otra capability del
-Composition Root.
-
-## 12. Deuda explícita (fuera de alcance aquí)
-
-- Provisioning administrativo (`KeycloakIdentityProviderAdapter`) ya usa service account con
-  `client_credentials`, verifica cuentas existentes y asegura client roles del client
-  `asistencias-api`. La implementación estática está disponible; falta validación runtime/E2E
-  contra Keycloak real.
-- El contrato de `IdentityProviderPort` ya quedó endurecido en la Microfase 2B.2-A: el rol
-  institucional cruza el Port como `InstitutionalRole` (nunca `String rolInstitucional` /
-  `asignarRol(String, String)`), y `CuentaIdentidadDTO` ya no transporta `mensaje` ni `username`
-  — ver `docs/security/keycloak-identity-provider.md` §7. Pendiente: la integración de ese Port
-  con decano/coordinador (ver estado real en `keycloak-identity-provider.md`).
-- RBAC revisado en este prompt (ver más abajo) documenta dudas puntuales sobre contratos
-  funcionales no explícitos; no inventa políticas nuevas donde el contrato no está claro.
-
-## 13. RBAC revisado
-
-Se revisaron las familias de rutas indicadas: `/admin/**`, `/decano/**`, `/coordinador/**`,
-`/docente/**`, `/docentes/**`, `/estudiante/**`, `/grupos/**`, `/sesiones/**`,
-`/asistencias/**`, `/realtime/**`, `/usuarios/**`. Cambios y hallazgos:
-
-| Ruta | Antes | Ahora | Razón |
-| --- | --- | --- | --- |
-| `/api/v1/docentes/**` (directorio general, `DocenteController`) | Sin regla propia → caía en `authenticated()` (cualquier rol, incluido ESTUDIANTE, podía crear/asignar docentes) | `hasAnyRole("COORDINADOR","ADMINISTRADOR")` | Gap real. **Duda documentada**: no hay contrato funcional explícito de quién administra este directorio; se asumió el mismo criterio que ya administra docentes en `/coordinador/docentes`. |
-| `GET /api/v1/grupos/**` | `authenticated()` | `hasAnyRole("DOCENTE","COORDINADOR","ADMINISTRADOR")` | El docente necesita consultar sus grupos/estudiantes/reportes; no hay evidencia de que ESTUDIANTE deba verlos por grupo completo. |
-| `POST/PUT/DELETE /api/v1/grupos/**` | `authenticated()` | `hasAnyRole("COORDINADOR","ADMINISTRADOR")` | Crear/actualizar grupo y matricular estudiante son commands de coordinación (Bloque 29 del prompt). |
-| `GET /api/v1/sesiones/*/qr-token` | `authenticated()` | `hasRole("DOCENTE")` | Generar el QR/PIN es una acción del docente que dicta la sesión (hoy retorna `FeatureUnavailableException`, sin impacto funcional inmediato). |
-| `POST /api/v1/asistencias/consultas/grupo` (legacy) | `authenticated()` | `hasAnyRole("DOCENTE","COORDINADOR","ADMINISTRADOR")` | Mismo criterio que su equivalente `GET /api/v1/grupos/{id}/asistencias`. |
-| `POST /api/v1/realtime/emit` | `authenticated()` (cualquier usuario podía forzar un evento SSE a todos los suscriptores) | `hasRole("ADMINISTRADOR")` | Utilidad de desarrollo sin rol funcional propio. **No se eliminó** (fuera de alcance: el transporte SSE no se refactoriza en este prompt) — ver deuda para cuando Realtime tenga su propio Port. |
-| `POST /api/v1/usuarios` | `authenticated()` | Sin cambio (ya no era `permitAll`) | **Riesgo documentado, no resuelto**: cualquier rol autenticado puede provisionar un usuario nuevo. No se identificó un contrato funcional explícito que indique qué rol debería exigirse (¿ADMINISTRADOR? ¿COORDINADOR?), y el prompt prohíbe inventar una política nueva o un autorregistro público. Debe aclararse en Prompt 2B junto con el resto de provisioning. |
-| `/api/v1/estudiantes/**` (directorio general, plural, `EstudianteController`) | `authenticated()` | `hasAnyRole("COORDINADOR","ADMINISTRADOR")` | **Resuelto en el prompt correctivo.** `EstudianteController` expone `GET /api/v1/estudiantes` (listado filtrable por tipo de identificación, número, nombre, correo, institución, facultad, programa, **grupo**) y `GET /api/v1/estudiantes/{id}` (detalle de *cualquier* estudiante) — es un directorio institucional, no una vista acotada al propio estudiante ni a un docente. El docente ya tiene su vertical específica y acotada por grupo (`GET /api/v1/grupos/{grupoId}/estudiantes`, ya protegida), así que este directorio general no se abre a DOCENTE. No se cambió ningún contrato HTTP ni se inventaron rutas nuevas. |
-| `/api/v1/archivos/**` | `authenticated()` | Sin cambio — **SECURITY DEBT — STORAGE PHASE** | Ver sección 15. No se decide una política de ownership/contexto ahora porque depende de introducir `FileStoragePort`; mantenerlo en `authenticated()` es una decisión temporal explícita, no un descuido. |
-| `POST /api/v1/asistencias`, `/lote`, `/revisiones`; `/sesiones/**` (POST/PUT/PATCH); `/docente/**`; `/estudiante/**`; `/admin/**`; `/decano/**`; `/coordinador/**` | Ya protegidos correctamente | Sin cambio | Verificado contra Bloques 30-31 del prompt: coinciden con las reglas ya existentes. |
-
-Ninguna de las reglas nuevas fue inventada libremente: donde el contrato funcional era
-ambiguo, se documentó la duda en vez de asumir una política. `/api/v1/estudiantes/**` se
-resolvió en el prompt correctivo (sección 13, ver política arriba) porque el código funcional
-respaldaba una restricción clara; `/api/v1/archivos/**` sigue sin modificarse (ver sección 15).
-
-## 14. Authorization layers
-
-Dos capas de autorización, deliberadamente separadas:
+El `JwtDecoder` productivo de Keycloak aplica:
 
 ```text
-Layer 1 — coarse-grained:
-  Spring Security / roles / route access (SecurityConfig, authorizeHttpRequests).
-  Responde: "¿este rol puede llegar a esta ruta/método HTTP, en general?"
-
-Layer 2 — contextual:
-  Application UseCase + InstitutionalScopePort.
-  Responde: "¿este usuario específico puede actuar sobre ESTE recurso específico
-  (este grupo, esta sesión, este estudiante)?"
+issuer exacto
++ audience esperada
++ claim institucional UUID requerido
 ```
 
-`SecurityConfig` resuelve exclusivamente Layer 1. Nunca debe intentar resolver Layer 2 (por
-eso, p.ej., "¿este docente puede actuar sobre este grupo?" vive en Application vía
-`InstitutionalScopePort`, no en un matcher de `SecurityConfig` — ver Prompt 2A, sección 30 del
-prompt original). Un endpoint puede pasar Layer 1 (tiene el rol correcto) y aun así deber ser
-rechazado en Layer 2 (no tiene scope sobre ese recurso concreto).
-
-**Endpoints pendientes de Layer 2** (Layer 1 ya correcto, ver sección 16):
-
-- `GET /api/v1/sesiones/{sesionId}` (`SesionController`): recibe solo el UUID de la sesión: no
-  recibe el actor autenticado ni consulta `InstitutionalScopePort` para verificar que el
-  docente/estudiante que consulta tenga relación con esa sesión.
-- `GET /api/v1/sesiones/grupo/{grupoId}` (`SesionController`): mismo patrón — hoy además está
-  sin implementar (`FeatureUnavailableException`), pero cuando se implemente necesitará el
-  mismo scope contextual.
-- `GET /api/v1/docentes/{docenteId}` y `GET /api/v1/docentes/{docenteId}/asignaciones`
-  (`DocenteController`): reciben solo el UUID del docente; no hay verificación de que el
-  llamador (p.ej. un COORDINADOR) tenga scope institucional sobre ese docente específico.
-- `GET /api/v1/estudiantes/{estudianteId}` (`EstudianteController`): mismo patrón — solo UUID,
-  sin scope institucional sobre ese estudiante específico.
-
-Este prompt correctivo **no** implementa Layer 2 para estos endpoints (sería un refactor de
-autorización contextual fuera de alcance) — solo los lista y los deja marcados para la fase de
-"authorization hardening". No se agregaron comprobaciones improvisadas en ningún Controller ni
-se intentó resolver scope desde `SecurityConfig`.
-
-## 15. `/api/v1/archivos/**` — SECURITY DEBT — STORAGE PHASE
-
-`ArchivoController` (`POST /subir`, `GET /{nombreArchivo}`) permanece en `authenticated()`:
-cualquier usuario autenticado puede subir o descargar cualquier archivo por nombre. No hay hoy:
-
-- Un `FileStoragePort`/`GuardarArchivoInputPort` (ver deuda ya documentada en
-  `docs/architecture/adapter-composition-standard.md`) a través del cual aplicar una regla de
-  autorización coherente.
-- Una noción de *ownership* (¿quién subió el archivo? ¿a qué solicitud de revisión pertenece?)
-  ni de contexto institucional (¿el docente que descarga pertenece al grupo de la solicitud?)
-  disponible en el Controller o en un Port.
-
-Definir una política de roles ahora, sin ese contexto, sería o demasiado laxa (no resuelve el
-riesgo real) o inventar un contrato de ownership que no existe todavía en el código. Por eso
-se mantiene `authenticated()` **temporalmente**, marcado explícitamente como:
+Validadores:
 
 ```text
-SECURITY DEBT — STORAGE PHASE
+JwtValidators.createDefaultWithIssuer(...)
+AudienceValidator
+RequiredUuidClaimValidator
 ```
 
-Debe resolverse junto con la introducción de `FileStoragePort` (ver
-`docs/architecture/adapter-composition-standard.md`, sección "Ejemplo: Local Storage → MinIO"):
-la autorización por ownership/contexto de archivos es Layer 2 (sección 14), no una regla nueva
-de `SecurityConfig`.
+### 5.1 Issuer
+
+El claim `iss` debe coincidir exactamente con `KEYCLOAK_ISSUER_URI`.
+
+No se usa:
+
+- `contains`;
+- `endsWith`;
+- regex parcial;
+- fallback a otro issuer.
+
+### 5.2 Audience
+
+`aud` debe contener la audiencia esperada:
+
+```text
+asistencias-api
+```
+
+Una audiencia como `account` o el client de frontend no sustituye la audiencia de la API.
+
+### 5.3 Usuario institucional
+
+El claim configurado, por defecto:
+
+```text
+idUsuario
+```
+
+debe existir y ser UUID válido.
+
+No existe fallback a:
+
+```text
+sub
+email
+preferred_username
+```
+
+---
+
+## 6. Roles
+
+`KeycloakJwtClaimsAdapter` lee exclusivamente:
+
+```text
+resource_access[asistencias-api].roles
+```
+
+No utiliza `realm_access.roles` para autorización de la API.
+
+Roles institucionales reconocidos:
+
+```text
+ADMINISTRADOR
+DECANO
+COORDINADOR
+DOCENTE
+ESTUDIANTE
+```
+
+La comparación es exacta. Roles técnicos o desconocidos se ignoran.
+
+`InstitutionalJwtAuthenticationConverter` transforma:
+
+```text
+DOCENTE -> ROLE_DOCENTE
+```
+
+La convención `ROLE_` pertenece a Spring Security / Infrastructure; no a Domain ni Application.
+
+---
+
+## 7. Principal autenticado
+
+El principal runtime es siempre:
+
+```text
+idUsuario.toString()
+```
+
+`AuthenticatedUserProvider` resuelve:
+
+```text
+SecurityContextHolder
+ -> Authentication.getName()
+ -> UUID.fromString(...)
+```
+
+No vuelve a interpretar claims del JWT.
+
+Esto evita que diferentes capas discutan si el principal es `sub`, email, username o UUID
+institucional.
+
+---
+
+## 8. CSRF
+
+### 8.1 Modelo
+
+La API usa:
+
+```http
+Authorization: Bearer <jwt>
+```
+
+El navegador no adjunta automáticamente un bearer token elegido por la aplicación a un request
+cross-site, a diferencia de credenciales basadas en cookies.
+
+`SecurityConfig` mantiene CSRF habilitado para peticiones inseguras sin Bearer y excluye del
+token CSRF únicamente las requests que presentan el encabezado Bearer.
+
+Conceptualmente:
+
+```text
+request inseguro sin Bearer
+  -> CSRF se mantiene
+
+request con Authorization: Bearer ...
+  -> excepción CSRF
+  -> autenticación/autorización JWT siguen aplicando
+```
+
+Una cookie por sí sola no obtiene esta excepción.
+
+### 8.2 Validación
+
+La suite de seguridad cubre, entre otros:
+
+- POST sin Bearer ni CSRF -> rechazado;
+- cookie sin Bearer -> no concede acceso;
+- Bearer inválido -> no concede acceso;
+- Bearer vacío/malformado -> no concede acceso;
+- Bearer válido -> continúa hacia RBAC.
+
+### 8.3 Sonar/CodeQL
+
+El hallazgo CodeQL original por desactivar CSRF globalmente fue corregido.
+
+Sonar `java:S4502` fue revisado explícitamente para el modelo stateless bearer y aceptado como
+decisión de seguridad documentada. No debe ocultarse mediante cambios artificiales al código.
+
+Si cambia el mecanismo de autenticación, especialmente si algún día se introducen cookies
+autenticadas, esta decisión debe reabrirse y revisarse.
+
+---
+
+## 9. CORS
+
+`SecurityConfig` mantiene CORS neutral respecto al proveedor de identidad.
+
+Origen local por defecto:
+
+```text
+http://localhost:4200
+```
+
+Headers relevantes:
+
+```text
+Authorization
+Content-Type
+X-Correlation-Id
+Accept
+```
+
+Header expuesto:
+
+```text
+X-Correlation-Id
+```
+
+Si se cambian los clientes frontend permitidos, debe hacerse por configuración de entorno y no
+hardcodeando nuevos origins en lógica de negocio.
+
+---
+
+## 10. Capas de autorización
+
+La autorización se divide deliberadamente:
+
+### Layer 1 — RBAC HTTP
+
+Spring Security responde:
+
+> ¿Este rol puede llegar a esta familia de rutas/método HTTP?
+
+Ejemplo:
+
+```text
+POST /api/v1/grupos/** -> COORDINADOR o ADMINISTRADOR
+```
+
+### Layer 2 — scope contextual
+
+Application responde:
+
+> ¿Este usuario concreto puede operar sobre este grupo/sesión/estudiante concreto?
+
+Se implementa mediante casos de uso y `InstitutionalScopePort` cuando el flujo lo requiere.
+
+`SecurityConfig` no debe consultar DB ni resolver ownership contextual.
+
+---
+
+## 11. Matriz RBAC relevante
+
+Estado vigente de las familias revisadas:
+
+| Ruta | Regla |
+|---|---|
+| `/api/v1/admin/**` | `ADMINISTRADOR` |
+| `/api/v1/decano/**` | `DECANO` o `ADMINISTRADOR` |
+| `/api/v1/coordinador/**` | `COORDINADOR` o `ADMINISTRADOR` |
+| `/api/v1/docente/**` | `DOCENTE` |
+| `/api/v1/docentes/**` | `COORDINADOR` o `ADMINISTRADOR` |
+| `/api/v1/estudiante/**` | `ESTUDIANTE` |
+| `/api/v1/estudiantes/**` | `COORDINADOR` o `ADMINISTRADOR` |
+| `GET /api/v1/grupos/**` | `DOCENTE`, `COORDINADOR` o `ADMINISTRADOR` |
+| `POST/PUT/DELETE /api/v1/grupos/**` | `COORDINADOR` o `ADMINISTRADOR` |
+| `POST/PUT/PATCH /api/v1/sesiones/**` | `DOCENTE` |
+| `GET /api/v1/sesiones/*/qr-token` | `DOCENTE` |
+| `POST /api/v1/asistencias` | `DOCENTE` |
+| `POST /api/v1/asistencias/lote` | `DOCENTE` |
+| `POST /api/v1/asistencias/revisiones` | `ESTUDIANTE` |
+| `POST /api/v1/asistencias/consultas/grupo` | `DOCENTE`, `COORDINADOR` o `ADMINISTRADOR` |
+| `POST /api/v1/usuarios` | cualquier usuario autenticado; deuda funcional pendiente |
+| `/api/v1/archivos/**` | cualquier usuario autenticado; deuda Storage/ownership pendiente |
+| `GET /api/v1/realtime/stream` | cualquier usuario autenticado |
+| `GET /api/v1/realtime/status` | cualquier usuario autenticado |
+| `POST /api/v1/realtime/emit` | `ADMINISTRADOR` |
+
+---
+
+## 12. Realtime / SSE
+
+La Fase 3.1 ya reemplazó el antiguo `RealtimeEventHub` por:
+
+```text
+RealtimePublisherPort
+ -> ReactorRealtimeAdapter
+ -> RealtimeStreamGateway
+ -> RealtimeEventsController
+ -> SSE
+```
+
+Provider:
+
+```text
+app.adapters.realtime.provider=local-sse
+```
+
+### 12.1 Autenticación
+
+El stream continúa protegido por Bearer. No se permite:
+
+```text
+?token=<jwt>
+```
+
+y no se hace público para facilitar el consumo desde navegador.
+
+El frontend deberá consumir SSE con una solución que permita enviar headers, como `fetch`
+streaming o un cliente SSE compatible con `Authorization`.
+
+### 12.2 `/emit`
+
+`POST /api/v1/realtime/emit` es una utilidad diagnóstica, no un caso de uso de negocio.
+
+Permanece restringida a:
+
+```text
+ADMINISTRADOR
+```
+
+Antes de producción debe decidirse si:
+
+- se conserva;
+- se condiciona mediante property de diagnóstico;
+- o se elimina.
+
+### 12.3 Información sensible
+
+Los payloads realtime no deben transportar:
+
+- JWT;
+- refresh tokens;
+- cookies;
+- contraseñas;
+- secretos.
+
+Más detalle:
+
+```text
+docs/architecture/reactive-realtime.md
+```
+
+---
+
+## 13. Authorization contextual pendiente
+
+Los siguientes endpoints requieren revisar/completar Layer 2 cuando se implemente o endurezca su
+flujo funcional:
+
+- `GET /api/v1/sesiones/{sesionId}`;
+- `GET /api/v1/sesiones/grupo/{grupoId}`;
+- `GET /api/v1/docentes/{docenteId}`;
+- `GET /api/v1/docentes/{docenteId}/asignaciones`;
+- `GET /api/v1/estudiantes/{estudianteId}`.
+
+La regla no debe improvisarse en el Controller. Debe resolverse desde Application mediante el
+scope institucional correspondiente.
+
+---
+
+## 14. Storage security debt
+
+`/api/v1/archivos/**` permanece temporalmente bajo:
+
+```text
+authenticated()
+```
+
+Hoy todavía no existe una abstracción completa de ownership/contexto alrededor del archivo.
+
+La fase Storage deberá introducir:
+
+```text
+GuardarArchivoInputPort
+GuardarArchivoUseCase
+FileStoragePort
+```
+
+y definir autorización Layer 2 con información como propietario/recurso/grupo cuando el contrato
+funcional esté formalizado.
+
+No debe intentarse resolver esta deuda solamente con un matcher de roles.
+
+---
+
+## 15. Provisioning security debt
+
+`POST /api/v1/usuarios` continúa bajo `authenticated()`.
+
+El contrato funcional definitivo debe aclarar quién puede provisionar usuarios institucionales.
+No se inventa una política nueva sin respaldo funcional.
+
+Identity provisioning además mantiene deudas E2E/documentadas para ciertos roles institucionales.
+Ver:
+
+```text
+docs/security/keycloak-identity-provider.md
+```
+
+---
+
+## 16. Cómo agregar otro runtime IdP
+
+Para incorporar otro proveedor, por ejemplo Auth0:
+
+1. crear `Auth0JwtClaimsAdapter implements JwtClaimsAdapter`;
+2. crear sus properties tipadas;
+3. crear `Auth0SecurityAdapterConfiguration`;
+4. condicionarla a `app.adapters.security.provider=auth0`;
+5. registrar su `JwtDecoder`;
+6. agregar el enum/provider correspondiente;
+7. cubrir issuer/audience/user claim/roles con tests.
+
+No deben cambiar:
+
+```text
+SecurityConfig
+InstitutionalJwtAuthenticationConverter
+AuthenticatedUserProvider
+Application UseCases
+Controllers de negocio
+```
+
+salvo que el nuevo contrato funcional exija una capacidad distinta, no por el simple cambio de
+vendor.
+
+---
+
+## 17. Reglas de calidad y seguridad
+
+Cualquier cambio en seguridad debe conservar:
+
+```text
+CodeQL: sin nuevas alertas
+Sonar Security Rating: A
+Sonar Security Hotspots nuevos: 0 o revisados explícitamente
+Dependency Review: sin nuevas vulnerabilidades High/Critical
+ArchUnit: PASS
+JaCoCo: gates globales PASS
+```
+
+No se permite “arreglar” scanners mediante:
+
+- desactivar reglas;
+- excluir paquetes productivos;
+- ocultar warnings con código equivalente;
+- relajar RBAC;
+- hacer endpoints públicos;
+- pasar tokens por query string.
+
+---
+
+## 18. Checklist de cambio de seguridad
+
+Antes de integrar un cambio:
+
+```text
+[ ] issuer validado exactamente
+[ ] audience validada
+[ ] idUsuario UUID requerido
+[ ] roles solo desde el client de API
+[ ] principal = idUsuario
+[ ] Bearer inválido -> 401
+[ ] rol insuficiente -> 403
+[ ] CSRF no se desactiva globalmente
+[ ] cookies no autentican accidentalmente
+[ ] CORS no se amplía sin necesidad
+[ ] Layer 1 y Layer 2 no se mezclan
+[ ] no hay secretos en logs/eventos
+[ ] tests RBAC pasan
+[ ] CodeQL pasa
+[ ] Sonar Security pasa
+```
+
+Este documento representa el estado vigente después de la baseline de seguridad y la Fase 3.1
+Realtime. Si cambia el mecanismo de autenticación, la estrategia CSRF o la matriz RBAC, debe
+actualizarse en el mismo PR.

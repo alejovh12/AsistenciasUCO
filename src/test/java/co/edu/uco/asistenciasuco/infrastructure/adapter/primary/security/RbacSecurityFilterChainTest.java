@@ -195,6 +195,42 @@ class RbacSecurityFilterChainTest {
                 .andExpect(status().isOk());
     }
 
+    // --- GET /api/v1/realtime/stream : canal SSE, requiere autenticacion (cualquier rol) ---
+
+    @Test
+    void realtime_stream_sin_token_recibe_401() throws Exception {
+        mockMvc.perform(get("/api/v1/realtime/stream"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void realtime_stream_con_bearer_invalido_recibe_401() throws Exception {
+        mockMvc.perform(get("/api/v1/realtime/stream").header(HttpHeaders.AUTHORIZATION, "Bearer token-invalido"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void realtime_stream_cualquier_rol_autenticado_es_permitido() throws Exception {
+        mockMvc.perform(get("/api/v1/realtime/stream").header(HttpHeaders.AUTHORIZATION, bearer("ESTUDIANTE")))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/realtime/stream").header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isOk());
+    }
+
+    // --- POST /api/v1/realtime/emit : utilidad de desarrollo, restringida a ADMINISTRADOR ---
+
+    @Test
+    void realtime_emit_estudiante_recibe_403() throws Exception {
+        mockMvc.perform(post("/api/v1/realtime/emit").header(HttpHeaders.AUTHORIZATION, bearer("ESTUDIANTE")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void realtime_emit_administrador_es_permitido_por_security_filter_chain() throws Exception {
+        mockMvc.perform(post("/api/v1/realtime/emit").header(HttpHeaders.AUTHORIZATION, bearer("ADMINISTRADOR")))
+                .andExpect(status().isOk());
+    }
+
     private static String bearer(final String institutionalRoleName) {
         return "Bearer " + institutionalRoleName;
     }
@@ -239,6 +275,16 @@ class RbacSecurityFilterChainTest {
 
         @GetMapping("/api/v1/estudiante/materias")
         String materiasEstudiante() {
+            return "ok";
+        }
+
+        @GetMapping("/api/v1/realtime/stream")
+        String realtimeStream() {
+            return "ok";
+        }
+
+        @PostMapping("/api/v1/realtime/emit")
+        String realtimeEmit() {
             return "ok";
         }
     }
