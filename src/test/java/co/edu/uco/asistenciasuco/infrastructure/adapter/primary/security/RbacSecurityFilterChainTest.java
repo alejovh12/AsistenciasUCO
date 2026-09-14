@@ -128,6 +128,28 @@ class RbacSecurityFilterChainTest {
                 .andExpect(status().isOk());
     }
 
+    @Test
+    void cookie_y_bearer_invalido_no_permiten_acceso() throws Exception {
+        mockMvc.perform(post("/api/v1/grupos")
+                        .cookie(new Cookie("JSESSIONID", "session-de-prueba"))
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer token-invalido"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void bearer_vacio_o_malformado_no_permite_acceso() throws Exception {
+        mockMvc.perform(post("/api/v1/grupos").header(HttpHeaders.AUTHORIZATION, "Bearer "))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/v1/grupos").header(HttpHeaders.AUTHORIZATION, "Bearer"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void post_sin_bearer_y_sin_token_csrf_permanece_bloqueado() throws Exception {
+        mockMvc.perform(post("/api/v1/grupos"))
+                .andExpect(status().isForbidden());
+    }
+
     // --- POST /api/v1/asistencias/lote : registro docente por lote ---
 
     @Test
@@ -233,6 +255,9 @@ class RbacSecurityFilterChainTest {
         JwtDecoder jwtDecoder() {
             final OAuth2TokenValidator<Jwt> audienceValidator = new AudienceValidator(AUDIENCE);
             return token -> {
+                if (!List.of("COORDINADOR", "ADMINISTRADOR", "DOCENTE", "ESTUDIANTE").contains(token)) {
+                    throw new BadJwtException("Invalid test token.");
+                }
                 final Jwt jwt = jwtFor(token);
                 final OAuth2TokenValidatorResult result = audienceValidator.validate(jwt);
                 if (result.hasErrors()) {
