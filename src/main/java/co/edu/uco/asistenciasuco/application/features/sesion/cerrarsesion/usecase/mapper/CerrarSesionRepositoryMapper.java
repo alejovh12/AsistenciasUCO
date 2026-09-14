@@ -20,6 +20,7 @@ public final class CerrarSesionRepositoryMapper {
 
         return new CerrarSesionRepositoryDTO(
                 domain.getSesion(),
+                domain.getDocente(),
                 domain.getObservacionCierre()
         );
     }

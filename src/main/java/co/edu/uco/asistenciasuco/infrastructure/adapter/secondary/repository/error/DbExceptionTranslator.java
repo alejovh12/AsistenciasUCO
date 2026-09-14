@@ -41,6 +41,7 @@ public final class DbExceptionTranslator {
     private static final Set<ErrorDefinition> CONFLICT_CODES = Set.of(
             UsuarioErrorCode.ERR_UNICIDAD_CORREO,
             UsuarioErrorCode.ERR_UNICIDAD_DOCUMENTO,
+            UsuarioErrorCode.ERR_IDENTIDAD_USUARIO_CONFLICTO,
             GrupoErrorCode.ERR_CUPO_SUPERADO,
             GrupoErrorCode.ERR_CRUCE_HORARIO_ESTUDIANTE,
             GrupoErrorCode.ERR_CRUCE_HORARIO_DOCENTE,

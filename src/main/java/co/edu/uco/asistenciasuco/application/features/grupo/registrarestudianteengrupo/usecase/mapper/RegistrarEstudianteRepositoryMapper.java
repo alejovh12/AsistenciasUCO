@@ -4,8 +4,12 @@ import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudiantee
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.entity.RegistrarEstudianteResultadoEntity;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarEstudianteRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.RegistrarEstudianteRepositoryProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.UsuarioIdentidadRepositoryProjection;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+
+import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Mapper entre el dominio del caso de uso y el contrato del puerto secundario.
@@ -13,6 +17,10 @@ import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 public final class RegistrarEstudianteRepositoryMapper {
 
     private RegistrarEstudianteRepositoryMapper() {
+    }
+
+    public static Optional<UUID> toIdentidadId(final Optional<UsuarioIdentidadRepositoryProjection> proyeccion) {
+        return proyeccion.map(UsuarioIdentidadRepositoryProjection::id);
     }
 
     public static RegistrarEstudianteRepositoryDTO toRepositoryDTO(final RegistrarEstudianteDomain domain) {

@@ -4,6 +4,7 @@ package co.edu.uco.asistenciasuco.application.features.grupo.registrarestudiante
 import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.usuario.domain.UsuarioRegistroDomain;
+import co.edu.uco.asistenciasuco.application.features.usuario.domain.rules.PasswordRegistroRule;
 
 import java.util.UUID;
 
@@ -83,5 +84,9 @@ public final class RegistrarEstudianteDomain {
 
     public UUID getGrupoId() {
         return grupoId;
+    }
+
+    public String resolverCredencialNueva() {
+        return PasswordRegistroRule.resolverCredencialNueva(getPassword(), getNumeroIdentificacion());
     }
 }

@@ -1,7 +1,10 @@
 package co.edu.uco.asistenciasuco.application.secondaryports.repository;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarAsistenciasPorGrupoRepositoryDTO;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciaAutonomaRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciaRepositoryDTO;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciasSesionRepositoryDTO;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ResolverSolicitudRevisionAsistenciaRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.SolicitarRevisionAsistenciaRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.AsistenciaRepositoryProjection;
 
@@ -14,7 +17,13 @@ public interface AsistenciaRepositoryPort {
 
     void registrarAsistencia(RegistrarAsistenciaRepositoryDTO dto);
 
+    void registrarAsistenciasSesion(RegistrarAsistenciasSesionRepositoryDTO dto);
+
+    void registrarAsistenciaAutonoma(RegistrarAsistenciaAutonomaRepositoryDTO dto);
+
     List<AsistenciaRepositoryProjection> consultarAsistenciasPorGrupo(ConsultarAsistenciasPorGrupoRepositoryDTO dto);
 
     void solicitarRevisionAsistencia(SolicitarRevisionAsistenciaRepositoryDTO dto);
+
+    void resolverSolicitudRevisionAsistencia(ResolverSolicitudRevisionAsistenciaRepositoryDTO dto);
 }

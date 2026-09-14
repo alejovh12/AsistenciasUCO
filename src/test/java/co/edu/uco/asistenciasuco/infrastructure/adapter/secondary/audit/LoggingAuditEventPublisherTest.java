@@ -41,7 +41,7 @@ class LoggingAuditEventPublisherTest {
             verify(repository).insert(event);
             final ILoggingEvent loggingEvent = lastEvent(appender);
             assertEquals(Level.INFO, loggingEvent.getLevel());
-            assertEquals("Audit event persisted.", loggingEvent.getFormattedMessage());
+            assertEquals("Audit event published.", loggingEvent.getFormattedMessage());
             assertEquals("AUDIT", keyValues(loggingEvent).get("eventType"));
         } finally {
             detach(logger, appender);
@@ -62,6 +62,13 @@ class LoggingAuditEventPublisherTest {
         try {
             publisher.publish(event);
 
+            verify(repository).insert(event);
+            assertTrue(appender.list.stream().anyMatch(log -> {
+                final Map<String, String> keyValues = keyValues(log);
+                return Level.INFO.equals(log.getLevel())
+                        && "Audit event published.".equals(log.getFormattedMessage())
+                        && "AUDIT".equals(keyValues.get("eventType"));
+            }));
             final ILoggingEvent loggingEvent = lastEvent(appender);
             final Map<String, String> keyValues = keyValues(loggingEvent);
             assertEquals(Level.ERROR, loggingEvent.getLevel());
@@ -76,7 +83,6 @@ class LoggingAuditEventPublisherTest {
             assertNull(keyValues.get("actorId"));
             assertNull(keyValues.get("metadata"));
             assertNotNull(loggingEvent.getThrowableProxy());
-            assertTrue(appender.list.stream().noneMatch(log -> "Audit event persisted.".equals(log.getFormattedMessage())));
         } finally {
             detach(logger, appender);
         }
@@ -127,6 +133,9 @@ class LoggingAuditEventPublisherTest {
     }
 
     private Map<String, String> keyValues(final ILoggingEvent event) {
+        if (event.getKeyValuePairs() == null) {
+            return Map.of();
+        }
         return event.getKeyValuePairs().stream()
                 .collect(Collectors.toMap(keyValue -> keyValue.key, keyValue -> String.valueOf(keyValue.value), (left, right) -> right));
     }

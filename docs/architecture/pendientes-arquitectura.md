@@ -14,11 +14,17 @@ Caso conocido: `usp_validar_tipo_identificacion_exista_por_id_interno` puede pro
 
 ## Sesion
 
-La persistencia real de Sesion sigue pendiente. Actualmente Sesion opera solo bajo profile `mock`.
+Sesion dispone de adapter SQL Server productivo implementado estaticamente
+(`SesionRepositorySqlServerAdapter`) y configurado desde el Composition Root de persistencia.
+Los mocks ya no se seleccionan mediante un spring profile tecnologico; quedan destinados a
+testing/test configuration. Pendiente: validacion de ejecucion/E2E.
 
 ## Asistencia
 
-La persistencia real de Asistencia sigue pendiente. Actualmente Asistencia opera solo bajo profile `mock`.
+Asistencia dispone de adapter SQL Server productivo implementado estaticamente
+(`AsistenciaRepositorySqlServerAdapter`) y configurado desde el Composition Root de persistencia.
+Los mocks ya no se seleccionan mediante un spring profile tecnologico; quedan destinados a
+testing/test configuration. Pendiente: validacion de ejecucion/E2E.
 
 ## Estados de asistencia
 

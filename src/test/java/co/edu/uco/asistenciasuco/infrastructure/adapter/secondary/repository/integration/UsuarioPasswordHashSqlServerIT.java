@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
@@ -25,6 +27,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @Tag("integration")
 @SpringBootTest
+@MockitoBean(types = JwtDecoder.class)
 class UsuarioPasswordHashSqlServerIT {
 
     @Autowired
@@ -72,7 +75,7 @@ class UsuarioPasswordHashSqlServerIT {
             final String persistedPassword = jdbcTemplate.queryForObject(
                     """
                             SELECT password
-                            FROM dbo.Usuario
+                            FROM dbo.uv_usuario_autenticacion
                             WHERE correo = ?
                             """,
                     String.class,
@@ -99,7 +102,7 @@ class UsuarioPasswordHashSqlServerIT {
         return jdbcTemplate.queryForObject(
                 """
                         SELECT COUNT(*)
-                        FROM dbo.Usuario
+                        FROM dbo.uv_usuario
                         WHERE correo = ?
                            OR numeroIdentificacion = ?
                         """,

@@ -1,0 +1,26 @@
+.git
+.github
+
+# Cache local de Maven (repositorio local, NO el Maven Wrapper).
+# .mvn/, mvnw y mvnw.cmd se conservan deliberadamente: son el wrapper, no cache.
+.maven/
+
+**/.env
+**/.env.*
+!**/.env.example
+
+.idea
+.vscode
+
+target
+.tmp
+.tmp-log-metadata
+
+uploads
+logs
+
+*.log
+
+bootrun-*.log
+
+README-local*

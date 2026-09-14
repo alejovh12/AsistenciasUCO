@@ -1,10 +1,18 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.audit;
 
+import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
+import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
+import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditActorType;
 import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditEvent;
 import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditOutcome;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -14,21 +22,41 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
+/**
+ * Verifica auditoria HTTP durable contra SQL Server usando solo mocks explicitos para los
+ * puertos de negocio que no forman parte del contrato de auditoria.
+ */
 @Tag("integration")
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.profiles.active=mock"
+        properties = "spring.main.allow-bean-definition-overriding=true"
 )
 class AuditHttpIT {
+
+    private static final String API_CLIENT_ID = "asistencias-api";
+    private static final UUID ESTUDIANTE_ID = UUID.fromString("93641bab-e3cd-485c-b275-47e7b731e18c");
+    private static final UUID COORDINADOR_ID = UUID.fromString("83641bab-e3cd-485c-b275-47e7b731e18c");
+    private static final UUID SESION_ID = UUID.fromString("00000000-0000-0000-0000-000000000301");
+    private static final UUID ESTUDIANTE_ACADEMICO_ID = UUID.fromString("00000000-0000-0000-0000-000000000201");
 
     @LocalServerPort
     private int port;
@@ -36,22 +64,55 @@ class AuditHttpIT {
     @Autowired
     private AuditEventJdbcRepository auditEventJdbcRepository;
 
+    @MockitoBean
+    private JwtDecoder jwtDecoder;
+
+    @MockitoBean
+    private InstitutionalScopePort institutionalScopePort;
+
+    @MockitoBean
+    private AsistenciaRepositoryPort asistenciaRepositoryPort;
+
+    @MockitoBean
+    private GrupoRepositoryPort grupoRepositoryPort;
+
+    @MockitoBean
+    private UsuarioRepositoryPort usuarioRepositoryPort;
+
     private final RestTemplate restTemplate = buildRestTemplate();
+
+    @BeforeEach
+    void configureJwtDecoder() {
+        when(jwtDecoder.decode("audit-estudiante"))
+                .thenReturn(institutionalJwt("audit-estudiante", ESTUDIANTE_ID, InstitutionalRole.ESTUDIANTE,
+                        API_CLIENT_ID, API_CLIENT_ID));
+        when(jwtDecoder.decode("audit-coordinador"))
+                .thenReturn(institutionalJwt("audit-coordinador", COORDINADOR_ID, InstitutionalRole.COORDINADOR,
+                        API_CLIENT_ID, API_CLIENT_ID));
+        when(usuarioRepositoryPort.consultarUsuarioPorCorreo(anyString())).thenReturn(Optional.empty());
+        when(usuarioRepositoryPort.consultarUsuarioPorIdentificacion(any(), any())).thenReturn(Optional.empty());
+        when(grupoRepositoryPort.registrarEstudianteEnGrupo(any()))
+                .thenThrow(new ConflictException(GrupoErrorCode.ERR_GRUPO_NO_HABILITADO));
+    }
 
     @Test
     void operacion_exitosa_persiste_auditoria_success_recuperable_desde_db() {
+        when(institutionalScopePort.findEstudianteIdByUsuario(ESTUDIANTE_ID))
+                .thenReturn(Optional.of(ESTUDIANTE_ACADEMICO_ID));
         final String correlationId = UUID.randomUUID().toString();
         final HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("X-Correlation-Id", correlationId);
+        headers.setBearerAuth("audit-estudiante");
 
         final ResponseEntity<String> response = restTemplate.exchange(
                 "http://localhost:" + port + "/api/v1/asistencias/revisiones",
                 HttpMethod.POST,
                 new HttpEntity<>("""
                         {
-                          "asistencia":"00000000-0000-0000-0000-000000000101",
-                          "motivo":"Validar asistencia."
+                          "sesionId":"00000000-0000-0000-0000-000000000301",
+                          "categoria":"INASISTENCIA",
+                          "justificacion":"Validar asistencia."
                         }
                         """, headers),
                 String.class
@@ -63,10 +124,11 @@ class AuditHttpIT {
         final AuditEvent event = auditEventJdbcRepository.findLatestByCorrelationId(correlationId).orElseThrow();
         assertEquals(AuditOutcome.SUCCESS, event.outcome());
         assertEquals("SOLICITAR_REVISION_ASISTENCIA", event.action());
-        assertEquals("ASISTENCIA", event.resourceType());
-        assertEquals("00000000-0000-0000-0000-000000000101", event.resourceId());
+        assertEquals("SESION", event.resourceType());
+        assertEquals(SESION_ID.toString(), event.resourceId());
         assertEquals(correlationId, event.correlationId());
-        assertEquals(AuditActorType.ANONYMOUS, event.actorType());
+        assertEquals(AuditActorType.USER, event.actorType());
+        assertEquals(ESTUDIANTE_ID.toString(), event.actorId());
         assertTrue(event.errorCode() == null || event.errorCode().isBlank());
         assertFalse(event.traceId() == null || event.traceId().isBlank());
         assertEquals("HTTP", event.metadata().get("handlerType"));
@@ -78,6 +140,7 @@ class AuditHttpIT {
         final HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("X-Correlation-Id", correlationId);
+        headers.setBearerAuth("audit-coordinador");
 
         final String body = """
                 {
@@ -111,9 +174,32 @@ class AuditHttpIT {
         assertEquals(grupoId.toString(), event.resourceId());
         assertEquals("ERR_GRUPO_NO_HABILITADO", event.errorCode());
         assertEquals(409, event.httpStatus());
+        assertEquals(AuditActorType.USER, event.actorType());
+        assertEquals(COORDINADOR_ID.toString(), event.actorId());
         assertFalse(event.traceId() == null || event.traceId().isBlank());
         assertFalse(event.spanId() == null || event.spanId().isBlank());
         assertEquals("HTTP", event.metadata().get("handlerType"));
+    }
+
+    private static Jwt institutionalJwt(
+            final String token,
+            final UUID idUsuario,
+            final InstitutionalRole role,
+            final String audience,
+            final String apiClientId
+    ) {
+        final Instant now = Instant.now();
+        return Jwt.withTokenValue(token)
+                .header("alg", "none")
+                .issuer("http://127.0.0.1:65534/realms/asistencias-uco")
+                .subject("test-" + idUsuario)
+                .audience(List.of(audience))
+                .issuedAt(now.minusSeconds(60))
+                .notBefore(now.minusSeconds(60))
+                .expiresAt(now.plusSeconds(300))
+                .claim("idUsuario", idUsuario.toString())
+                .claim("resource_access", Map.of(apiClientId, Map.of("roles", List.of(role.name()))))
+                .build();
     }
 
     private RestTemplate buildRestTemplate() {

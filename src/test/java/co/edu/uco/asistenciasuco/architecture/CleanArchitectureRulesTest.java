@@ -1,10 +1,23 @@
 package co.edu.uco.asistenciasuco.architecture;
 
+import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
+import com.tngtech.archunit.lang.ArchCondition;
+import com.tngtech.archunit.lang.ConditionEvents;
+import com.tngtech.archunit.lang.SimpleConditionEvent;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
@@ -65,10 +78,42 @@ class CleanArchitectureRulesTest {
     }
 
     @Test
+    void controllers_no_dependen_de_jdbc_ni_java_sql() {
+        noClasses()
+                .that().resideInAPackage("..infrastructure.adapter.primary.controller..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "org.springframework.jdbc.core..",
+                        "org.springframework.jdbc.core.namedparam..",
+                        "org.springframework.jdbc.core.simple..",
+                        "java.sql.."
+                )
+                .check(importedClasses());
+    }
+
+    @Test
+    void codigo_productivo_no_referencia_procedimientos_internos() throws IOException {
+        try (var files = Files.walk(Path.of("src/main/java"))) {
+            final boolean hasInternalProcedure = files
+                    .filter(path -> path.toString().endsWith(".java"))
+                    .anyMatch(path -> containsInternalProcedureReference(path));
+            assertTrue(!hasInternalProcedure);
+        }
+    }
+
+    private static boolean containsInternalProcedureReference(final Path path) {
+        try {
+            return Files.readString(path).matches("(?s).*usp_.*_interno.*");
+        } catch (IOException exception) {
+            throw new IllegalStateException("No fue posible inspeccionar " + path, exception);
+        }
+    }
+
+    @Test
     void adapters_secondary_en_infrastructure_adapter_secondary() {
         classes()
                 .that().haveSimpleNameEndingWith("Adapter")
                 .and().resideInAPackage("..infrastructure..")
+                .and().resideOutsideOfPackage("..infrastructure.adapter.primary.security..")
                 .should().resideInAPackage("..infrastructure.adapter.secondary..")
                 .check(importedClasses());
     }
@@ -94,7 +139,7 @@ class CleanArchitectureRulesTest {
         classes()
                 .that().haveSimpleNameEndingWith("DTO")
                 .and().resideInAPackage("..application.features..")
-                .should().resideInAPackage("..primaryports.dto..")
+                .should().resideInAnyPackage("..primaryports.dto..", "..application.features..common.dto..")
                 .check(importedClasses());
     }
 
@@ -117,6 +162,60 @@ class CleanArchitectureRulesTest {
                 .that().haveSimpleNameEndingWith("RepositoryPort")
                 .should().resideInAPackage("..application.secondaryports..")
                 .check(importedClasses());
+    }
+
+    @Test
+    void usecase_no_depende_de_primaryports_dto() {
+        noClasses()
+                .that().resideInAPackage("..application.features..usecase..")
+                .should().dependOnClassesThat().resideInAPackage("..primaryports.dto..")
+                .check(importedClasses());
+    }
+
+    @Test
+    void usecaseimpl_implementa_interfaz_usecase() {
+        classes()
+                .that().resideInAPackage("..application.features..usecase.impl..")
+                .and().haveSimpleNameEndingWith("UseCaseImpl")
+                .should(implementarUnaInterfazUseCase())
+                .check(importedClasses());
+    }
+
+    @Test
+    void controller_no_depende_de_usecaseimpl() {
+        noClasses()
+                .that().resideInAPackage("..infrastructure.adapter.primary.controller..")
+                .should().dependOnClassesThat().haveSimpleNameEndingWith("UseCaseImpl")
+                .check(importedClasses());
+    }
+
+    @Test
+    void domain_no_tiene_anotaciones_de_framework() {
+        noClasses()
+                .that().resideInAPackage(DOMAIN_PACKAGE)
+                .should().beAnnotatedWith(Component.class)
+                .orShould().beAnnotatedWith(Service.class)
+                .orShould().beAnnotatedWith(Repository.class)
+                .orShould().beAnnotatedWith(Configuration.class)
+                .orShould().beAnnotatedWith(Autowired.class)
+                .check(importedClasses());
+    }
+
+    private static ArchCondition<JavaClass> implementarUnaInterfazUseCase() {
+        return new ArchCondition<JavaClass>("implement an interface ending with UseCase") {
+            @Override
+            public void check(final JavaClass item, final ConditionEvents events) {
+                final boolean cumple = item.getInterfaces().stream()
+                        .anyMatch(interfaz -> interfaz.toErasure().getSimpleName().endsWith("UseCase"));
+                events.add(new SimpleConditionEvent(
+                        item,
+                        cumple,
+                        item.getFullName() + (cumple
+                                ? " implementa una interfaz UseCase"
+                                : " no implementa ninguna interfaz UseCase")
+                ));
+            }
+        };
     }
 
     private static JavaClasses importedClasses() {

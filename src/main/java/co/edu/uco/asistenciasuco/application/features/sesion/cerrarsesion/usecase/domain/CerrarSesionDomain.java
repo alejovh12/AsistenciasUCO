@@ -14,21 +14,31 @@ import java.util.UUID;
 public final class CerrarSesionDomain {
 
     private final UUID sesion;
+    private final UUID docente;
     private final String observacionCierre;
 
     public CerrarSesionDomain(
             final UUID sesion,
+            final UUID docente,
             final String observacionCierre
     ) {
         validarSesion(sesion);
+        validarDocente(docente);
         this.observacionCierre = validarObservacionCierre(observacionCierre);
 
+        this.docente = docente;
         this.sesion = sesion;
     }
 
     private void validarSesion(final UUID sesion) {
         if (ObjectHelper.isNull(sesion)) {
             throw new ValidationException(SesionErrorCode.ERR_SESION_REQUERIDA);
+        }
+    }
+
+    private void validarDocente(final UUID docente) {
+        if (ObjectHelper.isNull(docente)) {
+            throw new ValidationException(SesionErrorCode.ERR_DOCENTE_REQUERIDO);
         }
     }
 
@@ -48,6 +58,10 @@ public final class CerrarSesionDomain {
 
     public UUID getSesion() {
         return sesion;
+    }
+
+    public UUID getDocente() {
+        return docente;
     }
 
     public String getObservacionCierre() {

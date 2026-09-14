@@ -1,7 +1,11 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo;
 
+import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.primaryports.ActualizarGrupoInputPort;
+import co.edu.uco.asistenciasuco.application.features.grupo.consultarestudiantesgrupo.primaryports.ConsultarEstudiantesGrupoInputPort;
+import co.edu.uco.asistenciasuco.application.features.grupo.consultarestudiantesgrupo.primaryports.dto.EstudianteGrupoDTO;
 import co.edu.uco.asistenciasuco.application.features.grupo.consultargrupos.primaryports.ConsultarGruposInputPort;
 import co.edu.uco.asistenciasuco.application.features.grupo.consultargrupos.primaryports.dto.GrupoDTO;
+import co.edu.uco.asistenciasuco.application.features.grupo.creargrupo.primaryports.CrearGrupoInputPort;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.primaryports.RegistrarEstudianteInputPort;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.primaryports.dto.RegistrarEstudianteDTO;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.primaryports.dto.RegistrarEstudianteResultadoDTO;
@@ -57,11 +61,13 @@ class GrupoControllerTest {
 
         mockMvc.perform(get("/api/v1/grupos"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(GRUPO.toString()))
-                .andExpect(jsonPath("$[0].nombreAsignatura").value("Backend"))
-                .andExpect(jsonPath("$[0].grupoHabilitado").value(true))
-                .andExpect(jsonPath("$[0].idCorrelacion").doesNotExist());
+                .andExpect(jsonPath("$.exitoso").value(true))
+                .andExpect(jsonPath("$.datos", hasSize(1)))
+                .andExpect(jsonPath("$.datos[0].id").value(GRUPO.toString()))
+                .andExpect(jsonPath("$.datos[0].nombreAsignatura").value("Backend"))
+                .andExpect(jsonPath("$.datos[0].grupoHabilitado").value(true))
+                .andExpect(jsonPath("$.datos[0].idCorrelacion").doesNotExist())
+                .andExpect(jsonPath("$.total").value(1));
     }
 
     @Test
@@ -100,6 +106,44 @@ class GrupoControllerTest {
                 .andExpect(status().isCreated());
 
         assertEquals(GRUPO, dtoCapturado.get().getGrupoId());
+    }
+
+    @Test
+    void listarEstudiantesGrupo_delega_en_puerto_actual_y_no_expone_correlacion() throws Exception {
+        final AtomicReference<UUID> grupoCapturado = new AtomicReference<>();
+        final RegistrarEstudianteInputPort registrarPort = dto -> new RegistrarEstudianteResultadoDTO(true, "Estudiante registrado.");
+        final ConsultarEstudiantesGrupoInputPort consultarEstudiantesPort = dto -> {
+            grupoCapturado.set(dto.grupoId());
+            return List.of(new EstudianteGrupoDTO(
+                    UUID.fromString("63641bab-e3cd-485c-b275-47e7b731e18c"),
+                    UUID.fromString("73641bab-e3cd-485c-b275-47e7b731e18c"),
+                    "123456789",
+                    "Ana Perez",
+                    "ana.perez@uco.edu.co",
+                    "ACTIVO",
+                    "Activo"
+            ));
+        };
+
+        final MockMvc mockMvc = MockMvcBuilders.standaloneSetup(new GrupoController(
+                        mock(CrearGrupoInputPort.class),
+                        mock(ActualizarGrupoInputPort.class),
+                        registrarPort,
+                        List::of,
+                        consultarEstudiantesPort
+                ))
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
+
+        mockMvc.perform(get("/api/v1/grupos/{grupoId}/estudiantes", GRUPO))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exitoso").value(true))
+                .andExpect(jsonPath("$.datos", hasSize(1)))
+                .andExpect(jsonPath("$.datos[0].correo").value("ana.perez@uco.edu.co"))
+                .andExpect(jsonPath("$.datos[0].idCorrelacion").doesNotExist())
+                .andExpect(jsonPath("$.total").value(1));
+
+        assertEquals(GRUPO, grupoCapturado.get());
     }
 
     @Test
@@ -184,7 +228,13 @@ class GrupoControllerTest {
             final RegistrarEstudianteInputPort registrarPort,
             final ConsultarGruposInputPort consultarPort
     ) {
-        return MockMvcBuilders.standaloneSetup(new GrupoController(registrarPort, consultarPort))
+        return MockMvcBuilders.standaloneSetup(new GrupoController(
+                        mock(CrearGrupoInputPort.class),
+                        mock(ActualizarGrupoInputPort.class),
+                        registrarPort,
+                        consultarPort,
+                        dto -> List.of()
+                ))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }

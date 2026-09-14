@@ -5,6 +5,8 @@ import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.Solic
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 
+import java.util.UUID;
+
 /**
  * Mapper entre el dominio del caso de uso y el contrato del puerto secundario.
  */
@@ -14,15 +16,20 @@ public final class SolicitarRevisionAsistenciaRepositoryMapper {
     }
 
     public static SolicitarRevisionAsistenciaRepositoryDTO toRepositoryDTO(
-            final SolicitarRevisionAsistenciaDomain domain
+            final SolicitarRevisionAsistenciaDomain domain,
+            final UUID estudianteId
     ) {
         if (ObjectHelper.isNull(domain)) {
             throw new CrosscuttingException("El dominio para solicitar revision de asistencia es obligatorio.");
         }
 
         return new SolicitarRevisionAsistenciaRepositoryDTO(
-                domain.getAsistencia(),
-                domain.getMotivo()
+                estudianteId,
+                domain.getSesion(),
+                domain.getCategoria(),
+                domain.getJustificacion(),
+                domain.getSoporteNombre(),
+                domain.getSoporteUrl()
         );
     }
 }

@@ -1,5 +1,9 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.features;
 
+import co.edu.uco.asistenciasuco.application.features.sesion.actualizarsesion.primaryports.ActualizarSesionInputPort;
+import co.edu.uco.asistenciasuco.application.features.sesion.actualizarsesion.primaryports.interactor.ActualizarSesionInteractor;
+import co.edu.uco.asistenciasuco.application.features.sesion.actualizarsesion.usecase.ActualizarSesionUseCase;
+import co.edu.uco.asistenciasuco.application.features.sesion.actualizarsesion.usecase.impl.ActualizarSesionUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.sesion.cerrarsesion.primaryports.CerrarSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.sesion.cerrarsesion.primaryports.interactor.CerrarSesionInteractor;
 import co.edu.uco.asistenciasuco.application.features.sesion.cerrarsesion.usecase.CerrarSesionUseCase;
@@ -12,24 +16,24 @@ import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.primary
 import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.primaryports.interactor.CrearSesionInteractor;
 import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.usecase.CrearSesionUseCase;
 import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.usecase.impl.CrearSesionUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.sesion.generarsesionesgrupo.primaryports.GenerarSesionesGrupoInputPort;
+import co.edu.uco.asistenciasuco.application.features.sesion.generarsesionesgrupo.primaryports.interactor.GenerarSesionesGrupoInteractor;
+import co.edu.uco.asistenciasuco.application.features.sesion.generarsesionesgrupo.usecase.GenerarSesionesGrupoUseCase;
+import co.edu.uco.asistenciasuco.application.features.sesion.generarsesionesgrupo.usecase.impl.GenerarSesionesGrupoUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.SesionRepositoryMockAdapter;
+import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 
 @Configuration(proxyBeanMethods = false)
-@Profile("mock")
 public class SesionBeansConfig {
 
     @Bean
-    public SesionRepositoryPort sesionRepositoryPort() {
-        return new SesionRepositoryMockAdapter();
-    }
-
-    @Bean
-    public CrearSesionUseCase crearSesionUseCase(final SesionRepositoryPort sesionRepositoryPort) {
-        return new CrearSesionUseCaseImpl(sesionRepositoryPort);
+    public CrearSesionUseCase crearSesionUseCase(
+            final SesionRepositoryPort sesionRepositoryPort,
+            final InstitutionalScopePort institutionalScopePort
+    ) {
+        return new CrearSesionUseCaseImpl(sesionRepositoryPort, institutionalScopePort);
     }
 
     @Bean
@@ -48,12 +52,40 @@ public class SesionBeansConfig {
     }
 
     @Bean
-    public CerrarSesionUseCase cerrarSesionUseCase(final SesionRepositoryPort sesionRepositoryPort) {
-        return new CerrarSesionUseCaseImpl(sesionRepositoryPort);
+    public CerrarSesionUseCase cerrarSesionUseCase(
+            final SesionRepositoryPort sesionRepositoryPort,
+            final InstitutionalScopePort institutionalScopePort
+    ) {
+        return new CerrarSesionUseCaseImpl(sesionRepositoryPort, institutionalScopePort);
     }
 
     @Bean
     public CerrarSesionInputPort cerrarSesionInputPort(final CerrarSesionUseCase cerrarSesionUseCase) {
         return new CerrarSesionInteractor(cerrarSesionUseCase);
+    }
+
+    @Bean
+    public ActualizarSesionUseCase actualizarSesionUseCase(
+            final SesionRepositoryPort sesionRepositoryPort,
+            final InstitutionalScopePort institutionalScopePort
+    ) {
+        return new ActualizarSesionUseCaseImpl(sesionRepositoryPort, institutionalScopePort);
+    }
+
+    @Bean
+    public ActualizarSesionInputPort actualizarSesionInputPort(final ActualizarSesionUseCase actualizarSesionUseCase) {
+        return new ActualizarSesionInteractor(actualizarSesionUseCase);
+    }
+
+    @Bean
+    public GenerarSesionesGrupoUseCase generarSesionesGrupoUseCase(final SesionRepositoryPort sesionRepositoryPort) {
+        return new GenerarSesionesGrupoUseCaseImpl(sesionRepositoryPort);
+    }
+
+    @Bean
+    public GenerarSesionesGrupoInputPort generarSesionesGrupoInputPort(
+            final GenerarSesionesGrupoUseCase generarSesionesGrupoUseCase
+    ) {
+        return new GenerarSesionesGrupoInteractor(generarSesionesGrupoUseCase);
     }
 }

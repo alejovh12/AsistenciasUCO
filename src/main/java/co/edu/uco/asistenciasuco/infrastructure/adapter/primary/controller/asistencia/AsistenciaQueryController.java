@@ -8,7 +8,6 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asist
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.validation.ConsultarAsistenciasPorGrupoRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,7 +24,6 @@ import java.util.UUID;
  * Adaptador primario REST para consultas de asistencias.
  */
 @RestController
-@Profile("mock")
 public final class AsistenciaQueryController {
 
     private static final ConsultarAsistenciasPorGrupoRequestValidator CONSULT_BY_GROUP_VALIDATOR =

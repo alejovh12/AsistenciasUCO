@@ -19,6 +19,7 @@ out/
 # Logs and runtime dumps
 *.log
 logs/
+uploads/
 hs_err_pid*
 replay_pid*
 

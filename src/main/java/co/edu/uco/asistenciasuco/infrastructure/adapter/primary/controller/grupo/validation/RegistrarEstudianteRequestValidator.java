@@ -28,6 +28,10 @@ public final class RegistrarEstudianteRequestValidator implements Validator<Regi
             return builder.add("request", ValidationErrorType.REQUIRED, REQUIRED_STUDENT_INFORMATION).build();
         }
 
+        if (request.getEstudianteId() != null) {
+            return builder.build();
+        }
+
         UuidFieldValidationHelper.validateRequiredUuid(
                 builder,
                 "tipoIdentificacionId",
@@ -145,8 +149,7 @@ public final class RegistrarEstudianteRequestValidator implements Validator<Regi
     }
 
     private static void validatePassword(final String value, final ValidationResultBuilder builder) {
-        if (!ValidationHelper.hasText(value)) {
-            builder.add("password", ValidationErrorType.REQUIRED, "La clave es obligatoria.");
+        if (value == null) {
             return;
         }
         final int length = value.length();

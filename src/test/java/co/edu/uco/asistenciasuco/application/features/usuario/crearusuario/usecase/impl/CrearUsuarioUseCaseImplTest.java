@@ -116,6 +116,11 @@ class CrearUsuarioUseCaseImplTest {
             }
 
             @Override
+            public Optional<UsuarioIdentidadRepositoryProjection> consultarUsuarioPorId(final UUID idUsuario) {
+                return Optional.empty();
+            }
+
+            @Override
             public Optional<UsuarioIdentidadRepositoryProjection> consultarUsuarioPorIdentificacion(
                     final UUID tipoIdentificacionId,
                     final Integer numeroIdentificacion

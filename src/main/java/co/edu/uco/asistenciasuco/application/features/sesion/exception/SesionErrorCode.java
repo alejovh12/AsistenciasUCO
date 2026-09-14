@@ -8,6 +8,8 @@ public enum SesionErrorCode implements ErrorDefinition {
     ERR_SESION_REQUERIDA("ERR_SESION_REQUERIDA", "La sesion es obligatoria.", ErrorKind.VALIDATION),
     ERR_TEMA_SESION_REQUERIDO("ERR_TEMA_SESION_REQUERIDO", "El tema de la sesion es obligatorio.", ErrorKind.VALIDATION),
     ERR_TEMA_SESION_LONGITUD_INVALIDA("ERR_TEMA_SESION_LONGITUD_INVALIDA", "El tema de la sesion debe tener entre 5 y 100 caracteres.", ErrorKind.VALIDATION),
+    ERR_DOCENTE_REQUERIDO("ERR_DOCENTE_REQUERIDO", "El docente autenticado es obligatorio para operar la sesion.", ErrorKind.VALIDATION),
+    ERR_RANGO_FECHAS_SESION_INVALIDO("ERR_RANGO_FECHAS_SESION_INVALIDO", "El rango de fechas de la sesion no es valido.", ErrorKind.VALIDATION),
     ERR_DESCRIPCION_SESION_LONGITUD_INVALIDA("ERR_DESCRIPCION_SESION_LONGITUD_INVALIDA", "Cuando se indique una descripcion, debe tener entre 10 y 250 caracteres.", ErrorKind.VALIDATION),
     ERR_OBSERVACION_CIERRE_REQUERIDA("ERR_OBSERVACION_CIERRE_REQUERIDA", "La observacion de cierre es obligatoria.", ErrorKind.VALIDATION),
     ERR_OBSERVACION_CIERRE_LONGITUD_INVALIDA("ERR_OBSERVACION_CIERRE_LONGITUD_INVALIDA", "La observacion de cierre debe tener entre 10 y 250 caracteres.", ErrorKind.VALIDATION);

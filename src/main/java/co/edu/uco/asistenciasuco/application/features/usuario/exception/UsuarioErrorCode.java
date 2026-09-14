@@ -6,6 +6,7 @@ import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorKind;
 public enum UsuarioErrorCode implements ErrorDefinition {
     ERR_UNICIDAD_CORREO("ERR_UNICIDAD_CORREO", "El correo ya se encuentra registrado.", ErrorKind.CONFLICT),
     ERR_UNICIDAD_DOCUMENTO("ERR_UNICIDAD_DOCUMENTO", "El numero de identificacion ya se encuentra registrado.", ErrorKind.CONFLICT),
+    ERR_IDENTIDAD_USUARIO_CONFLICTO("ERR_IDENTIDAD_USUARIO_CONFLICTO", "El correo y el documento no corresponden al mismo usuario.", ErrorKind.CONFLICT),
     ERR_USUARIO_NO_EXISTE("ERR_USUARIO_NO_EXISTE", "El usuario consultado no existe.", ErrorKind.NOT_FOUND),
     ERR_USUARIO_INACTIVO("ERR_USUARIO_INACTIVO", "El usuario se encuentra inactivo.", ErrorKind.CONFLICT),
     ERR_NOMBRE_PERSONA_INVALIDO("ERR_NOMBRE_PERSONA_INVALIDO", "Los nombres y apellidos solo pueden contener letras, espacios, apostrofes y guiones.", ErrorKind.VALIDATION),

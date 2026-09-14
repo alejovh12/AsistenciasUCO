@@ -61,10 +61,11 @@ Con profile default:
 - Usuario: SQL real.
 - Docente: SQL real.
 - Grupo: SQL real.
-- Sesion: sin mock productivo.
-- Asistencia: sin mock productivo.
+- Sesion: adapter SQL Server disponible estaticamente, pendiente validacion de ejecucion/E2E.
+- Asistencia: adapter SQL Server disponible estaticamente, pendiente validacion de ejecucion/E2E.
 
-Con `spring.profiles.active=mock`, Sesion y Asistencia pueden cargar sus mocks temporales para desarrollo/pruebas.
+Los mocks de repositorio ya no se seleccionan mediante spring profile tecnologico. Deben
+registrarse desde `@TestConfiguration` o crearse directamente en tests cuando sean necesarios.
 
 ## Cobertura automatica clave
 

@@ -50,7 +50,7 @@ class DomainShouldNotDependOnSpringTest {
         classes()
                 .that().haveSimpleNameEndingWith("DTO")
                 .and().resideInAPackage("..application.features..")
-                .should().resideInAPackage("..primaryports.dto..")
+                .should().resideInAnyPackage("..primaryports.dto..", "..application.features..common.dto..")
                 .check(classes);
 
         classes()

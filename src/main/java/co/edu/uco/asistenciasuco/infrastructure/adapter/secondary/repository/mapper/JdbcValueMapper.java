@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.ma
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.UUID;
 
 /**
@@ -60,6 +61,32 @@ public final class JdbcValueMapper {
             return localDateTime.toLocalDate();
         }
         return LocalDate.parse(String.valueOf(value));
+    }
+
+    public static LocalDateTime toLocalDateTime(final Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof LocalDateTime localDateTime) {
+            return localDateTime;
+        }
+        if (value instanceof java.sql.Timestamp timestamp) {
+            return timestamp.toLocalDateTime();
+        }
+        return LocalDateTime.parse(String.valueOf(value));
+    }
+
+    public static LocalTime toLocalTime(final Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof LocalTime localTime) {
+            return localTime;
+        }
+        if (value instanceof java.sql.Time time) {
+            return time.toLocalTime();
+        }
+        return LocalTime.parse(String.valueOf(value));
     }
 
     public static String toString(final Object value) {

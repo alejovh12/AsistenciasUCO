@@ -5,6 +5,7 @@ import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorKind;
 
 public enum DatabaseErrorCode implements ErrorDefinition {
     DATABASE_OPERATION_ERROR("DATABASE_OPERATION_ERROR", "Ocurrio un error interno. Utilice el codigo de seguimiento para soporte.", ErrorKind.TECHNICAL),
+    ERR_DB_CANONICAL_CONTRACT("ERR_DB_CANONICAL_CONTRACT", "Ocurrio un error interno. Utilice el codigo de seguimiento para soporte.", ErrorKind.TECHNICAL),
     ERR_DB_UNCLASSIFIED("ERR_DB_UNCLASSIFIED", "Ocurrio un error interno. Utilice el codigo de seguimiento para soporte.", ErrorKind.TECHNICAL);
 
     private final String code;

@@ -10,6 +10,7 @@ import co.edu.uco.asistenciasuco.application.exception.validation.ValidationExce
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -19,26 +20,38 @@ public final class SesionConsultadaEntity {
 
     private final UUID sesion;
     private final UUID grupo;
-    private final String tema;
-    private final String descripcion;
-    private final boolean cerrada;
-    private final String observacionCierre;
+    private final String nombre;
+    private final Integer numero;
+    private final String codigo;
+    private final Integer numeroSemana;
+    private final String codigoGrupo;
+    private final String nombreGrupo;
+    private final LocalDateTime fechaHoraInicio;
+    private final LocalDateTime fechaHoraFin;
 
     public SesionConsultadaEntity(
             final UUID sesion,
             final UUID grupo,
-            final String tema,
-            final String descripcion,
-            final boolean cerrada,
-            final String observacionCierre
+            final String nombre,
+            final Integer numero,
+            final String codigo,
+            final Integer numeroSemana,
+            final String codigoGrupo,
+            final String nombreGrupo,
+            final LocalDateTime fechaHoraInicio,
+            final LocalDateTime fechaHoraFin
     ) {
         validarIdentificador(sesion, SesionErrorCode.ERR_SESION_REQUERIDA);
         validarIdentificador(grupo, GrupoErrorCode.ERR_GRUPO_REQUERIDO);
 
-        this.tema = validarTema(tema);
-        this.descripcion = normalizarDescripcion(descripcion);
-        this.observacionCierre = normalizarObservacionCierre(observacionCierre);
-        this.cerrada = cerrada;
+        this.nombre = validarNombre(nombre);
+        this.numero = numero;
+        this.codigo = TextHelper.trim(codigo);
+        this.numeroSemana = numeroSemana;
+        this.codigoGrupo = TextHelper.trim(codigoGrupo);
+        this.nombreGrupo = TextHelper.trim(nombreGrupo);
+        this.fechaHoraInicio = fechaHoraInicio;
+        this.fechaHoraFin = fechaHoraFin;
         this.sesion = sesion;
         this.grupo = grupo;
     }
@@ -49,46 +62,18 @@ public final class SesionConsultadaEntity {
         }
     }
 
-    private String validarTema(final String tema) {
-        final String temaNormalizado = TextHelper.trim(tema);
+    private String validarNombre(final String nombre) {
+        final String nombreNormalizado = TextHelper.trim(nombre);
 
-        if (TextHelper.isNullOrBlank(temaNormalizado)) {
+        if (TextHelper.isNullOrBlank(nombreNormalizado)) {
             throw new ValidationException(SesionErrorCode.ERR_TEMA_SESION_REQUERIDO);
         }
 
-        if (!TextHelper.hasLengthBetween(temaNormalizado, 5, 100)) {
+        if (!TextHelper.hasLengthBetween(nombreNormalizado, 1, 150)) {
             throw new ValidationException(SesionErrorCode.ERR_TEMA_SESION_LONGITUD_INVALIDA);
         }
 
-        return temaNormalizado;
-    }
-
-    private String normalizarDescripcion(final String descripcion) {
-        final String descripcionNormalizada = TextHelper.trim(descripcion);
-
-        if (TextHelper.isNullOrBlank(descripcionNormalizada)) {
-            return null;
-        }
-
-        if (!TextHelper.hasLengthBetween(descripcionNormalizada, 10, 250)) {
-            throw new ValidationException(SesionErrorCode.ERR_DESCRIPCION_SESION_LONGITUD_INVALIDA);
-        }
-
-        return descripcionNormalizada;
-    }
-
-    private String normalizarObservacionCierre(final String observacionCierre) {
-        final String observacionNormalizada = TextHelper.trim(observacionCierre);
-
-        if (TextHelper.isNullOrBlank(observacionNormalizada)) {
-            return null;
-        }
-
-        if (!TextHelper.hasLengthBetween(observacionNormalizada, 5, 250)) {
-            throw new ValidationException(SesionErrorCode.ERR_OBSERVACION_CIERRE_LONGITUD_INVALIDA);
-        }
-
-        return observacionNormalizada;
+        return nombreNormalizado;
     }
 
     public UUID getSesion() {
@@ -99,19 +84,35 @@ public final class SesionConsultadaEntity {
         return grupo;
     }
 
-    public String getTema() {
-        return tema;
+    public String getNombre() {
+        return nombre;
     }
 
-    public String getDescripcion() {
-        return descripcion;
+    public Integer getNumero() {
+        return numero;
     }
 
-    public boolean isCerrada() {
-        return cerrada;
+    public String getCodigo() {
+        return codigo;
     }
 
-    public String getObservacionCierre() {
-        return observacionCierre;
+    public Integer getNumeroSemana() {
+        return numeroSemana;
+    }
+
+    public String getCodigoGrupo() {
+        return codigoGrupo;
+    }
+
+    public String getNombreGrupo() {
+        return nombreGrupo;
+    }
+
+    public LocalDateTime getFechaHoraInicio() {
+        return fechaHoraInicio;
+    }
+
+    public LocalDateTime getFechaHoraFin() {
+        return fechaHoraFin;
     }
 }

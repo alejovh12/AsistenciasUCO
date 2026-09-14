@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
@@ -28,6 +30,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @Tag("integration")
 @SpringBootTest
+@MockitoBean(types = JwtDecoder.class)
 class DocenteRepositorySqlServerIT {
 
     private static final UUID EMPTY_UUID = new UUID(0L, 0L);
