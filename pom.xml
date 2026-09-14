@@ -48,6 +48,17 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
+        <!--
+            Reactor Core puro (NO spring-boot-starter-webflux): la vertical realtime/SSE se
+            construye sobre Spring MVC + soporte reactivo nativo de RequestMappingHandlerAdapter
+            (Flux<ServerSentEvent<T>> ya es manejado por spring-web/spring-webmvc sin necesidad
+            de WebFlux). El resto del backend sigue siendo Spring MVC + JDBC bloqueante. Version
+            administrada por el reactor-bom que importa spring-boot-dependencies.
+        -->
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-core</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jdbc</artifactId>
@@ -101,6 +112,11 @@
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
             <version>5.2.5</version>
+        </dependency>
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-test</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
