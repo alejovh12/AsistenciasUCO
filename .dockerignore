@@ -12,7 +12,12 @@
 .idea
 .vscode
 
-target
+# El build de CI genera el JAR antes de construir la imagen Docker.
+# Excluimos el resto de target/ pero conservamos el artefacto empaquetado
+# que el Dockerfile copia dentro de la imagen.
+target/*
+!target/AsistenciasUCO-0.0.1-SNAPSHOT.jar
+
 .tmp
 .tmp-log-metadata
 
