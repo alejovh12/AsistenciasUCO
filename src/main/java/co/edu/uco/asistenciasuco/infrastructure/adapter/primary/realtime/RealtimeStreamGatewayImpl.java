@@ -2,18 +2,22 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimeEvent;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.realtime.ReactorRealtimeAdapter;
-import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
 import java.util.Map;
 import java.util.Objects;
 
-@Component
-final class RealtimeStreamGatewayImpl implements RealtimeStreamGateway {
+/**
+ * Bridge interno entre el controller SSE y el adapter local seleccionado por el Composition Root.
+ *
+ * <p>No se autoregistra con Spring. {@code LocalSseRealtimeAdapterConfiguration} crea esta
+ * implementacion solamente cuando el provider realtime es {@code local-sse}.</p>
+ */
+public final class RealtimeStreamGatewayImpl implements RealtimeStreamGateway {
 
     private final ReactorRealtimeAdapter realtimeAdapter;
 
-    RealtimeStreamGatewayImpl(final ReactorRealtimeAdapter realtimeAdapter) {
+    public RealtimeStreamGatewayImpl(final ReactorRealtimeAdapter realtimeAdapter) {
         this.realtimeAdapter = Objects.requireNonNull(realtimeAdapter, "ReactorRealtimeAdapter es requerido.");
     }
 

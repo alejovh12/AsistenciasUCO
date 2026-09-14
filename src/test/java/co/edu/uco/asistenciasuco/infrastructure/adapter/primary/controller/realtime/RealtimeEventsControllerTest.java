@@ -3,19 +3,18 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.real
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.RealtimeEventResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.RealtimeStreamGateway;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.codec.ServerSentEvent;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 import reactor.test.StepVerifier;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -29,7 +28,12 @@ class RealtimeEventsControllerTest {
     @Test
     void subscribe_produce_serverSentEvent_conservando_id_y_type_del_evento() {
         final RealtimeEventResponse response = new RealtimeEventResponse(
-                UUID.randomUUID(), "ASISTENCIA_REGISTRADA", Instant.now(), "corr-1", Map.of("estudiante", "123"));
+                UUID.randomUUID(),
+                "ASISTENCIA_REGISTRADA",
+                Instant.now(),
+                "corr-1",
+                Map.of("estudiante", "123")
+        );
         when(gateway.subscribe()).thenReturn(Flux.just(response));
 
         StepVerifier.create(controller.subscribe())
@@ -38,7 +42,8 @@ class RealtimeEventsControllerTest {
                     assertEquals("ASISTENCIA_REGISTRADA", sse.event());
                     assertEquals(response, sse.data());
                 })
-                .verifyComplete();
+                .thenCancel()
+                .verify();
     }
 
     @Test
@@ -48,23 +53,38 @@ class RealtimeEventsControllerTest {
         when(gateway.subscribe()).thenReturn(Flux.just(first, second));
 
         StepVerifier.create(controller.subscribe())
-                .expectNextMatches(sse -> sse.id().equals(first.eventId().toString()))
-                .expectNextMatches(sse -> sse.id().equals(second.eventId().toString()))
-                .verifyComplete();
+                .expectNextMatches(sse -> first.eventId().toString().equals(sse.id()))
+                .expectNextMatches(sse -> second.eventId().toString().equals(sse.id()))
+                .thenCancel()
+                .verify();
     }
 
     @Test
-    void subscribe_delega_directamente_en_el_gateway_sin_alterar_la_desconexion() {
-        final Sinks.Many<RealtimeEventResponse> sink = Sinks.many().multicast().onBackpressureBuffer();
+    void subscribe_emite_heartbeat_como_comentario_sse() {
+        when(gateway.subscribe()).thenReturn(Flux.never());
+
+        StepVerifier.withVirtualTime(controller::subscribe)
+                .thenAwait(RealtimeEventsController.HEARTBEAT_INTERVAL)
+                .assertNext(sse -> assertEquals("heartbeat", sse.comment()))
+                .thenCancel()
+                .verify();
+    }
+
+    @Test
+    void subscribe_delega_en_el_gateway_y_la_desconexion_no_lanza() {
+        final Sinks.Many<RealtimeEventResponse> sink =
+                Sinks.many().multicast().directBestEffort();
         when(gateway.subscribe()).thenReturn(sink.asFlux());
 
         final reactor.core.Disposable subscription = controller.subscribe().subscribe();
-        assertEquals(reactor.core.publisher.Sinks.EmitResult.OK, sink.tryEmitNext(response("VIVO")));
+        assertEquals(Sinks.EmitResult.OK, sink.tryEmitNext(response("VIVO")));
+
         subscription.dispose();
 
-        // Tras desconectar el unico subscriptor, una nueva emision no debe lanzar excepcion:
-        // el gateway (y transitivamente el hub) sigue operativo para futuros subscriptores.
-        sink.tryEmitNext(response("DESPUES_DE_DESCONECTAR"));
+        assertEquals(
+                Sinks.EmitResult.FAIL_ZERO_SUBSCRIBER,
+                sink.tryEmitNext(response("DESPUES_DE_DESCONECTAR"))
+        );
     }
 
     @Test
@@ -83,11 +103,17 @@ class RealtimeEventsControllerTest {
         when(gateway.activeSubscribersCount()).thenReturn(2);
 
         final var result = controller.emitCustomEvent(Map.of(
-                "topic", "ASISTENCIA", "action", "CREADA", "data", Map.of("id", 42)));
+                "topic", "ASISTENCIA",
+                "action", "CREADA",
+                "data", Map.of("id", 42)
+        ));
 
         verify(gateway).emit(eq("ASISTENCIA.CREADA"), eq(Map.of("id", 42)));
         assertEquals(200, result.getStatusCode().value());
-        assertTrue(((String) result.getBody().datos().get("mensajeUsuario")).contains("2 suscriptores"));
+        assertTrue(
+                ((String) result.getBody().datos().get("mensajeUsuario"))
+                        .contains("2 suscriptores")
+        );
     }
 
     @Test
@@ -97,7 +123,23 @@ class RealtimeEventsControllerTest {
         verify(gateway).emit(eq("GENERAL.CUSTOM_EVENT"), eq(Map.of()));
     }
 
+    @Test
+    void emitCustomEvent_rechaza_data_que_no_sea_objeto_json() {
+        final ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> controller.emitCustomEvent(Map.of("data", "no-es-un-objeto"))
+        );
+
+        assertEquals(400, exception.getStatusCode().value());
+    }
+
     private static RealtimeEventResponse response(final String type) {
-        return new RealtimeEventResponse(UUID.randomUUID(), type, Instant.now(), null, Map.of());
+        return new RealtimeEventResponse(
+                UUID.randomUUID(),
+                type,
+                Instant.now(),
+                null,
+                Map.of()
+        );
     }
 }
