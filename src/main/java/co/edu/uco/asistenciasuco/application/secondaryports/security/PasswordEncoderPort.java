@@ -2,7 +2,8 @@ package co.edu.uco.asistenciasuco.application.secondaryports.security;
 
 /**
  * Puerto de aplicacion para codificar credenciales de usuario.
- * Dependencia transitoria del flujo legacy mientras credenciales migra completamente a Keycloak.
+ * Dependencia transitoria del flujo legacy mientras las credenciales migran al proveedor de
+ * identidad externo.
  */
 public interface PasswordEncoderPort {
 

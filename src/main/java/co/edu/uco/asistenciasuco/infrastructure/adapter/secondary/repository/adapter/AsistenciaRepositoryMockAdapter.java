@@ -2,7 +2,10 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.ad
 
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarAsistenciasPorGrupoRepositoryDTO;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciaAutonomaRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciaRepositoryDTO;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciasSesionRepositoryDTO;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ResolverSolicitudRevisionAsistenciaRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.SolicitarRevisionAsistenciaRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.AsistenciaRepositoryProjection;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
@@ -28,6 +31,20 @@ public final class AsistenciaRepositoryMockAdapter implements AsistenciaReposito
     public void registrarAsistencia(final RegistrarAsistenciaRepositoryDTO dto) {
         if (ObjectHelper.isNull(dto)) {
             throw new CrosscuttingException("El dominio para registrar asistencia es obligatorio.");
+        }
+    }
+
+    @Override
+    public void registrarAsistenciasSesion(final RegistrarAsistenciasSesionRepositoryDTO dto) {
+        if (ObjectHelper.isNull(dto)) {
+            throw new CrosscuttingException("El dominio para registrar asistencias por sesion es obligatorio.");
+        }
+    }
+
+    @Override
+    public void registrarAsistenciaAutonoma(final RegistrarAsistenciaAutonomaRepositoryDTO dto) {
+        if (ObjectHelper.isNull(dto)) {
+            throw new CrosscuttingException("El dominio para registrar asistencia autonoma es obligatorio.");
         }
     }
 
@@ -67,6 +84,13 @@ public final class AsistenciaRepositoryMockAdapter implements AsistenciaReposito
     public void solicitarRevisionAsistencia(final SolicitarRevisionAsistenciaRepositoryDTO dto) {
         if (ObjectHelper.isNull(dto)) {
             throw new CrosscuttingException("El dominio para solicitar revision de asistencia es obligatorio.");
+        }
+    }
+
+    @Override
+    public void resolverSolicitudRevisionAsistencia(final ResolverSolicitudRevisionAsistenciaRepositoryDTO dto) {
+        if (ObjectHelper.isNull(dto)) {
+            throw new CrosscuttingException("El dominio para resolver revision de asistencia es obligatorio.");
         }
     }
 }

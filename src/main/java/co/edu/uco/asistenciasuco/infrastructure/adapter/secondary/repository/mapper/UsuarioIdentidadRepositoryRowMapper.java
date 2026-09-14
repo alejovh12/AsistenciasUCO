@@ -11,6 +11,13 @@ public final class UsuarioIdentidadRepositoryRowMapper implements RowMapper<Usua
     @Override
     public UsuarioIdentidadRepositoryProjection mapRow(final ResultSet resultSet, final int rowNum)
             throws SQLException {
-        return new UsuarioIdentidadRepositoryProjection(JdbcValueMapper.toUuid(resultSet.getObject("id")));
+        return new UsuarioIdentidadRepositoryProjection(
+                JdbcValueMapper.toUuid(resultSet.getObject("id")),
+                JdbcValueMapper.toUuid(resultSet.getObject("idTipoIdentificacion")),
+                JdbcValueMapper.toInteger(resultSet.getObject("numeroIdentificacion")),
+                resultSet.getString("primerNombre"),
+                resultSet.getString("primerApellido"),
+                resultSet.getString("correo")
+        );
     }
 }

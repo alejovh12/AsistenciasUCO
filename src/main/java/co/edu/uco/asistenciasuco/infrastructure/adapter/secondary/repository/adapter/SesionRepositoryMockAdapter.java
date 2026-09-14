@@ -1,9 +1,11 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ActualizarSesionRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.CerrarSesionRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarSesionRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.CrearSesionRepositoryDTO;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.GenerarSesionesGrupoRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.SesionRepositoryProjection;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
@@ -27,6 +29,13 @@ public final class SesionRepositoryMockAdapter implements SesionRepositoryPort {
     }
 
     @Override
+    public void actualizarSesion(final ActualizarSesionRepositoryDTO dto) {
+        if (ObjectHelper.isNull(dto)) {
+            throw new CrosscuttingException("El dominio para actualizar sesion es obligatorio.");
+        }
+    }
+
+    @Override
     public SesionRepositoryProjection consultarSesion(final ConsultarSesionRepositoryDTO dto) {
         if (ObjectHelper.isNull(dto)) {
             throw new CrosscuttingException("El dominio para consultar sesion es obligatorio.");
@@ -38,11 +47,13 @@ public final class SesionRepositoryMockAdapter implements SesionRepositoryPort {
                 dto.getSesion(),
                 GRUPO_1,
                 sesionCerrada ? "Sesion de cierre de periodo" : "Sesion de seguimiento academico",
-                sesionCerrada
-                        ? "Sesion mock cerrada para validar flujo de consulta."
-                        : "Sesion mock disponible para validar flujo de consulta.",
-                sesionCerrada,
-                sesionCerrada ? "La sesion se cerro sin novedades." : null
+                sesionCerrada ? 16 : 3,
+                sesionCerrada ? "CIERRE-16" : "SES-03",
+                sesionCerrada ? 16 : 3,
+                "G-001",
+                "Grupo mock",
+                null,
+                null
         );
     }
 
@@ -50,6 +61,13 @@ public final class SesionRepositoryMockAdapter implements SesionRepositoryPort {
     public void cerrarSesion(final CerrarSesionRepositoryDTO dto) {
         if (ObjectHelper.isNull(dto)) {
             throw new CrosscuttingException("El dominio para cerrar sesion es obligatorio.");
+        }
+    }
+
+    @Override
+    public void generarSesionesGrupo(final GenerarSesionesGrupoRepositoryDTO dto) {
+        if (ObjectHelper.isNull(dto)) {
+            throw new CrosscuttingException("El dominio para generar sesiones de grupo es obligatorio.");
         }
     }
 }

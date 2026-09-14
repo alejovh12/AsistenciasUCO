@@ -131,8 +131,7 @@ public final class CrearUsuarioRequestValidator implements Validator<CrearUsuari
     }
 
     private static void validatePassword(final ValidationResultBuilder builder, final String value) {
-        if (!ValidationHelper.hasText(value)) {
-            builder.add("password", ValidationErrorType.REQUIRED, "La clave es obligatoria.");
+        if (value == null) {
             return;
         }
         final int length = value.length();

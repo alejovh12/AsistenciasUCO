@@ -1,0 +1,173 @@
+package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin;
+
+import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
+import co.edu.uco.asistenciasuco.application.features.admin.consultarareas.primaryports.ConsultarAreasInputPort;
+import co.edu.uco.asistenciasuco.application.features.admin.consultarareas.primaryports.dto.AreaDTO;
+import co.edu.uco.asistenciasuco.application.features.admin.consultardecanos.primaryports.ConsultarDecanosInputPort;
+import co.edu.uco.asistenciasuco.application.features.admin.consultardecanos.primaryports.dto.DecanoDTO;
+import co.edu.uco.asistenciasuco.application.features.admin.consultarfacultades.primaryports.ConsultarFacultadesInputPort;
+import co.edu.uco.asistenciasuco.application.features.admin.consultarfacultades.primaryports.dto.FacultadDTO;
+import co.edu.uco.asistenciasuco.application.features.admin.consultarinstituciones.primaryports.ConsultarInstitucionesInputPort;
+import co.edu.uco.asistenciasuco.application.features.admin.consultarinstituciones.primaryports.dto.InstitucionDTO;
+import co.edu.uco.asistenciasuco.application.features.admin.consultarparametros.primaryports.ConsultarParametrosInputPort;
+import co.edu.uco.asistenciasuco.application.features.admin.consultarparametros.primaryports.dto.ParametroDTO;
+import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.CrearDecanoInputPort;
+import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.dto.CrearDecanoDTO;
+import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.primaryports.EjecutarCierreMasivoInputPort;
+import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.primaryports.dto.EjecutarCierreMasivoDTO;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiMessageResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.AuthenticatedUserProvider;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/v1/admin")
+public final class AdminPortalController {
+
+    private final ConsultarDecanosInputPort consultarDecanosInputPort;
+    private final CrearDecanoInputPort crearDecanoInputPort;
+    private final ConsultarParametrosInputPort consultarParametrosInputPort;
+    private final EjecutarCierreMasivoInputPort ejecutarCierreMasivoInputPort;
+    private final ConsultarInstitucionesInputPort consultarInstitucionesInputPort;
+    private final ConsultarFacultadesInputPort consultarFacultadesInputPort;
+    private final ConsultarAreasInputPort consultarAreasInputPort;
+    private final AuthenticatedUserProvider authenticatedUserProvider;
+
+    public AdminPortalController(
+            final ConsultarDecanosInputPort consultarDecanosInputPort,
+            final CrearDecanoInputPort crearDecanoInputPort,
+            final ConsultarParametrosInputPort consultarParametrosInputPort,
+            final EjecutarCierreMasivoInputPort ejecutarCierreMasivoInputPort,
+            final ConsultarInstitucionesInputPort consultarInstitucionesInputPort,
+            final ConsultarFacultadesInputPort consultarFacultadesInputPort,
+            final ConsultarAreasInputPort consultarAreasInputPort,
+            final AuthenticatedUserProvider authenticatedUserProvider
+    ) {
+        this.consultarDecanosInputPort = consultarDecanosInputPort;
+        this.crearDecanoInputPort = crearDecanoInputPort;
+        this.consultarParametrosInputPort = consultarParametrosInputPort;
+        this.ejecutarCierreMasivoInputPort = ejecutarCierreMasivoInputPort;
+        this.consultarInstitucionesInputPort = consultarInstitucionesInputPort;
+        this.consultarFacultadesInputPort = consultarFacultadesInputPort;
+        this.consultarAreasInputPort = consultarAreasInputPort;
+        this.authenticatedUserProvider = authenticatedUserProvider;
+    }
+
+    @GetMapping("/decanos")
+    public ResponseEntity<ApiListResponse<DecanoDTO>> consultarDecanos() {
+        final var data = consultarDecanosInputPort.execute();
+        return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
+    }
+
+    @PostMapping("/decanos")
+    public ResponseEntity<ApiMessageResponse> crearDecano(@RequestBody final CrearDecanoRequest request) {
+        crearDecanoInputPort.execute(new CrearDecanoDTO(
+                request.tipoIdentificacionId(), request.numeroIdentificacion(), request.primerNombre(),
+                request.segundoNombre(), request.primerApellido(), request.segundoApellido(), request.correo(),
+                request.password(), request.idFacultad()
+        ));
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiMessageResponse(true, "Decano creado correctamente."));
+    }
+
+    @PatchMapping("/decanos/{id}/toggle")
+    public ResponseEntity<ApiDataResponse<Void>> toggleDecano(@PathVariable final UUID id) {
+        throw unavailable("cambiar estado de decano");
+    }
+
+    @GetMapping("/sedes")
+    public ResponseEntity<ApiListResponse<Void>> consultarSedes() { throw unavailable("consultar sedes"); }
+    @PostMapping("/sedes")
+    public ResponseEntity<ApiDataResponse<Void>> crearSede() { throw unavailable("crear sede"); }
+    @PutMapping("/sedes/{id}")
+    public ResponseEntity<ApiDataResponse<Void>> actualizarSede(@PathVariable final UUID id) { throw unavailable("actualizar sede"); }
+    @PatchMapping("/sedes/{id}/estado")
+    public ResponseEntity<ApiDataResponse<Void>> cambiarEstadoSede(@PathVariable final UUID id) { throw unavailable("cambiar estado de sede"); }
+
+    @GetMapping("/espacios-fisicos")
+    public ResponseEntity<ApiListResponse<Void>> consultarEspaciosFisicos() { throw unavailable("consultar espacios fisicos"); }
+    @PostMapping("/espacios-fisicos")
+    public ResponseEntity<ApiDataResponse<Void>> crearEspacioFisico() { throw unavailable("crear espacio fisico"); }
+    @PutMapping("/espacios-fisicos/{id}")
+    public ResponseEntity<ApiDataResponse<Void>> actualizarEspacioFisico(@PathVariable final UUID id) { throw unavailable("actualizar espacio fisico"); }
+    @PatchMapping("/espacios-fisicos/{id}/estado")
+    public ResponseEntity<ApiDataResponse<Void>> cambiarEstadoEspacioFisico(@PathVariable final UUID id) { throw unavailable("cambiar estado de espacio fisico"); }
+
+    @GetMapping("/parametros")
+    public ResponseEntity<ApiListResponse<ParametroDTO>> consultarParametros() {
+        final var data = consultarParametrosInputPort.execute();
+        return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
+    }
+    @PutMapping("/parametros/{id}")
+    public ResponseEntity<ApiDataResponse<Void>> actualizarParametro(@PathVariable final UUID id) { throw unavailable("actualizar parametro"); }
+    @GetMapping("/auditoria")
+    public ResponseEntity<ApiListResponse<Void>> consultarAuditoria() { throw unavailable("consultar auditoria"); }
+
+    @PostMapping("/cierre-masivo")
+    public ResponseEntity<ApiMessageResponse> ejecutarCierreMasivo(@RequestBody final CierreMasivoRequest request) {
+        ejecutarCierreMasivoInputPort.execute(new EjecutarCierreMasivoDTO(
+                request.idPeriodoAcademico(),
+                authenticatedUserProvider.requireAuthenticatedUserId()
+        ));
+        return ResponseEntity.ok(new ApiMessageResponse(true, "Cierre masivo solicitado correctamente."));
+    }
+
+    @GetMapping("/instituciones")
+    public ResponseEntity<ApiListResponse<InstitucionDTO>> consultarInstituciones() {
+        final var data = consultarInstitucionesInputPort.execute();
+        return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
+    }
+    @PostMapping("/instituciones")
+    public ResponseEntity<ApiDataResponse<Void>> crearInstitucion() { throw unavailable("crear institucion"); }
+    @PutMapping("/instituciones/{id}")
+    public ResponseEntity<ApiDataResponse<Void>> actualizarInstitucion(@PathVariable final UUID id) { throw unavailable("actualizar institucion"); }
+    @PatchMapping("/instituciones/{id}/toggle-estado")
+    public ResponseEntity<ApiDataResponse<Void>> cambiarEstadoInstitucion(@PathVariable final UUID id) { throw unavailable("cambiar estado de institucion"); }
+
+    @GetMapping("/facultades")
+    public ResponseEntity<ApiListResponse<FacultadDTO>> consultarFacultades() {
+        final var data = consultarFacultadesInputPort.execute();
+        return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
+    }
+    @PostMapping("/facultades")
+    public ResponseEntity<ApiDataResponse<Void>> crearFacultad() { throw unavailable("crear facultad"); }
+    @PutMapping("/facultades/{id}")
+    public ResponseEntity<ApiDataResponse<Void>> actualizarFacultad(@PathVariable final UUID id) { throw unavailable("actualizar facultad"); }
+    @PatchMapping("/facultades/{id}/estado")
+    public ResponseEntity<ApiDataResponse<Void>> cambiarEstadoFacultad(@PathVariable final UUID id) { throw unavailable("cambiar estado de facultad"); }
+
+    @GetMapping("/areas")
+    public ResponseEntity<ApiListResponse<AreaDTO>> consultarAreas() {
+        final var data = consultarAreasInputPort.execute();
+        return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
+    }
+    @PostMapping("/areas")
+    public ResponseEntity<ApiDataResponse<Void>> crearArea() { throw unavailable("crear area"); }
+    @PutMapping("/areas/{id}")
+    public ResponseEntity<ApiDataResponse<Void>> actualizarArea(@PathVariable final UUID id) { throw unavailable("actualizar area"); }
+    @PatchMapping("/areas/{id}/estado")
+    public ResponseEntity<ApiDataResponse<Void>> cambiarEstadoArea(@PathVariable final UUID id) { throw unavailable("cambiar estado de area"); }
+
+    private FeatureUnavailableException unavailable(final String operation) {
+        return new FeatureUnavailableException("La operacion de administrador no esta disponible: " + operation + ".");
+    }
+
+    public record CrearDecanoRequest(UUID tipoIdentificacionId, Integer numeroIdentificacion, String primerNombre,
+                                     String segundoNombre, String primerApellido, String segundoApellido, String correo,
+                                     String password, UUID idFacultad) {
+    }
+
+    public record CierreMasivoRequest(UUID idPeriodoAcademico) {
+    }
+}

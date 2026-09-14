@@ -9,18 +9,11 @@ import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudi
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudiantes.usecase.ConsultarEstudiantesUseCase;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudiantes.usecase.impl.ConsultarEstudiantesUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.EstudianteRepositoryPort;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.EstudianteRepositorySqlServerAdapter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 @Configuration(proxyBeanMethods = false)
 public class EstudianteBeansConfig {
-
-    @Bean
-    public EstudianteRepositoryPort estudianteRepositoryPort(final JdbcTemplate jdbcTemplate) {
-        return new EstudianteRepositorySqlServerAdapter(jdbcTemplate);
-    }
 
     @Bean
     public ConsultarEstudiantesUseCase consultarEstudiantesUseCase(

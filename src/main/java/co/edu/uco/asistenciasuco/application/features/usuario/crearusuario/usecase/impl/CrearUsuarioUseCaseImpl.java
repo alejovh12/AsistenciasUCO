@@ -4,7 +4,6 @@ import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.useca
 import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.usecase.domain.CrearUsuarioDomain;
 import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.usecase.entity.CrearUsuarioResultadoEntity;
 import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.usecase.mapper.CrearUsuarioRepositoryMapper;
-import co.edu.uco.asistenciasuco.application.features.usuario.domain.rules.PasswordRegistroRule;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.CrearUsuarioRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
@@ -34,9 +33,7 @@ public final class CrearUsuarioUseCaseImpl implements CrearUsuarioUseCase {
             throw new CrosscuttingException("El dominio para crear usuario es obligatorio.");
         }
 
-        final String encodedPassword = passwordEncoderPort.encode(
-                PasswordRegistroRule.resolverCredencialNueva(domain.getPassword(), domain.getNumeroIdentificacion())
-        );
+        final String encodedPassword = passwordEncoderPort.encode(domain.resolverCredencialNueva());
         final CrearUsuarioRepositoryProjection resultado = usuarioRepositoryPort.crearUsuario(
                 CrearUsuarioRepositoryMapper.toRepositoryDTO(domain, encodedPassword)
         );

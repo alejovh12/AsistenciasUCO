@@ -11,10 +11,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class CerrarSesionDomainTest {
 
     private static final UUID SESION = UUID.fromString("11111111-1111-1111-1111-111111111111");
+    private static final UUID DOCENTE = UUID.fromString("22222222-2222-2222-2222-222222222222");
+
     @Test
     void construye_domain_valido_y_normaliza_observacion() {
         final CerrarSesionDomain domain =
-                new CerrarSesionDomain(SESION, "  Se finaliza por cierre programado  ");
+                new CerrarSesionDomain(SESION, DOCENTE, "  Se finaliza por cierre programado  ");
 
         assertEquals(SESION, domain.getSesion());
         assertEquals("Se finaliza por cierre programado", domain.getObservacionCierre());
@@ -22,9 +24,9 @@ class CerrarSesionDomainTest {
 
     @Test
     void rechaza_sesion_y_observacion_invalidas() {
-        assertThrows(ValidationException.class, () -> new CerrarSesionDomain(null, "Observacion valida"));
-        assertThrows(ValidationException.class, () -> new CerrarSesionDomain(SESION, null));
-        assertThrows(ValidationException.class, () -> new CerrarSesionDomain(SESION, "corta"));
-        assertThrows(ValidationException.class, () -> new CerrarSesionDomain(SESION, "a".repeat(251)));
+        assertThrows(ValidationException.class, () -> new CerrarSesionDomain(null, DOCENTE, "Observacion valida"));
+        assertThrows(ValidationException.class, () -> new CerrarSesionDomain(SESION, DOCENTE, null));
+        assertThrows(ValidationException.class, () -> new CerrarSesionDomain(SESION, DOCENTE, "corta"));
+        assertThrows(ValidationException.class, () -> new CerrarSesionDomain(SESION, DOCENTE, "a".repeat(251)));
     }
 }

@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.erro
 
 import co.edu.uco.asistenciasuco.application.exception.ApplicationException;
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
+import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
@@ -10,6 +11,7 @@ import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorDefinition;
 import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorKind;
 import co.edu.uco.asistenciasuco.crosscutting.exception.TechnicalException;
 import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.CommonErrorCode;
+import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
 import org.springframework.http.HttpStatus;
 
 final class ApiErrorCatalog {
@@ -51,7 +53,10 @@ final class ApiErrorCatalog {
 
     private static ApiErrorDescriptor fromUnknownApplicationException(final ApplicationException exception) {
         final HttpStatus status = statusForExceptionType(exception);
-        return new ApiErrorDescriptor(exception.getCode(), CommonErrorCode.BUSINESS_ERROR.defaultMessage(), status);
+        final String message = TextHelper.isNullOrBlank(exception.getMessage())
+                ? CommonErrorCode.BUSINESS_ERROR.defaultMessage()
+                : exception.getMessage();
+        return new ApiErrorDescriptor(exception.getCode(), message, status);
     }
 
     private static HttpStatus statusForExceptionType(final ApplicationException exception) {
@@ -66,6 +71,9 @@ final class ApiErrorCatalog {
         }
         if (exception instanceof ForbiddenException) {
             return HttpStatus.FORBIDDEN;
+        }
+        if (exception instanceof FeatureUnavailableException) {
+            return HttpStatus.NOT_IMPLEMENTED;
         }
         if (exception instanceof InternalApplicationException) {
             return HttpStatus.INTERNAL_SERVER_ERROR;

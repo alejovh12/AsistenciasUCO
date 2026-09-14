@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.secondaryports.repository.projection;
 
 import java.util.UUID;
+import java.time.LocalDateTime;
 
 /**
  * Proyeccion del puerto secundario para resultados de sesion.
@@ -9,25 +10,37 @@ public final class SesionRepositoryProjection {
 
     private final UUID sesion;
     private final UUID grupo;
-    private final String tema;
-    private final String descripcion;
-    private final boolean cerrada;
-    private final String observacionCierre;
+    private final String nombre;
+    private final Integer numero;
+    private final String codigo;
+    private final Integer numeroSemana;
+    private final String codigoGrupo;
+    private final String nombreGrupo;
+    private final LocalDateTime fechaHoraInicio;
+    private final LocalDateTime fechaHoraFin;
 
     public SesionRepositoryProjection(
             final UUID sesion,
             final UUID grupo,
-            final String tema,
-            final String descripcion,
-            final boolean cerrada,
-            final String observacionCierre
+            final String nombre,
+            final Integer numero,
+            final String codigo,
+            final Integer numeroSemana,
+            final String codigoGrupo,
+            final String nombreGrupo,
+            final LocalDateTime fechaHoraInicio,
+            final LocalDateTime fechaHoraFin
     ) {
         this.sesion = sesion;
         this.grupo = grupo;
-        this.tema = tema;
-        this.descripcion = descripcion;
-        this.cerrada = cerrada;
-        this.observacionCierre = observacionCierre;
+        this.nombre = nombre;
+        this.numero = numero;
+        this.codigo = codigo;
+        this.numeroSemana = numeroSemana;
+        this.codigoGrupo = codigoGrupo;
+        this.nombreGrupo = nombreGrupo;
+        this.fechaHoraInicio = fechaHoraInicio;
+        this.fechaHoraFin = fechaHoraFin;
     }
 
     public UUID getSesion() {
@@ -38,19 +51,35 @@ public final class SesionRepositoryProjection {
         return grupo;
     }
 
-    public String getTema() {
-        return tema;
+    public String getNombre() {
+        return nombre;
     }
 
-    public String getDescripcion() {
-        return descripcion;
+    public Integer getNumero() {
+        return numero;
     }
 
-    public boolean isCerrada() {
-        return cerrada;
+    public String getCodigo() {
+        return codigo;
     }
 
-    public String getObservacionCierre() {
-        return observacionCierre;
+    public Integer getNumeroSemana() {
+        return numeroSemana;
+    }
+
+    public String getCodigoGrupo() {
+        return codigoGrupo;
+    }
+
+    public String getNombreGrupo() {
+        return nombreGrupo;
+    }
+
+    public LocalDateTime getFechaHoraInicio() {
+        return fechaHoraInicio;
+    }
+
+    public LocalDateTime getFechaHoraFin() {
+        return fechaHoraFin;
     }
 }

@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevis
 
 import co.edu.uco.asistenciasuco.application.features.asistencia.exception.AsistenciaErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
+import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
 
@@ -13,45 +14,77 @@ import java.util.UUID;
  */
 public final class SolicitarRevisionAsistenciaDomain {
 
-    private final UUID asistencia;
-    private final String motivo;
+    private final UUID sesion;
+    private final String categoria;
+    private final String justificacion;
+    private final String soporteNombre;
+    private final String soporteUrl;
+    private final UUID usuario;
 
     public SolicitarRevisionAsistenciaDomain(
-            final UUID asistencia,
-            final String motivo
+            final UUID sesion,
+            final String categoria,
+            final String justificacion,
+            final String soporteNombre,
+            final String soporteUrl,
+            final UUID usuario
     ) {
-        validarAsistencia(asistencia);
-        this.motivo = validarMotivo(motivo);
+        validarSesion(sesion);
+        validarUsuario(usuario);
+        this.categoria = validarTextoObligatorio(categoria, AsistenciaErrorCode.ERR_CATEGORIA_REVISION_REQUERIDA);
+        this.justificacion = validarTextoObligatorio(justificacion, AsistenciaErrorCode.ERR_JUSTIFICACION_REVISION_REQUERIDA);
+        this.soporteNombre = TextHelper.trim(soporteNombre);
+        this.soporteUrl = TextHelper.trim(soporteUrl);
 
-        this.asistencia = asistencia;
+        this.sesion = sesion;
+        this.usuario = usuario;
     }
 
-    private void validarAsistencia(final UUID asistencia) {
-        if (ObjectHelper.isNull(asistencia)) {
-            throw new ValidationException(AsistenciaErrorCode.ERR_ASISTENCIA_REQUERIDA);
+    private void validarSesion(final UUID sesion) {
+        if (ObjectHelper.isNull(sesion)) {
+            throw new ValidationException(AsistenciaErrorCode.ERR_SESION_ASISTENCIA_REQUERIDA);
         }
     }
 
-    private String validarMotivo(final String motivo) {
-        final String motivoNormalizado = TextHelper.trim(motivo);
-
-        if (TextHelper.isNullOrBlank(motivoNormalizado)) {
-            throw new ValidationException(AsistenciaErrorCode.ERR_MOTIVO_REVISION_REQUERIDO);
+    private void validarUsuario(final UUID usuario) {
+        if (ObjectHelper.isNull(usuario)) {
+            throw new ValidationException(UsuarioErrorCode.ERR_USUARIO_REQUERIDO);
         }
+    }
 
-        if (!TextHelper.hasLengthBetween(motivoNormalizado, 10, 300)) {
+    private String validarTextoObligatorio(final String valor, final AsistenciaErrorCode errorCode) {
+        final String normalizado = TextHelper.trim(valor);
+        if (TextHelper.isNullOrBlank(normalizado)) {
+            throw new ValidationException(errorCode);
+        }
+        if (!TextHelper.hasLengthBetween(normalizado, 1, 300)) {
             throw new ValidationException(AsistenciaErrorCode.ERR_MOTIVO_REVISION_LONGITUD_INVALIDA);
         }
-
-        return motivoNormalizado;
+        return normalizado;
     }
 
-    public UUID getAsistencia() {
-        return asistencia;
+    public UUID getSesion() {
+        return sesion;
     }
 
-    public String getMotivo() {
-        return motivo;
+    public String getCategoria() {
+        return categoria;
+    }
+
+    public String getJustificacion() {
+        return justificacion;
+    }
+
+    public String getSoporteNombre() {
+        return soporteNombre;
+    }
+
+    public String getSoporteUrl() {
+        return soporteUrl;
+    }
+
+    public UUID getUsuario() {
+        return usuario;
     }
 
 }

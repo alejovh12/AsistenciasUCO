@@ -14,7 +14,6 @@ import org.springframework.boot.json.JsonWriter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -26,7 +25,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-@Repository
 public class AuditEventJdbcRepository {
 
     static final String TABLE_NAME = "dbo.AuditoriaEvento";

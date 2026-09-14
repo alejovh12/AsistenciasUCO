@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.usecase.domain;
 
 import co.edu.uco.asistenciasuco.application.features.usuario.domain.UsuarioRegistroDomain;
+import co.edu.uco.asistenciasuco.application.features.usuario.domain.rules.PasswordRegistroRule;
 
 import java.util.UUID;
 
@@ -13,6 +14,14 @@ public final class CrearUsuarioDomain {
 
     private CrearUsuarioDomain(final UsuarioRegistroDomain usuarioRegistro) {
         this.usuarioRegistro = usuarioRegistro;
+    }
+
+    /**
+     * Reconstruye el dominio a partir de un {@link UsuarioRegistroDomain} ya validado por
+     * otra funcionalidad (ej. provisionarusuario), evitando revalidar los mismos datos.
+     */
+    public static CrearUsuarioDomain of(final UsuarioRegistroDomain usuarioRegistro) {
+        return new CrearUsuarioDomain(usuarioRegistro);
     }
 
     public static CrearUsuarioDomain crear(
@@ -67,6 +76,10 @@ public final class CrearUsuarioDomain {
 
     public String getPassword() {
         return usuarioRegistro.getPassword();
+    }
+
+    public String resolverCredencialNueva() {
+        return PasswordRegistroRule.resolverCredencialNueva(getPassword(), getNumeroIdentificacion());
     }
 
 }

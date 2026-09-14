@@ -1,21 +1,28 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter;
 
-
-
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.error.DatabaseErrorCode;
-import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.error.DatabaseOperationException;
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
-import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
+import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ActualizarGrupoRepositoryDTO;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.CrearGrupoRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarEstudianteRepositoryDTO;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.EstudianteGrupoRepositoryProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.GrupoCommandRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.GrupoRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.RegistrarEstudianteRepositoryProjection;
+import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.error.DatabaseErrorCode;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.error.DatabaseOperationException;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.mapper.GrupoRepositoryRowMapper;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.procedure.CanonicalProcedureResult;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.procedure.CanonicalStoredProcedureExecutor;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionOperations;
@@ -26,16 +33,17 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class GrupoRepositorySqlServerAdapterTest {
@@ -52,56 +60,55 @@ class GrupoRepositorySqlServerAdapterTest {
     }
 
     @Test
-    void registrarEstudiante_envia_parametros_exactos_y_usa_misma_correlacion_del_contexto() {
-        final AtomicReference<String> sqlCapturado = new AtomicReference<>();
-        final AtomicReference<MapSqlParameterSource> parametrosCapturados = new AtomicReference<>();
+    void registrarEstudiante_envia_parametros_exactos_al_ejecutor_canonico() {
+        final CanonicalStoredProcedureExecutor procedureExecutor = mock(CanonicalStoredProcedureExecutor.class);
+        final NamedParameterJdbcOperations jdbcOperations = mock(NamedParameterJdbcOperations.class);
+        when(procedureExecutor.execute(anyString(), anyString(), any(MapSqlParameterSource.class)))
+                .thenReturn(new CanonicalProcedureResult(CORRELACION, "Estudiante registrado.", "detalle interno", true));
         final AtomicBoolean transaccionEjecutada = new AtomicBoolean(false);
         final GrupoRepositorySqlServerAdapter adapter = new GrupoRepositorySqlServerAdapter(
-                (sql, parameters) -> {
-                    sqlCapturado.set(sql);
-                    parametrosCapturados.set(parameters);
-                    return Map.of(
-                            GrupoRepositorySqlServerAdapter.OUT_ESTADO, true,
-                            GrupoRepositorySqlServerAdapter.OUT_MENSAJE_USUARIO, "Estudiante registrado.",
-                            GrupoRepositorySqlServerAdapter.OUT_MENSAJE_TECNICO, "detalle interno"
-                    );
-                },
-                (sql, rowMapper) -> List.of(),
+                procedureExecutor,
+                jdbcOperations,
                 transactionOperations(transaccionEjecutada)
         );
         CorrelationIdContext.set(CORRELACION);
 
         final RegistrarEstudianteRepositoryProjection resultado = adapter.registrarEstudianteEnGrupo(dtoValido());
 
-        final Map<String, Object> values = parametrosCapturados.get().getValues();
+        final ArgumentCaptor<String> operationCaptor = ArgumentCaptor.forClass(String.class);
+        final ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);
+        final ArgumentCaptor<MapSqlParameterSource> parametersCaptor = ArgumentCaptor.forClass(MapSqlParameterSource.class);
+        verify(procedureExecutor).execute(operationCaptor.capture(), sqlCaptor.capture(), parametersCaptor.capture());
+        final MapSqlParameterSource parametros = parametersCaptor.getValue();
+
         assertTrue(transaccionEjecutada.get());
-        assertTrue(sqlCapturado.get().contains("dbo.usp_registrar_estudiante_en_grupo_usuario_no_existente"));
-        assertTrue(sqlCapturado.get().contains("@idTipoIdIdentificacion = :idTipoIdIdentificacion"));
-        assertEquals(TIPO_IDENTIFICACION.toString(), values.get(GrupoRepositorySqlServerAdapter.PARAM_ID_TIPO_ID_IDENTIFICACION));
-        assertEquals(123456789, values.get(GrupoRepositorySqlServerAdapter.PARAM_NUMERO_IDENTIFICACION));
-        assertEquals("PEREZ", values.get(GrupoRepositorySqlServerAdapter.PARAM_PRIMER_APELLIDO));
-        assertEquals("GOMEZ", values.get(GrupoRepositorySqlServerAdapter.PARAM_SEGUNDO_APELLIDO));
-        assertEquals("ANA", values.get(GrupoRepositorySqlServerAdapter.PARAM_PRIMER_NOMBRE));
-        assertEquals("MARIA", values.get(GrupoRepositorySqlServerAdapter.PARAM_SEGUNDO_NOMBRE));
-        assertEquals("ana.perez@uco.edu.co", values.get(GrupoRepositorySqlServerAdapter.PARAM_CORREO));
-        assertEquals("Clave123!", values.get(GrupoRepositorySqlServerAdapter.PARAM_PASSWORD));
-        assertEquals(GRUPO.toString(), values.get(GrupoRepositorySqlServerAdapter.PARAM_ID_GRUPO));
-        assertEquals(CORRELACION.toString(), values.get(GrupoRepositorySqlServerAdapter.PARAM_ID_CORRELACION));
-        assertEquals(10, values.size());
+        assertEquals("registrarEstudianteEnGrupo", operationCaptor.getValue());
+        assertTrue(sqlCaptor.getValue().contains("dbo.usp_registrar_estudiante_en_grupo_usuario_no_existente"));
+        assertTrue(sqlCaptor.getValue().contains("@idTipoIdIdentificacion = :idTipoIdIdentificacion"));
+        assertEquals(TIPO_IDENTIFICACION, parametros.getValue(GrupoRepositorySqlServerAdapter.PARAM_ID_TIPO_ID_IDENTIFICACION));
+        assertEquals(123456789, parametros.getValue(GrupoRepositorySqlServerAdapter.PARAM_NUMERO_IDENTIFICACION));
+        assertEquals("PEREZ", parametros.getValue(GrupoRepositorySqlServerAdapter.PARAM_PRIMER_APELLIDO));
+        assertEquals("GOMEZ", parametros.getValue(GrupoRepositorySqlServerAdapter.PARAM_SEGUNDO_APELLIDO));
+        assertEquals("ANA", parametros.getValue(GrupoRepositorySqlServerAdapter.PARAM_PRIMER_NOMBRE));
+        assertEquals("MARIA", parametros.getValue(GrupoRepositorySqlServerAdapter.PARAM_SEGUNDO_NOMBRE));
+        assertEquals("ana.perez@uco.edu.co", parametros.getValue(GrupoRepositorySqlServerAdapter.PARAM_CORREO));
+        assertEquals("Clave123!", parametros.getValue(GrupoRepositorySqlServerAdapter.PARAM_PASSWORD));
+        assertEquals(GRUPO, parametros.getValue(GrupoRepositorySqlServerAdapter.PARAM_ID_GRUPO));
+        assertEquals(CORRELACION, parametros.getValue(GrupoRepositorySqlServerAdapter.PARAM_ID_CORRELACION));
+        assertEquals(10, parametros.getValues().size());
         assertEquals("Estudiante registrado.", resultado.getMensajeUsuario());
     }
 
     @Test
-    void registrarEstudiante_con_error_conocido_retorna_codigo_err_y_excepcion_correcta() {
+    void registrarEstudiante_propaga_error_de_negocio_del_ejecutor_canonico() {
+        final CanonicalStoredProcedureExecutor procedureExecutor = mock(CanonicalStoredProcedureExecutor.class);
         final GrupoRepositorySqlServerAdapter adapter = new GrupoRepositorySqlServerAdapter(
-                (sql, parameters) -> Map.of(
-                        GrupoRepositorySqlServerAdapter.OUT_ESTADO, false,
-                        GrupoRepositorySqlServerAdapter.OUT_MENSAJE_USUARIO, "La matricula ya se encuentra registrada.",
-                        GrupoRepositorySqlServerAdapter.OUT_MENSAJE_TECNICO, "SQLException password stacktrace"
-                ),
-                (sql, rowMapper) -> List.of(),
+                procedureExecutor,
+                mock(NamedParameterJdbcOperations.class),
                 transactionOperations(new AtomicBoolean(false))
         );
+        when(procedureExecutor.execute(anyString(), anyString(), any(MapSqlParameterSource.class)))
+                .thenThrow(new ConflictException(GrupoErrorCode.ERR_MATRICULA_DUPLICADA));
         CorrelationIdContext.set(CORRELACION);
 
         final ConflictException exception = assertThrows(
@@ -114,16 +121,18 @@ class GrupoRepositorySqlServerAdapterTest {
     }
 
     @Test
-    void registrarEstudiante_con_error_desconocido_retorna_error_interno_seguro() {
+    void registrarEstudiante_propaga_error_tecnico_del_ejecutor_canonico() {
+        final CanonicalStoredProcedureExecutor procedureExecutor = mock(CanonicalStoredProcedureExecutor.class);
         final GrupoRepositorySqlServerAdapter adapter = new GrupoRepositorySqlServerAdapter(
-                (sql, parameters) -> Map.of(
-                        GrupoRepositorySqlServerAdapter.OUT_ESTADO, false,
-                        GrupoRepositorySqlServerAdapter.OUT_MENSAJE_USUARIO, "mensaje publico no clasificado",
-                        GrupoRepositorySqlServerAdapter.OUT_MENSAJE_TECNICO, "SQLException password stacktrace"
-                ),
-                (sql, rowMapper) -> List.of(),
+                procedureExecutor,
+                mock(NamedParameterJdbcOperations.class),
                 transactionOperations(new AtomicBoolean(false))
         );
+        when(procedureExecutor.execute(anyString(), anyString(), any(MapSqlParameterSource.class)))
+                .thenThrow(new DatabaseOperationException(
+                        DatabaseErrorCode.ERR_DB_UNCLASSIFIED,
+                        DatabaseErrorCode.ERR_DB_UNCLASSIFIED.defaultMessage()
+                ));
         CorrelationIdContext.set(CORRELACION);
 
         final DatabaseOperationException exception = assertThrows(
@@ -136,31 +145,31 @@ class GrupoRepositorySqlServerAdapterTest {
     }
 
     @Test
-    void errores_dataAccess_se_convierten_en_databaseOperationException() {
+    void errores_jdbc_en_consultarGrupos_se_convierten_en_databaseOperationException() {
+        final NamedParameterJdbcOperations jdbcOperations = mock(NamedParameterJdbcOperations.class);
+        when(jdbcOperations.query(anyString(), any(RowMapper.class)))
+                .thenThrow(new DataAccessResourceFailureException("fallo tecnico"));
         final GrupoRepositorySqlServerAdapter adapter = new GrupoRepositorySqlServerAdapter(
-                (sql, parameters) -> {
-                    throw new DataAccessResourceFailureException("fallo tecnico");
-                },
-                (sql, rowMapper) -> {
-                    throw new DataAccessResourceFailureException("fallo tecnico");
-                },
+                mock(CanonicalStoredProcedureExecutor.class),
+                jdbcOperations,
                 transactionOperations(new AtomicBoolean(false))
         );
-        CorrelationIdContext.set(CORRELACION);
 
-        assertThrows(DatabaseOperationException.class, () -> adapter.registrarEstudianteEnGrupo(dtoValido()));
         assertThrows(DatabaseOperationException.class, adapter::consultarGrupos);
     }
 
     @Test
     void registrarEstudiante_sin_contexto_no_genera_correlationId_nuevo() {
         final AtomicBoolean spEjecutado = new AtomicBoolean(false);
-        final GrupoRepositorySqlServerAdapter adapter = new GrupoRepositorySqlServerAdapter(
-                (sql, parameters) -> {
+        final CanonicalStoredProcedureExecutor procedureExecutor = mock(CanonicalStoredProcedureExecutor.class);
+        when(procedureExecutor.execute(anyString(), anyString(), any(MapSqlParameterSource.class)))
+                .thenAnswer(invocation -> {
                     spEjecutado.set(true);
-                    return Map.of();
-                },
-                (sql, rowMapper) -> List.of(),
+                    return new CanonicalProcedureResult(CORRELACION, "ok", "ok", true);
+                });
+        final GrupoRepositorySqlServerAdapter adapter = new GrupoRepositorySqlServerAdapter(
+                procedureExecutor,
+                mock(NamedParameterJdbcOperations.class),
                 transactionOperations(new AtomicBoolean(false))
         );
 
@@ -171,7 +180,7 @@ class GrupoRepositorySqlServerAdapterTest {
 
     @Test
     void consultarGrupos_usa_vista_uv_grupo_y_mapea_columnas_confirmadas() {
-        final AtomicReference<String> sqlCapturado = new AtomicReference<>();
+        final NamedParameterJdbcOperations jdbcOperations = mock(NamedParameterJdbcOperations.class);
         final GrupoRepositoryProjection entity = new GrupoRepositoryProjection(
                 GRUPO,
                 "G1",
@@ -186,20 +195,20 @@ class GrupoRepositorySqlServerAdapterTest {
                 LocalDate.of(2026, 1, 20),
                 LocalDate.of(2026, 5, 30)
         );
+        when(jdbcOperations.query(anyString(), any(RowMapper.class))).thenReturn(List.of(entity));
         final GrupoRepositorySqlServerAdapter adapter = new GrupoRepositorySqlServerAdapter(
-                (sql, parameters) -> Map.of(),
-                (sql, rowMapper) -> {
-                    sqlCapturado.set(sql);
-                    return List.of(entity);
-                },
+                mock(CanonicalStoredProcedureExecutor.class),
+                jdbcOperations,
                 transactionOperations(new AtomicBoolean(false))
         );
 
         final List<GrupoRepositoryProjection> resultado = adapter.consultarGrupos();
 
+        final ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);
+        verify(jdbcOperations).query(sqlCaptor.capture(), any(RowMapper.class));
         assertEquals(1, resultado.size());
-        assertTrue(sqlCapturado.get().contains("FROM dbo.uv_grupo"));
-        assertFalse(sqlCapturado.get().toUpperCase().contains("SELECT *"));
+        assertTrue(sqlCaptor.getValue().contains("FROM dbo.uv_grupo"));
+        assertFalse(sqlCaptor.getValue().toUpperCase().contains("SELECT *"));
         assertEquals("Backend", resultado.getFirst().getNombreAsignatura());
     }
 
@@ -231,6 +240,152 @@ class GrupoRepositorySqlServerAdapterTest {
         assertTrue(entity.isGrupoHabilitado());
         assertEquals(LocalDate.of(2026, 1, 20), entity.getFechaInicioPeriodoAcademico());
         assertEquals(LocalDate.of(2026, 5, 30), entity.getFechaFinPeriodoAcademico());
+    }
+
+    @Test
+    void crearGrupo_ejecuta_procedimiento_dentro_de_transaccion_y_retorna_mensaje() {
+        final CanonicalStoredProcedureExecutor procedureExecutor = mock(CanonicalStoredProcedureExecutor.class);
+        when(procedureExecutor.execute(anyString(), anyString(), any(MapSqlParameterSource.class)))
+                .thenReturn(new CanonicalProcedureResult(CORRELACION, "Grupo creado.", "detalle", true));
+        final AtomicBoolean transaccionEjecutada = new AtomicBoolean(false);
+        final GrupoRepositorySqlServerAdapter adapter = new GrupoRepositorySqlServerAdapter(
+                procedureExecutor,
+                mock(NamedParameterJdbcOperations.class),
+                transactionOperations(transaccionEjecutada)
+        );
+        CorrelationIdContext.set(CORRELACION);
+
+        final GrupoCommandRepositoryProjection resultado = adapter.crearGrupo(new CrearGrupoRepositoryDTO(
+                GRUPO, ASIGNATURA, UUID.randomUUID(), 1, "Grupo 1", DOCENTE, "Aula 101"
+        ));
+
+        final var operation = ArgumentCaptor.forClass(String.class);
+        final var sql = ArgumentCaptor.forClass(String.class);
+        final var params = ArgumentCaptor.forClass(MapSqlParameterSource.class);
+        verify(procedureExecutor).execute(operation.capture(), sql.capture(), params.capture());
+        assertTrue(transaccionEjecutada.get());
+        assertEquals("crearGrupo", operation.getValue());
+        assertTrue(sql.getValue().contains("dbo.usp_crear_grupo"));
+        assertEquals(GRUPO, params.getValue().getValue(GrupoRepositorySqlServerAdapter.PARAM_ID_GRUPO));
+        assertEquals("Aula 101", params.getValue().getValue(GrupoRepositorySqlServerAdapter.PARAM_AULA));
+        assertEquals(CORRELACION, params.getValue().getValue(GrupoRepositorySqlServerAdapter.PARAM_ID_CORRELACION));
+        assertEquals(GRUPO, resultado.idGrupo());
+        assertEquals("Grupo creado.", resultado.mensajeUsuario());
+    }
+
+    @Test
+    void crearGrupo_con_dto_nulo_lanza_excepcion_de_dominio() {
+        final GrupoRepositorySqlServerAdapter adapter = new GrupoRepositorySqlServerAdapter(
+                mock(CanonicalStoredProcedureExecutor.class),
+                mock(NamedParameterJdbcOperations.class),
+                transactionOperations(new AtomicBoolean(false))
+        );
+
+        assertThrows(CrosscuttingException.class, () -> adapter.crearGrupo(null));
+    }
+
+    @Test
+    void actualizarGrupo_ejecuta_procedimiento_y_retorna_mensaje() {
+        final CanonicalStoredProcedureExecutor procedureExecutor = mock(CanonicalStoredProcedureExecutor.class);
+        when(procedureExecutor.execute(anyString(), anyString(), any(MapSqlParameterSource.class)))
+                .thenReturn(new CanonicalProcedureResult(CORRELACION, "Grupo actualizado.", "detalle", true));
+        final GrupoRepositorySqlServerAdapter adapter = new GrupoRepositorySqlServerAdapter(
+                procedureExecutor,
+                mock(NamedParameterJdbcOperations.class),
+                transactionOperations(new AtomicBoolean(false))
+        );
+        CorrelationIdContext.set(CORRELACION);
+
+        final GrupoCommandRepositoryProjection resultado = adapter.actualizarGrupo(new ActualizarGrupoRepositoryDTO(
+                GRUPO, 1, "Grupo 1", DOCENTE, 40, "Aula 202"
+        ));
+
+        final var sql = ArgumentCaptor.forClass(String.class);
+        final var params = ArgumentCaptor.forClass(MapSqlParameterSource.class);
+        verify(procedureExecutor).execute(anyString(), sql.capture(), params.capture());
+        assertTrue(sql.getValue().contains("dbo.usp_actualizar_grupo"));
+        assertEquals(40, params.getValue().getValue(GrupoRepositorySqlServerAdapter.PARAM_CUPO_MAXIMO));
+        assertEquals("Grupo actualizado.", resultado.mensajeUsuario());
+    }
+
+    @Test
+    void actualizarGrupo_con_dto_nulo_lanza_excepcion_de_dominio() {
+        final GrupoRepositorySqlServerAdapter adapter = new GrupoRepositorySqlServerAdapter(
+                mock(CanonicalStoredProcedureExecutor.class),
+                mock(NamedParameterJdbcOperations.class),
+                transactionOperations(new AtomicBoolean(false))
+        );
+
+        assertThrows(CrosscuttingException.class, () -> adapter.actualizarGrupo(null));
+    }
+
+    @Test
+    void generarSesionesGrupo_ejecuta_procedimiento_y_retorna_mensaje() {
+        final CanonicalStoredProcedureExecutor procedureExecutor = mock(CanonicalStoredProcedureExecutor.class);
+        when(procedureExecutor.execute(anyString(), anyString(), any(MapSqlParameterSource.class)))
+                .thenReturn(new CanonicalProcedureResult(CORRELACION, "Sesiones generadas.", "detalle", true));
+        final GrupoRepositorySqlServerAdapter adapter = new GrupoRepositorySqlServerAdapter(
+                procedureExecutor,
+                mock(NamedParameterJdbcOperations.class),
+                transactionOperations(new AtomicBoolean(false))
+        );
+        CorrelationIdContext.set(CORRELACION);
+
+        final GrupoCommandRepositoryProjection resultado = adapter.generarSesionesGrupo(GRUPO);
+
+        final var sql = ArgumentCaptor.forClass(String.class);
+        verify(procedureExecutor).execute(anyString(), sql.capture(), any(MapSqlParameterSource.class));
+        assertTrue(sql.getValue().contains("dbo.usp_generar_sesiones_grupo"));
+        assertEquals(GRUPO, resultado.idGrupo());
+        assertEquals("Sesiones generadas.", resultado.mensajeUsuario());
+    }
+
+    @Test
+    void consultarEstudiantesGrupo_mapea_proyeccion_desde_vista_confirmada() throws SQLException {
+        final NamedParameterJdbcOperations jdbcOperations = mock(NamedParameterJdbcOperations.class);
+        final UUID matricula = UUID.randomUUID();
+        final UUID estudianteId = UUID.randomUUID();
+        final ResultSet resultSet = mock(ResultSet.class);
+        when(resultSet.getObject("id")).thenReturn(matricula);
+        when(resultSet.getObject("idEstudiante")).thenReturn(estudianteId);
+        when(resultSet.getObject("documento")).thenReturn("123456789");
+        when(resultSet.getObject("nombreCompleto")).thenReturn("Ana Perez");
+        when(resultSet.getObject("correo")).thenReturn("ana@uco.edu.co");
+        when(resultSet.getObject("codigoEstado")).thenReturn("ACTIVO");
+        when(resultSet.getObject("nombreEstado")).thenReturn("Activo");
+        when(jdbcOperations.query(anyString(), any(MapSqlParameterSource.class), any(RowMapper.class)))
+                .thenAnswer(invocation -> List.of(((RowMapper<EstudianteGrupoRepositoryProjection>) invocation.getArgument(2))
+                        .mapRow(resultSet, 0)));
+        final GrupoRepositorySqlServerAdapter adapter = new GrupoRepositorySqlServerAdapter(
+                mock(CanonicalStoredProcedureExecutor.class),
+                jdbcOperations,
+                transactionOperations(new AtomicBoolean(false))
+        );
+
+        final List<EstudianteGrupoRepositoryProjection> resultado = adapter.consultarEstudiantesGrupo(GRUPO);
+
+        assertEquals(1, resultado.size());
+        assertEquals(estudianteId, resultado.getFirst().idEstudiante());
+        assertEquals("Ana Perez", resultado.getFirst().nombreCompleto());
+        final var sql = ArgumentCaptor.forClass(String.class);
+        final var params = ArgumentCaptor.forClass(MapSqlParameterSource.class);
+        verify(jdbcOperations).query(sql.capture(), params.capture(), any(RowMapper.class));
+        assertTrue(sql.getValue().contains("FROM dbo.uv_estudiante_grupo"));
+        assertEquals(GRUPO, params.getValue().getValue(GrupoRepositorySqlServerAdapter.PARAM_ID_GRUPO));
+    }
+
+    @Test
+    void consultarEstudiantesGrupo_traduce_error_jdbc_a_databaseOperationException() {
+        final NamedParameterJdbcOperations jdbcOperations = mock(NamedParameterJdbcOperations.class);
+        when(jdbcOperations.query(anyString(), any(MapSqlParameterSource.class), any(RowMapper.class)))
+                .thenThrow(new DataAccessResourceFailureException("fallo tecnico"));
+        final GrupoRepositorySqlServerAdapter adapter = new GrupoRepositorySqlServerAdapter(
+                mock(CanonicalStoredProcedureExecutor.class),
+                jdbcOperations,
+                transactionOperations(new AtomicBoolean(false))
+        );
+
+        assertThrows(DatabaseOperationException.class, () -> adapter.consultarEstudiantesGrupo(GRUPO));
     }
 
     private RegistrarEstudianteRepositoryDTO dtoValido() {

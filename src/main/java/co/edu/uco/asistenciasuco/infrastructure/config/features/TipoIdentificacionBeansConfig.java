@@ -5,18 +5,11 @@ import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consult
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.usecase.ConsultarTiposIdentificacionUseCase;
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.usecase.impl.ConsultarTiposIdentificacionUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.TipoIdentificacionRepositoryPort;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.TipoIdentificacionRepositorySqlServerAdapter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 @Configuration(proxyBeanMethods = false)
 public class TipoIdentificacionBeansConfig {
-
-    @Bean
-    public TipoIdentificacionRepositoryPort tipoIdentificacionRepositoryPort(final JdbcTemplate jdbcTemplate) {
-        return new TipoIdentificacionRepositorySqlServerAdapter(jdbcTemplate);
-    }
 
     @Bean
     public ConsultarTiposIdentificacionUseCase consultarTiposIdentificacionUseCase(

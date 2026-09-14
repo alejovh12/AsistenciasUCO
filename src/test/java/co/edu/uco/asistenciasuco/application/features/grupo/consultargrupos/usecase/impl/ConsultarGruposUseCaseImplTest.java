@@ -2,7 +2,11 @@ package co.edu.uco.asistenciasuco.application.features.grupo.consultargrupos.use
 
 import co.edu.uco.asistenciasuco.application.features.grupo.consultargrupos.usecase.entity.GrupoEntity;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ActualizarGrupoRepositoryDTO;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.CrearGrupoRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarEstudianteRepositoryDTO;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.EstudianteGrupoRepositoryProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.GrupoCommandRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.GrupoRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.RegistrarEstudianteRepositoryProjection;
 import org.junit.jupiter.api.Test;
@@ -24,6 +28,21 @@ class ConsultarGruposUseCaseImplTest {
     void execute_consulta_puerto_secundario_y_mapea_grupos() {
         final GrupoRepositoryPort repositoryPort = new GrupoRepositoryPort() {
             @Override
+            public GrupoCommandRepositoryProjection crearGrupo(final CrearGrupoRepositoryDTO dto) {
+                throw new UnsupportedOperationException("No usado por este test.");
+            }
+
+            @Override
+            public GrupoCommandRepositoryProjection actualizarGrupo(final ActualizarGrupoRepositoryDTO dto) {
+                throw new UnsupportedOperationException("No usado por este test.");
+            }
+
+            @Override
+            public GrupoCommandRepositoryProjection generarSesionesGrupo(final UUID grupoId) {
+                throw new UnsupportedOperationException("No usado por este test.");
+            }
+
+            @Override
             public RegistrarEstudianteRepositoryProjection registrarEstudianteEnGrupo(final RegistrarEstudianteRepositoryDTO dto) {
                 return new RegistrarEstudianteRepositoryProjection("ok");
             }
@@ -44,6 +63,11 @@ class ConsultarGruposUseCaseImplTest {
                         LocalDate.of(2026, 1, 20),
                         LocalDate.of(2026, 5, 30)
                 ));
+            }
+
+            @Override
+            public List<EstudianteGrupoRepositoryProjection> consultarEstudiantesGrupo(final UUID grupoId) {
+                throw new UnsupportedOperationException("No usado por este test.");
             }
         };
         final ConsultarGruposUseCaseImpl useCase = new ConsultarGruposUseCaseImpl(repositoryPort);

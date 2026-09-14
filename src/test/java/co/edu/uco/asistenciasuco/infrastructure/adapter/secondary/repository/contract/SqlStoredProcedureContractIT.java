@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -17,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 @Tag("integration")
 @SpringBootTest
+@MockitoBean(types = JwtDecoder.class)
 class SqlStoredProcedureContractIT {
 
     private static final String SQL_PARAMETERS = """
@@ -30,10 +33,13 @@ class SqlStoredProcedureContractIT {
             WHERE SCHEMA_NAME(o.schema_id) = 'dbo'
               AND o.type = 'P'
               AND o.name IN (
-                  'usp_sincronizar_usuario_interno',
+                  'usp_sincronizar_usuario',
+                  'usp_crear_decano',
+                  'usp_crear_grupo',
+                  'usp_actualizar_grupo',
+                  'usp_generar_sesiones_grupo',
                   'usp_registrar_estudiante_en_grupo_usuario_no_existente',
-                  'usp_sincronizar_docente_interno',
-                  'usp_registrar_docente_en_grupo_interno'
+                  'usp_radicar_solicitud_revision_asistencia'
               )
             ORDER BY o.name, p.parameter_id
             """;
@@ -92,7 +98,7 @@ class SqlStoredProcedureContractIT {
 
     private Map<String, List<SqlParameterContract>> expectedContracts() {
         final Map<String, List<SqlParameterContract>> contracts = new LinkedHashMap<>();
-        contracts.put("usp_sincronizar_usuario_interno", List.of(
+        contracts.put("usp_sincronizar_usuario", List.of(
                 input("@idTipoIdIdentificacion", "uniqueidentifier"),
                 input("@numeroIdentificacion", "int"),
                 input("@primerApellido", "nvarchar"),
@@ -101,10 +107,44 @@ class SqlStoredProcedureContractIT {
                 input("@segundoNombre", "nvarchar"),
                 input("@correo", "nvarchar"),
                 input("@password", "nvarchar"),
-                input("@idCorrelacion", "uniqueidentifier"),
-                output("@mensajeUsuarioResultado", "nvarchar"),
-                output("@mensajeTecnicoResultado", "nvarchar"),
-                output("@estadoResultado", "bit")
+                input("@idCorrelacion", "uniqueidentifier")
+        ));
+        contracts.put("usp_crear_decano", List.of(
+                input("@idDecano", "uniqueidentifier"),
+                input("@idTipoIdIdentificacion", "uniqueidentifier"),
+                input("@numeroIdentificacion", "int"),
+                input("@primerNombre", "nvarchar"),
+                input("@segundoNombre", "nvarchar"),
+                input("@primerApellido", "nvarchar"),
+                input("@segundoApellido", "nvarchar"),
+                input("@correo", "nvarchar"),
+                input("@idFacultad", "uniqueidentifier"),
+                input("@nombreFacultad", "nvarchar"),
+                input("@password", "nvarchar"),
+                input("@idCorrelacion", "uniqueidentifier")
+        ));
+        contracts.put("usp_crear_grupo", List.of(
+                input("@idGrupo", "uniqueidentifier"),
+                input("@idAsignatura", "uniqueidentifier"),
+                input("@idPeriodoAcademico", "uniqueidentifier"),
+                input("@codigo", "int"),
+                input("@nombre", "nvarchar"),
+                input("@idDocente", "uniqueidentifier"),
+                input("@aula", "nvarchar"),
+                input("@idCorrelacion", "uniqueidentifier")
+        ));
+        contracts.put("usp_actualizar_grupo", List.of(
+                input("@idGrupo", "uniqueidentifier"),
+                input("@codigo", "int"),
+                input("@nombre", "nvarchar"),
+                input("@idDocente", "uniqueidentifier"),
+                input("@cupoMaximo", "int"),
+                input("@aula", "nvarchar"),
+                input("@idCorrelacion", "uniqueidentifier")
+        ));
+        contracts.put("usp_generar_sesiones_grupo", List.of(
+                input("@idGrupo", "uniqueidentifier"),
+                input("@idCorrelacion", "uniqueidentifier")
         ));
         contracts.put("usp_registrar_estudiante_en_grupo_usuario_no_existente", List.of(
                 input("@idTipoIdIdentificacion", "uniqueidentifier"),
@@ -118,30 +158,20 @@ class SqlStoredProcedureContractIT {
                 input("@idGrupo", "uniqueidentifier"),
                 input("@idCorrelacion", "uniqueidentifier")
         ));
-        contracts.put("usp_sincronizar_docente_interno", List.of(
-                input("@idUsuario", "uniqueidentifier"),
-                input("@idCorrelacion", "uniqueidentifier"),
-                output("@mensajeUsuarioResultado", "nvarchar"),
-                output("@mensajeTecnicoResultado", "nvarchar"),
-                output("@estadoResultado", "bit")
-        ));
-        contracts.put("usp_registrar_docente_en_grupo_interno", List.of(
-                input("@idDocente", "uniqueidentifier"),
-                input("@idGrupo", "uniqueidentifier"),
-                input("@idCorrelacion", "uniqueidentifier"),
-                output("@mensajeUsuarioResultado", "nvarchar"),
-                output("@mensajeTecnicoResultado", "nvarchar"),
-                output("@estadoResultado", "bit")
+        contracts.put("usp_radicar_solicitud_revision_asistencia", List.of(
+                input("@idEstudiante", "uniqueidentifier"),
+                input("@idSesion", "uniqueidentifier"),
+                input("@categoria", "nvarchar"),
+                input("@justificacion", "nvarchar"),
+                input("@soporteNombre", "nvarchar"),
+                input("@soporteUrl", "nvarchar"),
+                input("@idCorrelacion", "uniqueidentifier")
         ));
         return contracts;
     }
 
     private SqlParameterContract input(final String parameterName, final String typeName) {
         return new SqlParameterContract(parameterName, typeName, false);
-    }
-
-    private SqlParameterContract output(final String parameterName, final String typeName) {
-        return new SqlParameterContract(parameterName, typeName, true);
     }
 
     private record SqlParameterContract(String parameterName, String typeName, boolean output) {

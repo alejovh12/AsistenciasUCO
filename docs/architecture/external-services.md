@@ -1,24 +1,31 @@
 # External Services
 
-`externalservice` se usara cuando AsistenciasUCO tenga que iniciar comunicacion con sistemas externos de negocio.
+`externalservice` agrupa comunicaciones iniciadas por AsistenciasUCO hacia sistemas externos
+de negocio o infraestructura institucional.
 
-Ejemplos futuros:
+Estado actual:
 
-- Keycloak Admin API para aprovisionamiento de identidades.
+- Identity provisioning existe mediante `IdentityProviderPort` y
+  `KeycloakIdentityProviderAdapter`.
+- El adapter de provisioning se selecciona desde `KeycloakIdentityAdapterConfiguration` con
+  `app.adapters.identity.provider=keycloak`.
+- Runtime authentication continua parcialmente acoplado a Keycloak en `SecurityConfig` y
+  `KeycloakGrantedAuthoritiesConverter`. Ese desacoplamiento pertenece a la siguiente fase.
+
+Ejemplos futuros o pendientes:
+
 - Correo.
 - APIs institucionales.
 - Servicios externos.
 
 Spring Security Resource Server y la validacion JWT no son un adapter de external service de negocio. Permanecen en `infrastructure/adapter/primary/security` y `infrastructure/config/security`.
 
-Estructura futura, solo cuando exista implementacion real:
+Estructura actual de provisioning:
 
 ```text
-application/secondaryports/externalservice/identity/
-    IdentityProvisioningPort.java
+application/secondaryports/identity/
+    IdentityProviderPort.java
 
-infrastructure/adapter/secondary/externalservice/keycloak/
-    KeycloakIdentityProvisioningAdapter.java
-    dto/
-    mapper/
+infrastructure/adapter/secondary/identity/
+    KeycloakIdentityProviderAdapter.java
 ```

@@ -21,7 +21,12 @@ public final class CrearSesionMapper {
         return new CrearSesionDomain(
                 dto.getGrupo(),
                 dto.getTema(),
-                dto.getDescripcion()
+                dto.getDescripcion(),
+                dto.getFechaHoraInicio(),
+                dto.getFechaHoraFin(),
+                dto.getAula(),
+                dto.getTipo(),
+                dto.getDocente()
         );
     }
 }

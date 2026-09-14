@@ -23,4 +23,11 @@ class SpringPasswordEncoderAdapterTest {
         assertTrue(adapter.matches(rawPassword, secondEncoded));
         assertFalse(adapter.matches("PasswordIncorrecta123!", firstEncoded));
     }
+
+    @Test
+    void encode_test1234_genera_hash_valido() {
+        final SpringPasswordEncoderAdapter adapter = new SpringPasswordEncoderAdapter();
+        final String encoded = adapter.encode("Test1234!");
+        assertTrue(adapter.matches("Test1234!", encoded));
+    }
 }

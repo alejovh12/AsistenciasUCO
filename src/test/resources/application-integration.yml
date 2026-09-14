@@ -26,9 +26,29 @@ management:
         include: health,info
 
 app:
-  security:
-    mode: fake
-  cache:
-    mode: fake
-  notifications:
-    mode: fake
+  adapters:
+    persistence:
+      provider: sqlserver
+    identity:
+      provider: keycloak
+    security:
+      provider: keycloak
+    storage:
+      provider: local
+    realtime:
+      provider: local-sse
+    audit:
+      provider: logging
+  providers:
+    keycloak-identity:
+      server-url: http://127.0.0.1:65534
+      realm: asistencias-uco
+      admin-client-id: test-only-admin
+      admin-client-secret: test-only-not-used
+      api-client-id: asistencias-api
+      user-id-attribute: idUsuario
+    keycloak-security:
+      issuer-uri: http://127.0.0.1:65534/realms/asistencias-uco
+      api-client-id: asistencias-api
+      expected-audience: asistencias-api
+      user-id-claim: idUsuario

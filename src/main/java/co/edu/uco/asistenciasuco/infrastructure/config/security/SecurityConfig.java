@@ -1,66 +1,65 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.security;
 
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.ApiAccessDeniedHandler;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.ApiAuthenticationEntryPoint;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.KeycloakGrantedAuthoritiesConverter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.InstitutionalJwtAuthenticationConverter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.spi.JwtClaimsAdapter;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.core.OAuth2Error;
-import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
-import org.springframework.security.oauth2.core.OAuth2TokenValidator;
-import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtClaimValidator;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtDecoders;
-import org.springframework.security.oauth2.jwt.JwtValidators;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.AuthenticationEntryPoint;
-import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Collection;
+import jakarta.servlet.http.HttpServletRequest;
+import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Configuración de seguridad HTTP, deliberadamente neutral respecto al proveedor de identidad:
+ * no importa nada de {@code keycloak} ni conoce cómo un proveedor concreto estructura sus
+ * claims. Depende únicamente de {@link JwtDecoder} y {@link JwtClaimsAdapter}, ambos
+ * registrados por el Composition Root de seguridad según
+ * {@code app.adapters.security.provider} (hoy {@code KeycloakSecurityAdapterConfiguration}).
+ */
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
-    private static final String PRINCIPAL_CLAIM_NAME = "idUsuario";
-    private static final OAuth2Error MISSING_ID_USUARIO_ERROR = new OAuth2Error(
-            "invalid_token",
-            "Missing required idUsuario claim.",
-            null
-    );
+    @Value("${app.security.cors.allowed-origins:http://localhost:4200}")
+    private String allowedOrigins;
 
-    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
-    private String issuerUri;
-
-    @Value("${spring.security.oauth2.resourceserver.jwt.audiences:asistencias-api}")
-    private String expectedAudience;
+    @Bean
+    public InstitutionalJwtAuthenticationConverter institutionalJwtAuthenticationConverter(
+            final JwtClaimsAdapter jwtClaimsAdapter
+    ) {
+        return new InstitutionalJwtAuthenticationConverter(jwtClaimsAdapter);
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(
             final HttpSecurity http,
             final JwtDecoder jwtDecoder,
-            final JwtAuthenticationConverter jwtAuthenticationConverter,
+            final InstitutionalJwtAuthenticationConverter institutionalJwtAuthenticationConverter,
             final AuthenticationEntryPoint authenticationEntryPoint,
             final AccessDeniedHandler accessDeniedHandler
     ) throws Exception {
         http
-            .cors(org.springframework.security.config.Customizer.withDefaults())
-            .csrf(csrf -> csrf.disable())
+            .cors(Customizer.withDefaults())
+            // El cliente envía JWT en Authorization: Bearer. Ese header no se adjunta
+            // automáticamente en una petición cross-site, a diferencia de una cookie.
+            // Mantenemos CSRF para cualquier petición insegura sin Bearer.
+            .csrf(csrf -> csrf.ignoringRequestMatchers(SecurityConfig::hasBearerAuthorization))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .exceptionHandling(exceptionHandling -> exceptionHandling
                 .authenticationEntryPoint(authenticationEntryPoint)
@@ -68,6 +67,48 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/**").permitAll()
+                .requestMatchers("/api/v1/admin/**").hasRole("ADMINISTRADOR")
+                .requestMatchers("/api/v1/decano/**").hasAnyRole("DECANO", "ADMINISTRADOR")
+                .requestMatchers("/api/v1/coordinador/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")
+                .requestMatchers("/api/v1/docente/**").hasRole("DOCENTE")
+                // Directorio general de docentes (crear/consultar/asignar a grupo): hoy sin
+                // contrato funcional explícito de quién debe administrarlo; se restringe a los
+                // roles que ya administran docentes en otros endpoints (ver duda documentada
+                // en docs/security/runtime-security-provider-architecture.md).
+                .requestMatchers("/api/v1/docentes/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")
+                .requestMatchers("/api/v1/estudiante/**").hasRole("ESTUDIANTE")
+                // Directorio general/institucional de estudiantes (distinto del portal propio
+                // en /estudiante/**): expone datos de CUALQUIER estudiante filtrando por
+                // grupo/programa/facultad. El docente ya tiene su vertical específica y
+                // acotada por grupo en GET /api/v1/grupos/{grupoId}/estudiantes; por eso este
+                // directorio general NO se abre a DOCENTE (ver política documentada en
+                // docs/security/runtime-security-provider-architecture.md).
+                .requestMatchers("/api/v1/estudiantes/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")
+                .requestMatchers(HttpMethod.POST, "/api/v1/usuarios").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/v1/sesiones/**").hasRole("DOCENTE")
+                .requestMatchers(HttpMethod.PUT, "/api/v1/sesiones/**").hasRole("DOCENTE")
+                .requestMatchers(HttpMethod.PATCH, "/api/v1/sesiones/**").hasRole("DOCENTE")
+                // Generación del QR/PIN de una sesión: acción del docente que dicta la sesión.
+                .requestMatchers(HttpMethod.GET, "/api/v1/sesiones/*/qr-token").hasRole("DOCENTE")
+                .requestMatchers(HttpMethod.POST, "/api/v1/asistencias/lote").hasRole("DOCENTE")
+                .requestMatchers(HttpMethod.POST, "/api/v1/asistencias/revisiones").hasRole("ESTUDIANTE")
+                .requestMatchers(HttpMethod.POST, "/api/v1/asistencias").hasRole("DOCENTE")
+                // Consulta de asistencias por grupo (ruta legacy vía POST): mismo criterio que
+                // GET /api/v1/grupos/{grupoId}/asistencias.
+                .requestMatchers(HttpMethod.POST, "/api/v1/asistencias/consultas/grupo")
+                    .hasAnyRole("DOCENTE", "COORDINADOR", "ADMINISTRADOR")
+                // Grupos: los commands de coordinación (crear/actualizar/matricular) requieren
+                // COORDINADOR; las queries también las necesita el DOCENTE (ver sus grupos).
+                .requestMatchers(HttpMethod.GET, "/api/v1/grupos/**")
+                    .hasAnyRole("DOCENTE", "COORDINADOR", "ADMINISTRADOR")
+                .requestMatchers(HttpMethod.POST, "/api/v1/grupos/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")
+                .requestMatchers(HttpMethod.PUT, "/api/v1/grupos/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/grupos/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")
+                // Utilidad de desarrollo para forzar eventos SSE manualmente: no tiene todavía
+                // un rol funcional propio; se restringe a ADMINISTRADOR hasta que Realtime
+                // tenga su propio Port (ver documentación).
+                .requestMatchers(HttpMethod.POST, "/api/v1/realtime/emit").hasRole("ADMINISTRADOR")
+                .requestMatchers("/api/v1/realtime/**").authenticated()
                 .requestMatchers("/api/v1/**").authenticated()
                 .anyRequest().authenticated()
             )
@@ -76,53 +117,31 @@ public class SecurityConfig {
                 .accessDeniedHandler(accessDeniedHandler)
                 .jwt(jwt -> jwt
                     .decoder(jwtDecoder)
-                    .jwtAuthenticationConverter(jwtAuthenticationConverter)
+                    .jwtAuthenticationConverter(institutionalJwtAuthenticationConverter)
                 )
             );
 
         return http.build();
     }
 
-    @Bean
-    public JwtAuthenticationConverter jwtAuthenticationConverter() {
-        final JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setPrincipalClaimName(PRINCIPAL_CLAIM_NAME);
-        converter.setJwtGrantedAuthoritiesConverter(new KeycloakGrantedAuthoritiesConverter());
-        return converter;
-    }
-
-    @Bean
-    @ConditionalOnMissingBean(JwtDecoder.class)
-    public JwtDecoder jwtDecoder() {
-        final NimbusJwtDecoder jwtDecoder = JwtDecoders.fromIssuerLocation(issuerUri);
-        jwtDecoder.setJwtValidator(jwtValidator());
-        return jwtDecoder;
-    }
-
-    @Bean
-    public OAuth2TokenValidator<Jwt> jwtValidator() {
-        final OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuerUri);
-        final OAuth2TokenValidator<Jwt> withAudience = new JwtClaimValidator<Collection<String>>(
-                "aud",
-                audiences -> audiences != null && audiences.contains(expectedAudience)
-        );
-        final OAuth2TokenValidator<Jwt> withPrincipal = jwt -> {
-            final String idUsuario = jwt.getClaimAsString(PRINCIPAL_CLAIM_NAME);
-            return idUsuario == null || idUsuario.isBlank()
-                    ? OAuth2TokenValidatorResult.failure(MISSING_ID_USUARIO_ERROR)
-                    : OAuth2TokenValidatorResult.success();
-        };
-        return new DelegatingOAuth2TokenValidator<>(withIssuer, withAudience, withPrincipal);
+    private static boolean hasBearerAuthorization(final HttpServletRequest request) {
+        final String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
+        return authorization != null && authorization.regionMatches(true, 0, "Bearer ", 0, 7);
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         final CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:4200", "http://127.0.0.1:4200"));
-        // CORS expone únicamente los métodos HTTP utilizados actualmente por la API: GET, POST y OPTIONS.
+        configuration.setAllowedOrigins(Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isBlank())
+                .toList());
         configuration.setAllowedMethods(List.of(
                 HttpMethod.GET.name(),
                 HttpMethod.POST.name(),
+                HttpMethod.PUT.name(),
+                HttpMethod.PATCH.name(),
+                HttpMethod.DELETE.name(),
                 HttpMethod.OPTIONS.name()
         ));
         configuration.setAllowedHeaders(List.of(

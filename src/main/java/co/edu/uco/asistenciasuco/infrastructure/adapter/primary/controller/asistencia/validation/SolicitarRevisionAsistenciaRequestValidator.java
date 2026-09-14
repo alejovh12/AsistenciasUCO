@@ -16,15 +16,18 @@ public final class SolicitarRevisionAsistenciaRequestValidator implements Valida
         if (request == null) {
             return builder.add("request", ValidationErrorType.REQUIRED, "La informacion de revision de asistencia es obligatoria.").build();
         }
-        UuidFieldValidationHelper.validateRequiredUuid(builder, "asistencia", request.getAsistencia(), "La asistencia es obligatoria.", "El identificador de la asistencia no es valido.");
-        if (!ValidationHelper.hasText(request.getMotivo())) {
-            builder.add("motivo", ValidationErrorType.REQUIRED, "El motivo es obligatorio.");
+        UuidFieldValidationHelper.validateRequiredUuid(builder, "sesionId", request.getSesionId(), "La sesion es obligatoria.", "El identificador de la sesion no es valido.");
+        if (!ValidationHelper.hasText(request.getCategoria())) {
+            builder.add("categoria", ValidationErrorType.REQUIRED, "La categoria es obligatoria.");
+        }
+        if (!ValidationHelper.hasText(request.getJustificacion())) {
+            builder.add("justificacion", ValidationErrorType.REQUIRED, "La justificacion es obligatoria.");
         } else {
             builder.addIf(
-                    !ValidationHelper.isLengthBetween(request.getMotivo().trim(), 10, 300),
-                    "motivo",
+                    !ValidationHelper.isLengthBetween(request.getJustificacion().trim(), 1, 300),
+                    "justificacion",
                     ValidationErrorType.INVALID_LENGTH,
-                    "El motivo debe tener entre 10 y 300 caracteres."
+                    "La justificacion debe tener entre 1 y 300 caracteres."
             );
         }
         return builder.build();

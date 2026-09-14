@@ -5,12 +5,14 @@ import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.SecurityErrorCod
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.ClientIpResolver;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.CorrelationIdFilter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.RequestActorResolver;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.keycloak.KeycloakJwtClaimsAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.spi.JwtClaimsAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.validation.AudienceValidator;
 import co.edu.uco.asistenciasuco.infrastructure.config.security.SecurityConfig;
 import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditActorType;
 import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditEventPublisher;
 import co.edu.uco.asistenciasuco.infrastructure.observability.audit.RequestActor;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
-import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +34,6 @@ import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jwt.BadJwtException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -55,6 +56,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * Verifica que {@link SecurityConfig} funciona correctamente sin conocer Keycloak: el único
+ * punto de este test que sabe que el token es "de Keycloak" es el {@link JwtClaimsAdapter} de
+ * prueba (un {@link KeycloakJwtClaimsAdapter} real), inyectado como cualquier otro bean del
+ * Composition Root. SecurityConfig, el converter y el decoder de prueba no importan Keycloak.
+ */
 @WebMvcTest(controllers = SecurityConfigTest.ProtectedController.class)
 @Import({
         SecurityConfig.class,
@@ -65,24 +72,25 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         ClientIpResolver.class,
         RequestActorResolver.class,
         SecurityConfigTest.ProtectedController.class,
-        SecurityConfigTest.JwtDecoderTestConfig.class
+        SecurityConfigTest.SecurityTestSupportConfig.class
 })
 @TestPropertySource(properties = {
-        "spring.security.oauth2.resourceserver.jwt.issuer-uri=http://127.0.0.1:8081/realms/asistencias-uco",
-        "spring.security.oauth2.resourceserver.jwt.audiences=asistencias-api",
         "spring.main.allow-bean-definition-overriding=true"
 })
 class SecurityConfigTest {
 
     private static final String ISSUER = "http://127.0.0.1:8081/realms/asistencias-uco";
     private static final String AUDIENCE = "asistencias-api";
+    private static final String API_CLIENT_ID = "asistencias-api";
+    private static final String USER_ID_CLAIM = "idUsuario";
+    private static final UUID USER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private static final String CORRELATION_ID = "93641bab-e3cd-485c-b275-47e7b731e18c";
 
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
-    private JwtAuthenticationConverter jwtAuthenticationConverter;
+    private InstitutionalJwtAuthenticationConverter institutionalJwtAuthenticationConverter;
 
     @Autowired
     private CorsConfigurationSource corsConfigurationSource;
@@ -101,7 +109,7 @@ class SecurityConfigTest {
                         .header(HttpHeaders.AUTHORIZATION, "Bearer valid-do")
                         .header(CorrelationIdFilter.HEADER_NAME, CORRELATION_ID))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.principal").value("usuario-123"))
+                .andExpect(jsonPath("$.principal").value(USER_ID.toString()))
                 .andExpect(header().string(CorrelationIdFilter.HEADER_NAME, CORRELATION_ID));
     }
 
@@ -129,11 +137,11 @@ class SecurityConfigTest {
     }
 
     @Test
-    void usuario_autenticado_expone_authority_role_do() throws Exception {
+    void usuario_autenticado_expone_authority_role_docente() throws Exception {
         mockMvc.perform(get("/api/v1/protegido")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer valid-do"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.hasRoleDo").value(true));
+                .andExpect(jsonPath("$.hasRoleDocente").value(true));
     }
 
     @Test
@@ -161,15 +169,15 @@ class SecurityConfigTest {
 
     @Test
     void requestActorResolver_usa_idUsuario_como_actorId() {
-        final Jwt jwt = jwt("valid-do", List.of(AUDIENCE), List.of("DO"));
-        final AbstractAuthenticationToken authentication = jwtAuthenticationConverter.convert(jwt);
+        final Jwt jwt = jwt("valid-do", List.of(AUDIENCE), List.of("DOCENTE"));
+        final AbstractAuthenticationToken authentication = institutionalJwtAuthenticationConverter.convert(jwt);
         final MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/protegido");
         request.setUserPrincipal(authentication);
 
         final RequestActor actor = new RequestActorResolver().resolve(request);
 
         assertEquals(AuditActorType.USER, actor.actorType());
-        assertEquals("usuario-123", actor.actorId());
+        assertEquals(USER_ID.toString(), actor.actorId());
     }
 
     @Test
@@ -207,12 +215,12 @@ class SecurityConfigTest {
                 .notBefore(now.minusSeconds(60))
                 .expiresAt(now.plusSeconds(300))
                 .audience(audiences)
-                .claim("idUsuario", "usuario-123")
+                .claim(USER_ID_CLAIM, USER_ID.toString())
                 .claim("resource_access", Map.of(
-                        "asistencias-api", Map.of("roles", clientRoles),
+                        API_CLIENT_ID, Map.of("roles", clientRoles),
                         "account", Map.of("roles", List.of("manage-account"))
                 ))
-                .claim("realm_access", Map.of("roles", List.of("AD")))
+                .claim("realm_access", Map.of("roles", List.of("ADMINISTRADOR")))
                 .build();
     }
 
@@ -231,24 +239,37 @@ class SecurityConfigTest {
                     "principal", authentication.getName(),
                     "authorities", authorities,
                     "roleAuthorities", roleAuthorities,
-                    "hasRoleDo", authorities.contains("ROLE_DO")
+                    "hasRoleDocente", authorities.contains("ROLE_DOCENTE")
             );
         }
     }
 
+    /**
+     * Sustituye, únicamente para este test, al Composition Root de seguridad
+     * ({@code KeycloakSecurityAdapterConfiguration}) que no se carga en un slice
+     * {@code @WebMvcTest}. El {@link JwtClaimsAdapter} real ({@link KeycloakJwtClaimsAdapter})
+     * se usa a propósito: prueba que SecurityConfig funciona correctamente con un token con
+     * forma de Keycloak sin que SecurityConfig mismo sepa nada de Keycloak.
+     */
     @TestConfiguration
-    static class JwtDecoderTestConfig {
+    static class SecurityTestSupportConfig {
 
         @Bean
-        JwtDecoder jwtDecoder(final OAuth2TokenValidator<Jwt> jwtValidator) {
+        JwtClaimsAdapter jwtClaimsAdapter() {
+            return new KeycloakJwtClaimsAdapter(API_CLIENT_ID, USER_ID_CLAIM);
+        }
+
+        @Bean
+        JwtDecoder jwtDecoder() {
+            final OAuth2TokenValidator<Jwt> audienceValidator = new AudienceValidator(AUDIENCE);
             return token -> {
                 final Jwt jwt = switch (token) {
-                    case "valid-do" -> SecurityConfigTest.jwt(token, List.of(AUDIENCE), List.of("DO"));
+                    case "valid-do" -> SecurityConfigTest.jwt(token, List.of(AUDIENCE), List.of("DOCENTE"));
                     case "ignored-roles-only" -> SecurityConfigTest.jwt(token, List.of(AUDIENCE), List.of());
-                    case "wrong-audience" -> SecurityConfigTest.jwt(token, List.of("otra-api"), List.of("DO"));
+                    case "wrong-audience" -> SecurityConfigTest.jwt(token, List.of("otra-api"), List.of("DOCENTE"));
                     default -> throw new BadJwtException("Unknown test token.");
                 };
-                final OAuth2TokenValidatorResult result = jwtValidator.validate(jwt);
+                final OAuth2TokenValidatorResult result = audienceValidator.validate(jwt);
                 if (result.hasErrors()) {
                     throw new BadJwtException("Invalid test token.");
                 }

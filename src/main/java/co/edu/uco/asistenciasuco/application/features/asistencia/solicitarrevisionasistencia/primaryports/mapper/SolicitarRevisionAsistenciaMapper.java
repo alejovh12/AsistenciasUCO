@@ -19,8 +19,12 @@ public final class SolicitarRevisionAsistenciaMapper {
         }
 
         return new SolicitarRevisionAsistenciaDomain(
-                dto.getAsistencia(),
-                dto.getMotivo()
+                dto.getSesion(),
+                dto.getCategoria(),
+                dto.getJustificacion(),
+                dto.getSoporteNombre(),
+                dto.getSoporteUrl(),
+                dto.getUsuario()
         );
     }
 }

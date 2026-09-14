@@ -48,6 +48,26 @@ class DbExceptionTranslatorTest {
     }
 
     @Test
+    void conflicto_identidad_de_db_se_traduce_a_conflictException_con_codigo_neutral() {
+        final ConflictException exception = assertThrows(ConflictException.class, () -> translateFailure(
+                "Los datos de identificación suministrados no corresponden de forma unívoca al mismo usuario.",
+                "Conflicto de identidad: correo y documento compuesto no resuelven de forma unívoca al mismo usuario en uv_usuario.",
+                "crearDecano"
+        ));
+
+        assertEquals("ERR_IDENTIDAD_USUARIO_CONFLICTO", exception.getCode());
+        assertEquals(UsuarioErrorCode.ERR_IDENTIDAD_USUARIO_CONFLICTO.defaultMessage(), exception.getMessage());
+    }
+
+    @Test
+    void clasificacion_de_identidad_no_captura_conflicto_generico() {
+        final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
+                () -> translateFailure("Conflicto de horario nuevo.", "crearDecano"));
+
+        assertEquals("ERR_DB_UNCLASSIFIED", exception.getCode());
+    }
+
+    @Test
     void cruce_horario_sin_actor_en_operacion_asignar_docente_lanza_codigo_docente() {
         final ConflictException exception = assertThrows(
                 ConflictException.class,

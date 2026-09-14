@@ -6,9 +6,7 @@ import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditEventPu
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.stereotype.Component;
 
-@Component
 public final class LoggingAuditEventPublisher implements AuditEventPublisher {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggingAuditEventPublisher.class);
@@ -20,26 +18,6 @@ public final class LoggingAuditEventPublisher implements AuditEventPublisher {
 
     @Override
     public void publish(final AuditEvent event) {
-        if (repository != null) {
-            try {
-                repository.insert(event);
-            } catch (Exception exception) {
-                LOGGER.atError()
-                        .setCause(exception)
-                        .addKeyValue("eventType", "AUDIT_PERSISTENCE_FAILED")
-                        .addKeyValue("auditId", event.id())
-                        .addKeyValue("action", event.action())
-                        .addKeyValue("resourceType", event.resourceType())
-                        .addKeyValue("resourceId", event.resourceId())
-                        .addKeyValue("correlationId", event.correlationId())
-                        .addKeyValue("traceId", event.traceId())
-                        .log("Audit persistence failed.");
-                return;
-            }
-        } else {
-            LOGGER.warn("Audit repository is not available. Skipping durable persistence for current context.");
-            return;
-        }
         LOGGER.atInfo()
                 .addKeyValue("eventType", "AUDIT")
                 .addKeyValue("auditId", event.id())
@@ -56,7 +34,26 @@ public final class LoggingAuditEventPublisher implements AuditEventPublisher {
                 .addKeyValue("errorCode", safe(event.errorCode(), 120))
                 .addKeyValue("result", event.outcome())
                 .addKeyValue("metadata", SensitiveDataSanitizer.sanitizeMetadata(event.metadata()))
-                .log("Audit event persisted.");
+                .log("Audit event published.");
+
+        if (repository != null) {
+            try {
+                repository.insert(event);
+            } catch (Exception exception) {
+                LOGGER.atError()
+                        .setCause(exception)
+                        .addKeyValue("eventType", "AUDIT_PERSISTENCE_FAILED")
+                        .addKeyValue("auditId", event.id())
+                        .addKeyValue("action", event.action())
+                        .addKeyValue("resourceType", event.resourceType())
+                        .addKeyValue("resourceId", event.resourceId())
+                        .addKeyValue("correlationId", event.correlationId())
+                        .addKeyValue("traceId", event.traceId())
+                        .log("Audit persistence failed.");
+            }
+        } else {
+            LOGGER.warn("Audit repository is not available. Skipping durable persistence for current context.");
+        }
     }
 
     private String safe(final String value, final int maxLength) {

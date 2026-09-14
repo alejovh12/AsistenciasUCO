@@ -31,10 +31,14 @@ public final class ConsultarSesionRepositoryMapper {
         return new SesionConsultadaEntity(
                 entity.getSesion(),
                 entity.getGrupo(),
-                entity.getTema(),
-                entity.getDescripcion(),
-                entity.isCerrada(),
-                entity.getObservacionCierre()
+                entity.getNombre(),
+                entity.getNumero(),
+                entity.getCodigo(),
+                entity.getNumeroSemana(),
+                entity.getCodigoGrupo(),
+                entity.getNombreGrupo(),
+                entity.getFechaHoraInicio(),
+                entity.getFechaHoraFin()
         );
     }
 }

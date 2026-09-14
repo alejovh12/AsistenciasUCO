@@ -65,6 +65,10 @@ final class DbFailureClassifier {
                 return GrupoErrorCode.ERR_CRUCE_HORARIO_DOCENTE;
             }
         }
+        if (contains(message, "conflicto de identidad")
+                || contains(message, "no corresponden de forma univoca al mismo usuario")) {
+            return UsuarioErrorCode.ERR_IDENTIDAD_USUARIO_CONFLICTO;
+        }
         if (containsAny(message, "correo", "email", "e-mail") && containsAny(message, "duplicad", "ya existe", "ya se encuentra", "registrad", "unico")) {
             return UsuarioErrorCode.ERR_UNICIDAD_CORREO;
         }

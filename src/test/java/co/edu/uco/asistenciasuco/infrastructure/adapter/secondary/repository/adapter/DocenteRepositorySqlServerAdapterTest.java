@@ -1,30 +1,24 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter;
 
 
-import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.error.DatabaseOperationException;
-import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
-import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.AsignarDocenteAGrupoRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarAsignacionesAcademicasDocenteRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarDocentePorIdRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarDocenteDesdeUsuarioRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.DocenteAsignacionAcademicaRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.DocenteIdentidadRepositoryProjection;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.DocenteOperacionRepositoryProjection;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.mapper.DocenteAsignacionAcademicaRepositoryRowMapper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.mapper.DocenteIdentidadRepositoryRowMapper;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataAccessResourceFailureException;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
@@ -42,7 +36,6 @@ class DocenteRepositorySqlServerAdapterTest {
     private static final UUID USUARIO = UUID.fromString("23641bab-e3cd-485c-b275-47e7b731e18c");
     private static final UUID GRUPO = UUID.fromString("33641bab-e3cd-485c-b275-47e7b731e18c");
     private static final UUID CORRELACION = UUID.fromString("93641bab-e3cd-485c-b275-47e7b731e18c");
-    private static final UUID CORRELACION_CONTEXTO = UUID.fromString("11111111-2222-3333-4444-555555555555");
 
     @AfterEach
     void clearCorrelationContext() {
@@ -58,9 +51,7 @@ class DocenteRepositorySqlServerAdapterTest {
                     return List.of();
                 },
                 (sql, args) -> List.of(),
-                (sql, args) -> List.of(),
-                parameters -> output(true, "ok", "detalle"),
-                parameters -> output(true, "ok", "detalle")
+                (sql, args) -> List.of()
         );
 
         assertTrue(adapter.consultarDocentes().isEmpty());
@@ -81,9 +72,7 @@ class DocenteRepositorySqlServerAdapterTest {
                     argsCapturados.set(args);
                     return List.of();
                 },
-                (sql, args) -> List.of(),
-                parameters -> output(true, "ok", "detalle"),
-                parameters -> output(true, "ok", "detalle")
+                (sql, args) -> List.of()
         );
 
         final Optional<DocenteIdentidadRepositoryProjection> resultado =
@@ -104,9 +93,7 @@ class DocenteRepositorySqlServerAdapterTest {
                 (sql, args) -> {
                     sqlCapturado.set(sql);
                     return List.of(asignacion(1), asignacion(1));
-                },
-                parameters -> output(true, "ok", "detalle"),
-                parameters -> output(true, "ok", "detalle")
+                }
         );
 
         final List<DocenteAsignacionAcademicaRepositoryProjection> resultado =
@@ -121,82 +108,20 @@ class DocenteRepositorySqlServerAdapterTest {
     }
 
     @Test
-    void procedimientos_envian_parametros_exactos_y_leen_outputs_sin_exponer_tecnico_en_resultado_publico() {
-        final AtomicReference<MapSqlParameterSource> registrarParams = new AtomicReference<>();
-        final AtomicReference<MapSqlParameterSource> asignarParams = new AtomicReference<>();
+    void comandos_docente_no_soportados_lanzan_featureUnavailable_sin_infraestructura_ficticia() {
         final DocenteRepositorySqlServerAdapter adapter = adapterBase(
                 sql -> List.of(),
                 (sql, args) -> List.of(),
-                (sql, args) -> List.of(),
-                parameters -> {
-                    registrarParams.set(parameters);
-                    return output(true, "Docente registrado.", "detalle interno");
-                },
-                parameters -> {
-                    asignarParams.set(parameters);
-                    return output(true, "Docente asignado.", "detalle interno");
-                }
+                (sql, args) -> List.of()
         );
 
-        CorrelationIdContext.set(CORRELACION);
-
-        final DocenteOperacionRepositoryProjection registro = adapter.registrarDocenteDesdeUsuario(
-                new RegistrarDocenteDesdeUsuarioRepositoryDTO(USUARIO)
+        assertThrows(
+                FeatureUnavailableException.class,
+                () -> adapter.registrarDocenteDesdeUsuario(new RegistrarDocenteDesdeUsuarioRepositoryDTO(USUARIO))
         );
-        final DocenteOperacionRepositoryProjection asignacion = adapter.asignarDocenteAGrupo(
-                new AsignarDocenteAGrupoRepositoryDTO(DOCENTE, GRUPO)
-        );
-
-        assertEquals(USUARIO.toString(), registrarParams.get().getValues().get(DocenteRepositorySqlServerAdapter.PARAM_ID_USUARIO));
-        assertEquals(CORRELACION.toString(), registrarParams.get().getValues().get(DocenteRepositorySqlServerAdapter.PARAM_ID_CORRELACION));
-        assertEquals(DOCENTE.toString(), asignarParams.get().getValues().get(DocenteRepositorySqlServerAdapter.PARAM_ID_DOCENTE));
-        assertEquals(GRUPO.toString(), asignarParams.get().getValues().get(DocenteRepositorySqlServerAdapter.PARAM_ID_GRUPO));
-        assertEquals("Docente registrado.", registro.getMensajeUsuario());
-        assertEquals("Docente asignado.", asignacion.getMensajeUsuario());
-    }
-
-    @Test
-    void procedimiento_con_estado_fallido_traduce_mensaje_resultado_a_excepcion() {
-        final DocenteRepositorySqlServerAdapter adapter = adapterBase(
-                sql -> List.of(),
-                (sql, args) -> List.of(),
-                (sql, args) -> List.of(),
-                parameters -> output(false, "El docente no existe.", "detalle sensible"),
-                parameters -> output(true, "ok", "detalle")
-        );
-        CorrelationIdContext.set(CORRELACION);
-
-        final ResourceNotFoundException exception = assertThrows(
-                ResourceNotFoundException.class,
-                () -> adapter.registrarDocenteDesdeUsuario(
-                        new RegistrarDocenteDesdeUsuarioRepositoryDTO(USUARIO)
-                )
-        );
-
-        assertEquals("ERR_DOCENTE_NO_EXISTE", exception.getCode());
-        assertEquals(DocenteErrorCode.ERR_DOCENTE_NO_EXISTE.defaultMessage(), exception.getMessage());
-    }
-
-    @Test
-    void procedimiento_usa_correlationId_de_contexto_para_parametro_sql() {
-        final AtomicReference<MapSqlParameterSource> registrarParams = new AtomicReference<>();
-        final DocenteRepositorySqlServerAdapter adapter = adapterBase(
-                sql -> List.of(),
-                (sql, args) -> List.of(),
-                (sql, args) -> List.of(),
-                parameters -> {
-                    registrarParams.set(parameters);
-                    return output(true, "Docente registrado.", "detalle interno");
-                },
-                parameters -> output(true, "ok", "detalle")
-        );
-        CorrelationIdContext.set(CORRELACION_CONTEXTO);
-
-        adapter.registrarDocenteDesdeUsuario(new RegistrarDocenteDesdeUsuarioRepositoryDTO(USUARIO));
-
-        assertEquals(
-                CORRELACION_CONTEXTO.toString(),
-                registrarParams.get().getValues().get(DocenteRepositorySqlServerAdapter.PARAM_ID_CORRELACION)
+        assertThrows(
+                FeatureUnavailableException.class,
+                () -> adapter.asignarDocenteAGrupo(new AsignarDocenteAGrupoRepositoryDTO(DOCENTE, GRUPO))
         );
     }
 
@@ -210,12 +135,6 @@ class DocenteRepositorySqlServerAdapterTest {
                     throw new DataAccessResourceFailureException("fallo");
                 },
                 (sql, args) -> {
-                    throw new DataAccessResourceFailureException("fallo");
-                },
-                parameters -> {
-                    throw new DataAccessResourceFailureException("fallo");
-                },
-                parameters -> {
                     throw new DataAccessResourceFailureException("fallo");
                 }
         );
@@ -232,36 +151,6 @@ class DocenteRepositorySqlServerAdapterTest {
                         new ConsultarAsignacionesAcademicasDocenteRepositoryDTO(DOCENTE)
                 )
         );
-        assertThrows(
-                DatabaseOperationException.class,
-                () -> adapter.registrarDocenteDesdeUsuario(new RegistrarDocenteDesdeUsuarioRepositoryDTO(USUARIO))
-        );
-        assertThrows(
-                DatabaseOperationException.class,
-                () -> adapter.asignarDocenteAGrupo(new AsignarDocenteAGrupoRepositoryDTO(DOCENTE, GRUPO))
-        );
-    }
-
-    @Test
-    void procedimiento_sin_contexto_no_genera_correlationId_nuevo() {
-        final AtomicReference<MapSqlParameterSource> registrarParams = new AtomicReference<>();
-        final DocenteRepositorySqlServerAdapter adapter = adapterBase(
-                sql -> List.of(),
-                (sql, args) -> List.of(),
-                (sql, args) -> List.of(),
-                parameters -> {
-                    registrarParams.set(parameters);
-                    return output(true, "ok", "detalle");
-                },
-                parameters -> output(true, "ok", "detalle")
-        );
-
-        assertThrows(
-                CrosscuttingException.class,
-                () -> adapter.registrarDocenteDesdeUsuario(new RegistrarDocenteDesdeUsuarioRepositoryDTO(USUARIO))
-        );
-        assertEquals(null, registrarParams.get());
-        assertEquals(null, CorrelationIdContext.get());
     }
 
     @Test
@@ -292,25 +181,13 @@ class DocenteRepositorySqlServerAdapterTest {
     private DocenteRepositorySqlServerAdapter adapterBase(
             final DocenteRepositorySqlServerAdapter.QueryExecutor<DocenteIdentidadRepositoryProjection> consultarDocentes,
             final DocenteRepositorySqlServerAdapter.ParameterizedQueryExecutor<DocenteIdentidadRepositoryProjection> consultarPorId,
-            final DocenteRepositorySqlServerAdapter.ParameterizedQueryExecutor<DocenteAsignacionAcademicaRepositoryProjection> consultarAsignaciones,
-            final DocenteRepositorySqlServerAdapter.ProcedureExecutor registrar,
-            final DocenteRepositorySqlServerAdapter.ProcedureExecutor asignar
+            final DocenteRepositorySqlServerAdapter.ParameterizedQueryExecutor<DocenteAsignacionAcademicaRepositoryProjection> consultarAsignaciones
     ) {
         return new DocenteRepositorySqlServerAdapter(
                 consultarDocentes,
                 consultarPorId,
-                consultarAsignaciones,
-                registrar,
-                asignar
+                consultarAsignaciones
         );
-    }
-
-    private Map<String, Object> output(final boolean estado, final String usuario, final String tecnico) {
-        final Map<String, Object> output = new HashMap<>();
-        output.put(DocenteRepositorySqlServerAdapter.OUT_ESTADO, estado);
-        output.put(DocenteRepositorySqlServerAdapter.OUT_MENSAJE_USUARIO, usuario);
-        output.put(DocenteRepositorySqlServerAdapter.OUT_MENSAJE_TECNICO, tecnico);
-        return output;
     }
 
     private DocenteAsignacionAcademicaRepositoryProjection asignacion(final Integer estadoDocente) {

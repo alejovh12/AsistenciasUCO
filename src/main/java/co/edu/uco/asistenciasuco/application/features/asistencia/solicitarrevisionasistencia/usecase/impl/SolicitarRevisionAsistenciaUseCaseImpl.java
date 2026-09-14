@@ -1,9 +1,11 @@
 package co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.usecase.SolicitarRevisionAsistenciaUseCase;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.usecase.domain.SolicitarRevisionAsistenciaDomain;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.usecase.mapper.SolicitarRevisionAsistenciaRepositoryMapper;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 import java.util.Objects;
@@ -14,9 +16,14 @@ import java.util.Objects;
 public final class SolicitarRevisionAsistenciaUseCaseImpl implements SolicitarRevisionAsistenciaUseCase {
 
     private final AsistenciaRepositoryPort asistenciaRepositoryPort;
+    private final InstitutionalScopePort institutionalScopePort;
 
-    public SolicitarRevisionAsistenciaUseCaseImpl(final AsistenciaRepositoryPort asistenciaRepositoryPort) {
+    public SolicitarRevisionAsistenciaUseCaseImpl(
+            final AsistenciaRepositoryPort asistenciaRepositoryPort,
+            final InstitutionalScopePort institutionalScopePort
+    ) {
         this.asistenciaRepositoryPort = Objects.requireNonNull(asistenciaRepositoryPort, "El puerto de salida AsistenciaRepositoryPort es obligatorio.");
+        this.institutionalScopePort = Objects.requireNonNull(institutionalScopePort, "InstitutionalScopePort es obligatorio.");
     }
 
     @Override
@@ -24,8 +31,10 @@ public final class SolicitarRevisionAsistenciaUseCaseImpl implements SolicitarRe
         if (ObjectHelper.isNull(domain)) {
             throw new CrosscuttingException("El dominio para solicitar revision de asistencia es obligatorio.");
         }
+        final var estudianteId = institutionalScopePort.findEstudianteIdByUsuario(domain.getUsuario())
+                .orElseThrow(() -> new ForbiddenException("No fue posible resolver el estudiante autenticado."));
         asistenciaRepositoryPort.solicitarRevisionAsistencia(
-                SolicitarRevisionAsistenciaRepositoryMapper.toRepositoryDTO(domain)
+                SolicitarRevisionAsistenciaRepositoryMapper.toRepositoryDTO(domain, estudianteId)
         );
     }
 }

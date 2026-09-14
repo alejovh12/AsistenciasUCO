@@ -1,22 +1,27 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.usuario;
 
-import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.primaryports.CrearUsuarioInputPort;
-import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.primaryports.dto.CrearUsuarioDTO;
-import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.primaryports.dto.CrearUsuarioResultadoDTO;
+import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
+import co.edu.uco.asistenciasuco.application.features.usuario.provisionarusuario.primaryports.ProvisionarUsuarioInputPort;
+import co.edu.uco.asistenciasuco.application.features.usuario.provisionarusuario.primaryports.dto.ProvisionarUsuarioDTO;
+import co.edu.uco.asistenciasuco.application.features.usuario.provisionarusuario.primaryports.dto.ProvisionarUsuarioResultadoDTO;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.audit.AuditableOperation;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.usuario.response.CrearUsuarioResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.audit.AuditRequestAttributes;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.audit.AuditableOperation;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.usuario.mapper.CrearUsuarioHttpMapper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.usuario.request.CrearUsuarioRequest;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.usuario.response.CrearUsuarioResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.usuario.validation.CrearUsuarioRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 import java.util.Objects;
 
 /**
@@ -28,10 +33,27 @@ public final class UsuarioController {
 
     private static final CrearUsuarioRequestValidator CREATE_USER_VALIDATOR = new CrearUsuarioRequestValidator();
 
-    private final CrearUsuarioInputPort crearUsuarioInputPort;
+    private final ProvisionarUsuarioInputPort provisionarUsuarioInputPort;
 
-    public UsuarioController(final CrearUsuarioInputPort crearUsuarioInputPort) {
-        this.crearUsuarioInputPort = Objects.requireNonNull(crearUsuarioInputPort, "El puerto de entrada CrearUsuarioInputPort es obligatorio.");
+    public UsuarioController(final ProvisionarUsuarioInputPort provisionarUsuarioInputPort) {
+        this.provisionarUsuarioInputPort = Objects.requireNonNull(
+                provisionarUsuarioInputPort,
+                "ProvisionarUsuarioInputPort es obligatorio."
+        );
+    }
+
+    @GetMapping("/perfil")
+    public ResponseEntity<ApiDataResponse<Void>> consultarPerfilUsuarioAutenticado() {
+        throw new FeatureUnavailableException(
+                "La consulta de perfil requiere una vertical de lectura sobre vistas publicas de usuario."
+        );
+    }
+
+    @PutMapping("/perfil")
+    public ResponseEntity<ApiDataResponse<Void>> actualizarPerfilUsuarioAutenticado(@RequestBody final Object request) {
+        throw new FeatureUnavailableException(
+                "La actualizacion de perfil requiere un command publico de DB; no se permite UPDATE directo."
+        );
     }
 
     @PostMapping
@@ -41,10 +63,10 @@ public final class UsuarioController {
     )
     public ResponseEntity<CrearUsuarioResponse> crearUsuario(@RequestBody final CrearUsuarioRequest request) {
         RequestValidationGuard.validate(CREATE_USER_VALIDATOR.validate(request));
-        final CrearUsuarioDTO dto = CrearUsuarioHttpMapper.toApplicationDTO(request);
-        final CrearUsuarioResultadoDTO resultado = crearUsuarioInputPort.execute(dto);
-        if (!ObjectHelper.isNull(resultado.getUsuarioId())) {
-            AuditRequestAttributes.storeResourceId(resultado.getUsuarioId().toString());
+        final ProvisionarUsuarioDTO dto = CrearUsuarioHttpMapper.toApplicationDTO(request);
+        final ProvisionarUsuarioResultadoDTO resultado = provisionarUsuarioInputPort.execute(dto);
+        if (!ObjectHelper.isNull(resultado.usuarioId())) {
+            AuditRequestAttributes.storeResourceId(resultado.usuarioId().toString());
         }
         return ResponseEntity.status(HttpStatus.CREATED).body(CrearUsuarioResponse.from(resultado));
     }

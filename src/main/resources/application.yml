@@ -5,16 +5,10 @@ spring:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
-    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:com.microsoft.sqlserver.jdbc.SQLServerDriver}
   sql:
     init:
       mode: never
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://127.0.0.1:8081/realms/asistencias-uco}
-          audiences: ${KEYCLOAK_AUDIENCE:asistencias-api}
   main:
     web-application-type: servlet
     keep-alive: true
@@ -72,3 +66,51 @@ logging:
       add:
         service: ${spring.application.name}
         environment: ${ASISTENCIAS_UCO_ENVIRONMENT:local}
+
+# ──────────────────────────────────────────────────────────────
+# app.adapters.*  -> QUÉ tecnología implementa cada capability (Composition Root).
+# app.providers.* -> CÓMO se configura esa tecnología ya elegida.
+# Ver docs/architecture/adapter-composition-standard.md
+# ──────────────────────────────────────────────────────────────
+app:
+  adapters:
+    persistence:
+      provider: ${APP_ADAPTERS_PERSISTENCE_PROVIDER:sqlserver}
+    identity:
+      provider: ${APP_ADAPTERS_IDENTITY_PROVIDER:keycloak}
+    security:
+      provider: ${APP_ADAPTERS_SECURITY_PROVIDER:keycloak}
+    storage:
+      provider: ${APP_ADAPTERS_STORAGE_PROVIDER:local}
+    realtime:
+      provider: ${APP_ADAPTERS_REALTIME_PROVIDER:local-sse}
+    audit:
+      provider: ${APP_ADAPTERS_AUDIT_PROVIDER:logging}
+
+  providers:
+    # Identity provisioning administrativo (crear/verificar/eliminar cuentas institucionales
+    # y asignar client roles vía Admin REST API). NO confundir con keycloak-security: esto
+    # nunca participa en la validación de JWT de cada request. Ver
+    # docs/security/keycloak-identity-provider.md.
+    keycloak-identity:
+      server-url: ${KEYCLOAK_SERVER_URL:http://127.0.0.1:8081}
+      realm: ${KEYCLOAK_REALM:asistencias-uco}
+      admin-client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:asistencias-backend-admin}
+      admin-client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:}
+      api-client-id: ${KEYCLOAK_API_CLIENT_ID:asistencias-api}
+      user-id-attribute: ${KEYCLOAK_USER_ID_ATTRIBUTE:idUsuario}
+    # Runtime security (validacion de JWT). Ver
+    # docs/security/runtime-security-provider-architecture.md.
+    keycloak-security:
+      issuer-uri: ${KEYCLOAK_ISSUER_URI:http://127.0.0.1:8081/realms/asistencias-uco}
+      api-client-id: ${KEYCLOAK_API_CLIENT_ID:asistencias-api}
+      expected-audience: ${KEYCLOAK_EXPECTED_AUDIENCE:asistencias-api}
+      user-id-claim: ${KEYCLOAK_USER_ID_CLAIM:idUsuario}
+    local-storage:
+      upload-directory: ${APP_STORAGE_UPLOAD_DIRECTORY:uploads/soportes}
+
+  # CORS es neutral (no conoce ningun proveedor de identidad); SecurityConfig lo lee
+  # directamente via @Value.
+  security:
+    cors:
+      allowed-origins: ${APP_SECURITY_CORS_ALLOWED_ORIGINS:http://localhost:4200}

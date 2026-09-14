@@ -52,8 +52,8 @@ services:
       KC_METRICS_ENABLED: "true"
 
     ports:
-      - "127.0.0.1:${KC_HTTP_PORT}:8080"
-      - "127.0.0.1:${KC_MANAGEMENT_PORT}:9000"
+      - "${KC_HTTP_PORT}:8080"
+      - "${KC_MANAGEMENT_PORT}:9000"
 
     networks:
       - keycloak-network

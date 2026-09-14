@@ -21,7 +21,12 @@ public final class CrearSesionRepositoryMapper {
         return new CrearSesionRepositoryDTO(
                 domain.getGrupo(),
                 domain.getTema(),
-                domain.getDescripcion()
+                domain.getDescripcion(),
+                domain.getFechaHoraInicio(),
+                domain.getFechaHoraFin(),
+                domain.getAula(),
+                domain.getTipo(),
+                domain.getDocente()
         );
     }
 }

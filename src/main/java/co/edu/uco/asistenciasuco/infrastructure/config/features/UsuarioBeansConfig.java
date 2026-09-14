@@ -4,20 +4,18 @@ import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.prima
 import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.primaryports.interactor.CrearUsuarioInteractor;
 import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.usecase.CrearUsuarioUseCase;
 import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.usecase.impl.CrearUsuarioUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.usuario.provisionarusuario.primaryports.ProvisionarUsuarioInputPort;
+import co.edu.uco.asistenciasuco.application.features.usuario.provisionarusuario.primaryports.interactor.ProvisionarUsuarioInteractor;
+import co.edu.uco.asistenciasuco.application.features.usuario.provisionarusuario.usecase.ProvisionarUsuarioUseCase;
+import co.edu.uco.asistenciasuco.application.features.usuario.provisionarusuario.usecase.impl.ProvisionarUsuarioUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.UsuarioRepositorySqlServerAdapter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 @Configuration(proxyBeanMethods = false)
 public class UsuarioBeansConfig {
-
-    @Bean
-    public UsuarioRepositoryPort usuarioRepositoryPort(final JdbcTemplate jdbcTemplate) {
-        return new UsuarioRepositorySqlServerAdapter(jdbcTemplate);
-    }
 
     @Bean
     public CrearUsuarioUseCase crearUsuarioUseCase(
@@ -30,5 +28,18 @@ public class UsuarioBeansConfig {
     @Bean
     public CrearUsuarioInputPort crearUsuarioInputPort(final CrearUsuarioUseCase crearUsuarioUseCase) {
         return new CrearUsuarioInteractor(crearUsuarioUseCase);
+    }
+
+    @Bean
+    public ProvisionarUsuarioUseCase provisionarUsuarioUseCase(
+            final CrearUsuarioUseCase crearUsuarioUseCase,
+            final IdentityProviderPort identityProviderPort
+    ) {
+        return new ProvisionarUsuarioUseCaseImpl(crearUsuarioUseCase, identityProviderPort);
+    }
+
+    @Bean
+    public ProvisionarUsuarioInputPort provisionarUsuarioInputPort(final ProvisionarUsuarioUseCase provisionarUsuarioUseCase) {
+        return new ProvisionarUsuarioInteractor(provisionarUsuarioUseCase);
     }
 }

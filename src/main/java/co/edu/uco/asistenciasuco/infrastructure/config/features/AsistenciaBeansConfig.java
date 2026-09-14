@@ -4,28 +4,33 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasiste
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.primaryports.interactor.ConsultarAsistenciasPorGrupoInteractor;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.ConsultarAsistenciasPorGrupoUseCase;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.impl.ConsultarAsistenciasPorGrupoUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciaautonoma.primaryports.RegistrarAsistenciaAutonomaInputPort;
+import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciaautonoma.primaryports.interactor.RegistrarAsistenciaAutonomaInteractor;
+import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciaautonoma.usecase.RegistrarAsistenciaAutonomaUseCase;
+import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciaautonoma.usecase.impl.RegistrarAsistenciaAutonomaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.primaryports.RegistrarAsistenciaInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.primaryports.interactor.RegistrarAsistenciaInteractor;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.usecase.RegistrarAsistenciaUseCase;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.usecase.impl.RegistrarAsistenciaUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.RegistrarAsistenciasSesionInputPort;
+import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.interactor.RegistrarAsistenciasSesionInteractor;
+import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.usecase.RegistrarAsistenciasSesionUseCase;
+import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.usecase.impl.RegistrarAsistenciasSesionUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicitudrevisionasistencia.primaryports.ResolverSolicitudRevisionAsistenciaInputPort;
+import co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicitudrevisionasistencia.primaryports.interactor.ResolverSolicitudRevisionAsistenciaInteractor;
+import co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicitudrevisionasistencia.usecase.ResolverSolicitudRevisionAsistenciaUseCase;
+import co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicitudrevisionasistencia.usecase.impl.ResolverSolicitudRevisionAsistenciaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.primaryports.SolicitarRevisionAsistenciaInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.primaryports.interactor.SolicitarRevisionAsistenciaInteractor;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.usecase.SolicitarRevisionAsistenciaUseCase;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.usecase.impl.SolicitarRevisionAsistenciaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.AsistenciaRepositoryMockAdapter;
+import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 
 @Configuration(proxyBeanMethods = false)
-@Profile("mock")
 public class AsistenciaBeansConfig {
-
-    @Bean
-    public AsistenciaRepositoryPort asistenciaRepositoryPort() {
-        return new AsistenciaRepositoryMockAdapter();
-    }
 
     @Bean
     public RegistrarAsistenciaUseCase registrarAsistenciaUseCase(final AsistenciaRepositoryPort asistenciaRepositoryPort) {
@@ -54,10 +59,40 @@ public class AsistenciaBeansConfig {
     }
 
     @Bean
-    public SolicitarRevisionAsistenciaUseCase solicitarRevisionAsistenciaUseCase(
+    public RegistrarAsistenciasSesionUseCase registrarAsistenciasSesionUseCase(
             final AsistenciaRepositoryPort asistenciaRepositoryPort
     ) {
-        return new SolicitarRevisionAsistenciaUseCaseImpl(asistenciaRepositoryPort);
+        return new RegistrarAsistenciasSesionUseCaseImpl(asistenciaRepositoryPort);
+    }
+
+    @Bean
+    public RegistrarAsistenciasSesionInputPort registrarAsistenciasSesionInputPort(
+            final RegistrarAsistenciasSesionUseCase registrarAsistenciasSesionUseCase
+    ) {
+        return new RegistrarAsistenciasSesionInteractor(registrarAsistenciasSesionUseCase);
+    }
+
+    @Bean
+    public RegistrarAsistenciaAutonomaUseCase registrarAsistenciaAutonomaUseCase(
+            final AsistenciaRepositoryPort asistenciaRepositoryPort,
+            final InstitutionalScopePort institutionalScopePort
+    ) {
+        return new RegistrarAsistenciaAutonomaUseCaseImpl(asistenciaRepositoryPort, institutionalScopePort);
+    }
+
+    @Bean
+    public RegistrarAsistenciaAutonomaInputPort registrarAsistenciaAutonomaInputPort(
+            final RegistrarAsistenciaAutonomaUseCase registrarAsistenciaAutonomaUseCase
+    ) {
+        return new RegistrarAsistenciaAutonomaInteractor(registrarAsistenciaAutonomaUseCase);
+    }
+
+    @Bean
+    public SolicitarRevisionAsistenciaUseCase solicitarRevisionAsistenciaUseCase(
+            final AsistenciaRepositoryPort asistenciaRepositoryPort,
+            final InstitutionalScopePort institutionalScopePort
+    ) {
+        return new SolicitarRevisionAsistenciaUseCaseImpl(asistenciaRepositoryPort, institutionalScopePort);
     }
 
     @Bean
@@ -65,5 +100,20 @@ public class AsistenciaBeansConfig {
             final SolicitarRevisionAsistenciaUseCase solicitarRevisionAsistenciaUseCase
     ) {
         return new SolicitarRevisionAsistenciaInteractor(solicitarRevisionAsistenciaUseCase);
+    }
+
+    @Bean
+    public ResolverSolicitudRevisionAsistenciaUseCase resolverSolicitudRevisionAsistenciaUseCase(
+            final AsistenciaRepositoryPort asistenciaRepositoryPort,
+            final InstitutionalScopePort institutionalScopePort
+    ) {
+        return new ResolverSolicitudRevisionAsistenciaUseCaseImpl(asistenciaRepositoryPort, institutionalScopePort);
+    }
+
+    @Bean
+    public ResolverSolicitudRevisionAsistenciaInputPort resolverSolicitudRevisionAsistenciaInputPort(
+            final ResolverSolicitudRevisionAsistenciaUseCase resolverSolicitudRevisionAsistenciaUseCase
+    ) {
+        return new ResolverSolicitudRevisionAsistenciaInteractor(resolverSolicitudRevisionAsistenciaUseCase);
     }
 }

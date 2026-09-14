@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.primaryports.dto;
 
 import java.util.UUID;
+import java.time.LocalDateTime;
 
 /**
  * DTO de salida para una sesion consultada.
@@ -9,10 +10,14 @@ public final class SesionConsultadaDTO {
 
     private UUID sesion;
     private UUID grupo;
-    private String tema;
-    private String descripcion;
-    private Boolean cerrada;
-    private String observacionCierre;
+    private String nombre;
+    private Integer numero;
+    private String codigo;
+    private Integer numeroSemana;
+    private String codigoGrupo;
+    private String nombreGrupo;
+    private LocalDateTime fechaHoraInicio;
+    private LocalDateTime fechaHoraFin;
 
     public SesionConsultadaDTO() {
         super();
@@ -21,17 +26,25 @@ public final class SesionConsultadaDTO {
     public SesionConsultadaDTO(
             final UUID sesion,
             final UUID grupo,
-            final String tema,
-            final String descripcion,
-            final Boolean cerrada,
-            final String observacionCierre
+            final String nombre,
+            final Integer numero,
+            final String codigo,
+            final Integer numeroSemana,
+            final String codigoGrupo,
+            final String nombreGrupo,
+            final LocalDateTime fechaHoraInicio,
+            final LocalDateTime fechaHoraFin
     ) {
         setSesion(sesion);
         setGrupo(grupo);
-        setTema(tema);
-        setDescripcion(descripcion);
-        setCerrada(cerrada);
-        setObservacionCierre(observacionCierre);
+        setNombre(nombre);
+        setNumero(numero);
+        setCodigo(codigo);
+        setNumeroSemana(numeroSemana);
+        setCodigoGrupo(codigoGrupo);
+        setNombreGrupo(nombreGrupo);
+        setFechaHoraInicio(fechaHoraInicio);
+        setFechaHoraFin(fechaHoraFin);
     }
 
     public UUID getSesion() {
@@ -50,35 +63,67 @@ public final class SesionConsultadaDTO {
         this.grupo = grupo;
     }
 
-    public String getTema() {
-        return tema;
+    public String getNombre() {
+        return nombre;
     }
 
-    public void setTema(final String tema) {
-        this.tema = tema;
+    public void setNombre(final String nombre) {
+        this.nombre = nombre;
     }
 
-    public String getDescripcion() {
-        return descripcion;
+    public Integer getNumero() {
+        return numero;
     }
 
-    public void setDescripcion(final String descripcion) {
-        this.descripcion = descripcion;
+    public void setNumero(final Integer numero) {
+        this.numero = numero;
     }
 
-    public Boolean getCerrada() {
-        return cerrada;
+    public String getCodigo() {
+        return codigo;
     }
 
-    public void setCerrada(final Boolean cerrada) {
-        this.cerrada = cerrada;
+    public void setCodigo(final String codigo) {
+        this.codigo = codigo;
     }
 
-    public String getObservacionCierre() {
-        return observacionCierre;
+    public Integer getNumeroSemana() {
+        return numeroSemana;
     }
 
-    public void setObservacionCierre(final String observacionCierre) {
-        this.observacionCierre = observacionCierre;
+    public void setNumeroSemana(final Integer numeroSemana) {
+        this.numeroSemana = numeroSemana;
+    }
+
+    public String getCodigoGrupo() {
+        return codigoGrupo;
+    }
+
+    public void setCodigoGrupo(final String codigoGrupo) {
+        this.codigoGrupo = codigoGrupo;
+    }
+
+    public String getNombreGrupo() {
+        return nombreGrupo;
+    }
+
+    public void setNombreGrupo(final String nombreGrupo) {
+        this.nombreGrupo = nombreGrupo;
+    }
+
+    public LocalDateTime getFechaHoraInicio() {
+        return fechaHoraInicio;
+    }
+
+    public void setFechaHoraInicio(final LocalDateTime fechaHoraInicio) {
+        this.fechaHoraInicio = fechaHoraInicio;
+    }
+
+    public LocalDateTime getFechaHoraFin() {
+        return fechaHoraFin;
+    }
+
+    public void setFechaHoraFin(final LocalDateTime fechaHoraFin) {
+        this.fechaHoraFin = fechaHoraFin;
     }
 }

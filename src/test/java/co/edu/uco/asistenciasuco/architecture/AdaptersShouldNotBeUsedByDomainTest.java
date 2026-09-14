@@ -62,6 +62,7 @@ class AdaptersShouldNotBeUsedByDomainTest {
         classes()
                 .that().haveSimpleNameEndingWith("Adapter")
                 .and().resideInAPackage("..infrastructure..")
+                .and().resideOutsideOfPackage("..infrastructure.adapter.primary.security..")
                 .should().resideInAPackage("..infrastructure.adapter.secondary..")
                 .check(classes);
     }

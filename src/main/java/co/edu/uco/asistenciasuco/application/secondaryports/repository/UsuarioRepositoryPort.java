@@ -16,6 +16,8 @@ public interface UsuarioRepositoryPort {
 
     Optional<UsuarioIdentidadRepositoryProjection> consultarUsuarioPorCorreo(String correo);
 
+    Optional<UsuarioIdentidadRepositoryProjection> consultarUsuarioPorId(UUID idUsuario);
+
     Optional<UsuarioIdentidadRepositoryProjection> consultarUsuarioPorIdentificacion(
             UUID tipoIdentificacionId,
             Integer numeroIdentificacion
