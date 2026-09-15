@@ -17,13 +17,13 @@
 
 [CmdletBinding()]
 param(
-    [string]$EnvFile = (Join-Path $PSScriptRoot '..' '.env')
+    [string]$EnvFile = (Join-Path (Join-Path $PSScriptRoot '..') '.env')
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-Import-Module (Join-Path $PSScriptRoot 'lib' 'KeycloakAdmin.psm1') -Force
+Import-Module (Join-Path (Join-Path $PSScriptRoot 'lib') 'KeycloakAdmin.psm1') -Force
 
 $envMap = Import-KcDotEnv -Path $EnvFile
 
@@ -113,11 +113,11 @@ if ($null -ne $frontendClient) {
         -FailMessage "$frontendClientId no esta configurado como public client con Standard Flow"
 
     $expectedRedirects = @('http://localhost:4200/*', 'http://127.0.0.1:4200/*')
-    $hasRedirects = $expectedRedirects | ForEach-Object { $_ -in @($frontendClient.redirectUris) } | Where-Object { -not $_ }
+    $hasRedirects = @($expectedRedirects | ForEach-Object { $_ -in @($frontendClient.redirectUris) } | Where-Object { -not $_ })
     Test-Check -Condition ($hasRedirects.Count -eq 0) -OkMessage 'Redirect URIs del frontend' -FailMessage "Redirect URIs del frontend incompletos (esperado: $($expectedRedirects -join ', '))"
 
     $expectedOrigins = @('http://localhost:4200', 'http://127.0.0.1:4200')
-    $hasOrigins = $expectedOrigins | ForEach-Object { $_ -in @($frontendClient.webOrigins) } | Where-Object { -not $_ }
+    $hasOrigins = @($expectedOrigins | ForEach-Object { $_ -in @($frontendClient.webOrigins) } | Where-Object { -not $_ })
     Test-Check -Condition ($hasOrigins.Count -eq 0 -and '*' -notin @($frontendClient.webOrigins)) -OkMessage 'Web origins del frontend' -FailMessage "Web origins del frontend incompletos o usan '*' (esperado: $($expectedOrigins -join ', '))"
 
     if ($frontendClient.directAccessGrantsEnabled) {
@@ -166,7 +166,7 @@ if ($null -ne $backendAdminClient) {
             foreach ($required in $requiredRealmManagementRoles) {
                 Test-Check -Condition ($assignedNames -contains $required) -OkMessage "Service account: $required" -FailMessage "Service account de $backendAdminClientId no tiene el role realm-management '$required'"
             }
-            $excessive = @('realm-admin', 'manage-realm', 'manage-clients', 'manage-authorization') | Where-Object { $assignedNames -contains $_ }
+            $excessive = @(@('realm-admin', 'manage-realm', 'manage-clients', 'manage-authorization') | Where-Object { $assignedNames -contains $_ })
             if ($excessive.Count -gt 0) {
                 $warnings.Add("Service account de $backendAdminClientId tiene permisos excesivos: $($excessive -join ', ')") | Out-Null
                 Write-KcResult -Status 'WARN' -Message "Permisos excesivos detectados: $($excessive -join ', ')"
