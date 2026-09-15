@@ -25,13 +25,13 @@
 param(
     [Parameter(Mandatory = $true)][string]$Username,
     [switch]$ShowToken,
-    [string]$EnvFile = (Join-Path $PSScriptRoot '..' '.env')
+    [string]$EnvFile = (Join-Path (Join-Path $PSScriptRoot '..') '.env')
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-Import-Module (Join-Path $PSScriptRoot 'lib' 'KeycloakAdmin.psm1') -Force
+Import-Module (Join-Path (Join-Path $PSScriptRoot 'lib') 'KeycloakAdmin.psm1') -Force
 
 $envMap = Import-KcDotEnv -Path $EnvFile
 
@@ -98,16 +98,40 @@ if ($segments.Length -lt 2) {
 $claims = ConvertFrom-Base64Url $segments[1] | ConvertFrom-Json
 
 $roles = @()
-if ($claims.resource_access -and $claims.resource_access.$apiClientId) {
-    $roles = @($claims.resource_access.$apiClientId.roles)
+$resourceAccessProperty = $claims.PSObject.Properties['resource_access']
+if ($null -ne $resourceAccessProperty -and $null -ne $resourceAccessProperty.Value) {
+    $apiAccessProperty = $resourceAccessProperty.Value.PSObject.Properties[$apiClientId]
+    if ($null -ne $apiAccessProperty -and $null -ne $apiAccessProperty.Value) {
+        $rolesProperty = $apiAccessProperty.Value.PSObject.Properties['roles']
+        if ($null -ne $rolesProperty) {
+            $roles = @($rolesProperty.Value)
+        }
+    }
 }
-$expDate = if ($claims.exp) { [DateTimeOffset]::FromUnixTimeSeconds($claims.exp).LocalDateTime } else { $null }
+
+$idUsuario = $null
+$idUsuarioProperty = $claims.PSObject.Properties['idUsuario']
+if ($null -ne $idUsuarioProperty) {
+    $idUsuario = $idUsuarioProperty.Value
+}
+
+$audience = @()
+$audienceProperty = $claims.PSObject.Properties['aud']
+if ($null -ne $audienceProperty) {
+    $audience = @($audienceProperty.Value)
+}
+
+$expDate = $null
+$expProperty = $claims.PSObject.Properties['exp']
+if ($null -ne $expProperty -and $null -ne $expProperty.Value) {
+    $expDate = [DateTimeOffset]::FromUnixTimeSeconds([long]$expProperty.Value).LocalDateTime
+}
 
 Write-Host ''
 Write-Host "== Claims :: $Username ==" -ForegroundColor Magenta
 Write-Host "issuer                : $($claims.iss)"
-Write-Host "audience              : $($claims.aud -join ', ')"
-Write-Host "idUsuario             : $($claims.idUsuario)"
+Write-Host "audience              : $($audience -join ', ')"
+Write-Host "idUsuario             : $idUsuario"
 Write-Host "resource_access.$apiClientId.roles : $($roles -join ', ')"
 Write-Host "exp                   : $expDate"
 Write-Host ''
