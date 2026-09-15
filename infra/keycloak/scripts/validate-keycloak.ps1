@@ -17,11 +17,15 @@
 
 [CmdletBinding()]
 param(
-    [string]$EnvFile = (Join-Path (Join-Path $PSScriptRoot '..') '.env')
+    [string]$EnvFile
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+if ([string]::IsNullOrWhiteSpace($EnvFile)) {
+    $EnvFile = Join-Path (Join-Path $PSScriptRoot '..') '.env'
+}
 
 Import-Module (Join-Path (Join-Path $PSScriptRoot 'lib') 'KeycloakAdmin.psm1') -Force
 
@@ -58,6 +62,17 @@ function Test-Check {
         Write-KcResult -Status 'ERROR' -Message $FailMessage
         $failures.Add($FailMessage) | Out-Null
     }
+}
+
+function Get-ConfigString {
+    param(
+        $Config,
+        [Parameter(Mandatory = $true)][string]$Name
+    )
+    if ($null -eq $Config) { return $null }
+    $property = $Config.PSObject.Properties[$Name]
+    if ($null -eq $property) { return $null }
+    return [string]$property.Value
 }
 
 Write-Host ''
@@ -135,17 +150,65 @@ $clientScope = Find-KcClientScopeByName -ServerUrl $serverUrl -Realm $realmName 
 Test-Check -Condition ($null -ne $clientScope) -OkMessage "Client scope $clientScopeName" -FailMessage "Client scope $clientScopeName no existe"
 
 if ($null -ne $clientScope) {
-    $mappers = (Invoke-KcAdminApi -Method Get -ServerUrl $serverUrl -Path "/admin/realms/$realmName/client-scopes/$($clientScope.id)/protocol-mappers/models" -Token $adminToken).Body
-    $idUsuarioMapper = @($mappers) | Where-Object { $_.name -eq $userIdAttribute -and $_.protocolMapper -eq 'oidc-usermodel-attribute-mapper' }
-    Test-Check -Condition ($null -ne $idUsuarioMapper) -OkMessage "Mapper $userIdAttribute" -FailMessage "Mapper $userIdAttribute ausente en $clientScopeName"
+    $mappers = @((Invoke-KcAdminApi -Method Get -ServerUrl $serverUrl -Path "/admin/realms/$realmName/client-scopes/$($clientScope.id)/protocol-mappers/models" -Token $adminToken).Body)
+    $claimMappers = @($mappers | Where-Object { (Get-ConfigString -Config $_.config -Name 'claim.name') -eq $userIdAttribute })
+    Test-Check -Condition ($claimMappers.Count -eq 1) -OkMessage "Exactamente un mapper para claim $userIdAttribute en $clientScopeName" -FailMessage "Se esperaba exactamente un mapper para claim $userIdAttribute en $clientScopeName y hay $($claimMappers.Count)"
+
+    if ($claimMappers.Count -eq 1) {
+        $idUsuarioMapper = $claimMappers[0]
+        $mapperIsExact = $idUsuarioMapper.name -eq $userIdAttribute -and
+            $idUsuarioMapper.protocol -eq 'openid-connect' -and
+            $idUsuarioMapper.protocolMapper -eq 'oidc-usermodel-attribute-mapper' -and
+            (Get-ConfigString -Config $idUsuarioMapper.config -Name 'user.attribute') -ceq $userIdAttribute -and
+            (Get-ConfigString -Config $idUsuarioMapper.config -Name 'claim.name') -ceq $userIdAttribute -and
+            (Get-ConfigString -Config $idUsuarioMapper.config -Name 'jsonType.label') -eq 'String' -and
+            (Get-ConfigString -Config $idUsuarioMapper.config -Name 'access.token.claim') -eq 'true' -and
+            (Get-ConfigString -Config $idUsuarioMapper.config -Name 'id.token.claim') -eq 'true' -and
+            (Get-ConfigString -Config $idUsuarioMapper.config -Name 'userinfo.token.claim') -eq 'true' -and
+            (Get-ConfigString -Config $idUsuarioMapper.config -Name 'introspection.token.claim') -eq 'true' -and
+            (Get-ConfigString -Config $idUsuarioMapper.config -Name 'multivalued') -eq 'false'
+        Test-Check -Condition $mapperIsExact -OkMessage "Mapper ${userIdAttribute}: protocolo, atributo, claim y destinos exactos" -FailMessage "Mapper $userIdAttribute no cumple exactamente protocolo/user.attribute/claim.name/String/access/ID/userinfo/introspection/multivalued=false"
+    }
+
+    $scopeMappings = (Invoke-KcAdminApi -Method Get -ServerUrl $serverUrl -Path "/admin/realms/$realmName/client-scopes/$($clientScope.id)/scope-mappings" -Token $adminToken).Body
+    $scopeMappingCount = 0
+    $realmMappingsProperty = $scopeMappings.PSObject.Properties['realmMappings']
+    if ($null -ne $realmMappingsProperty -and $null -ne $realmMappingsProperty.Value) {
+        $scopeMappingCount += @($realmMappingsProperty.Value).Count
+    }
+    $clientMappingsProperty = $scopeMappings.PSObject.Properties['clientMappings']
+    if ($null -ne $clientMappingsProperty -and $null -ne $clientMappingsProperty.Value) {
+        foreach ($mappingProperty in $clientMappingsProperty.Value.PSObject.Properties) {
+            $scopeMappingCount += @($mappingProperty.Value.mappings).Count
+        }
+    }
+    Test-Check -Condition ($scopeMappingCount -eq 0) -OkMessage "$clientScopeName sin Role Scope Mappings (claims disponibles para todo usuario)" -FailMessage "$clientScopeName tiene $scopeMappingCount Role Scope Mapping(s): Keycloak omitira todos sus mappers para usuarios sin esos roles"
 
     $audienceMapper = @($mappers) | Where-Object { $_.protocolMapper -eq 'oidc-audience-mapper' -and $_.config.'included.client.audience' -eq $apiClientId }
-    Test-Check -Condition ($null -ne $audienceMapper) -OkMessage "Mapper audience $apiClientId" -FailMessage "Mapper audience ($apiClientId) ausente en $clientScopeName"
+    Test-Check -Condition (@($audienceMapper).Count -eq 1) -OkMessage "Exactamente un mapper audience $apiClientId" -FailMessage "Se esperaba exactamente un mapper audience ($apiClientId) en $clientScopeName"
 
     if ($null -ne $frontendClient) {
         $defaultScopes = (Invoke-KcAdminApi -Method Get -ServerUrl $serverUrl -Path "/admin/realms/$realmName/clients/$($frontendClient.id)/default-client-scopes" -Token $adminToken).Body
         $isDefault = @($defaultScopes) | Where-Object { $_.name -eq $clientScopeName }
         Test-Check -Condition ($null -ne $isDefault) -OkMessage "$clientScopeName asignado como DEFAULT a $frontendClientId" -FailMessage "$clientScopeName no esta asignado como DEFAULT a $frontendClientId"
+
+        $effectiveSummaries = @((Invoke-KcAdminApi -Method Get -ServerUrl $serverUrl -Path "/admin/realms/$realmName/clients/$($frontendClient.id)/evaluate-scopes/protocol-mappers" -Token $adminToken).Body)
+        $effectiveIdUsuarioMappers = New-Object System.Collections.Generic.List[object]
+        foreach ($summary in $effectiveSummaries) {
+            if ($null -eq $summary) { continue }
+            $mapperPath = $null
+            if ($summary.containerType -eq 'client-scope') {
+                $mapperPath = "/admin/realms/$realmName/client-scopes/$($summary.containerId)/protocol-mappers/models/$($summary.mapperId)"
+            } elseif ($summary.containerType -eq 'client') {
+                $mapperPath = "/admin/realms/$realmName/clients/$($summary.containerId)/protocol-mappers/models/$($summary.mapperId)"
+            }
+            if ($null -eq $mapperPath) { continue }
+            $effectiveMapper = (Invoke-KcAdminApi -Method Get -ServerUrl $serverUrl -Path $mapperPath -Token $adminToken -AllowNotFound).Body
+            if ($null -ne $effectiveMapper -and (Get-ConfigString -Config $effectiveMapper.config -Name 'claim.name') -eq $userIdAttribute) {
+                $effectiveIdUsuarioMappers.Add($effectiveMapper) | Out-Null
+            }
+        }
+        Test-Check -Condition ($effectiveIdUsuarioMappers.Count -eq 1) -OkMessage "Exactamente un mapper efectivo para claim $userIdAttribute en $frontendClientId" -FailMessage "Se esperaba exactamente un mapper efectivo para claim $userIdAttribute en $frontendClientId y hay $($effectiveIdUsuarioMappers.Count)"
     }
 }
 
@@ -179,14 +242,51 @@ if ($null -ne $backendAdminClient) {
 }
 
 $userProfile = (Invoke-KcAdminApi -Method Get -ServerUrl $serverUrl -Path "/admin/realms/$realmName/users/profile" -Token $adminToken -AllowNotFound).Body
+Test-Check -Condition ($null -ne $userProfile) -OkMessage 'User Profile disponible' -FailMessage 'No fue posible leer User Profile'
 if ($null -ne $userProfile) {
-    $hasAttribute = @($userProfile.attributes) | Where-Object { $_.name -eq $userIdAttribute }
-    $unmanagedPermissive = $false
-    $unmanagedProperty = $userProfile.PSObject.Properties['unmanagedAttributePolicy']
-    if ($null -ne $unmanagedProperty) {
-        $unmanagedPermissive = $unmanagedProperty.Value -eq 'ENABLED'
+    $idUsuarioAttributes = @($userProfile.attributes | Where-Object { $_.name -ceq $userIdAttribute })
+    Test-Check -Condition ($idUsuarioAttributes.Count -eq 1) -OkMessage "User Profile declara exactamente un atributo $userIdAttribute" -FailMessage "User Profile debe declarar exactamente un atributo $userIdAttribute con el case exacto"
+    if ($idUsuarioAttributes.Count -eq 1) {
+        $attribute = $idUsuarioAttributes[0]
+        $view = @()
+        $edit = @()
+        $permissionsProperty = $attribute.PSObject.Properties['permissions']
+        if ($null -ne $permissionsProperty -and $null -ne $permissionsProperty.Value) {
+            $viewProperty = $permissionsProperty.Value.PSObject.Properties['view']
+            $editProperty = $permissionsProperty.Value.PSObject.Properties['edit']
+            if ($null -ne $viewProperty) { $view = @($viewProperty.Value) }
+            if ($null -ne $editProperty) { $edit = @($editProperty.Value) }
+        }
+        $permissionsOk = $view.Count -eq 2 -and $view -contains 'user' -and $view -contains 'admin' -and $edit.Count -eq 1 -and $edit -contains 'admin'
+        Test-Check -Condition $permissionsOk -OkMessage "$userIdAttribute permisos view=user,admin; edit=admin" -FailMessage "$userIdAttribute debe ser visible por user/admin y editable solo por admin"
+
+        $multivaluedProperty = $attribute.PSObject.Properties['multivalued']
+        $singleValued = $null -ne $multivaluedProperty -and $multivaluedProperty.Value -eq $false
+        Test-Check -Condition $singleValued -OkMessage "$userIdAttribute single-valued" -FailMessage "$userIdAttribute debe tener multivalued=false"
+
+        $displayNameProperty = $attribute.PSObject.Properties['displayName']
+        $annotationsProperty = $attribute.PSObject.Properties['annotations']
+        $annotationCount = 0
+        if ($null -ne $annotationsProperty -and $null -ne $annotationsProperty.Value) {
+            $annotationCount = @($annotationsProperty.Value.PSObject.Properties).Count
+        }
+        $metadataOk = $null -ne $displayNameProperty -and $displayNameProperty.Value -eq 'ID Usuario' -and
+            $annotationCount -eq 0 -and
+            $null -eq $attribute.PSObject.Properties['required'] -and
+            $null -eq $attribute.PSObject.Properties['selector']
+        Test-Check -Condition $metadataOk -OkMessage "$userIdAttribute metadata canonica (sin required/selector/annotations)" -FailMessage "$userIdAttribute debe usar displayName canonico y no tener required, selector ni annotations"
+
+        $uuidPattern = '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+        $actualPattern = $null
+        $validationsProperty = $attribute.PSObject.Properties['validations']
+        if ($null -ne $validationsProperty -and $null -ne $validationsProperty.Value) {
+            $patternProperty = $validationsProperty.Value.PSObject.Properties['pattern']
+            if ($null -ne $patternProperty -and $null -ne $patternProperty.Value) {
+                $actualPattern = [string]$patternProperty.Value.pattern
+            }
+        }
+        Test-Check -Condition ($actualPattern -eq $uuidPattern) -OkMessage "$userIdAttribute valida formato UUID" -FailMessage "$userIdAttribute no tiene el validador UUID canonico"
     }
-    Test-Check -Condition (($null -ne $hasAttribute) -or $unmanagedPermissive) -OkMessage 'User Profile permite el atributo idUsuario' -FailMessage 'User Profile no declara idUsuario y unmanaged attributes no esta habilitado (Admin API no podra escribirlo)'
 }
 
 Write-Host ''

@@ -22,11 +22,15 @@
 
 [CmdletBinding()]
 param(
-    [string]$EnvFile = (Join-Path (Join-Path $PSScriptRoot '..') '.env')
+    [string]$EnvFile
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+if ([string]::IsNullOrWhiteSpace($EnvFile)) {
+    $EnvFile = Join-Path (Join-Path $PSScriptRoot '..') '.env'
+}
 
 Import-Module (Join-Path (Join-Path $PSScriptRoot 'lib') 'KeycloakAdmin.psm1') -Force
 
@@ -35,6 +39,7 @@ $envMap = Import-KcDotEnv -Path $EnvFile
 $serverUrl   = Get-KcEnvValue -EnvMap $envMap -Key 'KEYCLOAK_SERVER_URL' -Default 'http://127.0.0.1:8081'
 $realmName   = Get-KcEnvValue -EnvMap $envMap -Key 'KC_REALM' -Default 'asistencias-uco'
 $apiClientId = Get-KcEnvValue -EnvMap $envMap -Key 'KC_API_CLIENT_ID' -Default 'asistencias-api'
+$frontendClientId = Get-KcEnvValue -EnvMap $envMap -Key 'KC_FRONTEND_CLIENT_ID' -Default 'asistencias-uco-frontend'
 $passwordMinLength = [int](Get-KcEnvValue -EnvMap $envMap -Key 'KC_PASSWORD_MIN_LENGTH' -Default '12')
 
 $bootstrapAdminUser = Get-KcRequiredEnvValue -EnvMap $envMap -Key 'KC_BOOTSTRAP_ADMIN_USERNAME'
@@ -42,6 +47,7 @@ $bootstrapAdminPass = Get-KcRequiredEnvValue -EnvMap $envMap -Key 'KC_BOOTSTRAP_
 
 $resetExistingPasswords = (Get-KcEnvValue -EnvMap $envMap -Key 'KC_RESET_EXISTING_E2E_PASSWORDS' -Default 'false') -eq 'true'
 $userIdAttribute = 'idUsuario'
+$failures = New-Object System.Collections.Generic.List[string]
 
 $userSpecs = @(
     @{ Key = 'DOCENTE'; Role = 'DOCENTE' },
@@ -129,6 +135,11 @@ if ($null -eq $apiClient) {
     Write-KcResult -Status 'ERROR' -Message "Client $apiClientId no existe. Ejecuta bootstrap-keycloak.ps1 primero."
     exit 1
 }
+$frontendClient = Find-KcClientByClientId -ServerUrl $serverUrl -Realm $realmName -Token $adminToken -ClientId $frontendClientId
+if ($null -eq $frontendClient) {
+    Write-KcResult -Status 'ERROR' -Message "Client $frontendClientId no existe. Ejecuta bootstrap-keycloak.ps1 primero."
+    exit 1
+}
 
 foreach ($spec in $userSpecs) {
     $prefix = "E2E_$($spec.Key)_"
@@ -150,6 +161,7 @@ foreach ($spec in $userSpecs) {
         [void][System.Guid]::Parse($idUsuario)
     } catch {
         Write-KcResult -Status 'ERROR' -Message "${prefix}ID_USUARIO ('$idUsuario') no es un UUID valido."
+        $failures.Add("${username}: idUsuario no es UUID") | Out-Null
         continue
     }
 
@@ -180,10 +192,27 @@ foreach ($spec in $userSpecs) {
 
     Set-E2eUserProfile -UserId $userId -Username $username -Email $email -FirstName $firstName -LastName $lastName -IdUsuario $idUsuario
 
+    $persistedUser = (Invoke-KcAdminApi -Method Get -ServerUrl $serverUrl -Path "/admin/realms/$realmName/users/$userId" -Token $adminToken).Body
+    $persistedValues = @()
+    $persistedAttributesProperty = $persistedUser.PSObject.Properties['attributes']
+    if ($null -ne $persistedAttributesProperty -and $null -ne $persistedAttributesProperty.Value) {
+        $persistedIdProperty = $persistedAttributesProperty.Value.PSObject.Properties[$userIdAttribute]
+        if ($null -ne $persistedIdProperty) { $persistedValues = @($persistedIdProperty.Value) }
+    }
+    if ($persistedValues.Count -ne 1 -or [string]$persistedValues[0] -ne $idUsuario) {
+        $message = "Usuario ${username}: Admin REST no persistio exactamente idUsuario=$idUsuario"
+        Write-KcResult -Status 'ERROR' -Message $message
+        $failures.Add($message) | Out-Null
+        continue
+    }
+    Write-KcResult -Status 'OK' -Message "Usuario ${username}: idUsuario verificado por Admin REST"
+
     if ($isNew -or $resetExistingPasswords) {
         $passwordProblems = @(Test-E2ePasswordPolicy -Password $password -Username $username -Email $email)
         if ($passwordProblems.Count -gt 0) {
-            Write-KcResult -Status 'ERROR' -Message "Usuario ${username}: password E2E no cumple politica local: $($passwordProblems -join ', ')"
+            $message = "Usuario ${username}: password E2E no cumple politica local: $($passwordProblems -join ', ')"
+            Write-KcResult -Status 'ERROR' -Message $message
+            $failures.Add($message) | Out-Null
         } else {
             try {
                 Invoke-KcAdminApi -Method Put -ServerUrl $serverUrl -Path "/admin/realms/$realmName/users/$userId/reset-password" -Token $adminToken -Body @{
@@ -193,7 +222,9 @@ foreach ($spec in $userSpecs) {
                 } | Out-Null
                 Write-KcResult -Status 'UPDATED' -Message "Usuario ${username}: password establecida"
             } catch {
-                Write-KcResult -Status 'ERROR' -Message "Usuario ${username}: Keycloak rechazo la password. $($_.Exception.Message)"
+                $message = "Usuario ${username}: Keycloak rechazo la password. $($_.Exception.Message)"
+                Write-KcResult -Status 'ERROR' -Message $message
+                $failures.Add($message) | Out-Null
             }
         }
     } else {
@@ -205,7 +236,9 @@ foreach ($spec in $userSpecs) {
     if (-not $hasRole) {
         $role = Find-KcClientRole -ServerUrl $serverUrl -Realm $realmName -Token $adminToken -ClientUuid $apiClient.id -RoleName $roleName
         if ($null -eq $role) {
-            Write-KcResult -Status 'ERROR' -Message "Role $roleName no existe en $apiClientId. Ejecuta bootstrap-keycloak.ps1 primero."
+            $message = "Role $roleName no existe en $apiClientId. Ejecuta bootstrap-keycloak.ps1 primero."
+            Write-KcResult -Status 'ERROR' -Message $message
+            $failures.Add($message) | Out-Null
             continue
         }
         Invoke-KcAdminApi -Method Post -ServerUrl $serverUrl -Path "/admin/realms/$realmName/users/$userId/role-mappings/clients/$($apiClient.id)" -Token $adminToken -Body @($role) | Out-Null
@@ -213,7 +246,38 @@ foreach ($spec in $userSpecs) {
     } else {
         Write-KcResult -Status 'OK' -Message "Usuario ${username}: role $roleName"
     }
+
+    $exampleToken = (Invoke-KcAdminApi -Method Get -ServerUrl $serverUrl -Path "/admin/realms/$realmName/clients/$($frontendClient.id)/evaluate-scopes/generate-example-access-token?userId=$userId" -Token $adminToken).Body
+    $exampleIdUsuario = $null
+    $exampleIdProperty = $exampleToken.PSObject.Properties[$userIdAttribute]
+    if ($null -ne $exampleIdProperty) { $exampleIdUsuario = [string]$exampleIdProperty.Value }
+
+    $exampleRoles = @()
+    $resourceAccessProperty = $exampleToken.PSObject.Properties['resource_access']
+    if ($null -ne $resourceAccessProperty -and $null -ne $resourceAccessProperty.Value) {
+        $apiAccessProperty = $resourceAccessProperty.Value.PSObject.Properties[$apiClientId]
+        if ($null -ne $apiAccessProperty -and $null -ne $apiAccessProperty.Value) {
+            $rolesProperty = $apiAccessProperty.Value.PSObject.Properties['roles']
+            if ($null -ne $rolesProperty) { $exampleRoles = @($rolesProperty.Value) }
+        }
+    }
+
+    $exampleAudience = @()
+    $audienceProperty = $exampleToken.PSObject.Properties['aud']
+    if ($null -ne $audienceProperty) { $exampleAudience = @($audienceProperty.Value) }
+
+    if ($exampleIdUsuario -ne $idUsuario -or $exampleRoles -notcontains $roleName -or $exampleAudience -notcontains $apiClientId) {
+        $message = "Usuario ${username}: token de ejemplo no cumple idUsuario/audience/role esperados"
+        Write-KcResult -Status 'ERROR' -Message $message
+        $failures.Add($message) | Out-Null
+    } else {
+        Write-KcResult -Status 'OK' -Message "Usuario ${username}: token verificado (idUsuario, aud=$apiClientId, role=$roleName)"
+    }
 }
 
 Write-Host ''
-Write-Host 'Seed E2E completado.' -ForegroundColor Green
+if ($failures.Count -gt 0) {
+    Write-Host "Seed E2E termino con $($failures.Count) fallo(s)." -ForegroundColor Red
+    exit 1
+}
+Write-Host 'Seed E2E completado y verificado.' -ForegroundColor Green

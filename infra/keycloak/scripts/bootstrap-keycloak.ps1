@@ -22,13 +22,17 @@
 
 [CmdletBinding()]
 param(
-    [string]$EnvFile = (Join-Path $PSScriptRoot '..' '.env')
+    [string]$EnvFile
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-Import-Module (Join-Path $PSScriptRoot 'lib' 'KeycloakAdmin.psm1') -Force
+if ([string]::IsNullOrWhiteSpace($EnvFile)) {
+    $EnvFile = Join-Path (Join-Path $PSScriptRoot '..') '.env'
+}
+
+Import-Module (Join-Path (Join-Path $PSScriptRoot 'lib') 'KeycloakAdmin.psm1') -Force
 
 # ---------------------------------------------------------------------------
 # 1. Cargar configuracion
@@ -154,7 +158,7 @@ function Set-DesiredClientState {
         $desiredValue = $Desired[$key]
         $currentValue = $existing.$key
         $isDifferent =
-            if ($desiredValue -is [array]) { (@($currentValue) -join '|') -ne (@($desiredValue) -join '|') }
+            if ($desiredValue -is [array]) { ((@($currentValue) | Sort-Object) -join '|') -ne ((@($desiredValue) | Sort-Object) -join '|') }
             else { $currentValue -ne $desiredValue }
         if ($isDifferent) {
             $existing | Add-Member -NotePropertyName $key -NotePropertyValue $desiredValue -Force
@@ -303,6 +307,39 @@ if ($null -eq $clientScope) {
     Write-KcResult -Status 'OK' -Message "Client scope $clientScopeName"
 }
 
+# Un client scope con Role Scope Mappings solo esta disponible para usuarios que tengan al
+# menos uno de esos roles. Este scope contiene claims de identidad obligatorios, por lo que no
+# debe estar condicionado por roles. Se eliminan restricciones heredadas/legacy de forma
+# explicita; no se eliminan los roles ni sus asignaciones a usuarios.
+$scopeMappings = (Invoke-KcAdminApi -Method Get -ServerUrl $serverUrl -Path "/admin/realms/$realmName/client-scopes/$clientScopeUuid/scope-mappings" -Token $adminToken).Body
+$removedScopeMappings = 0
+
+$realmMappingsProperty = $scopeMappings.PSObject.Properties['realmMappings']
+if ($null -ne $realmMappingsProperty -and $null -ne $realmMappingsProperty.Value) {
+    $realmMappings = @($realmMappingsProperty.Value)
+    if ($realmMappings.Count -gt 0) {
+        Invoke-KcAdminApi -Method Delete -ServerUrl $serverUrl -Path "/admin/realms/$realmName/client-scopes/$clientScopeUuid/scope-mappings/realm" -Token $adminToken -Body $realmMappings | Out-Null
+        $removedScopeMappings += $realmMappings.Count
+    }
+}
+
+$clientMappingsProperty = $scopeMappings.PSObject.Properties['clientMappings']
+if ($null -ne $clientMappingsProperty -and $null -ne $clientMappingsProperty.Value) {
+    foreach ($clientMappingProperty in $clientMappingsProperty.Value.PSObject.Properties) {
+        $clientMapping = $clientMappingProperty.Value
+        $mappedRoles = @($clientMapping.mappings)
+        if ($mappedRoles.Count -eq 0) { continue }
+        Invoke-KcAdminApi -Method Delete -ServerUrl $serverUrl -Path "/admin/realms/$realmName/client-scopes/$clientScopeUuid/scope-mappings/clients/$($clientMapping.id)" -Token $adminToken -Body $mappedRoles | Out-Null
+        $removedScopeMappings += $mappedRoles.Count
+    }
+}
+
+if ($removedScopeMappings -gt 0) {
+    Write-KcResult -Status 'UPDATED' -Message "Client scope ${clientScopeName}: eliminadas $removedScopeMappings restriccion(es) de Role Scope Mapping"
+} else {
+    Write-KcResult -Status 'OK' -Message "Client scope ${clientScopeName}: disponible para todos los usuarios (sin Role Scope Mappings)"
+}
+
 function Set-DesiredMapper {
     param(
         [Parameter(Mandatory = $true)][string]$Name,
@@ -311,7 +348,7 @@ function Set-DesiredMapper {
     )
 
     $existingMappers = (Invoke-KcAdminApi -Method Get -ServerUrl $serverUrl -Path "/admin/realms/$realmName/client-scopes/$clientScopeUuid/protocol-mappers/models" -Token $adminToken).Body
-    $existing = @($existingMappers) | Where-Object { $_.name -eq $Name }
+    $existing = @(@($existingMappers) | Where-Object { $_.name -eq $Name })
 
     $desiredBody = @{
         name           = $Name
@@ -320,16 +357,17 @@ function Set-DesiredMapper {
         config         = $Config
     }
 
-    if (-not $existing) {
+    if ($existing.Count -eq 0) {
         Invoke-KcAdminApi -Method Post -ServerUrl $serverUrl -Path "/admin/realms/$realmName/client-scopes/$clientScopeUuid/protocol-mappers/models" -Token $adminToken -Body $desiredBody | Out-Null
         Write-KcResult -Status 'CREATED' -Message "Mapper $Name"
         return
     }
 
     $current = $existing[0]
-    $needsUpdate = $false
+    $needsUpdate = $current.protocol -ne 'openid-connect' -or $current.protocolMapper -ne $ProtocolMapper
     foreach ($key in $Config.Keys) {
-        if ($current.config.$key -ne $Config[$key]) { $needsUpdate = $true }
+        $property = $current.config.PSObject.Properties[$key]
+        if ($null -eq $property -or [string]$property.Value -ne [string]$Config[$key]) { $needsUpdate = $true }
     }
     if ($needsUpdate) {
         $desiredBody['id'] = $current.id
@@ -337,6 +375,11 @@ function Set-DesiredMapper {
         Write-KcResult -Status 'UPDATED' -Message "Mapper $Name"
     } else {
         Write-KcResult -Status 'OK' -Message "Mapper $Name"
+    }
+
+    foreach ($duplicate in @($existing | Select-Object -Skip 1)) {
+        Invoke-KcAdminApi -Method Delete -ServerUrl $serverUrl -Path "/admin/realms/$realmName/client-scopes/$clientScopeUuid/protocol-mappers/models/$($duplicate.id)" -Token $adminToken | Out-Null
+        Write-KcResult -Status 'UPDATED' -Message "Mapper duplicado eliminado: $Name"
     }
 }
 
@@ -347,12 +390,38 @@ Set-DesiredMapper -Name $userIdAttribute -ProtocolMapper 'oidc-usermodel-attribu
     'id.token.claim'       = 'true'
     'access.token.claim'   = 'true'
     'userinfo.token.claim' = 'true'
+    'introspection.token.claim' = 'true'
+    'multivalued'          = 'false'
+}
+
+$scopeMappers = @((Invoke-KcAdminApi -Method Get -ServerUrl $serverUrl -Path "/admin/realms/$realmName/client-scopes/$clientScopeUuid/protocol-mappers/models" -Token $adminToken).Body)
+$canonicalIdMapper = @($scopeMappers | Where-Object { $_.name -eq $userIdAttribute }) | Select-Object -First 1
+foreach ($mapper in $scopeMappers) {
+    if ($null -eq $mapper -or $mapper.id -eq $canonicalIdMapper.id) { continue }
+    $claimProperty = $mapper.config.PSObject.Properties['claim.name']
+    if ($null -ne $claimProperty -and [string]$claimProperty.Value -eq $userIdAttribute) {
+        Invoke-KcAdminApi -Method Delete -ServerUrl $serverUrl -Path "/admin/realms/$realmName/client-scopes/$clientScopeUuid/protocol-mappers/models/$($mapper.id)" -Token $adminToken | Out-Null
+        Write-KcResult -Status 'UPDATED' -Message "Mapper conflictivo eliminado: $($mapper.name) (claim $userIdAttribute)"
+    }
 }
 
 Set-DesiredMapper -Name "audience-$apiClientId" -ProtocolMapper 'oidc-audience-mapper' -Config @{
     'included.client.audience' = $apiClientId
     'id.token.claim'            = 'false'
     'access.token.claim'        = 'true'
+    'introspection.token.claim' = 'true'
+    'userinfo.token.claim'      = 'false'
+}
+
+$scopeMappers = @((Invoke-KcAdminApi -Method Get -ServerUrl $serverUrl -Path "/admin/realms/$realmName/client-scopes/$clientScopeUuid/protocol-mappers/models" -Token $adminToken).Body)
+$canonicalAudienceMapper = @($scopeMappers | Where-Object { $_.name -eq "audience-$apiClientId" }) | Select-Object -First 1
+foreach ($mapper in $scopeMappers) {
+    if ($null -eq $mapper -or $mapper.id -eq $canonicalAudienceMapper.id -or $mapper.protocolMapper -ne 'oidc-audience-mapper') { continue }
+    $audienceProperty = $mapper.config.PSObject.Properties['included.client.audience']
+    if ($null -ne $audienceProperty -and [string]$audienceProperty.Value -eq $apiClientId) {
+        Invoke-KcAdminApi -Method Delete -ServerUrl $serverUrl -Path "/admin/realms/$realmName/client-scopes/$clientScopeUuid/protocol-mappers/models/$($mapper.id)" -Token $adminToken | Out-Null
+        Write-KcResult -Status 'UPDATED' -Message "Mapper audience duplicado eliminado: $($mapper.name)"
+    }
 }
 
 # ---------------------------------------------------------------------------
@@ -426,25 +495,83 @@ if ($rolesToAssign.Count -gt 0) {
 }
 
 # ---------------------------------------------------------------------------
-# 14. User Profile: permitir el atributo idUsuario (admin-only)
+# 14. User Profile: idUsuario visible para el usuario y editable solo por admin
 # ---------------------------------------------------------------------------
 
 $userProfile = (Invoke-KcAdminApi -Method Get -ServerUrl $serverUrl -Path "/admin/realms/$realmName/users/profile" -Token $adminToken).Body
 $attributes = @($userProfile.attributes)
-$hasIdUsuarioAttribute = $attributes | Where-Object { $_.name -eq $userIdAttribute }
-
-if (-not $hasIdUsuarioAttribute) {
-    $newAttribute = [pscustomobject]@{
-        name        = $userIdAttribute
-        displayName = $userIdAttribute
-        permissions = [pscustomobject]@{ view = @('admin'); edit = @('admin') }
-        multivalued = $false
+$idUsuarioAttributes = @($attributes | Where-Object { $_.name -eq $userIdAttribute })
+$uuidPattern = '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+$desiredProfileAttribute = [pscustomobject]@{
+    name        = $userIdAttribute
+    displayName = 'ID Usuario'
+    validations = [pscustomobject]@{
+        pattern = [pscustomobject]@{
+            pattern = $uuidPattern
+            'error-message' = 'El idUsuario debe tener formato UUID.'
+        }
     }
-    $userProfile.attributes = @($attributes) + $newAttribute
+    annotations = [pscustomobject]@{}
+    permissions = [pscustomobject]@{
+        view = @('user', 'admin')
+        edit = @('admin')
+    }
+    multivalued = $false
+}
+
+$profileMatches = $idUsuarioAttributes.Count -eq 1
+if ($profileMatches) {
+    $currentAttribute = $idUsuarioAttributes[0]
+    $view = @()
+    $edit = @()
+    $permissionsProperty = $currentAttribute.PSObject.Properties['permissions']
+    if ($null -ne $permissionsProperty -and $null -ne $permissionsProperty.Value) {
+        $viewProperty = $permissionsProperty.Value.PSObject.Properties['view']
+        $editProperty = $permissionsProperty.Value.PSObject.Properties['edit']
+        if ($null -ne $viewProperty) { $view = @($viewProperty.Value) }
+        if ($null -ne $editProperty) { $edit = @($editProperty.Value) }
+    }
+    $pattern = $null
+    $errorMessage = $null
+    if ($null -ne $currentAttribute.PSObject.Properties['validations'] -and $null -ne $currentAttribute.validations) {
+        $patternValidation = $currentAttribute.validations.PSObject.Properties['pattern']
+        if ($null -ne $patternValidation -and $null -ne $patternValidation.Value) {
+            $pattern = [string]$patternValidation.Value.pattern
+            $errorProperty = $patternValidation.Value.PSObject.Properties['error-message']
+            if ($null -ne $errorProperty) { $errorMessage = [string]$errorProperty.Value }
+        }
+    }
+    $displayNameProperty = $currentAttribute.PSObject.Properties['displayName']
+    $multivaluedProperty = $currentAttribute.PSObject.Properties['multivalued']
+    $profileMatches = $null -ne $displayNameProperty -and $displayNameProperty.Value -eq 'ID Usuario' -and
+        $null -ne $multivaluedProperty -and $multivaluedProperty.Value -eq $false -and
+        $view.Count -eq 2 -and $view -contains 'user' -and $view -contains 'admin' -and
+        $edit.Count -eq 1 -and $edit -contains 'admin' -and
+        $pattern -eq $uuidPattern -and
+        $errorMessage -eq 'El idUsuario debe tener formato UUID.' -and
+        $null -eq $currentAttribute.PSObject.Properties['required'] -and
+        $null -eq $currentAttribute.PSObject.Properties['selector']
+}
+
+if (-not $profileMatches) {
+    $reconciledAttributes = New-Object System.Collections.Generic.List[object]
+    $inserted = $false
+    foreach ($attribute in $attributes) {
+        if ($attribute.name -eq $userIdAttribute) {
+            if (-not $inserted) {
+                $reconciledAttributes.Add($desiredProfileAttribute) | Out-Null
+                $inserted = $true
+            }
+            continue
+        }
+        $reconciledAttributes.Add($attribute) | Out-Null
+    }
+    if (-not $inserted) { $reconciledAttributes.Add($desiredProfileAttribute) | Out-Null }
+    $userProfile.attributes = @($reconciledAttributes)
     Invoke-KcAdminApi -Method Put -ServerUrl $serverUrl -Path "/admin/realms/$realmName/users/profile" -Token $adminToken -Body $userProfile | Out-Null
-    Write-KcResult -Status 'CREATED' -Message "User Profile: atributo $userIdAttribute declarado (admin-only, no autoasignable)"
+    Write-KcResult -Status 'UPDATED' -Message "User Profile: $userIdAttribute reconciliado (view=user,admin; edit=admin; UUID; single-valued)"
 } else {
-    Write-KcResult -Status 'OK' -Message "User Profile: atributo $userIdAttribute"
+    Write-KcResult -Status 'OK' -Message "User Profile: $userIdAttribute (view=user,admin; edit=admin; UUID; single-valued)"
 }
 
 # ---------------------------------------------------------------------------

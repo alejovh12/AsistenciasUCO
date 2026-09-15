@@ -18,11 +18,15 @@
 
 [CmdletBinding()]
 param(
-    [string]$EnvFile = (Join-Path (Join-Path $PSScriptRoot '..') '.env')
+    [string]$EnvFile
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+if ([string]::IsNullOrWhiteSpace($EnvFile)) {
+    $EnvFile = Join-Path (Join-Path $PSScriptRoot '..') '.env'
+}
 
 Import-Module (Join-Path (Join-Path $PSScriptRoot 'lib') 'KeycloakAdmin.psm1') -Force
 
@@ -58,7 +62,8 @@ function Get-E2eAccessToken {
         'grant_type=password',
         "client_id=$(ConvertTo-KcUrlEncoded $frontendClientId)",
         "username=$(ConvertTo-KcUrlEncoded $Username)",
-        "password=$(ConvertTo-KcUrlEncoded $Password)"
+        "password=$(ConvertTo-KcUrlEncoded $Password)",
+        "scope=$(ConvertTo-KcUrlEncoded 'openid')"
     )
     $body = [string]::Join('&', $bodyPairs)
     $response = Invoke-RestMethod -Method Post -Uri $tokenUrl -ContentType 'application/x-www-form-urlencoded' -Body $body

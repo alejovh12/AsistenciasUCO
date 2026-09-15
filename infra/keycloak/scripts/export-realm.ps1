@@ -17,14 +17,21 @@
 
 [CmdletBinding()]
 param(
-    [string]$EnvFile = (Join-Path $PSScriptRoot '..' '.env'),
-    [string]$OutputDirectory = (Join-Path $PSScriptRoot '..' 'generated')
+    [string]$EnvFile,
+    [string]$OutputDirectory
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-Import-Module (Join-Path $PSScriptRoot 'lib' 'KeycloakAdmin.psm1') -Force
+if ([string]::IsNullOrWhiteSpace($EnvFile)) {
+    $EnvFile = Join-Path (Join-Path $PSScriptRoot '..') '.env'
+}
+if ([string]::IsNullOrWhiteSpace($OutputDirectory)) {
+    $OutputDirectory = Join-Path (Join-Path $PSScriptRoot '..') 'generated'
+}
+
+Import-Module (Join-Path (Join-Path $PSScriptRoot 'lib') 'KeycloakAdmin.psm1') -Force
 
 $envMap = Import-KcDotEnv -Path $EnvFile
 

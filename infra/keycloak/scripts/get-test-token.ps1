@@ -25,11 +25,15 @@
 param(
     [Parameter(Mandatory = $true)][string]$Username,
     [switch]$ShowToken,
-    [string]$EnvFile = (Join-Path (Join-Path $PSScriptRoot '..') '.env')
+    [string]$EnvFile
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+if ([string]::IsNullOrWhiteSpace($EnvFile)) {
+    $EnvFile = Join-Path (Join-Path $PSScriptRoot '..') '.env'
+}
 
 Import-Module (Join-Path (Join-Path $PSScriptRoot 'lib') 'KeycloakAdmin.psm1') -Force
 

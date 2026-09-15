@@ -61,6 +61,17 @@ mappers:
 - **`audience-asistencias-api`**: `oidc-audience-mapper` oficial de Keycloak que agrega
   `asistencias-api` al claim `aud` del access token.
 
+El scope debe tener **cero Role Scope Mappings**. En Keycloak, un client scope que contiene
+Role Scope Mappings solo se aplica si el usuario posee al menos uno de esos roles; cuando no hay
+interseccion, Keycloak omite todos sus protocol mappers aunque el scope este asignado como
+DEFAULT. El bootstrap elimina restricciones heredadas de roles legacy (`AD/DE/CD/DO/ES`) sin
+eliminar los roles ni sus asignaciones a usuarios.
+
+`idUsuario` es un atributo gestionado de User Profile, de valor unico y formato UUID. Puede ser
+visto por `user` y `admin`, pero solo `admin` puede editarlo. Esto permite que el mapper lo lea
+durante la emision del token sin permitir que un usuario se autoasigne otra identidad
+institucional.
+
 ## 4. Roles institucionales
 
 Client roles de `asistencias-api` — **nunca realm roles**:
@@ -254,6 +265,10 @@ particular, debe ser un `dbo.Usuario.id` **real** en SQL Server si se quiere pro
 contextual (por ejemplo, asignaciones academicas del docente). No resetea la password de un
 usuario ya existente salvo `KC_RESET_EXISTING_E2E_PASSWORDS=true`.
 
+Despues de cada alta/reconciliacion, el seed vuelve a leer el usuario por Admin REST y falla si
+`idUsuario` no quedo persistido exactamente. Tambien genera un token de ejemplo (sin imprimir
+JWTs ni secretos) y verifica `idUsuario`, el audience `asistencias-api` y el rol institucional.
+
 ## 15. Obtener un token de prueba
 
 ```powershell
@@ -273,7 +288,26 @@ imprime. Ningun token se versiona.
 
 Inspeccion de solo lectura: realm, clients, client scope, roles canonicos, mappers, default
 scope, redirects/origins del frontend, permisos minimos del service account, y objetos legacy
-encontrados. Termina con exit code distinto de cero si falta algo esencial.
+encontrados. Verifica ademas que `asistencias-api-scope` no tenga Role Scope Mappings, que haya
+exactamente un mapper efectivo de `idUsuario` con toda su configuracion canonica y que User
+Profile mantenga `view=user,admin`, `edit=admin`, UUID y `multivalued=false`. Termina con exit
+code distinto de cero si falta algo esencial.
+
+Prueba rapida completa:
+
+```powershell
+.\scripts\bootstrap-keycloak.ps1
+.\scripts\validate-keycloak.ps1
+.\scripts\seed-e2e-users.ps1
+.\scripts\get-test-token.ps1 -Username admin.prueba
+.\scripts\get-test-token.ps1 -Username docente.prueba
+```
+
+Si un atributo aparece por Admin REST pero falta en el JWT, ejecutar
+`.\scripts\diagnose-idusuario.ps1`. El diagnostico compara subject, atributo REST, persistencia
+PostgreSQL cuando Docker esta disponible, claim y roles sin imprimir passwords, secrets ni
+tokens crudos. Revisar primero que el validator reporte cero Role Scope Mappings en
+`asistencias-api-scope`; asignarlo como DEFAULT no evita por si solo esa restriccion.
 
 ## 17. Exportar el realm para diagnostico
 
@@ -306,6 +340,7 @@ infra/keycloak/
     ├── seed-e2e-users.ps1
     ├── get-test-token.ps1
     ├── validate-keycloak.ps1
+    ├── diagnose-idusuario.ps1       # troubleshooting read-only
     └── export-realm.ps1
 ```
 
