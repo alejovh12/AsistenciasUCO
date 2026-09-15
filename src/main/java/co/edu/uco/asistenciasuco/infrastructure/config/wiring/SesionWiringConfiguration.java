@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.infrastructure.config.features;
+package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
 import co.edu.uco.asistenciasuco.application.features.sesion.actualizarsesion.primaryports.ActualizarSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.sesion.actualizarsesion.primaryports.interactor.ActualizarSesionInteractor;
@@ -26,7 +26,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration(proxyBeanMethods = false)
-public class SesionBeansConfig {
+public class SesionWiringConfiguration {
 
     @Bean
     public CrearSesionUseCase crearSesionUseCase(

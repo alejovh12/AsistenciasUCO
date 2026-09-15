@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.infrastructure.config.features;
+package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
 import co.edu.uco.asistenciasuco.application.features.docente.asignardocenteagrupo.primaryports.interactor.AsignarDocenteAGrupoInteractor;
 import co.edu.uco.asistenciasuco.application.features.docente.asignardocenteagrupo.usecase.impl.AsignarDocenteAGrupoUseCaseImpl;
@@ -16,9 +16,9 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.Mockito.mock;
 
-class DocenteBeansConfigTest {
+class DocenteWiringConfigurationTest {
 
-    private final DocenteBeansConfig config = new DocenteBeansConfig();
+    private final DocenteWiringConfiguration config = new DocenteWiringConfiguration();
     private final DocenteRepositoryPort docenteRepositoryPort = mock(DocenteRepositoryPort.class);
 
     @Test

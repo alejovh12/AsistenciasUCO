@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.infrastructure.config.features;
+package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasignaturas.primaryports.interactor.ConsultarAsignaturasInteractor;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasignaturas.usecase.impl.ConsultarAsignaturasUseCaseImpl;
@@ -26,9 +26,9 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.Mockito.mock;
 
-class CoordinadorFeatureConfigurationTest {
+class CoordinadorWiringConfigurationTest {
 
-    private final CoordinadorFeatureConfiguration config = new CoordinadorFeatureConfiguration();
+    private final CoordinadorWiringConfiguration config = new CoordinadorWiringConfiguration();
     private final InstitutionalScopePort scopePort = mock(InstitutionalScopePort.class);
 
     @Test

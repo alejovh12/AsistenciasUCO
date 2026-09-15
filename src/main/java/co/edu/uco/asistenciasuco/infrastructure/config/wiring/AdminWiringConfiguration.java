@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.infrastructure.config.features;
+package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
 import co.edu.uco.asistenciasuco.application.features.admin.consultarareas.primaryports.ConsultarAreasInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarareas.primaryports.interactor.ConsultarAreasInteractor;
@@ -43,7 +43,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration(proxyBeanMethods = false)
-public class AdminFeatureConfiguration {
+public class AdminWiringConfiguration {
 
     @Bean ConsultarDecanosUseCase consultarDecanosUseCase(final DecanoQueryPort port) { return new ConsultarDecanosUseCaseImpl(port); }
     @Bean ConsultarDecanosInputPort consultarDecanosInputPort(final ConsultarDecanosUseCase useCase) { return new ConsultarDecanosInteractor(useCase); }

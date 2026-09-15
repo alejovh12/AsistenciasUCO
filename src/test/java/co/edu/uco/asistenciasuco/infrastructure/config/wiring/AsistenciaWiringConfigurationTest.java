@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.infrastructure.config.features;
+package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.primaryports.interactor.ConsultarAsistenciasPorGrupoInteractor;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.impl.ConsultarAsistenciasPorGrupoUseCaseImpl;
@@ -20,9 +20,9 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.Mockito.mock;
 
-class AsistenciaBeansConfigTest {
+class AsistenciaWiringConfigurationTest {
 
-    private final AsistenciaBeansConfig config = new AsistenciaBeansConfig();
+    private final AsistenciaWiringConfiguration config = new AsistenciaWiringConfiguration();
     private final AsistenciaRepositoryPort asistenciaRepositoryPort = mock(AsistenciaRepositoryPort.class);
     private final InstitutionalScopePort scopePort = mock(InstitutionalScopePort.class);
     private final RealtimePublisherPort realtimePublisherPort = mock(RealtimePublisherPort.class);

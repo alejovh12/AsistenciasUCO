@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.infrastructure.config.features;
+package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
 import co.edu.uco.asistenciasuco.application.features.sesion.actualizarsesion.primaryports.interactor.ActualizarSesionInteractor;
 import co.edu.uco.asistenciasuco.application.features.sesion.actualizarsesion.usecase.impl.ActualizarSesionUseCaseImpl;
@@ -17,9 +17,9 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.Mockito.mock;
 
-class SesionBeansConfigTest {
+class SesionWiringConfigurationTest {
 
-    private final SesionBeansConfig config = new SesionBeansConfig();
+    private final SesionWiringConfiguration config = new SesionWiringConfiguration();
     private final SesionRepositoryPort sesionRepositoryPort = mock(SesionRepositoryPort.class);
     private final InstitutionalScopePort scopePort = mock(InstitutionalScopePort.class);
 

@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.infrastructure.config.features;
+package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.primaryports.ConsultarCoordinadoresInputPort;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.primaryports.interactor.ConsultarCoordinadoresInteractor;
@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration(proxyBeanMethods = false)
-public class DecanoFeatureConfiguration {
+public class DecanoWiringConfiguration {
 
     @Bean ConsultarCoordinadoresUseCase consultarCoordinadoresUseCase(final InstitutionalScopePort scopePort, final CoordinadorQueryPort queryPort) { return new ConsultarCoordinadoresUseCaseImpl(scopePort, queryPort); }
     @Bean ConsultarCoordinadoresInputPort consultarCoordinadoresInputPort(final ConsultarCoordinadoresUseCase useCase) { return new ConsultarCoordinadoresInteractor(useCase); }

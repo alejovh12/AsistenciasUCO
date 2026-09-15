@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.infrastructure.config.features;
+package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
 import co.edu.uco.asistenciasuco.application.features.admin.consultarareas.primaryports.interactor.ConsultarAreasInteractor;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarareas.usecase.impl.ConsultarAreasUseCaseImpl;
@@ -30,9 +30,9 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.Mockito.mock;
 
-class AdminFeatureConfigurationTest {
+class AdminWiringConfigurationTest {
 
-    private final AdminFeatureConfiguration config = new AdminFeatureConfiguration();
+    private final AdminWiringConfiguration config = new AdminWiringConfiguration();
 
     @Test
     void todos_los_beans_se_construyen_con_el_adapter_esperado() {

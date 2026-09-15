@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.infrastructure.config.features;
+package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
 import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.primaryports.GenerarReporteAsistenciaInputPort;
 import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.primaryports.interactor.GenerarReporteAsistenciaInteractor;
@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration(proxyBeanMethods = false)
-public class ReporteFeatureConfiguration {
+public class ReporteWiringConfiguration {
 
     @Bean GenerarReporteAsistenciaUseCase generarReporteAsistenciaUseCase(final ReporteAsistenciaQueryPort queryPort) { return new GenerarReporteAsistenciaUseCaseImpl(queryPort); }
     @Bean GenerarReporteAsistenciaInputPort generarReporteAsistenciaInputPort(final GenerarReporteAsistenciaUseCase useCase) { return new GenerarReporteAsistenciaInteractor(useCase); }

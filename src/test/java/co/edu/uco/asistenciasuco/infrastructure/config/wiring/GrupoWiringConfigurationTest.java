@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.infrastructure.config.features;
+package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.primaryports.interactor.ActualizarGrupoInteractor;
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.usecase.impl.ActualizarGrupoUseCaseImpl;
@@ -19,9 +19,9 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.Mockito.mock;
 
-class GrupoBeansConfigTest {
+class GrupoWiringConfigurationTest {
 
-    private final GrupoBeansConfig config = new GrupoBeansConfig();
+    private final GrupoWiringConfiguration config = new GrupoWiringConfiguration();
     private final GrupoRepositoryPort grupoRepositoryPort = mock(GrupoRepositoryPort.class);
 
     @Test

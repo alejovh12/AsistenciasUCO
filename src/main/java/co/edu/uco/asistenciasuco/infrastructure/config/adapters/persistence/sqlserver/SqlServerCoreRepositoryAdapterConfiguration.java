@@ -26,7 +26,7 @@ import org.springframework.transaction.support.TransactionOperations;
  * Composition Root: selecciona SQL Server como tecnología de persistencia para los
  * repositorios "core" (Grupo, Usuario, TipoIdentificacion, Estudiante, Docente, Sesion, Asistencia).
  *
- * <p>Las Feature Configs (p.ej. {@code GrupoBeansConfig}) solo dependen de los
+ * <p>Las Feature Configs (p.ej. {@code GrupoWiringConfiguration}) solo dependen de los
  * {@code *RepositoryPort} declarados aquí; no conocen SQL Server.</p>
  */
 @Configuration(proxyBeanMethods = false)

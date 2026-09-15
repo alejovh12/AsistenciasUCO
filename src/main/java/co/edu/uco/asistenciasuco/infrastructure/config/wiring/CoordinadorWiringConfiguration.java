@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.infrastructure.config.features;
+package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasignaturas.primaryports.ConsultarAsignaturasInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasignaturas.primaryports.interactor.ConsultarAsignaturasInteractor;
@@ -39,7 +39,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration(proxyBeanMethods = false)
-public class CoordinadorFeatureConfiguration {
+public class CoordinadorWiringConfiguration {
 
     @Bean ConsultarPlanesEstudioUseCase consultarPlanesEstudioUseCase(final InstitutionalScopePort scopePort, final PlanEstudioQueryPort queryPort) { return new ConsultarPlanesEstudioUseCaseImpl(scopePort, queryPort); }
     @Bean ConsultarPlanesEstudioInputPort consultarPlanesEstudioInputPort(final ConsultarPlanesEstudioUseCase useCase) { return new ConsultarPlanesEstudioInteractor(useCase); }
