@@ -2,7 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.asistencia.registrarasist
 
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.asistencia.exception.AsistenciaErrorCode;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 
 import java.util.List;
 import java.util.UUID;

@@ -8,7 +8,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRe
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.CrearUsuarioRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 import java.util.Objects;
 
 /**

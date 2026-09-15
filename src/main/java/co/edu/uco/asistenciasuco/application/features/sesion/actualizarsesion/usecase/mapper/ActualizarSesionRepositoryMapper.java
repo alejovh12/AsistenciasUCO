@@ -3,7 +3,7 @@ package co.edu.uco.asistenciasuco.application.features.sesion.actualizarsesion.u
 import co.edu.uco.asistenciasuco.application.features.sesion.actualizarsesion.usecase.domain.ActualizarSesionDomain;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ActualizarSesionRepositoryDTO;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 
 public final class ActualizarSesionRepositoryMapper {
 

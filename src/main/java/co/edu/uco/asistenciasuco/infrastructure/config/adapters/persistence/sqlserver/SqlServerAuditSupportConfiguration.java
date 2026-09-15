@@ -1,6 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.adapters.persistence.sqlserver;
 
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.audit.AuditEventJdbcRepository;
+import co.edu.uco.asistenciasuco.infrastructure.audit.adapter.sqlserver.AuditEventJdbcRepository;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;

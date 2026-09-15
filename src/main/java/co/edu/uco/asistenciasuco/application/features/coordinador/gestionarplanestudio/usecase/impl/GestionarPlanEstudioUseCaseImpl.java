@@ -6,7 +6,7 @@ import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarplane
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.PlanEstudioCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 
 import java.util.Objects;
 import java.util.UUID;

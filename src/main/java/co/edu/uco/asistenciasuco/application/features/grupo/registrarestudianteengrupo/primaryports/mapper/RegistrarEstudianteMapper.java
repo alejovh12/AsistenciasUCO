@@ -5,7 +5,7 @@ import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudiantee
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.domain.RegistrarEstudianteDomain;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.entity.RegistrarEstudianteResultadoEntity;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 
 /**
  * Mapper para convertir el DTO de entrada al dominio del caso de uso.

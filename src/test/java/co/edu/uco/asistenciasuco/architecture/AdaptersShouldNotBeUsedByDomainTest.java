@@ -34,7 +34,9 @@ class AdaptersShouldNotBeUsedByDomainTest {
 
         classes()
                 .that().areAnnotatedWith(RestController.class)
-                .should().resideInAPackage("..infrastructure.adapter.primary.controller..")
+                .should().resideInAnyPackage(
+                        "..infrastructure.adapter.primary.controller..",
+                        "..infrastructure.adapter.primary.realtime.sse.controller..")
                 .check(classes);
     }
 

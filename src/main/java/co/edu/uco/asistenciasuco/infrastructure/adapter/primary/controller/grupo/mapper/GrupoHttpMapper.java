@@ -4,7 +4,7 @@ import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailab
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.primaryports.dto.ActualizarGrupoDTO;
 import co.edu.uco.asistenciasuco.application.features.grupo.creargrupo.primaryports.dto.CrearGrupoDTO;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo.request.ActualizarGrupoRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo.request.CrearGrupoRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.HttpTemporalParser;

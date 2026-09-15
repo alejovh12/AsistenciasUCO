@@ -16,7 +16,7 @@ import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryp
 import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.primaryports.EjecutarCierreMasivoInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.primaryports.dto.EjecutarCierreMasivoDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.AuthenticatedUserProvider;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 import org.mockito.ArgumentCaptor;
@@ -49,7 +49,7 @@ class AdminPortalControllerTest {
     private final ConsultarInstitucionesInputPort consultarInstituciones = mock(ConsultarInstitucionesInputPort.class);
     private final ConsultarFacultadesInputPort consultarFacultades = mock(ConsultarFacultadesInputPort.class);
     private final ConsultarAreasInputPort consultarAreas = mock(ConsultarAreasInputPort.class);
-    private final AuthenticatedUserProvider identity = () -> ACTOR;
+    private final AuthenticatedUserResolver identity = () -> ACTOR;
     private final AdminPortalController controller = new AdminPortalController(consultarDecanos, crearDecano,
             consultarParametros, ejecutarCierreMasivo, consultarInstituciones, consultarFacultades, consultarAreas, identity);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)

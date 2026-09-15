@@ -4,7 +4,7 @@ import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasign
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.usecase.domain.AsignaturaDomain;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsignaturaCommandPort;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 import java.util.Objects;
 import java.util.UUID;
 

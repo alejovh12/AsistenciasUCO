@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.adapters.identity.keycloak;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.identity.KeycloakIdentityProviderAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.identity.keycloak.KeycloakIdentityProviderAdapter;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 

@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation;
 
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

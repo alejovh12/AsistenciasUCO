@@ -11,7 +11,7 @@ import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorDefinition;
 import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorKind;
 import co.edu.uco.asistenciasuco.crosscutting.exception.TechnicalException;
 import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.CommonErrorCode;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 import org.springframework.http.HttpStatus;
 
 final class ApiErrorCatalog {

@@ -18,7 +18,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coord
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador.request.GuardarPlanEstudioRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.AuthenticatedUserProvider;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,7 +43,7 @@ public final class CoordinadorPortalController {
     private final ConsultarEstudiantesProgramaInputPort consultarEstudiantesProgramaInputPort;
     private final GestionarPlanEstudioInputPort gestionarPlanEstudioInputPort;
     private final GestionarAsignaturaInputPort gestionarAsignaturaInputPort;
-    private final AuthenticatedUserProvider authenticatedUserProvider;
+    private final AuthenticatedUserResolver authenticatedUserResolver;
 
     public CoordinadorPortalController(
             final ConsultarPlanesEstudioInputPort consultarPlanesEstudioInputPort,
@@ -53,7 +53,7 @@ public final class CoordinadorPortalController {
             final ConsultarEstudiantesProgramaInputPort consultarEstudiantesProgramaInputPort,
             final GestionarPlanEstudioInputPort gestionarPlanEstudioInputPort,
             final GestionarAsignaturaInputPort gestionarAsignaturaInputPort,
-            final AuthenticatedUserProvider authenticatedUserProvider
+            final AuthenticatedUserResolver authenticatedUserResolver
     ) {
         this.consultarPlanesEstudioInputPort = consultarPlanesEstudioInputPort;
         this.consultarAsignaturasPlanInputPort = consultarAsignaturasPlanInputPort;
@@ -62,7 +62,7 @@ public final class CoordinadorPortalController {
         this.consultarEstudiantesProgramaInputPort = consultarEstudiantesProgramaInputPort;
         this.gestionarPlanEstudioInputPort = gestionarPlanEstudioInputPort;
         this.gestionarAsignaturaInputPort = gestionarAsignaturaInputPort;
-        this.authenticatedUserProvider = authenticatedUserProvider;
+        this.authenticatedUserResolver = authenticatedUserResolver;
     }
 
     @GetMapping("/docentes")
@@ -74,7 +74,7 @@ public final class CoordinadorPortalController {
 
     @GetMapping("/planes-estudio")
     public ResponseEntity<ApiListResponse<PlanEstudioDTO>> consultarPlanesEstudio() {
-        final var data = consultarPlanesEstudioInputPort.execute(authenticatedUserProvider.requireAuthenticatedUserId());
+        final var data = consultarPlanesEstudioInputPort.execute(authenticatedUserResolver.requireAuthenticatedUserId());
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
     }
     @PostMapping("/planes-estudio")
@@ -83,7 +83,7 @@ public final class CoordinadorPortalController {
                 null,
                 request == null ? null : request.getCodigo(),
                 request == null ? null : request.getNombre(),
-                authenticatedUserProvider.requireAuthenticatedUserId()
+                authenticatedUserResolver.requireAuthenticatedUserId()
         ));
         return ResponseEntity.ok(new ApiDataResponse<>(true, null));
     }
@@ -96,7 +96,7 @@ public final class CoordinadorPortalController {
                 id,
                 request == null ? null : request.getCodigo(),
                 request == null ? null : request.getNombre(),
-                authenticatedUserProvider.requireAuthenticatedUserId()
+                authenticatedUserResolver.requireAuthenticatedUserId()
         ));
         return ResponseEntity.ok(new ApiDataResponse<>(true, null));
     }
@@ -109,7 +109,7 @@ public final class CoordinadorPortalController {
 
     @GetMapping("/planes-estudio/{id}/asignaturas")
     public ResponseEntity<ApiListResponse<AsignaturaDTO>> consultarAsignaturasPlan(@PathVariable final UUID id) {
-        final var data = consultarAsignaturasPlanInputPort.execute(authenticatedUserProvider.requireAuthenticatedUserId(), id);
+        final var data = consultarAsignaturasPlanInputPort.execute(authenticatedUserResolver.requireAuthenticatedUserId(), id);
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
     }
     @PostMapping("/planes-estudio/{id}/asignaturas")
@@ -134,7 +134,7 @@ public final class CoordinadorPortalController {
 
     @GetMapping("/asignaturas")
     public ResponseEntity<ApiListResponse<AsignaturaDTO>> listarTodasAsignaturas() {
-        final var data = consultarAsignaturasInputPort.execute(authenticatedUserProvider.requireAuthenticatedUserId());
+        final var data = consultarAsignaturasInputPort.execute(authenticatedUserResolver.requireAuthenticatedUserId());
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
     }
     @PatchMapping("/asignaturas/{id}/estado")
@@ -157,7 +157,7 @@ public final class CoordinadorPortalController {
 
     @GetMapping("/estudiantes")
     public ResponseEntity<ApiListResponse<EstudianteProgramaDTO>> consultarEstudiantesPrograma() {
-        final var data = consultarEstudiantesProgramaInputPort.execute(authenticatedUserProvider.requireAuthenticatedUserId());
+        final var data = consultarEstudiantesProgramaInputPort.execute(authenticatedUserResolver.requireAuthenticatedUserId());
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
     }
     @GetMapping("/solicitudes-matricula")

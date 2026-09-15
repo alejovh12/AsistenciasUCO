@@ -10,7 +10,7 @@ import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryp
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.CrearDecanoUseCase;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.domain.CrearDecanoDomain;
 import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.primaryports.EjecutarCierreMasivoInputPort;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.AuthenticatedUserProvider;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import tools.jackson.databind.json.JsonMapper;
@@ -33,7 +33,7 @@ class AdminPortalCrearDecanoContractTest {
             mock(ConsultarDecanosInputPort.class), new CrearDecanoInteractor(useCase),
             mock(ConsultarParametrosInputPort.class), mock(EjecutarCierreMasivoInputPort.class),
             mock(ConsultarInstitucionesInputPort.class), mock(ConsultarFacultadesInputPort.class),
-            mock(ConsultarAreasInputPort.class), mock(AuthenticatedUserProvider.class)
+            mock(ConsultarAreasInputPort.class), mock(AuthenticatedUserResolver.class)
     );
 
     @Test

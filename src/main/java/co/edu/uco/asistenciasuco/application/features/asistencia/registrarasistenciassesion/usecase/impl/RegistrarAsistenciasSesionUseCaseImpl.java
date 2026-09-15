@@ -5,7 +5,7 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasiste
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.usecase.mapper.RegistrarAsistenciasSesionRepositoryMapper;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 
 import java.util.Objects;
 

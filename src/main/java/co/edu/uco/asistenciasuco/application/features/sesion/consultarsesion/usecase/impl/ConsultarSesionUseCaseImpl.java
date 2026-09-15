@@ -6,7 +6,7 @@ import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.use
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.usecase.mapper.ConsultarSesionRepositoryMapper;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 import java.util.Objects;
 
 /**

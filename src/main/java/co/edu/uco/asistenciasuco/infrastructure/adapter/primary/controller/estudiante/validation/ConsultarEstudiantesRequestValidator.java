@@ -1,6 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.estudiante.validation;
 
-import co.edu.uco.asistenciasuco.crosscutting.helpers.validation.ValidationHelper;
+import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationHelper;
 import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationErrorType;
 import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationResult;
 import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationResultBuilder;

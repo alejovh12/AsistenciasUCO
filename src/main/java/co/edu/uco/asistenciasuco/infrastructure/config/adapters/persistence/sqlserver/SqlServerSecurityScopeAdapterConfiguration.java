@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.adapters.persistence.sqlserver;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.security.InstitutionalScopeSqlServerAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.authorization.InstitutionalScopeSqlServerAdapter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

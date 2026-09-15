@@ -95,7 +95,9 @@ class CleanArchitectureRulesTest {
     void adapters_primary_en_infrastructure_adapter_primary() {
         classes()
                 .that().areAnnotatedWith(RestController.class)
-                .should().resideInAPackage("..infrastructure.adapter.primary.controller..")
+                .should().resideInAnyPackage(
+                        "..infrastructure.adapter.primary.controller..",
+                        "..infrastructure.adapter.primary.realtime.sse.controller..")
                 .check(importedClasses());
     }
 
@@ -151,7 +153,7 @@ class CleanArchitectureRulesTest {
     @Test
     void util_no_depende_de_infrastructure() {
         noClasses()
-                .that().resideInAPackage("..crosscutting.helpers..")
+                .that().resideInAnyPackage("..crosscutting.util..", "..crosscutting.validation..")
                 .should().dependOnClassesThat().resideInAPackage("..infrastructure..")
                 .check(importedClasses());
     }

@@ -11,7 +11,7 @@ import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioE
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.exception.TipoIdentificacionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 
 import java.util.UUID;
 

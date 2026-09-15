@@ -11,7 +11,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asist
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.request.RegistrarAsistenciaQrRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.request.RegistrarAsistenciasSesionRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.AuthenticatedUserProvider;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.test.web.servlet.MockMvc;
@@ -39,7 +39,7 @@ class AsistenciaControllerContractTest {
     private final RegistrarAsistenciaInputPort register = mock(RegistrarAsistenciaInputPort.class);
     private final RegistrarAsistenciasSesionInputPort registerBatch = mock(RegistrarAsistenciasSesionInputPort.class);
     private final SolicitarRevisionAsistenciaInputPort review = mock(SolicitarRevisionAsistenciaInputPort.class);
-    private final AuthenticatedUserProvider identity = () -> ACTOR;
+    private final AuthenticatedUserResolver identity = () -> ACTOR;
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(new AsistenciaController(
             register, registerBatch, review, identity)).setControllerAdvice(new GlobalExceptionHandler()).build();
     private final JsonMapper json = JsonMapper.builder().build();

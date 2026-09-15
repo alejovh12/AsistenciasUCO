@@ -3,7 +3,7 @@ package co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.us
 
 import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 
 import java.util.UUID;
 

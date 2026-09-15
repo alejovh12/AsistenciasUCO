@@ -3,11 +3,14 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.ClientIpResolver;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.CorrelationIdFilter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.RequestActorResolver;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.keycloak.KeycloakJwtClaimsAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.spi.JwtClaimsAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.validation.AudienceValidator;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.handler.ApiAccessDeniedHandler;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.handler.ApiAuthenticationEntryPoint;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.handler.SecurityErrorResponseWriter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.keycloak.KeycloakJwtClaimsExtractor;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.contract.JwtClaimsExtractor;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.validation.AudienceValidator;
 import co.edu.uco.asistenciasuco.infrastructure.config.security.SecurityConfig;
-import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditEventPublisher;
+import co.edu.uco.asistenciasuco.infrastructure.audit.contract.AuditEventPublisher;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -293,8 +296,8 @@ class RbacSecurityFilterChainTest {
     static class RbacTestSupportConfig {
 
         @Bean
-        JwtClaimsAdapter jwtClaimsAdapter() {
-            return new KeycloakJwtClaimsAdapter(API_CLIENT_ID, USER_ID_CLAIM);
+        JwtClaimsExtractor jwtClaimsExtractor() {
+            return new KeycloakJwtClaimsExtractor(API_CLIENT_ID, USER_ID_CLAIM);
         }
 
         @Bean

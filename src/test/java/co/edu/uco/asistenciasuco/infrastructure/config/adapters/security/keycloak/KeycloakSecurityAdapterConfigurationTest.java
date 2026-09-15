@@ -1,8 +1,8 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.adapters.security.keycloak;
 
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.InstitutionalJwtAuthenticationConverter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.keycloak.KeycloakJwtClaimsAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.spi.JwtClaimsAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.InstitutionalJwtAuthenticationConverter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.keycloak.KeycloakJwtClaimsExtractor;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.contract.JwtClaimsExtractor;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.KeycloakSecurityProviderProperties;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -46,8 +46,8 @@ class KeycloakSecurityAdapterConfigurationTest {
     @Test
     void registra_exactamente_un_jwtClaimsAdapter_keycloak() {
         contextRunner.run(context -> {
-            assertEquals(1, context.getBeansOfType(JwtClaimsAdapter.class).size());
-            assertInstanceOf(KeycloakJwtClaimsAdapter.class, context.getBean(JwtClaimsAdapter.class));
+            assertEquals(1, context.getBeansOfType(JwtClaimsExtractor.class).size());
+            assertInstanceOf(KeycloakJwtClaimsExtractor.class, context.getBean(JwtClaimsExtractor.class));
         });
     }
 
@@ -84,7 +84,7 @@ class KeycloakSecurityAdapterConfigurationTest {
                 .withPropertyValues(
                         "app.adapters.security.provider=otro-provider-hipotetico"
                 )
-                .run(context -> assertTrue(context.getBeansOfType(JwtClaimsAdapter.class).isEmpty()));
+                .run(context -> assertTrue(context.getBeansOfType(JwtClaimsExtractor.class).isEmpty()));
     }
 
     @Test

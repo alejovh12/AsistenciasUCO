@@ -25,7 +25,7 @@ class AdapterCompositionRootRulesTest {
 
     private static final String BASE_PACKAGE = "co.edu.uco.asistenciasuco";
     private static final String DOMAIN_PACKAGE = "..application..domain..";
-    private static final String FEATURE_CONFIG_PACKAGE = "..infrastructure.config.features..";
+    private static final String FEATURE_CONFIG_PACKAGE = "..infrastructure.config.wiring..";
     private static final String SECONDARY_ADAPTER_PACKAGE = "..infrastructure.adapter.secondary..";
 
     // 19.1: Feature Configs solo conectan Application; no instancian adapters tecnológicos.
@@ -108,7 +108,7 @@ class AdapterCompositionRootRulesTest {
     }
 
     // Las configuraciones del Composition Root deben residir bajo infrastructure.config.adapters
-    // y no bajo infrastructure.config.features (separación Feature Config vs Adapter Config).
+    // y no bajo infrastructure.config.wiring (separación Feature Config vs Adapter Config).
     @Test
     void adapter_configurations_residen_en_composition_root() {
         classes()

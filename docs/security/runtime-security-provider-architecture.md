@@ -48,10 +48,10 @@ JwtDecoder
 InstitutionalJwtAuthenticationConverter
         |
         v
-JwtClaimsAdapter
+JwtClaimsExtractor
         |
         v
-KeycloakJwtClaimsAdapter
+KeycloakJwtClaimsExtractor
         |
         v
 JwtAuthenticationToken
@@ -76,7 +76,7 @@ SessionCreationPolicy.STATELESS
 
 | Capability | Contrato | Provider actual | Selector |
 |---|---|---|---|
-| Runtime authentication | `JwtClaimsAdapter`, `JwtDecoder` | Keycloak | `app.adapters.security.provider=keycloak` |
+| Runtime authentication | `JwtClaimsExtractor`, `JwtDecoder` | Keycloak | `app.adapters.security.provider=keycloak` |
 | Identity provisioning | `IdentityProviderPort` | Keycloak Admin API | `app.adapters.identity.provider=keycloak` |
 
 `SecurityConfig` es neutral respecto a Keycloak. Depende de:
@@ -87,7 +87,7 @@ SessionCreationPolicy.STATELESS
 - `AccessDeniedHandler`;
 - configuración CORS.
 
-La interpretación específica de claims Keycloak está aislada en `KeycloakJwtClaimsAdapter`.
+La interpretación específica de claims Keycloak está aislada en `KeycloakJwtClaimsExtractor`.
 
 ---
 
@@ -182,7 +182,7 @@ preferred_username
 
 ## 6. Roles
 
-`KeycloakJwtClaimsAdapter` lee exclusivamente:
+`KeycloakJwtClaimsExtractor` lee exclusivamente:
 
 ```text
 resource_access[asistencias-api].roles
@@ -220,7 +220,7 @@ El principal runtime es siempre:
 idUsuario.toString()
 ```
 
-`AuthenticatedUserProvider` resuelve:
+`AuthenticatedUserResolver` resuelve:
 
 ```text
 SecurityContextHolder
@@ -499,7 +499,7 @@ docs/security/keycloak-identity-provider.md
 
 Para incorporar otro proveedor, por ejemplo Auth0:
 
-1. crear `Auth0JwtClaimsAdapter implements JwtClaimsAdapter`;
+1. crear `Auth0JwtClaimsExtractor implements JwtClaimsExtractor`;
 2. crear sus properties tipadas;
 3. crear `Auth0SecurityAdapterConfiguration`;
 4. condicionarla a `app.adapters.security.provider=auth0`;
@@ -512,7 +512,7 @@ No deben cambiar:
 ```text
 SecurityConfig
 InstitutionalJwtAuthenticationConverter
-AuthenticatedUserProvider
+AuthenticatedUserResolver
 Application UseCases
 Controllers de negocio
 ```

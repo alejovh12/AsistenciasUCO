@@ -6,7 +6,7 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasiste
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.mapper.AsistenciaHttpMapper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.request.RegistrarAsistenciaQrRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.AuthenticatedUserProvider;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,19 +29,19 @@ import java.util.Objects;
 public final class AsistenciaQrController {
 
     private final RegistrarAsistenciaAutonomaInputPort registrarAsistenciaAutonomaInputPort;
-    private final AuthenticatedUserProvider authenticatedUserProvider;
+    private final AuthenticatedUserResolver authenticatedUserResolver;
 
     public AsistenciaQrController(
             final RegistrarAsistenciaAutonomaInputPort registrarAsistenciaAutonomaInputPort,
-            final AuthenticatedUserProvider authenticatedUserProvider
+            final AuthenticatedUserResolver authenticatedUserResolver
     ) {
         this.registrarAsistenciaAutonomaInputPort = Objects.requireNonNull(
                 registrarAsistenciaAutonomaInputPort,
                 "RegistrarAsistenciaAutonomaInputPort es obligatorio."
         );
-        this.authenticatedUserProvider = Objects.requireNonNull(
-                authenticatedUserProvider,
-                "AuthenticatedUserProvider es obligatorio."
+        this.authenticatedUserResolver = Objects.requireNonNull(
+                authenticatedUserResolver,
+                "AuthenticatedUserResolver es obligatorio."
         );
     }
 
@@ -58,7 +58,7 @@ public final class AsistenciaQrController {
     ) {
         final RegistrarAsistenciaAutonomaDTO dto = AsistenciaHttpMapper.toApplicationDTO(
                 request,
-                authenticatedUserProvider.requireAuthenticatedUserId()
+                authenticatedUserResolver.requireAuthenticatedUserId()
         );
         registrarAsistenciaAutonomaInputPort.execute(dto);
         return ResponseEntity.ok(new ApiDataResponse<>(true, null));

@@ -7,14 +7,14 @@ import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoRepo
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.TipoIdentificacionRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.AsistenciaRepositorySqlServerAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.DocenteRepositorySqlServerAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.EstudianteRepositorySqlServerAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.GrupoRepositorySqlServerAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.SesionRepositorySqlServerAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.TipoIdentificacionRepositorySqlServerAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.UsuarioRepositorySqlServerAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.procedure.CanonicalStoredProcedureExecutor;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.core.AsistenciaRepositorySqlServerAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.core.DocenteRepositorySqlServerAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.core.EstudianteRepositorySqlServerAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.core.GrupoRepositorySqlServerAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.core.SesionRepositorySqlServerAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.core.TipoIdentificacionRepositorySqlServerAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.core.UsuarioRepositorySqlServerAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.CanonicalStoredProcedureExecutor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,7 +26,7 @@ import org.springframework.transaction.support.TransactionOperations;
  * Composition Root: selecciona SQL Server como tecnología de persistencia para los
  * repositorios "core" (Grupo, Usuario, TipoIdentificacion, Estudiante, Docente, Sesion, Asistencia).
  *
- * <p>Las Feature Configs (p.ej. {@code GrupoBeansConfig}) solo dependen de los
+ * <p>Las Feature Configs (p.ej. {@code GrupoWiringConfiguration}) solo dependen de los
  * {@code *RepositoryPort} declarados aquí; no conocen SQL Server.</p>
  */
 @Configuration(proxyBeanMethods = false)

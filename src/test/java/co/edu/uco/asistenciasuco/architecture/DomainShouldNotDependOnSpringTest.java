@@ -71,7 +71,7 @@ class DomainShouldNotDependOnSpringTest {
                 .importPackages(BASE_PACKAGE);
 
         noClasses()
-                .that().resideInAPackage("..crosscutting.helpers..")
+                .that().resideInAnyPackage("..crosscutting.util..", "..crosscutting.validation..")
                 .should().dependOnClassesThat().resideInAPackage("..infrastructure..")
                 .check(classes);
     }

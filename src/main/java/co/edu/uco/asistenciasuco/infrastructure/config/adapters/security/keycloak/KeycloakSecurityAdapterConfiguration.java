@@ -1,9 +1,9 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.adapters.security.keycloak;
 
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.keycloak.KeycloakJwtClaimsAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.spi.JwtClaimsAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.validation.AudienceValidator;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.validation.RequiredUuidClaimValidator;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.keycloak.KeycloakJwtClaimsExtractor;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.contract.JwtClaimsExtractor;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.validation.AudienceValidator;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.validation.RequiredUuidClaimValidator;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.KeycloakSecurityProviderProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -22,10 +22,10 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
  * JWT + resolución de claims). No registra reglas HTTP — eso sigue siendo responsabilidad de
  * {@code SecurityConfig}, que es neutral respecto al proveedor.
  *
- * <p>Para migrar a otro IdP en runtime: implementar {@link JwtClaimsAdapter}, crear sus
+ * <p>Para migrar a otro IdP en runtime: implementar {@link JwtClaimsExtractor}, crear sus
  * properties y una configuración equivalente a esta condicionada a
  * {@code app.adapters.security.provider=<nuevo>}. {@code SecurityConfig},
- * {@code InstitutionalJwtAuthenticationConverter} y {@code AuthenticatedUserProvider} no
+ * {@code InstitutionalJwtAuthenticationConverter} y {@code AuthenticatedUserResolver} no
  * cambian.</p>
  *
  * <p>El {@code JwtDecoder} que aquí se registra es, deliberadamente, el único dueño de la
@@ -46,8 +46,8 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 public class KeycloakSecurityAdapterConfiguration {
 
     @Bean
-    public JwtClaimsAdapter jwtClaimsAdapter(final KeycloakSecurityProviderProperties properties) {
-        return new KeycloakJwtClaimsAdapter(properties.apiClientId(), properties.userIdClaim());
+    public JwtClaimsExtractor jwtClaimsExtractor(final KeycloakSecurityProviderProperties properties) {
+        return new KeycloakJwtClaimsExtractor(properties.apiClientId(), properties.userIdClaim());
     }
 
     @Bean

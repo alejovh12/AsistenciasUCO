@@ -9,7 +9,7 @@ import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudi
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudianteporid.usecase.mapper.ConsultarEstudiantePorIdRepositoryMapper;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.EstudianteRepositoryPort;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 import java.util.Objects;
 
 public final class ConsultarEstudiantePorIdUseCaseImpl implements ConsultarEstudiantePorIdUseCase {

@@ -393,7 +393,7 @@ docs/security/keycloak-identity-provider.md
 Runtime Security usa:
 
 ```text
-JwtClaimsAdapter
+JwtClaimsExtractor
 JwtDecoder
 InstitutionalJwtAuthenticationConverter
 ```
@@ -527,7 +527,7 @@ src/main/java/co/edu/uco/asistenciasuco/application/features/coordinador/common/
 |---|---|---|---|---|---|
 | Persistence | `*RepositoryPort`, `*QueryPort`, `*CommandPort`, `InstitutionalScopePort` | SQL Server adapters | `app.adapters.persistence.provider=sqlserver` | Ports desacoplados; solo SQL Server | DataSource provider-specific antes de otra DB |
 | Identity Provisioning | `IdentityProviderPort` | `KeycloakIdentityProviderAdapter` | `app.adapters.identity.provider=keycloak` | Reemplazable por provider; solo Keycloak | E2E y completar integración de roles/flujos institucionales pendientes |
-| Runtime Security | `JwtClaimsAdapter` | `KeycloakJwtClaimsAdapter` | `app.adapters.security.provider=keycloak` | Reemplazable por SPI; solo Keycloak | E2E y authorization hardening contextual |
+| Runtime Security | `JwtClaimsExtractor` | `KeycloakJwtClaimsExtractor` | `app.adapters.security.provider=keycloak` | Reemplazable por SPI; solo Keycloak | E2E y authorization hardening contextual |
 | Password Encoding | `PasswordEncoderPort` | Spring password adapter | configuración existente | Desacoplado | Sin deuda de provider relevante en esta fase |
 | Storage | `FileStoragePort` pendiente | filesystem dentro de `ArchivoController` | `app.adapters.storage.provider=local` preparado | Todavía no reemplazable | Extraer InputPort/UseCase/Port antes de MinIO |
 | Realtime | `RealtimePublisherPort` | `ReactorRealtimeAdapter` + SSE gateway | `app.adapters.realtime.provider=local-sse` | Provider seleccionado por Composition Root; solo `local-sse` | Angular SSE autenticado, API First, distribución/durabilidad con RabbitMQ |

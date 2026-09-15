@@ -1,8 +1,8 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.adapters.audit;
 
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.audit.AuditEventJdbcRepository;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.audit.LoggingAuditEventPublisher;
-import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditEventPublisher;
+import co.edu.uco.asistenciasuco.infrastructure.audit.adapter.sqlserver.AuditEventJdbcRepository;
+import co.edu.uco.asistenciasuco.infrastructure.audit.adapter.logging.LoggingAuditEventPublisher;
+import co.edu.uco.asistenciasuco.infrastructure.audit.contract.AuditEventPublisher;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;

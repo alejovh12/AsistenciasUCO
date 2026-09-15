@@ -33,3 +33,12 @@ Existe una incompatibilidad pendiente entre estados reales actuales `AN`, `SJC`,
 ## Transactional Outbox
 
 Transactional Outbox puede requerir nueva estructura DB. Queda documentado como evolucion dependiente de DB y no se implementa todavia.
+
+## Auditoria: DML directo en AuditEventJdbcRepository
+
+`infrastructure.audit.adapter.sqlserver.AuditEventJdbcRepository` ejecuta `INSERT`/`SELECT`
+directos contra `dbo.AuditoriaEvento` en lugar de pasar por un stored procedure `usp_*` publico,
+violando la regla "nunca DML directo" que respeta el resto de `persistence.sqlserver`. Requiere
+crear `usp_RegistrarEventoAuditoria` / `usp_ConsultarEventoAuditoriaPorCorrelationId` (o
+equivalente) y migrar la clase a `CanonicalStoredProcedureExecutor`. Ver detalle en
+`docs/architecture/infrastructure-structure.md` (seccion "KNOWN ARCHITECTURAL DEBT").

@@ -15,7 +15,7 @@ import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasign
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarplanestudio.primaryports.GestionarPlanEstudioInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarplanestudio.primaryports.dto.GuardarPlanEstudioDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.AuthenticatedUserProvider;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.test.web.servlet.MockMvc;
@@ -53,7 +53,7 @@ class CoordinadorPortalControllerTest {
     private final ConsultarEstudiantesProgramaInputPort students = mock(ConsultarEstudiantesProgramaInputPort.class);
     private final GestionarPlanEstudioInputPort managePlans = mock(GestionarPlanEstudioInputPort.class);
     private final GestionarAsignaturaInputPort manageSubjects = mock(GestionarAsignaturaInputPort.class);
-    private final AuthenticatedUserProvider identity = () -> ACTOR;
+    private final AuthenticatedUserResolver identity = () -> ACTOR;
     private final CoordinadorPortalController controller = new CoordinadorPortalController(plans, planSubjects,
             subjects, periods, students, managePlans, manageSubjects, identity);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)

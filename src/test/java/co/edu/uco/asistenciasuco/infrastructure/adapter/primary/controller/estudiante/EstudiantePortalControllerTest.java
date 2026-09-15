@@ -8,7 +8,7 @@ import co.edu.uco.asistenciasuco.application.features.estudiante.consultarmateri
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.primaryports.ConsultarSesionesMateriaEstudianteInputPort;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.primaryports.dto.SesionMateriaEstudianteDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.AuthenticatedUserProvider;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 import org.springframework.test.web.servlet.MockMvc;
@@ -34,7 +34,7 @@ class EstudiantePortalControllerTest {
     private final ConsultarMateriasEstudianteInputPort materias = mock(ConsultarMateriasEstudianteInputPort.class);
     private final ConsultarHorariosEstudianteInputPort horarios = mock(ConsultarHorariosEstudianteInputPort.class);
     private final ConsultarSesionesMateriaEstudianteInputPort sesiones = mock(ConsultarSesionesMateriaEstudianteInputPort.class);
-    private final AuthenticatedUserProvider identity = () -> ACTOR;
+    private final AuthenticatedUserResolver identity = () -> ACTOR;
     private final EstudiantePortalController controller =
             new EstudiantePortalController(materias, horarios, sesiones, identity);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)

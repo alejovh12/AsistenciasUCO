@@ -3,7 +3,7 @@ package co.edu.uco.asistenciasuco.application.features.asistencia.registrarasist
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciaautonoma.usecase.domain.RegistrarAsistenciaAutonomaDomain;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciaAutonomaRepositoryDTO;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 
 import java.util.UUID;
 

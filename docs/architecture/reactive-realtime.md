@@ -217,7 +217,7 @@ La configuración está condicionada por:
 )
 ```
 
-`ReactorRealtimeAdapter` y `RealtimeStreamGatewayImpl` **no se autoregistran** con
+`ReactorRealtimeAdapter` y `LocalSseRealtimeStreamGateway` **no se autoregistran** con
 `@Component`, `@Service` ni `@Repository`.
 
 Esto mantiene el mismo estándar usado por persistencia, identidad y seguridad:
