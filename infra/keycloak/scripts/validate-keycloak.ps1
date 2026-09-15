@@ -181,7 +181,11 @@ if ($null -ne $backendAdminClient) {
 $userProfile = (Invoke-KcAdminApi -Method Get -ServerUrl $serverUrl -Path "/admin/realms/$realmName/users/profile" -Token $adminToken -AllowNotFound).Body
 if ($null -ne $userProfile) {
     $hasAttribute = @($userProfile.attributes) | Where-Object { $_.name -eq $userIdAttribute }
-    $unmanagedPermissive = $userProfile.unmanagedAttributePolicy -eq 'ENABLED'
+    $unmanagedPermissive = $false
+    $unmanagedProperty = $userProfile.PSObject.Properties['unmanagedAttributePolicy']
+    if ($null -ne $unmanagedProperty) {
+        $unmanagedPermissive = $unmanagedProperty.Value -eq 'ENABLED'
+    }
     Test-Check -Condition (($null -ne $hasAttribute) -or $unmanagedPermissive) -OkMessage 'User Profile permite el atributo idUsuario' -FailMessage 'User Profile no declara idUsuario y unmanaged attributes no esta habilitado (Admin API no podra escribirlo)'
 }
 
