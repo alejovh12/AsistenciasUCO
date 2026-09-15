@@ -63,6 +63,9 @@ ehthumbs.db
 # Keycloak local secrets
 infra/keycloak/.env
 
+# Keycloak diagnostic exports (never a backup, never versioned)
+infra/keycloak/generated/
+
 # Temporary/editor files
 .tmp-log-metadata/
 *.swp

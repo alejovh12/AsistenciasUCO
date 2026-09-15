@@ -34,6 +34,7 @@ services:
 
     command:
       - start-dev
+      - --import-realm
 
     depends_on:
       keycloak-db:
@@ -51,9 +52,15 @@ services:
       KC_HEALTH_ENABLED: "true"
       KC_METRICS_ENABLED: "true"
 
+      # Sustituido dentro de realm-import/asistencias-uco-realm.json via ${KC_PASSWORD_MIN_LENGTH:12}.
+      KC_PASSWORD_MIN_LENGTH: ${KC_PASSWORD_MIN_LENGTH:-12}
+
     ports:
       - "${KC_HTTP_PORT}:8080"
       - "${KC_MANAGEMENT_PORT}:9000"
+
+    volumes:
+      - ./realm-import:/opt/keycloak/data/import:ro
 
     networks:
       - keycloak-network
