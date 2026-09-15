@@ -8,10 +8,11 @@
     E2E_<ROL>_ID_USUARIO para un usuario, ese usuario se omite (nunca se inventa un UUID
     institucional).
 
-    E2E_DOCENTE_ID_USUARIO debe corresponder a un dbo.Usuario.id REAL en SQL Server si se
-    quiere probar autorizacion contextual (por ejemplo, asignaciones academicas del docente).
+    Los UUID E2E deben corresponder a dbo.Usuario.id REALES en SQL Server cuando se quiera
+    probar autorizacion contextual. El script reconcilia de forma idempotente email, nombre,
+    estado e idUsuario para los usuarios E2E existentes, sin tocar otros atributos.
 
-    Idempotente: no resetea la password de un usuario E2E ya existente salvo que
+    No resetea la password de un usuario E2E ya existente salvo que
     KC_RESET_EXISTING_E2E_PASSWORDS=true.
 
 .EXAMPLE
@@ -34,16 +35,89 @@ $envMap = Import-KcDotEnv -Path $EnvFile
 $serverUrl   = Get-KcEnvValue -EnvMap $envMap -Key 'KEYCLOAK_SERVER_URL' -Default 'http://127.0.0.1:8081'
 $realmName   = Get-KcEnvValue -EnvMap $envMap -Key 'KC_REALM' -Default 'asistencias-uco'
 $apiClientId = Get-KcEnvValue -EnvMap $envMap -Key 'KC_API_CLIENT_ID' -Default 'asistencias-api'
+$passwordMinLength = [int](Get-KcEnvValue -EnvMap $envMap -Key 'KC_PASSWORD_MIN_LENGTH' -Default '12')
 
 $bootstrapAdminUser = Get-KcRequiredEnvValue -EnvMap $envMap -Key 'KC_BOOTSTRAP_ADMIN_USERNAME'
 $bootstrapAdminPass = Get-KcRequiredEnvValue -EnvMap $envMap -Key 'KC_BOOTSTRAP_ADMIN_PASSWORD'
 
 $resetExistingPasswords = (Get-KcEnvValue -EnvMap $envMap -Key 'KC_RESET_EXISTING_E2E_PASSWORDS' -Default 'false') -eq 'true'
+$userIdAttribute = 'idUsuario'
 
 $userSpecs = @(
     @{ Key = 'DOCENTE'; Role = 'DOCENTE' },
     @{ Key = 'ADMIN'; Role = 'ADMINISTRADOR' }
 )
+
+function Test-E2ePasswordPolicy {
+    param(
+        [Parameter(Mandatory = $true)][string]$Password,
+        [Parameter(Mandatory = $true)][string]$Username,
+        [Parameter(Mandatory = $true)][string]$Email
+    )
+
+    $reasons = New-Object System.Collections.Generic.List[string]
+    if ($Password.Length -lt $passwordMinLength) { $reasons.Add("minimo $passwordMinLength caracteres") | Out-Null }
+    if ($Password -cnotmatch '[a-z]') { $reasons.Add('al menos 1 minuscula') | Out-Null }
+    if ($Password -cnotmatch '[A-Z]') { $reasons.Add('al menos 1 mayuscula') | Out-Null }
+    if ($Password -notmatch '[0-9]') { $reasons.Add('al menos 1 digito') | Out-Null }
+    if ($Password -notmatch '[^A-Za-z0-9]') { $reasons.Add('al menos 1 caracter especial') | Out-Null }
+    if ($Password -eq $Username) { $reasons.Add('no puede ser igual al username') | Out-Null }
+    if ($Password -eq $Email) { $reasons.Add('no puede ser igual al email') | Out-Null }
+    return @($reasons)
+}
+
+function Set-E2eUserProfile {
+    param(
+        [Parameter(Mandatory = $true)][string]$UserId,
+        [Parameter(Mandatory = $true)][string]$Username,
+        [Parameter(Mandatory = $true)][string]$Email,
+        [Parameter(Mandatory = $true)][string]$FirstName,
+        [Parameter(Mandatory = $true)][string]$LastName,
+        [Parameter(Mandatory = $true)][string]$IdUsuario
+    )
+
+    $user = (Invoke-KcAdminApi -Method Get -ServerUrl $serverUrl -Path "/admin/realms/$realmName/users/$UserId" -Token $adminToken).Body
+    $changed = $false
+
+    foreach ($field in @{
+        email         = $Email
+        firstName     = $FirstName
+        lastName      = $LastName
+        enabled       = $true
+        emailVerified = $true
+    }.GetEnumerator()) {
+        $property = $user.PSObject.Properties[$field.Key]
+        if ($null -eq $property -or $property.Value -ne $field.Value) {
+            $user | Add-Member -NotePropertyName $field.Key -NotePropertyValue $field.Value -Force
+            $changed = $true
+        }
+    }
+
+    $attributes = @{}
+    $attributesProperty = $user.PSObject.Properties['attributes']
+    if ($null -ne $attributesProperty -and $null -ne $attributesProperty.Value) {
+        foreach ($property in $attributesProperty.Value.PSObject.Properties) {
+            $attributes[$property.Name] = @($property.Value)
+        }
+    }
+
+    $currentIdUsuario = @()
+    if ($attributes.ContainsKey($userIdAttribute)) {
+        $currentIdUsuario = @($attributes[$userIdAttribute])
+    }
+    if ($currentIdUsuario.Count -ne 1 -or [string]$currentIdUsuario[0] -ne $IdUsuario) {
+        $attributes[$userIdAttribute] = @($IdUsuario)
+        $changed = $true
+    }
+
+    if ($changed) {
+        $user | Add-Member -NotePropertyName attributes -NotePropertyValue $attributes -Force
+        Invoke-KcAdminApi -Method Put -ServerUrl $serverUrl -Path "/admin/realms/$realmName/users/$UserId" -Token $adminToken -Body $user | Out-Null
+        Write-KcResult -Status 'UPDATED' -Message "Usuario ${Username}: perfil e idUsuario reconciliados"
+    } else {
+        Write-KcResult -Status 'OK' -Message "Usuario ${Username}: perfil e idUsuario"
+    }
+}
 
 Write-Host ''
 Write-Host "== Seed usuarios E2E :: realm $realmName ==" -ForegroundColor Magenta
@@ -104,13 +178,24 @@ foreach ($spec in $userSpecs) {
         Write-KcResult -Status 'OK' -Message "Usuario $username"
     }
 
+    Set-E2eUserProfile -UserId $userId -Username $username -Email $email -FirstName $firstName -LastName $lastName -IdUsuario $idUsuario
+
     if ($isNew -or $resetExistingPasswords) {
-        Invoke-KcAdminApi -Method Put -ServerUrl $serverUrl -Path "/admin/realms/$realmName/users/$userId/reset-password" -Token $adminToken -Body @{
-            type      = 'password'
-            value     = $password
-            temporary = $false
-        } | Out-Null
-        Write-KcResult -Status 'UPDATED' -Message "Usuario ${username}: password establecida"
+        $passwordProblems = @(Test-E2ePasswordPolicy -Password $password -Username $username -Email $email)
+        if ($passwordProblems.Count -gt 0) {
+            Write-KcResult -Status 'ERROR' -Message "Usuario ${username}: password E2E no cumple politica local: $($passwordProblems -join ', ')"
+        } else {
+            try {
+                Invoke-KcAdminApi -Method Put -ServerUrl $serverUrl -Path "/admin/realms/$realmName/users/$userId/reset-password" -Token $adminToken -Body @{
+                    type      = 'password'
+                    value     = $password
+                    temporary = $false
+                } | Out-Null
+                Write-KcResult -Status 'UPDATED' -Message "Usuario ${username}: password establecida"
+            } catch {
+                Write-KcResult -Status 'ERROR' -Message "Usuario ${username}: Keycloak rechazo la password. $($_.Exception.Message)"
+            }
+        }
     } else {
         Write-KcResult -Status 'SKIPPED' -Message "Usuario ${username}: password no modificada (KC_RESET_EXISTING_E2E_PASSWORDS=false)"
     }
