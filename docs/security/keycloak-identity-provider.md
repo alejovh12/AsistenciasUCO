@@ -235,6 +235,14 @@ La implementación estática del adapter y su Composition Root están disponible
 tests de backend/fake HTTP. La validación contra un Keycloak real de ambiente sigue pendiente
 de runtime/E2E.
 
+En LOCAL/DEV, el realm/clients/roles/service-account que este adapter consume ya no se
+configuran manualmente: `infra/keycloak/scripts/bootstrap-keycloak.ps1` los crea/reconcilia de
+forma automatizada e idempotente (ver `infra/keycloak/README.md` y
+`docs/security/keycloak-service-account.md` sección 0). Ese bootstrap es infraestructura
+administrativa, separada de este adapter — el adapter sigue siendo el único punto del backend
+que llama a la Admin REST API en runtime, y nunca crea el client `asistencias-api`, el client
+scope ni el propio realm.
+
 ## 6. Cómo agregar otro proveedor de identidad
 
 1. Implementar `IdentityProviderPort` en un nuevo adapter.
