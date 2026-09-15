@@ -12,8 +12,8 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
  * docs/security/runtime-security-provider-architecture.md.
  *
  * <p>Objetivo: {@code SecurityConfig} → Keycloak = 0; Application no conoce Keycloak, Jwt ni
- * Spring Security; los Controllers no conocen {@code JwtClaimsAdapter} ni Keycloak
- * directamente (solo {@code AuthenticatedUserProvider}, InputPorts y modelos HTTP).</p>
+ * Spring Security; los Controllers no conocen {@code JwtClaimsExtractor} ni Keycloak
+ * directamente (solo {@code AuthenticatedUserResolver}, InputPorts y modelos HTTP).</p>
  */
 class SecurityProviderIsolationRulesTest {
 
@@ -52,14 +52,14 @@ class SecurityProviderIsolationRulesTest {
                 .check(importedClasses());
     }
 
-    // 43: Controllers no dependen de JwtClaimsAdapter/KeycloakJwtClaimsAdapter/IdentityProviderPort.
-    // Sí pueden depender de AuthenticatedUserProvider, InputPorts y modelos HTTP.
+    // 43: Controllers no dependen de JwtClaimsExtractor/KeycloakJwtClaimsExtractor/IdentityProviderPort.
+    // Sí pueden depender de AuthenticatedUserResolver, InputPorts y modelos HTTP.
     @Test
     void controllers_no_dependen_de_jwt_claims_adapter_ni_identity_provider_port() {
         noClasses()
                 .that().resideInAPackage(CONTROLLER_PACKAGE)
                 .should().dependOnClassesThat().haveNameMatching(
-                        ".*JwtClaimsAdapter|.*KeycloakJwtClaimsAdapter|.*IdentityProviderPort"
+                        ".*JwtClaimsExtractor|.*KeycloakJwtClaimsExtractor|.*IdentityProviderPort"
                 )
                 .check(importedClasses());
     }

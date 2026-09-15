@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.security;
 
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.InstitutionalJwtAuthenticationConverter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.spi.JwtClaimsAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.InstitutionalJwtAuthenticationConverter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.contract.JwtClaimsExtractor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,7 +27,7 @@ import java.util.List;
 /**
  * Configuración de seguridad HTTP, deliberadamente neutral respecto al proveedor de identidad:
  * no importa nada de {@code keycloak} ni conoce cómo un proveedor concreto estructura sus
- * claims. Depende únicamente de {@link JwtDecoder} y {@link JwtClaimsAdapter}, ambos
+ * claims. Depende únicamente de {@link JwtDecoder} y {@link JwtClaimsExtractor}, ambos
  * registrados por el Composition Root de seguridad según
  * {@code app.adapters.security.provider} (hoy {@code KeycloakSecurityAdapterConfiguration}).
  */
@@ -41,9 +41,9 @@ public class SecurityConfig {
 
     @Bean
     public InstitutionalJwtAuthenticationConverter institutionalJwtAuthenticationConverter(
-            final JwtClaimsAdapter jwtClaimsAdapter
+            final JwtClaimsExtractor jwtClaimsExtractor
     ) {
-        return new InstitutionalJwtAuthenticationConverter(jwtClaimsAdapter);
+        return new InstitutionalJwtAuthenticationConverter(jwtClaimsExtractor);
     }
 
     @Bean

@@ -24,7 +24,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesio
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesion.validation.ConsultarSesionRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesion.validation.CrearSesionRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.AuthenticatedUserProvider;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -54,7 +54,7 @@ public final class SesionController {
     private final CerrarSesionInputPort cerrarSesionInputPort;
     private final ActualizarSesionInputPort actualizarSesionInputPort;
     private final GenerarSesionesGrupoInputPort generarSesionesGrupoInputPort;
-    private final AuthenticatedUserProvider authenticatedUserProvider;
+    private final AuthenticatedUserResolver authenticatedUserResolver;
 
     public SesionController(
             final CrearSesionInputPort crearSesionInputPort,
@@ -62,21 +62,21 @@ public final class SesionController {
             final CerrarSesionInputPort cerrarSesionInputPort,
             final ActualizarSesionInputPort actualizarSesionInputPort,
             final GenerarSesionesGrupoInputPort generarSesionesGrupoInputPort,
-            final AuthenticatedUserProvider authenticatedUserProvider
+            final AuthenticatedUserResolver authenticatedUserResolver
     ) {
         this.crearSesionInputPort = Objects.requireNonNull(crearSesionInputPort, "CrearSesionInputPort es obligatorio.");
         this.consultarSesionInputPort = Objects.requireNonNull(consultarSesionInputPort, "ConsultarSesionInputPort es obligatorio.");
         this.cerrarSesionInputPort = Objects.requireNonNull(cerrarSesionInputPort, "CerrarSesionInputPort es obligatorio.");
         this.actualizarSesionInputPort = Objects.requireNonNull(actualizarSesionInputPort, "ActualizarSesionInputPort es obligatorio.");
         this.generarSesionesGrupoInputPort = Objects.requireNonNull(generarSesionesGrupoInputPort, "GenerarSesionesGrupoInputPort es obligatorio.");
-        this.authenticatedUserProvider = Objects.requireNonNull(authenticatedUserProvider, "AuthenticatedUserProvider es obligatorio.");
+        this.authenticatedUserResolver = Objects.requireNonNull(authenticatedUserResolver, "AuthenticatedUserResolver es obligatorio.");
     }
 
     @PostMapping
     @AuditableOperation(action = "CREAR_SESION", resourceType = "GRUPO", resourceIdRequestField = "grupo")
     public ResponseEntity<ApiMessageResponse> crearSesion(@RequestBody final CrearSesionRequest request) {
         RequestValidationGuard.validate(CREATE_SESSION_VALIDATOR.validate(request));
-        final CrearSesionDTO dto = SesionHttpMapper.toApplicationDTO(request, authenticatedUserProvider.requireAuthenticatedUserId());
+        final CrearSesionDTO dto = SesionHttpMapper.toApplicationDTO(request, authenticatedUserResolver.requireAuthenticatedUserId());
         crearSesionInputPort.execute(dto);
 
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -117,7 +117,7 @@ public final class SesionController {
     @AuditableOperation(action = "CERRAR_SESION", resourceType = "SESION", resourceIdRequestField = "sesion")
     public ResponseEntity<ApiMessageResponse> cerrarSesion(@RequestBody final CerrarSesionRequest request) {
         RequestValidationGuard.validate(CLOSE_SESSION_VALIDATOR.validate(request));
-        final CerrarSesionDTO dto = SesionHttpMapper.toApplicationDTO(request, authenticatedUserProvider.requireAuthenticatedUserId());
+        final CerrarSesionDTO dto = SesionHttpMapper.toApplicationDTO(request, authenticatedUserResolver.requireAuthenticatedUserId());
         cerrarSesionInputPort.execute(dto);
 
         return ResponseEntity.ok(new ApiMessageResponse(true, "Sesion cerrada correctamente."));
@@ -131,7 +131,7 @@ public final class SesionController {
         final ActualizarSesionDTO dto = SesionHttpMapper.toApplicationDTO(
                 sesionId,
                 request,
-                authenticatedUserProvider.requireAuthenticatedUserId()
+                authenticatedUserResolver.requireAuthenticatedUserId()
         );
         actualizarSesionInputPort.execute(dto);
         return ResponseEntity.ok(new ApiDataResponse<>(true, null));

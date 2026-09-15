@@ -9,7 +9,7 @@ import co.edu.uco.asistenciasuco.application.features.docente.consultarhorarios.
 import co.edu.uco.asistenciasuco.application.features.docente.consultarhorarios.primaryports.dto.HorarioDocenteDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.request.ResolverReclamoRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.AuthenticatedUserProvider;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.test.web.servlet.MockMvc;
@@ -39,7 +39,7 @@ class DocentePortalControllerTest {
     private final ConsultarAsignaturasDocenteInputPort asignaturas = mock(ConsultarAsignaturasDocenteInputPort.class);
     private final ResolverSolicitudRevisionAsistenciaInputPort resolverReclamo =
             mock(ResolverSolicitudRevisionAsistenciaInputPort.class);
-    private final AuthenticatedUserProvider identity = () -> ACTOR;
+    private final AuthenticatedUserResolver identity = () -> ACTOR;
     private final DocentePortalController controller =
             new DocentePortalController(horarios, asignaturas, resolverReclamo, identity);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)

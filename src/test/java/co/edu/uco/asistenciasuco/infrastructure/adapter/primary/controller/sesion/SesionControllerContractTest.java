@@ -11,7 +11,7 @@ import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.primary
 import co.edu.uco.asistenciasuco.application.features.sesion.generarsesionesgrupo.primaryports.GenerarSesionesGrupoInputPort;
 import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.AuthenticatedUserProvider;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.test.web.servlet.MockMvc;
@@ -43,7 +43,7 @@ class SesionControllerContractTest {
     private final CerrarSesionInputPort close = mock(CerrarSesionInputPort.class);
     private final ActualizarSesionInputPort update = mock(ActualizarSesionInputPort.class);
     private final GenerarSesionesGrupoInputPort generate = mock(GenerarSesionesGrupoInputPort.class);
-    private final AuthenticatedUserProvider identity = () -> ACTOR;
+    private final AuthenticatedUserResolver identity = () -> ACTOR;
     private final SesionController controller = new SesionController(create, query, close, update, generate, identity);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
             .setControllerAdvice(new GlobalExceptionHandler()).build();

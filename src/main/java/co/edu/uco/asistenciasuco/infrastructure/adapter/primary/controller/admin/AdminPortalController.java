@@ -18,7 +18,7 @@ import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiMessageResponse;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.AuthenticatedUserProvider;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,7 +43,7 @@ public final class AdminPortalController {
     private final ConsultarInstitucionesInputPort consultarInstitucionesInputPort;
     private final ConsultarFacultadesInputPort consultarFacultadesInputPort;
     private final ConsultarAreasInputPort consultarAreasInputPort;
-    private final AuthenticatedUserProvider authenticatedUserProvider;
+    private final AuthenticatedUserResolver authenticatedUserResolver;
 
     public AdminPortalController(
             final ConsultarDecanosInputPort consultarDecanosInputPort,
@@ -53,7 +53,7 @@ public final class AdminPortalController {
             final ConsultarInstitucionesInputPort consultarInstitucionesInputPort,
             final ConsultarFacultadesInputPort consultarFacultadesInputPort,
             final ConsultarAreasInputPort consultarAreasInputPort,
-            final AuthenticatedUserProvider authenticatedUserProvider
+            final AuthenticatedUserResolver authenticatedUserResolver
     ) {
         this.consultarDecanosInputPort = consultarDecanosInputPort;
         this.crearDecanoInputPort = crearDecanoInputPort;
@@ -62,7 +62,7 @@ public final class AdminPortalController {
         this.consultarInstitucionesInputPort = consultarInstitucionesInputPort;
         this.consultarFacultadesInputPort = consultarFacultadesInputPort;
         this.consultarAreasInputPort = consultarAreasInputPort;
-        this.authenticatedUserProvider = authenticatedUserProvider;
+        this.authenticatedUserResolver = authenticatedUserResolver;
     }
 
     @GetMapping("/decanos")
@@ -118,7 +118,7 @@ public final class AdminPortalController {
     public ResponseEntity<ApiMessageResponse> ejecutarCierreMasivo(@RequestBody final CierreMasivoRequest request) {
         ejecutarCierreMasivoInputPort.execute(new EjecutarCierreMasivoDTO(
                 request.idPeriodoAcademico(),
-                authenticatedUserProvider.requireAuthenticatedUserId()
+                authenticatedUserResolver.requireAuthenticatedUserId()
         ));
         return ResponseEntity.ok(new ApiMessageResponse(true, "Cierre masivo solicitado correctamente."));
     }

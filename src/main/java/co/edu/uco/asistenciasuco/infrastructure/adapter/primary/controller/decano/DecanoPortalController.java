@@ -8,7 +8,7 @@ import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.pr
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.decano.request.CrearCoordinadorRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.AuthenticatedUserProvider;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -26,21 +26,21 @@ public final class DecanoPortalController {
 
     private final ConsultarCoordinadoresInputPort consultarCoordinadoresInputPort;
     private final CrearCoordinadorInputPort crearCoordinadorInputPort;
-    private final AuthenticatedUserProvider authenticatedUserProvider;
+    private final AuthenticatedUserResolver authenticatedUserResolver;
 
     public DecanoPortalController(
             final ConsultarCoordinadoresInputPort consultarCoordinadoresInputPort,
             final CrearCoordinadorInputPort crearCoordinadorInputPort,
-            final AuthenticatedUserProvider authenticatedUserProvider
+            final AuthenticatedUserResolver authenticatedUserResolver
     ) {
         this.consultarCoordinadoresInputPort = consultarCoordinadoresInputPort;
         this.crearCoordinadorInputPort = crearCoordinadorInputPort;
-        this.authenticatedUserProvider = authenticatedUserProvider;
+        this.authenticatedUserResolver = authenticatedUserResolver;
     }
 
     @GetMapping("/coordinadores")
     public ResponseEntity<ApiListResponse<CoordinadorDTO>> consultarCoordinadores() {
-        final var data = consultarCoordinadoresInputPort.execute(authenticatedUserProvider.requireAuthenticatedUserId());
+        final var data = consultarCoordinadoresInputPort.execute(authenticatedUserResolver.requireAuthenticatedUserId());
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
     }
 
@@ -60,7 +60,7 @@ public final class DecanoPortalController {
                 request == null ? null : request.getCorreo(),
                 request == null ? null : request.getIdPrograma(),
                 request == null ? null : request.getPassword(),
-                authenticatedUserProvider.requireAuthenticatedUserId()
+                authenticatedUserResolver.requireAuthenticatedUserId()
         ));
         return ResponseEntity.ok(new ApiDataResponse<>(true, null));
     }

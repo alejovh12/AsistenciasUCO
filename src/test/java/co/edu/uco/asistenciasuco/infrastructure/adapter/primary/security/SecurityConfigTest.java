@@ -5,9 +5,13 @@ import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.SecurityErrorCod
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.ClientIpResolver;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.CorrelationIdFilter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.RequestActorResolver;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.keycloak.KeycloakJwtClaimsAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.spi.JwtClaimsAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.validation.AudienceValidator;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.handler.ApiAccessDeniedHandler;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.handler.ApiAuthenticationEntryPoint;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.handler.SecurityErrorResponseWriter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.InstitutionalJwtAuthenticationConverter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.keycloak.KeycloakJwtClaimsExtractor;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.contract.JwtClaimsExtractor;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.validation.AudienceValidator;
 import co.edu.uco.asistenciasuco.infrastructure.config.security.SecurityConfig;
 import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditActorType;
 import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditEventPublisher;
@@ -58,8 +62,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Verifica que {@link SecurityConfig} funciona correctamente sin conocer Keycloak: el único
- * punto de este test que sabe que el token es "de Keycloak" es el {@link JwtClaimsAdapter} de
- * prueba (un {@link KeycloakJwtClaimsAdapter} real), inyectado como cualquier otro bean del
+ * punto de este test que sabe que el token es "de Keycloak" es el {@link JwtClaimsExtractor} de
+ * prueba (un {@link KeycloakJwtClaimsExtractor} real), inyectado como cualquier otro bean del
  * Composition Root. SecurityConfig, el converter y el decoder de prueba no importan Keycloak.
  */
 @WebMvcTest(controllers = SecurityConfigTest.ProtectedController.class)
@@ -247,7 +251,7 @@ class SecurityConfigTest {
     /**
      * Sustituye, únicamente para este test, al Composition Root de seguridad
      * ({@code KeycloakSecurityAdapterConfiguration}) que no se carga en un slice
-     * {@code @WebMvcTest}. El {@link JwtClaimsAdapter} real ({@link KeycloakJwtClaimsAdapter})
+     * {@code @WebMvcTest}. El {@link JwtClaimsExtractor} real ({@link KeycloakJwtClaimsExtractor})
      * se usa a propósito: prueba que SecurityConfig funciona correctamente con un token con
      * forma de Keycloak sin que SecurityConfig mismo sepa nada de Keycloak.
      */
@@ -255,8 +259,8 @@ class SecurityConfigTest {
     static class SecurityTestSupportConfig {
 
         @Bean
-        JwtClaimsAdapter jwtClaimsAdapter() {
-            return new KeycloakJwtClaimsAdapter(API_CLIENT_ID, USER_ID_CLAIM);
+        JwtClaimsExtractor jwtClaimsExtractor() {
+            return new KeycloakJwtClaimsExtractor(API_CLIENT_ID, USER_ID_CLAIM);
         }
 
         @Bean

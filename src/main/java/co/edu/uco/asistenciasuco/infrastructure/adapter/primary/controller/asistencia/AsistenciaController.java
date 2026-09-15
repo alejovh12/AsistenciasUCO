@@ -15,7 +15,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asist
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.audit.AuditableOperation;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiMessageResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.AuthenticatedUserProvider;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,13 +38,13 @@ public final class AsistenciaController {
     private final RegistrarAsistenciaInputPort registrarAsistenciaInputPort;
     private final RegistrarAsistenciasSesionInputPort registrarAsistenciasSesionInputPort;
     private final SolicitarRevisionAsistenciaInputPort solicitarRevisionAsistenciaInputPort;
-    private final AuthenticatedUserProvider authenticatedUserProvider;
+    private final AuthenticatedUserResolver authenticatedUserResolver;
 
     public AsistenciaController(
             final RegistrarAsistenciaInputPort registrarAsistenciaInputPort,
             final RegistrarAsistenciasSesionInputPort registrarAsistenciasSesionInputPort,
             final SolicitarRevisionAsistenciaInputPort solicitarRevisionAsistenciaInputPort,
-            final AuthenticatedUserProvider authenticatedUserProvider
+            final AuthenticatedUserResolver authenticatedUserResolver
     ) {
         this.registrarAsistenciaInputPort = Objects.requireNonNull(registrarAsistenciaInputPort,
                 "RegistrarAsistenciaInputPort es obligatorio.");
@@ -52,8 +52,8 @@ public final class AsistenciaController {
                 "RegistrarAsistenciasSesionInputPort es obligatorio.");
         this.solicitarRevisionAsistenciaInputPort = Objects.requireNonNull(solicitarRevisionAsistenciaInputPort,
                 "SolicitarRevisionAsistenciaInputPort es obligatorio.");
-        this.authenticatedUserProvider = Objects.requireNonNull(authenticatedUserProvider,
-                "AuthenticatedUserProvider es obligatorio.");
+        this.authenticatedUserResolver = Objects.requireNonNull(authenticatedUserResolver,
+                "AuthenticatedUserResolver es obligatorio.");
     }
 
     @PostMapping
@@ -77,7 +77,7 @@ public final class AsistenciaController {
         RequestValidationGuard.validate(REQUEST_REVISION_VALIDATOR.validate(request));
         final SolicitarRevisionAsistenciaDTO dto = AsistenciaHttpMapper.toApplicationDTO(
                 request,
-                authenticatedUserProvider.requireAuthenticatedUserId()
+                authenticatedUserResolver.requireAuthenticatedUserId()
         );
         solicitarRevisionAsistenciaInputPort.execute(dto);
 

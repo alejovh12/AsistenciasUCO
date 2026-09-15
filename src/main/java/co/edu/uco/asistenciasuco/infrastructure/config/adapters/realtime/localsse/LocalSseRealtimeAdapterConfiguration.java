@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.adapters.realtime.localsse;
 
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.RealtimeStreamGateway;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.RealtimeStreamGatewayImpl;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.contract.RealtimeStreamGateway;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.localsse.LocalSseRealtimeStreamGateway;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.realtime.localsse.ReactorRealtimeAdapter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -31,6 +31,6 @@ public class LocalSseRealtimeAdapterConfiguration {
 
     @Bean
     public RealtimeStreamGateway realtimeStreamGateway(final ReactorRealtimeAdapter realtimeAdapter) {
-        return new RealtimeStreamGatewayImpl(realtimeAdapter);
+        return new LocalSseRealtimeStreamGateway(realtimeAdapter);
     }
 }

@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.adapters.realtime.localsse;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.RealtimeStreamGateway;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.contract.RealtimeStreamGateway;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.realtime.localsse.ReactorRealtimeAdapter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;

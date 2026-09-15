@@ -6,7 +6,7 @@ import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinado
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.primaryports.CrearCoordinadorInputPort;
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.primaryports.dto.CrearCoordinadorDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.AuthenticatedUserProvider;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.test.web.servlet.MockMvc;
@@ -33,7 +33,7 @@ class DecanoPortalControllerTest {
 
     private final ConsultarCoordinadoresInputPort consultarCoordinadores = mock(ConsultarCoordinadoresInputPort.class);
     private final CrearCoordinadorInputPort crearCoordinador = mock(CrearCoordinadorInputPort.class);
-    private final AuthenticatedUserProvider identity = () -> ACTOR;
+    private final AuthenticatedUserResolver identity = () -> ACTOR;
     private final DecanoPortalController controller =
             new DecanoPortalController(consultarCoordinadores, crearCoordinador, identity);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)

@@ -95,7 +95,9 @@ class CleanArchitectureRulesTest {
     void adapters_primary_en_infrastructure_adapter_primary() {
         classes()
                 .that().areAnnotatedWith(RestController.class)
-                .should().resideInAPackage("..infrastructure.adapter.primary.controller..")
+                .should().resideInAnyPackage(
+                        "..infrastructure.adapter.primary.controller..",
+                        "..infrastructure.adapter.primary.realtime.sse.controller..")
                 .check(importedClasses());
     }
 

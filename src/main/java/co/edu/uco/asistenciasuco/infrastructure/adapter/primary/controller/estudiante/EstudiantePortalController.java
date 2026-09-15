@@ -9,7 +9,7 @@ import co.edu.uco.asistenciasuco.application.features.estudiante.consultarmateri
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.primaryports.dto.SesionMateriaEstudianteDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.AuthenticatedUserProvider;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,29 +27,29 @@ public final class EstudiantePortalController {
     private final ConsultarMateriasEstudianteInputPort consultarMateriasEstudianteInputPort;
     private final ConsultarHorariosEstudianteInputPort consultarHorariosEstudianteInputPort;
     private final ConsultarSesionesMateriaEstudianteInputPort consultarSesionesMateriaEstudianteInputPort;
-    private final AuthenticatedUserProvider authenticatedUserProvider;
+    private final AuthenticatedUserResolver authenticatedUserResolver;
 
     public EstudiantePortalController(
             final ConsultarMateriasEstudianteInputPort consultarMateriasEstudianteInputPort,
             final ConsultarHorariosEstudianteInputPort consultarHorariosEstudianteInputPort,
             final ConsultarSesionesMateriaEstudianteInputPort consultarSesionesMateriaEstudianteInputPort,
-            final AuthenticatedUserProvider authenticatedUserProvider
+            final AuthenticatedUserResolver authenticatedUserResolver
     ) {
         this.consultarMateriasEstudianteInputPort = consultarMateriasEstudianteInputPort;
         this.consultarHorariosEstudianteInputPort = consultarHorariosEstudianteInputPort;
         this.consultarSesionesMateriaEstudianteInputPort = consultarSesionesMateriaEstudianteInputPort;
-        this.authenticatedUserProvider = authenticatedUserProvider;
+        this.authenticatedUserResolver = authenticatedUserResolver;
     }
 
     @GetMapping("/materias")
     public ResponseEntity<ApiListResponse<MateriaEstudianteDTO>> consultarMaterias() {
-        final var data = consultarMateriasEstudianteInputPort.execute(authenticatedUserProvider.requireAuthenticatedUserId());
+        final var data = consultarMateriasEstudianteInputPort.execute(authenticatedUserResolver.requireAuthenticatedUserId());
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
     }
 
     @GetMapping("/horarios")
     public ResponseEntity<ApiListResponse<HorarioEstudianteDTO>> consultarHorarios() {
-        final var data = consultarHorariosEstudianteInputPort.execute(authenticatedUserProvider.requireAuthenticatedUserId());
+        final var data = consultarHorariosEstudianteInputPort.execute(authenticatedUserResolver.requireAuthenticatedUserId());
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
     }
 
@@ -58,7 +58,7 @@ public final class EstudiantePortalController {
             @PathVariable final UUID materiaId
     ) {
         final var data = consultarSesionesMateriaEstudianteInputPort.execute(
-                authenticatedUserProvider.requireAuthenticatedUserId(),
+                authenticatedUserResolver.requireAuthenticatedUserId(),
                 materiaId
         );
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));

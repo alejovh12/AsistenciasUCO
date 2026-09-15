@@ -29,7 +29,7 @@ import java.util.Optional;
  * Adaptador que implementa {@link IdentityProviderPort} usando la Admin REST API de Keycloak,
  * exclusivamente para provisioning administrativo (crear/verificar/eliminar cuentas
  * institucionales y asignar client roles). No participa en runtime security — eso vive en
- * {@code KeycloakJwtClaimsAdapter} (ver {@code docs/security/runtime-security-provider-architecture.md}).
+ * {@code KeycloakJwtClaimsExtractor} (ver {@code docs/security/runtime-security-provider-architecture.md}).
  *
  * <p>Usa {@code client_credentials} contra un client confidencial de service account
  * ({@code adminClientId}/{@code adminClientSecret}) — nunca password grant ni un
