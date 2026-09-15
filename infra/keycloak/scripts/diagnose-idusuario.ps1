@@ -4,11 +4,14 @@
 
 .DESCRIPTION
     Compara, para DOCENTE y ADMIN:
+      - UUID del usuario consultado por Admin REST,
+      - subject/preferred_username del access token,
       - atributo idUsuario visible por Admin REST API,
-      - fila persistida en PostgreSQL de Keycloak (si docker compose/psql estan disponibles),
+      - fila persistida en PostgreSQL de Keycloak,
       - claim idUsuario del access token,
       - claim idUsuario de /userinfo,
-      - roles de asistencias-api.
+      - roles de asistencias-api,
+      - federationLink/serviceAccountClientId/requiredActions.
 
     No modifica Keycloak, usuarios, passwords, roles ni base de datos.
 #>
@@ -111,8 +114,14 @@ foreach ($spec in $specs) {
         }
     }
 
+    $federationLink = Get-OptionalPropertyValue -Object $fullUser -Name 'federationLink'
+    $serviceAccountClientId = Get-OptionalPropertyValue -Object $fullUser -Name 'serviceAccountClientId'
+    $requiredActions = @(Get-OptionalPropertyValue -Object $fullUser -Name 'requiredActions')
+
     $accessToken = $null
     $tokenId = $null
+    $tokenSub = $null
+    $tokenPreferredUsername = $null
     $roles = @()
     $userinfoId = $null
     $tokenError = $null
@@ -122,6 +131,13 @@ foreach ($spec in $specs) {
         $segments = $accessToken.Split('.')
         if ($segments.Length -ge 2) {
             $claims = ConvertFrom-Base64UrlSafe $segments[1] | ConvertFrom-Json
+
+            $subProperty = $claims.PSObject.Properties['sub']
+            if ($null -ne $subProperty) { $tokenSub = [string]$subProperty.Value }
+
+            $preferredUsernameProperty = $claims.PSObject.Properties['preferred_username']
+            if ($null -ne $preferredUsernameProperty) { $tokenPreferredUsername = [string]$preferredUsernameProperty.Value }
+
             $tokenIdProperty = $claims.PSObject.Properties['idUsuario']
             if ($null -ne $tokenIdProperty) { $tokenId = [string]$tokenIdProperty.Value }
 
@@ -168,8 +184,17 @@ foreach ($spec in $specs) {
         }
     }
 
+    $sameSubject = if ([string]::IsNullOrWhiteSpace($tokenSub)) { '<sin sub>' } elseif ($tokenSub -eq [string]$user.id) { 'SI' } else { 'NO' }
+
     Write-Host "[$($spec.Key)] $username" -ForegroundColor Cyan
     Write-Host "  expected .env        : $expectedId"
+    Write-Host "  Admin REST user UUID : $($user.id)"
+    Write-Host "  token sub            : $tokenSub"
+    Write-Host "  same subject         : $sameSubject"
+    Write-Host "  token username       : $tokenPreferredUsername"
+    Write-Host "  federationLink       : $federationLink"
+    Write-Host "  service account      : $serviceAccountClientId"
+    Write-Host "  required actions     : $($requiredActions -join ', ')"
     Write-Host "  Admin REST attribute : $adminApiId"
     Write-Host "  PostgreSQL attribute : $dbValue"
     if ($null -ne $tokenError) {
