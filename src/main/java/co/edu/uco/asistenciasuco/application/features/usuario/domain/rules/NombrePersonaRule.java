@@ -2,7 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.usuario.domain.rules;
 
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.validation.ValidationHelper;
+import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationHelper;
 
 public final class NombrePersonaRule {
 

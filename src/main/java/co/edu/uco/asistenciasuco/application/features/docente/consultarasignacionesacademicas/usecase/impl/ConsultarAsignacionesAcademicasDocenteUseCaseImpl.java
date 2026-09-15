@@ -6,7 +6,7 @@ import co.edu.uco.asistenciasuco.application.features.docente.consultarasignacio
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignacionesacademicas.usecase.mapper.ConsultarAsignacionesAcademicasDocenteRepositoryMapper;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.DocenteRepositoryPort;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 
 import java.util.List;
 import java.util.Objects;

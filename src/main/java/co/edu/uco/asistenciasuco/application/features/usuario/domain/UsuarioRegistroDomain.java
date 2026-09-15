@@ -5,8 +5,8 @@ import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.excepti
 import co.edu.uco.asistenciasuco.application.features.usuario.domain.rules.NombrePersonaRule;
 import co.edu.uco.asistenciasuco.application.features.usuario.domain.rules.PasswordRegistroRule;
 import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.validation.ValidationHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
+import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationHelper;
 
 import java.util.Locale;
 import java.util.UUID;

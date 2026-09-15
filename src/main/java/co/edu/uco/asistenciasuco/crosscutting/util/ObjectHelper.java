@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.crosscutting.helpers;
+package co.edu.uco.asistenciasuco.crosscutting.util;
 
 
 import java.util.UUID;

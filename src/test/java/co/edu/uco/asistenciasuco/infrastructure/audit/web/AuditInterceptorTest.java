@@ -8,7 +8,7 @@ import co.edu.uco.asistenciasuco.infrastructure.audit.contract.AuditEventPublish
 import co.edu.uco.asistenciasuco.infrastructure.audit.model.AuditOutcome;
 import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditRequestAttributes;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
-import co.edu.uco.asistenciasuco.infrastructure.observability.tracing.TraceContextSnapshot;
+import co.edu.uco.asistenciasuco.infrastructure.observability.tracing.opentelemetry.TraceContextSnapshot;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;

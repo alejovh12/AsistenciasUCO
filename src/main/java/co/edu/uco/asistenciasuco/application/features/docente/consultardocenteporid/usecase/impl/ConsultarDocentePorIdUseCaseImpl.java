@@ -10,7 +10,7 @@ import co.edu.uco.asistenciasuco.application.features.docente.consultardocentepo
 import co.edu.uco.asistenciasuco.application.features.docente.consultardocenteporid.usecase.mapper.ConsultarDocentePorIdRepositoryMapper;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.DocenteRepositoryPort;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 import java.util.Objects;
 
 /**

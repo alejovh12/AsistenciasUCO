@@ -3,8 +3,8 @@ package co.edu.uco.asistenciasuco.application.features.docente.consultardocentes
 
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 
 import java.util.UUID;
 

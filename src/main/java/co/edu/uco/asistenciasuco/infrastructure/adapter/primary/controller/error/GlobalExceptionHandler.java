@@ -2,7 +2,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.erro
 
 import co.edu.uco.asistenciasuco.application.exception.ApplicationException;
 import co.edu.uco.asistenciasuco.crosscutting.exception.TechnicalException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 import co.edu.uco.asistenciasuco.crosscutting.sanitization.SensitiveDataSanitizer;
 import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationIssue;
 import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditRequestAttributes;

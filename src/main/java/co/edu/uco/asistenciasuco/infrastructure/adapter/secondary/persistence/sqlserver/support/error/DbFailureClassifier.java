@@ -8,7 +8,7 @@ import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErr
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.exception.TipoIdentificacionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
 import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorDefinition;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 
 import java.text.Normalizer;
 import java.util.Locale;

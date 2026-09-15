@@ -3,7 +3,7 @@ package co.edu.uco.asistenciasuco.application.features.tipoidentificacion.domain
 
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.exception.TipoIdentificacionErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 
 import java.util.Objects;
 import java.util.UUID;

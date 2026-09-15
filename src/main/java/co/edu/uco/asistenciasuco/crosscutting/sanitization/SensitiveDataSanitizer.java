@@ -1,6 +1,6 @@
 package co.edu.uco.asistenciasuco.crosscutting.sanitization;
 
-import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 
 import java.util.LinkedHashMap;
 import java.util.Locale;

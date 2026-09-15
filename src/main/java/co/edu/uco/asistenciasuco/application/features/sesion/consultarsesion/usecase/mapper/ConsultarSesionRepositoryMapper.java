@@ -5,7 +5,7 @@ import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.use
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarSesionRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.SesionRepositoryProjection;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 
 /**
  * Mapper entre el caso de uso y el contrato del puerto secundario.

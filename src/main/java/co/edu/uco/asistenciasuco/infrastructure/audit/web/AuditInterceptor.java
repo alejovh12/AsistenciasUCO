@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.audit.web;
 
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.TextHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 import co.edu.uco.asistenciasuco.crosscutting.sanitization.SensitiveDataSanitizer;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.ClientIpResolver;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.RequestActorResolver;
@@ -10,7 +10,7 @@ import co.edu.uco.asistenciasuco.infrastructure.audit.contract.AuditEventPublish
 import co.edu.uco.asistenciasuco.infrastructure.audit.model.AuditOutcome;
 import co.edu.uco.asistenciasuco.infrastructure.audit.model.RequestActor;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
-import co.edu.uco.asistenciasuco.infrastructure.observability.tracing.TraceContextSnapshot;
+import co.edu.uco.asistenciasuco.infrastructure.observability.tracing.opentelemetry.TraceContextSnapshot;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.BeanWrapperImpl;

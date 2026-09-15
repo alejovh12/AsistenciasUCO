@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.audit.adapter.sqlserver;
 
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 import co.edu.uco.asistenciasuco.crosscutting.sanitization.SensitiveDataSanitizer;
 import co.edu.uco.asistenciasuco.infrastructure.audit.model.AuditActorType;
 import co.edu.uco.asistenciasuco.infrastructure.audit.model.AuditEvent;

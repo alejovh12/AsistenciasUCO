@@ -2,7 +2,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filt
 
 import co.edu.uco.asistenciasuco.crosscutting.sanitization.SensitiveDataSanitizer;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
-import co.edu.uco.asistenciasuco.infrastructure.observability.tracing.TraceContextSnapshot;
+import co.edu.uco.asistenciasuco.infrastructure.observability.tracing.opentelemetry.TraceContextSnapshot;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

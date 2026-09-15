@@ -1,7 +1,7 @@
-package co.edu.uco.asistenciasuco.crosscutting.helpers;
+package co.edu.uco.asistenciasuco.crosscutting.util;
 
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.helpers.validation.ValidationHelper;
+import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationHelper;
 
 import java.util.Locale;
 

@@ -153,7 +153,7 @@ class CleanArchitectureRulesTest {
     @Test
     void util_no_depende_de_infrastructure() {
         noClasses()
-                .that().resideInAPackage("..crosscutting.helpers..")
+                .that().resideInAnyPackage("..crosscutting.util..", "..crosscutting.validation..")
                 .should().dependOnClassesThat().resideInAPackage("..infrastructure..")
                 .check(importedClasses());
     }

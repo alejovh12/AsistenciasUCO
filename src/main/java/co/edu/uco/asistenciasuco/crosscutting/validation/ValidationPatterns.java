@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.crosscutting.helpers.validation;
+package co.edu.uco.asistenciasuco.crosscutting.validation;
 
 import java.util.regex.Pattern;
 

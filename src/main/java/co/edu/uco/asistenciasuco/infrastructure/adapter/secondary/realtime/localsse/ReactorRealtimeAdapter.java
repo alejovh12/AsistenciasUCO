@@ -3,7 +3,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.realtime.loca
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimeEvent;
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
-import co.edu.uco.asistenciasuco.infrastructure.observability.tracing.TraceContextSnapshot;
+import co.edu.uco.asistenciasuco.infrastructure.observability.tracing.opentelemetry.TraceContextSnapshot;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;

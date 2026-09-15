@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.infrastructure.observability.tracing;
+package co.edu.uco.asistenciasuco.infrastructure.observability.tracing.opentelemetry;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
