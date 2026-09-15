@@ -2,8 +2,8 @@ package co.edu.uco.asistenciasuco.infrastructure.config;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.AsistenciaRepositoryMockAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.adapter.SesionRepositoryMockAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.testdouble.AsistenciaRepositoryMockAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.testdouble.SesionRepositoryMockAdapter;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 

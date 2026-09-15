@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.adapters.persistence.sqlserver;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.report.ReporteAsistenciaQueryPort;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.report.ReporteAsistenciaSqlServerAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.reporting.ReporteAsistenciaSqlServerAdapter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

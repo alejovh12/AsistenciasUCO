@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.adapters.identity.keycloak;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.identity.KeycloakIdentityProviderAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.identity.keycloak.KeycloakIdentityProviderAdapter;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.KeycloakIdentityProviderProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

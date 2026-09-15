@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimeEvent;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.realtime.ReactorRealtimeAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.realtime.localsse.ReactorRealtimeAdapter;
 import reactor.core.publisher.Flux;
 
 import java.util.Map;

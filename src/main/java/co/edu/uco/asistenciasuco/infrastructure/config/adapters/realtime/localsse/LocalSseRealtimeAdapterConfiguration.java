@@ -2,7 +2,7 @@ package co.edu.uco.asistenciasuco.infrastructure.config.adapters.realtime.locals
 
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.RealtimeStreamGateway;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.RealtimeStreamGatewayImpl;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.realtime.ReactorRealtimeAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.realtime.localsse.ReactorRealtimeAdapter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;

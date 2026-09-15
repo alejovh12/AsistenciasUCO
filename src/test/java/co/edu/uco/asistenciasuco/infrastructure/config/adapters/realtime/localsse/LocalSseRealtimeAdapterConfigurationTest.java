@@ -2,7 +2,7 @@ package co.edu.uco.asistenciasuco.infrastructure.config.adapters.realtime.locals
 
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.RealtimeStreamGateway;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.realtime.ReactorRealtimeAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.realtime.localsse.ReactorRealtimeAdapter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;

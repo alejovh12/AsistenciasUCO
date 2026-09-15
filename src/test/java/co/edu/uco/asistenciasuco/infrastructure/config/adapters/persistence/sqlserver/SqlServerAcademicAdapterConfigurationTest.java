@@ -8,11 +8,11 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.DecanoComma
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DecanoQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.PlanEstudioCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.PlanEstudioQueryPort;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.academic.AsignaturaSqlServerAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.academic.CoordinadorSqlServerAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.academic.DecanoSqlServerAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.academic.PlanEstudioSqlServerAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.repository.procedure.CanonicalStoredProcedureExecutor;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.academic.AsignaturaSqlServerAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.academic.CoordinadorSqlServerAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.academic.DecanoSqlServerAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.academic.PlanEstudioSqlServerAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.CanonicalStoredProcedureExecutor;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.assertj.AssertableApplicationContext;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
