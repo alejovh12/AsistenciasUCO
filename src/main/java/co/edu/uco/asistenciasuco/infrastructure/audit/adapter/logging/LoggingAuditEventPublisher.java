@@ -1,8 +1,9 @@
-package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.audit;
+package co.edu.uco.asistenciasuco.infrastructure.audit.adapter.logging;
 
 import co.edu.uco.asistenciasuco.crosscutting.sanitization.SensitiveDataSanitizer;
-import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditEvent;
-import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditEventPublisher;
+import co.edu.uco.asistenciasuco.infrastructure.audit.adapter.sqlserver.AuditEventJdbcRepository;
+import co.edu.uco.asistenciasuco.infrastructure.audit.model.AuditEvent;
+import co.edu.uco.asistenciasuco.infrastructure.audit.contract.AuditEventPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;

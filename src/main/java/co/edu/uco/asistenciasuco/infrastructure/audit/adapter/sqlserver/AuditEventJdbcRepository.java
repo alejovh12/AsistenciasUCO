@@ -1,11 +1,11 @@
-package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.audit;
+package co.edu.uco.asistenciasuco.infrastructure.audit.adapter.sqlserver;
 
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 import co.edu.uco.asistenciasuco.crosscutting.sanitization.SensitiveDataSanitizer;
-import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditActorType;
-import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditEvent;
-import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditOutcome;
+import co.edu.uco.asistenciasuco.infrastructure.audit.model.AuditActorType;
+import co.edu.uco.asistenciasuco.infrastructure.audit.model.AuditEvent;
+import co.edu.uco.asistenciasuco.infrastructure.audit.model.AuditOutcome;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.json.JsonParseException;
 import org.springframework.boot.json.JsonParser;

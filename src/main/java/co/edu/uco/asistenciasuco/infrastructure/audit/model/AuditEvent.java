@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.infrastructure.observability.audit;
+package co.edu.uco.asistenciasuco.infrastructure.audit.model;
 
 import java.time.OffsetDateTime;
 import java.util.Map;

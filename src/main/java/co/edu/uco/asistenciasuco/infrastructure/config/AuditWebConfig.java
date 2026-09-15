@@ -1,6 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.config;
 
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.audit.AuditInterceptor;
+import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;

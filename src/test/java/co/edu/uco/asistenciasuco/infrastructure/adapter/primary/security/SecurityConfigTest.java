@@ -13,9 +13,9 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.key
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.contract.JwtClaimsExtractor;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.validation.AudienceValidator;
 import co.edu.uco.asistenciasuco.infrastructure.config.security.SecurityConfig;
-import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditActorType;
-import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditEventPublisher;
-import co.edu.uco.asistenciasuco.infrastructure.observability.audit.RequestActor;
+import co.edu.uco.asistenciasuco.infrastructure.audit.model.AuditActorType;
+import co.edu.uco.asistenciasuco.infrastructure.audit.contract.AuditEventPublisher;
+import co.edu.uco.asistenciasuco.infrastructure.audit.model.RequestActor;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;

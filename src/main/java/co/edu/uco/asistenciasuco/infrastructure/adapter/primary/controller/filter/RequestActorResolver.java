@@ -1,8 +1,8 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter;
 
 import co.edu.uco.asistenciasuco.crosscutting.sanitization.SensitiveDataSanitizer;
-import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditActorType;
-import co.edu.uco.asistenciasuco.infrastructure.observability.audit.RequestActor;
+import co.edu.uco.asistenciasuco.infrastructure.audit.model.AuditActorType;
+import co.edu.uco.asistenciasuco.infrastructure.audit.model.RequestActor;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Component;
 

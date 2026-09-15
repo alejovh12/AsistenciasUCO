@@ -14,8 +14,8 @@ import co.edu.uco.asistenciasuco.application.features.docente.registrardocentede
 import co.edu.uco.asistenciasuco.application.features.docente.registrardocentedesdeusuario.primaryports.dto.RegistrarDocenteDesdeUsuarioDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.registrardocentedesdeusuario.primaryports.dto.RegistrarDocenteDesdeUsuarioResultadoDTO;
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.audit.AuditableOperation;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.audit.AuditRequestAttributes;
+import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
+import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditRequestAttributes;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.mapper.DocenteHttpMapper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.request.AsignarDocenteAGrupoRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.request.ConsultarAsignacionesAcademicasDocenteRequest;

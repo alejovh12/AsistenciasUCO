@@ -1,12 +1,12 @@
-package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.audit;
+package co.edu.uco.asistenciasuco.infrastructure.audit.web;
 
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.ClientIpResolver;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.RequestActorResolver;
-import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditActorType;
-import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditEvent;
-import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditEventPublisher;
-import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditOutcome;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.audit.AuditRequestAttributes;
+import co.edu.uco.asistenciasuco.infrastructure.audit.model.AuditActorType;
+import co.edu.uco.asistenciasuco.infrastructure.audit.model.AuditEvent;
+import co.edu.uco.asistenciasuco.infrastructure.audit.contract.AuditEventPublisher;
+import co.edu.uco.asistenciasuco.infrastructure.audit.model.AuditOutcome;
+import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditRequestAttributes;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import co.edu.uco.asistenciasuco.infrastructure.observability.tracing.TraceContextSnapshot;
 import org.junit.jupiter.api.AfterEach;

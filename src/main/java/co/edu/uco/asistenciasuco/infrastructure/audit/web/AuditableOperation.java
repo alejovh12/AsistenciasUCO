@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.audit;
+package co.edu.uco.asistenciasuco.infrastructure.audit.web;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

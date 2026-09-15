@@ -1,11 +1,12 @@
-package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.audit;
+package co.edu.uco.asistenciasuco.infrastructure.audit.adapter.logging;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
-import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditActorType;
-import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditEvent;
-import co.edu.uco.asistenciasuco.infrastructure.observability.audit.AuditOutcome;
+import co.edu.uco.asistenciasuco.infrastructure.audit.adapter.sqlserver.AuditEventJdbcRepository;
+import co.edu.uco.asistenciasuco.infrastructure.audit.model.AuditActorType;
+import co.edu.uco.asistenciasuco.infrastructure.audit.model.AuditEvent;
+import co.edu.uco.asistenciasuco.infrastructure.audit.model.AuditOutcome;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;

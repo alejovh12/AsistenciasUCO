@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.audit;
+package co.edu.uco.asistenciasuco.infrastructure.audit.web;
 
 import co.edu.uco.asistenciasuco.crosscutting.helpers.ObjectHelper;
 import jakarta.servlet.http.HttpServletRequest;

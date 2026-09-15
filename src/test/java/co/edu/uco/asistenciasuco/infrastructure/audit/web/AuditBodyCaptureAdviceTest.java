@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.audit;
+package co.edu.uco.asistenciasuco.infrastructure.audit.web;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
