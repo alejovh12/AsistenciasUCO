@@ -24,19 +24,21 @@ class RegistrarAsistenciasSesionMapperTest {
     void toDomain_con_dto_valido_mapea_registros() {
         final UUID sesion = UUID.randomUUID();
         final UUID estudiante = UUID.randomUUID();
+        final UUID usuarioEjecutor = UUID.randomUUID();
         final RegistrarAsistenciasSesionDTO dto = new RegistrarAsistenciasSesionDTO(
-                sesion, List.of(new RegistroAsistenciaSesionDTO(estudiante, "ASISTIO")));
+                sesion, List.of(new RegistroAsistenciaSesionDTO(estudiante, "AN")), usuarioEjecutor);
 
         final RegistrarAsistenciasSesionDomain domain = RegistrarAsistenciasSesionMapper.toDomain(dto);
 
         assertEquals(sesion, domain.getSesion());
         assertEquals(1, domain.getRegistros().size());
         assertEquals(estudiante, domain.getRegistros().getFirst().getEstudiante());
+        assertEquals(usuarioEjecutor, domain.getUsuarioEjecutor());
     }
 
     @Test
     void toDomain_con_registros_nulos_lanza_validationException_por_lista_vacia() {
-        final RegistrarAsistenciasSesionDTO dto = new RegistrarAsistenciasSesionDTO(UUID.randomUUID(), null);
+        final RegistrarAsistenciasSesionDTO dto = new RegistrarAsistenciasSesionDTO(UUID.randomUUID(), null, UUID.randomUUID());
 
         assertThrows(ValidationException.class, () -> RegistrarAsistenciasSesionMapper.toDomain(dto));
     }

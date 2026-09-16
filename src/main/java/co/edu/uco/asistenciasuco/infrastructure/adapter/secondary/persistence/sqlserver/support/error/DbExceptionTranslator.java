@@ -53,7 +53,8 @@ public final class DbExceptionTranslator {
             DocenteErrorCode.ERR_DOCENTE_YA_REGISTRADO
     );
     private static final Set<ErrorDefinition> VALIDATION_CODES = Set.of(
-            UsuarioErrorCode.ERR_NOMBRE_PERSONA_INVALIDO
+            UsuarioErrorCode.ERR_NOMBRE_PERSONA_INVALIDO,
+            AsistenciaErrorCode.ERR_ESTADO_ASISTENCIA_INVALIDO
     );
 
     private static final Map<Set<ErrorDefinition>, ExceptionFactory> EXCEPTION_BY_CODES = Map.of(

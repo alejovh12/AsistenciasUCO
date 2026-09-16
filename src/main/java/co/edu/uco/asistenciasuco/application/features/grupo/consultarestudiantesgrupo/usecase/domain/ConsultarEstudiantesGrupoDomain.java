@@ -2,5 +2,5 @@ package co.edu.uco.asistenciasuco.application.features.grupo.consultarestudiante
 
 import java.util.UUID;
 
-public record ConsultarEstudiantesGrupoDomain(UUID grupoId) {
+public record ConsultarEstudiantesGrupoDomain(UUID grupoId, UUID usuarioEjecutor) {
 }

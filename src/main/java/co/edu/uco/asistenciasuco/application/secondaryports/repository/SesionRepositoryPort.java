@@ -7,6 +7,9 @@ import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.Actua
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.GenerarSesionesGrupoRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.SesionRepositoryProjection;
 
+import java.util.List;
+import java.util.UUID;
+
 /**
  * Puerto secundario para persistencia relacionada con sesiones.
  */
@@ -17,6 +20,8 @@ public interface SesionRepositoryPort {
     void actualizarSesion(ActualizarSesionRepositoryDTO dto);
 
     SesionRepositoryProjection consultarSesion(ConsultarSesionRepositoryDTO dto);
+
+    List<SesionRepositoryProjection> consultarSesionesPorGrupo(UUID grupoId);
 
     void cerrarSesion(CerrarSesionRepositoryDTO dto);
 

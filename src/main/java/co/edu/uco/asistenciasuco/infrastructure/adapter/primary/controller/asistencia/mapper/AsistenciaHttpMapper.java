@@ -32,9 +32,12 @@ public final class AsistenciaHttpMapper {
         );
     }
 
-    public static ConsultarAsistenciasPorGrupoDTO toApplicationDTO(final ConsultarAsistenciasPorGrupoRequest request) {
+    public static ConsultarAsistenciasPorGrupoDTO toApplicationDTO(
+            final ConsultarAsistenciasPorGrupoRequest request,
+            final UUID usuarioEjecutor
+    ) {
         Objects.requireNonNull(request, "El request HTTP para consultar asistencias por grupo es obligatorio.");
-        return new ConsultarAsistenciasPorGrupoDTO(request.getGrupo(), request.getSesion());
+        return new ConsultarAsistenciasPorGrupoDTO(request.getGrupo(), request.getSesion(), usuarioEjecutor);
     }
 
     public static SolicitarRevisionAsistenciaDTO toApplicationDTO(
@@ -52,7 +55,10 @@ public final class AsistenciaHttpMapper {
         );
     }
 
-    public static RegistrarAsistenciasSesionDTO toApplicationDTO(final RegistrarAsistenciasSesionRequest request) {
+    public static RegistrarAsistenciasSesionDTO toApplicationDTO(
+            final RegistrarAsistenciasSesionRequest request,
+            final UUID usuarioEjecutor
+    ) {
         Objects.requireNonNull(request, "El request HTTP para registrar asistencias de sesion es obligatorio.");
         final List<RegistroAsistenciaSesionDTO> registros = request.getRegistros() == null
                 ? List.of()
@@ -62,7 +68,7 @@ public final class AsistenciaHttpMapper {
                                 registro == null ? null : registro.getEstado()
                         ))
                         .toList();
-        return new RegistrarAsistenciasSesionDTO(request.getSesionId(), registros);
+        return new RegistrarAsistenciasSesionDTO(request.getSesionId(), registros, usuarioEjecutor);
     }
 
     public static RegistrarAsistenciaAutonomaDTO toApplicationDTO(

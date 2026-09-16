@@ -6,6 +6,7 @@ import co.edu.uco.asistenciasuco.application.exception.business.ConflictExceptio
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
+import co.edu.uco.asistenciasuco.application.features.asistencia.exception.AsistenciaErrorCode;
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
@@ -186,6 +187,52 @@ class DbExceptionTranslatorTest {
         );
 
         assertEquals(expectedCode, exception.getCode());
+    }
+
+    @Test
+    void mensaje_rc_001_estado_de_asistencia_invalido_lanza_validationException_no_500() {
+        // Texto verificado en vivo contra dbo.uv_mensaje_usuario / dbo.uv_mensaje_tecnico para el
+        // codigo de catalogo RC_001 (RazonCausa.codigo inexistente).
+        final ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> translateFailure(
+                        "El código de estado de asistencia \"ABC\" no corresponde a una razón de causa registrada en el catálogo.",
+                        "Error de catálogo: RazonCausa.codigo = [ABC] no existe. No se permite creación dinámica de estados en dbo.RazonCausa.",
+                        "registrarAsistenciasSesion"
+                )
+        );
+
+        assertEquals(AsistenciaErrorCode.ERR_ESTADO_ASISTENCIA_INVALIDO.code(), exception.getCode());
+    }
+
+    @Test
+    void mensaje_sesion_no_encontrada_lanza_resourceNotFoundException_no_500() {
+        // Texto verificado en vivo para SES_001.
+        final ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class,
+                () -> translateFailure(
+                        "La sesión de clase especificada no existe o no se encuentra activa.",
+                        "Error de búsqueda: Sesión no encontrada o cerrada en uv_sesion: 00000000-0000-0000-0000-000000000000.",
+                        "registrarAsistenciasSesion"
+                )
+        );
+
+        assertEquals("ERR_SESION_NO_EXISTE", exception.getCode());
+    }
+
+    @Test
+    void mensaje_estudiante_fuera_de_grupo_lanza_forbiddenException_no_500() {
+        // Texto verificado en vivo para EST_004.
+        final ForbiddenException exception = assertThrows(
+                ForbiddenException.class,
+                () -> translateFailure(
+                        "El estudiante no pertenece al grupo de la sesion seleccionada.",
+                        "Validación de pertenencia fallida: El estudiante no está inscrito en el grupo de la sesión.",
+                        "registrarAsistenciasSesion"
+                )
+        );
+
+        assertEquals("ERR_ESTUDIANTE_NO_PERTENECE_SESION", exception.getCode());
     }
 
     @Test

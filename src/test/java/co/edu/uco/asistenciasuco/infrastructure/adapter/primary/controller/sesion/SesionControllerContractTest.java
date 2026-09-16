@@ -6,10 +6,11 @@ import co.edu.uco.asistenciasuco.application.features.sesion.cerrarsesion.primar
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.primaryports.ConsultarSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.primaryports.dto.ConsultarSesionDTO;
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.primaryports.dto.SesionConsultadaDTO;
+import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionesporgrupo.primaryports.ConsultarSesionesPorGrupoInputPort;
+import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionesporgrupo.primaryports.dto.ConsultarSesionesPorGrupoDTO;
 import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.primaryports.CrearSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.primaryports.dto.CrearSesionDTO;
 import co.edu.uco.asistenciasuco.application.features.sesion.generarsesionesgrupo.primaryports.GenerarSesionesGrupoInputPort;
-import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.junit.jupiter.api.Test;
@@ -18,10 +19,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -40,11 +41,13 @@ class SesionControllerContractTest {
     private static final LocalDateTime START = LocalDateTime.of(2026, 9, 14, 8, 0);
     private final CrearSesionInputPort create = mock(CrearSesionInputPort.class);
     private final ConsultarSesionInputPort query = mock(ConsultarSesionInputPort.class);
+    private final ConsultarSesionesPorGrupoInputPort queryByGroup = mock(ConsultarSesionesPorGrupoInputPort.class);
     private final CerrarSesionInputPort close = mock(CerrarSesionInputPort.class);
     private final ActualizarSesionInputPort update = mock(ActualizarSesionInputPort.class);
     private final GenerarSesionesGrupoInputPort generate = mock(GenerarSesionesGrupoInputPort.class);
     private final AuthenticatedUserResolver identity = () -> ACTOR;
-    private final SesionController controller = new SesionController(create, query, close, update, generate, identity);
+    private final SesionController controller =
+            new SesionController(create, query, queryByGroup, close, update, generate, identity);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
             .setControllerAdvice(new GlobalExceptionHandler()).build();
 
@@ -67,6 +70,7 @@ class SesionControllerContractTest {
         assertEquals(START.plusHours(1), captor.getValue().getFechaHoraFin());
         assertEquals(ACTOR, captor.getValue().getDocente());
         assertEquals("PRESENCIAL", captor.getValue().getTipo());
+        assertEquals(ACTOR, captor.getValue().getUsuarioEjecutor());
     }
 
     @Test
@@ -109,6 +113,7 @@ class SesionControllerContractTest {
         assertEquals(START.plusHours(2), updateCaptor.getValue().getFechaHoraFin());
         assertEquals("B202", updateCaptor.getValue().getAula());
         assertEquals(ACTOR, updateCaptor.getValue().getDocente());
+        assertEquals(ACTOR, updateCaptor.getValue().getUsuarioEjecutor());
 
         mvc.perform(post("/api/v1/sesiones/cierres").contentType("application/json")
                         .content("{\"sesion\":\"" + SESSION + "\",\"observacionCierre\":\"Finalizada\"}"))
@@ -117,12 +122,14 @@ class SesionControllerContractTest {
         verify(close).execute(closeCaptor.capture());
         assertEquals(SESSION, closeCaptor.getValue().getSesion());
         assertEquals(ACTOR, closeCaptor.getValue().getDocente());
+        assertEquals(ACTOR, closeCaptor.getValue().getUsuarioEjecutor());
 
         mvc.perform(post("/api/v1/sesiones/grupo/{id}/generacion", GROUP))
                 .andExpect(status().isCreated());
         final var generateCaptor = ArgumentCaptor.forClass(co.edu.uco.asistenciasuco.application.features.sesion.generarsesionesgrupo.primaryports.dto.GenerarSesionesGrupoDTO.class);
         verify(generate).execute(generateCaptor.capture());
         assertEquals(GROUP, generateCaptor.getValue().getGrupo());
+        assertEquals(ACTOR, generateCaptor.getValue().getUsuarioEjecutor());
     }
 
     @Test
@@ -140,7 +147,20 @@ class SesionControllerContractTest {
     }
 
     @Test
-    void groupListingRemainsUnavailableUntilPublicDbContractExists() {
-        assertThrows(FeatureUnavailableException.class, () -> controller.consultarSesionesPorGrupo(GROUP));
+    void groupListingDelegatesToInputPortWithAuthenticatedActor() throws Exception {
+        when(queryByGroup.execute(any(ConsultarSesionesPorGrupoDTO.class))).thenReturn(List.of(
+                new SesionConsultadaDTO(SESSION, GROUP, "Sesión 1", 1, "S01", 2, "G01", "Grupo 1", START, START.plusHours(1))
+        ));
+
+        mvc.perform(get("/api/v1/sesiones/grupo/{grupoId}", GROUP))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exitoso").value(true))
+                .andExpect(jsonPath("$.datos[0].sesion").value(SESSION.toString()))
+                .andExpect(jsonPath("$.total").value(1));
+
+        final var captor = ArgumentCaptor.forClass(ConsultarSesionesPorGrupoDTO.class);
+        verify(queryByGroup).execute(captor.capture());
+        assertEquals(GROUP, captor.getValue().getGrupo());
+        assertEquals(ACTOR, captor.getValue().getUsuarioEjecutor());
     }
 }

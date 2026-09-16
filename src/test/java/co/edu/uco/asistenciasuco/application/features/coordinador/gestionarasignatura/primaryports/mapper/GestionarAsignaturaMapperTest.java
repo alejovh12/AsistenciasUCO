@@ -21,12 +21,16 @@ class GestionarAsignaturaMapperTest {
     void toDomain_con_dto_valido_mapea_campos() {
         final UUID id = UUID.randomUUID();
         final UUID plan = UUID.randomUUID();
-        final GuardarAsignaturaDTO dto = new GuardarAsignaturaDTO(id, plan, "COD1", "Calculo", 3, 1, "Area", "Componente");
+        final UUID usuarioEjecutor = UUID.randomUUID();
+        final GuardarAsignaturaDTO dto = new GuardarAsignaturaDTO(
+                id, plan, "COD1", "Calculo", 3, 1, "Area", "Componente", usuarioEjecutor
+        );
 
         final AsignaturaDomain domain = GestionarAsignaturaMapper.toDomain(dto);
 
         assertEquals(id, domain.idAsignatura());
         assertEquals("COD1", domain.codigo());
         assertEquals(plan, domain.idPlanEstudio());
+        assertEquals(usuarioEjecutor, domain.usuarioEjecutor());
     }
 }

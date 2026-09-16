@@ -12,6 +12,7 @@ public final class ActualizarSesionDTO {
     private String aula;
     private String descripcion;
     private UUID docente;
+    private UUID usuarioEjecutor;
 
     public ActualizarSesionDTO() {
         super();
@@ -24,7 +25,8 @@ public final class ActualizarSesionDTO {
             final LocalDateTime fechaHoraFin,
             final String aula,
             final String descripcion,
-            final UUID docente
+            final UUID docente,
+            final UUID usuarioEjecutor
     ) {
         setSesion(sesion);
         setNombre(nombre);
@@ -33,6 +35,7 @@ public final class ActualizarSesionDTO {
         setAula(aula);
         setDescripcion(descripcion);
         setDocente(docente);
+        setUsuarioEjecutor(usuarioEjecutor);
     }
 
     public UUID getSesion() {
@@ -89,5 +92,13 @@ public final class ActualizarSesionDTO {
 
     public void setDocente(final UUID docente) {
         this.docente = docente;
+    }
+
+    public UUID getUsuarioEjecutor() {
+        return usuarioEjecutor;
+    }
+
+    public void setUsuarioEjecutor(final UUID usuarioEjecutor) {
+        this.usuarioEjecutor = usuarioEjecutor;
     }
 }

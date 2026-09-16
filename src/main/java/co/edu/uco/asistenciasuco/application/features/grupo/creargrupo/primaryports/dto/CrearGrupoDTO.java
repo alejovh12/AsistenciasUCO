@@ -9,6 +9,7 @@ public record CrearGrupoDTO(
         String nombre,
         UUID idDocente,
         String aula,
-        Boolean generarSesionesAutomaticas
+        Boolean generarSesionesAutomaticas,
+        UUID usuarioEjecutor
 ) {
 }

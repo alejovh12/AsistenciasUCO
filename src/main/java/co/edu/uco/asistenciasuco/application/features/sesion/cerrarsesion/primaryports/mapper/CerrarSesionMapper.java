@@ -21,7 +21,8 @@ public final class CerrarSesionMapper {
         return new CerrarSesionDomain(
                 dto.getSesion(),
                 dto.getDocente(),
-                dto.getObservacionCierre()
+                dto.getObservacionCierre(),
+                dto.getUsuarioEjecutor()
         );
     }
 }

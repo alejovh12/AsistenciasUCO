@@ -22,15 +22,17 @@ class CrearSesionMapperTest {
     void toDomain_con_dto_valido_mapea_campos() {
         final UUID grupo = UUID.randomUUID();
         final UUID docente = UUID.randomUUID();
+        final UUID usuarioEjecutor = UUID.randomUUID();
         final CrearSesionDTO dto = new CrearSesionDTO(
                 grupo, "Tema de la sesion", "Descripcion",
                 LocalDateTime.of(2026, 1, 20, 8, 0), LocalDateTime.of(2026, 1, 20, 10, 0),
-                "Aula 1", "TEORICA", docente);
+                "Aula 1", "TEORICA", docente, usuarioEjecutor);
 
         final CrearSesionDomain domain = CrearSesionMapper.toDomain(dto);
 
         assertEquals(grupo, domain.getGrupo());
         assertEquals("Tema de la sesion", domain.getTema());
         assertEquals(docente, domain.getDocente());
+        assertEquals(usuarioEjecutor, domain.getUsuarioEjecutor());
     }
 }

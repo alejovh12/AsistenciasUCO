@@ -103,6 +103,49 @@ class RbacSecurityFilterChainTest {
                 .andExpect(status().isOk());
     }
 
+    // --- GET /api/v1/grupos : listado institucional completo (NO es "mis grupos" del docente) ---
+
+    @Test
+    void listar_grupos_docente_recibe_403() throws Exception {
+        // El listado completo institucional no es la fuente de "mis grupos" del docente
+        // (esa es GET /api/v1/docente/horarios); abrirlo permitiria enumerar grupos ajenos.
+        mockMvc.perform(get("/api/v1/grupos").header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void listar_grupos_coordinador_es_permitido() throws Exception {
+        mockMvc.perform(get("/api/v1/grupos").header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
+                .andExpect(status().isOk());
+    }
+
+    // --- GET /api/v1/grupos/{grupoId}/estudiantes : sub-recurso de un grupo (DOCENTE si accede,
+    // scopeado a su propio grupo en Application) ---
+
+    @Test
+    void estudiantes_de_grupo_docente_es_permitido_por_security_filter_chain() throws Exception {
+        mockMvc.perform(get("/api/v1/grupos/{grupoId}/estudiantes", "11111111-1111-1111-1111-111111111111")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isOk());
+    }
+
+    // --- GET /api/v1/sesiones/grupo/{grupoId} : sesiones de un grupo, usadas por el docente
+    // para elegir sobre cual tomar asistencia ---
+
+    @Test
+    void sesiones_por_grupo_docente_es_permitido_por_security_filter_chain() throws Exception {
+        mockMvc.perform(get("/api/v1/sesiones/grupo/{grupoId}", "11111111-1111-1111-1111-111111111111")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void sesiones_por_grupo_coordinador_recibe_403() throws Exception {
+        mockMvc.perform(get("/api/v1/sesiones/grupo/{grupoId}", "11111111-1111-1111-1111-111111111111")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
+                .andExpect(status().isForbidden());
+    }
+
     // --- POST /api/v1/grupos : command de coordinación ---
 
     @Test
@@ -263,6 +306,21 @@ class RbacSecurityFilterChainTest {
 
         @GetMapping("/api/v1/estudiantes")
         String estudiantes() {
+            return "ok";
+        }
+
+        @GetMapping("/api/v1/grupos")
+        String listarGrupos() {
+            return "ok";
+        }
+
+        @GetMapping("/api/v1/grupos/{grupoId}/estudiantes")
+        String estudiantesDeGrupo() {
+            return "ok";
+        }
+
+        @GetMapping("/api/v1/sesiones/grupo/{grupoId}")
+        String sesionesPorGrupo() {
             return "ok";
         }
 

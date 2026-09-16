@@ -5,7 +5,7 @@ import java.util.UUID;
 public interface AsignaturaCommandPort {
 
     void crearAsignatura(UUID idAsignatura, String codigo, String nombre, Integer creditos, UUID idPlanEstudio,
-                         Integer semestreNumero, String nombreArea, String nombreComponente);
+                         Integer semestreNumero, String nombreArea, String nombreComponente, UUID usuarioEjecutor);
 
     void actualizarAsignatura(UUID idAsignatura, String codigo, String nombre, Integer creditos, UUID idPlanEstudio,
                               Integer semestreNumero, String nombreArea, String nombreComponente);

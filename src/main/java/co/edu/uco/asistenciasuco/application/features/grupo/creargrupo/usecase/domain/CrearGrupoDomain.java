@@ -9,6 +9,7 @@ public record CrearGrupoDomain(
         String nombre,
         UUID idDocente,
         String aula,
-        boolean generarSesionesAutomaticas
+        boolean generarSesionesAutomaticas,
+        UUID usuarioEjecutor
 ) {
 }

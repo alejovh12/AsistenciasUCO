@@ -33,12 +33,13 @@ class SesionRepositoryMockAdapterTest {
     void metodos_de_comando_aceptan_dto_valido_sin_lanzar() {
         adapter.crearSesion(new CrearSesionRepositoryDTO(
                 UUID.randomUUID(), "Tema", "Descripcion", LocalDateTime.now(), LocalDateTime.now().plusHours(2),
-                "Aula 1", "TEORICA", UUID.randomUUID()));
+                "Aula 1", "TEORICA", UUID.randomUUID(), UUID.randomUUID()));
         adapter.actualizarSesion(new ActualizarSesionRepositoryDTO(
                 UUID.randomUUID(), "Sesion", LocalDateTime.now(), LocalDateTime.now().plusHours(2),
-                "Aula 1", "Descripcion", UUID.randomUUID()));
-        adapter.cerrarSesion(new CerrarSesionRepositoryDTO(UUID.randomUUID(), UUID.randomUUID(), "Cerrada a tiempo"));
-        adapter.generarSesionesGrupo(new GenerarSesionesGrupoRepositoryDTO(UUID.randomUUID()));
+                "Aula 1", "Descripcion", UUID.randomUUID(), UUID.randomUUID()));
+        adapter.cerrarSesion(new CerrarSesionRepositoryDTO(
+                UUID.randomUUID(), UUID.randomUUID(), "Cerrada a tiempo", UUID.randomUUID()));
+        adapter.generarSesionesGrupo(new GenerarSesionesGrupoRepositoryDTO(UUID.randomUUID(), UUID.randomUUID()));
     }
 
     @Test

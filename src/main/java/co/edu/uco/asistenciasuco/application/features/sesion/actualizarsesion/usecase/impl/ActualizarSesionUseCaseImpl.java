@@ -39,7 +39,8 @@ public final class ActualizarSesionUseCaseImpl implements ActualizarSesionUseCas
                 domain.getFechaHoraFin(),
                 domain.getAula(),
                 domain.getDescripcion(),
-                docenteId
+                docenteId,
+                domain.getUsuarioEjecutor()
         );
         sesionRepositoryPort.actualizarSesion(ActualizarSesionRepositoryMapper.toRepositoryDTO(scopedDomain));
     }

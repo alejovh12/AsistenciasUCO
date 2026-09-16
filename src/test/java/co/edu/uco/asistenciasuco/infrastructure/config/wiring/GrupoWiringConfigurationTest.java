@@ -13,6 +13,7 @@ import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudiantee
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import org.junit.jupiter.api.Test;
 
@@ -43,7 +44,8 @@ class GrupoWiringConfigurationTest {
         assertInstanceOf(ConsultarGruposUseCaseImpl.class, consultarGruposUseCase);
         assertInstanceOf(ConsultarGruposInteractor.class, config.consultarGruposInputPort(consultarGruposUseCase));
 
-        final var consultarEstudiantesGrupoUseCase = config.consultarEstudiantesGrupoUseCase(grupoRepositoryPort);
+        final var consultarEstudiantesGrupoUseCase = config.consultarEstudiantesGrupoUseCase(
+                grupoRepositoryPort, mock(InstitutionalScopePort.class));
         assertInstanceOf(ConsultarEstudiantesGrupoUseCaseImpl.class, consultarEstudiantesGrupoUseCase);
         assertInstanceOf(ConsultarEstudiantesGrupoInteractor.class,
                 config.consultarEstudiantesGrupoInputPort(consultarEstudiantesGrupoUseCase));

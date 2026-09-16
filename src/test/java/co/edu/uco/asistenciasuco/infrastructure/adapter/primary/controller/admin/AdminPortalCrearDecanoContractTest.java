@@ -27,13 +27,15 @@ class AdminPortalCrearDecanoContractTest {
 
     private static final UUID TIPO_ID = UUID.fromString("22222222-3333-4444-5555-666666666666");
     private static final UUID FACULTAD_ID = UUID.fromString("11111111-2222-3333-4444-555555555555");
+    private static final UUID ADMINISTRADOR_AUTENTICADO = UUID.fromString("99999999-8888-7777-6666-555555555555");
     private final JsonMapper json = JsonMapper.builder().build();
     private final CrearDecanoUseCase useCase = mock(CrearDecanoUseCase.class);
+    private final AuthenticatedUserResolver authenticatedUserResolver = () -> ADMINISTRADOR_AUTENTICADO;
     private final AdminPortalController controller = new AdminPortalController(
             mock(ConsultarDecanosInputPort.class), new CrearDecanoInteractor(useCase),
             mock(ConsultarParametrosInputPort.class), mock(EjecutarCierreMasivoInputPort.class),
             mock(ConsultarInstitucionesInputPort.class), mock(ConsultarFacultadesInputPort.class),
-            mock(ConsultarAreasInputPort.class), mock(AuthenticatedUserResolver.class)
+            mock(ConsultarAreasInputPort.class), authenticatedUserResolver
     );
 
     @Test
@@ -44,6 +46,15 @@ class AdminPortalCrearDecanoContractTest {
         verify(useCase).execute(domain.capture());
         assertEquals(TIPO_ID, domain.getValue().getTipoIdentificacionId());
         assertEquals(123456789, domain.getValue().getNumeroIdentificacion());
+    }
+
+    @Test
+    void administrador_autenticado_se_propaga_como_usuario_ejecutor() {
+        controller.crearDecano(json.readValue(requestJson(TIPO_ID.toString()), AdminPortalController.CrearDecanoRequest.class));
+
+        final ArgumentCaptor<CrearDecanoDomain> domain = ArgumentCaptor.forClass(CrearDecanoDomain.class);
+        verify(useCase).execute(domain.capture());
+        assertEquals(ADMINISTRADOR_AUTENTICADO, domain.getValue().getUsuarioEjecutor());
     }
 
     @Test

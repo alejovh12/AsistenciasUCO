@@ -117,7 +117,9 @@ public final class CoordinadorPortalController {
             @PathVariable final UUID id,
             @RequestBody final GuardarAsignaturaRequest request
     ) {
-        gestionarAsignaturaInputPort.crear(toAsignaturaDTO(null, id, request));
+        gestionarAsignaturaInputPort.crear(
+                toAsignaturaDTO(null, id, request, authenticatedUserResolver.requireAuthenticatedUserId())
+        );
         return ResponseEntity.ok(new ApiDataResponse<>(true, null));
     }
     @PutMapping("/planes-estudio/{planId}/asignaturas/{asigId}")
@@ -126,7 +128,7 @@ public final class CoordinadorPortalController {
             @PathVariable final UUID asigId,
             @RequestBody final GuardarAsignaturaRequest request
     ) {
-        gestionarAsignaturaInputPort.actualizar(toAsignaturaDTO(asigId, planId, request));
+        gestionarAsignaturaInputPort.actualizar(toAsignaturaDTO(asigId, planId, request, null));
         return ResponseEntity.ok(new ApiDataResponse<>(true, null));
     }
     @DeleteMapping("/planes-estudio/{planId}/asignaturas/{asigId}")
@@ -176,7 +178,8 @@ public final class CoordinadorPortalController {
     private static GuardarAsignaturaDTO toAsignaturaDTO(
             final UUID asignaturaId,
             final UUID planId,
-            final GuardarAsignaturaRequest request
+            final GuardarAsignaturaRequest request,
+            final UUID usuarioEjecutor
     ) {
         return new GuardarAsignaturaDTO(
                 asignaturaId,
@@ -186,7 +189,8 @@ public final class CoordinadorPortalController {
                 request == null ? null : request.getCreditos(),
                 request == null ? null : request.getSemestreNumero(),
                 request == null ? null : request.getNombreArea(),
-                request == null ? null : request.getNombreComponente()
+                request == null ? null : request.getNombreComponente(),
+                usuarioEjecutor
         );
     }
 }

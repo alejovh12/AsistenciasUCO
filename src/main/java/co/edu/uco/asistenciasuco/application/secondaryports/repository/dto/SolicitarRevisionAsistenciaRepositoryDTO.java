@@ -8,6 +8,7 @@ public record SolicitarRevisionAsistenciaRepositoryDTO(
         String categoria,
         String justificacion,
         String soporteNombre,
-        String soporteUrl
+        String soporteUrl,
+        UUID usuarioEjecutor
 ) {
 }

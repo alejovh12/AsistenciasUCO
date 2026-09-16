@@ -17,7 +17,7 @@ public final class GrupoHttpMapper {
     private GrupoHttpMapper() {
     }
 
-    public static CrearGrupoDTO toApplicationDTO(final CrearGrupoRequest request) {
+    public static CrearGrupoDTO toApplicationDTO(final CrearGrupoRequest request, final UUID usuarioEjecutor) {
         Objects.requireNonNull(request, "El request HTTP para crear grupo es obligatorio.");
         rejectHorarioIfPresent(request.getDias(), request.getHoraInicio(), request.getHoraFin());
         return new CrearGrupoDTO(
@@ -27,11 +27,16 @@ public final class GrupoHttpMapper {
                 requiredText(request.getNombre(), "nombre"),
                 firstNonNull(request.getIdDocente(), request.getDocenteId()),
                 requiredText(request.getAula(), "aula"),
-                firstNonNull(request.getGenerarSesionesAutomaticas(), request.getCrearSesionesAutomaticamente())
+                firstNonNull(request.getGenerarSesionesAutomaticas(), request.getCrearSesionesAutomaticamente()),
+                usuarioEjecutor
         );
     }
 
-    public static ActualizarGrupoDTO toApplicationDTO(final UUID grupoId, final ActualizarGrupoRequest request) {
+    public static ActualizarGrupoDTO toApplicationDTO(
+            final UUID grupoId,
+            final ActualizarGrupoRequest request,
+            final UUID usuarioEjecutor
+    ) {
         Objects.requireNonNull(grupoId, "El identificador del grupo es obligatorio.");
         Objects.requireNonNull(request, "El request HTTP para actualizar grupo es obligatorio.");
         rejectHorarioIfPresent(request.getDias(), request.getHoraInicio(), request.getHoraFin());
@@ -41,7 +46,8 @@ public final class GrupoHttpMapper {
                 firstTextOrNull(request.getNombre()),
                 firstNonNull(request.getIdDocente(), request.getDocenteId()),
                 request.getCupoMaximo(),
-                firstTextOrNull(request.getAula())
+                firstTextOrNull(request.getAula()),
+                usuarioEjecutor
         );
     }
 

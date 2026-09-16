@@ -13,6 +13,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
@@ -24,9 +25,10 @@ class DecanoSqlServerAdapterTest {
     }
 
     @Test
-    void crear_decano_envia_tipo_identificacion_en_segunda_posicion_del_exec() {
+    void crear_decano_no_envia_tipo_identificacion_y_propaga_usuario_ejecutor() {
         final UUID tipoId = UUID.fromString("22222222-3333-4444-5555-666666666666");
         final UUID correlationId = UUID.fromString("33333333-4444-5555-6666-777777777777");
+        final UUID usuarioEjecutor = UUID.fromString("44444444-5555-6666-7777-888888888888");
         final AtomicReference<String> sql = new AtomicReference<>();
         final AtomicReference<MapSqlParameterSource> params = new AtomicReference<>();
         final NamedParameterJdbcOperations jdbc = mock(NamedParameterJdbcOperations.class);
@@ -45,13 +47,14 @@ class DecanoSqlServerAdapterTest {
         final var adapter = new DecanoSqlServerAdapter(jdbc, executor);
         adapter.crearDecano(new DecanoCommandPort.CrearDecanoCommand(
                 UUID.randomUUID(), tipoId, 123456789, "ANA", "MARIA", "PEREZ", "GOMEZ",
-                "nuevo@uco.edu.co", UUID.randomUUID(), "Facultad", "HASH"
+                "nuevo@uco.edu.co", UUID.randomUUID(), "Facultad", "HASH", usuarioEjecutor
         ));
 
         assertTrue(sql.get().contains("EXEC dbo.usp_crear_decano"));
-        assertTrue(sql.get().indexOf("@idDecano") < sql.get().indexOf("@idTipoIdIdentificacion"));
-        assertTrue(sql.get().indexOf("@idTipoIdIdentificacion") < sql.get().indexOf("@numeroIdentificacion"));
-        assertEquals(tipoId, params.get().getValue("idTipoIdIdentificacion"));
+        assertTrue(sql.get().contains("@idUsuarioEjecutor"));
+        assertFalse(sql.get().contains("@idTipoIdIdentificacion"));
+        assertFalse(params.get().hasValue("idTipoIdIdentificacion"));
+        assertEquals(usuarioEjecutor, params.get().getValue("idUsuarioEjecutor"));
         assertEquals("HASH", params.get().getValue("password"));
         assertEquals(correlationId, params.get().getValue("idCorrelacion"));
     }

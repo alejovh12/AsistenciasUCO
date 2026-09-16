@@ -29,6 +29,6 @@ public final class CrearCoordinadorUseCaseImpl implements CrearCoordinadorUseCas
                 .orElseThrow(() -> new ForbiddenException("No fue posible resolver la facultad del decano autenticado."));
         commandPort.crearCoordinador(UUID.randomUUID(), domain.getNumeroIdentificacion(), domain.getPrimerNombre(),
                 domain.getSegundoNombre(), domain.getPrimerApellido(), domain.getSegundoApellido(), domain.getCorreo(),
-                domain.getIdPrograma(), facultad, domain.getPassword());
+                domain.getIdPrograma(), facultad, domain.getPassword(), domain.getUsuario());
     }
 }

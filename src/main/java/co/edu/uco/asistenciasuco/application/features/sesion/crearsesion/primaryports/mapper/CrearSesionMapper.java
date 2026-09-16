@@ -26,7 +26,8 @@ public final class CrearSesionMapper {
                 dto.getFechaHoraFin(),
                 dto.getAula(),
                 dto.getTipo(),
-                dto.getDocente()
+                dto.getDocente(),
+                dto.getUsuarioEjecutor()
         );
     }
 }

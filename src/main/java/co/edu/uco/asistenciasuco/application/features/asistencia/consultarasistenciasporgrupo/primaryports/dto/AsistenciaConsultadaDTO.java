@@ -12,6 +12,7 @@ public final class AsistenciaConsultadaDTO {
     private UUID grupo;
     private UUID sesion;
     private Boolean presente;
+    private String estado;
     private String observacion;
 
     public AsistenciaConsultadaDTO() {
@@ -24,6 +25,7 @@ public final class AsistenciaConsultadaDTO {
             final UUID grupo,
             final UUID sesion,
             final Boolean presente,
+            final String estado,
             final String observacion
     ) {
         setAsistencia(asistencia);
@@ -31,6 +33,7 @@ public final class AsistenciaConsultadaDTO {
         setGrupo(grupo);
         setSesion(sesion);
         setPresente(presente);
+        setEstado(estado);
         setObservacion(observacion);
     }
 
@@ -72,6 +75,14 @@ public final class AsistenciaConsultadaDTO {
 
     public void setPresente(final Boolean presente) {
         this.presente = presente;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(final String estado) {
+        this.estado = estado;
     }
 
     public String getObservacion() {

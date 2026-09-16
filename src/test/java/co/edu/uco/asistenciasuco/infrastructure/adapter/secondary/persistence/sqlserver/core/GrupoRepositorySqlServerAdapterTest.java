@@ -255,8 +255,9 @@ class GrupoRepositorySqlServerAdapterTest {
         );
         CorrelationIdContext.set(CORRELACION);
 
+        final UUID usuarioEjecutor = UUID.randomUUID();
         final GrupoCommandRepositoryProjection resultado = adapter.crearGrupo(new CrearGrupoRepositoryDTO(
-                GRUPO, ASIGNATURA, UUID.randomUUID(), 1, "Grupo 1", DOCENTE, "Aula 101"
+                GRUPO, ASIGNATURA, UUID.randomUUID(), 1, "Grupo 1", DOCENTE, "Aula 101", usuarioEjecutor
         ));
 
         final var operation = ArgumentCaptor.forClass(String.class);
@@ -266,9 +267,11 @@ class GrupoRepositorySqlServerAdapterTest {
         assertTrue(transaccionEjecutada.get());
         assertEquals("crearGrupo", operation.getValue());
         assertTrue(sql.getValue().contains("dbo.usp_crear_grupo"));
+        assertTrue(sql.getValue().contains("@idUsuarioEjecutor"));
         assertEquals(GRUPO, params.getValue().getValue(GrupoRepositorySqlServerAdapter.PARAM_ID_GRUPO));
         assertEquals("Aula 101", params.getValue().getValue(GrupoRepositorySqlServerAdapter.PARAM_AULA));
         assertEquals(CORRELACION, params.getValue().getValue(GrupoRepositorySqlServerAdapter.PARAM_ID_CORRELACION));
+        assertEquals(usuarioEjecutor, params.getValue().getValue(GrupoRepositorySqlServerAdapter.PARAM_ID_USUARIO_EJECUTOR));
         assertEquals(GRUPO, resultado.idGrupo());
         assertEquals("Grupo creado.", resultado.mensajeUsuario());
     }
@@ -296,15 +299,18 @@ class GrupoRepositorySqlServerAdapterTest {
         );
         CorrelationIdContext.set(CORRELACION);
 
+        final UUID usuarioEjecutor = UUID.randomUUID();
         final GrupoCommandRepositoryProjection resultado = adapter.actualizarGrupo(new ActualizarGrupoRepositoryDTO(
-                GRUPO, 1, "Grupo 1", DOCENTE, 40, "Aula 202"
+                GRUPO, 1, "Grupo 1", DOCENTE, 40, "Aula 202", usuarioEjecutor
         ));
 
         final var sql = ArgumentCaptor.forClass(String.class);
         final var params = ArgumentCaptor.forClass(MapSqlParameterSource.class);
         verify(procedureExecutor).execute(anyString(), sql.capture(), params.capture());
         assertTrue(sql.getValue().contains("dbo.usp_actualizar_grupo"));
+        assertTrue(sql.getValue().contains("@idUsuarioEjecutor"));
         assertEquals(40, params.getValue().getValue(GrupoRepositorySqlServerAdapter.PARAM_CUPO_MAXIMO));
+        assertEquals(usuarioEjecutor, params.getValue().getValue(GrupoRepositorySqlServerAdapter.PARAM_ID_USUARIO_EJECUTOR));
         assertEquals("Grupo actualizado.", resultado.mensajeUsuario());
     }
 
@@ -317,27 +323,6 @@ class GrupoRepositorySqlServerAdapterTest {
         );
 
         assertThrows(CrosscuttingException.class, () -> adapter.actualizarGrupo(null));
-    }
-
-    @Test
-    void generarSesionesGrupo_ejecuta_procedimiento_y_retorna_mensaje() {
-        final CanonicalStoredProcedureExecutor procedureExecutor = mock(CanonicalStoredProcedureExecutor.class);
-        when(procedureExecutor.execute(anyString(), anyString(), any(MapSqlParameterSource.class)))
-                .thenReturn(new CanonicalProcedureResult(CORRELACION, "Sesiones generadas.", "detalle", true));
-        final GrupoRepositorySqlServerAdapter adapter = new GrupoRepositorySqlServerAdapter(
-                procedureExecutor,
-                mock(NamedParameterJdbcOperations.class),
-                transactionOperations(new AtomicBoolean(false))
-        );
-        CorrelationIdContext.set(CORRELACION);
-
-        final GrupoCommandRepositoryProjection resultado = adapter.generarSesionesGrupo(GRUPO);
-
-        final var sql = ArgumentCaptor.forClass(String.class);
-        verify(procedureExecutor).execute(anyString(), sql.capture(), any(MapSqlParameterSource.class));
-        assertTrue(sql.getValue().contains("dbo.usp_generar_sesiones_grupo"));
-        assertEquals(GRUPO, resultado.idGrupo());
-        assertEquals("Sesiones generadas.", resultado.mensajeUsuario());
     }
 
     @Test

@@ -41,19 +41,22 @@ class CoordinadorSqlServerAdapterTest {
         final UUID id = UUID.randomUUID();
         final UUID programa = UUID.randomUUID();
         final UUID facultad = UUID.randomUUID();
+        final UUID usuarioEjecutor = UUID.randomUUID();
 
         adapter.crearCoordinador(id, "123456", "ANA", "MARIA", "PEREZ", "GOMEZ",
-                "ana@uco.edu.co", programa, facultad, "HASH");
+                "ana@uco.edu.co", programa, facultad, "HASH", usuarioEjecutor);
 
         final var sql = ArgumentCaptor.forClass(String.class);
         final var params = ArgumentCaptor.forClass(MapSqlParameterSource.class);
         verify(procedures).execute(eq("crearCoordinador"), sql.capture(), params.capture());
         assertTrue(sql.getValue().contains("usp_crear_coordinador"));
+        assertTrue(sql.getValue().contains("@idUsuarioEjecutor"));
         assertEquals(id, params.getValue().getValue("idCoordinador"));
         assertEquals(programa, params.getValue().getValue("idPrograma"));
         assertEquals(facultad, params.getValue().getValue("idFacultad"));
         assertEquals("HASH", params.getValue().getValue("password"));
         assertEquals(CORRELACION, params.getValue().getValue("idCorrelacion"));
+        assertEquals(usuarioEjecutor, params.getValue().getValue("idUsuarioEjecutor"));
     }
 
     @Test

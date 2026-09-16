@@ -15,12 +15,16 @@ class ActualizarGrupoRepositoryMapperTest {
     @Test
     void toRepositoryDTO_mapea_todos_los_campos() {
         final UUID grupo = UUID.randomUUID();
-        final ActualizarGrupoDomain domain = new ActualizarGrupoDomain(grupo, 1, "Grupo 1", UUID.randomUUID(), 30, "Aula 1");
+        final UUID usuarioEjecutor = UUID.randomUUID();
+        final ActualizarGrupoDomain domain = new ActualizarGrupoDomain(
+                grupo, 1, "Grupo 1", UUID.randomUUID(), 30, "Aula 1", usuarioEjecutor
+        );
 
         final ActualizarGrupoRepositoryDTO dto = ActualizarGrupoRepositoryMapper.toRepositoryDTO(domain);
 
         assertEquals(grupo, dto.idGrupo());
         assertEquals(30, dto.cupoMaximo());
+        assertEquals(usuarioEjecutor, dto.usuarioEjecutor());
     }
 
     @Test

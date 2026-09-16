@@ -10,6 +10,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.repository.projectio
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -55,6 +56,15 @@ public final class SesionRepositoryMockAdapter implements SesionRepositoryPort {
                 null,
                 null
         );
+    }
+
+    @Override
+    public List<SesionRepositoryProjection> consultarSesionesPorGrupo(final UUID grupoId) {
+        if (ObjectHelper.isNull(grupoId)) {
+            throw new CrosscuttingException("El identificador del grupo para consultar sesiones es obligatorio.");
+        }
+
+        return List.of(consultarSesion(new ConsultarSesionRepositoryDTO(SESION_ABIERTA)));
     }
 
     @Override

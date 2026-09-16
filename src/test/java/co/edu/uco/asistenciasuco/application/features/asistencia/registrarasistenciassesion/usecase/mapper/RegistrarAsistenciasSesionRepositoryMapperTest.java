@@ -23,13 +23,15 @@ class RegistrarAsistenciasSesionRepositoryMapperTest {
     void toRepositoryDTO_con_dominio_valido_mapea_registros() {
         final UUID sesion = UUID.randomUUID();
         final UUID estudiante = UUID.randomUUID();
+        final UUID usuarioEjecutor = UUID.randomUUID();
         final RegistrarAsistenciasSesionDomain domain = new RegistrarAsistenciasSesionDomain(
-                sesion, List.of(new RegistroAsistenciaSesionDomain(estudiante, "ASISTIO")));
+                sesion, List.of(new RegistroAsistenciaSesionDomain(estudiante, "AN")), usuarioEjecutor);
 
         final RegistrarAsistenciasSesionRepositoryDTO dto = RegistrarAsistenciasSesionRepositoryMapper.toRepositoryDTO(domain);
 
         assertEquals(sesion, dto.sesion());
         assertEquals(1, dto.registros().size());
         assertEquals(estudiante, dto.registros().getFirst().estudiante());
+        assertEquals(usuarioEjecutor, dto.usuarioEjecutor());
     }
 }

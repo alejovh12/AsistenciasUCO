@@ -14,6 +14,7 @@ class CrearSesionDomainTest {
 
     private static final UUID GRUPO = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private static final UUID DOCENTE = UUID.fromString("22222222-2222-2222-2222-222222222222");
+    private static final UUID USUARIO_EJECUTOR = UUID.fromString("33333333-3333-3333-3333-333333333333");
     private static final LocalDateTime INICIO = LocalDateTime.of(2026, 1, 1, 8, 0);
     private static final LocalDateTime FIN = LocalDateTime.of(2026, 1, 1, 10, 0);
 
@@ -28,27 +29,38 @@ class CrearSesionDomainTest {
                         FIN,
                         "Aula 101",
                         "REGULAR",
-                        DOCENTE
+                        DOCENTE,
+                        USUARIO_EJECUTOR
                 );
 
         assertEquals(GRUPO, domain.getGrupo());
         assertEquals("Tema principal", domain.getTema());
         assertEquals("Descripcion valida de prueba", domain.getDescripcion());
+        assertEquals(USUARIO_EJECUTOR, domain.getUsuarioEjecutor());
     }
 
     @Test
     void permite_descripcion_vacia_como_null() {
-        final CrearSesionDomain domain = new CrearSesionDomain(GRUPO, "Tema 1", "   ", INICIO, FIN, "Aula 101", "REGULAR", DOCENTE);
+        final CrearSesionDomain domain = new CrearSesionDomain(
+                GRUPO, "Tema 1", "   ", INICIO, FIN, "Aula 101", "REGULAR", DOCENTE, USUARIO_EJECUTOR);
         assertNull(domain.getDescripcion());
     }
 
     @Test
-    void rechaza_grupo_tema_y_descripcion_invalidos() {
-        assertThrows(ValidationException.class, () -> new CrearSesionDomain(null, "Tema valido", null, INICIO, FIN, "Aula 101", "REGULAR", DOCENTE));
-        assertThrows(ValidationException.class, () -> new CrearSesionDomain(GRUPO, null, null, INICIO, FIN, "Aula 101", "REGULAR", DOCENTE));
-        assertThrows(ValidationException.class, () -> new CrearSesionDomain(GRUPO, "abcd", null, INICIO, FIN, "Aula 101", "REGULAR", DOCENTE));
-        assertThrows(ValidationException.class, () -> new CrearSesionDomain(GRUPO, "a".repeat(101), null, INICIO, FIN, "Aula 101", "REGULAR", DOCENTE));
-        assertThrows(ValidationException.class, () -> new CrearSesionDomain(GRUPO, "Tema valido", "corta", INICIO, FIN, "Aula 101", "REGULAR", DOCENTE));
-        assertThrows(ValidationException.class, () -> new CrearSesionDomain(GRUPO, "Tema valido", "a".repeat(251), INICIO, FIN, "Aula 101", "REGULAR", DOCENTE));
+    void rechaza_grupo_tema_descripcion_y_usuario_invalidos() {
+        assertThrows(ValidationException.class, () -> new CrearSesionDomain(
+                null, "Tema valido", null, INICIO, FIN, "Aula 101", "REGULAR", DOCENTE, USUARIO_EJECUTOR));
+        assertThrows(ValidationException.class, () -> new CrearSesionDomain(
+                GRUPO, null, null, INICIO, FIN, "Aula 101", "REGULAR", DOCENTE, USUARIO_EJECUTOR));
+        assertThrows(ValidationException.class, () -> new CrearSesionDomain(
+                GRUPO, "abcd", null, INICIO, FIN, "Aula 101", "REGULAR", DOCENTE, USUARIO_EJECUTOR));
+        assertThrows(ValidationException.class, () -> new CrearSesionDomain(
+                GRUPO, "a".repeat(101), null, INICIO, FIN, "Aula 101", "REGULAR", DOCENTE, USUARIO_EJECUTOR));
+        assertThrows(ValidationException.class, () -> new CrearSesionDomain(
+                GRUPO, "Tema valido", "corta", INICIO, FIN, "Aula 101", "REGULAR", DOCENTE, USUARIO_EJECUTOR));
+        assertThrows(ValidationException.class, () -> new CrearSesionDomain(
+                GRUPO, "Tema valido", "a".repeat(251), INICIO, FIN, "Aula 101", "REGULAR", DOCENTE, USUARIO_EJECUTOR));
+        assertThrows(ValidationException.class, () -> new CrearSesionDomain(
+                GRUPO, "Tema valido", null, INICIO, FIN, "Aula 101", "REGULAR", DOCENTE, null));
     }
 }

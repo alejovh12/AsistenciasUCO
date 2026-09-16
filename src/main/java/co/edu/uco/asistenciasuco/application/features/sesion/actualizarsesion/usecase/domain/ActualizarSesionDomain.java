@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.sesion.actualizarsesion.u
 
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
+import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 
@@ -17,6 +18,7 @@ public final class ActualizarSesionDomain {
     private final String aula;
     private final String descripcion;
     private final UUID docente;
+    private final UUID usuarioEjecutor;
 
     public ActualizarSesionDomain(
             final UUID sesion,
@@ -25,10 +27,12 @@ public final class ActualizarSesionDomain {
             final LocalDateTime fechaHoraFin,
             final String aula,
             final String descripcion,
-            final UUID docente
+            final UUID docente,
+            final UUID usuarioEjecutor
     ) {
         validarSesion(sesion);
         validarDocente(docente);
+        validarUsuarioEjecutor(usuarioEjecutor);
         validarFechas(fechaHoraInicio, fechaHoraFin);
         this.nombre = validarNombre(nombre);
         this.descripcion = validarDescripcion(descripcion);
@@ -36,6 +40,7 @@ public final class ActualizarSesionDomain {
         this.fechaHoraInicio = fechaHoraInicio;
         this.fechaHoraFin = fechaHoraFin;
         this.docente = docente;
+        this.usuarioEjecutor = usuarioEjecutor;
         this.sesion = sesion;
     }
 
@@ -48,6 +53,12 @@ public final class ActualizarSesionDomain {
     private void validarDocente(final UUID docente) {
         if (ObjectHelper.isNull(docente)) {
             throw new ValidationException(SesionErrorCode.ERR_DOCENTE_REQUERIDO);
+        }
+    }
+
+    private void validarUsuarioEjecutor(final UUID usuarioEjecutor) {
+        if (ObjectHelper.isNull(usuarioEjecutor)) {
+            throw new ValidationException(UsuarioErrorCode.ERR_USUARIO_REQUERIDO);
         }
     }
 
@@ -105,5 +116,9 @@ public final class ActualizarSesionDomain {
 
     public UUID getDocente() {
         return docente;
+    }
+
+    public UUID getUsuarioEjecutor() {
+        return usuarioEjecutor;
     }
 }

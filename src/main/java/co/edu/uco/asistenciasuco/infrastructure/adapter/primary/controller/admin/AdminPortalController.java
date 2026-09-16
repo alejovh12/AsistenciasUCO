@@ -76,7 +76,7 @@ public final class AdminPortalController {
         crearDecanoInputPort.execute(new CrearDecanoDTO(
                 request.tipoIdentificacionId(), request.numeroIdentificacion(), request.primerNombre(),
                 request.segundoNombre(), request.primerApellido(), request.segundoApellido(), request.correo(),
-                request.password(), request.idFacultad()
+                request.password(), request.idFacultad(), authenticatedUserResolver.requireAuthenticatedUserId()
         ));
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiMessageResponse(true, "Decano creado correctamente."));
     }

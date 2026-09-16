@@ -55,7 +55,8 @@ class CrearCoordinadorUseCaseImplTest {
                 org.mockito.ArgumentMatchers.eq("ANA"), org.mockito.ArgumentMatchers.eq("MARIA"),
                 org.mockito.ArgumentMatchers.eq("PEREZ"), org.mockito.ArgumentMatchers.eq("GOMEZ"),
                 org.mockito.ArgumentMatchers.eq("ana@uco.edu.co"), org.mockito.ArgumentMatchers.eq(programa),
-                facultadCaptor.capture(), org.mockito.ArgumentMatchers.eq("HASH"));
+                facultadCaptor.capture(), org.mockito.ArgumentMatchers.eq("HASH"),
+                org.mockito.ArgumentMatchers.eq(usuario));
         assertEquals(facultad, facultadCaptor.getValue());
     }
 }

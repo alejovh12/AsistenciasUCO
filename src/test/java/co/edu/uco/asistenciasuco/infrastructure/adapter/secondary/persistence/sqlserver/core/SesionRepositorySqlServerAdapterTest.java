@@ -51,9 +51,10 @@ class SesionRepositorySqlServerAdapterTest {
     @Test
     void createPassesConfirmedProcedureAndParameters() {
         final LocalDateTime start = LocalDateTime.of(2026, 9, 14, 8, 0);
+        final UUID usuarioEjecutor = UUID.randomUUID();
         CorrelationIdContext.set(CORRELATION);
         adapter.crearSesion(new CrearSesionRepositoryDTO(GROUP, "Tema", "Descripción", start,
-                start.plusHours(1), "A101", "PRESENCIAL", TEACHER));
+                start.plusHours(1), "A101", "PRESENCIAL", TEACHER, usuarioEjecutor));
 
         final var operation = ArgumentCaptor.forClass(String.class);
         final var sql = ArgumentCaptor.forClass(String.class);
@@ -61,21 +62,24 @@ class SesionRepositorySqlServerAdapterTest {
         verify(procedures).execute(operation.capture(), sql.capture(), params.capture());
         assertEquals("crearSesion", operation.getValue());
         assertTrue(sql.getValue().contains("dbo.usp_crear_sesion"));
+        assertTrue(sql.getValue().contains("@idUsuarioEjecutor"));
         assertEquals(GROUP, params.getValue().getValue("idGrupo"));
         assertEquals(TEACHER, params.getValue().getValue("idDocente"));
         assertEquals(start, params.getValue().getValue("fechaHoraInicio"));
         assertEquals("PRESENCIAL", params.getValue().getValue("tipo"));
         assertEquals(CORRELATION, params.getValue().getValue("idCorrelacion"));
+        assertEquals(usuarioEjecutor, params.getValue().getValue("idUsuarioEjecutor"));
     }
 
     @Test
     void updateCloseAndGeneratePassThePublicProcedures() {
         final LocalDateTime start = LocalDateTime.of(2026, 9, 14, 8, 0);
+        final UUID usuarioEjecutor = UUID.randomUUID();
         CorrelationIdContext.set(CORRELATION);
         adapter.actualizarSesion(new ActualizarSesionRepositoryDTO(SESSION, "Nuevo", start,
-                start.plusHours(2), "B102", "Cambio", TEACHER));
-        adapter.cerrarSesion(new CerrarSesionRepositoryDTO(SESSION, TEACHER, "Cierre"));
-        adapter.generarSesionesGrupo(new GenerarSesionesGrupoRepositoryDTO(GROUP));
+                start.plusHours(2), "B102", "Cambio", TEACHER, usuarioEjecutor));
+        adapter.cerrarSesion(new CerrarSesionRepositoryDTO(SESSION, TEACHER, "Cierre", usuarioEjecutor));
+        adapter.generarSesionesGrupo(new GenerarSesionesGrupoRepositoryDTO(GROUP, usuarioEjecutor));
 
         final var operation = ArgumentCaptor.forClass(String.class);
         final var sql = ArgumentCaptor.forClass(String.class);
@@ -85,11 +89,13 @@ class SesionRepositorySqlServerAdapterTest {
         assertTrue(sql.getAllValues().get(0).contains("dbo.usp_actualizar_sesion"));
         assertTrue(sql.getAllValues().get(1).contains("dbo.usp_cerrar_sesion"));
         assertTrue(sql.getAllValues().get(2).contains("dbo.usp_generar_sesiones_grupo"));
+        sql.getAllValues().forEach(value -> assertTrue(value.contains("@idUsuarioEjecutor")));
         assertEquals(SESSION, params.getAllValues().get(0).getValue("idSesion"));
         assertEquals("Nuevo", params.getAllValues().get(0).getValue("nombre"));
         assertEquals(TEACHER, params.getAllValues().get(1).getValue("idDocente"));
         assertEquals(GROUP, params.getAllValues().get(2).getValue("idGrupo"));
         params.getAllValues().forEach(value -> assertEquals(CORRELATION, value.getValue("idCorrelacion")));
+        params.getAllValues().forEach(value -> assertEquals(usuarioEjecutor, value.getValue("idUsuarioEjecutor")));
     }
 
     @Test

@@ -22,7 +22,8 @@ public final class ActualizarSesionRepositoryMapper {
                 domain.getFechaHoraFin(),
                 domain.getAula(),
                 domain.getDescripcion(),
-                domain.getDocente()
+                domain.getDocente(),
+                domain.getUsuarioEjecutor()
         );
     }
 }

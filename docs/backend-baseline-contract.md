@@ -39,14 +39,14 @@
 | `PUT /api/v1/sesiones/{id}` | DOCENTE | Actualizar sesion | `SesionRepositoryPort` | `usp_actualizar_sesion` | IMPLEMENTATION_AVAILABLE_PENDING_E2E | Scope docente resuelto desde JWT | `ActualizarSesionRequest` |
 | `POST /api/v1/sesiones/cierres` | DOCENTE | Cerrar sesion | `SesionRepositoryPort` | `usp_cerrar_sesion` | IMPLEMENTATION_AVAILABLE_PENDING_E2E | Scope docente resuelto desde JWT | `CerrarSesionRequest` |
 | `POST /api/v1/sesiones/grupo/{grupoId}/generacion` | DOCENTE | Generar sesiones grupo | `SesionRepositoryPort` | `usp_generar_sesiones_grupo` | IMPLEMENTATION_AVAILABLE_PENDING_E2E | No hay loops/INSERTs en Java | Path `grupoId` |
-| `GET /api/v1/sesiones/grupo/{grupoId}` | DOCENTE | Consultar sesiones por grupo |  | `uv_sesion` | READY_WITH_DB_LIMITATION | Vista soporta sesion por id; falta contrato de respuesta agregado por grupo en esta vertical | `FeatureUnavailableException` |
+| `GET /api/v1/sesiones/grupo/{grupoId}` | DOCENTE | Consultar sesiones por grupo | `SesionRepositoryPort` | `uv_sesion` | IMPLEMENTATION_AVAILABLE_PENDING_E2E | Scope docente resuelto desde JWT via `InstitutionalScopePort` | `ApiListResponse<SesionConsultadaDTO>` |
 | `GET /api/v1/grupos/{id}/reportes/asistencia-excel` | AUTENTICADO | Reporte asistencia | `ReporteAsistenciaQueryPort` | `uv_sesion`, `uv_estudiante_grupo`, `uv_estudiante_identidad`, `uv_usuario`, `uv_asistencia`, `uv_detalle_asistencia` | IMPLEMENTATION_AVAILABLE_PENDING_E2E | Sin reglas inventadas de aprobacion | XLSX |
 | `POST /api/v1/asistencias/lote` | DOCENTE | Registro masivo | `AsistenciaRepositoryPort` | `usp_registrar_asistencias_sesion` | IMPLEMENTATION_AVAILABLE_PENDING_E2E | JSON serializado con ObjectMapper | `RegistrarAsistenciasSesionRequest` |
 | `POST /api/v1/estudiante/asistencia-qr` | ESTUDIANTE | Registro autonomo | `AsistenciaRepositoryPort` | `usp_registrar_asistencia_estudiante_autonomo` | IMPLEMENTATION_AVAILABLE_PENDING_E2E | `idEstudiante` resuelto desde JWT | `RegistrarAsistenciaQrRequest` |
 | `POST /api/v1/asistencias/revisiones` | ESTUDIANTE | Radicar revision | `AsistenciaRepositoryPort` | `usp_radicar_solicitud_revision_asistencia` | IMPLEMENTATION_AVAILABLE_PENDING_E2E | `idEstudiante` resuelto desde JWT | `SolicitarRevisionAsistenciaRequest` |
 | `PATCH /api/v1/docente/reclamos/{id}` | DOCENTE | Resolver revision | `AsistenciaRepositoryPort` | `usp_resolver_solicitud_revision_asistencia` | IMPLEMENTATION_AVAILABLE_PENDING_E2E | `idDocente` resuelto desde JWT | `ResolverReclamoRequest` |
 | `GET /api/v1/sesiones/{id}/qr-token` | DOCENTE | Exponer codigo QR/PIN |  | `uv_sesion.codigo` | READY_WITH_DB_LIMITATION | Pendiente definir respuesta publica para codigo administrado por DB | `FeatureUnavailableException` |
-| `GET /api/v1/realtime/**` | AUTENTICADO | Realtime |  |  | DEPRECATED_COMPATIBILITY | Ya no es anonimo; revisar politica por evento | SSE/JSON |
+| `GET /api/v1/realtime/stream?grupoId={UUID}` | DOCENTE | Realtime scopeado por grupo | `InstitutionalScopePort` (via `RealtimeStreamGateway`) |  | IMPLEMENTATION_AVAILABLE_PENDING_E2E | `grupoId` obligatorio; titularidad validada una vez al suscribirse, filtrado en memoria | SSE (`ASISTENCIAS_SESION_ACTUALIZADAS`) |
 
 ## DB ISSUES REQUIRING TEAM ACTION
 

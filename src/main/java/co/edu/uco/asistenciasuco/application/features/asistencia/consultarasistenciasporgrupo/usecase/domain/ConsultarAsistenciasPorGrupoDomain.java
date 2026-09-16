@@ -14,15 +14,18 @@ public final class ConsultarAsistenciasPorGrupoDomain {
 
     private final UUID grupo;
     private final UUID sesion;
+    private final UUID usuarioEjecutor;
 
     public ConsultarAsistenciasPorGrupoDomain(
             final UUID grupo,
-            final UUID sesion
+            final UUID sesion,
+            final UUID usuarioEjecutor
     ) {
         validarGrupo(grupo);
 
         this.grupo = grupo;
         this.sesion = sesion;
+        this.usuarioEjecutor = usuarioEjecutor;
     }
 
     private void validarGrupo(final UUID grupo) {
@@ -37,6 +40,10 @@ public final class ConsultarAsistenciasPorGrupoDomain {
 
     public UUID getSesion() {
         return sesion;
+    }
+
+    public UUID getUsuarioEjecutor() {
+        return usuarioEjecutor;
     }
 
 }

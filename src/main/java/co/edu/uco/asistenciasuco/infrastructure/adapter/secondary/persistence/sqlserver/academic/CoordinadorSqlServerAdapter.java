@@ -37,7 +37,8 @@ public final class CoordinadorSqlServerAdapter implements CoordinadorQueryPort, 
             final String correo,
             final UUID idPrograma,
             final UUID idFacultad,
-            final String password
+            final String password,
+            final UUID usuarioEjecutor
     ) {
         procedureExecutor.execute("crearCoordinador", """
                 EXEC dbo.usp_crear_coordinador
@@ -51,7 +52,8 @@ public final class CoordinadorSqlServerAdapter implements CoordinadorQueryPort, 
                      @idPrograma = :idPrograma,
                      @idFacultad = :idFacultad,
                      @password = :password,
-                     @idCorrelacion = :idCorrelacion
+                     @idCorrelacion = :idCorrelacion,
+                     @idUsuarioEjecutor = :idUsuarioEjecutor
                 """, new MapSqlParameterSource()
                 .addValue("idCoordinador", idCoordinador)
                 .addValue("numeroIdentificacion", numeroIdentificacion)
@@ -63,7 +65,8 @@ public final class CoordinadorSqlServerAdapter implements CoordinadorQueryPort, 
                 .addValue("idPrograma", idPrograma)
                 .addValue("idFacultad", idFacultad)
                 .addValue("password", password)
-                .addValue("idCorrelacion", CorrelationIdContext.require()));
+                .addValue("idCorrelacion", CorrelationIdContext.require())
+                .addValue("idUsuarioEjecutor", usuarioEjecutor));
     }
 
     @Override

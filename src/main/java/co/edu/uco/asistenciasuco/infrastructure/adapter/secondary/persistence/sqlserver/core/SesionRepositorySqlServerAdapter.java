@@ -19,7 +19,9 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 
+import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Adaptador SQL Server para persistencia y consulta de sesiones de clase.
@@ -38,6 +40,7 @@ public final class SesionRepositorySqlServerAdapter implements SesionRepositoryP
     private static final String PARAM_TIPO = "tipo";
     private static final String PARAM_ID_SESION = "idSesion";
     private static final String PARAM_ID_CORRELACION = "idCorrelacion";
+    private static final String PARAM_ID_USUARIO_EJECUTOR = "idUsuarioEjecutor";
 
     static final String SQL_CREAR_SESION = """
             EXEC dbo.usp_crear_sesion
@@ -49,14 +52,16 @@ public final class SesionRepositorySqlServerAdapter implements SesionRepositoryP
                  @fechaHoraFin = :fechaHoraFin,
                  @aula = :aula,
                  @tipo = :tipo,
-                 @idCorrelacion = :idCorrelacion
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
 
     static final String SQL_CERRAR_SESION = """
             EXEC dbo.usp_cerrar_sesion
                  @idSesion = :idSesion,
                  @idDocente = :idDocente,
-                 @idCorrelacion = :idCorrelacion
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
 
     static final String SQL_ACTUALIZAR_SESION = """
@@ -68,13 +73,15 @@ public final class SesionRepositorySqlServerAdapter implements SesionRepositoryP
                  @aula = :aula,
                  @descripcion = :descripcion,
                  @idDocente = :idDocente,
-                 @idCorrelacion = :idCorrelacion
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
 
     static final String SQL_GENERAR_SESIONES_GRUPO = """
             EXEC dbo.usp_generar_sesiones_grupo
                  @idGrupo = :idGrupo,
-                 @idCorrelacion = :idCorrelacion
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
 
     static final String SQL_CONSULTAR_POR_ID = """
@@ -91,6 +98,23 @@ public final class SesionRepositorySqlServerAdapter implements SesionRepositoryP
                 fechaHoraFin
             FROM dbo.uv_sesion
             WHERE id = :idSesion
+            """;
+
+    static final String SQL_CONSULTAR_POR_GRUPO = """
+            SELECT
+                id,
+                idGrupo,
+                nombre,
+                numero,
+                codigo,
+                numeroSemana,
+                codigoGrupo,
+                nombreGrupo,
+                fechaHoraInicio,
+                fechaHoraFin
+            FROM dbo.uv_sesion
+            WHERE idGrupo = :idGrupo
+            ORDER BY fechaHoraInicio, numero, id
             """;
 
     private final CanonicalStoredProcedureExecutor procedureExecutor;
@@ -123,6 +147,7 @@ public final class SesionRepositorySqlServerAdapter implements SesionRepositoryP
                         .addValue(PARAM_AULA, dto.getAula())
                         .addValue(PARAM_TIPO, dto.getTipo())
                         .addValue(PARAM_ID_CORRELACION, CorrelationIdContext.require())
+                        .addValue(PARAM_ID_USUARIO_EJECUTOR, dto.getUsuarioEjecutor())
         );
     }
 
@@ -144,6 +169,7 @@ public final class SesionRepositorySqlServerAdapter implements SesionRepositoryP
                         .addValue(PARAM_DESCRIPCION, dto.descripcion())
                         .addValue(PARAM_ID_DOCENTE, dto.docente())
                         .addValue(PARAM_ID_CORRELACION, CorrelationIdContext.require())
+                        .addValue(PARAM_ID_USUARIO_EJECUTOR, dto.usuarioEjecutor())
         );
     }
 
@@ -181,6 +207,36 @@ public final class SesionRepositorySqlServerAdapter implements SesionRepositoryP
     }
 
     @Override
+    public List<SesionRepositoryProjection> consultarSesionesPorGrupo(final UUID grupoId) {
+        if (ObjectHelper.isNull(grupoId)) {
+            throw new CrosscuttingException("El identificador del grupo para consultar sesiones es obligatorio.");
+        }
+
+        try {
+            return jdbcOperations.query(SQL_CONSULTAR_POR_GRUPO, new MapSqlParameterSource(PARAM_ID_GRUPO, grupoId), (rs, rowNum) ->
+                    new SesionRepositoryProjection(
+                            JdbcValueMapper.toUuid(rs.getObject("id")),
+                            JdbcValueMapper.toUuid(rs.getObject("idGrupo")),
+                            JdbcValueMapper.toString(rs.getObject("nombre")),
+                            JdbcValueMapper.toInteger(rs.getObject("numero")),
+                            JdbcValueMapper.toString(rs.getObject("codigo")),
+                            JdbcValueMapper.toInteger(rs.getObject("numeroSemana")),
+                            JdbcValueMapper.toString(rs.getObject("codigoGrupo")),
+                            JdbcValueMapper.toString(rs.getObject("nombreGrupo")),
+                            JdbcValueMapper.toLocalDateTime(rs.getObject("fechaHoraInicio")),
+                            JdbcValueMapper.toLocalDateTime(rs.getObject("fechaHoraFin"))
+                    )
+            );
+        } catch (DataAccessException exception) {
+            LOGGER.error(
+                    "SQL operation failed. operation=consultarSesionesPorGrupo, correlationId={}",
+                    CorrelationIdContext.getAsString()
+            );
+            throw new DatabaseOperationException("No fue posible consultar las sesiones del grupo desde base de datos.", exception);
+        }
+    }
+
+    @Override
     public void cerrarSesion(final CerrarSesionRepositoryDTO dto) {
         if (ObjectHelper.isNull(dto)) {
             throw new CrosscuttingException("El dominio para cerrar sesion es obligatorio.");
@@ -193,6 +249,7 @@ public final class SesionRepositorySqlServerAdapter implements SesionRepositoryP
                         .addValue(PARAM_ID_SESION, dto.getSesion())
                         .addValue(PARAM_ID_DOCENTE, dto.getDocente())
                         .addValue(PARAM_ID_CORRELACION, CorrelationIdContext.require())
+                        .addValue(PARAM_ID_USUARIO_EJECUTOR, dto.getUsuarioEjecutor())
         );
     }
 
@@ -208,6 +265,7 @@ public final class SesionRepositorySqlServerAdapter implements SesionRepositoryP
                 new MapSqlParameterSource()
                         .addValue(PARAM_ID_GRUPO, dto.grupo())
                         .addValue(PARAM_ID_CORRELACION, CorrelationIdContext.require())
+                        .addValue(PARAM_ID_USUARIO_EJECUTOR, dto.usuarioEjecutor())
         );
     }
 }

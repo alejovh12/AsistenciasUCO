@@ -90,6 +90,10 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PATCH, "/api/v1/sesiones/**").hasRole("DOCENTE")
                 // Generación del QR/PIN de una sesión: acción del docente que dicta la sesión.
                 .requestMatchers(HttpMethod.GET, "/api/v1/sesiones/*/qr-token").hasRole("DOCENTE")
+                // Sesiones agrupadas por grupo: usadas por el docente para elegir la sesion sobre
+                // la que va a tomar asistencia. La titularidad sobre el grupo se valida en
+                // Application via InstitutionalScopePort (ver ConsultarSesionesPorGrupoUseCaseImpl).
+                .requestMatchers(HttpMethod.GET, "/api/v1/sesiones/grupo/*").hasRole("DOCENTE")
                 .requestMatchers(HttpMethod.POST, "/api/v1/asistencias/lote").hasRole("DOCENTE")
                 .requestMatchers(HttpMethod.POST, "/api/v1/asistencias/revisiones").hasRole("ESTUDIANTE")
                 .requestMatchers(HttpMethod.POST, "/api/v1/asistencias").hasRole("DOCENTE")
@@ -97,8 +101,15 @@ public class SecurityConfig {
                 // GET /api/v1/grupos/{grupoId}/asistencias.
                 .requestMatchers(HttpMethod.POST, "/api/v1/asistencias/consultas/grupo")
                     .hasAnyRole("DOCENTE", "COORDINADOR", "ADMINISTRADOR")
-                // Grupos: los commands de coordinación (crear/actualizar/matricular) requieren
-                // COORDINADOR; las queries también las necesita el DOCENTE (ver sus grupos).
+                // Listado institucional completo de grupos: NO es la fuente de "mis grupos" del
+                // docente (esa es GET /api/v1/docente/horarios, ya scopeada por Usuario->Docente).
+                // Abrir este listado a DOCENTE permitiria enumerar grupos de otros docentes.
+                .requestMatchers(HttpMethod.GET, "/api/v1/grupos")
+                    .hasAnyRole("COORDINADOR", "ADMINISTRADOR")
+                // Sub-recursos de un grupo especifico (estudiantes, asistencias): el DOCENTE si
+                // los necesita, pero scopeados a su propio grupo en Application via
+                // InstitutionalScopePort (ver ConsultarEstudiantesGrupoUseCaseImpl /
+                // ConsultarAsistenciasPorGrupoUseCaseImpl).
                 .requestMatchers(HttpMethod.GET, "/api/v1/grupos/**")
                     .hasAnyRole("DOCENTE", "COORDINADOR", "ADMINISTRADOR")
                 .requestMatchers(HttpMethod.POST, "/api/v1/grupos/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")

@@ -36,20 +36,20 @@ class ActualizarSesionUseCaseImplTest {
         final UUID usuarioDocente = UUID.randomUUID();
         final ActualizarSesionDomain domain = new ActualizarSesionDomain(
                 UUID.randomUUID(), "Sesion", LocalDateTime.of(2026, 1, 20, 8, 0),
-                LocalDateTime.of(2026, 1, 20, 10, 0), "Aula 1", "Descripcion", usuarioDocente);
+                LocalDateTime.of(2026, 1, 20, 10, 0), "Aula 1", "Descripcion", usuarioDocente, usuarioDocente);
         when(institutionalScopePort.findDocenteIdByUsuario(usuarioDocente)).thenReturn(Optional.empty());
 
         assertThrows(ForbiddenException.class, () -> useCase.execute(domain));
     }
 
     @Test
-    void execute_reescribe_docente_con_el_id_resuelto_por_el_alcance_institucional() {
+    void execute_reescribe_docente_con_el_id_resuelto_y_preserva_usuarioEjecutor() {
         final UUID usuarioDocente = UUID.randomUUID();
         final UUID docenteId = UUID.randomUUID();
         final UUID sesion = UUID.randomUUID();
         final ActualizarSesionDomain domain = new ActualizarSesionDomain(
                 sesion, "Sesion", LocalDateTime.of(2026, 1, 20, 8, 0),
-                LocalDateTime.of(2026, 1, 20, 10, 0), "Aula 1", "Descripcion", usuarioDocente);
+                LocalDateTime.of(2026, 1, 20, 10, 0), "Aula 1", "Descripcion", usuarioDocente, usuarioDocente);
         when(institutionalScopePort.findDocenteIdByUsuario(usuarioDocente)).thenReturn(Optional.of(docenteId));
 
         useCase.execute(domain);
@@ -58,5 +58,6 @@ class ActualizarSesionUseCaseImplTest {
         verify(sesionRepositoryPort).actualizarSesion(captor.capture());
         assertEquals(sesion, captor.getValue().sesion());
         assertEquals(docenteId, captor.getValue().docente());
+        assertEquals(usuarioDocente, captor.getValue().usuarioEjecutor());
     }
 }

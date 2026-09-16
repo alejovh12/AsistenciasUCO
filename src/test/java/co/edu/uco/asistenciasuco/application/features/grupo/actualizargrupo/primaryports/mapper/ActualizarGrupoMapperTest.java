@@ -15,12 +15,16 @@ class ActualizarGrupoMapperTest {
     @Test
     void toDomain_mapea_todos_los_campos() {
         final UUID grupo = UUID.randomUUID();
-        final ActualizarGrupoDTO dto = new ActualizarGrupoDTO(grupo, 1, "Grupo 1", UUID.randomUUID(), 30, "Aula 1");
+        final UUID usuarioEjecutor = UUID.randomUUID();
+        final ActualizarGrupoDTO dto = new ActualizarGrupoDTO(
+                grupo, 1, "Grupo 1", UUID.randomUUID(), 30, "Aula 1", usuarioEjecutor
+        );
 
         final ActualizarGrupoDomain domain = ActualizarGrupoMapper.toDomain(dto);
 
         assertEquals(grupo, domain.idGrupo());
         assertEquals(30, domain.cupoMaximo());
+        assertEquals(usuarioEjecutor, domain.usuarioEjecutor());
     }
 
     @Test

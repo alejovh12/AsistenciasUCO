@@ -20,8 +20,6 @@ public interface GrupoRepositoryPort {
 
     GrupoCommandRepositoryProjection actualizarGrupo(ActualizarGrupoRepositoryDTO dto);
 
-    GrupoCommandRepositoryProjection generarSesionesGrupo(UUID grupoId);
-
     RegistrarEstudianteRepositoryProjection registrarEstudianteEnGrupo(RegistrarEstudianteRepositoryDTO dto);
 
     List<GrupoRepositoryProjection> consultarGrupos();

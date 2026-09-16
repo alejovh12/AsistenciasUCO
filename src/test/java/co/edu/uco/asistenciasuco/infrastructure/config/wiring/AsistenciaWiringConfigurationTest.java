@@ -14,6 +14,7 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisi
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.usecase.impl.SolicitarRevisionAsistenciaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import org.junit.jupiter.api.Test;
 
@@ -24,6 +25,7 @@ class AsistenciaWiringConfigurationTest {
 
     private final AsistenciaWiringConfiguration config = new AsistenciaWiringConfiguration();
     private final AsistenciaRepositoryPort asistenciaRepositoryPort = mock(AsistenciaRepositoryPort.class);
+    private final SesionRepositoryPort sesionRepositoryPort = mock(SesionRepositoryPort.class);
     private final InstitutionalScopePort scopePort = mock(InstitutionalScopePort.class);
     private final RealtimePublisherPort realtimePublisherPort = mock(RealtimePublisherPort.class);
 
@@ -33,12 +35,13 @@ class AsistenciaWiringConfigurationTest {
         assertInstanceOf(RegistrarAsistenciaUseCaseImpl.class, registrarAsistenciaUseCase);
         assertInstanceOf(RegistrarAsistenciaInteractor.class, config.registrarAsistenciaInputPort(registrarAsistenciaUseCase));
 
-        final var consultarAsistenciasPorGrupoUseCase = config.consultarAsistenciasPorGrupoUseCase(asistenciaRepositoryPort);
+        final var consultarAsistenciasPorGrupoUseCase = config.consultarAsistenciasPorGrupoUseCase(asistenciaRepositoryPort, scopePort);
         assertInstanceOf(ConsultarAsistenciasPorGrupoUseCaseImpl.class, consultarAsistenciasPorGrupoUseCase);
         assertInstanceOf(ConsultarAsistenciasPorGrupoInteractor.class,
                 config.consultarAsistenciasPorGrupoInputPort(consultarAsistenciasPorGrupoUseCase));
 
-        final var registrarAsistenciasSesionUseCase = config.registrarAsistenciasSesionUseCase(asistenciaRepositoryPort);
+        final var registrarAsistenciasSesionUseCase = config.registrarAsistenciasSesionUseCase(
+                asistenciaRepositoryPort, sesionRepositoryPort, scopePort, realtimePublisherPort);
         assertInstanceOf(RegistrarAsistenciasSesionUseCaseImpl.class, registrarAsistenciasSesionUseCase);
         assertInstanceOf(RegistrarAsistenciasSesionInteractor.class,
                 config.registrarAsistenciasSesionInputPort(registrarAsistenciasSesionUseCase));

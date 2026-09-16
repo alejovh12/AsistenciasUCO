@@ -25,7 +25,8 @@ public final class ConsultarAsistenciasPorGrupoMapper {
 
         return new ConsultarAsistenciasPorGrupoDomain(
                 dto.getGrupo(),
-                dto.getSesion()
+                dto.getSesion(),
+                dto.getUsuarioEjecutor()
         );
     }
 
@@ -43,6 +44,7 @@ public final class ConsultarAsistenciasPorGrupoMapper {
                     entity.getGrupo(),
                     entity.getSesion(),
                     entity.isPresente(),
+                    entity.getEstado(),
                     entity.getObservacion()
             ));
         }

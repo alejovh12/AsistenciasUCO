@@ -22,6 +22,7 @@ class GrupoHttpMapperContractTest {
     private static final UUID SUBJECT = UUID.randomUUID();
     private static final UUID PERIOD = UUID.randomUUID();
     private static final UUID TEACHER = UUID.randomUUID();
+    private static final UUID USUARIO_EJECUTOR = UUID.randomUUID();
     private final JsonMapper json = JsonMapper.builder().build();
 
     @Test
@@ -34,7 +35,7 @@ class GrupoHttpMapperContractTest {
                 """.formatted(SUBJECT, UUID.randomUUID(), PERIOD, UUID.randomUUID(), TEACHER, UUID.randomUUID()),
                 CrearGrupoRequest.class);
 
-        final CrearGrupoDTO mapped = GrupoHttpMapper.toApplicationDTO(request);
+        final CrearGrupoDTO mapped = GrupoHttpMapper.toApplicationDTO(request, USUARIO_EJECUTOR);
         assertEquals(SUBJECT, mapped.idAsignatura());
         assertEquals(PERIOD, mapped.idPeriodoAcademico());
         assertEquals(12, mapped.codigo());
@@ -42,6 +43,7 @@ class GrupoHttpMapperContractTest {
         assertEquals(TEACHER, mapped.idDocente());
         assertEquals("A101", mapped.aula());
         assertEquals(false, mapped.generarSesionesAutomaticas());
+        assertEquals(USUARIO_EJECUTOR, mapped.usuarioEjecutor());
     }
 
     @Test
@@ -52,7 +54,7 @@ class GrupoHttpMapperContractTest {
                  "crearSesionesAutomaticamente":true}
                 """.formatted(SUBJECT, PERIOD, TEACHER), CrearGrupoRequest.class);
 
-        final CrearGrupoDTO mapped = GrupoHttpMapper.toApplicationDTO(request);
+        final CrearGrupoDTO mapped = GrupoHttpMapper.toApplicationDTO(request, USUARIO_EJECUTOR);
         assertEquals(SUBJECT, mapped.idAsignatura());
         assertEquals(PERIOD, mapped.idPeriodoAcademico());
         assertEquals("Grupo B", mapped.nombre());
@@ -68,55 +70,66 @@ class GrupoHttpMapperContractTest {
                  "cupoMaximo":25,"room":"  C303  "}
                 """.formatted(TEACHER), ActualizarGrupoRequest.class);
 
-        final ActualizarGrupoDTO mapped = GrupoHttpMapper.toApplicationDTO(GROUP, request);
+        final ActualizarGrupoDTO mapped = GrupoHttpMapper.toApplicationDTO(GROUP, request, USUARIO_EJECUTOR);
         assertEquals(GROUP, mapped.idGrupo());
         assertEquals(14, mapped.codigo());
         assertEquals("Grupo actualizado", mapped.nombre());
         assertEquals(TEACHER, mapped.idDocente());
         assertEquals(25, mapped.cupoMaximo());
         assertEquals("C303", mapped.aula());
+        assertEquals(USUARIO_EJECUTOR, mapped.usuarioEjecutor());
 
         final ActualizarGrupoRequest empty = json.readValue("{}", ActualizarGrupoRequest.class);
-        assertNull(GrupoHttpMapper.toApplicationDTO(GROUP, empty).nombre());
-        assertNull(GrupoHttpMapper.toApplicationDTO(GROUP, empty).aula());
+        assertNull(GrupoHttpMapper.toApplicationDTO(GROUP, empty, USUARIO_EJECUTOR).nombre());
+        assertNull(GrupoHttpMapper.toApplicationDTO(GROUP, empty, USUARIO_EJECUTOR).aula());
     }
 
     @Test
     void rejectsMissingCreateFieldsAndMissingUpdateIdentity() {
-        assertThrows(NullPointerException.class, () -> GrupoHttpMapper.toApplicationDTO((CrearGrupoRequest) null));
-        assertThrows(NullPointerException.class, () -> GrupoHttpMapper.toApplicationDTO(GROUP, null));
         assertThrows(NullPointerException.class,
-                () -> GrupoHttpMapper.toApplicationDTO(null, new ActualizarGrupoRequest()));
+                () -> GrupoHttpMapper.toApplicationDTO((CrearGrupoRequest) null, USUARIO_EJECUTOR));
+        assertThrows(NullPointerException.class,
+                () -> GrupoHttpMapper.toApplicationDTO(GROUP, null, USUARIO_EJECUTOR));
+        assertThrows(NullPointerException.class,
+                () -> GrupoHttpMapper.toApplicationDTO(null, new ActualizarGrupoRequest(), USUARIO_EJECUTOR));
 
         final CrearGrupoRequest request = json.readValue("{}", CrearGrupoRequest.class);
         assertEquals("ERR_CAMPO_OBLIGATORIO",
-                assertThrows(ValidationException.class, () -> GrupoHttpMapper.toApplicationDTO(request)).getCode());
+                assertThrows(ValidationException.class,
+                        () -> GrupoHttpMapper.toApplicationDTO(request, USUARIO_EJECUTOR)).getCode());
         request.setCodigo(1);
         assertEquals("ERR_CAMPO_OBLIGATORIO",
-                assertThrows(ValidationException.class, () -> GrupoHttpMapper.toApplicationDTO(request)).getCode());
+                assertThrows(ValidationException.class,
+                        () -> GrupoHttpMapper.toApplicationDTO(request, USUARIO_EJECUTOR)).getCode());
         request.setNombre("Grupo");
         assertEquals("ERR_CAMPO_OBLIGATORIO",
-                assertThrows(ValidationException.class, () -> GrupoHttpMapper.toApplicationDTO(request)).getCode());
+                assertThrows(ValidationException.class,
+                        () -> GrupoHttpMapper.toApplicationDTO(request, USUARIO_EJECUTOR)).getCode());
     }
 
     @Test
     void scheduleFieldsAreParsedButRejectedUntilPublicDbCommandExists() {
         final CrearGrupoRequest create = basicCreate();
         create.setHoraInicio("08:00");
-        assertThrows(FeatureUnavailableException.class, () -> GrupoHttpMapper.toApplicationDTO(create));
+        assertThrows(FeatureUnavailableException.class,
+                () -> GrupoHttpMapper.toApplicationDTO(create, USUARIO_EJECUTOR));
         create.setHoraInicio("25:00");
         assertEquals("ERR_FECHA_HORA_INVALIDA",
-                assertThrows(ValidationException.class, () -> GrupoHttpMapper.toApplicationDTO(create)).getCode());
+                assertThrows(ValidationException.class,
+                        () -> GrupoHttpMapper.toApplicationDTO(create, USUARIO_EJECUTOR)).getCode());
 
         final ActualizarGrupoRequest update = new ActualizarGrupoRequest();
         update.setHoraFin("09:00:00");
-        assertThrows(FeatureUnavailableException.class, () -> GrupoHttpMapper.toApplicationDTO(GROUP, update));
+        assertThrows(FeatureUnavailableException.class,
+                () -> GrupoHttpMapper.toApplicationDTO(GROUP, update, USUARIO_EJECUTOR));
         update.setHoraFin("24:00");
         assertEquals("ERR_FECHA_HORA_INVALIDA",
-                assertThrows(ValidationException.class, () -> GrupoHttpMapper.toApplicationDTO(GROUP, update)).getCode());
+                assertThrows(ValidationException.class,
+                        () -> GrupoHttpMapper.toApplicationDTO(GROUP, update, USUARIO_EJECUTOR)).getCode());
         update.setHoraFin(null);
         update.setDias(java.util.List.of("LUNES"));
-        assertThrows(FeatureUnavailableException.class, () -> GrupoHttpMapper.toApplicationDTO(GROUP, update));
+        assertThrows(FeatureUnavailableException.class,
+                () -> GrupoHttpMapper.toApplicationDTO(GROUP, update, USUARIO_EJECUTOR));
     }
 
     private static CrearGrupoRequest basicCreate() {

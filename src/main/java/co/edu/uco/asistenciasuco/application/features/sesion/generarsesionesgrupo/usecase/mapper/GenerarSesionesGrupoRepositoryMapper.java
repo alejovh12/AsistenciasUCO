@@ -14,6 +14,6 @@ public final class GenerarSesionesGrupoRepositoryMapper {
         if (ObjectHelper.isNull(domain)) {
             throw new CrosscuttingException("El dominio para generar sesiones de grupo es obligatorio.");
         }
-        return new GenerarSesionesGrupoRepositoryDTO(domain.getGrupo());
+        return new GenerarSesionesGrupoRepositoryDTO(domain.getGrupo(), domain.getUsuarioEjecutor());
     }
 }

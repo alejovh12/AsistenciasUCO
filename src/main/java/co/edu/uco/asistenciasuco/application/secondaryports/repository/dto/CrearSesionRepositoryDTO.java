@@ -16,6 +16,7 @@ public final class CrearSesionRepositoryDTO {
     private String aula;
     private String tipo;
     private UUID docente;
+    private UUID usuarioEjecutor;
 
     public CrearSesionRepositoryDTO() {
         super();
@@ -29,7 +30,8 @@ public final class CrearSesionRepositoryDTO {
             final LocalDateTime fechaHoraFin,
             final String aula,
             final String tipo,
-            final UUID docente
+            final UUID docente,
+            final UUID usuarioEjecutor
     ) {
         setGrupo(grupo);
         setTema(tema);
@@ -39,6 +41,7 @@ public final class CrearSesionRepositoryDTO {
         setAula(aula);
         setTipo(tipo);
         setDocente(docente);
+        setUsuarioEjecutor(usuarioEjecutor);
     }
 
     public UUID getGrupo() {
@@ -103,6 +106,14 @@ public final class CrearSesionRepositoryDTO {
 
     public void setDocente(final UUID docente) {
         this.docente = docente;
+    }
+
+    public UUID getUsuarioEjecutor() {
+        return usuarioEjecutor;
+    }
+
+    public void setUsuarioEjecutor(final UUID usuarioEjecutor) {
+        this.usuarioEjecutor = usuarioEjecutor;
     }
 
 }

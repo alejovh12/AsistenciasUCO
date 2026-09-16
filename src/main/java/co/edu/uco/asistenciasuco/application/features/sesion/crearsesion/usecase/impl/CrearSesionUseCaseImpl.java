@@ -33,7 +33,7 @@ public final class CrearSesionUseCaseImpl implements CrearSesionUseCase {
                 .orElseThrow(() -> new ForbiddenException("No fue posible resolver el docente autenticado."));
         final var scopedDomain = new CrearSesionDomain(
                 domain.getGrupo(), domain.getTema(), domain.getDescripcion(), domain.getFechaHoraInicio(),
-                domain.getFechaHoraFin(), domain.getAula(), domain.getTipo(), docenteId
+                domain.getFechaHoraFin(), domain.getAula(), domain.getTipo(), docenteId, domain.getUsuarioEjecutor()
         );
         sesionRepositoryPort.crearSesion(CrearSesionRepositoryMapper.toRepositoryDTO(scopedDomain));
     }

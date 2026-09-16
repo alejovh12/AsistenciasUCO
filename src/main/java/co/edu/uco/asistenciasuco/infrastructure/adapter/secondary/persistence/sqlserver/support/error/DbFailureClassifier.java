@@ -31,6 +31,15 @@ final class DbFailureClassifier {
         if (TextHelper.isNullOrBlank(message)) {
             return DatabaseErrorCode.ERR_DB_UNCLASSIFIED;
         }
+        // RC_001: codigo de RazonCausa inexistente en dbo.RazonCausa (catalogo de estados de
+        // asistencia). El backend ya valida AN/SJC/EX en Application antes de llamar al SP; esta
+        // rama es defensa en profundidad para cualquier codigo que la DB rechace igualmente.
+        if (contains(message, "estado de asistencia") && contains(message, "razon de causa")) {
+            return AsistenciaErrorCode.ERR_ESTADO_ASISTENCIA_INVALIDO;
+        }
+        if (contains(message, "razoncausa.codigo")) {
+            return AsistenciaErrorCode.ERR_ESTADO_ASISTENCIA_INVALIDO;
+        }
         if (containsAny(message, "nombre", "nombres", "apellido", "apellidos")
                 && containsAny(message, "caracteres no permitidos", "formato invalido")) {
             return UsuarioErrorCode.ERR_NOMBRE_PERSONA_INVALIDO;

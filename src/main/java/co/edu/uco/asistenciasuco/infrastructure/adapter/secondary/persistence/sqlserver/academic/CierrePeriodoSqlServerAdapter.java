@@ -6,6 +6,7 @@ import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.Correl
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 
 import java.util.Objects;
+import java.util.UUID;
 
 public final class CierrePeriodoSqlServerAdapter implements CierrePeriodoCommandPort {
 
@@ -17,15 +18,17 @@ public final class CierrePeriodoSqlServerAdapter implements CierrePeriodoCommand
     }
 
     @Override
-    public void ejecutarCierreMasivoPeriodo(final String codigoPeriodo, final String idActor) {
+    public void ejecutarCierreMasivoPeriodo(final String codigoPeriodo, final String idActor, final UUID idUsuarioEjecutor) {
         procedureExecutor.execute("ejecutarCierreMasivoPeriodo", """
                 EXEC dbo.usp_ejecutar_cierre_masivo_periodo
                      @codigoPeriodo = :codigoPeriodo,
                      @idActor = :idActor,
-                     @idCorrelacion = :idCorrelacion
+                     @idCorrelacion = :idCorrelacion,
+                     @idUsuarioEjecutor = :idUsuarioEjecutor
                 """, new MapSqlParameterSource()
                 .addValue("codigoPeriodo", codigoPeriodo)
                 .addValue("idActor", idActor)
-                .addValue(ID_CORRELACION, CorrelationIdContext.require()));
+                .addValue(ID_CORRELACION, CorrelationIdContext.require())
+                .addValue("idUsuarioEjecutor", idUsuarioEjecutor));
     }
 }

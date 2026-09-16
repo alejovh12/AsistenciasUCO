@@ -48,12 +48,14 @@ public final class AsistenciaRepositorySqlServerAdapter implements AsistenciaRep
     private static final String PARAM_ACCION = "accion";
     private static final String PARAM_RESPUESTA_DOCENTE = "respuestaDocente";
     private static final String PARAM_ID_CORRELACION = "idCorrelacion";
+    private static final String PARAM_ID_USUARIO_EJECUTOR = "idUsuarioEjecutor";
 
     static final String SQL_REGISTRAR_ASISTENCIAS_SESION = """
             EXEC dbo.usp_registrar_asistencias_sesion
                  @idSesion = :idSesion,
                  @asistenciaJSON = :asistenciaJSON,
-                 @idCorrelacion = :idCorrelacion
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
 
     static final String SQL_REGISTRAR_ASISTENCIA_AUTONOMA = """
@@ -61,7 +63,8 @@ public final class AsistenciaRepositorySqlServerAdapter implements AsistenciaRep
                  @idEstudiante = :idEstudiante,
                  @idSesion = :idSesion,
                  @codigoVerificacion = :codigoVerificacion,
-                 @idCorrelacion = :idCorrelacion
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
 
     static final String SQL_RADICAR_SOLICITUD_REVISION = """
@@ -72,7 +75,8 @@ public final class AsistenciaRepositorySqlServerAdapter implements AsistenciaRep
                  @justificacion = :justificacion,
                  @soporteNombre = :soporteNombre,
                  @soporteUrl = :soporteUrl,
-                 @idCorrelacion = :idCorrelacion
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
 
     static final String SQL_RESOLVER_SOLICITUD_REVISION = """
@@ -81,7 +85,8 @@ public final class AsistenciaRepositorySqlServerAdapter implements AsistenciaRep
                  @idDocente = :idDocente,
                  @accion = :accion,
                  @respuestaDocente = :respuestaDocente,
-                 @idCorrelacion = :idCorrelacion
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
 
     static final String SQL_CONSULTAR_ASISTENCIAS = """
@@ -91,6 +96,7 @@ public final class AsistenciaRepositorySqlServerAdapter implements AsistenciaRep
                 eg.idGrupo AS grupo,
                 a.idSesion AS sesion,
                 da.asistio AS presente,
+                da.codigoRazonCausa AS estado,
                 '' AS observacion
             FROM dbo.uv_detalle_asistencia da
             INNER JOIN dbo.uv_asistencia a
@@ -134,6 +140,7 @@ public final class AsistenciaRepositorySqlServerAdapter implements AsistenciaRep
                         .addValue(PARAM_ID_SESION, dto.sesion())
                         .addValue(PARAM_ASISTENCIA_JSON, serializarRegistros(dto))
                         .addValue(PARAM_ID_CORRELACION, CorrelationIdContext.require())
+                        .addValue(PARAM_ID_USUARIO_EJECUTOR, dto.usuarioEjecutor())
         );
     }
 
@@ -151,6 +158,7 @@ public final class AsistenciaRepositorySqlServerAdapter implements AsistenciaRep
                         .addValue(PARAM_ID_SESION, dto.sesion())
                         .addValue(PARAM_CODIGO_VERIFICACION, dto.codigoVerificacion())
                         .addValue(PARAM_ID_CORRELACION, CorrelationIdContext.require())
+                        .addValue(PARAM_ID_USUARIO_EJECUTOR, dto.usuarioEjecutor())
         );
     }
 
@@ -174,6 +182,7 @@ public final class AsistenciaRepositorySqlServerAdapter implements AsistenciaRep
                             JdbcValueMapper.toUuid(rs.getObject("grupo")),
                             JdbcValueMapper.toUuid(rs.getObject("sesion")),
                             rs.getBoolean("presente"),
+                            JdbcValueMapper.toString(rs.getObject("estado")),
                             JdbcValueMapper.toString(rs.getObject("observacion"))
                     )
             );
@@ -203,6 +212,7 @@ public final class AsistenciaRepositorySqlServerAdapter implements AsistenciaRep
                         .addValue(PARAM_SOPORTE_NOMBRE, dto.soporteNombre())
                         .addValue(PARAM_SOPORTE_URL, dto.soporteUrl())
                         .addValue(PARAM_ID_CORRELACION, CorrelationIdContext.require())
+                        .addValue(PARAM_ID_USUARIO_EJECUTOR, dto.usuarioEjecutor())
         );
     }
 
@@ -221,6 +231,7 @@ public final class AsistenciaRepositorySqlServerAdapter implements AsistenciaRep
                         .addValue(PARAM_ACCION, dto.accion())
                         .addValue(PARAM_RESPUESTA_DOCENTE, dto.respuestaDocente())
                         .addValue(PARAM_ID_CORRELACION, CorrelationIdContext.require())
+                        .addValue(PARAM_ID_USUARIO_EJECUTOR, dto.usuarioEjecutor())
         );
     }
 

@@ -14,6 +14,7 @@ class ActualizarSesionDomainTest {
 
     private static final UUID SESSION = UUID.randomUUID();
     private static final UUID TEACHER = UUID.randomUUID();
+    private static final UUID USUARIO_EJECUTOR = UUID.randomUUID();
     private static final LocalDateTime START = LocalDateTime.of(2026, 9, 14, 8, 0);
 
     @Test
@@ -35,6 +36,8 @@ class ActualizarSesionDomainTest {
     void requiresSessionTeacherAndChronologicalSchedule() {
         assertCode("ERR_SESION_REQUERIDA", () -> create(null, "Tema", START, START.plusHours(1), null, null, TEACHER));
         assertCode("ERR_DOCENTE_REQUERIDO", () -> create(SESSION, "Tema", START, START.plusHours(1), null, null, null));
+        assertCode("ERR_USUARIO_REQUERIDO", () -> new ActualizarSesionDomain(
+                SESSION, "Tema", START, START.plusHours(1), null, null, TEACHER, null));
         assertCode("ERR_RANGO_FECHAS_SESION_INVALIDO", () -> create(SESSION, "Tema", null, START, null, null, TEACHER));
         assertCode("ERR_RANGO_FECHAS_SESION_INVALIDO", () -> create(SESSION, "Tema", START, null, null, null, TEACHER));
         assertCode("ERR_RANGO_FECHAS_SESION_INVALIDO", () -> create(SESSION, "Tema", START, START, null, null, TEACHER));
@@ -53,7 +56,7 @@ class ActualizarSesionDomainTest {
     private static ActualizarSesionDomain create(final UUID session, final String name, final LocalDateTime start,
                                                   final LocalDateTime end, final String classroom,
                                                   final String description, final UUID teacher) {
-        return new ActualizarSesionDomain(session, name, start, end, classroom, description, teacher);
+        return new ActualizarSesionDomain(session, name, start, end, classroom, description, teacher, USUARIO_EJECUTOR);
     }
 
     private static void assertCode(final String code, final org.junit.jupiter.api.function.Executable action) {

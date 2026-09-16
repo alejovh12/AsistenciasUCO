@@ -26,6 +26,7 @@ public final class AsistenciaConsultadaEntity {
     private final UUID grupo;
     private final UUID sesion;
     private final boolean presente;
+    private final String estado;
     private final String observacion;
 
     public AsistenciaConsultadaEntity(
@@ -34,6 +35,7 @@ public final class AsistenciaConsultadaEntity {
             final UUID grupo,
             final UUID sesion,
             final boolean presente,
+            final String estado,
             final String observacion
     ) {
         validarIdentificador(asistencia, AsistenciaErrorCode.ERR_ASISTENCIA_REQUERIDA);
@@ -46,6 +48,7 @@ public final class AsistenciaConsultadaEntity {
         this.grupo = grupo;
         this.sesion = sesion;
         this.presente = presente;
+        this.estado = TextHelper.normalizeTrimUpper(estado);
         this.observacion = normalizarObservacion(observacion);
     }
 
@@ -87,6 +90,10 @@ public final class AsistenciaConsultadaEntity {
 
     public boolean isPresente() {
         return presente;
+    }
+
+    public String getEstado() {
+        return estado;
     }
 
     public String getObservacion() {

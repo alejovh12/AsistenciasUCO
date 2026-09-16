@@ -31,7 +31,9 @@ public final class CerrarSesionUseCaseImpl implements CerrarSesionUseCase {
         }
         final var docenteId = institutionalScopePort.findDocenteIdByUsuario(domain.getDocente())
                 .orElseThrow(() -> new ForbiddenException("No fue posible resolver el docente autenticado."));
-        final var scopedDomain = new CerrarSesionDomain(domain.getSesion(), docenteId, domain.getObservacionCierre());
+        final var scopedDomain = new CerrarSesionDomain(
+                domain.getSesion(), docenteId, domain.getObservacionCierre(), domain.getUsuarioEjecutor()
+        );
         sesionRepositoryPort.cerrarSesion(CerrarSesionRepositoryMapper.toRepositoryDTO(scopedDomain));
     }
 }

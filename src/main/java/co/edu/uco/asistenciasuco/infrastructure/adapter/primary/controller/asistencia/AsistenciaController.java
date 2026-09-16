@@ -90,7 +90,10 @@ public final class AsistenciaController {
     public ResponseEntity<ApiMessageResponse> registrarAsistenciasLote(
             @RequestBody final RegistrarAsistenciasSesionRequest request
     ) {
-        final RegistrarAsistenciasSesionDTO dto = AsistenciaHttpMapper.toApplicationDTO(request);
+        final RegistrarAsistenciasSesionDTO dto = AsistenciaHttpMapper.toApplicationDTO(
+                request,
+                authenticatedUserResolver.requireAuthenticatedUserId()
+        );
         registrarAsistenciasSesionInputPort.execute(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiMessageResponse(true, "Asistencias de sesion registradas correctamente."));

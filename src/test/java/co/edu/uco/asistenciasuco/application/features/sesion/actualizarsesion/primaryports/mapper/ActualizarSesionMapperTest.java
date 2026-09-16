@@ -22,14 +22,16 @@ class ActualizarSesionMapperTest {
     void toDomain_con_dto_valido_mapea_campos() {
         final UUID sesion = UUID.randomUUID();
         final UUID docente = UUID.randomUUID();
+        final UUID usuarioEjecutor = UUID.randomUUID();
         final ActualizarSesionDTO dto = new ActualizarSesionDTO(
                 sesion, "Sesion actualizada", LocalDateTime.of(2026, 1, 20, 8, 0),
-                LocalDateTime.of(2026, 1, 20, 10, 0), "Aula 1", "Descripcion", docente);
+                LocalDateTime.of(2026, 1, 20, 10, 0), "Aula 1", "Descripcion", docente, usuarioEjecutor);
 
         final ActualizarSesionDomain domain = ActualizarSesionMapper.toDomain(dto);
 
         assertEquals(sesion, domain.getSesion());
         assertEquals("Sesion actualizada", domain.getNombre());
         assertEquals(docente, domain.getDocente());
+        assertEquals(usuarioEjecutor, domain.getUsuarioEjecutor());
     }
 }

@@ -26,6 +26,7 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisi
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.usecase.impl.SolicitarRevisionAsistenciaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -50,9 +51,10 @@ public class AsistenciaWiringConfiguration {
 
     @Bean
     public ConsultarAsistenciasPorGrupoUseCase consultarAsistenciasPorGrupoUseCase(
-            final AsistenciaRepositoryPort asistenciaRepositoryPort
+            final AsistenciaRepositoryPort asistenciaRepositoryPort,
+            final InstitutionalScopePort institutionalScopePort
     ) {
-        return new ConsultarAsistenciasPorGrupoUseCaseImpl(asistenciaRepositoryPort);
+        return new ConsultarAsistenciasPorGrupoUseCaseImpl(asistenciaRepositoryPort, institutionalScopePort);
     }
 
     @Bean
@@ -64,9 +66,17 @@ public class AsistenciaWiringConfiguration {
 
     @Bean
     public RegistrarAsistenciasSesionUseCase registrarAsistenciasSesionUseCase(
-            final AsistenciaRepositoryPort asistenciaRepositoryPort
+            final AsistenciaRepositoryPort asistenciaRepositoryPort,
+            final SesionRepositoryPort sesionRepositoryPort,
+            final InstitutionalScopePort institutionalScopePort,
+            final RealtimePublisherPort realtimePublisherPort
     ) {
-        return new RegistrarAsistenciasSesionUseCaseImpl(asistenciaRepositoryPort);
+        return new RegistrarAsistenciasSesionUseCaseImpl(
+                asistenciaRepositoryPort,
+                sesionRepositoryPort,
+                institutionalScopePort,
+                realtimePublisherPort
+        );
     }
 
     @Bean

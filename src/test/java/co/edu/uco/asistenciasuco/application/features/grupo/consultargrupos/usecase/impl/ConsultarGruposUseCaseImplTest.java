@@ -38,11 +38,6 @@ class ConsultarGruposUseCaseImplTest {
             }
 
             @Override
-            public GrupoCommandRepositoryProjection generarSesionesGrupo(final UUID grupoId) {
-                throw new UnsupportedOperationException("No usado por este test.");
-            }
-
-            @Override
             public RegistrarEstudianteRepositoryProjection registrarEstudianteEnGrupo(final RegistrarEstudianteRepositoryDTO dto) {
                 return new RegistrarEstudianteRepositoryProjection("ok");
             }

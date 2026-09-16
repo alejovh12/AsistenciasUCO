@@ -25,7 +25,7 @@ class ConsultarAsistenciasPorGrupoRepositoryMapperTest {
     void toRepositoryDTO_con_dominio_valido_mapea_grupo_y_sesion() {
         final UUID grupo = UUID.randomUUID();
         final UUID sesion = UUID.randomUUID();
-        final ConsultarAsistenciasPorGrupoDomain domain = new ConsultarAsistenciasPorGrupoDomain(grupo, sesion);
+        final ConsultarAsistenciasPorGrupoDomain domain = new ConsultarAsistenciasPorGrupoDomain(grupo, sesion, UUID.randomUUID());
 
         final ConsultarAsistenciasPorGrupoRepositoryDTO dto = ConsultarAsistenciasPorGrupoRepositoryMapper.toRepositoryDTO(domain);
 
@@ -41,7 +41,7 @@ class ConsultarAsistenciasPorGrupoRepositoryMapperTest {
     @Test
     void toUseCaseEntities_mapea_proyeccion_completa() {
         final AsistenciaRepositoryProjection projection = new AsistenciaRepositoryProjection(
-                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), true, "A tiempo");
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), true, "EX", "A tiempo");
 
         final List<AsistenciaConsultadaEntity> resultado =
                 ConsultarAsistenciasPorGrupoRepositoryMapper.toUseCaseEntities(List.of(projection));
@@ -49,5 +49,6 @@ class ConsultarAsistenciasPorGrupoRepositoryMapperTest {
         assertEquals(1, resultado.size());
         assertEquals(projection.getAsistencia(), resultado.getFirst().getAsistencia());
         assertTrue(resultado.getFirst().isPresente());
+        assertEquals("EX", resultado.getFirst().getEstado());
     }
 }

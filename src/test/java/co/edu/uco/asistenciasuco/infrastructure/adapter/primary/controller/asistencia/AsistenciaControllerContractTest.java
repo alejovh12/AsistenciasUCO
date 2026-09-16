@@ -80,10 +80,10 @@ class AsistenciaControllerContractTest {
     }
 
     @Test
-    void batchMapsEachStudentAndStatus() throws Exception {
+    void batchMapsEachStudentAndStatusAndPropagatesAuthenticatedUser() throws Exception {
         mvc.perform(post("/api/v1/asistencias/lote").contentType("application/json")
                         .content("""
-                                {"sesionId":"%s","registros":[{"estudianteId":"%s","estado":"ASISTIO"}]}
+                                {"sesionId":"%s","registros":[{"estudianteId":"%s","estado":"AN"}]}
                                 """.formatted(SESSION, STUDENT)))
                 .andExpect(status().isCreated());
         final var captor = ArgumentCaptor.forClass(RegistrarAsistenciasSesionDTO.class);
@@ -91,7 +91,8 @@ class AsistenciaControllerContractTest {
         assertEquals(SESSION, captor.getValue().getSesion());
         assertEquals(1, captor.getValue().getRegistros().size());
         assertEquals(STUDENT, captor.getValue().getRegistros().getFirst().getEstudiante());
-        assertEquals("ASISTIO", captor.getValue().getRegistros().getFirst().getEstado());
+        assertEquals("AN", captor.getValue().getRegistros().getFirst().getEstado());
+        assertEquals(ACTOR, captor.getValue().getUsuarioEjecutor());
     }
 
     @Test
@@ -106,12 +107,13 @@ class AsistenciaControllerContractTest {
     @Test
     void mapperHandlesEmptyAndNullBatchAndQrAliases() {
         assertThrows(NullPointerException.class,
-                () -> AsistenciaHttpMapper.toApplicationDTO((RegistrarAsistenciasSesionRequest) null));
+                () -> AsistenciaHttpMapper.toApplicationDTO((RegistrarAsistenciasSesionRequest) null, ACTOR));
         final RegistrarAsistenciasSesionRequest empty = new RegistrarAsistenciasSesionRequest();
         empty.setSesionId(SESSION);
-        assertTrue(AsistenciaHttpMapper.toApplicationDTO(empty).getRegistros().isEmpty());
+        assertTrue(AsistenciaHttpMapper.toApplicationDTO(empty, ACTOR).getRegistros().isEmpty());
+        assertEquals(ACTOR, AsistenciaHttpMapper.toApplicationDTO(empty, ACTOR).getUsuarioEjecutor());
         empty.setRegistros(java.util.Collections.singletonList(null));
-        assertEquals(null, AsistenciaHttpMapper.toApplicationDTO(empty).getRegistros().getFirst().getEstudiante());
+        assertEquals(null, AsistenciaHttpMapper.toApplicationDTO(empty, ACTOR).getRegistros().getFirst().getEstudiante());
 
         final RegistrarAsistenciaQrRequest qr = json.readValue(
                 "{\"sesionId\":\"" + SESSION + "\",\"codigoAcceso\":\"ABC123\"}",
@@ -124,7 +126,8 @@ class AsistenciaControllerContractTest {
         final ConsultarAsistenciasPorGrupoRequest query = json.readValue(
                 "{\"grupo\":\"" + GROUP + "\",\"sesion\":\"" + SESSION + "\"}",
                 ConsultarAsistenciasPorGrupoRequest.class);
-        assertEquals(GROUP, AsistenciaHttpMapper.toApplicationDTO(query).getGrupo());
-        assertEquals(SESSION, AsistenciaHttpMapper.toApplicationDTO(query).getSesion());
+        assertEquals(GROUP, AsistenciaHttpMapper.toApplicationDTO(query, ACTOR).getGrupo());
+        assertEquals(SESSION, AsistenciaHttpMapper.toApplicationDTO(query, ACTOR).getSesion());
+        assertEquals(ACTOR, AsistenciaHttpMapper.toApplicationDTO(query, ACTOR).getUsuarioEjecutor());
     }
 }

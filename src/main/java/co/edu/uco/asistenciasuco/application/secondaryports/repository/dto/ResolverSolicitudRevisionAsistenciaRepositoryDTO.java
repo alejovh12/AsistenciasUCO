@@ -6,6 +6,7 @@ public record ResolverSolicitudRevisionAsistenciaRepositoryDTO(
         UUID solicitud,
         UUID docente,
         String accion,
-        String respuestaDocente
+        String respuestaDocente,
+        UUID usuarioEjecutor
 ) {
 }

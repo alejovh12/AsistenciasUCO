@@ -9,6 +9,7 @@ public record CrearGrupoRepositoryDTO(
         Integer codigo,
         String nombre,
         UUID idDocente,
-        String aula
+        String aula,
+        UUID usuarioEjecutor
 ) {
 }

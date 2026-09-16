@@ -22,7 +22,8 @@ public final class EjecutarCierreMasivoUseCaseImpl implements EjecutarCierreMasi
                 .orElseThrow(() -> new ResourceNotFoundException("El periodo academico indicado no existe."));
         cierrePeriodoCommandPort.ejecutarCierreMasivoPeriodo(
                 EjecutarCierreMasivoRepositoryMapper.toCodigoPeriodo(periodo),
-                domain.getActorUsuarioId().toString()
+                domain.getActorUsuarioId().toString(),
+                domain.getActorUsuarioId()
         );
     }
 }

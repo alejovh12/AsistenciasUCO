@@ -22,7 +22,8 @@ public final class RegistrarAsistenciasSesionRepositoryMapper {
                                 registro.getEstudiante(),
                                 registro.getEstado()
                         ))
-                        .toList()
+                        .toList(),
+                domain.getUsuarioEjecutor()
         );
     }
 }

@@ -48,7 +48,6 @@ public final class GrupoRepositorySqlServerAdapter implements GrupoRepositoryPor
 
     private static final String OPERATION_CREAR_GRUPO = "crearGrupo";
     private static final String OPERATION_ACTUALIZAR_GRUPO = "actualizarGrupo";
-    private static final String OPERATION_GENERAR_SESIONES = "generarSesionesGrupo";
     private static final String OPERATION_REGISTRAR_ESTUDIANTE = "registrarEstudianteEnGrupo";
     private static final String OPERATION_CONSULTAR_GRUPOS = "consultarGrupos";
     private static final String OPERATION_CONSULTAR_ESTUDIANTES = "consultarEstudiantesGrupo";
@@ -70,6 +69,7 @@ public final class GrupoRepositorySqlServerAdapter implements GrupoRepositoryPor
     static final String PARAM_CUPO_MAXIMO = "cupoMaximo";
     static final String PARAM_AULA = "aula";
     static final String PARAM_ID_CORRELACION = "idCorrelacion";
+    static final String PARAM_ID_USUARIO_EJECUTOR = "idUsuarioEjecutor";
 
     static final String SQL_CREAR_GRUPO = """
             EXEC dbo.usp_crear_grupo
@@ -80,7 +80,8 @@ public final class GrupoRepositorySqlServerAdapter implements GrupoRepositoryPor
                  @nombre = :nombre,
                  @idDocente = :idDocente,
                  @aula = :aula,
-                 @idCorrelacion = :idCorrelacion
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
     static final String SQL_ACTUALIZAR_GRUPO = """
             EXEC dbo.usp_actualizar_grupo
@@ -90,12 +91,8 @@ public final class GrupoRepositorySqlServerAdapter implements GrupoRepositoryPor
                  @idDocente = :idDocente,
                  @cupoMaximo = :cupoMaximo,
                  @aula = :aula,
-                 @idCorrelacion = :idCorrelacion
-            """;
-    static final String SQL_GENERAR_SESIONES = """
-            EXEC dbo.usp_generar_sesiones_grupo
-                 @idGrupo = :idGrupo,
-                 @idCorrelacion = :idCorrelacion
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
     static final String SQL_REGISTRAR_ESTUDIANTE = """
             EXEC dbo.usp_registrar_estudiante_en_grupo_usuario_no_existente
@@ -199,20 +196,6 @@ public final class GrupoRepositorySqlServerAdapter implements GrupoRepositoryPor
     }
 
     @Override
-    public GrupoCommandRepositoryProjection generarSesionesGrupo(final UUID grupoId) {
-        return transactionOperations.execute(status -> {
-            final CanonicalProcedureResult result = procedureExecutor.execute(
-                    OPERATION_GENERAR_SESIONES,
-                    SQL_GENERAR_SESIONES,
-                    new MapSqlParameterSource()
-                            .addValue(PARAM_ID_GRUPO, grupoId)
-                            .addValue(PARAM_ID_CORRELACION, CorrelationIdContext.require())
-            );
-            return new GrupoCommandRepositoryProjection(grupoId, result.getMensajeUsuarioResultado());
-        });
-    }
-
-    @Override
     public RegistrarEstudianteRepositoryProjection registrarEstudianteEnGrupo(final RegistrarEstudianteRepositoryDTO dto) {
         if (ObjectHelper.isNull(dto)) {
             throw new CrosscuttingException("El DTO para registrar estudiante en grupo es obligatorio.");
@@ -268,7 +251,8 @@ public final class GrupoRepositorySqlServerAdapter implements GrupoRepositoryPor
                 .addValue(PARAM_NOMBRE, dto.nombre())
                 .addValue(PARAM_ID_DOCENTE, dto.idDocente())
                 .addValue(PARAM_AULA, dto.aula())
-                .addValue(PARAM_ID_CORRELACION, correlationId);
+                .addValue(PARAM_ID_CORRELACION, correlationId)
+                .addValue(PARAM_ID_USUARIO_EJECUTOR, dto.usuarioEjecutor());
     }
 
     private MapSqlParameterSource buildActualizarGrupoParameters(final ActualizarGrupoRepositoryDTO dto, final UUID correlationId) {
@@ -279,7 +263,8 @@ public final class GrupoRepositorySqlServerAdapter implements GrupoRepositoryPor
                 .addValue(PARAM_ID_DOCENTE, dto.idDocente())
                 .addValue(PARAM_CUPO_MAXIMO, dto.cupoMaximo())
                 .addValue(PARAM_AULA, dto.aula())
-                .addValue(PARAM_ID_CORRELACION, correlationId);
+                .addValue(PARAM_ID_CORRELACION, correlationId)
+                .addValue(PARAM_ID_USUARIO_EJECUTOR, dto.usuarioEjecutor());
     }
 
     private MapSqlParameterSource buildRegistrarEstudianteParameters(

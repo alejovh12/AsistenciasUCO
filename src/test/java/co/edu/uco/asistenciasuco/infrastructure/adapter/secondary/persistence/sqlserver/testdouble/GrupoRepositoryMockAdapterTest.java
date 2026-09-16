@@ -30,7 +30,8 @@ class GrupoRepositoryMockAdapterTest {
     void crearGrupo_retorna_proyeccion_con_mismo_id() {
         final UUID id = UUID.randomUUID();
         final GrupoCommandRepositoryProjection resultado = adapter.crearGrupo(
-                new CrearGrupoRepositoryDTO(id, UUID.randomUUID(), UUID.randomUUID(), 1, "Grupo 1", UUID.randomUUID(), "Aula 1"));
+                new CrearGrupoRepositoryDTO(id, UUID.randomUUID(), UUID.randomUUID(), 1, "Grupo 1", UUID.randomUUID(),
+                        "Aula 1", UUID.randomUUID()));
 
         assertEquals(id, resultado.idGrupo());
         assertEquals("Grupo registrado correctamente.", resultado.mensajeUsuario());
@@ -40,19 +41,10 @@ class GrupoRepositoryMockAdapterTest {
     void actualizarGrupo_retorna_proyeccion_con_mismo_id() {
         final UUID id = UUID.randomUUID();
         final GrupoCommandRepositoryProjection resultado = adapter.actualizarGrupo(
-                new ActualizarGrupoRepositoryDTO(id, 1, "Grupo 1", UUID.randomUUID(), 30, "Aula 1"));
+                new ActualizarGrupoRepositoryDTO(id, 1, "Grupo 1", UUID.randomUUID(), 30, "Aula 1", UUID.randomUUID()));
 
         assertEquals(id, resultado.idGrupo());
         assertEquals("Grupo actualizado correctamente.", resultado.mensajeUsuario());
-    }
-
-    @Test
-    void generarSesionesGrupo_retorna_proyeccion_con_mensaje_fijo() {
-        final UUID id = UUID.randomUUID();
-        final GrupoCommandRepositoryProjection resultado = adapter.generarSesionesGrupo(id);
-
-        assertEquals(id, resultado.idGrupo());
-        assertEquals("Sesiones generadas correctamente.", resultado.mensajeUsuario());
     }
 
     @Test

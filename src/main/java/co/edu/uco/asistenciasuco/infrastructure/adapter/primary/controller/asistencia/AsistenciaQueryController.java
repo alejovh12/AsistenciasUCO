@@ -8,6 +8,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asist
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.validation.ConsultarAsistenciasPorGrupoRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,12 +31,15 @@ public final class AsistenciaQueryController {
             new ConsultarAsistenciasPorGrupoRequestValidator();
 
     private final ConsultarAsistenciasPorGrupoInputPort consultarAsistenciasPorGrupoInputPort;
+    private final AuthenticatedUserResolver authenticatedUserResolver;
 
     public AsistenciaQueryController(
-            final ConsultarAsistenciasPorGrupoInputPort consultarAsistenciasPorGrupoInputPort
+            final ConsultarAsistenciasPorGrupoInputPort consultarAsistenciasPorGrupoInputPort,
+            final AuthenticatedUserResolver authenticatedUserResolver
     ) {
 
         this.consultarAsistenciasPorGrupoInputPort = Objects.requireNonNull(consultarAsistenciasPorGrupoInputPort, "El puerto de entrada ConsultarAsistenciasPorGrupoInputPort es obligatorio.");
+        this.authenticatedUserResolver = Objects.requireNonNull(authenticatedUserResolver, "AuthenticatedUserResolver es obligatorio.");
     }
 
     @GetMapping("/api/v1/grupos/{grupoId}/asistencias")
@@ -65,7 +69,10 @@ public final class AsistenciaQueryController {
             final ConsultarAsistenciasPorGrupoRequest request
     ) {
         RequestValidationGuard.validate(CONSULT_BY_GROUP_VALIDATOR.validate(request));
-        final ConsultarAsistenciasPorGrupoDTO dto = AsistenciaHttpMapper.toApplicationDTO(request);
+        final ConsultarAsistenciasPorGrupoDTO dto = AsistenciaHttpMapper.toApplicationDTO(
+                request,
+                authenticatedUserResolver.requireAuthenticatedUserId()
+        );
         final List<AsistenciaConsultadaDTO> asistencias = consultarAsistenciasPorGrupoInputPort.execute(dto);
 
         return ResponseEntity.ok(new ApiListResponse<>(true, asistencias, asistencias.size()));

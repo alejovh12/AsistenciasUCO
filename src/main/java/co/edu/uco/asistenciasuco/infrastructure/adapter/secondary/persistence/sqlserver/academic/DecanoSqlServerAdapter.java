@@ -45,10 +45,12 @@ public final class DecanoSqlServerAdapter implements DecanoQueryPort, DecanoComm
 
     @Override
     public void crearDecano(final CrearDecanoCommand command) {
+        // usp_crear_decano ya no declara @idTipoIdIdentificacion (resuelve el tipo internamente);
+        // command.tipoIdentificacionId() se conserva en capas superiores por compatibilidad HTTP
+        // pero no se reenvia a la SP.
         procedureExecutor.execute("crearDecano", """
                 EXEC dbo.usp_crear_decano
                      @idDecano = :idDecano,
-                     @idTipoIdIdentificacion = :idTipoIdIdentificacion,
                      @numeroIdentificacion = :numeroIdentificacion,
                      @primerNombre = :primerNombre,
                      @segundoNombre = :segundoNombre,
@@ -58,10 +60,10 @@ public final class DecanoSqlServerAdapter implements DecanoQueryPort, DecanoComm
                      @idFacultad = :idFacultad,
                      @nombreFacultad = :nombreFacultad,
                      @password = :password,
-                     @idCorrelacion = :idCorrelacion
+                     @idCorrelacion = :idCorrelacion,
+                     @idUsuarioEjecutor = :idUsuarioEjecutor
                 """, new MapSqlParameterSource()
                 .addValue("idDecano", command.idDecano())
-                .addValue("idTipoIdIdentificacion", command.tipoIdentificacionId())
                 .addValue("numeroIdentificacion", command.numeroIdentificacion())
                 .addValue("primerNombre", command.primerNombre())
                 .addValue("segundoNombre", command.segundoNombre())
@@ -71,6 +73,7 @@ public final class DecanoSqlServerAdapter implements DecanoQueryPort, DecanoComm
                 .addValue("password", command.password())
                 .addValue("idFacultad", command.idFacultad())
                 .addValue("nombreFacultad", command.nombreFacultad())
-                .addValue(ID_CORRELACION, CorrelationIdContext.require()));
+                .addValue(ID_CORRELACION, CorrelationIdContext.require())
+                .addValue("idUsuarioEjecutor", command.usuarioEjecutor()));
     }
 }

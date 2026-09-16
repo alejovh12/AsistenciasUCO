@@ -40,6 +40,7 @@ class CrearDecanoUseCaseImplTest {
     private static final UUID FACULTAD_ID = UUID.fromString("11111111-2222-3333-4444-555555555555");
     private static final UUID TIPO_ID = UUID.fromString("22222222-3333-4444-5555-666666666666");
     private static final UUID USUARIO_ID = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
+    private static final UUID USUARIO_EJECUTOR = UUID.fromString("99999999-8888-7777-6666-555555555555");
     private static final String CORREO = "nuevo@uco.edu.co";
     private static final String RAW = "Clave123!";
     private static final String HASH = "HASH_CONTROLADO";
@@ -83,6 +84,7 @@ class CrearDecanoUseCaseImplTest {
         orden.verify(identity).crearCuenta(idp.capture());
         assertEquals(HASH, db.getValue().password());
         assertEquals(TIPO_ID, db.getValue().tipoIdentificacionId());
+        assertEquals(USUARIO_EJECUTOR, db.getValue().usuarioEjecutor());
         assertNotEquals(RAW, db.getValue().password());
         assertEquals(RAW, idp.getValue().passwordInicial());
         assertNotEquals(HASH, idp.getValue().passwordInicial());
@@ -241,7 +243,7 @@ class CrearDecanoUseCaseImplTest {
     @Test
     void tipo_identificacion_requerido_antes_de_cualquier_dependencia() {
         final CrearDecanoDomain sinTipo = new CrearDecanoDomain(
-                null, 123456789, "Ana", "Maria", "Perez", "Gomez", CORREO, RAW, FACULTAD_ID
+                null, 123456789, "Ana", "Maria", "Perez", "Gomez", CORREO, RAW, FACULTAD_ID, USUARIO_EJECUTOR
         );
 
         assertThrows(ValidationException.class, () -> useCase.execute(sinTipo));
@@ -250,7 +252,9 @@ class CrearDecanoUseCaseImplTest {
     }
 
     private CrearDecanoDomain domain(final int numero, final String correo) {
-        return new CrearDecanoDomain(TIPO_ID, numero, "Ana", "Maria", "Perez", "Gomez", correo, RAW, FACULTAD_ID);
+        return new CrearDecanoDomain(
+                TIPO_ID, numero, "Ana", "Maria", "Perez", "Gomez", correo, RAW, FACULTAD_ID, USUARIO_EJECUTOR
+        );
     }
 
     private UsuarioIdentidadRepositoryProjection usuario(final UUID id, final int numero, final String correo) {

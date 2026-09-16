@@ -14,13 +14,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ConsultarEstudiantesGrupoMapperTest {
 
     @Test
-    void toDomain_mapea_grupoId() {
+    void toDomain_mapea_grupoId_y_usuarioEjecutor() {
         final UUID grupoId = UUID.randomUUID();
+        final UUID usuarioEjecutor = UUID.randomUUID();
 
         final ConsultarEstudiantesGrupoDomain domain =
-                ConsultarEstudiantesGrupoMapper.toDomain(new ConsultarEstudiantesGrupoDTO(grupoId));
+                ConsultarEstudiantesGrupoMapper.toDomain(new ConsultarEstudiantesGrupoDTO(grupoId, usuarioEjecutor));
 
         assertEquals(grupoId, domain.grupoId());
+        assertEquals(usuarioEjecutor, domain.usuarioEjecutor());
     }
 
     @Test

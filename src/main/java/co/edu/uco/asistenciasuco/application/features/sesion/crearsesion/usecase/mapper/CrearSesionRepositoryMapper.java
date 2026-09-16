@@ -26,7 +26,8 @@ public final class CrearSesionRepositoryMapper {
                 domain.getFechaHoraFin(),
                 domain.getAula(),
                 domain.getTipo(),
-                domain.getDocente()
+                domain.getDocente(),
+                domain.getUsuarioEjecutor()
         );
     }
 }

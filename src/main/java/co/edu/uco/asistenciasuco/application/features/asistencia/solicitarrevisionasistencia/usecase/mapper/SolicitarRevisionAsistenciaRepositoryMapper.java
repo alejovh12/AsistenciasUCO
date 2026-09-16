@@ -29,7 +29,8 @@ public final class SolicitarRevisionAsistenciaRepositoryMapper {
                 domain.getCategoria(),
                 domain.getJustificacion(),
                 domain.getSoporteNombre(),
-                domain.getSoporteUrl()
+                domain.getSoporteUrl(),
+                domain.getUsuario()
         );
     }
 }

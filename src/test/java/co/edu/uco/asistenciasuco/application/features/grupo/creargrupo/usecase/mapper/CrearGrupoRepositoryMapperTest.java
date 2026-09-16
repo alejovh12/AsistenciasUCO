@@ -16,13 +16,15 @@ class CrearGrupoRepositoryMapperTest {
     void toRepositoryDTO_mapea_todos_los_campos_incluyendo_id_externo() {
         final UUID idGrupo = UUID.randomUUID();
         final UUID asignatura = UUID.randomUUID();
+        final UUID usuarioEjecutor = UUID.randomUUID();
         final CrearGrupoDomain domain = new CrearGrupoDomain(asignatura, UUID.randomUUID(), 1, "Grupo 1",
-                UUID.randomUUID(), "Aula 1", true);
+                UUID.randomUUID(), "Aula 1", true, usuarioEjecutor);
 
         final CrearGrupoRepositoryDTO dto = CrearGrupoRepositoryMapper.toRepositoryDTO(domain, idGrupo);
 
         assertEquals(idGrupo, dto.idGrupo());
         assertEquals(asignatura, dto.idAsignatura());
+        assertEquals(usuarioEjecutor, dto.usuarioEjecutor());
     }
 
     @Test

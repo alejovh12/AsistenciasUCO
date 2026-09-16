@@ -8,6 +8,7 @@ public record ActualizarGrupoDomain(
         String nombre,
         UUID idDocente,
         Integer cupoMaximo,
-        String aula
+        String aula,
+        UUID usuarioEjecutor
 ) {
 }

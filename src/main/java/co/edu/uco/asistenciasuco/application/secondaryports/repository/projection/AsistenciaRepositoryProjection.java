@@ -12,6 +12,7 @@ public final class AsistenciaRepositoryProjection {
     private final UUID grupo;
     private final UUID sesion;
     private final boolean presente;
+    private final String estado;
     private final String observacion;
 
     public AsistenciaRepositoryProjection(
@@ -20,6 +21,7 @@ public final class AsistenciaRepositoryProjection {
             final UUID grupo,
             final UUID sesion,
             final boolean presente,
+            final String estado,
             final String observacion
     ) {
         this.asistencia = asistencia;
@@ -27,6 +29,7 @@ public final class AsistenciaRepositoryProjection {
         this.grupo = grupo;
         this.sesion = sesion;
         this.presente = presente;
+        this.estado = estado;
         this.observacion = observacion;
     }
 
@@ -48,6 +51,10 @@ public final class AsistenciaRepositoryProjection {
 
     public boolean isPresente() {
         return presente;
+    }
+
+    public String getEstado() {
+        return estado;
     }
 
     public String getObservacion() {
