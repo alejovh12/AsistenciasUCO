@@ -203,6 +203,26 @@ class GlobalExceptionHandlerTest {
         return request;
     }
 
+    @Test
+    void handleApplication_resuelve_mensaje_dinamicamente_desde_catalogo_cuando_esta_presente() {
+        CorrelationIdContext.set(java.util.UUID.fromString(CORRELATION_ID));
+        final co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort mockCatalog =
+                org.mockito.Mockito.mock(co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort.class);
+        org.mockito.Mockito.when(mockCatalog.findUserMessage("ERR_CORREO_FORMATO_INVALIDO"))
+                .thenReturn(java.util.Optional.of("Mensaje dinamico desde Azure App Configuration"));
+
+        final GlobalExceptionHandler customHandler = new GlobalExceptionHandler(mockCatalog);
+
+        final ResponseEntity<ApiErrorResponse> response = customHandler.handleApplication(
+                new ValidationException(UsuarioErrorCode.ERR_CORREO_FORMATO_INVALIDO, "Dato invalido tecnico."),
+                request()
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("ERR_CORREO_FORMATO_INVALIDO", response.getBody().code());
+        assertEquals("Mensaje dinamico desde Azure App Configuration", response.getBody().message());
+    }
+
     private void assertDoesNotContainSensitiveDetail(final String message) {
         assertFalse(message.contains("mensajeTecnicoResultado"));
         assertFalse(message.contains("technicalMessage"));

@@ -526,6 +526,9 @@ src/main/java/co/edu/uco/asistenciasuco/application/features/coordinador/common/
 | Capability | Port / SPI | Adapter actual | Selector | Estado | Trabajo pendiente |
 |---|---|---|---|---|---|
 | Persistence | `*RepositoryPort`, `*QueryPort`, `*CommandPort`, `InstitutionalScopePort` | SQL Server adapters | `app.adapters.persistence.provider=sqlserver` | Ports desacoplados; solo SQL Server | DataSource provider-specific antes de otra DB |
+| Secret Vault | `SecretVaultPort` | `AzureKeyVaultAdapter`, `LocalEnvSecretVaultAdapter` | `app.adapters.vault.provider=azure_keyvault` | Reemplazable por provider (Azure Key Vault / Local Env) | Implementado con DefaultAzureCredential y E2E verificado |
+| Parameter Catalog | `ParameterCatalogPort` | `AzureAppConfigParameterCatalogAdapter`, `SqlServerParameterCatalogAdapter` | `app.adapters.parameter-catalog.provider=azure_appconfig` | Reemplazable por provider (Azure AppConfig / SQL Server) | Implementado con caché en memoria y E2E verificado |
+| Message Catalog | `MessageCatalogPort` | `AzureAppConfigMessageCatalogAdapter`, `SqlServerMessageCatalogAdapter` | `app.adapters.message-catalog.provider=sqlserver` / `azure` | Reemplazable por provider (Azure AppConfig / SQL Server) | Implementado con soporte de label 'es', caché y E2E verificado |
 | Identity Provisioning | `IdentityProviderPort` | `KeycloakIdentityProviderAdapter` | `app.adapters.identity.provider=keycloak` | Reemplazable por provider; solo Keycloak | E2E y completar integración de roles/flujos institucionales pendientes |
 | Runtime Security | `JwtClaimsExtractor` | `KeycloakJwtClaimsExtractor` | `app.adapters.security.provider=keycloak` | Reemplazable por SPI; solo Keycloak | E2E y authorization hardening contextual |
 | Password Encoding | `PasswordEncoderPort` | Spring password adapter | configuración existente | Desacoplado | Sin deuda de provider relevante en esta fase |

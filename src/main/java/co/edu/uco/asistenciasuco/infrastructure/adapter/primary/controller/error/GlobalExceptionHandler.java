@@ -27,12 +27,23 @@ import java.io.StringWriter;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
+import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort;
 import java.util.UUID;
 
 @RestControllerAdvice
 public final class GlobalExceptionHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    private final MessageCatalogPort messageCatalogPort;
+
+    public GlobalExceptionHandler(final MessageCatalogPort messageCatalogPort) {
+        this.messageCatalogPort = messageCatalogPort;
+    }
+
+    public GlobalExceptionHandler() {
+        this(null);
+    }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiErrorResponse> handleUnreadableMessage(
@@ -155,16 +166,31 @@ public final class GlobalExceptionHandler {
             final List<ApiFieldError> details
     ) {
         AuditRequestAttributes.storeErrorCode(request, descriptor.code());
+        final String resolvedMessage = resolveErrorMessage(descriptor);
         return ResponseEntity.status(descriptor.status()).body(new ApiErrorResponse(
                 OffsetDateTime.now(),
                 descriptor.status().value(),
                 descriptor.status().getReasonPhrase(),
                 descriptor.code(),
-                TextHelper.isNullOrBlank(descriptor.message()) ? descriptor.status().getReasonPhrase() : descriptor.message(),
+                resolvedMessage,
                 safePath(request),
                 CorrelationIdContext.getAsString(),
                 details == null ? List.of() : details
         ));
+    }
+
+    private String resolveErrorMessage(final ApiErrorDescriptor descriptor) {
+        if (messageCatalogPort != null && descriptor.code() != null) {
+            try {
+                final Optional<String> catalogMessage = messageCatalogPort.findUserMessage(descriptor.code());
+                if (catalogMessage.isPresent() && !TextHelper.isNullOrBlank(catalogMessage.get())) {
+                    return catalogMessage.get();
+                }
+            } catch (final Exception e) {
+                LOGGER.debug("No se pudo resolver mensaje en catalogo para codigo: {}", descriptor.code());
+            }
+        }
+        return TextHelper.isNullOrBlank(descriptor.message()) ? descriptor.status().getReasonPhrase() : descriptor.message();
     }
 
     private void logControlled(
