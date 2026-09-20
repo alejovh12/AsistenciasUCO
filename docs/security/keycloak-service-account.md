@@ -1,9 +1,33 @@
 # Configuración externa requerida en Keycloak — Service Account administrativo
 
-Este documento describe la configuración que debe existir **manualmente** en el Keycloak
-real para que `KeycloakIdentityProviderAdapter` funcione. AsistenciasUCO **no modifica
-Keycloak automáticamente**: esta configuración se hace una vez, fuera del backend, por un
-administrador de Keycloak.
+Este documento describe la configuración que debe existir en Keycloak para que
+`KeycloakIdentityProviderAdapter` funcione. Esta configuración es **externa al backend**: el
+backend de negocio nunca crea clients, scopes ni el realm en runtime (ver diferenciación más
+abajo).
+
+**En LOCAL/DEV esta configuración ya no se hace manualmente en Keycloak Admin Console.**
+`infra/keycloak/scripts/bootstrap-keycloak.ps1` la crea/reconcilia de forma automatizada e
+idempotente vía Admin REST API — ver `infra/keycloak/README.md` para el flujo completo
+(instalación limpia vía `realm-import/asistencias-uco-realm.json` + reconciliación de un realm
+existente vía el script). En otros ambientes (staging/producción), el equivalente de ese
+bootstrap corre como paso administrativo de infraestructura, separado del despliegue del
+backend.
+
+## 0. Bootstrap de infraestructura vs provisioning funcional
+
+No confundir estas dos capabilities, deliberadamente separadas:
+
+- **Bootstrap de infraestructura** (`infra/keycloak/scripts/bootstrap-keycloak.ps1` y
+  `realm-import/asistencias-uco-realm.json`): crea/reconcilia el realm, los 3 clients, los 5
+  roles institucionales, el client scope `asistencias-api-scope` y sus mappers, y los permisos
+  mínimos del service account descritos en este documento. Lo ejecuta un desarrollador/ops,
+  fuera del backend.
+- **Provisioning funcional del backend** (`IdentityProviderPort` →
+  `KeycloakIdentityProviderAdapter`, descrito en el resto de este documento y en
+  `docs/security/keycloak-identity-provider.md`): crea/verifica cuentas institucionales
+  individuales en runtime, usando la infraestructura ya bootstrapeada. El backend nunca crea el
+  client `asistencias-api`, el client scope, ni el propio realm — solo consume el service
+  account `asistencias-backend-admin` ya configurado.
 
 ## 1. Client confidencial de service account
 
@@ -75,12 +99,14 @@ adapter busca vía `GET /clients/{id}/roles/{roleName}`.
 
 ## 4. Atributo de usuario `idUsuario`
 
-No requiere configuración especial de "user profile" en Keycloak para que el adapter
-funcione: los `attributes` arbitrarios se pueden escribir vía Admin API sin declarar el
-atributo de antemano. Si el realm tiene habilitado un "Unmanaged attributes" restrictivo en el
-User Profile (Keycloak 24+), debe permitir escribir el atributo `idUsuario` (o el nombre
-configurado en `KEYCLOAK_USER_ID_ATTRIBUTE`) vía Admin API — de lo contrario Keycloak podría
-ignorar o rechazar ese atributo silenciosamente al crear el usuario.
+El adapter escribe `attributes.idUsuario` vía Admin API. Si el realm tiene habilitado un
+"Unmanaged attributes" restrictivo en el User Profile (Keycloak 24+), Keycloak podría ignorar o
+rechazar ese atributo silenciosamente al crear el usuario — por eso `bootstrap-keycloak.ps1`
+declara explícitamente el atributo `idUsuario` en el User Profile del realm (`view`/`edit`
+restringidos a `admin`), en vez de depender de una política permisiva de unmanaged attributes.
+Esto también evita que un usuario final pueda autoasignarse otro UUID institucional editando su
+propio perfil. Ver `infra/keycloak/README.md` sección 1 para el flujo DB-first completo de
+`idUsuario`.
 
 ## 5. Resumen de variables de entorno
 
