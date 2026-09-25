@@ -39,6 +39,9 @@ public class SecurityConfig {
     @Value("${app.security.cors.allowed-origins:http://localhost:4200}")
     private String allowedOrigins;
 
+    @Value("${app.security.azure-events.webhook-token:dev-azure-event-token-change-in-prod}")
+    private String azureWebhookToken;
+
     @Bean
     public InstitutionalJwtAuthenticationConverter institutionalJwtAuthenticationConverter(
             final JwtClaimsExtractor jwtClaimsExtractor
@@ -59,14 +62,22 @@ public class SecurityConfig {
             // El cliente envía JWT en Authorization: Bearer. Ese header no se adjunta
             // automáticamente en una petición cross-site, a diferencia de una cookie.
             // Mantenemos CSRF para cualquier petición insegura sin Bearer.
-            .csrf(csrf -> csrf.ignoringRequestMatchers(SecurityConfig::hasBearerAuthorization))
+            .csrf(csrf -> csrf.ignoringRequestMatchers(
+                    SecurityConfig::hasBearerAuthorization,
+                    request -> request.getRequestURI() != null && request.getRequestURI().endsWith("/api/v1/internal/azure-events")
+            ))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .addFilterBefore(
+                    new AzureEventGridAuthFilter(azureWebhookToken),
+                    org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class
+            )
             .exceptionHandling(exceptionHandling -> exceptionHandling
                 .authenticationEntryPoint(authenticationEntryPoint)
                 .accessDeniedHandler(accessDeniedHandler)
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/**").permitAll()
+                .requestMatchers("/api/v1/internal/azure-events").permitAll()
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMINISTRADOR")
                 .requestMatchers("/api/v1/decano/**").hasAnyRole("DECANO", "ADMINISTRADOR")
                 .requestMatchers("/api/v1/coordinador/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")

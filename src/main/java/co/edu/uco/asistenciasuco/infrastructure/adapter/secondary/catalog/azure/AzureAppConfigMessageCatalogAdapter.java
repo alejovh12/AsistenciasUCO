@@ -5,11 +5,13 @@ import com.azure.core.exception.ResourceNotFoundException;
 import com.azure.data.appconfiguration.ConfigurationClient;
 import com.azure.data.appconfiguration.models.ConfigurationSetting;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+
 import java.text.MessageFormat;
-import java.util.Map;
+import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Adaptador secundario para resolver mensajes desde Azure App Configuration.
@@ -22,7 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * </ul>
  * </p>
  *
- * <p>Incorpora una caché concurrente en memoria para evitar el consumo recurrente de cuota
+ * <p>Incorpora una caché acotada en memoria (Caffeine) para evitar el consumo recurrente de cuota
  * en la nube.</p>
  */
 public class AzureAppConfigMessageCatalogAdapter implements MessageCatalogPort {
@@ -32,11 +34,25 @@ public class AzureAppConfigMessageCatalogAdapter implements MessageCatalogPort {
     private static final String TECHNICAL_PREFIX = "messages:technical:";
 
     private final ConfigurationClient client;
-    private final Map<String, String> userMessageCache = new ConcurrentHashMap<>();
-    private final Map<String, String> technicalMessageCache = new ConcurrentHashMap<>();
+    private final Cache<String, String> userMessageCache;
+    private final Cache<String, String> technicalMessageCache;
 
     public AzureAppConfigMessageCatalogAdapter(final ConfigurationClient client) {
+        this(
+                client,
+                Caffeine.newBuilder().maximumSize(2000).expireAfterWrite(Duration.ofMinutes(30)).build(),
+                Caffeine.newBuilder().maximumSize(2000).expireAfterWrite(Duration.ofMinutes(30)).build()
+        );
+    }
+
+    public AzureAppConfigMessageCatalogAdapter(
+            final ConfigurationClient client,
+            final Cache<String, String> userMessageCache,
+            final Cache<String, String> technicalMessageCache
+    ) {
         this.client = Objects.requireNonNull(client, "ConfigurationClient de Azure App Configuration es obligatorio.");
+        this.userMessageCache = Objects.requireNonNull(userMessageCache, "userMessageCache es obligatoria.");
+        this.technicalMessageCache = Objects.requireNonNull(technicalMessageCache, "technicalMessageCache es obligatoria.");
     }
 
     @Override
@@ -58,8 +74,9 @@ public class AzureAppConfigMessageCatalogAdapter implements MessageCatalogPort {
         }
 
         final String cleanCode = code.trim();
-        if (userMessageCache.containsKey(cleanCode)) {
-            return Optional.ofNullable(userMessageCache.get(cleanCode));
+        final String cached = userMessageCache.getIfPresent(cleanCode);
+        if (cached != null) {
+            return Optional.of(cached);
         }
 
         final String key = USER_PREFIX + cleanCode;
@@ -93,8 +110,9 @@ public class AzureAppConfigMessageCatalogAdapter implements MessageCatalogPort {
         }
 
         final String cleanCode = code.trim();
-        if (technicalMessageCache.containsKey(cleanCode)) {
-            return Optional.ofNullable(technicalMessageCache.get(cleanCode));
+        final String cached = technicalMessageCache.getIfPresent(cleanCode);
+        if (cached != null) {
+            return Optional.of(cached);
         }
 
         final String key = TECHNICAL_PREFIX + cleanCode;
@@ -112,9 +130,28 @@ public class AzureAppConfigMessageCatalogAdapter implements MessageCatalogPort {
         }
     }
 
+    /**
+     * Invalida un mensaje específico por su código de negocio.
+     */
+    public void invalidateMessage(final String code) {
+        if (code != null && !code.isBlank()) {
+            final String cleanCode = code.trim();
+            userMessageCache.invalidate(cleanCode);
+            technicalMessageCache.invalidate(cleanCode);
+        }
+    }
+
+    /**
+     * Invalida todas las entradas en memoria.
+     */
+    public void invalidateAll() {
+        userMessageCache.invalidateAll();
+        technicalMessageCache.invalidateAll();
+    }
+
     public void clearCache() {
-        userMessageCache.clear();
-        technicalMessageCache.clear();
+        userMessageCache.invalidateAll();
+        technicalMessageCache.invalidateAll();
     }
 
     private String formatMessage(final String template, final Object... args) {

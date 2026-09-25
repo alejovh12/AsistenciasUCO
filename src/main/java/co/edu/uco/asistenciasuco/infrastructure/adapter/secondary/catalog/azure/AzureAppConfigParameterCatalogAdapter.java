@@ -5,16 +5,18 @@ import com.azure.core.exception.ResourceNotFoundException;
 import com.azure.data.appconfiguration.ConfigurationClient;
 import com.azure.data.appconfiguration.models.ConfigurationSetting;
 
-import java.util.Map;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+
+import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Adaptador secundario para Azure App Configuration.
  * Implementa {@link ParameterCatalogPort} utilizando el {@link ConfigurationClient} de Azure SDK.
  *
- * <p>Incorpora una cache concurrente en memoria (ConcurrentHashMap) para optimizar
+ * <p>Incorpora una cache acotada y con TTL en memoria (Caffeine) para optimizar
  * lecturas y respetar la cuota de peticiones del tier gratuito (F0).</p>
  *
  * <p>No se autoregistra con anotaciones de Spring (@Component/@Service). Es instanciado
@@ -23,10 +25,18 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AzureAppConfigParameterCatalogAdapter implements ParameterCatalogPort {
 
     private final ConfigurationClient client;
-    private final Map<String, String> cache = new ConcurrentHashMap<>();
+    private final Cache<String, String> cache;
 
     public AzureAppConfigParameterCatalogAdapter(final ConfigurationClient client) {
+        this(client, Caffeine.newBuilder()
+                .maximumSize(1000)
+                .expireAfterWrite(Duration.ofMinutes(10))
+                .build());
+    }
+
+    public AzureAppConfigParameterCatalogAdapter(final ConfigurationClient client, final Cache<String, String> cache) {
         this.client = Objects.requireNonNull(client, "ConfigurationClient de Azure App Configuration es obligatorio.");
+        this.cache = Objects.requireNonNull(cache, "Cache de Caffeine es obligatoria.");
     }
 
     @Override
@@ -38,8 +48,9 @@ public class AzureAppConfigParameterCatalogAdapter implements ParameterCatalogPo
         final String normalizedKey = buildKey(group, key);
 
         // 1. Revisar cache en memoria
-        if (cache.containsKey(normalizedKey)) {
-            return Optional.ofNullable(cache.get(normalizedKey));
+        final String cached = cache.getIfPresent(normalizedKey);
+        if (cached != null) {
+            return Optional.of(cached);
         }
 
         // 2. Consultar en Azure App Configuration si no esta en cache
@@ -104,10 +115,28 @@ public class AzureAppConfigParameterCatalogAdapter implements ParameterCatalogPo
     }
 
     /**
-     * Invalida la cache local en memoria.
+     * Invalida la clave de un parámetro en la caché en memoria.
+     */
+    public void invalidateParameter(final String group, final String key) {
+        if (group != null && !group.isBlank() && key != null && !key.isBlank()) {
+            cache.invalidate(buildKey(group, key));
+        } else if (key != null && !key.isBlank()) {
+            cache.invalidate(key.trim());
+        }
+    }
+
+    /**
+     * Invalida toda la cache local en memoria.
+     */
+    public void invalidateAll() {
+        cache.invalidateAll();
+    }
+
+    /**
+     * Invalida la cache local en memoria (compatibilidad).
      */
     public void clearCache() {
-        cache.clear();
+        cache.invalidateAll();
     }
 
     private String buildKey(final String group, final String key) {
