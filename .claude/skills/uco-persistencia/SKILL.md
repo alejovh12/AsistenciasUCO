@@ -34,6 +34,8 @@ Carga puerto y adapter JDBC afectados, contrato DB liberado e IT. Migración inc
 
 La paridad es obligatoria antes del switch: mismo fixture, semántica y proyección; baseline JDBC y candidato JPA comparados field-by-field. Commands y queries pueden migrar por separado. H2, repository mock o `EntityManager` mock no certifican SQL Server/JPA. El PLAN define selector y rollback al provider JDBC.
 
+Piloto de query (LB-002.1, ver [LB-002.0-DECISION](../../../docs/work-items/LB-002-jpa-incremental/LB-002.0-DECISION.md)): migración de tecnología, no de autorización. Usa las vistas base `uv_detalle_asistencia`/`uv_asistencia`/`uv_estudiante_grupo`; no `uv_auth_*`, no `SESSION_CONTEXT`, no `usp_consultar_grupos_paginado`/paginación; `InstitutionalScopePort` y roles/ownership intactos. Paridad obligatoria en SQL Server real con el freeze DB desplegado.
+
 ## Archivos y cambios prohibidos
 
 No modificar schema/SQL DB; no @Entity/JpaRepository/EntityManager en Domain/Application; no exponer entidades por HTTP; no cambiar contrato/RED ni agregar JPA/pom.xml fuera de un work item `PERSISTENCE_MIGRATION` READY.

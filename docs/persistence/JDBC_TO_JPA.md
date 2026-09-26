@@ -141,6 +141,16 @@ vertical por vertical.
 
 Commands y queries pueden migrar y seleccionarse por separado. El PLAN debe conservar un selector/rollback practicable al provider JDBC; no hay big bang ni retiro del baseline durante el piloto.
 
+### Alcance del piloto de query (LB-002.0, [DECISION](../work-items/LB-002-jpa-incremental/LB-002.0-DECISION.md))
+
+LB-002.1 es una migración de tecnología de persistencia, no de arquitectura de autorización. Contra el freeze final de la DB (`develop`, code freeze `dcc69f19...`, contrato `45e48c5a...`):
+
+- El piloto usa las vistas base congeladas `dbo.uv_detalle_asistencia`, `dbo.uv_asistencia` y `dbo.uv_estudiante_grupo`; **no** `uv_auth_*`.
+- **No** establece `SESSION_CONTEXT` (estado por conexión física; su adopción exige work item propio con set/use/restore, limpieza ante excepción, pool, transacciones y tests de fuga).
+- **No** consume `usp_consultar_grupos_paginado` ni añade paginación (DR-010 intacta).
+- Autorización AS-IS: HTTP Security → Use Case → `InstitutionalScopePort` → Repository.
+- Paridad en SQL Server real (`sql_server_asistencias`, `gestionasistenciadb`, con el freeze desplegado y `test_summary.ps1` PASS): mismo fixture, baseline JDBC vs candidato JPA.
+
 ## 5. Ejemplo TARGET, no archivos existentes ni nombres definitivos
 
 ```text
