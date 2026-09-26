@@ -508,7 +508,7 @@ src/main/java/co/edu/uco/asistenciasuco/application/features/coordinador/common/
 
 | Capability | Port / SPI | Adapter actual | Selector | Estado | Trabajo pendiente |
 |---|---|---|---|---|---|
-| Persistence | `*RepositoryPort`, `*QueryPort`, `*CommandPort`, `InstitutionalScopePort` | SQL Server adapters | `app.adapters.persistence.provider=sqlserver` | Ports desacoplados; solo SQL Server | DataSource provider-specific antes de otra DB |
+| Persistence | `*RepositoryPort`, `*QueryPort`, `*CommandPort`, `InstitutionalScopePort` | SQL Server adapters | `app.adapters.persistence.provider=sqlserver`; `app.adapters.persistence.asistencia-query-provider` (jdbc por defecto, o jpa) (LB-002.1, solo `consultarAsistenciasPorGrupo`) | Ports desacoplados; solo SQL Server; JPA solo en la query piloto | DataSource provider-specific antes de otra DB |
 | Secret Vault | `SecretVaultPort` | `AzureKeyVaultAdapter`, `LocalEnvSecretVaultAdapter` | `app.adapters.vault.provider=azure_keyvault` | Reemplazable; Azure usa `DefaultAzureCredential`; Caffeine local 50/5 min | Evidencia operacional MV-003; seguridad webhook en LB-001D.2 |
 | Parameter Catalog | `ParameterCatalogPort` | `AzureAppConfigParameterCatalogAdapter`, `SqlServerParameterCatalogAdapter` | `app.adapters.parameter-catalog.provider=azure_appconfig` | Reemplazable; Azure usa Caffeine local 1000/10 min | Evidencia operacional MV-003 |
 | Message Catalog | `MessageCatalogPort` | `AzureAppConfigMessageCatalogAdapter`, `SqlServerMessageCatalogAdapter` | `app.adapters.message-catalog.provider=azure` | Reemplazable; Azure usa dos caches locales 2000/30 min; label `es` para usuario | Evidencia operacional MV-003 |

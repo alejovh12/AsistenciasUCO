@@ -6,6 +6,12 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:com.microsoft.sqlserver.jdbc.SQLServerDriver}
+  # LB-002.1: defaults seguros por si se habilitara la auto-configuracion JPA de Boot (hoy excluida
+  # en AsistenciasUcoApplication; el EMF explicito fija hbm2ddl=none). Hibernate no administra el schema.
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
   sql:
     init:
       mode: never
@@ -80,6 +86,9 @@ app:
   adapters:
     persistence:
       provider: ${APP_ADAPTERS_PERSISTENCE_PROVIDER:sqlserver}
+      # LB-002.1: tecnologia de SOLO consultarAsistenciasPorGrupo (jdbc | jpa). Los commands son
+      # siempre JDBC. Rollback = jdbc. Valor no soportado => falla el arranque.
+      asistencia-query-provider: ${APP_ADAPTERS_PERSISTENCE_ASISTENCIA_QUERY_PROVIDER:jdbc}
     identity:
       provider: ${APP_ADAPTERS_IDENTITY_PROVIDER:keycloak}
     security:

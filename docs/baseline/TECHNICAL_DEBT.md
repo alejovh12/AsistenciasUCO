@@ -561,7 +561,8 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 - **Motivo:** `NON_GOLDEN_DB_CONTRACT_DRIFT`; sin evidencia suficiente para mapear a SP existentes (`usp_sincronizar_usuario_interno`, `usp_registrar_estudiante_en_grupo`, etc. difieren en firma/semántica). No se modifica código ni DB.
 - **Resolución esperada:** work item contractual propio (DB owner vs backend consumer) antes de liberar cada feature: crear el SP en DB o adaptar el backend, con decisión explícita de OWNER.
 - **Bloquea línea base:** no para el Golden Path; sí para liberar las tres features anteriores.
-- **Estado:** ABIERTA (no resuelta). **Work item relacionado:** [LB-001B.4](../work-items/LB-001B.4-final-backend-contract-closure/CONTRACT_DECISION_TD043.md).
+- **Actualización LB-002.1 (2026-09-26) — nueva evidencia, deuda NO cerrada:** `.\mvnw.cmd -Pintegration verify` contra `sql_server_asistencias`/`gestionasistenciadb` (freeze DB desplegado) da 6 fallos: `SqlStoredProcedureContractIT` ×3 (los tres SP de esta deuda), `GrupoRepositorySqlServerIT` ×2 y `UsuarioPasswordHashSqlServerIT` ×1 (`Could not find stored procedure`, error 2812). Son **idénticos sobre `HEAD` limpio (`df66a67`) sin cambios JPA**: preexistentes al piloto JPA, sin regresión causada por LB-002.1. El perfil `-Pintegration` global continúa `NOT_GREEN_TD043`; no se convierte en PASS. Los ITs no se modificaron (sin `@Disabled`, `Assumptions`, exclusiones, mocks ni cambio de expected); no se tocó DB. Ver [LB-002.1-VALIDATION](../work-items/LB-002-jpa-incremental/LB-002.1-VALIDATION.md).
+- **Estado:** OPEN / NON_GOLDEN_DB_CONTRACT_DRIFT (no resuelta; requiere work item propio si se decide resolver). **Work item relacionado:** [LB-001B.4](../work-items/LB-001B.4-final-backend-contract-closure/CONTRACT_DECISION_TD043.md).
 
 ## TD-044
 

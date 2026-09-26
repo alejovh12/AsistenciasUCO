@@ -15,12 +15,19 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.core.TipoIdentificacionRepositorySqlServerAdapter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.core.UsuarioRepositorySqlServerAdapter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.CanonicalStoredProcedureExecutor;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.core.AsistenciaRepositoryHybridSqlServerAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.AsistenciaJpaQueryPersistence;
+import jakarta.persistence.EntityManagerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.transaction.support.TransactionOperations;
+
+import java.util.Locale;
 
 /**
  * Composition Root: selecciona SQL Server como tecnología de persistencia para los
@@ -37,6 +44,8 @@ import org.springframework.transaction.support.TransactionOperations;
         matchIfMissing = true
 )
 public class SqlServerCoreRepositoryAdapterConfiguration {
+
+    static final String ASISTENCIA_QUERY_PROVIDER_PROPERTY = "app.adapters.persistence.asistencia-query-provider";
 
     @Bean
     public GrupoRepositoryPort grupoRepositoryPort(
@@ -82,11 +91,43 @@ public class SqlServerCoreRepositoryAdapterConfiguration {
         return new SesionRepositorySqlServerAdapter(procedureExecutor, namedParameterJdbcOperations);
     }
 
+    /**
+     * LB-002.1: unico {@link AsistenciaRepositoryPort}. {@code app.adapters.persistence.asistencia-query-provider}
+     * (jdbc por defecto | jpa) elige la tecnologia SOLO de {@code consultarAsistenciasPorGrupo}; los
+     * commands siempre son JDBC. Un valor no soportado falla el arranque (fail-closed). El
+     * {@code EntityManagerFactory} solo se resuelve con {@code jpa}.
+     */
     @Bean
     public AsistenciaRepositoryPort asistenciaRepositoryPort(
             final NamedParameterJdbcOperations namedParameterJdbcOperations,
-            final CanonicalStoredProcedureExecutor procedureExecutor
+            final CanonicalStoredProcedureExecutor procedureExecutor,
+            final ObjectProvider<EntityManagerFactory> entityManagerFactory,
+            final Environment environment
     ) {
-        return new AsistenciaRepositorySqlServerAdapter(namedParameterJdbcOperations, procedureExecutor);
+        final AsistenciaRepositoryPort jdbcAdapter =
+                new AsistenciaRepositorySqlServerAdapter(namedParameterJdbcOperations, procedureExecutor);
+        return switch (AsistenciaQueryProvider.from(environment.getProperty(ASISTENCIA_QUERY_PROVIDER_PROPERTY))) {
+            case JDBC -> jdbcAdapter;
+            case JPA -> new AsistenciaRepositoryHybridSqlServerAdapter(
+                    jdbcAdapter,
+                    new AsistenciaJpaQueryPersistence(entityManagerFactory.getObject())
+            );
+        };
+    }
+
+    enum AsistenciaQueryProvider {
+        JDBC, JPA;
+
+        static AsistenciaQueryProvider from(final String value) {
+            if (value == null) {
+                return JDBC;
+            }
+            return switch (value.trim().toLowerCase(Locale.ROOT)) {
+                case "jdbc" -> JDBC;
+                case "jpa" -> JPA;
+                default -> throw new IllegalStateException(
+                        ASISTENCIA_QUERY_PROVIDER_PROPERTY + " no soporta el valor '" + value + "'. Valores: jdbc, jpa.");
+            };
+        }
     }
 }
