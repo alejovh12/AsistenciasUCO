@@ -33,7 +33,7 @@ Fuente ejecutable: [pom.xml](../../pom.xml) y [.github/workflows](../../.github/
 - Java `[25,26)` por Maven Enforcer.
 - JaCoCo BUNDLE, COVEREDRATIO: **LINE >= 0.80; BRANCH >= 0.70**, en fase verify.
 - ArchUnit/JUnit en Surefire, dentro de verify; reportes en `target/surefire-reports`.
-- Failsafe `**/*IT.java` solo con perfil `integration`, configurado con `application-integration`.
+- Failsafe `**/*IT.java` (excepto `**/*CloudIntegrationIT.java`) solo con perfil `integration`, configurado con `application-integration`. Cloud Integration Azure: perfil `azure-integration` (solo `**/*CloudIntegrationIT.java`, sin Surefire ni JaCoCo).
 - CI: clean verify, existencia de reportes JaCoCo/JAR y Docker build. Sonar análisis + espera de Quality Gate solo para PR/push develop; el umbral remoto de New Code no está versionado aquí.
 - CodeQL Java y Dependency Review (PR, high+) en workflow de seguridad. Protección de ramas y resultados remotos requieren evidencia externa.
 - Integración SQL workflow manual; no required check hasta disponer de DB CI reproducible.
@@ -176,7 +176,7 @@ Frontend E2E se agrega cuando el ambiente esté automatizable.
 | Cloud Integration | Azure real u otro cloud real, con perfil/comando explícito y evidencia sanitizada |
 | E2E | frontend/backend/DB/IdP reales según el alcance declarado |
 
-Un test que consume Azure real no debe ejecutarse implícitamente como suite unitaria/normal. Su aislamiento técnico queda como target de LB-001D.2; hasta entonces se registra como deuda, no se reclasifica la evidencia ni se afirma que mocks certifican Azure.
+Un test que consume Azure real no debe ejecutarse implícitamente como suite unitaria/normal. Se nombra `*CloudIntegrationIT`, corre con Failsafe solo mediante `-Pazure-integration` (solo lectura) y está excluido de `mvn verify` y de `-Pintegration` (SQL Server); no se aísla con skips/assumptions. Sin ambiente Azure falla o se registra `VALIDATION_BLOCKED_BY_ENVIRONMENT`, nunca PASS. Mocks no certifican Azure. `CloudIntegrationClassificationTest` protege la convención detectando wiring Azure + `.getSecret(` + endpoint operacional (variables `AZURE_*_ENDPOINT`); no detecta pruebas Cloud sin esas señales.
 
 ## Anti-patrones bloqueantes
 

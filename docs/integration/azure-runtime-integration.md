@@ -144,7 +144,7 @@ Event Grid permite invalidación push mediante `CatalogInvalidationPort`:
 - No se sirve un valor inventado ante fallo del provider.
 - Los fallos técnicos conservan causa para diagnóstico, pero no exponen secretos al cliente.
 - Event Grid con evento no soportado o sin tipo se ignora; App Configuration sin clave identificable invalida todo; Key Vault sin nombre identificable no invalida.
-- El webhook responde 401 si la credencial falta/no coincide; el hardening de default y transporte de credencial es deuda LB-001D.2.
+- El webhook responde 401 si la credencial no está configurada (vacía/ausente/en blanco), falta o no coincide. La credencial se acepta solo en el header `aeg-sas-token`; no existe default funcional (`app.security.azure-events.webhook-token` ← `AZURE_EVENTGRID_WEBHOOK_TOKEN`, vacío por defecto) ni autenticación por query string (TD-051/TD-052, LB-001D.2). `permitAll` en `SecurityConfig` es solo de autorización: la autenticación la ejecuta `AzureEventGridAuthFilter`, que identifica la ruta de forma exacta (respetando context path).
 - No existe garantía de invalidación distribuida, entrega exactamente una vez ni orden global.
 
 ## 13. Provider selectors
@@ -184,7 +184,7 @@ Endpoints y opciones del provider viven bajo `app.providers.*`; no se mezclan co
 - Cloud Integration: Key Vault/App Configuration reales mediante perfil explícito; evidencia sanitizada y cero secretos.
 - Webhook integration: autenticación, handshake, eventos y refresh observable.
 
-AS-IS existe `AzureCloudIntegrationE2ETest` con Azure real bajo la convención normal `*Test`; esto es `TEST_CLASSIFICATION_DEBT` y se corrige técnicamente en LB-001D.2. Hasta entonces, no se presenta `mvn verify` como independiente de Azure real ni un mock como certificación cloud.
+La Cloud Integration es `AzureCloudIntegrationIT` (Failsafe, solo lectura de Key Vault/App Configuration mediante `SecretVaultPort`/`ParameterCatalogPort`/`MessageCatalogPort`). `mvn verify` no la ejecuta; se lanza con `.\mvnw.cmd -Pazure-integration verify`, con identidad `DefaultAzureCredential` (p. ej. `az login`) y `AZURE_KEYVAULT_ENDPOINT`/`AZURE_APPCONFIG_ENDPOINT` definidos. Sin ambiente la prueba **falla** (nunca se salta ni pasa en falso). Un PASS de esta prueba no certifica Event Grid real, invalidación end-to-end ni observabilidad: MV-003 sigue pendiente. Los tests con mocks/clientes controlados no certifican Azure real.
 
 ## 17. Observability
 
@@ -248,9 +248,7 @@ Registrar, cuando aplique: tipo de evento, subject sanitizado, correlation dispo
 ## 21. Known debts
 
 - [TD-027](../baseline/TECHNICAL_DEBT.md#td-027): evidencia operacional Azure/telemetría; MV-003.
-- [TD-051](../baseline/TECHNICAL_DEBT.md#td-051): default funcional inseguro del webhook.
-- [TD-052](../baseline/TECHNICAL_DEBT.md#td-052): credencial del webhook aceptada por query.
-- [TD-053](../baseline/TECHNICAL_DEBT.md#td-053): aislamiento/clasificación de Cloud Integration.
+- [TD-051](../baseline/TECHNICAL_DEBT.md#td-051), [TD-052](../baseline/TECHNICAL_DEBT.md#td-052), [TD-053](../baseline/TECHNICAL_DEBT.md#td-053): RESUELTAS en LB-001D.2 (default funcional, credencial por query, aislamiento de Cloud Integration).
 - [TD-054](../baseline/TECHNICAL_DEBT.md#td-054): decisión Azure→realtime; DR-AZ-001.
 
 ## 22. References

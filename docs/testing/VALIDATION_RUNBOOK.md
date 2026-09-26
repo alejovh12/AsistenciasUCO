@@ -37,6 +37,18 @@ Windows: `.\scripts\test-local.ps1` (carga variables sin imprimirlas y ejecuta p
 
 Failsafe: `target/failsafe-reports`. Verificar tests realmente ejecutados y assumptions. Asistencia requiere grupo con ≥3 matriculados, docente titular y otro docente activo; un skip por fixture ausente es evidencia insuficiente. No alterar DB ni fixtures institucionales para esta reorganización documental.
 
+## Cloud Integration Azure (solo lectura)
+
+No forma parte de `mvn verify` ni de `-Pintegration`. Requiere identidad `DefaultAzureCredential` autorizada (p. ej. `az login`) y los endpoints de recurso (no secretos):
+
+```powershell
+$env:AZURE_KEYVAULT_ENDPOINT='<endpoint Key Vault>'
+$env:AZURE_APPCONFIG_ENDPOINT='<endpoint App Configuration>'
+.\mvnw.cmd -Pazure-integration verify
+```
+
+Ejecuta solo `*CloudIntegrationIT` con Failsafe (`target/failsafe-reports`); no corre Surefire ni el gate JaCoCo. Sin ambiente, la prueba falla con mensaje explícito: registrar `VALIDATION_BLOCKED_BY_ENVIRONMENT`, nunca PASS. No imprimir valores; no certifica Event Grid ni MV-003.
+
 ## Reorganización documental
 
 Comprobar rutas/enlaces, AGENTS único fuera de estado local, CLAUDE breve, skills/rutas existentes, pack retirado tras fusión, archivo histórico marcado, un ledger/roadmap/DoD, ignores locales y ausencia de worktrees versionados. Revisar `git diff --check`, `git diff --stat`, `git status --short` y hashes/diff de archivos funcionales. Git diff normal no incluye nuevos archivos: inspeccionarlos también.

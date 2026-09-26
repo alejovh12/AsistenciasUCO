@@ -64,9 +64,9 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 | [TD-048](#td-048) | `Sesion.nombre` es `nvarchar(50)` en DB pero el backend valida 1..150 (nombres de 51..150 fallarían en persistencia como error técnico) | CLOSED (LB-001B.4B) | no |
 | [TD-049](#td-049) | `/usuarios/perfil` responde 501 | ABIERTA / OUT_OF_GOLDEN_PATH / NON_BLOCKING | no |
 | [TD-050](#td-050) | Latencia de reconciliación realtime observada en MV-001 | ABIERTA / NON_BLOCKING | no |
-| [TD-051](#td-051) | Webhook Azure con credencial default funcional insegura | ABIERTA / SECURITY_FINDING / HIGH | sí, LB-001D.2 |
-| [TD-052](#td-052) | Webhook Azure acepta credencial por URL/query | ABIERTA / SECURITY_FINDING / HIGH | sí, LB-001D.2 |
-| [TD-053](#td-053) | Cloud Integration Azure corre como test normal | ABIERTA / TEST_CLASSIFICATION_DEBT | sí, LB-001D.2 y antes de LB-002 |
+| [TD-051](#td-051) | Webhook Azure con credencial default funcional insegura | RESUELTA (LB-001D.2) | no |
+| [TD-052](#td-052) | Webhook Azure acepta credencial por URL/query | RESUELTA (LB-001D.2) | no |
+| [TD-053](#td-053) | Cloud Integration Azure corre como test normal | RESUELTA (LB-001D.2) | no |
 | [TD-054](#td-054) | Semántica Azure→realtime sin decisión explícita | DECISION_REQUIRED | no para documentación; sí para cambio realtime futuro |
 
 ## TD-001
@@ -649,8 +649,8 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 - **Evidencia:** `SecurityConfig` y configuración runtime; se registra archivo/tipo, nunca el valor.
 - **Motivo para no resolver ahora:** LB-001D.1 es documentation/governance only; producción/tests/config están prohibidos.
 - **Resolución esperada:** LB-001D.2 elimina el default funcional, exige configuración fail-fast/disabled segura y agrega pruebas negativas sin debilitar la autenticación del webhook.
-- **Bloquea línea base:** sí, LB-001D.2 y por transitividad LB-002.
-- **Estado:** ABIERTA. **Work item:** [LB-001D.1](../work-items/LB-001D-governance-hardening/LB-001D.1-PLAN.md).
+- **Bloquea línea base:** no (resuelta).
+- **Estado:** RESUELTA en LB-001D.2 (2026-09-26): `@Value("${app.security.azure-events.webhook-token:}")` y `webhook-token: ${AZURE_EVENTGRID_WEBHOOK_TOKEN:}` sin valor por defecto; credencial vacía/ausente/en blanco → 401 fail-closed. Evidencia: `AzureWebhookUnconfiguredSecurityChainTest`, `AzureEventGridAuthFilterTest`. **Work item:** [LB-001D.2](../work-items/LB-001D-governance-hardening/LB-001D.2-REPORT.md).
 
 ## TD-052
 
@@ -661,8 +661,8 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 - **Evidencia:** `AzureEventGridAuthFilter`; no se registra el valor de ninguna credencial.
 - **Motivo para no resolver ahora:** LB-001D.1 no modifica código ni tests.
 - **Resolución esperada:** LB-001D.2 acepta la credencial únicamente por el header operacional aprobado, agrega negativos de query y verifica logs/evidencia sanitizados.
-- **Bloquea línea base:** sí, LB-001D.2 y por transitividad LB-002.
-- **Estado:** ABIERTA. **Work item:** [LB-001D.1](../work-items/LB-001D-governance-hardening/LB-001D.1-PLAN.md).
+- **Bloquea línea base:** no (resuelta).
+- **Estado:** RESUELTA en LB-001D.2 (2026-09-26): se eliminó `request.getParameter("token")`; la credencial se acepta solo por `aeg-sas-token`, con comparación de digests SHA-256 vía `MessageDigest.isEqual`. Evidencia: query-only (`token`, `access_token`, `key`) → 401 en filtro y en cadena real. **Work item:** [LB-001D.2](../work-items/LB-001D-governance-hardening/LB-001D.2-REPORT.md).
 
 ## TD-053
 
@@ -673,8 +673,8 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 - **Evidencia:** clase de test y convenciones Surefire/Failsafe del `pom.xml`.
 - **Motivo para no resolver ahora:** renombrar/reconfigurar tests o POM está prohibido en LB-001D.1.
 - **Resolución esperada:** LB-001D.2 aísla Azure real mediante perfil/comando explícito, mantiene unit/component sin cloud y registra ambiente/evidencia sanitizada.
-- **Bloquea línea base:** sí, LB-001D.2 y antes de LB-002.
-- **Estado:** ABIERTA. **Work item:** [LB-001D.1](../work-items/LB-001D-governance-hardening/LB-001D.1-PLAN.md).
+- **Bloquea línea base:** no (resuelta).
+- **Estado:** RESUELTA en LB-001D.2 (2026-09-26) por clasificación/perfil, sin skips: `AzureCloudIntegrationE2ETest` → `AzureCloudIntegrationIT` (Failsafe, solo lectura, endpoints por `AZURE_KEYVAULT_ENDPOINT`/`AZURE_APPCONFIG_ENDPOINT`), excluido de `-Pintegration` y ejecutado únicamente con `-Pazure-integration`; `mvn verify` no lo ejecuta (`CloudIntegrationClassificationTest` lo protege). Esto no cierra MV-003. **Work item:** [LB-001D.2](../work-items/LB-001D-governance-hardening/LB-001D.2-REPORT.md).
 
 ## TD-054
 

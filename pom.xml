@@ -304,6 +304,51 @@
                             <includes>
                                 <include>**/*IT.java</include>
                             </includes>
+                            <!-- Cloud Integration (Azure real) solo se ejecuta con -Pazure-integration. -->
+                            <excludes>
+                                <exclude>**/*CloudIntegrationIT.java</exclude>
+                            </excludes>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <!--
+            Cloud Integration Azure (Key Vault / App Configuration reales, solo lectura).
+            Comando: .\mvnw.cmd -Pazure-integration verify
+            Ejecuta unicamente *CloudIntegrationIT via Failsafe; Surefire (unit/component) y el
+            gate JaCoCo no aplican en este alcance. Requiere identidad DefaultAzureCredential y
+            AZURE_KEYVAULT_ENDPOINT / AZURE_APPCONFIG_ENDPOINT; sin ambiente la prueba FALLA.
+        -->
+        <profile>
+            <id>azure-integration</id>
+            <properties>
+                <jacoco.skip>true</jacoco.skip>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <configuration>
+                            <includes>
+                                <include>**/*CloudIntegrationIT.java</include>
+                            </includes>
                         </configuration>
                         <executions>
                             <execution>

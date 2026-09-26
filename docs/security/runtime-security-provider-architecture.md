@@ -520,7 +520,7 @@ No se permite “arreglar” scanners mediante:
 
 La autenticación de `POST /api/v1/internal/azure-events` es una frontera operacional externa y **no equivale** a OAuth2 Bearer JWT de la API de negocio. No cambia la matriz RBAC institucional.
 
-Las credenciales de webhook no pueden tener defaults funcionales inseguros, aceptarse por query parameter ni aparecer en logs/evidencia. El AS-IS y los hallazgos se documentan en [Azure Runtime Integration](../integration/azure-runtime-integration.md) y TD-051/TD-052; la corrección técnica pertenece a LB-001D.2.
+Las credenciales de webhook no pueden tener defaults funcionales inseguros, aceptarse por query parameter ni aparecer en logs/evidencia. El AS-IS y los hallazgos se documentan en [Azure Runtime Integration](../integration/azure-runtime-integration.md) y TD-051/TD-052; TD-051/TD-052 quedaron resueltas en LB-001D.2: sin default funcional, fail-closed sin credencial y header único `aeg-sas-token`. `permitAll` de autorización no equivale a endpoint sin autenticación.
 
 ---
 

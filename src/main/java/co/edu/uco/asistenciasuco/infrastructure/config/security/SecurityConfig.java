@@ -39,7 +39,7 @@ public class SecurityConfig {
     @Value("${app.security.cors.allowed-origins:http://localhost:4200}")
     private String allowedOrigins;
 
-    @Value("${app.security.azure-events.webhook-token:dev-azure-event-token-change-in-prod}")
+    @Value("${app.security.azure-events.webhook-token:}")
     private String azureWebhookToken;
 
     @Bean
@@ -64,7 +64,7 @@ public class SecurityConfig {
             // Mantenemos CSRF para cualquier petición insegura sin Bearer.
             .csrf(csrf -> csrf.ignoringRequestMatchers(
                     SecurityConfig::hasBearerAuthorization,
-                    request -> request.getRequestURI() != null && request.getRequestURI().endsWith("/api/v1/internal/azure-events")
+                    AzureEventGridAuthFilter::isWebhookRequest
             ))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(
@@ -77,7 +77,9 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/**").permitAll()
-                .requestMatchers("/api/v1/internal/azure-events").permitAll()
+                // permitAll de AUTORIZACION: la autenticacion la exige AzureEventGridAuthFilter (header
+                // aeg-sas-token, fail-closed). No equivale a un endpoint sin autenticacion.
+                .requestMatchers(AzureEventGridAuthFilter.WEBHOOK_PATH).permitAll()
                 // Solo lectura de documentación runtime. La propiedad de Swagger UI controla
                 // si estos handlers existen; ningún endpoint de negocio se abre por esta regla.
                 .requestMatchers(
