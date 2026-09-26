@@ -3,7 +3,7 @@ status: active
 type: active
 scope: backend
 owner: backend-team
-last-reviewed: 2026-09-24
+last-reviewed: 2026-09-26
 ---
 
 # Mapa del conocimiento del backend
@@ -59,6 +59,7 @@ Entrada operativa: [AGENTS](../AGENTS.md). **NORMATIVE** significa regla activa;
 ## Integration
 
 - **NORMATIVE:** [protocolo de alineación contractual DB ↔ backend ↔ frontend](integration/CONTRACT_ALIGNMENT_PROTOCOL.md); plantilla [CONTRACT_MATRIX](../.claude/templates/CONTRACT_MATRIX.md).
+- **NORMATIVE / AS-IS:** [Azure Runtime Integration](integration/azure-runtime-integration.md): Key Vault, App Configuration, Event Grid, caché local e invalidación.
 - [SQL Server local](integration/sqlserver-connection.md), [alineación frontend pendiente de evidencia externa](integration/frontend-contract-alignment.md).
 
 ## ADR
@@ -70,10 +71,10 @@ Entrada operativa: [AGENTS](../AGENTS.md). **NORMATIVE** significa regla activa;
 
 - [Convención y artefactos](work-items/README.md), [LB-000](work-items/LB-000-gobernanza-documentacion/PLAN.md), [informe de consolidación](work-items/LB-000-gobernanza-documentacion/REPORT.md).
 - [.claude/agents](../.claude/agents), [.claude/skills](../.claude/skills), [.claude/templates](../.claude/templates) son versionables; worktrees son locales.
-- Skills: uco-arquitectura, uco-baseline, uco-contratos, [uco-catalogos](../.claude/skills/uco-catalogos/SKILL.md) (catálogos de mensajes/parámetros), uco-observabilidad, uco-persistencia, uco-realtime, uco-seguridad, uco-testing.
+- Skills: uco-arquitectura, uco-baseline, uco-contratos, [uco-catalogos](../.claude/skills/uco-catalogos/SKILL.md) (catálogos de mensajes/parámetros), [uco-azure](../.claude/skills/uco-azure/SKILL.md), uco-observabilidad, uco-persistencia, uco-realtime, uco-seguridad, uco-testing.
 
 ## Archive
 
 - [Históricos y reemplazos](archive/README.md). Roadmaps, prompts y mapas de refactor sustituidos no autorizan implementación.
 
-Cloud/IaC/CD nuevos se documentarán cuando exista una decisión/trabajo real de LB-006; no se crean directorios artificiales.
+Azure Key Vault, App Configuration y Event Grid ya son capabilities implementadas y se documentan como AS-IS. Eso no prueba despliegue, IaC, CD ni validación cloud; esas evidencias y evoluciones siguen gobernadas por la línea base y MV-003.

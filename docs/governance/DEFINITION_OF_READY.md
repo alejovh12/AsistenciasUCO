@@ -3,7 +3,7 @@ status: active
 type: normative
 scope: backend
 owner: backend-team
-last-reviewed: 2026-09-20
+last-reviewed: 2026-09-26
 ---
 
 # Definition of Ready
@@ -25,17 +25,23 @@ No exige build verde. Exige:
 Exige, además de lo siguiente: build base verde o excepción aprobada, conflictos contractuales resueltos, contrato aprobado y TEST_PLAN. Antes de escribir implementación, `PLAN.md` debe resolver:
 
 - objetivo, criterios de aceptación, alcance y no alcance;
+- requirement y autoridad aplicable;
+- variable principal y provider/capability afectados;
 - fuentes autoritativas, evidencia AS-IS y TARGET separados;
 - archivos existentes afectados y archivos propuestos marcados NUEVOS;
 - contratos HTTP, dominio, persistencia, seguridad y eventos afectados;
 - consumidores afectados y evidencia de compatibilidad (frontend cuando corresponda);
 - riesgos, dependencias y ambiente/fixtures necesarios;
+- nivel de test requerido, necesidad de provider real y disponibilidad del entorno externo;
 - estrategia de pruebas y TEST_PLAN trazable al requisito/contrato;
 - rollback practicable y stop conditions;
 - deuda conocida y validaciones manuales aplicables;
+- consumidores, impacto de seguridad y observabilidad;
 - cero `CONTRACT_CONFLICT`, `TEST_CONTRACT_CONFLICT` o `BLOCKED_BY_MISSING_EVIDENCE` abiertos relevantes para el alcance a implementar.
 
 Resultado obligatorio: **READY** o **NOT_READY**, con justificación y referencias. `NOT_READY` permite investigar y planificar, pero prohíbe al implementador escribir código. Una tarea documental puede declarar contratos/tests funcionales NO APLICA explicando por qué, sin inventar un RED Java.
+
+Si una integración externa real es obligatoria pero el ambiente no existe o no está autorizado, el trabajo puede quedar planificado; no puede declararse READY para cierre funcional ni convertir `NOT_RUN` en `PASS`. Esta comprobación debe ser proporcional al cambio y no añade burocracia a tareas que no tocan providers externos.
 
 La aprobación de un contrato y del plan se identifica con decisión, responsable y referencia versionada; no se infiere de un archivo generado. Una orden de planificar o analizar una fase autoriza investigación, no elimina sus bloqueos ni autoriza la fase siguiente.
 

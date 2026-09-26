@@ -16,9 +16,18 @@
 ## Clase de cambio y alcance de rutas
 
 - Change class: DOCUMENTATION_ONLY | CONTRACT_ANALYSIS | CONTRACT_CHANGE | REFACTOR | BEHAVIOR_CHANGE | PERSISTENCE_MIGRATION | INFRASTRUCTURE
-- Variable principal de la tarea (una sola):
-- Allowed (rutas permitidas):
-- Forbidden (rutas prohibidas):
+- PRIMARY_VARIABLE (una sola):
+- ALLOWED_PATHS:
+- FORBIDDEN_PATHS:
+- CONTRACTS:
+- PROVIDERS:
+- EXTERNAL_ENVIRONMENT:
+- SECURITY_IMPACT:
+- OBSERVABILITY_IMPACT:
+- TEST_LEVEL_REQUIRED:
+- ROLLBACK:
+- CONSUMERS:
+- STOP_CONDITIONS:
 
 Lo no listado como Allowed no se modifica. Ampliar el alcance exige actualizar este PLAN con aprobación.
 
@@ -40,9 +49,7 @@ DOMAIN / HTTP / PERSISTENCE / SECURITY / REALTIME; consumidor, versión, compati
 
 Referencia TEST_PLAN.md; criterios y secuencia RED → GREEN → VALIDATE antes de implementar.
 
-## Rollback
-
-## Stop conditions
+## Rollback y stop conditions
 
 CONTRACT_CONFLICT / TEST_CONTRACT_CONFLICT / BLOCKED_BY_MISSING_EVIDENCE con IDs y alcance.
 

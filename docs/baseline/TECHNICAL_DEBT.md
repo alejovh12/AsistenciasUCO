@@ -3,7 +3,7 @@ status: active
 type: ledger
 scope: backend
 owner: backend-team
-last-reviewed: 2026-09-24
+last-reviewed: 2026-09-26
 ---
 
 # Ledger único de deuda técnica
@@ -64,6 +64,10 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 | [TD-048](#td-048) | `Sesion.nombre` es `nvarchar(50)` en DB pero el backend valida 1..150 (nombres de 51..150 fallarían en persistencia como error técnico) | CLOSED (LB-001B.4B) | no |
 | [TD-049](#td-049) | `/usuarios/perfil` responde 501 | ABIERTA / OUT_OF_GOLDEN_PATH / NON_BLOCKING | no |
 | [TD-050](#td-050) | Latencia de reconciliación realtime observada en MV-001 | ABIERTA / NON_BLOCKING | no |
+| [TD-051](#td-051) | Webhook Azure con credencial default funcional insegura | ABIERTA / SECURITY_FINDING / HIGH | sí, LB-001D.2 |
+| [TD-052](#td-052) | Webhook Azure acepta credencial por URL/query | ABIERTA / SECURITY_FINDING / HIGH | sí, LB-001D.2 |
+| [TD-053](#td-053) | Cloud Integration Azure corre como test normal | ABIERTA / TEST_CLASSIFICATION_DEBT | sí, LB-001D.2 y antes de LB-002 |
+| [TD-054](#td-054) | Semántica Azure→realtime sin decisión explícita | DECISION_REQUIRED | no para documentación; sí para cambio realtime futuro |
 
 ## TD-001
 
@@ -343,10 +347,10 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 
 ## TD-027
 
-- **Descripción:** Evidencia operacional Azure/telemetría. Existen adapters Azure/catálogos y configuración local; menciones antiguas a E2E verificado carecen de artefacto de corrida en esta consolidación.
+- **Descripción:** Evidencia operacional Azure/telemetría. Existen capabilities, adapters, Composition Root, caches e invalidación Azure documentados; no hay artefacto vigente que certifique el ambiente real completo.
 - **Impacto:** Medio.
 - **Evidencia:** [adapter-composition-standard.md](../architecture/adapter-composition-standard.md); application.yml; infra/observability.
-- **Motivo:** No confundir implementación estática y validación de ambiente.
+- **Motivo:** No confundir implementación AS-IS con validación de ambiente.
 - **Resolución esperada:** MV-003 con versión/ambiente y evidencia sanitizada.
 - **Bloquea línea base:** sí, LB-006; según capacidad modificada.
 - **Estado:** ABIERTA.
@@ -635,3 +639,51 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
   un work item de observabilidad/realtime; no introducir broker/cache por suposición.
 - **Bloquea línea base:** no.
 - **Estado:** ABIERTA / NON_BLOCKING.
+
+## TD-051
+
+- **Fecha / responsable:** 2026-09-26 / backend-team + seguridad.
+- **Clasificación:** `SECURITY_FINDING`, prioridad alta.
+- **Descripción:** webhook credential currently has an unsafe functional default.
+- **Impacto:** una configuración omitida puede dejar habilitada una credencial conocida por el código/configuración distribuida.
+- **Evidencia:** `SecurityConfig` y configuración runtime; se registra archivo/tipo, nunca el valor.
+- **Motivo para no resolver ahora:** LB-001D.1 es documentation/governance only; producción/tests/config están prohibidos.
+- **Resolución esperada:** LB-001D.2 elimina el default funcional, exige configuración fail-fast/disabled segura y agrega pruebas negativas sin debilitar la autenticación del webhook.
+- **Bloquea línea base:** sí, LB-001D.2 y por transitividad LB-002.
+- **Estado:** ABIERTA. **Work item:** [LB-001D.1](../work-items/LB-001D-governance-hardening/LB-001D.1-PLAN.md).
+
+## TD-052
+
+- **Fecha / responsable:** 2026-09-26 / backend-team + seguridad.
+- **Clasificación:** `SECURITY_FINDING`, prioridad alta.
+- **Descripción:** credential may be accepted through URL query parameter.
+- **Impacto:** una credencial en URL puede quedar expuesta en historial, proxies, access logs o evidencia.
+- **Evidencia:** `AzureEventGridAuthFilter`; no se registra el valor de ninguna credencial.
+- **Motivo para no resolver ahora:** LB-001D.1 no modifica código ni tests.
+- **Resolución esperada:** LB-001D.2 acepta la credencial únicamente por el header operacional aprobado, agrega negativos de query y verifica logs/evidencia sanitizados.
+- **Bloquea línea base:** sí, LB-001D.2 y por transitividad LB-002.
+- **Estado:** ABIERTA. **Work item:** [LB-001D.1](../work-items/LB-001D-governance-hardening/LB-001D.1-PLAN.md).
+
+## TD-053
+
+- **Fecha / responsable:** 2026-09-26 / backend-team + testing.
+- **Clasificación:** `TEST_CLASSIFICATION_DEBT`.
+- **Descripción:** `AzureCloudIntegrationE2ETest` consume Azure real, pero su nombre `*Test` lo sitúa en la suite normal en lugar de un perfil Cloud Integration explícito.
+- **Impacto:** `mvn verify` puede depender de red, identidad y recursos Azure; un fallo ambiental se mezcla con unit/component y el build deja de ser reproducible.
+- **Evidencia:** clase de test y convenciones Surefire/Failsafe del `pom.xml`.
+- **Motivo para no resolver ahora:** renombrar/reconfigurar tests o POM está prohibido en LB-001D.1.
+- **Resolución esperada:** LB-001D.2 aísla Azure real mediante perfil/comando explícito, mantiene unit/component sin cloud y registra ambiente/evidencia sanitizada.
+- **Bloquea línea base:** sí, LB-001D.2 y antes de LB-002.
+- **Estado:** ABIERTA. **Work item:** [LB-001D.1](../work-items/LB-001D-governance-hardening/LB-001D.1-PLAN.md).
+
+## TD-054
+
+- **Fecha / responsable:** 2026-09-26 / backend-team + contratos/realtime.
+- **Clasificación:** `DECISION_REQUIRED`.
+- **Descripción:** el procesamiento Azure publica hoy algunos `RealtimeEvent`, mientras el SSE académico entrega solo eventos con `payload.grupo`; cambios de catálogo/configuración no necesariamente tienen ese scope.
+- **Impacto:** intención y consumidor del evento no están definidos; podría ser invalidación interna, señal distribuida o evento cliente.
+- **Evidencia:** `ProcesarEventoAzureUseCaseImpl`, `LocalSseRealtimeStreamGateway`, [DR-AZ-001](../work-items/LB-001D-governance-hardening/LB-001D.1-DECISIONS.md#dr-az-001).
+- **Motivo para no resolver ahora:** la tarea prohíbe decidir por intuición o cambiar realtime.
+- **Resolución esperada:** decisión explícita A/B/C, contrato/consumidores y tests antes de cualquier cambio realtime.
+- **Bloquea línea base:** no para LB-001D.1; sí para un cambio realtime relacionado.
+- **Estado:** DECISION_REQUIRED. **Work item:** [LB-001D.1](../work-items/LB-001D-governance-hardening/LB-001D.1-PLAN.md).

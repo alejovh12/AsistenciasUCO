@@ -21,6 +21,8 @@ Lee [AGENTS](../../../AGENTS.md) y la [precedencia](../../../docs/governance/SOU
 
 Preserva la dirección de dependencias, separa capability/provider y audit/observability. Reutiliza puertos con consumidores reales. La selección tecnológica vive en Composition Root, nunca en Application, perfiles tecnológicos o Service Locator. No generar shared/helpers por una sola vertical.
 
+SDKs cloud viven únicamente en Infrastructure. Application puede conocer Port, Use Case y DTO/value neutral; nunca `SecretClient`, `ConfigurationClient`, SDK de Event Grid ni una implementación de credenciales. Un webhook sigue `Primary Adapter → Application InputPort → Secondary Port`; nunca `Controller → adapter Azure secundario` directo.
+
 ## Archivos y cambios prohibidos
 
 No introducir imports de Spring/JPA/JDBC/Reactor/Keycloak/Azure en Domain/Application; no editar reglas ArchUnit para ocultar una violación. Fuera del PLAN no tocar controllers, contratos, SQL ni pom.xml.

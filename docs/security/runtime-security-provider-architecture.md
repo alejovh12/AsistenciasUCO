@@ -3,7 +3,7 @@ status: active
 type: normative
 scope: backend
 owner: backend-team
-last-reviewed: 2026-09-20
+last-reviewed: 2026-09-26
 ---
 
 # Arquitectura de Runtime Security (independiente del proveedor)
@@ -515,6 +515,12 @@ No se permite “arreglar” scanners mediante:
 - relajar RBAC;
 - hacer endpoints públicos;
 - pasar tokens por query string.
+
+## 17.1 Webhooks externos
+
+La autenticación de `POST /api/v1/internal/azure-events` es una frontera operacional externa y **no equivale** a OAuth2 Bearer JWT de la API de negocio. No cambia la matriz RBAC institucional.
+
+Las credenciales de webhook no pueden tener defaults funcionales inseguros, aceptarse por query parameter ni aparecer en logs/evidencia. El AS-IS y los hallazgos se documentan en [Azure Runtime Integration](../integration/azure-runtime-integration.md) y TD-051/TD-052; la corrección técnica pertenece a LB-001D.2.
 
 ---
 

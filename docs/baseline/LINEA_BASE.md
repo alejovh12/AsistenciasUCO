@@ -3,7 +3,7 @@ status: active
 type: normative
 scope: backend
 owner: backend-team
-last-reviewed: 2026-09-25
+last-reviewed: 2026-09-26
 ---
 
 # Línea base técnica activa
@@ -14,7 +14,8 @@ La vertical patrón es [asistencia en lote + consulta + realtime](GOLDEN_PATH_AS
 |---|---|---|---|
 | LB-000 | Gobernanza y documentación | Jerarquía única, routers, deuda, trazabilidad, sin cambios funcionales y validación registrada | GOVERNANCE COMPLETE; TECHNICAL BUILD GATE PASS (TD-029 cerrada por [TECH-001](../work-items/TECH-001-restaurar-gate-arquitectura/CLOSURE.md)); ver [cierre](../work-items/LB-000-gobernanza-documentacion/CLOSURE.md) |
 | LB-001 | Golden Path + Contract First (ver descomposición abajo) | AS-IS/consumidores/DB comprobados; plan y contrato aprobados; tests previstos, sin conflictos relevantes | **CLOSED / FROZEN**: LB-001A/B/B.1/B.3/B.4 DONE; DB↔backend y backend↔frontend ALIGNED; MV-001 PASS reportado; LB-001C C.1/C.1A/C.2/C.3 PASS; OpenAPI Contract First, PATCH canónico y Swagger UI runtime canónica. No se inicia otra fase automáticamente |
-| LB-002 | Piloto JDBC → JPA | [Estrategia incremental](../persistence/JDBC_TO_JPA.md), paridad real y rollback; puertos y contratos preservados | NOT STARTED |
+| LB-001D | Governance Hardening | C.1 sincroniza documentación/skills/agentes/Azure; C.2 corrige seguridad del webhook y aísla Cloud Integration | **C.1 DOCUMENTATION SYNC DONE** ([reporte](../work-items/LB-001D-governance-hardening/LB-001D.1-REPORT.md)); **C.2 Azure Security + Test Isolation Hardening PLANNED** |
+| LB-002 | Piloto JDBC → JPA | [Estrategia incremental](../persistence/JDBC_TO_JPA.md), paridad real y rollback; puertos y contratos preservados | `BLOCKED_BY_LB-001D.2`; NOT STARTED |
 | LB-003 | Quality Gate Golden Path | Unit/application, ArchUnit, contrato, SQL Server real, E2E y [DoD](DEFINITION_OF_DONE.md) | NO INICIADA |
 | LB-004 | Stateless / Serverless readiness | Estado funcional fuera de filesystem/heap de réplica; storage y configuración/secrets externos; evaluar caché según necesidad | NO INICIADA |
 | LB-005 | Realtime distribuido | Provider neutral, decisión por ADR y pruebas multi-instancia/costo/operación | NO INICIADA |
@@ -60,7 +61,7 @@ Estas opciones no son capacidades implementadas ni una selección de proveedor a
 | Outbox y mensajería durable | LB-005, condicionados por contrato DB y ADR; [TD-011](TECHNICAL_DEBT.md#td-011) |
 | Cobertura frontend 80 % mencionada por el paquete | Objetivo histórico pendiente de acuerdo con su repositorio; no es gate comprobado del backend |
 
-Los adapters Azure existentes de vault/catálogos son evidencia del checkout; no demuestran despliegue cloud, CD ni E2E. Este trabajo no desarrolla Azure.
+Los adapters Azure existentes de vault/catálogos son evidencia del checkout; no demuestran despliegue cloud, CD ni E2E. LB-001D.1 documenta el AS-IS, sin cambiar runtime ni operar recursos Azure.
 
 ## Próxima instrucción
 
@@ -73,7 +74,7 @@ y una futura migración del wire temporal siguen siendo candidatos de fase separ
 por este cierre. El cierre final registra OpenAPI Contract First PASS, PATCH canónico, PUT
 deprecated, Swagger UI PASS, 9 operaciones y los hashes contractuales vigentes. [TD-043](TECHNICAL_DEBT.md#td-043) permanece fuera del Golden Path y mantiene el
 perfil de integración completo en rojo. No iniciar JPA, generación Angular ni otro work item sin
-autorización.
+autorización. LB-001D.1 solo sincroniza gobernanza; LB-001D.2 debe cerrar el hardening de seguridad Azure y el aislamiento de Cloud Integration antes de LB-002.
 
 ## Ledger activo de estado técnico
 

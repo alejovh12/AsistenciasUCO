@@ -3,7 +3,7 @@ status: active
 type: normative
 scope: backend
 owner: backend-team
-last-reviewed: 2026-09-20
+last-reviewed: 2026-09-26
 ---
 
 # Estándar de Composition Root y selección de adapters
@@ -55,6 +55,12 @@ app:
       provider: ${APP_ADAPTERS_REALTIME_PROVIDER:local-sse}
     audit:
       provider: ${APP_ADAPTERS_AUDIT_PROVIDER:logging}
+    vault:
+      provider: ${APP_ADAPTERS_VAULT_PROVIDER:azure_keyvault}
+    parameter-catalog:
+      provider: ${APP_ADAPTERS_PARAMETER_CATALOG_PROVIDER:azure_appconfig}
+    message-catalog:
+      provider: ${APP_ADAPTERS_MESSAGE_CATALOG_PROVIDER:azure}
 ```
 
 ---
@@ -503,9 +509,10 @@ src/main/java/co/edu/uco/asistenciasuco/application/features/coordinador/common/
 | Capability | Port / SPI | Adapter actual | Selector | Estado | Trabajo pendiente |
 |---|---|---|---|---|---|
 | Persistence | `*RepositoryPort`, `*QueryPort`, `*CommandPort`, `InstitutionalScopePort` | SQL Server adapters | `app.adapters.persistence.provider=sqlserver` | Ports desacoplados; solo SQL Server | DataSource provider-specific antes de otra DB |
-| Secret Vault | `SecretVaultPort` | `AzureKeyVaultAdapter`, `LocalEnvSecretVaultAdapter` | `app.adapters.vault.provider=azure_keyvault` | Reemplazable por provider (Azure Key Vault / Local Env) | Implementación estática con DefaultAzureCredential; evidencia operacional pendiente TD-027 |
-| Parameter Catalog | `ParameterCatalogPort` | `AzureAppConfigParameterCatalogAdapter`, `SqlServerParameterCatalogAdapter` | `app.adapters.parameter-catalog.provider=azure_appconfig` | Reemplazable por provider (Azure AppConfig / SQL Server) | Implementación estática con caché en memoria; evidencia operacional pendiente TD-027 |
-| Message Catalog | `MessageCatalogPort` | `AzureAppConfigMessageCatalogAdapter`, `SqlServerMessageCatalogAdapter` | `app.adapters.message-catalog.provider=sqlserver` / `azure` | Reemplazable por provider (Azure AppConfig / SQL Server) | Implementación estática con label 'es' y caché; evidencia operacional pendiente TD-027 |
+| Secret Vault | `SecretVaultPort` | `AzureKeyVaultAdapter`, `LocalEnvSecretVaultAdapter` | `app.adapters.vault.provider=azure_keyvault` | Reemplazable; Azure usa `DefaultAzureCredential`; Caffeine local 50/5 min | Evidencia operacional MV-003; seguridad webhook en LB-001D.2 |
+| Parameter Catalog | `ParameterCatalogPort` | `AzureAppConfigParameterCatalogAdapter`, `SqlServerParameterCatalogAdapter` | `app.adapters.parameter-catalog.provider=azure_appconfig` | Reemplazable; Azure usa Caffeine local 1000/10 min | Evidencia operacional MV-003 |
+| Message Catalog | `MessageCatalogPort` | `AzureAppConfigMessageCatalogAdapter`, `SqlServerMessageCatalogAdapter` | `app.adapters.message-catalog.provider=azure` | Reemplazable; Azure usa dos caches locales 2000/30 min; label `es` para usuario | Evidencia operacional MV-003 |
+| Catalog/Vault invalidation | `CatalogInvalidationPort` | `CompositeCatalogInvalidationAdapter` | input Event Grid | Invalida parámetros, mensajes, secretos o todo; Event Grid entra por InputPort | Decisión Azure→realtime DR-AZ-001; aislamiento cloud test LB-001D.2 |
 | Identity Provisioning | `IdentityProviderPort` | `KeycloakIdentityProviderAdapter` | `app.adapters.identity.provider=keycloak` | Reemplazable por provider; solo Keycloak | E2E y completar integración de roles/flujos institucionales pendientes |
 | Runtime Security | `JwtClaimsExtractor` | `KeycloakJwtClaimsExtractor` | `app.adapters.security.provider=keycloak` | Reemplazable por SPI; solo Keycloak | E2E y authorization hardening contextual |
 | Password Encoding | `PasswordEncoderPort` | Spring password adapter | configuración existente | Desacoplado | Sin deuda de provider relevante en esta fase |
@@ -545,3 +552,5 @@ Antes de considerar integrado un provider nuevo:
 
 Este documento representa el estado vigente después de la Fase 3.1 de realtime y debe
 actualizarse cada vez que una capability pasa de "preparada" a "implementada".
+
+Las caches Caffeine anteriores son por JVM/proceso. No ofrecen coherencia distribuida; Event Grid reduce la ventana de datos stale mediante invalidación push, sin convertirlas en cache compartida. Véase [Azure Runtime Integration](../integration/azure-runtime-integration.md).

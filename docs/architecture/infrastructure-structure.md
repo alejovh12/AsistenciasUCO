@@ -3,7 +3,7 @@ status: active
 type: normative
 scope: backend
 owner: backend-team
-last-reviewed: 2026-09-20
+last-reviewed: 2026-09-26
 ---
 
 # Estructura de Infrastructure y Crosscutting
@@ -20,6 +20,7 @@ infrastructure/
   adapter/
     primary/                         # entrada externa al backend
       controller/                    # controllers REST por feature (admin, asistencia, ...)
+        azure/                       # AzureEventGridWebhookController -> Application InputPort
       realtime/sse/
         controller/                  # RealtimeEventsController
         contract/                    # RealtimeStreamGateway (contrato interno, no Application Port)
@@ -48,6 +49,11 @@ infrastructure/
       identity/keycloak/             # KeycloakIdentityProviderAdapter
       realtime/localsse/             # ReactorRealtimeAdapter
       cryptography/password/spring/  # SpringPasswordEncoderAdapter
+      catalog/
+        azure/                       # App Configuration: mensajes y parámetros
+        sqlserver/                   # providers SQL Server de catálogos
+        composite/                   # implementación de CatalogInvalidationPort
+      vault/{azure,local}/           # Key Vault / variables de entorno
   audit/                             # ver sección 4 (no es observability)
     model/                           # AuditEvent, AuditActorType, AuditOutcome, RequestActor
     contract/                        # AuditEventPublisher
@@ -68,6 +74,8 @@ infrastructure/
                                       # PasswordEncoderAdapterConfiguration
       realtime/localsse/             # LocalSseRealtimeAdapterConfiguration
       audit/                         # AuditAdapterConfiguration
+      catalog/{azure,invalidation}/  # App Configuration e invalidación
+      vault/{azure,local}/           # Key Vault / local env
     wiring/                          # Composition Root: ENSAMBLAJE de UseCase+Interactor a
                                       # partir de Application Ports, cero tecnología
                                       # (<Feature>WiringConfiguration, uno por feature)
@@ -91,9 +99,9 @@ Cada carpeta bajo `infrastructure/adapter/secondary` (y sus pares en `config/ada
 `audit/adapter`) sigue el mismo patrón de tres niveles:
 
 1. **Capability**: la capacidad que Application necesita (`persistence`, `identity`, `realtime`,
-   `cryptography`, `audit`). Nombra el "qué", nunca el "cómo".
+   `cryptography`, `catalog`, `vault`, `audit`). Nombra el "qué", nunca el "cómo".
 2. **Provider**: la tecnología/proveedor concreto que satisface esa capability hoy
-   (`sqlserver`, `keycloak`, `localsse`, `spring`, `logging`). Puede haber más de uno por
+   (`sqlserver`, `keycloak`, `localsse`, `spring`, `azure`, `local`, `logging`). Puede haber más de uno por
    capability (p. ej. `audit/adapter/{logging,sqlserver}`).
 3. **Implementación**: la(s) clase(s) concreta(s) dentro de ese provider.
 
@@ -112,6 +120,8 @@ reorganiza la capability existente.
   Application secondary port (`*RepositoryPort`, `*QueryPort`, `IdentityProviderPort`,
   `RealtimePublisherPort`, `PasswordEncoderPort`, `InstitutionalScopePort`) contra una tecnología
   concreta.
+
+El webhook Azure es un Primary Adapter: `AzureEventGridWebhookController → ProcesarEventoAzureInputPort → CatalogInvalidationPort`. Nunca llama directamente a `AzureKeyVaultAdapter` ni a los adapters de App Configuration.
 
 ## 4. Application Port vs contrato interno de Infrastructure
 

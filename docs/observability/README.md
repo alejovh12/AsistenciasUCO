@@ -3,7 +3,7 @@ status: active
 type: normative
 scope: backend
 owner: backend-team
-last-reviewed: 2026-09-20
+last-reviewed: 2026-09-26
 ---
 
 # Observabilidad
@@ -13,3 +13,5 @@ Capacidades obligatorias: **logs, metrics, traces y correlation ID**. La arquite
 Evidencia operacional configurada, no prueba de despliegue: [application.yml](../../src/main/resources/application.yml), [stack local](../../infra/observability/compose.yaml), [Alloy](../../infra/observability/alloy/config.alloy), [Prometheus](../../infra/observability/prometheus/prometheus.yml) y [datasources](../../infra/observability/grafana/provisioning/datasources/datasources.yml). Logs locales son JSONL leídos por Alloy; métricas se exponen para scrape y trazas salen por OTLP.
 
 No romper `traceId`, `spanId` ni `correlationId` sin decisión arquitectónica explícita. No colocar SDKs en Application ni IDs de alta cardinalidad como labels. Auditoría de negocio conserva su contrato aparte. Ver [skill](../../.claude/skills/uco-observabilidad/SKILL.md), [runbook](../testing/VALIDATION_RUNBOOK.md) y [MV-003](../baseline/MANUAL_VALIDATION_LEDGER.md) para evidencia de ambiente.
+
+Para Azure, la evidencia sanitizada identifica tipo de evento, capability/provider, clasificación de fallo, procesamiento Event Grid e invalidación de cache cuando aplique; nunca valores secretos. El logging AS-IS del webhook no implica métricas Azure ni operación cloud certificada. Detalle: [Azure Runtime Integration](../integration/azure-runtime-integration.md).

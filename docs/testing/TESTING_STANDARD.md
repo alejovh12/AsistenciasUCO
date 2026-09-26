@@ -3,7 +3,7 @@ status: active
 type: normative
 scope: backend
 owner: backend-team
-last-reviewed: 2026-09-24
+last-reviewed: 2026-09-26
 ---
 
 # Estándar de testing — AsistenciasUCO
@@ -43,6 +43,8 @@ Fuente ejecutable: [pom.xml](../../pom.xml) y [.github/workflows](../../.github/
 
 Cobertura es un gate, no el objetivo principal.
 
+Coverage is necessary but not sufficient. La cobertura no compensa negativos ausentes, falta de integración requerida, efectos no verificados, asserts débiles ni mocks excesivos.
+
 ## Protocolo e integridad
 
 REQUIREMENT → CONTRACT → TEST_PLAN → RED TEST → IMPLEMENTATION → GREEN → VALIDATION.
@@ -55,6 +57,54 @@ Todo TEST_PLAN con RED incluye una sección `RED_SNAPSHOT` con, cuando aplique: 
 [TECH-001](../work-items/TECH-001-restaurar-gate-arquitectura/TEST_PLAN.md) precede esta política: posee evidencia RED documental, pero no snapshot criptográfico; no se altera retroactivamente.
 
 Para documentación sin cambio funcional, registrar NO APLICA RED con motivo; no crear tests Java cosméticos.
+
+## Behavior-driven test design
+
+Cada test debe declarar o permitir justificar:
+
+- requirement o behavior que protege;
+- Given / precondición y estado;
+- When / acción;
+- Then / observable esperado;
+- implementación equivocada que haría fallar.
+
+No es obligatorio usar sintaxis BDD literal en nombres Java. Sí es obligatorio probar comportamiento observable y evitar tautologías. Para tests críticos, el tester debe preguntarse: **«¿Qué implementación equivocada haría fallar este test?»**. Esta disciplina no introduce todavía un framework de mutation testing ni PIT.
+
+Todo `TEST_PLAN` funcional incluye como mínimo:
+
+| ID | Requirement | Scenario | Input/State | Observable | Expected | Wrong implementation caught | Level |
+|---|---|---|---|---|---|---|---|
+| | | | | | | | |
+
+## Estándares por tipo de comportamiento
+
+### Commands
+
+Un command no queda probado solo por status exitoso o ausencia de excepción. Cuando aplique debe verificar resultado, side effect, estado persistido, ausencia de side effect ante error, rollback, publicación de evento solo después del éxito, idempotencia exigida por contrato y error semántico. `assertDoesNotThrow` nunca es evidencia única.
+
+### Queries
+
+Cubrir cuando aplique: 0 rows, 1 row, N rows, filtros, filtros opcionales null, mapping, nullability, duplicados, errores del provider y autorización/scope. Verificar ordering solo si es contractual. No inventar paginación.
+
+### Endpoints protegidos
+
+Matriz mínima cuando aplique:
+
+1. sin credencial;
+2. credencial malformada o inválida;
+3. identidad válida con rol incorrecto;
+4. rol válido con scope institucional/ownership incorrecto;
+5. rol y scope válidos.
+
+`401` es Authentication; `403` es Authorization. No cambiar el expected para acomodar la implementación.
+
+### Persistencia y migración JDBC → JPA
+
+- Un repository mock no certifica persistencia.
+- Un `EntityManager` mock no certifica JPA.
+- H2 no certifica comportamiento específico de SQL Server.
+- Cuando mapping/query depende de SQL Server, se requiere integración real contra SQL Server.
+- Toda migración JDBC → JPA exige `PARITY TEST`: mismo fixture, misma semántica, misma proyección, baseline JDBC, candidato JPA y comparación field-by-field; commands incluyen errores, side effects y rollback.
 
 ## Niveles
 
@@ -114,6 +164,20 @@ Auth -> POST lote -> commit SQL -> evento realtime -> GET consulta -> datos cohe
 
 Frontend E2E se agrega cuando el ambiente esté automatizable.
 
+## Clasificación de tests
+
+| Nivel | Definición |
+|---|---|
+| Unit | sin infraestructura real; SUT aislado con colaboradores mínimos |
+| Component / Application | caso de uso o componente con colaboradores controlados |
+| Architecture | reglas ArchUnit y dirección de dependencias |
+| Contract | OpenAPI, schemas, compatibilidad y conformance |
+| Integration | DB o provider real dentro de un ambiente controlado |
+| Cloud Integration | Azure real u otro cloud real, con perfil/comando explícito y evidencia sanitizada |
+| E2E | frontend/backend/DB/IdP reales según el alcance declarado |
+
+Un test que consume Azure real no debe ejecutarse implícitamente como suite unitaria/normal. Su aislamiento técnico queda como target de LB-001D.2; hasta entonces se registra como deuda, no se reclasifica la evidencia ni se afirma que mocks certifican Azure.
+
 ## Anti-patrones bloqueantes
 
 - tests que modifican el SUT para poder probarlo sin justificar arquitectura;
@@ -127,6 +191,7 @@ Frontend E2E se agrega cuando el ambiente esté automatizable.
 - desactivar un test fallido sin deuda/razón;
 - cambiar expected status porque la implementación devolvió otro;
 - sleeps arbitrarios para realtime.
+- declarar integración Azure/provider real como PASS basándose únicamente en mocks (`EVIDENCE_LAUNDERING`).
 
 ## Regla de regresión
 

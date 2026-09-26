@@ -4,12 +4,23 @@
 
 Requisito, PLAN, contrato aprobado/versionado, DB, seguridad y eventos aplicables.
 
-## Comportamiento esperado
+## Behavioral Matrix
 
-| ID | Criterio/fuente | Escenario | Nivel | Precondición | Acción | Assert observable |
-|---|---|---|---|---|---|---|
+| ID | Requirement | Scenario | Precondition | Action | Observable | Expected | Wrong implementation caught | Level |
+|---|---|---|---|---|---|---|---|---|
 
 Cubrir caso feliz, bordes, errores, seguridad, persistencia y contrato; marcar NO APLICA con motivo.
+
+## Integration Requirement
+
+- REAL_PROVIDER_REQUIRED: YES / NO
+- ENVIRONMENT:
+- MOCK_SUFFICIENT: YES / NO
+- WHY:
+
+## Negative / Boundary Coverage
+
+## Side Effects / Rollback
 
 ## Pruebas RED requeridas
 

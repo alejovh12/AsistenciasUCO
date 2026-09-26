@@ -32,6 +32,8 @@ Regla obligatoria: no iniciar JDBC → JPA sobre un contrato DB con `MISMATCH`, 
 
 Carga puerto y adapter JDBC afectados, contrato DB liberado e IT. Migración incremental, query primero y SP complejo conservado inicialmente. RepositoryPort estable, @Entity solo Infrastructure; JDBC/JPA pueden coexistir temporalmente. Sin dual-write; paridad antes de retiro. Hibernate validate/none y open-in-view=false. Evitar N+1, EAGER como parche y cascadas generales; justificar native query y fronteras transaccionales.
 
+La paridad es obligatoria antes del switch: mismo fixture, semántica y proyección; baseline JDBC y candidato JPA comparados field-by-field. Commands y queries pueden migrar por separado. H2, repository mock o `EntityManager` mock no certifican SQL Server/JPA. El PLAN define selector y rollback al provider JDBC.
+
 ## Archivos y cambios prohibidos
 
 No modificar schema/SQL DB; no @Entity/JpaRepository/EntityManager en Domain/Application; no exponer entidades por HTTP; no cambiar contrato/RED ni agregar JPA/pom.xml fuera de un work item `PERSISTENCE_MIGRATION` READY.

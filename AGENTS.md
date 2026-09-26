@@ -3,7 +3,7 @@ status: active
 type: normative
 scope: backend
 owner: backend-team
-last-reviewed: 2026-09-20
+last-reviewed: 2026-09-26
 ---
 
 # AsistenciasUCO — entrada para agentes
@@ -17,6 +17,9 @@ El [mapa humano](docs/README.md) y la [precedencia por ámbito](docs/governance/
 - Reutiliza evidencia existente. No inventes endpoints, clases existentes, SQL, roles, reglas de negocio, consumidores ni resultados de pruebas. Distingue AS-IS, TARGET y propuesta.
 - El backend no administra el esquema DB. No cambies contratos públicos ni retires compatibilidad dentro de un refactor técnico sin decisión contractual explícita.
 - No incorpores secretos a código, documentación, logs ni evidencias. Reporta `SECURITY_FINDING` con archivo/tipo, nunca el valor.
+- Los tests prueban comportamiento observable, no detalles de implementación. Un mock no certifica un provider externo y una integración obligatoria `NOT_RUN` no es `PASS`.
+- SDKs cloud solo viven en Infrastructure. Los valores reales de secretos/configuración externa nunca se convierten en source of truth del repositorio.
+- Antes de una fase técnica mayor, las fuentes activas deben describir el AS-IS comprobado; documentación desactualizada bloquea el cierre, no autoriza adaptar el código a ella.
 - `.claude/worktrees/` y `.workspace/` son estado local, sin autoridad. El [archivo histórico](docs/archive/README.md) tampoco rige tareas nuevas.
 
 ## Flujo y evidencia
@@ -55,6 +58,7 @@ Responsabilidades: [planificador](.claude/agents/01-planificador.md), [contratos
 | Logs, metrics, traces y correlation ID | [uco-observabilidad](.claude/skills/uco-observabilidad/SKILL.md) |
 | Puerto realtime, SSE y entrega de eventos | [uco-realtime](.claude/skills/uco-realtime/SKILL.md) |
 | Catálogos de mensajes y parámetros | [uco-catalogos](.claude/skills/uco-catalogos/SKILL.md) |
+| Azure Key Vault, App Configuration y Event Grid | [uco-azure](.claude/skills/uco-azure/SKILL.md) |
 
 Apoyo: [protocolo de alineación contractual](docs/integration/CONTRACT_ALIGNMENT_PROTOCOL.md) y [plantilla CONTRACT_MATRIX](.claude/templates/CONTRACT_MATRIX.md) para comparar contratos entre repositorios; [higiene del repositorio](docs/governance/REPOSITORY_HYGIENE.md).
 

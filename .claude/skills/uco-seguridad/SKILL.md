@@ -18,10 +18,13 @@ Lee [AGENTS](../../../AGENTS.md) y la [precedencia](../../../docs/governance/SOU
 - [keycloak-service-account.md](../../../docs/security/keycloak-service-account.md)
 - [README.md](../../../infra/keycloak/README.md)
 - [TECHNICAL_DEBT.md](../../../docs/baseline/TECHNICAL_DEBT.md)
+- [azure-runtime-integration.md](../../../docs/integration/azure-runtime-integration.md) cuando aplique webhook/provider Azure.
 
 ## Reglas obligatorias
 
 Seguridad es capacidad; Keycloak es el provider actual. Separar runtime JWT de provisioning. Preservar issuer/audience/idUsuario, roles y 401/403. Layer 1 HTTP y ownership/InstitutionalScope son distintos; no inventar permisos ni confundir scope de token y alcance institucional. Secretos nunca en evidencia/logs/URLs.
+
+La autenticación de un webhook externo no equivale a Bearer JWT de la API de negocio. Sus credenciales MUST NOT tener defaults funcionales inseguros, aceptarse por query parameter, aparecer en logs ni en evidencia. El hardening técnico del webhook Azure está planificado en LB-001D.2; esta regla no cambia RBAC ni roles.
 
 ## Archivos y cambios prohibidos
 

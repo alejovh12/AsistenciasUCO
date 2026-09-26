@@ -3,7 +3,7 @@ status: active
 type: normative
 scope: backend
 owner: backend-team
-last-reviewed: 2026-09-20
+last-reviewed: 2026-09-26
 ---
 
 # Backend Package Structure
@@ -13,19 +13,19 @@ organización (capability -> provider -> implementación, Application Port vs co
 Infrastructure, Composition Root, config/wiring vs config/adapters, audit vs observability). Este
 documento resume solo la vista de alto nivel.
 
-`primary` contiene entrada externa hacia el backend: controllers, filtros HTTP, la vertical
+`primary` contiene entrada externa hacia el backend: controllers (incluido el webhook Azure), filtros HTTP, la vertical
 realtime SSE y seguridad de entrada (contract/handler/jwt).
 
 `secondary` contiene salidas del backend hacia persistencia o sistemas externos, agrupadas por
-capability (`persistence`, `identity`, `realtime`, `cryptography`) y luego por provider
-(`sqlserver`, `keycloak`, `localsse`, `spring`).
+capability (`persistence`, `identity`, `realtime`, `cryptography`, `catalog`, `vault`) y luego por provider
+(`sqlserver`, `keycloak`, `localsse`, `spring`, `azure`, `local`).
 
 `audit` contiene el registro de auditoría (quién hizo qué, cuándo, con qué resultado) como
 concepto de negocio/cumplimiento independiente de la telemetría: `model`, `contract`,
 `adapter/{logging,sqlserver}` y `web` (interceptor y advices HTTP).
 
 `config` es el composition root: `config/adapters/*` selecciona la tecnología concreta por
-capability (SQL Server, Keycloak, local-sse, password encoder, audit sink) vía
+capability (SQL Server, Keycloak, Azure App Configuration, Azure Key Vault, local-sse, password encoder, audit sink) vía
 `app.adapters.<capability>.provider`; `config/wiring` ensambla UseCase + Interactor a partir de
 Application Ports, sin conocer ninguna tecnología.
 
@@ -59,4 +59,4 @@ infrastructure/adapter/secondary/persistence/sqlserver/
 ```
 
 `externalservice` existe solo cuando el sistema consume activamente un servicio externo de
-negocio.
+negocio. Azure Key Vault y App Configuration se modelan por sus capabilities `vault`/`catalog`, no en un paquete genérico.

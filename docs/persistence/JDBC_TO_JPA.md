@@ -3,7 +3,7 @@ status: active
 type: normative
 scope: backend
 owner: backend-team
-last-reviewed: 2026-09-20
+last-reviewed: 2026-09-26
 ---
 
 # Estándar de migración JDBC -> JPA
@@ -124,6 +124,8 @@ la semántica actual. No cambiar firma del SP.
 Ejecutar ambos caminos en tests controlados sobre fixtures equivalentes, nunca dual-write sobre el
 mismo request productivo.
 
+El `PARITY TEST` es obligatorio antes de cambiar el provider: mismo fixture, misma semántica y misma proyección; baseline JDBC y candidato JPA se comparan field-by-field. Repository mocks, `EntityManager` mocks y H2 no certifican mappings/queries dependientes de SQL Server.
+
 Comparar:
 
 - status/errores funcionales;
@@ -136,6 +138,8 @@ Comparar:
 
 Solo después de paridad y gates verdes. El resto del backend puede seguir en JDBC mientras se migra
 vertical por vertical.
+
+Commands y queries pueden migrar y seleccionarse por separado. El PLAN debe conservar un selector/rollback practicable al provider JDBC; no hay big bang ni retiro del baseline durante el piloto.
 
 ## 5. Ejemplo TARGET, no archivos existentes ni nombres definitivos
 

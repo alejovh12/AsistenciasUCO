@@ -22,6 +22,8 @@ Lee [AGENTS](../../../AGENTS.md) y la [precedencia](../../../docs/governance/SOU
 
 Logs, metrics, traces y correlation ID son capacidades obligatorias. No romper traceId/spanId/correlationId sin decisión arquitectónica explícita. Telemetría por OTel/Micrometer/logging, audit separado; no puertos por Grafana/Loki/Tempo/Prometheus. Application no importa SDKs. Sin IDs de alta cardinalidad como labels.
 
+Para Azure registrar, cuando aplique: tipo de evento, correlation disponible, clasificación de fallo del provider, resultado de procesamiento Event Grid e invalidación de cache. Nunca valor secreto. Distinguir AS-IS observado de métricas/tracing TARGET; no inventar métricas que no existen.
+
 ## Archivos y cambios prohibidos
 
 No secretos/PII en logs/eventos; no SDK de telemetría en Domain/Application. No cambiar application.yml, infra/observability/** o workflows fuera del PLAN. No sustituir correlation vigente por uno inventado.

@@ -3,7 +3,7 @@ status: active
 type: normative
 scope: backend
 owner: backend-team
-last-reviewed: 2026-09-24
+last-reviewed: 2026-09-26
 ---
 
 # Autoridad y fuentes de verdad
@@ -19,6 +19,8 @@ Dentro del ámbito aplicable, la precedencia es:
 5. Runbooks: cómo operar/verificar, no qué comportamiento inventar.
 6. Documentación histórica/archivo: trazabilidad sin autoridad vigente.
 
+Para providers externos en runtime, el comportamiento se contrasta con código **y** evidencia operacional sanitizada. La documentación no puede sustituir ni sobreescribir valores desplegados en Key Vault, App Configuration u otro sistema externo; esos valores nunca se copian al repositorio como source of truth.
+
 Un borrador no se convierte en contrato aprobado por existir en una carpeta. Una norma expresa lo exigido; un test existente puede evidenciar una limitación y no autoriza incumplirla. Ante contradicción relevante entre fuentes autoritativas, aplicar `CONTRACT_CONFLICT`; la precedencia no permite cambiar un ámbito ajeno.
 
 ## Ámbitos independientes
@@ -30,6 +32,7 @@ Un borrador no se convierte en contrato aprobado por existir en una carpeta. Una
 | PERSISTENCE CONTRACT | Esquema/vistas/SP liberados por el equipo DB; adapters e IT describen lo que Java consume | Los SQL strings no prueban que esa versión está desplegada; backend no crea/actualiza esquema |
 | SECURITY CONTRACT | [Arquitectura runtime](../security/runtime-security-provider-architecture.md), política institucional y tests | No inventar roles, claims, ownership ni permisos por conveniencia del frontend |
 | REALTIME CONTRACT | [Estándar de eventos](../contracts/REALTIME_EVENT_STANDARD.md), contrato aprobado y [arquitectura SSE](../architecture/reactive-realtime.md) | API/DB conservan el estado; SSE local no garantiza entrega ni distribución |
+| EXTERNAL PROVIDER / OPERATIONAL | Contrato operacional aprobado, código de adapter/Composition Root y evidencia de ambiente sanitizada; para Azure, [Azure Runtime Integration](../integration/azure-runtime-integration.md) | El repo documenta tipos, claves públicas y semántica; no valores secretos ni estado desplegado supuesto |
 
 ## Repositorios dueños de contrato externo
 
