@@ -76,4 +76,27 @@ class AsistenciaConsultadaEntityTest {
 
         assertEquals("EX", entity.getEstado());
     }
+
+    @Test
+    void constructor_rechaza_estado_legacy_o_desconocido_en_lectura() {
+        assertEquals("ERR_ESTADO_ASISTENCIA_INVALIDO",
+                assertThrows(ValidationException.class,
+                        () -> new AsistenciaConsultadaEntity(
+                                ASISTENCIA, ESTUDIANTE, GRUPO, SESION, true, "A", null))
+                        .getCode());
+        assertEquals("ERR_ESTADO_ASISTENCIA_INVALIDO",
+                assertThrows(ValidationException.class,
+                        () -> new AsistenciaConsultadaEntity(
+                                ASISTENCIA, ESTUDIANTE, GRUPO, SESION, false, "OTRO", null))
+                        .getCode());
+    }
+
+    @Test
+    void constructor_rechaza_estado_ausente_en_lectura() {
+        assertEquals("ERR_ESTADO_ASISTENCIA_REQUERIDO",
+                assertThrows(ValidationException.class,
+                        () -> new AsistenciaConsultadaEntity(
+                                ASISTENCIA, ESTUDIANTE, GRUPO, SESION, false, " ", null))
+                        .getCode());
+    }
 }

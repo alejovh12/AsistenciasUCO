@@ -40,8 +40,8 @@ public final class SesionMateriaEstudianteSqlServerAdapter implements SesionMate
                 JdbcValueMapper.toUuid(rs.getObject("idGrupo")),
                 JdbcValueMapper.toString(rs.getObject("codigoGrupo")),
                 JdbcValueMapper.toString(rs.getObject("nombreGrupo")),
-                JdbcValueMapper.toLocalDateTime(rs.getObject("fechaHoraInicio")),
-                JdbcValueMapper.toLocalDateTime(rs.getObject("fechaHoraFin"))
+                JdbcValueMapper.toLocalDateTimeUtc(rs.getObject("fechaHoraInicio")),
+                JdbcValueMapper.toLocalDateTimeUtc(rs.getObject("fechaHoraFin"))
         ));
     }
 }

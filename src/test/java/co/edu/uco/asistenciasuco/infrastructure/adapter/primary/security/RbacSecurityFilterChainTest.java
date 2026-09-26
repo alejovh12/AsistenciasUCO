@@ -27,7 +27,9 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
@@ -35,6 +37,8 @@ import java.util.List;
 import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -81,6 +85,16 @@ class RbacSecurityFilterChainTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Test
+    void swaggerUiAndCanonicalOpenApiArePublicButBusinessApiRemainsProtected() throws Exception {
+        mockMvc.perform(get("/swagger-ui/index.html"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/openapi/openapi-golden-path.yaml"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/docentes"))
+                .andExpect(status().isUnauthorized());
+    }
 
     // --- /api/v1/docentes/** : directorio general (COORDINADOR/ADMINISTRADOR) ---
 
@@ -144,6 +158,38 @@ class RbacSecurityFilterChainTest {
         mockMvc.perform(get("/api/v1/sesiones/grupo/{grupoId}", "11111111-1111-1111-1111-111111111111")
                         .header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
                 .andExpect(status().isForbidden());
+    }
+
+    // --- PUT (legacy) y PATCH /api/v1/sesiones/{sesionId}: misma autorización DOCENTE (LB-001C.2A) ---
+
+    @Test
+    void actualizar_sesion_put_y_patch_docente_permitido() throws Exception {
+        mockMvc.perform(put("/api/v1/sesiones/{id}", "11111111-1111-1111-1111-111111111111")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isOk());
+        mockMvc.perform(patch("/api/v1/sesiones/{id}", "11111111-1111-1111-1111-111111111111")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void actualizar_sesion_put_y_patch_coordinador_recibe_403() throws Exception {
+        mockMvc.perform(put("/api/v1/sesiones/{id}", "11111111-1111-1111-1111-111111111111")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(patch("/api/v1/sesiones/{id}", "11111111-1111-1111-1111-111111111111")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void actualizar_sesion_put_y_patch_con_bearer_invalido_recibe_401() throws Exception {
+        mockMvc.perform(put("/api/v1/sesiones/{id}", "11111111-1111-1111-1111-111111111111")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer token-invalido"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(patch("/api/v1/sesiones/{id}", "11111111-1111-1111-1111-111111111111")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer token-invalido"))
+                .andExpect(status().isUnauthorized());
     }
 
     // --- POST /api/v1/grupos : command de coordinación ---
@@ -299,6 +345,16 @@ class RbacSecurityFilterChainTest {
     @RestController
     static final class RbacProbeController {
 
+        @GetMapping("/swagger-ui/index.html")
+        String swaggerUi() {
+            return "ok";
+        }
+
+        @GetMapping("/openapi/openapi-golden-path.yaml")
+        String canonicalOpenApi() {
+            return "openapi: 3.1.2";
+        }
+
         @GetMapping("/api/v1/docentes")
         String docentes() {
             return "ok";
@@ -321,6 +377,16 @@ class RbacSecurityFilterChainTest {
 
         @GetMapping("/api/v1/sesiones/grupo/{grupoId}")
         String sesionesPorGrupo() {
+            return "ok";
+        }
+
+        @PutMapping("/api/v1/sesiones/{sesionId}")
+        String actualizarSesionLegacy() {
+            return "ok";
+        }
+
+        @PatchMapping("/api/v1/sesiones/{sesionId}")
+        String actualizarSesion() {
             return "ok";
         }
 
@@ -372,6 +438,11 @@ class RbacSecurityFilterChainTest {
                 }
                 return jwt;
             };
+        }
+
+        @Bean
+        co.edu.uco.asistenciasuco.application.features.catalogo.resolvermensajeusuario.primaryports.ResolverMensajeUsuarioInputPort resolverMensajeUsuarioInputPort() {
+            return codigo -> java.util.Optional.empty();
         }
 
         @Bean

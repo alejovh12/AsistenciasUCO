@@ -8,5 +8,5 @@ import java.util.UUID;
  */
 public record HorarioDocenteDomain(UUID id, UUID idDocente, UUID idGrupo, String codigoMateria, String nombreMateria,
                                    String seccion, String dia, LocalTime horaInicio, LocalTime horaFin,
-                                   String aula, Integer totalEstudiantes) {
+                                   Integer totalEstudiantes) {
 }

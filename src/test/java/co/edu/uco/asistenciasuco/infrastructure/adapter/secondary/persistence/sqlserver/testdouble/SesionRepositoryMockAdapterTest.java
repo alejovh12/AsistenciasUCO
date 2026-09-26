@@ -29,14 +29,19 @@ class SesionRepositoryMockAdapterTest {
         assertThrows(CrosscuttingException.class, () -> adapter.generarSesionesGrupo(null));
     }
 
+    /**
+     * Contrato TARGET (LB-001B.1, CONTRACT_FREEZE.md secc. 3.3/3.9): CrearSesionRepositoryDTO y
+     * ActualizarSesionRepositoryDTO retiran descripcion/aula/tipo; constructores de 6 parametros.
+     * RED esperado: ambos DTO todavia exponen sus constructores AS-IS (9 y 8 parametros).
+     */
     @Test
     void metodos_de_comando_aceptan_dto_valido_sin_lanzar() {
         adapter.crearSesion(new CrearSesionRepositoryDTO(
-                UUID.randomUUID(), "Tema", "Descripcion", LocalDateTime.now(), LocalDateTime.now().plusHours(2),
-                "Aula 1", "TEORICA", UUID.randomUUID(), UUID.randomUUID()));
+                UUID.randomUUID(), "Nombre", LocalDateTime.now(), LocalDateTime.now().plusHours(2),
+                UUID.randomUUID()));
         adapter.actualizarSesion(new ActualizarSesionRepositoryDTO(
                 UUID.randomUUID(), "Sesion", LocalDateTime.now(), LocalDateTime.now().plusHours(2),
-                "Aula 1", "Descripcion", UUID.randomUUID(), UUID.randomUUID()));
+                UUID.randomUUID()));
         adapter.cerrarSesion(new CerrarSesionRepositoryDTO(
                 UUID.randomUUID(), UUID.randomUUID(), "Cerrada a tiempo", UUID.randomUUID()));
         adapter.generarSesionesGrupo(new GenerarSesionesGrupoRepositoryDTO(UUID.randomUUID(), UUID.randomUUID()));

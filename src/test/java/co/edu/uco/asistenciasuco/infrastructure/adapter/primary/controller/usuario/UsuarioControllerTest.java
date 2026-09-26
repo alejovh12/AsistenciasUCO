@@ -28,7 +28,7 @@ class UsuarioControllerTest {
     private final ProvisionarUsuarioInputPort provisionarUsuario = mock(ProvisionarUsuarioInputPort.class);
     private final UsuarioController controller = new UsuarioController(provisionarUsuario);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
-            .setControllerAdvice(new GlobalExceptionHandler()).build();
+            .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
 
     @Test
     void consultarPerfil_no_implementado_lanza_featureUnavailable() {

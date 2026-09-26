@@ -282,6 +282,11 @@ class SecurityConfigTest {
         }
 
         @Bean
+        co.edu.uco.asistenciasuco.application.features.catalogo.resolvermensajeusuario.primaryports.ResolverMensajeUsuarioInputPort resolverMensajeUsuarioInputPort() {
+            return codigo -> java.util.Optional.empty();
+        }
+
+        @Bean
         AuditEventPublisher auditEventPublisher() {
             return event -> {
             };

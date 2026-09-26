@@ -14,12 +14,19 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * Contrato TARGET (LB-001B.4A): el caso de uso solo lleva Usuario.id como actor. La resolucion
+ * findDocenteIdByUsuario(usuarioEjecutor) es unicamente un chequeo de rol docente: su resultado
+ * NO se propaga al DTO del repositorio (que ya no tiene docente).
+ * RED esperado: falla la compilacion (constructor de 5 parametros / getNombre inexistentes).
+ */
 class CrearSesionUseCaseImplTest {
 
     private final SesionRepositoryPort sesionRepositoryPort = mock(SesionRepositoryPort.class);
@@ -33,35 +40,34 @@ class CrearSesionUseCaseImplTest {
     }
 
     @Test
-    void execute_lanza_forbidden_cuando_no_resuelve_docente_autenticado() {
-        final UUID usuarioDocente = UUID.randomUUID();
+    void execute_lanza_forbidden_y_no_persiste_cuando_el_usuario_no_es_docente() {
+        final UUID usuario = UUID.randomUUID();
         final CrearSesionDomain domain = new CrearSesionDomain(
-                UUID.randomUUID(), "Tema principal", "Descripcion valida", LocalDateTime.now(), LocalDateTime.now().plusHours(1),
-                "Aula 1", "PRESENCIAL", usuarioDocente, usuarioDocente
-        );
-        when(institutionalScopePort.findDocenteIdByUsuario(usuarioDocente)).thenReturn(Optional.empty());
+                UUID.randomUUID(), "Sesion principal", LocalDateTime.now(), LocalDateTime.now().plusHours(1), usuario);
+        when(institutionalScopePort.findDocenteIdByUsuario(usuario)).thenReturn(Optional.empty());
 
         assertThrows(ForbiddenException.class, () -> useCase.execute(domain));
+        verify(sesionRepositoryPort, never()).crearSesion(any());
     }
 
     @Test
-    void execute_reescribe_docente_con_el_id_resuelto_y_preserva_usuarioEjecutor() {
-        final UUID usuarioDocente = UUID.randomUUID();
-        final UUID docenteId = UUID.randomUUID();
+    void execute_verifica_rol_docente_con_usuarioEjecutor_y_persiste_sin_docente() {
+        final UUID usuario = UUID.randomUUID();
         final UUID grupo = UUID.randomUUID();
-        final CrearSesionDomain domain = new CrearSesionDomain(
-                grupo, "Tema principal", "Descripcion valida", LocalDateTime.now(), LocalDateTime.now().plusHours(1),
-                "Aula 1", "PRESENCIAL", usuarioDocente, usuarioDocente
-        );
-        when(institutionalScopePort.findDocenteIdByUsuario(usuarioDocente)).thenReturn(Optional.of(docenteId));
+        final LocalDateTime inicio = LocalDateTime.of(2026, 1, 20, 8, 0);
+        final LocalDateTime fin = inicio.plusHours(2);
+        final CrearSesionDomain domain = new CrearSesionDomain(grupo, "Sesion principal", inicio, fin, usuario);
+        when(institutionalScopePort.findDocenteIdByUsuario(usuario)).thenReturn(Optional.of(UUID.randomUUID()));
 
         useCase.execute(domain);
 
+        verify(institutionalScopePort).findDocenteIdByUsuario(usuario);
         final ArgumentCaptor<CrearSesionRepositoryDTO> captor = ArgumentCaptor.forClass(CrearSesionRepositoryDTO.class);
         verify(sesionRepositoryPort).crearSesion(captor.capture());
         assertEquals(grupo, captor.getValue().getGrupo());
-        assertEquals(docenteId, captor.getValue().getDocente());
-        assertEquals(usuarioDocente, captor.getValue().getUsuarioEjecutor());
-        assertNotEquals(captor.getValue().getDocente(), captor.getValue().getUsuarioEjecutor());
+        assertEquals("Sesion principal", captor.getValue().getNombre());
+        assertEquals(inicio, captor.getValue().getFechaHoraInicio());
+        assertEquals(fin, captor.getValue().getFechaHoraFin());
+        assertEquals(usuario, captor.getValue().getUsuarioEjecutor());
     }
 }

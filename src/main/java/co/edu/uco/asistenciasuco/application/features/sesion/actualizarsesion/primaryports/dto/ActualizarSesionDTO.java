@@ -9,9 +9,6 @@ public final class ActualizarSesionDTO {
     private String nombre;
     private LocalDateTime fechaHoraInicio;
     private LocalDateTime fechaHoraFin;
-    private String aula;
-    private String descripcion;
-    private UUID docente;
     private UUID usuarioEjecutor;
 
     public ActualizarSesionDTO() {
@@ -23,18 +20,12 @@ public final class ActualizarSesionDTO {
             final String nombre,
             final LocalDateTime fechaHoraInicio,
             final LocalDateTime fechaHoraFin,
-            final String aula,
-            final String descripcion,
-            final UUID docente,
             final UUID usuarioEjecutor
     ) {
         setSesion(sesion);
         setNombre(nombre);
         setFechaHoraInicio(fechaHoraInicio);
         setFechaHoraFin(fechaHoraFin);
-        setAula(aula);
-        setDescripcion(descripcion);
-        setDocente(docente);
         setUsuarioEjecutor(usuarioEjecutor);
     }
 
@@ -68,30 +59,6 @@ public final class ActualizarSesionDTO {
 
     public void setFechaHoraFin(final LocalDateTime fechaHoraFin) {
         this.fechaHoraFin = fechaHoraFin;
-    }
-
-    public String getAula() {
-        return aula;
-    }
-
-    public void setAula(final String aula) {
-        this.aula = aula;
-    }
-
-    public String getDescripcion() {
-        return descripcion;
-    }
-
-    public void setDescripcion(final String descripcion) {
-        this.descripcion = descripcion;
-    }
-
-    public UUID getDocente() {
-        return docente;
-    }
-
-    public void setDocente(final UUID docente) {
-        this.docente = docente;
     }
 
     public UUID getUsuarioEjecutor() {

@@ -13,10 +13,15 @@ import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.primary
 import co.edu.uco.asistenciasuco.application.features.sesion.generarsesionesgrupo.primaryports.GenerarSesionesGrupoInputPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
+import co.edu.uco.asistenciasuco.infrastructure.config.jackson.JacksonInputConfig;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,6 +33,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -49,28 +55,121 @@ class SesionControllerContractTest {
     private final SesionController controller =
             new SesionController(create, query, queryByGroup, close, update, generate, identity);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
-            .setControllerAdvice(new GlobalExceptionHandler()).build();
+            .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty()))
+            .setMessageConverters(new JacksonJsonHttpMessageConverter(buildProductionJsonMapper()))
+            .build();
 
+    /**
+     * Arnes de prueba (setup), no aserciones: MockMvcBuilders.standaloneSetup() arma su propio
+     * JsonMapper por defecto y nunca aplica los beans gestionados por Spring, por lo que
+     * FAIL_ON_UNKNOWN_PROPERTIES (JacksonInputConfig, unico bean JsonMapperBuilderCustomizer
+     * registrado en produccion) no se activaba en este test. Se carga aqui el @Configuration
+     * JacksonInputConfig real (sin tocarlo ni cambiar su visibilidad) en un ApplicationContext
+     * minimo, se obtiene su bean JsonMapperBuilderCustomizer tal como lo hace Spring Boot
+     * autoconfiguration en produccion, y se aplica al builder del JsonMapper standalone, para que
+     * el MockMvc de este test valide el comportamiento real de la aplicacion (RED_SNAPSHOT
+     * resolucion LB-001B.1, ver TEST_PLAN.md).
+     */
+    private static JsonMapper buildProductionJsonMapper() {
+        final JsonMapper.Builder builder = JsonMapper.builder();
+        try (var context = new AnnotationConfigApplicationContext(JacksonInputConfig.class)) {
+            context.getBean(JsonMapperBuilderCustomizer.class).customize(builder);
+        }
+        return builder.build();
+    }
+
+    /**
+     * Contrato TARGET (LB-001B.1, CONTRACT_FREEZE.md secc. 3.1/4): CrearSesionRequest/CrearSesionDTO
+     * retiran descripcion/aula/tipo/room del contrato de creacion. Este test ya no envia esos campos
+     * y no debe asertar CrearSesionDTO.getAula()/getTipo() (retirados). Sigue GREEN hoy porque el
+     * subconjunto de campos superviviente (grupo/tema/fechas/actor) ya se mapea igual en AS-IS.
+     */
     @Test
-    void createAcceptsLegacyNameAndRoomAndPassesParsedDatesAndActor() throws Exception {
+    void createAcceptsMinimalContractAndPassesParsedDatesAndActor() throws Exception {
         mvc.perform(post("/api/v1/sesiones").contentType("application/json")
                         .content("""
-                                {"grupo":"%s","nombre":"Tema válido","descripcion":"Descripción suficiente",
-                                 "fechaHoraInicio":"2026-09-14T08:00","fechaHoraFin":"2026-09-14T09:00",
-                                 "room":"A101","tipo":"PRESENCIAL"}
+                                {"grupo":"%s","nombre":"Tema válido",
+                                 "fechaHoraInicio":"2026-09-14T08:00","fechaHoraFin":"2026-09-14T09:00"}
                                 """.formatted(GROUP)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.exitoso").value(true));
         final var captor = ArgumentCaptor.forClass(CrearSesionDTO.class);
         verify(create).execute(captor.capture());
         assertEquals(GROUP, captor.getValue().getGrupo());
-        assertEquals("Tema válido", captor.getValue().getTema());
-        assertEquals("A101", captor.getValue().getAula());
+        assertEquals("Tema válido", captor.getValue().getNombre());
         assertEquals(START, captor.getValue().getFechaHoraInicio());
         assertEquals(START.plusHours(1), captor.getValue().getFechaHoraFin());
-        assertEquals(ACTOR, captor.getValue().getDocente());
-        assertEquals("PRESENCIAL", captor.getValue().getTipo());
         assertEquals(ACTOR, captor.getValue().getUsuarioEjecutor());
+    }
+
+    /**
+     * Contrato TARGET (LB-001B.1, CONTRACT_FREEZE.md secc. 2/3.1/7#17): una vez retirados
+     * descripcion/aula/tipo/room de CrearSesionRequest, FAIL_ON_UNKNOWN_PROPERTIES (JacksonInputConfig)
+     * debe rechazar con 400 (UnrecognizedPropertyException -> FIELD_UNKNOWN) cualquier cliente que
+     * los siga enviando. RED esperado: hoy estos 4 campos todavia son reconocidos por
+     * CrearSesionRequest (incluido el alias setRoom -> aula), por lo que la peticion HOY devuelve
+     * 201 (no 400) y el input port SI es invocado.
+     */
+    @Test
+    void createRejectsRetiredFieldsWithBadRequest() throws Exception {
+        assertCreateRejectsUnknownField("descripcion", "\"descripcion\":\"Descripción suficiente\"");
+        assertCreateRejectsUnknownField("aula", "\"aula\":\"A101\"");
+        assertCreateRejectsUnknownField("tipo", "\"tipo\":\"PRESENCIAL\"");
+        assertCreateRejectsUnknownField("room", "\"room\":\"A101\"");
+        assertCreateRejectsUnknownField("tema", "\"tema\":\"Tema legado\"");
+        assertCreateRejectsUnknownField("topic", "\"topic\":\"Tema legado\"");
+        assertCreateRejectsUnknownField("status", "\"status\":\"ABIERTA\"");
+        assertCreateRejectsUnknownField("docente", "\"docente\":\"%s\"".formatted(ACTOR));
+        org.mockito.Mockito.verifyNoInteractions(create);
+    }
+
+    /**
+     * LB-001B.4A: el contrato exacto usa {@code nombre}; {@code tema} ya no es alias, por lo que
+     * un cliente que envie SOLO {@code tema} (sin nombre) recibe FIELD_UNKNOWN, no un 201.
+     */
+    @Test
+    void createWithTemaInsteadOfNombreIsRejectedAsUnknownField() throws Exception {
+        mvc.perform(post("/api/v1/sesiones").contentType("application/json")
+                        .content("""
+                                {"grupo":"%s","tema":"Tema legado",
+                                 "fechaHoraInicio":"2026-09-14T08:00","fechaHoraFin":"2026-09-14T09:00"}
+                                """.formatted(GROUP)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details[0].field").value("tema"))
+                .andExpect(jsonPath("$.details[0].code").value("FIELD_UNKNOWN"));
+        org.mockito.Mockito.verifyNoInteractions(create);
+    }
+
+    @Test
+    void createMissingOrTooLongNombreReportsFieldNombreNeverTema() throws Exception {
+        mvc.perform(post("/api/v1/sesiones").contentType("application/json")
+                        .content("""
+                                {"grupo":"%s","fechaHoraInicio":"2026-09-14T08:00","fechaHoraFin":"2026-09-14T09:00"}
+                                """.formatted(GROUP)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details[0].field").value("nombre"))
+                .andExpect(jsonPath("$.details[?(@.field=='tema')]").isEmpty());
+        mvc.perform(post("/api/v1/sesiones").contentType("application/json")
+                        .content("""
+                                {"grupo":"%s","nombre":"%s",
+                                 "fechaHoraInicio":"2026-09-14T08:00","fechaHoraFin":"2026-09-14T09:00"}
+                                """.formatted(GROUP, "X".repeat(51))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details[0].field").value("nombre"))
+                .andExpect(jsonPath("$.details[0].code").value("FIELD_INVALID_LENGTH"))
+                .andExpect(jsonPath("$.details[?(@.field=='tema')]").isEmpty());
+        org.mockito.Mockito.verifyNoInteractions(create);
+    }
+
+    private void assertCreateRejectsUnknownField(final String expectedField, final String extraJsonProperty) throws Exception {
+        mvc.perform(post("/api/v1/sesiones").contentType("application/json")
+                        .content("""
+                                {"grupo":"%s","nombre":"Tema válido",
+                                 "fechaHoraInicio":"2026-09-14T08:00","fechaHoraFin":"2026-09-14T09:00",%s}
+                                """.formatted(GROUP, extraJsonProperty)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details[0].field").value(expectedField))
+                .andExpect(jsonPath("$.details[0].code").value("FIELD_UNKNOWN"));
     }
 
     @Test
@@ -98,12 +197,18 @@ class SesionControllerContractTest {
         captor.getAllValues().forEach(dto -> assertEquals(SESSION, dto.getSesion()));
     }
 
+    /**
+     * Contrato TARGET (LB-001B.1, CONTRACT_FREEZE.md secc. 3.7/4): ActualizarSesionRequest/DTO
+     * retiran aula/descripcion/room del contrato de actualizacion. Ya no envia esos campos y no
+     * debe asertar ActualizarSesionDTO.getAula() (retirado). Sigue GREEN hoy porque el subconjunto
+     * superviviente (nombre/fechas/actor) ya se mapea igual en AS-IS.
+     */
     @Test
     void updateCloseAndGeneratePassPathBodyAndActor() throws Exception {
         mvc.perform(put("/api/v1/sesiones/{id}", SESSION).contentType("application/json")
                         .content("""
-                                {"tema":"Tema actualizado","fechaHoraInicio":"2026-09-14T08:00",
-                                 "fechaHoraFin":"2026-09-14T10:00","room":"B202","descripcion":"Cambio de aula"}
+                                {"nombre":"Tema actualizado","fechaHoraInicio":"2026-09-14T08:00",
+                                 "fechaHoraFin":"2026-09-14T10:00"}
                                 """))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.exitoso").value(true));
         final var updateCaptor = ArgumentCaptor.forClass(ActualizarSesionDTO.class);
@@ -111,8 +216,6 @@ class SesionControllerContractTest {
         assertEquals(SESSION, updateCaptor.getValue().getSesion());
         assertEquals("Tema actualizado", updateCaptor.getValue().getNombre());
         assertEquals(START.plusHours(2), updateCaptor.getValue().getFechaHoraFin());
-        assertEquals("B202", updateCaptor.getValue().getAula());
-        assertEquals(ACTOR, updateCaptor.getValue().getDocente());
         assertEquals(ACTOR, updateCaptor.getValue().getUsuarioEjecutor());
 
         mvc.perform(post("/api/v1/sesiones/cierres").contentType("application/json")
@@ -130,6 +233,109 @@ class SesionControllerContractTest {
         verify(generate).execute(generateCaptor.capture());
         assertEquals(GROUP, generateCaptor.getValue().getGrupo());
         assertEquals(ACTOR, generateCaptor.getValue().getUsuarioEjecutor());
+    }
+
+    /**
+     * Contrato TARGET (LB-001B.1, CONTRACT_FREEZE.md secc. 2/3.7/7#17): una vez retirados
+     * aula/descripcion/room de ActualizarSesionRequest, FAIL_ON_UNKNOWN_PROPERTIES debe rechazar
+     * con 400 (FIELD_UNKNOWN) cualquier cliente que los siga enviando. RED esperado: hoy estos 3
+     * campos todavia son reconocidos por ActualizarSesionRequest (incluido el alias setRoom -> aula),
+     * por lo que la peticion HOY devuelve 200 (no 400) y el input port SI es invocado.
+     */
+    @Test
+    void updateRejectsRetiredFieldsWithBadRequest() throws Exception {
+        assertUpdateRejectsUnknownField("descripcion", "\"descripcion\":\"Cambio de aula\"");
+        assertUpdateRejectsUnknownField("aula", "\"aula\":\"B202\"");
+        assertUpdateRejectsUnknownField("room", "\"room\":\"B202\"");
+        assertUpdateRejectsUnknownField("tipo", "\"tipo\":\"PRESENCIAL\"");
+        assertUpdateRejectsUnknownField("tema", "\"tema\":\"Tema legado\"");
+        assertUpdateRejectsUnknownField("topic", "\"topic\":\"Tema legado\"");
+        assertUpdateRejectsUnknownField("status", "\"status\":\"ABIERTA\"");
+        org.mockito.Mockito.verifyNoInteractions(update);
+    }
+
+    /** LB-001B.4A: PUT exacto {nombre, fechaHoraInicio, fechaHoraFin}; {@code tema} ya no es alias de nombre. */
+    @Test
+    void updateWithTemaInsteadOfNombreIsRejectedAsUnknownField() throws Exception {
+        mvc.perform(put("/api/v1/sesiones/{id}", SESSION).contentType("application/json")
+                        .content("""
+                                {"tema":"Tema legado","fechaHoraInicio":"2026-09-14T08:00",
+                                 "fechaHoraFin":"2026-09-14T10:00"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details[0].field").value("tema"))
+                .andExpect(jsonPath("$.details[0].code").value("FIELD_UNKNOWN"));
+        org.mockito.Mockito.verifyNoInteractions(update);
+    }
+
+    private void assertUpdateRejectsUnknownField(final String expectedField, final String extraJsonProperty) throws Exception {
+        mvc.perform(put("/api/v1/sesiones/{id}", SESSION).contentType("application/json")
+                        .content("""
+                                {"nombre":"Tema actualizado","fechaHoraInicio":"2026-09-14T08:00",
+                                 "fechaHoraFin":"2026-09-14T10:00",%s}
+                                """.formatted(extraJsonProperty)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details[0].field").value(expectedField))
+                .andExpect(jsonPath("$.details[0].code").value("FIELD_UNKNOWN"));
+    }
+
+    private static final String VALID_UPDATE_BODY = """
+            {"nombre":"Tema actualizado","fechaHoraInicio":"2026-09-14T08:00",
+             "fechaHoraFin":"2026-09-14T10:00"}
+            """;
+
+    /** LB-001C.2A: PATCH delega al mismo input port con path, body y actor JWT; success 200 como el PUT. */
+    @Test
+    void patchUpdatesSessionThroughSameInputPortWithPathBodyAndActor() throws Exception {
+        mvc.perform(patch("/api/v1/sesiones/{id}", SESSION).contentType("application/json").content(VALID_UPDATE_BODY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exitoso").value(true))
+                .andExpect(jsonPath("$.datos").doesNotExist());
+        final var captor = ArgumentCaptor.forClass(ActualizarSesionDTO.class);
+        verify(update).execute(captor.capture());
+        assertEquals(SESSION, captor.getValue().getSesion());
+        assertEquals("Tema actualizado", captor.getValue().getNombre());
+        assertEquals(START, captor.getValue().getFechaHoraInicio());
+        assertEquals(START.plusHours(2), captor.getValue().getFechaHoraFin());
+        assertEquals(ACTOR, captor.getValue().getUsuarioEjecutor());
+    }
+
+    /** LB-001C.2A: PUT legacy sigue operativo; PUT y PATCH producen el mismo comando y la misma respuesta. */
+    @Test
+    void putLegacyAndPatchProduceIdenticalCommandAndResponse() throws Exception {
+        final String putBody = mvc.perform(put("/api/v1/sesiones/{id}", SESSION).contentType("application/json").content(VALID_UPDATE_BODY))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        final String patchBody = mvc.perform(patch("/api/v1/sesiones/{id}", SESSION).contentType("application/json").content(VALID_UPDATE_BODY))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertEquals(putBody, patchBody);
+        final var captor = ArgumentCaptor.forClass(ActualizarSesionDTO.class);
+        verify(update, org.mockito.Mockito.times(2)).execute(captor.capture());
+        final var commands = captor.getAllValues();
+        assertEquals(commands.get(0).getSesion(), commands.get(1).getSesion());
+        assertEquals(commands.get(0).getNombre(), commands.get(1).getNombre());
+        assertEquals(commands.get(0).getFechaHoraInicio(), commands.get(1).getFechaHoraInicio());
+        assertEquals(commands.get(0).getFechaHoraFin(), commands.get(1).getFechaHoraFin());
+        assertEquals(commands.get(0).getUsuarioEjecutor(), commands.get(1).getUsuarioEjecutor());
+    }
+
+    @Test
+    void patchPreservesValidationBehaviorOfPut() throws Exception {
+        mvc.perform(patch("/api/v1/sesiones/{id}", SESSION).contentType("application/json")
+                        .content("{\"fechaHoraInicio\":\"no-es-iso\"}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(patch("/api/v1/sesiones/{id}", SESSION).contentType("application/json")
+                        .content("""
+                                {"tema":"Tema legado","fechaHoraInicio":"2026-09-14T08:00",
+                                 "fechaHoraFin":"2026-09-14T10:00"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details[0].field").value("tema"))
+                .andExpect(jsonPath("$.details[0].code").value("FIELD_UNKNOWN"));
+        mvc.perform(patch("/api/v1/sesiones/{id}", SESSION).contentType("application/json")
+                        .content("{\"nombre\":\"x\",\"fechaHoraInicio\":\"2026-09-14T08:00\",\"fechaHoraFin\":\"2026-09-14T10:00\",\"aula\":\"B202\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details[0].code").value("FIELD_UNKNOWN"));
+        org.mockito.Mockito.verifyNoInteractions(update);
     }
 
     @Test

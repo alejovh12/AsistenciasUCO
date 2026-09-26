@@ -13,7 +13,6 @@ public final class CrearGrupoRequest {
     private String nombre;
     private UUID idDocente;
     private UUID docenteId;
-    private String aula;
     private List<String> dias;
     private String horaInicio;
     private String horaFin;
@@ -86,18 +85,6 @@ public final class CrearGrupoRequest {
 
     public void setDocenteId(final UUID docenteId) {
         this.docenteId = docenteId;
-    }
-
-    public String getAula() {
-        return aula;
-    }
-
-    public void setAula(final String aula) {
-        this.aula = aula;
-    }
-
-    public void setRoom(final String room) {
-        this.aula = room;
     }
 
     public List<String> getDias() {

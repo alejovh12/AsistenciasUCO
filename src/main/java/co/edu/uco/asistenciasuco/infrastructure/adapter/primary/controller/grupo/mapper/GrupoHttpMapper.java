@@ -26,7 +26,6 @@ public final class GrupoHttpMapper {
                 required(request.getCodigo(), "codigo"),
                 requiredText(request.getNombre(), "nombre"),
                 firstNonNull(request.getIdDocente(), request.getDocenteId()),
-                requiredText(request.getAula(), "aula"),
                 firstNonNull(request.getGenerarSesionesAutomaticas(), request.getCrearSesionesAutomaticamente()),
                 usuarioEjecutor
         );
@@ -46,7 +45,6 @@ public final class GrupoHttpMapper {
                 firstTextOrNull(request.getNombre()),
                 firstNonNull(request.getIdDocente(), request.getDocenteId()),
                 request.getCupoMaximo(),
-                firstTextOrNull(request.getAula()),
                 usuarioEjecutor
         );
     }

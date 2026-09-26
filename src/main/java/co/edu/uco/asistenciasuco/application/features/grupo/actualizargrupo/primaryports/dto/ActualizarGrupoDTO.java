@@ -8,7 +8,6 @@ public record ActualizarGrupoDTO(
         String nombre,
         UUID idDocente,
         Integer cupoMaximo,
-        String aula,
         UUID usuarioEjecutor
 ) {
 }

@@ -67,7 +67,6 @@ public final class GrupoRepositorySqlServerAdapter implements GrupoRepositoryPor
     static final String PARAM_NOMBRE = "nombre";
     static final String PARAM_ID_DOCENTE = "idDocente";
     static final String PARAM_CUPO_MAXIMO = "cupoMaximo";
-    static final String PARAM_AULA = "aula";
     static final String PARAM_ID_CORRELACION = "idCorrelacion";
     static final String PARAM_ID_USUARIO_EJECUTOR = "idUsuarioEjecutor";
 
@@ -79,7 +78,6 @@ public final class GrupoRepositorySqlServerAdapter implements GrupoRepositoryPor
                  @codigo = :codigo,
                  @nombre = :nombre,
                  @idDocente = :idDocente,
-                 @aula = :aula,
                  @idCorrelacion = :idCorrelacion,
                  @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
@@ -90,7 +88,6 @@ public final class GrupoRepositorySqlServerAdapter implements GrupoRepositoryPor
                  @nombre = :nombre,
                  @idDocente = :idDocente,
                  @cupoMaximo = :cupoMaximo,
-                 @aula = :aula,
                  @idCorrelacion = :idCorrelacion,
                  @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
@@ -250,7 +247,6 @@ public final class GrupoRepositorySqlServerAdapter implements GrupoRepositoryPor
                 .addValue(PARAM_CODIGO, dto.codigo())
                 .addValue(PARAM_NOMBRE, dto.nombre())
                 .addValue(PARAM_ID_DOCENTE, dto.idDocente())
-                .addValue(PARAM_AULA, dto.aula())
                 .addValue(PARAM_ID_CORRELACION, correlationId)
                 .addValue(PARAM_ID_USUARIO_EJECUTOR, dto.usuarioEjecutor());
     }
@@ -262,7 +258,6 @@ public final class GrupoRepositorySqlServerAdapter implements GrupoRepositoryPor
                 .addValue(PARAM_NOMBRE, dto.nombre())
                 .addValue(PARAM_ID_DOCENTE, dto.idDocente())
                 .addValue(PARAM_CUPO_MAXIMO, dto.cupoMaximo())
-                .addValue(PARAM_AULA, dto.aula())
                 .addValue(PARAM_ID_CORRELACION, correlationId)
                 .addValue(PARAM_ID_USUARIO_EJECUTOR, dto.usuarioEjecutor());
     }

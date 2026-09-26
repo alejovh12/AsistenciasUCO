@@ -78,6 +78,14 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/api/v1/internal/azure-events").permitAll()
+                // Solo lectura de documentación runtime. La propiedad de Swagger UI controla
+                // si estos handlers existen; ningún endpoint de negocio se abre por esta regla.
+                .requestMatchers(
+                        HttpMethod.GET,
+                        "/swagger-ui",
+                        "/swagger-ui/**",
+                        "/openapi/openapi-golden-path.yaml"
+                ).permitAll()
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMINISTRADOR")
                 .requestMatchers("/api/v1/decano/**").hasAnyRole("DECANO", "ADMINISTRADOR")
                 .requestMatchers("/api/v1/coordinador/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")

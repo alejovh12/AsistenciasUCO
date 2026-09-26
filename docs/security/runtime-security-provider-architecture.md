@@ -1,3 +1,11 @@
+---
+status: active
+type: normative
+scope: backend
+owner: backend-team
+last-reviewed: 2026-09-20
+---
+
 # Arquitectura de Runtime Security (independiente del proveedor)
 
 ## 1. Alcance
@@ -393,6 +401,9 @@ app.adapters.realtime.provider=local-sse
 
 ### 12.1 Autenticación
 
+Además de autenticación HTTP, `/stream` exige `grupoId` y `LocalSseRealtimeStreamGateway` verifica titularidad docente al suscribirse; no basta un JWT válido.
+
+
 El stream continúa protegido por Bearer. No se permite:
 
 ```text
@@ -438,62 +449,20 @@ docs/architecture/reactive-realtime.md
 
 ---
 
-## 13. Authorization contextual pendiente
+## 13. Autorización contextual y seguimiento
 
-Los siguientes endpoints requieren revisar/completar Layer 2 cuando se implemente o endurezca su
-flujo funcional:
+`GET /api/v1/sesiones/grupo/{grupoId}` ya verifica titularidad en `ConsultarSesionesPorGrupoUseCaseImpl`; no se mantiene como falta de implementación. El seguimiento de validación está en [TD-008](../baseline/TECHNICAL_DEBT.md#td-008).
 
-- `GET /api/v1/sesiones/{sesionId}`;
-- `GET /api/v1/sesiones/grupo/{grupoId}`;
-- `GET /api/v1/docentes/{docenteId}`;
-- `GET /api/v1/docentes/{docenteId}/asignaciones`;
-- `GET /api/v1/estudiantes/{estudianteId}`.
 
-La regla no debe improvisarse en el Controller. Debe resolverse desde Application mediante el
-scope institucional correspondiente.
+La lista única de endpoints pendientes y condición de cierre vive en [TD-016](../baseline/TECHNICAL_DEBT.md#td-016). No resolver ownership contextual en el Controller ni mezclarlo con Layer 1.
 
----
+## 14. Storage security
 
-## 14. Storage security debt
+La regla AS-IS de `/api/v1/archivos/**` es `authenticated()`. La abstracción y autorización funcional pendiente se registran en [TD-004](../baseline/TECHNICAL_DEBT.md#td-004); un matcher de roles no resuelve por sí solo ownership.
 
-`/api/v1/archivos/**` permanece temporalmente bajo:
+## 15. Provisioning security
 
-```text
-authenticated()
-```
-
-Hoy todavía no existe una abstracción completa de ownership/contexto alrededor del archivo.
-
-La fase Storage deberá introducir:
-
-```text
-GuardarArchivoInputPort
-GuardarArchivoUseCase
-FileStoragePort
-```
-
-y definir autorización Layer 2 con información como propietario/recurso/grupo cuando el contrato
-funcional esté formalizado.
-
-No debe intentarse resolver esta deuda solamente con un matcher de roles.
-
----
-
-## 15. Provisioning security debt
-
-`POST /api/v1/usuarios` continúa bajo `authenticated()`.
-
-El contrato funcional definitivo debe aclarar quién puede provisionar usuarios institucionales.
-No se inventa una política nueva sin respaldo funcional.
-
-Identity provisioning además mantiene deudas E2E/documentadas para ciertos roles institucionales.
-Ver:
-
-```text
-docs/security/keycloak-identity-provider.md
-```
-
----
+`POST /api/v1/usuarios` permanece bajo `authenticated()`. Política funcional/roles pendientes: [TD-013](../baseline/TECHNICAL_DEBT.md#td-013). Contrato y semántica DB-first: [keycloak-identity-provider](keycloak-identity-provider.md).
 
 ## 16. Cómo agregar otro runtime IdP
 
@@ -523,6 +492,9 @@ vendor.
 ---
 
 ## 17. Reglas de calidad y seguridad
+
+Los objetivos Sonar mencionados aquí requieren evidencia/configuración remota; no son umbrales comprobables en pom.xml. Los gates efectivos locales/CI se distinguen en [TESTING_STANDARD](../testing/TESTING_STANDARD.md).
+
 
 Cualquier cambio en seguridad debe conservar:
 

@@ -11,6 +11,6 @@ public final class ConsultarHorariosDocenteRepositoryMapper {
     public static HorarioDocenteDomain toDomain(final HorarioDocenteProjection projection) {
         return new HorarioDocenteDomain(projection.id(), projection.idDocente(), projection.idGrupo(),
                 projection.codigoMateria(), projection.nombreMateria(), projection.seccion(), projection.dia(),
-                projection.horaInicio(), projection.horaFin(), projection.aula(), projection.totalEstudiantes());
+                projection.horaInicio(), projection.horaFin(), projection.totalEstudiantes());
     }
 }

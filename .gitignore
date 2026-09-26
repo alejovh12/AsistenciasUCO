@@ -68,6 +68,7 @@ infra/keycloak/generated/
 
 # Temporary/editor files
 .tmp-log-metadata/
+.workspace/
 *.swp
 *.swo
 *~
@@ -79,3 +80,14 @@ infra/keycloak/generated/
 !src/main/java/
 !src/main/java/**/
 !src/main/java/**/*.java
+
+# Estado local de Claude (agents, skills y templates se versionan)
+.claude/worktrees/
+.claude/checkpoints/
+.claude/mailbox/
+.claude/routines/.state/
+.claude/scheduled_tasks.lock
+.claude/scheduled_tasks.json
+.claude/agent-registry.json
+.claude/agent-memory-local/
+.claude/assistant-daemon-state.json

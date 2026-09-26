@@ -11,8 +11,8 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -30,7 +30,7 @@ class GrupoHttpMapperContractTest {
         final CrearGrupoRequest request = json.readValue("""
                 {"idAsignatura":"%s","asignaturaId":"%s","idPeriodoAcademico":"%s",
                  "periodoAcademicoId":"%s","codigo":12,"nombre":"  Grupo A  ",
-                 "idDocente":"%s","docenteId":"%s","aula":"  A101  ",
+                 "idDocente":"%s","docenteId":"%s",
                  "generarSesionesAutomaticas":false,"crearSesionesAutomaticamente":true}
                 """.formatted(SUBJECT, UUID.randomUUID(), PERIOD, UUID.randomUUID(), TEACHER, UUID.randomUUID()),
                 CrearGrupoRequest.class);
@@ -41,16 +41,15 @@ class GrupoHttpMapperContractTest {
         assertEquals(12, mapped.codigo());
         assertEquals("Grupo A", mapped.nombre());
         assertEquals(TEACHER, mapped.idDocente());
-        assertEquals("A101", mapped.aula());
         assertEquals(false, mapped.generarSesionesAutomaticas());
         assertEquals(USUARIO_EJECUTOR, mapped.usuarioEjecutor());
     }
 
     @Test
-    void createAcceptsAliasesAndLegacySectionAndRoomNames() {
+    void createAcceptsAliasesAndLegacySectionName() {
         final CrearGrupoRequest request = json.readValue("""
                 {"asignaturaId":"%s","periodoAcademicoId":"%s","codigo":13,
-                 "section":"Grupo B","docenteId":"%s","room":"B202",
+                 "section":"Grupo B","docenteId":"%s",
                  "crearSesionesAutomaticamente":true}
                 """.formatted(SUBJECT, PERIOD, TEACHER), CrearGrupoRequest.class);
 
@@ -58,7 +57,6 @@ class GrupoHttpMapperContractTest {
         assertEquals(SUBJECT, mapped.idAsignatura());
         assertEquals(PERIOD, mapped.idPeriodoAcademico());
         assertEquals("Grupo B", mapped.nombre());
-        assertEquals("B202", mapped.aula());
         assertEquals(TEACHER, mapped.idDocente());
         assertTrue(mapped.generarSesionesAutomaticas());
     }
@@ -67,7 +65,7 @@ class GrupoHttpMapperContractTest {
     void updateBindsOptionalFieldsAndTeacherAlias() {
         final ActualizarGrupoRequest request = json.readValue("""
                 {"codigo":14,"section":"  Grupo actualizado  ","docenteId":"%s",
-                 "cupoMaximo":25,"room":"  C303  "}
+                 "cupoMaximo":25}
                 """.formatted(TEACHER), ActualizarGrupoRequest.class);
 
         final ActualizarGrupoDTO mapped = GrupoHttpMapper.toApplicationDTO(GROUP, request, USUARIO_EJECUTOR);
@@ -76,12 +74,7 @@ class GrupoHttpMapperContractTest {
         assertEquals("Grupo actualizado", mapped.nombre());
         assertEquals(TEACHER, mapped.idDocente());
         assertEquals(25, mapped.cupoMaximo());
-        assertEquals("C303", mapped.aula());
         assertEquals(USUARIO_EJECUTOR, mapped.usuarioEjecutor());
-
-        final ActualizarGrupoRequest empty = json.readValue("{}", ActualizarGrupoRequest.class);
-        assertNull(GrupoHttpMapper.toApplicationDTO(GROUP, empty, USUARIO_EJECUTOR).nombre());
-        assertNull(GrupoHttpMapper.toApplicationDTO(GROUP, empty, USUARIO_EJECUTOR).aula());
     }
 
     @Test
@@ -102,9 +95,7 @@ class GrupoHttpMapperContractTest {
                 assertThrows(ValidationException.class,
                         () -> GrupoHttpMapper.toApplicationDTO(request, USUARIO_EJECUTOR)).getCode());
         request.setNombre("Grupo");
-        assertEquals("ERR_CAMPO_OBLIGATORIO",
-                assertThrows(ValidationException.class,
-                        () -> GrupoHttpMapper.toApplicationDTO(request, USUARIO_EJECUTOR)).getCode());
+        assertDoesNotThrow(() -> GrupoHttpMapper.toApplicationDTO(request, USUARIO_EJECUTOR));
     }
 
     @Test
@@ -136,7 +127,6 @@ class GrupoHttpMapperContractTest {
         final CrearGrupoRequest request = new CrearGrupoRequest();
         request.setCodigo(1);
         request.setNombre("Grupo");
-        request.setAula("A101");
         return request;
     }
 }

@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -26,6 +27,14 @@ class HorarioDocenteSqlServerAdapterTest {
     private final NamedParameterJdbcOperations jdbc = mock(NamedParameterJdbcOperations.class);
     private final HorarioDocenteSqlServerAdapter adapter = new HorarioDocenteSqlServerAdapter(jdbc);
 
+    /**
+     * Contrato TARGET (LB-001B.3, CONTRACT_FREEZE.md secc. 4 / punto D de TASK_AUTORIZADA.md &sect;27):
+     * {@code uv_horario_docente} congelada declara exactamente {@code id, idDocente, idGrupo,
+     * codigoMateria, nombreMateria, seccion, dia, horaInicio, horaFin, totalEstudiantes} — SIN
+     * {@code aula}. RED esperado: el {@code SELECT} de {@code HorarioDocenteSqlServerAdapter} AS-IS
+     * todavia incluye la columna {@code aula} (l.24); la asercion de ausencia de abajo falla hoy
+     * contra produccion sin modificar.
+     */
     @Test
     @SuppressWarnings("unchecked")
     void consultarHorarioDocente_mapea_proyeccion_completa() throws Exception {
@@ -52,9 +61,14 @@ class HorarioDocenteSqlServerAdapterTest {
         assertEquals(id, resultado.getFirst().id());
         assertEquals(LocalTime.of(8, 0), resultado.getFirst().horaInicio());
         assertEquals(25, resultado.getFirst().totalEstudiantes());
+        final var sql = ArgumentCaptor.forClass(String.class);
         final var params = ArgumentCaptor.forClass(MapSqlParameterSource.class);
-        verify(jdbc).query(anyString(), params.capture(), any(RowMapper.class));
+        verify(jdbc).query(sql.capture(), params.capture(), any(RowMapper.class));
         assertEquals(docente, params.getValue().getValue("idDocente"));
+        assertTrue(sql.getValue().contains("FROM dbo.uv_horario_docente"));
+        // LB-001B.3 / punto D — RED esperado hoy: el SELECT AS-IS todavia proyecta la columna aula.
+        assertFalse(sql.getValue().toLowerCase(java.util.Locale.ROOT).contains("aula"),
+                "uv_horario_docente congelada no expone aula (CONTRACT_FREEZE.md secc. 4)");
     }
 
     @Test

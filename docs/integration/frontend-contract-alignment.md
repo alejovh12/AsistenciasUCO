@@ -1,28 +1,20 @@
-# Frontend contract alignment
+---
+status: active
+type: active
+scope: backend
+owner: backend-team
+last-reviewed: 2026-09-20
+---
 
-Este documento registra contratos backend que deben revisarse durante la alineacion del frontend. El frontend no se modifica en esta fase.
+# Alineación del consumidor frontend
 
-## Errores
+Referencia AS-IS del backend; el frontend no está incluido en este checkout. La comparación anterior se conserva como [histórica](../archive/frontend-contract-alignment.md) y no demuestra el estado actual del consumidor.
 
-El backend devuelve `message` y `details[]`. No devuelve `mensajeUsuario` en el contrato de errores. El frontend debe alinearse a `error.message` y `error.details` cuando correspondan.
+- Errores: `message` y `details`, según [contrato HTTP](../contracts/OPENAPI_STANDARD.md); no asumir `mensajeUsuario` como envelope de error.
+- Identificación: requests existentes usan número compatible con Integer; migración futura TD-006 no autoriza cambiar JSON ahora.
+- Asistencia: distinguir individual de lote. El [Golden Path](../baseline/GOLDEN_PATH_ASISTENCIA.md) usa `sesionId`, `registros[{estudianteId, estado}]`; SQL espera otra forma serializada interna. No exponer `asistenciaJSON` por deducción de parámetros DB.
+- Revisión: [SolicitarRevisionAsistenciaRequest](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/asistencia/request/SolicitarRevisionAsistenciaRequest.java) tiene sesionId (alias sesion), categoria, justificacion (fallback motivo), soporteNombre y soporteUrl. La afirmación anterior `asistencia/motivo` estaba desactualizada.
+- Queries GET y POST legacy: inventario en [HTTP_AS_IS_MATRIX](../contracts/HTTP_AS_IS_MATRIX.md). No retirar legacy sin consumidor/versionado y acuerdo.
+- SSE: Bearer por header, grupoId, reconexión y recuperación de estado según [contrato realtime](../contracts/REALTIME_EVENT_STANDARD.md). No certificar actualización UI a partir de tests backend.
 
-## Identificacion
-
-`numeroIdentificacion` debe enviarse actualmente como JSON NUMBER compatible con `Integer`, no como String. Esto es temporal hasta la futura migracion DB a `String` / `VARCHAR`.
-
-## Asistencia
-
-El backend actual espera conceptualmente `estudiante`, `grupo`, `sesion`, `presente` y `observacion`. El frontend previamente revisado tenia un modelo batch basado en `sesion` y `asistenciaJSON`. El contrato definitivo debe decidirse coordinado con la futura implementacion real de asistencia SQL.
-
-## Revision de asistencia
-
-El backend espera `asistencia` y `motivo`. El frontend previamente utilizaba algo equivalente a `asistencia` y `observacion`. Debe alinearse en una etapa frontend/funcional futura.
-
-## Queries canonicas
-
-- `GET /api/v1/docentes/{docenteId}`
-- `GET /api/v1/docentes/{docenteId}/asignaciones`
-- `GET /api/v1/sesiones/{sesionId}`
-- `GET /api/v1/grupos/{grupoId}/asistencias`
-
-Los POST legacy de consulta siguen disponibles temporalmente. Durante la alineacion frontend se debe migrar hacia los GET canonicos.
+LB-001B debe obtener el repositorio/versión del consumidor y registrar compatibilidad, casos de error y tiempos. Sin ello: `BLOCKED_BY_MISSING_EVIDENCE` ME-002; seguimiento [TD-017](../baseline/TECHNICAL_DEBT.md#td-017) y [MV-001](../baseline/MANUAL_VALIDATION_LEDGER.md).

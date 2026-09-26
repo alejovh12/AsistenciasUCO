@@ -15,10 +15,17 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * Contrato TARGET (LB-001B.4A): solo Usuario.id como actor; findDocenteIdByUsuario(usuarioEjecutor)
+ * es unicamente chequeo de rol docente y no se propaga al DTO del repositorio.
+ * RED esperado: falla la compilacion (constructor de 5 parametros / record de 5 componentes).
+ */
 class ActualizarSesionUseCaseImplTest {
 
     private final SesionRepositoryPort sesionRepositoryPort = mock(SesionRepositoryPort.class);
@@ -32,32 +39,31 @@ class ActualizarSesionUseCaseImplTest {
     }
 
     @Test
-    void execute_lanza_forbidden_cuando_no_resuelve_docente_autenticado() {
-        final UUID usuarioDocente = UUID.randomUUID();
+    void execute_lanza_forbidden_y_no_persiste_cuando_el_usuario_no_es_docente() {
+        final UUID usuario = UUID.randomUUID();
         final ActualizarSesionDomain domain = new ActualizarSesionDomain(
                 UUID.randomUUID(), "Sesion", LocalDateTime.of(2026, 1, 20, 8, 0),
-                LocalDateTime.of(2026, 1, 20, 10, 0), "Aula 1", "Descripcion", usuarioDocente, usuarioDocente);
-        when(institutionalScopePort.findDocenteIdByUsuario(usuarioDocente)).thenReturn(Optional.empty());
+                LocalDateTime.of(2026, 1, 20, 10, 0), usuario);
+        when(institutionalScopePort.findDocenteIdByUsuario(usuario)).thenReturn(Optional.empty());
 
         assertThrows(ForbiddenException.class, () -> useCase.execute(domain));
+        verify(sesionRepositoryPort, never()).actualizarSesion(any());
     }
 
     @Test
-    void execute_reescribe_docente_con_el_id_resuelto_y_preserva_usuarioEjecutor() {
-        final UUID usuarioDocente = UUID.randomUUID();
-        final UUID docenteId = UUID.randomUUID();
+    void execute_verifica_rol_docente_con_usuarioEjecutor_y_persiste_sin_docente() {
+        final UUID usuario = UUID.randomUUID();
         final UUID sesion = UUID.randomUUID();
-        final ActualizarSesionDomain domain = new ActualizarSesionDomain(
-                sesion, "Sesion", LocalDateTime.of(2026, 1, 20, 8, 0),
-                LocalDateTime.of(2026, 1, 20, 10, 0), "Aula 1", "Descripcion", usuarioDocente, usuarioDocente);
-        when(institutionalScopePort.findDocenteIdByUsuario(usuarioDocente)).thenReturn(Optional.of(docenteId));
+        final LocalDateTime inicio = LocalDateTime.of(2026, 1, 20, 8, 0);
+        final LocalDateTime fin = LocalDateTime.of(2026, 1, 20, 10, 0);
+        final ActualizarSesionDomain domain = new ActualizarSesionDomain(sesion, "Sesion", inicio, fin, usuario);
+        when(institutionalScopePort.findDocenteIdByUsuario(usuario)).thenReturn(Optional.of(UUID.randomUUID()));
 
         useCase.execute(domain);
 
+        verify(institutionalScopePort).findDocenteIdByUsuario(usuario);
         final ArgumentCaptor<ActualizarSesionRepositoryDTO> captor = ArgumentCaptor.forClass(ActualizarSesionRepositoryDTO.class);
         verify(sesionRepositoryPort).actualizarSesion(captor.capture());
-        assertEquals(sesion, captor.getValue().sesion());
-        assertEquals(docenteId, captor.getValue().docente());
-        assertEquals(usuarioDocente, captor.getValue().usuarioEjecutor());
+        assertEquals(new ActualizarSesionRepositoryDTO(sesion, "Sesion", inicio, fin, usuario), captor.getValue());
     }
 }

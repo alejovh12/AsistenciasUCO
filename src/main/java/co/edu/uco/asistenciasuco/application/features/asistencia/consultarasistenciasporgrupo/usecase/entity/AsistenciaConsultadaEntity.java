@@ -10,6 +10,7 @@ import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErr
 import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.asistencia.exception.AsistenciaErrorCode;
+import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.usecase.domain.RegistroAsistenciaSesionDomain;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
@@ -48,7 +49,7 @@ public final class AsistenciaConsultadaEntity {
         this.grupo = grupo;
         this.sesion = sesion;
         this.presente = presente;
-        this.estado = TextHelper.normalizeTrimUpper(estado);
+        this.estado = normalizarEstado(estado);
         this.observacion = normalizarObservacion(observacion);
     }
 
@@ -70,6 +71,17 @@ public final class AsistenciaConsultadaEntity {
         }
 
         return observacionNormalizada;
+    }
+
+    private String normalizarEstado(final String estado) {
+        final String estadoNormalizado = TextHelper.normalizeTrimUpper(estado);
+        if (TextHelper.isNullOrBlank(estadoNormalizado)) {
+            throw new ValidationException(AsistenciaErrorCode.ERR_ESTADO_ASISTENCIA_REQUERIDO);
+        }
+        if (!RegistroAsistenciaSesionDomain.ESTADOS_VALIDOS.contains(estadoNormalizado)) {
+            throw new ValidationException(AsistenciaErrorCode.ERR_ESTADO_ASISTENCIA_INVALIDO);
+        }
+        return estadoNormalizado;
     }
 
     public UUID getAsistencia() {

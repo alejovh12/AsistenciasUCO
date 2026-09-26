@@ -135,7 +135,7 @@ class GrupoControllerTest {
                         consultarEstudiantesPort,
                         AUTHENTICATED_USER_RESOLVER
                 ))
-                .setControllerAdvice(new GlobalExceptionHandler())
+                .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty()))
                 .build();
 
         mockMvc.perform(get("/api/v1/grupos/{grupoId}/estudiantes", GRUPO))
@@ -239,7 +239,7 @@ class GrupoControllerTest {
                         dto -> List.of(),
                         AUTHENTICATED_USER_RESOLVER
                 ))
-                .setControllerAdvice(new GlobalExceptionHandler())
+                .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty()))
                 .build();
     }
 

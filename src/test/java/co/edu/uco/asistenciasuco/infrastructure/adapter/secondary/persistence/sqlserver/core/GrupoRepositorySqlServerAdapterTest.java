@@ -257,7 +257,7 @@ class GrupoRepositorySqlServerAdapterTest {
 
         final UUID usuarioEjecutor = UUID.randomUUID();
         final GrupoCommandRepositoryProjection resultado = adapter.crearGrupo(new CrearGrupoRepositoryDTO(
-                GRUPO, ASIGNATURA, UUID.randomUUID(), 1, "Grupo 1", DOCENTE, "Aula 101", usuarioEjecutor
+                GRUPO, ASIGNATURA, UUID.randomUUID(), 1, "Grupo 1", DOCENTE, usuarioEjecutor
         ));
 
         final var operation = ArgumentCaptor.forClass(String.class);
@@ -268,8 +268,9 @@ class GrupoRepositorySqlServerAdapterTest {
         assertEquals("crearGrupo", operation.getValue());
         assertTrue(sql.getValue().contains("dbo.usp_crear_grupo"));
         assertTrue(sql.getValue().contains("@idUsuarioEjecutor"));
+        assertFalse(sql.getValue().contains("@aula"));
         assertEquals(GRUPO, params.getValue().getValue(GrupoRepositorySqlServerAdapter.PARAM_ID_GRUPO));
-        assertEquals("Aula 101", params.getValue().getValue(GrupoRepositorySqlServerAdapter.PARAM_AULA));
+        assertFalse(params.getValue().hasValue("aula"));
         assertEquals(CORRELACION, params.getValue().getValue(GrupoRepositorySqlServerAdapter.PARAM_ID_CORRELACION));
         assertEquals(usuarioEjecutor, params.getValue().getValue(GrupoRepositorySqlServerAdapter.PARAM_ID_USUARIO_EJECUTOR));
         assertEquals(GRUPO, resultado.idGrupo());
@@ -301,7 +302,7 @@ class GrupoRepositorySqlServerAdapterTest {
 
         final UUID usuarioEjecutor = UUID.randomUUID();
         final GrupoCommandRepositoryProjection resultado = adapter.actualizarGrupo(new ActualizarGrupoRepositoryDTO(
-                GRUPO, 1, "Grupo 1", DOCENTE, 40, "Aula 202", usuarioEjecutor
+                GRUPO, 1, "Grupo 1", DOCENTE, 40, usuarioEjecutor
         ));
 
         final var sql = ArgumentCaptor.forClass(String.class);
@@ -309,6 +310,8 @@ class GrupoRepositorySqlServerAdapterTest {
         verify(procedureExecutor).execute(anyString(), sql.capture(), params.capture());
         assertTrue(sql.getValue().contains("dbo.usp_actualizar_grupo"));
         assertTrue(sql.getValue().contains("@idUsuarioEjecutor"));
+        assertFalse(sql.getValue().contains("@aula"));
+        assertFalse(params.getValue().hasValue("aula"));
         assertEquals(40, params.getValue().getValue(GrupoRepositorySqlServerAdapter.PARAM_CUPO_MAXIMO));
         assertEquals(usuarioEjecutor, params.getValue().getValue(GrupoRepositorySqlServerAdapter.PARAM_ID_USUARIO_EJECUTOR));
         assertEquals("Grupo actualizado.", resultado.mensajeUsuario());

@@ -33,11 +33,8 @@ public final class SesionRepositorySqlServerAdapter implements SesionRepositoryP
     private static final String PARAM_ID_GRUPO = "idGrupo";
     private static final String PARAM_ID_DOCENTE = "idDocente";
     private static final String PARAM_NOMBRE = "nombre";
-    private static final String PARAM_DESCRIPCION = "descripcion";
     private static final String PARAM_FECHA_HORA_INICIO = "fechaHoraInicio";
     private static final String PARAM_FECHA_HORA_FIN = "fechaHoraFin";
-    private static final String PARAM_AULA = "aula";
-    private static final String PARAM_TIPO = "tipo";
     private static final String PARAM_ID_SESION = "idSesion";
     private static final String PARAM_ID_CORRELACION = "idCorrelacion";
     private static final String PARAM_ID_USUARIO_EJECUTOR = "idUsuarioEjecutor";
@@ -45,13 +42,9 @@ public final class SesionRepositorySqlServerAdapter implements SesionRepositoryP
     static final String SQL_CREAR_SESION = """
             EXEC dbo.usp_crear_sesion
                  @idGrupo = :idGrupo,
-                 @idDocente = :idDocente,
                  @nombre = :nombre,
-                 @descripcion = :descripcion,
                  @fechaHoraInicio = :fechaHoraInicio,
                  @fechaHoraFin = :fechaHoraFin,
-                 @aula = :aula,
-                 @tipo = :tipo,
                  @idCorrelacion = :idCorrelacion,
                  @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
@@ -70,9 +63,6 @@ public final class SesionRepositorySqlServerAdapter implements SesionRepositoryP
                  @nombre = :nombre,
                  @fechaHoraInicio = :fechaHoraInicio,
                  @fechaHoraFin = :fechaHoraFin,
-                 @aula = :aula,
-                 @descripcion = :descripcion,
-                 @idDocente = :idDocente,
                  @idCorrelacion = :idCorrelacion,
                  @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
@@ -139,13 +129,9 @@ public final class SesionRepositorySqlServerAdapter implements SesionRepositoryP
                 SQL_CREAR_SESION,
                 new MapSqlParameterSource()
                         .addValue(PARAM_ID_GRUPO, dto.getGrupo())
-                        .addValue(PARAM_ID_DOCENTE, dto.getDocente())
-                        .addValue(PARAM_NOMBRE, dto.getTema())
-                        .addValue(PARAM_DESCRIPCION, dto.getDescripcion())
+                        .addValue(PARAM_NOMBRE, dto.getNombre())
                         .addValue(PARAM_FECHA_HORA_INICIO, dto.getFechaHoraInicio())
                         .addValue(PARAM_FECHA_HORA_FIN, dto.getFechaHoraFin())
-                        .addValue(PARAM_AULA, dto.getAula())
-                        .addValue(PARAM_TIPO, dto.getTipo())
                         .addValue(PARAM_ID_CORRELACION, CorrelationIdContext.require())
                         .addValue(PARAM_ID_USUARIO_EJECUTOR, dto.getUsuarioEjecutor())
         );
@@ -165,9 +151,6 @@ public final class SesionRepositorySqlServerAdapter implements SesionRepositoryP
                         .addValue(PARAM_NOMBRE, dto.nombre())
                         .addValue(PARAM_FECHA_HORA_INICIO, dto.fechaHoraInicio())
                         .addValue(PARAM_FECHA_HORA_FIN, dto.fechaHoraFin())
-                        .addValue(PARAM_AULA, dto.aula())
-                        .addValue(PARAM_DESCRIPCION, dto.descripcion())
-                        .addValue(PARAM_ID_DOCENTE, dto.docente())
                         .addValue(PARAM_ID_CORRELACION, CorrelationIdContext.require())
                         .addValue(PARAM_ID_USUARIO_EJECUTOR, dto.usuarioEjecutor())
         );
@@ -193,8 +176,8 @@ public final class SesionRepositorySqlServerAdapter implements SesionRepositoryP
                         JdbcValueMapper.toInteger(rs.getObject("numeroSemana")),
                         JdbcValueMapper.toString(rs.getObject("codigoGrupo")),
                         JdbcValueMapper.toString(rs.getObject("nombreGrupo")),
-                        JdbcValueMapper.toLocalDateTime(rs.getObject("fechaHoraInicio")),
-                        JdbcValueMapper.toLocalDateTime(rs.getObject("fechaHoraFin"))
+                        JdbcValueMapper.toLocalDateTimeUtc(rs.getObject("fechaHoraInicio")),
+                        JdbcValueMapper.toLocalDateTimeUtc(rs.getObject("fechaHoraFin"))
                 );
             });
         } catch (DataAccessException exception) {
@@ -223,8 +206,8 @@ public final class SesionRepositorySqlServerAdapter implements SesionRepositoryP
                             JdbcValueMapper.toInteger(rs.getObject("numeroSemana")),
                             JdbcValueMapper.toString(rs.getObject("codigoGrupo")),
                             JdbcValueMapper.toString(rs.getObject("nombreGrupo")),
-                            JdbcValueMapper.toLocalDateTime(rs.getObject("fechaHoraInicio")),
-                            JdbcValueMapper.toLocalDateTime(rs.getObject("fechaHoraFin"))
+                            JdbcValueMapper.toLocalDateTimeUtc(rs.getObject("fechaHoraInicio")),
+                            JdbcValueMapper.toLocalDateTimeUtc(rs.getObject("fechaHoraFin"))
                     )
             );
         } catch (DataAccessException exception) {

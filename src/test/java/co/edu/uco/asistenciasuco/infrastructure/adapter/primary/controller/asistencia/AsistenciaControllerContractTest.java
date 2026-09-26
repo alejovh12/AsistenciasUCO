@@ -41,7 +41,7 @@ class AsistenciaControllerContractTest {
     private final SolicitarRevisionAsistenciaInputPort review = mock(SolicitarRevisionAsistenciaInputPort.class);
     private final AuthenticatedUserResolver identity = () -> ACTOR;
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(new AsistenciaController(
-            register, registerBatch, review, identity)).setControllerAdvice(new GlobalExceptionHandler()).build();
+            register, registerBatch, review, identity)).setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
     private final JsonMapper json = JsonMapper.builder().build();
 
     @Test

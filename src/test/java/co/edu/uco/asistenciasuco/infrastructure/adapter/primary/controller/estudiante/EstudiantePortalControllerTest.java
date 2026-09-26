@@ -38,7 +38,7 @@ class EstudiantePortalControllerTest {
     private final EstudiantePortalController controller =
             new EstudiantePortalController(materias, horarios, sesiones, identity);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
-            .setControllerAdvice(new GlobalExceptionHandler()).build();
+            .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
 
     @Test
     void consultarMaterias_usa_actor_autenticado() throws Exception {
@@ -55,7 +55,7 @@ class EstudiantePortalControllerTest {
     void consultarHorarios_usa_actor_autenticado() throws Exception {
         when(horarios.execute(ACTOR)).thenReturn(List.of(new HorarioEstudianteDTO(
                 UUID.randomUUID(), ACTOR, UUID.randomUUID(), "MAT-01", "Calculo", "G1", "LUNES",
-                java.time.LocalTime.of(8, 0), java.time.LocalTime.of(10, 0), "Aula 1", "Docente Uno")));
+                java.time.LocalTime.of(8, 0), java.time.LocalTime.of(10, 0), "Docente Uno")));
 
         mvc.perform(get("/api/v1/estudiante/horarios"))
                 .andExpect(status().isOk())

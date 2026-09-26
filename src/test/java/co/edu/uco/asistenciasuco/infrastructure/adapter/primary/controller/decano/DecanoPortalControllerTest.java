@@ -37,7 +37,7 @@ class DecanoPortalControllerTest {
     private final DecanoPortalController controller =
             new DecanoPortalController(consultarCoordinadores, crearCoordinador, identity);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
-            .setControllerAdvice(new GlobalExceptionHandler()).build();
+            .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
 
     @Test
     void consultarCoordinadores_usa_actor_autenticado_y_serializa_lista() throws Exception {

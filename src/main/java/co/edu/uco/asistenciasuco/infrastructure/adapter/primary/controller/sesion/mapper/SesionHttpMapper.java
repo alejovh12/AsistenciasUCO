@@ -22,13 +22,9 @@ public final class SesionHttpMapper {
         Objects.requireNonNull(request, "El request HTTP para crear sesion es obligatorio.");
         return new CrearSesionDTO(
                 request.getGrupo(),
-                request.getTema(),
-                request.getDescripcion(),
+                request.getNombre(),
                 HttpTemporalParser.parseLocalDateTime(request.getFechaHoraInicio(), "fechaHoraInicio"),
                 HttpTemporalParser.parseLocalDateTime(request.getFechaHoraFin(), "fechaHoraFin"),
-                request.getAula(),
-                request.getTipo(),
-                usuarioEjecutor,
                 usuarioEjecutor
         );
     }
@@ -54,9 +50,6 @@ public final class SesionHttpMapper {
                 request.getNombre(),
                 HttpTemporalParser.parseLocalDateTime(request.getFechaHoraInicio(), "fechaHoraInicio"),
                 HttpTemporalParser.parseLocalDateTime(request.getFechaHoraFin(), "fechaHoraFin"),
-                request.getAula(),
-                request.getDescripcion(),
-                usuarioEjecutor,
                 usuarioEjecutor
         );
     }

@@ -1,31 +1,17 @@
+---
+status: active
+type: normative
+scope: backend
+owner: backend-team
+last-reviewed: 2026-09-20
+---
+
 # External Services
 
-`externalservice` agrupa comunicaciones iniciadas por AsistenciasUCO hacia sistemas externos
-de negocio o infraestructura institucional.
+Los adapters de salida se organizan por capacidad/proveedor según [infrastructure-structure](infrastructure-structure.md). No crear un paquete externo o puerto sin consumidor funcional real.
 
-Estado actual:
+Identity provisioning usa `IdentityProviderPort` y `infrastructure.adapter.secondary.identity.keycloak.KeycloakIdentityProviderAdapter`, elegido por `KeycloakIdentityAdapterConfiguration`. Véase [contrato de identidad](../security/keycloak-identity-provider.md).
 
-- Identity provisioning existe mediante `IdentityProviderPort` y
-  `KeycloakIdentityProviderAdapter`.
-- El adapter de provisioning se selecciona desde `KeycloakIdentityAdapterConfiguration` con
-  `app.adapters.identity.provider=keycloak`.
-- Runtime authentication continua parcialmente acoplado a Keycloak en `SecurityConfig` y
-  `KeycloakGrantedAuthoritiesConverter`. Ese desacoplamiento pertenece a la siguiente fase.
+Runtime security es capacidad distinta: `JwtClaimsExtractor` / `KeycloakJwtClaimsExtractor`, `JwtDecoder` y `InstitutionalJwtAuthenticationConverter`. `SecurityConfig` ya es neutral respecto al IdP; la referencia antigua a `KeycloakGrantedAuthoritiesConverter` estaba desactualizada. Véase [seguridad runtime](../security/runtime-security-provider-architecture.md).
 
-Ejemplos futuros o pendientes:
-
-- Correo.
-- APIs institucionales.
-- Servicios externos.
-
-Spring Security Resource Server y la validacion JWT no son un adapter de external service de negocio. Permanecen en `infrastructure/adapter/primary/security` y `infrastructure/config/security`.
-
-Estructura actual de provisioning:
-
-```text
-application/secondaryports/identity/
-    IdentityProviderPort.java
-
-infrastructure/adapter/secondary/identity/
-    KeycloakIdentityProviderAdapter.java
-```
+Correo y APIs institucionales son ejemplos futuros, sin implementación declarada por este documento. El recurso OIDC/JWT pertenece al adapter primario de seguridad, no a un servicio externo de negocio.

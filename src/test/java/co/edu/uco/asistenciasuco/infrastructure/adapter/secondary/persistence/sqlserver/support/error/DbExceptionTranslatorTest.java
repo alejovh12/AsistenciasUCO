@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 
 
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
+import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
@@ -28,6 +29,114 @@ class DbExceptionTranslatorTest {
     private static final String OPERATION = "operacionPrueba";
     private static final String SAFE_INTERNAL_MESSAGE =
             "Ocurrio un error interno. Utilice el codigo de seguimiento para soporte.";
+
+    @ParameterizedTest
+    @CsvSource({"SEC_001", "SEC_002", "EST_004"})
+    void dbcode_de_autorizacion_lanza_forbidden_semantico(final String dbCode) {
+        final ForbiddenException exception = assertThrows(
+                ForbiddenException.class,
+                () -> translateFailure(
+                        "mensaje humano que no clasifica",
+                        "DBCODE=" + dbCode + "|detalle arbitrario y mutable",
+                        "registrarAsistenciasSesion"
+                )
+        );
+
+        assertEquals("FORBIDDEN", exception.getCode());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"ATT_001", "ATT_002", "ATT_003", "GEN_002", "RC_001", "SES_004"})
+    void dbcode_de_validacion_lanza_validation_semantico(final String dbCode) {
+        final ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> translateFailure(
+                        "mensaje humano que no clasifica",
+                        "DBCODE=" + dbCode + "|detalle arbitrario y mutable",
+                        "registrarAsistenciasSesion"
+                )
+        );
+
+        assertEquals("VALIDATION_ERROR", exception.getCode());
+    }
+
+    @Test
+    void dbcode_ses_001_lanza_not_found_semantico() {
+        final ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class,
+                () -> translateFailure("irrelevante", "DBCODE=SES_001|detalle", "consultarSesion")
+        );
+
+        assertEquals("RESOURCE_NOT_FOUND", exception.getCode());
+    }
+
+    @Test
+    void dbcode_ses_003_lanza_feature_unavailable_y_nunca_simula_exito() {
+        final FeatureUnavailableException exception = assertThrows(
+                FeatureUnavailableException.class,
+                () -> translateFailure("irrelevante", "DBCODE=SES_003|detalle", "cerrarSesion")
+        );
+
+        assertEquals("FEATURE_UNAVAILABLE", exception.getCode());
+    }
+
+    @Test
+    void cambiar_completamente_detalle_de_dbcode_no_cambia_clasificacion() {
+        final ForbiddenException first = assertThrows(
+                ForbiddenException.class,
+                () -> translateFailure("usuario", "DBCODE=SEC_001|texto A", OPERATION)
+        );
+        final ForbiddenException second = assertThrows(
+                ForbiddenException.class,
+                () -> translateFailure(
+                        "sesion no existe y correo duplicado",
+                        "DBCODE=SEC_001|cualquier texto completamente distinto",
+                        OPERATION
+                )
+        );
+
+        assertEquals(first.getClass(), second.getClass());
+        assertEquals(first.getCode(), second.getCode());
+        assertEquals("FORBIDDEN", second.getCode());
+    }
+
+    @Test
+    void dbcode_desconocido_falla_cerrado_y_no_se_convierte_en_validacion_por_el_detalle() {
+        final DatabaseOperationException exception = assertThrows(
+                DatabaseOperationException.class,
+                () -> translateFailure(
+                        "estado de asistencia invalido",
+                        "DBCODE=NUEVO_999|estado de asistencia y razon de causa",
+                        OPERATION
+                )
+        );
+
+        assertEquals("ERR_DB_UNCLASSIFIED", exception.getCode());
+    }
+
+    @Test
+    void dbcode_malformado_falla_cerrado_y_no_activa_el_classifier_legacy() {
+        final DatabaseOperationException exception = assertThrows(
+                DatabaseOperationException.class,
+                () -> translateFailure(
+                        "El correo ya existe.",
+                        "DBCODE=SEC-001|detalle malformado",
+                        OPERATION
+                )
+        );
+
+        assertEquals("ERR_DB_UNCLASSIFIED", exception.getCode());
+    }
+
+    @Test
+    void mensaje_legacy_sin_dbcode_conserva_compatibilidad() {
+        final ConflictException exception = assertThrows(
+                ConflictException.class,
+                () -> translateFailure("El correo ya existe.", "detalle tecnico antiguo", OPERATION)
+        );
+
+        assertEquals("ERR_UNICIDAD_CORREO", exception.getCode());
+    }
 
     @ParameterizedTest
     @CsvSource({

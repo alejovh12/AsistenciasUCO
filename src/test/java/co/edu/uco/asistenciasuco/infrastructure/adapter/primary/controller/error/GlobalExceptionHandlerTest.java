@@ -8,9 +8,15 @@ import co.edu.uco.asistenciasuco.application.features.estudiante.exception.Estud
 import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
 import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.CommonErrorCode;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.DatabaseOperationException;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.DbExceptionTranslator;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
+import co.edu.uco.asistenciasuco.application.features.catalogo.resolvermensajeusuario.primaryports.ResolverMensajeUsuarioInputPort;
+import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorDefinition;
+import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorKind;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +26,12 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+import java.util.Optional;
 
 class GlobalExceptionHandlerTest {
 
@@ -27,7 +39,29 @@ class GlobalExceptionHandlerTest {
     private static final String SAFE_INTERNAL_MESSAGE =
             "Ocurrio un error interno. Utilice el codigo de seguimiento para soporte.";
 
-    private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
+    private final GlobalExceptionHandler handler = new GlobalExceptionHandler(codigo -> java.util.Optional.empty());
+
+    @ParameterizedTest
+    @ValueSource(strings = {"SEC_001", "SEC_002"})
+    void dbcode_de_seguridad_retorna_403_forbidden_sin_exponer_codigo_db(final String dbCode) {
+        final co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException exception = assertThrows(
+                co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException.class,
+                () -> DbExceptionTranslator.throwIfFailed(
+                        false,
+                        "mensaje usuario",
+                        "DBCODE=" + dbCode + "|detalle tecnico que no debe exponerse",
+                        CORRELATION_ID,
+                        "registrarAsistenciasSesion"
+                )
+        );
+
+        final ResponseEntity<ApiErrorResponse> response = handler.handleApplication(exception, request());
+
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals("FORBIDDEN", response.getBody().code());
+        assertFalse(response.getBody().message().contains("DBCODE"));
+        assertFalse(response.getBody().message().contains(dbCode));
+    }
 
     @AfterEach
     void clearMdc() {
@@ -204,23 +238,85 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void handleApplication_resuelve_mensaje_dinamicamente_desde_catalogo_cuando_esta_presente() {
+    void resolver_con_mensaje_usa_mensaje_del_catalogo_y_conserva_metadata() {
         CorrelationIdContext.set(java.util.UUID.fromString(CORRELATION_ID));
-        final co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort mockCatalog =
-                org.mockito.Mockito.mock(co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort.class);
-        org.mockito.Mockito.when(mockCatalog.findUserMessage("ERR_CORREO_FORMATO_INVALIDO"))
-                .thenReturn(java.util.Optional.of("Mensaje dinamico desde Azure App Configuration"));
+        final ResolverMensajeUsuarioInputPort resolver = mock(ResolverMensajeUsuarioInputPort.class);
+        when(resolver.execute("ERR_CORREO_FORMATO_INVALIDO"))
+                .thenReturn(Optional.of("Mensaje dinamico desde el catalogo"));
 
-        final GlobalExceptionHandler customHandler = new GlobalExceptionHandler(mockCatalog);
-
-        final ResponseEntity<ApiErrorResponse> response = customHandler.handleApplication(
+        final ResponseEntity<ApiErrorResponse> response = new GlobalExceptionHandler(resolver).handleApplication(
                 new ValidationException(UsuarioErrorCode.ERR_CORREO_FORMATO_INVALIDO, "Dato invalido tecnico."),
                 request()
         );
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(400, response.getBody().status());
         assertEquals("ERR_CORREO_FORMATO_INVALIDO", response.getBody().code());
-        assertEquals("Mensaje dinamico desde Azure App Configuration", response.getBody().message());
+        assertEquals("Mensaje dinamico desde el catalogo", response.getBody().message());
+        assertEquals("/api/prueba", response.getBody().path());
+        assertEquals(CORRELATION_ID, response.getBody().correlationId());
+        assertEquals(List.of(), response.getBody().details());
+    }
+
+    @Test
+    void resolver_sin_mensaje_usa_mensaje_del_descriptor() {
+        final ResolverMensajeUsuarioInputPort resolver = mock(ResolverMensajeUsuarioInputPort.class);
+        when(resolver.execute("ERR_CORREO_FORMATO_INVALIDO")).thenReturn(Optional.empty());
+
+        final ResponseEntity<ApiErrorResponse> response = new GlobalExceptionHandler(resolver).handleApplication(
+                new ValidationException(UsuarioErrorCode.ERR_CORREO_FORMATO_INVALIDO, "Dato invalido tecnico."),
+                request()
+        );
+
+        assertEquals("Ingrese un correo valido, por ejemplo nombre@dominio.com.", response.getBody().message());
+    }
+
+    @Test
+    void resolver_que_falla_degrada_al_mensaje_del_descriptor() {
+        final ResolverMensajeUsuarioInputPort resolver = mock(ResolverMensajeUsuarioInputPort.class);
+        when(resolver.execute("ERR_CORREO_FORMATO_INVALIDO")).thenThrow(new IllegalStateException("fallo del resolver"));
+
+        final ResponseEntity<ApiErrorResponse> response = new GlobalExceptionHandler(resolver).handleApplication(
+                new ValidationException(UsuarioErrorCode.ERR_CORREO_FORMATO_INVALIDO, "Dato invalido tecnico."),
+                request()
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("Ingrese un correo valido, por ejemplo nombre@dominio.com.", response.getBody().message());
+    }
+
+    @Test
+    void descriptor_sin_mensaje_y_sin_catalogo_usa_reason_phrase_http() {
+        final ErrorDefinition sinMensaje = new ErrorDefinition() {
+            @Override
+            public String code() {
+                return "ERR_SIN_MENSAJE";
+            }
+
+            @Override
+            public String defaultMessage() {
+                return " ";
+            }
+
+            @Override
+            public ErrorKind kind() {
+                return ErrorKind.CONFLICT;
+            }
+        };
+
+        final ResponseEntity<ApiErrorResponse> response = handler.handleApplication(
+                new ConflictException(sinMensaje, "detalle tecnico"),
+                request()
+        );
+
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertEquals("ERR_SIN_MENSAJE", response.getBody().code());
+        assertEquals("Conflict", response.getBody().message());
+    }
+
+    @Test
+    void constructor_exige_el_puerto_de_entrada() {
+        assertThrows(NullPointerException.class, () -> new GlobalExceptionHandler(null));
     }
 
     private void assertDoesNotContainSensitiveDetail(final String message) {

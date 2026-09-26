@@ -1,3 +1,11 @@
+---
+status: active
+type: normative
+scope: backend
+owner: backend-team
+last-reviewed: 2026-09-20
+---
+
 # Estándar de Composition Root y selección de adapters
 
 ## 1. Propósito
@@ -320,34 +328,7 @@ La fuente de verdad continúa siendo la API/DB, no SSE.
 
 ### 7.5 Evolución prevista
 
-Hoy:
-
-```text
-UseCase
-  -> RealtimePublisherPort
-  -> ReactorRealtimeAdapter
-  -> SSE
-```
-
-Futuro distribuido:
-
-```text
-UseCase
-  -> EventPublisherPort
-  -> RabbitMQ
-  -> Consumer
-  -> RealtimePublisherPort
-  -> ReactorRealtimeAdapter
-  -> SSE
-```
-
-RabbitMQ resolverá distribución/durabilidad; Reactor seguirá resolviendo fan-out local.
-
-Más detalle:
-
-```text
-docs/architecture/reactive-realtime.md
-```
+La distribución/durabilidad se evalúa en [LB-005](../baseline/LINEA_BASE.md). RabbitMQ fue una alternativa mencionada históricamente, no un provider implementado ni una obligación ratificada por LB-000. La selección futura requiere ADR y mantiene neutralidad. Detalle del provider actual: [reactive-realtime](reactive-realtime.md).
 
 ---
 
@@ -380,11 +361,7 @@ KeycloakIdentityProviderAdapter
 Identity provisioning administrativo y Runtime Security son capabilities separadas aunque hoy
 usen el mismo Keycloak.
 
-Deudas actuales se mantienen documentadas en:
-
-```text
-docs/security/keycloak-identity-provider.md
-```
+Contrato detallado: [keycloak-identity-provider](../security/keycloak-identity-provider.md). Estado de deuda: [TD-013..015](../baseline/TECHNICAL_DEBT.md#td-013).
 
 ---
 
@@ -526,36 +503,22 @@ src/main/java/co/edu/uco/asistenciasuco/application/features/coordinador/common/
 | Capability | Port / SPI | Adapter actual | Selector | Estado | Trabajo pendiente |
 |---|---|---|---|---|---|
 | Persistence | `*RepositoryPort`, `*QueryPort`, `*CommandPort`, `InstitutionalScopePort` | SQL Server adapters | `app.adapters.persistence.provider=sqlserver` | Ports desacoplados; solo SQL Server | DataSource provider-specific antes de otra DB |
-| Secret Vault | `SecretVaultPort` | `AzureKeyVaultAdapter`, `LocalEnvSecretVaultAdapter` | `app.adapters.vault.provider=azure_keyvault` | Reemplazable por provider (Azure Key Vault / Local Env) | Implementado con DefaultAzureCredential y E2E verificado |
-| Parameter Catalog | `ParameterCatalogPort` | `AzureAppConfigParameterCatalogAdapter`, `SqlServerParameterCatalogAdapter` | `app.adapters.parameter-catalog.provider=azure_appconfig` | Reemplazable por provider (Azure AppConfig / SQL Server) | Implementado con caché en memoria y E2E verificado |
-| Message Catalog | `MessageCatalogPort` | `AzureAppConfigMessageCatalogAdapter`, `SqlServerMessageCatalogAdapter` | `app.adapters.message-catalog.provider=sqlserver` / `azure` | Reemplazable por provider (Azure AppConfig / SQL Server) | Implementado con soporte de label 'es', caché y E2E verificado |
+| Secret Vault | `SecretVaultPort` | `AzureKeyVaultAdapter`, `LocalEnvSecretVaultAdapter` | `app.adapters.vault.provider=azure_keyvault` | Reemplazable por provider (Azure Key Vault / Local Env) | Implementación estática con DefaultAzureCredential; evidencia operacional pendiente TD-027 |
+| Parameter Catalog | `ParameterCatalogPort` | `AzureAppConfigParameterCatalogAdapter`, `SqlServerParameterCatalogAdapter` | `app.adapters.parameter-catalog.provider=azure_appconfig` | Reemplazable por provider (Azure AppConfig / SQL Server) | Implementación estática con caché en memoria; evidencia operacional pendiente TD-027 |
+| Message Catalog | `MessageCatalogPort` | `AzureAppConfigMessageCatalogAdapter`, `SqlServerMessageCatalogAdapter` | `app.adapters.message-catalog.provider=sqlserver` / `azure` | Reemplazable por provider (Azure AppConfig / SQL Server) | Implementación estática con label 'es' y caché; evidencia operacional pendiente TD-027 |
 | Identity Provisioning | `IdentityProviderPort` | `KeycloakIdentityProviderAdapter` | `app.adapters.identity.provider=keycloak` | Reemplazable por provider; solo Keycloak | E2E y completar integración de roles/flujos institucionales pendientes |
 | Runtime Security | `JwtClaimsExtractor` | `KeycloakJwtClaimsExtractor` | `app.adapters.security.provider=keycloak` | Reemplazable por SPI; solo Keycloak | E2E y authorization hardening contextual |
 | Password Encoding | `PasswordEncoderPort` | Spring password adapter | configuración existente | Desacoplado | Sin deuda de provider relevante en esta fase |
 | Storage | `FileStoragePort` pendiente | filesystem dentro de `ArchivoController` | `app.adapters.storage.provider=local` preparado | Todavía no reemplazable | Extraer InputPort/UseCase/Port antes de MinIO |
-| Realtime | `RealtimePublisherPort` | `ReactorRealtimeAdapter` + SSE gateway | `app.adapters.realtime.provider=local-sse` | Provider seleccionado por Composition Root; solo `local-sse` | Angular SSE autenticado, API First, distribución/durabilidad con RabbitMQ |
+| Realtime | `RealtimePublisherPort` | `ReactorRealtimeAdapter` + SSE gateway | `app.adapters.realtime.provider=local-sse` | Provider seleccionado por Composition Root; solo `local-sse` | Angular SSE autenticado, API First, distribución/durabilidad con proveedor por decidir en ADR |
 | Audit | `AuditEventPublisher` | logging + soporte SQL existente | `app.adapters.audit.provider=logging` | Parcialmente desacoplado | Durable provider si se requiere |
 | Observability | APIs OTel/Micrometer/logging | OTel + Micrometer + logs estructurados | configuración externa | Provider-neutral | Validación operacional continua |
 
 ---
 
-## 15. Deuda conocida vigente
+## 15. Seguimiento de deuda
 
-1. **Identity:** completar validación E2E y flujos de provisioning institucional pendientes.
-2. **Storage:** introducir `GuardarArchivoInputPort`/`FileStoragePort` y ownership/autorización
-   contextual antes de MinIO.
-3. **Realtime frontend:** Angular aún debe consumir SSE con `Authorization: Bearer`, reconexión y
-   refresh de token.
-4. **Realtime distribuido:** `local-sse` vive en una sola JVM; RabbitMQ será necesario para
-   distribución entre instancias y eventos durables.
-5. **Realtime contract:** formalizar SSE/eventos en la fase API First / Contract First.
-6. **Persistence:** hacer `DataSource` provider-specific antes de una segunda DB.
-7. **Authorization contextual:** completar Layer 2 en endpoints documentados en
-   `runtime-security-provider-architecture.md`.
-8. **Storage security:** `/api/v1/archivos/**` mantiene deuda de ownership/contexto hasta la fase
-   Storage.
-9. **Endpoint diagnóstico realtime:** decidir antes de producción si `/api/v1/realtime/emit`
-   permanece, se condiciona por property o se elimina.
+Única autoridad de estado/prioridad: [TECHNICAL_DEBT](../baseline/TECHNICAL_DEBT.md). Identity: TD-013..015; Storage/ownership: TD-004; realtime/frontend/distribución/contrato: TD-002,003,017,018; DataSource: TD-012; autorización contextual: TD-016. Las limitaciones técnicas descritas arriba no son un segundo ledger.
 
 ---
 

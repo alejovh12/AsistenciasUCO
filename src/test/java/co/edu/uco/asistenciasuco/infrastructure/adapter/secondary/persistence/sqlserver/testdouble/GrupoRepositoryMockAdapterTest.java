@@ -31,7 +31,7 @@ class GrupoRepositoryMockAdapterTest {
         final UUID id = UUID.randomUUID();
         final GrupoCommandRepositoryProjection resultado = adapter.crearGrupo(
                 new CrearGrupoRepositoryDTO(id, UUID.randomUUID(), UUID.randomUUID(), 1, "Grupo 1", UUID.randomUUID(),
-                        "Aula 1", UUID.randomUUID()));
+                        UUID.randomUUID()));
 
         assertEquals(id, resultado.idGrupo());
         assertEquals("Grupo registrado correctamente.", resultado.mensajeUsuario());
@@ -41,7 +41,7 @@ class GrupoRepositoryMockAdapterTest {
     void actualizarGrupo_retorna_proyeccion_con_mismo_id() {
         final UUID id = UUID.randomUUID();
         final GrupoCommandRepositoryProjection resultado = adapter.actualizarGrupo(
-                new ActualizarGrupoRepositoryDTO(id, 1, "Grupo 1", UUID.randomUUID(), 30, "Aula 1", UUID.randomUUID()));
+                new ActualizarGrupoRepositoryDTO(id, 1, "Grupo 1", UUID.randomUUID(), 30, UUID.randomUUID()));
 
         assertEquals(id, resultado.idGrupo());
         assertEquals("Grupo actualizado correctamente.", resultado.mensajeUsuario());

@@ -17,7 +17,6 @@ public final class ActualizarGrupoMapper {
                 dto.nombre(),
                 dto.idDocente(),
                 dto.cupoMaximo(),
-                dto.aula(),
                 dto.usuarioEjecutor()
         );
     }

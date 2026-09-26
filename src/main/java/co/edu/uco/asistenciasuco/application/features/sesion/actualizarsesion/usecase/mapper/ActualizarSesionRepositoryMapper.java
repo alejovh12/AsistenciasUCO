@@ -20,9 +20,6 @@ public final class ActualizarSesionRepositoryMapper {
                 domain.getNombre(),
                 domain.getFechaHoraInicio(),
                 domain.getFechaHoraFin(),
-                domain.getAula(),
-                domain.getDescripcion(),
-                domain.getDocente(),
                 domain.getUsuarioEjecutor()
         );
     }

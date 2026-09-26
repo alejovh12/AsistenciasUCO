@@ -19,7 +19,7 @@ class CrearGrupoMapperTest {
         final UUID asignatura = UUID.randomUUID();
         final UUID usuarioEjecutor = UUID.randomUUID();
         final CrearGrupoDTO dto = new CrearGrupoDTO(asignatura, UUID.randomUUID(), 1, "Grupo 1",
-                UUID.randomUUID(), "Aula 1", true, usuarioEjecutor);
+                UUID.randomUUID(), true, usuarioEjecutor);
 
         final CrearGrupoDomain domain = CrearGrupoMapper.toDomain(dto);
 
@@ -31,7 +31,7 @@ class CrearGrupoMapperTest {
     @Test
     void toDomain_con_generarSesionesAutomaticas_nulo_lo_normaliza_a_falso() {
         final CrearGrupoDTO dto = new CrearGrupoDTO(UUID.randomUUID(), UUID.randomUUID(), 1, "Grupo 1",
-                UUID.randomUUID(), "Aula 1", null, UUID.randomUUID());
+                UUID.randomUUID(), null, UUID.randomUUID());
 
         final CrearGrupoDomain domain = CrearGrupoMapper.toDomain(dto);
 

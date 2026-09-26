@@ -29,12 +29,9 @@ public final class CrearSesionUseCaseImpl implements CrearSesionUseCase {
         if (ObjectHelper.isNull(domain)) {
             throw new CrosscuttingException("El dominio para crear sesion es obligatorio.");
         }
-        final var docenteId = institutionalScopePort.findDocenteIdByUsuario(domain.getDocente())
+        // Solo chequeo de rol docente: el docente resuelto no se persiste ni se propaga.
+        institutionalScopePort.findDocenteIdByUsuario(domain.getUsuarioEjecutor())
                 .orElseThrow(() -> new ForbiddenException("No fue posible resolver el docente autenticado."));
-        final var scopedDomain = new CrearSesionDomain(
-                domain.getGrupo(), domain.getTema(), domain.getDescripcion(), domain.getFechaHoraInicio(),
-                domain.getFechaHoraFin(), domain.getAula(), domain.getTipo(), docenteId, domain.getUsuarioEjecutor()
-        );
-        sesionRepositoryPort.crearSesion(CrearSesionRepositoryMapper.toRepositoryDTO(scopedDomain));
+        sesionRepositoryPort.crearSesion(CrearSesionRepositoryMapper.toRepositoryDTO(domain));
     }
 }

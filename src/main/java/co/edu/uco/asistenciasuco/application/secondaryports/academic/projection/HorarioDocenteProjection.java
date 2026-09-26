@@ -13,7 +13,6 @@ public record HorarioDocenteProjection(
         String dia,
         LocalTime horaInicio,
         LocalTime horaFin,
-        String aula,
         Integer totalEstudiantes
 ) {
 }

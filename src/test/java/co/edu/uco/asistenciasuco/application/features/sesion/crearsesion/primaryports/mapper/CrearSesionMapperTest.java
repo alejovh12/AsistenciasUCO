@@ -11,6 +11,11 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+/**
+ * Contrato TARGET (LB-001B.4A): CrearSesionDTO = (grupo, nombre, fechaHoraInicio, fechaHoraFin,
+ * usuarioEjecutor). Sin tema ni docente (Docente.id); el actor es solo Usuario.id.
+ * RED esperado: falla la compilacion porque el DTO AS-IS expone tema/docente (6 parametros).
+ */
 class CrearSesionMapperTest {
 
     @Test
@@ -21,18 +26,17 @@ class CrearSesionMapperTest {
     @Test
     void toDomain_con_dto_valido_mapea_campos() {
         final UUID grupo = UUID.randomUUID();
-        final UUID docente = UUID.randomUUID();
         final UUID usuarioEjecutor = UUID.randomUUID();
-        final CrearSesionDTO dto = new CrearSesionDTO(
-                grupo, "Tema de la sesion", "Descripcion",
-                LocalDateTime.of(2026, 1, 20, 8, 0), LocalDateTime.of(2026, 1, 20, 10, 0),
-                "Aula 1", "TEORICA", docente, usuarioEjecutor);
+        final LocalDateTime inicio = LocalDateTime.of(2026, 1, 20, 8, 0);
+        final LocalDateTime fin = LocalDateTime.of(2026, 1, 20, 10, 0);
+        final CrearSesionDTO dto = new CrearSesionDTO(grupo, "Nombre de la sesion", inicio, fin, usuarioEjecutor);
 
         final CrearSesionDomain domain = CrearSesionMapper.toDomain(dto);
 
         assertEquals(grupo, domain.getGrupo());
-        assertEquals("Tema de la sesion", domain.getTema());
-        assertEquals(docente, domain.getDocente());
+        assertEquals("Nombre de la sesion", domain.getNombre());
+        assertEquals(inicio, domain.getFechaHoraInicio());
+        assertEquals(fin, domain.getFechaHoraFin());
         assertEquals(usuarioEjecutor, domain.getUsuarioEjecutor());
     }
 }

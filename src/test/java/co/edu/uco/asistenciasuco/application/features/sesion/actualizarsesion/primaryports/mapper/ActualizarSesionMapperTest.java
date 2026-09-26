@@ -11,6 +11,10 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+/**
+ * Contrato TARGET (LB-001B.4A): ActualizarSesionDTO(sesion, nombre, fechaHoraInicio, fechaHoraFin,
+ * usuarioEjecutor). Sin docente. RED esperado: falla la compilacion (constructor AS-IS de 6 parametros).
+ */
 class ActualizarSesionMapperTest {
 
     @Test
@@ -21,17 +25,17 @@ class ActualizarSesionMapperTest {
     @Test
     void toDomain_con_dto_valido_mapea_campos() {
         final UUID sesion = UUID.randomUUID();
-        final UUID docente = UUID.randomUUID();
         final UUID usuarioEjecutor = UUID.randomUUID();
-        final ActualizarSesionDTO dto = new ActualizarSesionDTO(
-                sesion, "Sesion actualizada", LocalDateTime.of(2026, 1, 20, 8, 0),
-                LocalDateTime.of(2026, 1, 20, 10, 0), "Aula 1", "Descripcion", docente, usuarioEjecutor);
+        final LocalDateTime inicio = LocalDateTime.of(2026, 1, 20, 8, 0);
+        final LocalDateTime fin = LocalDateTime.of(2026, 1, 20, 10, 0);
+        final ActualizarSesionDTO dto = new ActualizarSesionDTO(sesion, "Sesion actualizada", inicio, fin, usuarioEjecutor);
 
         final ActualizarSesionDomain domain = ActualizarSesionMapper.toDomain(dto);
 
         assertEquals(sesion, domain.getSesion());
         assertEquals("Sesion actualizada", domain.getNombre());
-        assertEquals(docente, domain.getDocente());
+        assertEquals(inicio, domain.getFechaHoraInicio());
+        assertEquals(fin, domain.getFechaHoraFin());
         assertEquals(usuarioEjecutor, domain.getUsuarioEjecutor());
     }
 }

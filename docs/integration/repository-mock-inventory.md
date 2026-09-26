@@ -1,3 +1,11 @@
+---
+status: active
+type: active
+scope: backend
+owner: backend-team
+last-reviewed: 2026-09-20
+---
+
 # Inventario de adapters de persistencia
 
 ## Linea base actual
@@ -9,8 +17,8 @@ La persistencia productiva/default usa SQL Server mediante Spring JDBC. Los comm
 | Feature | Puerto | Adapter SQL Server | Contrato SQL |
 |---------|--------|--------------------|--------------|
 | TipoIdentificacion | `TipoIdentificacionRepositoryPort` | `TipoIdentificacionRepositorySqlServerAdapter` | `dbo.uv_tipo_identificacion` |
-| Usuario | `UsuarioRepositoryPort` | `UsuarioRepositorySqlServerAdapter` | `dbo.usp_sincronizar_usuario_interno` |
-| Docente | `DocenteRepositoryPort` | `DocenteRepositorySqlServerAdapter` | `dbo.uv_docente_identidad`, `dbo.uv_docente`, SPs internos confirmados |
+| Usuario | `UsuarioRepositoryPort` | `UsuarioRepositorySqlServerAdapter` | `dbo.usp_sincronizar_usuario` (contrato consumido por Java) |
+| Docente | `DocenteRepositoryPort` | `DocenteRepositorySqlServerAdapter` | `dbo.uv_docente_identidad`, `dbo.uv_docente`; commands no disponibles sin contrato público |
 | Grupo | `GrupoRepositoryPort` | `GrupoRepositorySqlServerAdapter` | `dbo.uv_grupo`, `dbo.usp_registrar_estudiante_en_grupo_usuario_no_existente` |
 | Sesion | `SesionRepositoryPort` | `SesionRepositorySqlServerAdapter` | Views/SPs de sesion disponibles estaticamente, pendiente validacion E2E |
 | Asistencia | `AsistenciaRepositoryPort` | `AsistenciaRepositorySqlServerAdapter` | SPs de asistencia disponibles estaticamente, pendiente validacion E2E |
@@ -30,5 +38,6 @@ Los mocks ya no se seleccionan mediante un spring profile tecnologico. No deben 
 
 ## Deuda pendiente
 
-- Validar ejecucion/E2E de Sesion y Asistencia contra SQL Server.
-- Mover mocks a `src/test/java` si se decide retirar definitivamente su presencia en `src/main/java`.
+Estado único: [TD-008](../baseline/TECHNICAL_DEBT.md#td-008). Los mocks ya viven en `src/test/java/.../persistence/sqlserver/testdouble`; la antigua tarea de moverlos está superada. Esta inspección no certifica la DB desplegada.
+
+Evidencia: [adapters reales](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/secondary/persistence/sqlserver/core) y [test doubles](../../src/test/java/co/edu/uco/asistenciasuco/infrastructure/adapter/secondary/persistence/sqlserver/testdouble).

@@ -18,7 +18,7 @@ class CrearGrupoRepositoryMapperTest {
         final UUID asignatura = UUID.randomUUID();
         final UUID usuarioEjecutor = UUID.randomUUID();
         final CrearGrupoDomain domain = new CrearGrupoDomain(asignatura, UUID.randomUUID(), 1, "Grupo 1",
-                UUID.randomUUID(), "Aula 1", true, usuarioEjecutor);
+                UUID.randomUUID(), true, usuarioEjecutor);
 
         final CrearGrupoRepositoryDTO dto = CrearGrupoRepositoryMapper.toRepositoryDTO(domain, idGrupo);
 

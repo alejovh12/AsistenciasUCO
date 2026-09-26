@@ -30,6 +30,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contrac
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -137,10 +138,27 @@ public final class SesionController {
         return ResponseEntity.ok(new ApiMessageResponse(true, "Sesion cerrada correctamente."));
     }
 
-    @PutMapping("/{sesionId}")
+    @PatchMapping("/{sesionId}")
     public ResponseEntity<ApiDataResponse<Void>> actualizarSesion(
             @PathVariable final UUID sesionId,
             @RequestBody final ActualizarSesionRequest request
+    ) {
+        return executeActualizarSesion(sesionId, request);
+    }
+
+    /** Endpoint de compatibilidad; los consumidores deben migrar a PATCH. Mismo caso de uso. */
+    @Deprecated(forRemoval = false)
+    @PutMapping("/{sesionId}")
+    public ResponseEntity<ApiDataResponse<Void>> actualizarSesionLegacy(
+            @PathVariable final UUID sesionId,
+            @RequestBody final ActualizarSesionRequest request
+    ) {
+        return executeActualizarSesion(sesionId, request);
+    }
+
+    private ResponseEntity<ApiDataResponse<Void>> executeActualizarSesion(
+            final UUID sesionId,
+            final ActualizarSesionRequest request
     ) {
         final ActualizarSesionDTO dto = SesionHttpMapper.toApplicationDTO(
                 sesionId,

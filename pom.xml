@@ -29,6 +29,8 @@
     <properties>
         <java.version>25</java.version>
         <jacoco.version>0.8.15</jacoco.version>
+        <swagger-parser.version>2.1.46</swagger-parser.version>
+        <swagger-ui.version>5.32.15</swagger-ui.version>
         <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
     </properties>
     <dependencies>
@@ -116,6 +118,12 @@
         <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.swagger.parser.v3</groupId>
+            <artifactId>swagger-parser</artifactId>
+            <version>${swagger-parser.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -212,6 +220,64 @@
                                     </limits>
                                 </rule>
                             </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.9.0</version>
+                <executions>
+                    <execution>
+                        <id>unpack-swagger-ui-assets</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.webjars</groupId>
+                                    <artifactId>swagger-ui</artifactId>
+                                    <version>${swagger-ui.version}</version>
+                                    <type>jar</type>
+                                    <outputDirectory>${project.build.outputDirectory}/runtime-docs/swagger-ui</outputDirectory>
+                                    <includes>
+                                        META-INF/resources/webjars/swagger-ui/${swagger-ui.version}/swagger-ui.css,
+                                        META-INF/resources/webjars/swagger-ui/${swagger-ui.version}/swagger-ui-bundle.js,
+                                        META-INF/resources/webjars/swagger-ui/${swagger-ui.version}/swagger-ui-standalone-preset.js,
+                                        META-INF/resources/webjars/swagger-ui/${swagger-ui.version}/favicon-16x16.png,
+                                        META-INF/resources/webjars/swagger-ui/${swagger-ui.version}/favicon-32x32.png
+                                    </includes>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-canonical-openapi</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/runtime-docs/openapi</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/docs/contracts/openapi</directory>
+                                    <filtering>false</filtering>
+                                    <includes>
+                                        <include>openapi-golden-path.yaml</include>
+                                    </includes>
+                                </resource>
+                            </resources>
                         </configuration>
                     </execution>
                 </executions>

@@ -20,9 +20,6 @@ public final class ActualizarSesionMapper {
                 dto.getNombre(),
                 dto.getFechaHoraInicio(),
                 dto.getFechaHoraFin(),
-                dto.getAula(),
-                dto.getDescripcion(),
-                dto.getDocente(),
                 dto.getUsuarioEjecutor()
         );
     }

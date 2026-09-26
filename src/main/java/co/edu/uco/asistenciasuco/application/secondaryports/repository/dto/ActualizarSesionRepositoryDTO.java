@@ -8,9 +8,6 @@ public record ActualizarSesionRepositoryDTO(
         String nombre,
         LocalDateTime fechaHoraInicio,
         LocalDateTime fechaHoraFin,
-        String aula,
-        String descripcion,
-        UUID docente,
         UUID usuarioEjecutor
 ) {
 }

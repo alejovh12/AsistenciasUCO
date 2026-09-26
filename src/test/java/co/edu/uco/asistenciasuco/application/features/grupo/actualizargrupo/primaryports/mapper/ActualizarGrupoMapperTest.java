@@ -17,7 +17,7 @@ class ActualizarGrupoMapperTest {
         final UUID grupo = UUID.randomUUID();
         final UUID usuarioEjecutor = UUID.randomUUID();
         final ActualizarGrupoDTO dto = new ActualizarGrupoDTO(
-                grupo, 1, "Grupo 1", UUID.randomUUID(), 30, "Aula 1", usuarioEjecutor
+                grupo, 1, "Grupo 1", UUID.randomUUID(), 30, usuarioEjecutor
         );
 
         final ActualizarGrupoDomain domain = ActualizarGrupoMapper.toDomain(dto);

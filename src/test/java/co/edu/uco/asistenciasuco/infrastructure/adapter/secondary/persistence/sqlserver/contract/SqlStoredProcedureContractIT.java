@@ -197,7 +197,6 @@ class SqlStoredProcedureContractIT {
                         input("@codigo", "int"),
                         input("@nombre", "nvarchar"),
                         input("@idDocente", "uniqueidentifier"),
-                        input("@aula", "nvarchar"),
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@idUsuarioEjecutor", "uniqueidentifier")
                 )),
@@ -207,7 +206,6 @@ class SqlStoredProcedureContractIT {
                         input("@nombre", "nvarchar"),
                         input("@idDocente", "uniqueidentifier"),
                         input("@cupoMaximo", "int"),
-                        input("@aula", "nvarchar"),
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@idUsuarioEjecutor", "uniqueidentifier")
                 )),
@@ -230,13 +228,9 @@ class SqlStoredProcedureContractIT {
                 )),
                 Arguments.of("usp_crear_sesion", List.of(
                         input("@idGrupo", "uniqueidentifier"),
-                        input("@idDocente", "uniqueidentifier"),
                         input("@nombre", "nvarchar"),
-                        input("@descripcion", "nvarchar"),
                         input("@fechaHoraInicio", "datetime2"),
                         input("@fechaHoraFin", "datetime2"),
-                        input("@aula", "nvarchar"),
-                        input("@tipo", "nvarchar"),
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@idUsuarioEjecutor", "uniqueidentifier")
                 )),
@@ -245,9 +239,6 @@ class SqlStoredProcedureContractIT {
                         input("@nombre", "nvarchar"),
                         input("@fechaHoraInicio", "datetime2"),
                         input("@fechaHoraFin", "datetime2"),
-                        input("@aula", "nvarchar"),
-                        input("@descripcion", "nvarchar"),
-                        input("@idDocente", "uniqueidentifier"),
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@idUsuarioEjecutor", "uniqueidentifier")
                 )),

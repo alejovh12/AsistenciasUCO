@@ -8,6 +8,8 @@ import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErr
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.exception.TipoIdentificacionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
 import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorDefinition;
+import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.CommonErrorCode;
+import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.SecurityErrorCode;
 import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 
 import java.text.Normalizer;
@@ -25,6 +27,32 @@ final class DbFailureClassifier {
     }
 
     static ErrorDefinition classify(final String userMessage, final String technicalMessage, final String operation) {
+        final var formalError = DbTechnicalError.parse(technicalMessage);
+        if (formalError.isPresent()) {
+            return classifyDbCode(formalError.get().codigo());
+        }
+        if (DbTechnicalError.hasDbCodeMarker(technicalMessage)) {
+            return DatabaseErrorCode.ERR_DB_UNCLASSIFIED;
+        }
+        return classifyLegacy(userMessage, technicalMessage, operation);
+    }
+
+    private static ErrorDefinition classifyDbCode(final String code) {
+        return switch (code) {
+            case "SEC_001", "SEC_002", "EST_004" -> SecurityErrorCode.FORBIDDEN;
+            case "ATT_001", "ATT_002", "ATT_003", "GEN_002", "RC_001", "SES_004" ->
+                    CommonErrorCode.VALIDATION_ERROR;
+            case "SES_001" -> CommonErrorCode.RESOURCE_NOT_FOUND;
+            case "SES_003" -> DatabaseErrorCode.FEATURE_UNAVAILABLE;
+            default -> DatabaseErrorCode.ERR_DB_UNCLASSIFIED;
+        };
+    }
+
+    private static ErrorDefinition classifyLegacy(
+            final String userMessage,
+            final String technicalMessage,
+            final String operation
+    ) {
         final String message = normalize(userMessage + " " + technicalMessage);
         final String normalizedOperation = normalize(operation);
 

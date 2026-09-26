@@ -1,3 +1,11 @@
+---
+status: active
+type: normative
+scope: backend
+owner: backend-team
+last-reviewed: 2026-09-20
+---
+
 # Backend Package Structure
 
 Ver `docs/architecture/infrastructure-structure.md` para el árbol completo y las reglas de

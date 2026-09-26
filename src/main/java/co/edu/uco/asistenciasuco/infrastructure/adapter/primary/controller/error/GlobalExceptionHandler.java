@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error;
 
 import co.edu.uco.asistenciasuco.application.exception.ApplicationException;
+import co.edu.uco.asistenciasuco.application.features.catalogo.resolvermensajeusuario.primaryports.ResolverMensajeUsuarioInputPort;
 import co.edu.uco.asistenciasuco.crosscutting.exception.TechnicalException;
 import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 import co.edu.uco.asistenciasuco.crosscutting.sanitization.SensitiveDataSanitizer;
@@ -26,8 +27,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
-import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort;
 import java.util.UUID;
 
 @RestControllerAdvice
@@ -35,14 +36,10 @@ public final class GlobalExceptionHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    private final MessageCatalogPort messageCatalogPort;
+    private final ResolverMensajeUsuarioInputPort resolverMensajeUsuario;
 
-    public GlobalExceptionHandler(final MessageCatalogPort messageCatalogPort) {
-        this.messageCatalogPort = messageCatalogPort;
-    }
-
-    public GlobalExceptionHandler() {
-        this(null);
+    public GlobalExceptionHandler(final ResolverMensajeUsuarioInputPort resolverMensajeUsuario) {
+        this.resolverMensajeUsuario = Objects.requireNonNull(resolverMensajeUsuario, "El puerto ResolverMensajeUsuarioInputPort es obligatorio.");
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -180,15 +177,13 @@ public final class GlobalExceptionHandler {
     }
 
     private String resolveErrorMessage(final ApiErrorDescriptor descriptor) {
-        if (messageCatalogPort != null && descriptor.code() != null) {
-            try {
-                final Optional<String> catalogMessage = messageCatalogPort.findUserMessage(descriptor.code());
-                if (catalogMessage.isPresent() && !TextHelper.isNullOrBlank(catalogMessage.get())) {
-                    return catalogMessage.get();
-                }
-            } catch (final Exception e) {
-                LOGGER.debug("No se pudo resolver mensaje en catalogo para codigo: {}", descriptor.code());
+        try {
+            final Optional<String> catalogMessage = resolverMensajeUsuario.execute(descriptor.code());
+            if (catalogMessage != null && catalogMessage.isPresent() && !TextHelper.isNullOrBlank(catalogMessage.get())) {
+                return catalogMessage.get();
             }
+        } catch (final RuntimeException e) {
+            LOGGER.debug("No se pudo resolver mensaje de usuario para codigo: {}", descriptor.code());
         }
         return TextHelper.isNullOrBlank(descriptor.message()) ? descriptor.status().getReasonPhrase() : descriptor.message();
     }

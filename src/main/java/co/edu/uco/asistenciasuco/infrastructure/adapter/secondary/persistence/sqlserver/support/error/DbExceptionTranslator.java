@@ -9,10 +9,13 @@ import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.excepti
 import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.ApplicationException;
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
+import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorDefinition;
+import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.CommonErrorCode;
+import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.SecurityErrorCode;
 import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 import co.edu.uco.asistenciasuco.crosscutting.sanitization.SensitiveDataSanitizer;
 import org.slf4j.Logger;
@@ -28,7 +31,8 @@ public final class DbExceptionTranslator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DbExceptionTranslator.class);
     private static final Set<ErrorDefinition> FORBIDDEN_CODES = Set.of(
-            AsistenciaErrorCode.ERR_ESTUDIANTE_NO_PERTENECE_SESION
+            AsistenciaErrorCode.ERR_ESTUDIANTE_NO_PERTENECE_SESION,
+            SecurityErrorCode.FORBIDDEN
     );
     private static final Set<ErrorDefinition> NOT_FOUND_CODES = Set.of(
             UsuarioErrorCode.ERR_USUARIO_NO_EXISTE,
@@ -36,7 +40,8 @@ public final class DbExceptionTranslator {
             DocenteErrorCode.ERR_DOCENTE_NO_EXISTE,
             GrupoErrorCode.ERR_GRUPO_NO_EXISTE,
             TipoIdentificacionErrorCode.ERR_TIPO_IDENTIFICACION_NO_EXISTE,
-            SesionErrorCode.ERR_SESION_NO_EXISTE
+            SesionErrorCode.ERR_SESION_NO_EXISTE,
+            CommonErrorCode.RESOURCE_NOT_FOUND
     );
     private static final Set<ErrorDefinition> CONFLICT_CODES = Set.of(
             UsuarioErrorCode.ERR_UNICIDAD_CORREO,
@@ -54,7 +59,8 @@ public final class DbExceptionTranslator {
     );
     private static final Set<ErrorDefinition> VALIDATION_CODES = Set.of(
             UsuarioErrorCode.ERR_NOMBRE_PERSONA_INVALIDO,
-            AsistenciaErrorCode.ERR_ESTADO_ASISTENCIA_INVALIDO
+            AsistenciaErrorCode.ERR_ESTADO_ASISTENCIA_INVALIDO,
+            CommonErrorCode.VALIDATION_ERROR
     );
 
     private static final Map<Set<ErrorDefinition>, ExceptionFactory> EXCEPTION_BY_CODES = Map.of(
@@ -80,6 +86,10 @@ public final class DbExceptionTranslator {
 
         final ErrorDefinition code = DbFailureClassifier.classify(userMessage, technicalMessage, operation);
         logFailedResult(code, userMessage, technicalMessage, correlationId, operation);
+
+        if (DatabaseErrorCode.FEATURE_UNAVAILABLE.equals(code)) {
+            throw new FeatureUnavailableException(code.defaultMessage());
+        }
 
         for (final Map.Entry<Set<ErrorDefinition>, ExceptionFactory> entry : EXCEPTION_BY_CODES.entrySet()) {
             if (entry.getKey().contains(code)) {

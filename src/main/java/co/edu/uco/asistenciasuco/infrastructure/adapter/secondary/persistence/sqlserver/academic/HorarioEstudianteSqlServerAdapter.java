@@ -21,7 +21,7 @@ public final class HorarioEstudianteSqlServerAdapter implements HorarioEstudiant
     @Override
     public List<HorarioEstudianteProjection> consultarHorarioEstudiante(final UUID idEstudiante) {
         return jdbcOperations.query("""
-                SELECT id, idEstudiante, idGrupo, codigoMateria, nombreMateria, grupo, dia, horaInicio, horaFin, aula, docente
+                SELECT id, idEstudiante, idGrupo, codigoMateria, nombreMateria, grupo, dia, horaInicio, horaFin, docente
                 FROM dbo.uv_horario_estudiante
                 WHERE idEstudiante = :idEstudiante
                 ORDER BY dia, horaInicio, nombreMateria
@@ -35,7 +35,6 @@ public final class HorarioEstudianteSqlServerAdapter implements HorarioEstudiant
                 JdbcValueMapper.toString(rs.getObject("dia")),
                 JdbcValueMapper.toLocalTime(rs.getObject("horaInicio")),
                 JdbcValueMapper.toLocalTime(rs.getObject("horaFin")),
-                JdbcValueMapper.toString(rs.getObject("aula")),
                 JdbcValueMapper.toString(rs.getObject("docente"))
         ));
     }

@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.mapping;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Date;
@@ -8,6 +9,7 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -128,6 +130,55 @@ class JdbcValueMapperTest {
     @Test
     void toLocalDateTime_con_string_lo_parsea() {
         assertEquals(LocalDateTime.of(2026, 1, 20, 8, 0), JdbcValueMapper.toLocalDateTime("2026-01-20T08:00:00"));
+    }
+
+    private TimeZone originalDefaultTimeZone;
+
+    @AfterEach
+    void restoreDefaultTimeZone() {
+        if (originalDefaultTimeZone != null) {
+            TimeZone.setDefault(originalDefaultTimeZone);
+            originalDefaultTimeZone = null;
+        }
+    }
+
+    /**
+     * Contrato TARGET (LB-001B.3, CONTRACT_FREEZE.md secc. 5, punto 2 / punto N de
+     * TASK_AUTORIZADA.md &sect;27 y &sect;20-21): {@code Sesion.fechaHoraInicio}/{@code fechaHoraFin}
+     * son {@code DATETIME2} con semantica UTC target; ninguna capa debe interpretarlos con
+     * {@code ZoneId.systemDefault()} ni asumir {@code America/Bogota}. Prueba de estabilidad: el mismo
+     * {@code java.sql.Timestamp} de entrada (construido con {@code TimeZone.getDefault()=UTC}, de
+     * forma que sus millis-desde-epoca representan literalmente el wall-clock esperado) debe producir
+     * el mismo {@code LocalDateTime} de salida sin importar el {@code user.timezone} de la JVM activo
+     * en el momento de la lectura.
+     *
+     * <p>RED esperado: {@code JdbcValueMapper.toLocalDateTime(Object)} delega en
+     * {@code java.sql.Timestamp#toLocalDateTime()}, cuyos campos (year/month/day/hour/minute/second)
+     * se derivan internamente vía {@code java.util.Date} usando {@code TimeZone.getDefault()} en el
+     * momento de la lectura — no una marca UTC explícita. Al construir el {@code Timestamp} bajo
+     * {@code TimeZone=UTC} y leerlo bajo {@code TimeZone=America/Bogota} (UTC-05:00), el
+     * {@code LocalDateTime} resultante se desplaza ~5 horas respecto del valor original, revelando la
+     * dependencia oculta de {@code systemDefault()} que CONTRACT_FREEZE.md secc. 5 exige eliminar.</p>
+     */
+    @Test
+    void toLocalDateTime_no_depende_del_systemDefault_de_la_jvm_para_datetime2_utc_de_sesion() {
+        originalDefaultTimeZone = TimeZone.getDefault();
+        try {
+            TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+            final LocalDateTime valorEscritoComoUtc = LocalDateTime.of(2026, 6, 15, 8, 30, 0);
+            final Timestamp timestampDesdeJdbc = Timestamp.valueOf(valorEscritoComoUtc);
+
+            TimeZone.setDefault(TimeZone.getTimeZone("America/Bogota"));
+            final LocalDateTime resultadoBajoOtroTimezone = JdbcValueMapper.toLocalDateTimeUtc(timestampDesdeJdbc);
+
+            assertEquals(valorEscritoComoUtc, resultadoBajoOtroTimezone,
+                    "Sesion.fechaHoraInicio/fechaHoraFin debe leerse igual sin importar user.timezone de la "
+                            + "JVM (DB_BASELINE_CONTRACT.md declara DATETIME2 con semantica UTC; prohibido "
+                            + "ZoneId.systemDefault()/TimeZone.getDefault() implicito, CONTRACT_FREEZE.md secc. 5).");
+        } finally {
+            TimeZone.setDefault(originalDefaultTimeZone);
+            originalDefaultTimeZone = null;
+        }
     }
 
     @Test

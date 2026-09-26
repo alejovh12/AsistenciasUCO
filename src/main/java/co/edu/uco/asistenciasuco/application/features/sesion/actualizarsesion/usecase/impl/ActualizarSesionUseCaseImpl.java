@@ -30,18 +30,9 @@ public final class ActualizarSesionUseCaseImpl implements ActualizarSesionUseCas
             throw new CrosscuttingException("El dominio para actualizar sesion es obligatorio.");
         }
 
-        final var docenteId = institutionalScopePort.findDocenteIdByUsuario(domain.getDocente())
+        // Solo chequeo de rol docente: el docente resuelto no se persiste ni se propaga.
+        institutionalScopePort.findDocenteIdByUsuario(domain.getUsuarioEjecutor())
                 .orElseThrow(() -> new ForbiddenException("No fue posible resolver el docente autenticado."));
-        final var scopedDomain = new ActualizarSesionDomain(
-                domain.getSesion(),
-                domain.getNombre(),
-                domain.getFechaHoraInicio(),
-                domain.getFechaHoraFin(),
-                domain.getAula(),
-                domain.getDescripcion(),
-                docenteId,
-                domain.getUsuarioEjecutor()
-        );
-        sesionRepositoryPort.actualizarSesion(ActualizarSesionRepositoryMapper.toRepositoryDTO(scopedDomain));
+        sesionRepositoryPort.actualizarSesion(ActualizarSesionRepositoryMapper.toRepositoryDTO(domain));
     }
 }

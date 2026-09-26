@@ -1,3 +1,11 @@
+---
+status: active
+type: runbook
+scope: backend
+owner: backend-team
+last-reviewed: 2026-09-20
+---
+
 # AsistenciasUCO Backend CI Baseline
 
 Este documento define el gate mínimo que debe conservar el backend antes de incorporar capacidades tecnológicas adicionales.
@@ -63,6 +71,10 @@ y conserva Surefire y Failsafe como artifacts.
 
 No debe convertirse en required check hasta contar con una DB CI reproducible y versionada. No debe apuntar a una DB personal ni de producción.
 
+## Sonar y evidencia de ejecución
+
+`backend-ci.yml` ejecuta análisis Sonar y espera Quality Gate solo en PR/push develop. Los umbrales remotos y Rulesets no están versionados en este checkout; no declarar PASS o protección efectiva sin evidencia de GitHub/Sonar. Gates locales exactos en [TESTING_STANDARD](../docs/testing/TESTING_STANDARD.md).
+
 ## Branch governance
 
 Configurar GitHub Rulesets para `develop` y `master`:
@@ -89,7 +101,10 @@ Configurar GitHub Rulesets para `develop` y `master`:
 - El artefacto Docker debe construirse a partir del JAR generado por el mismo gate.
 - Los secretos nunca se versionan.
 
-## Evolución prevista
+## Evolución prevista (opciones sujetas al roadmap activo)
+
+La secuencia y selección futura se rigen por [LINEA_BASE](../docs/baseline/LINEA_BASE.md); la lista siguiente no autoriza incorporar tecnologías ni implica que ya existan.
+
 
 Cuando se agreguen nuevas capacidades, CI debe crecer con ellas:
 

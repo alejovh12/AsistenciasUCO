@@ -1,3 +1,11 @@
+---
+status: active
+type: runbook
+scope: backend
+owner: backend-team
+last-reviewed: 2026-09-20
+---
+
 # Keycloak — AsistenciasUCO (LOCAL/DEV)
 
 Infraestructura local de identidad y autenticacion para AsistenciasUCO, con bootstrap
