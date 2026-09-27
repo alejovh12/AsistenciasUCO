@@ -43,6 +43,10 @@ final class DbFailureClassifier {
             case "ATT_001", "ATT_002", "ATT_003", "GEN_002", "RC_001", "SES_004" ->
                     CommonErrorCode.VALIDATION_ERROR;
             case "SES_001" -> CommonErrorCode.RESOURCE_NOT_FOUND;
+            case "ERR_GRUPO_NO_EXISTE" -> GrupoErrorCode.ERR_GRUPO_NO_EXISTE;
+            case "ERR_CUPO_SUPERADO" -> GrupoErrorCode.ERR_CUPO_SUPERADO;
+            case "ERR_MATRICULA_DUPLICADA" -> GrupoErrorCode.ERR_MATRICULA_DUPLICADA;
+            case "ERR_GRUPO_NO_HABILITADO" -> GrupoErrorCode.ERR_GRUPO_NO_HABILITADO;
             case "SES_003" -> DatabaseErrorCode.FEATURE_UNAVAILABLE;
             default -> DatabaseErrorCode.ERR_DB_UNCLASSIFIED;
         };

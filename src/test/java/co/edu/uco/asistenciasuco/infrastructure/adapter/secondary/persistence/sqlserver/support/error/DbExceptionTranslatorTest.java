@@ -80,6 +80,39 @@ class DbExceptionTranslatorTest {
         assertEquals("FEATURE_UNAVAILABLE", exception.getCode());
     }
 
+    @ParameterizedTest
+    @CsvSource({
+            "ERR_CUPO_SUPERADO, ERR_CUPO_SUPERADO",
+            "ERR_MATRICULA_DUPLICADA, ERR_MATRICULA_DUPLICADA",
+            "ERR_GRUPO_NO_HABILITADO, ERR_GRUPO_NO_HABILITADO"
+    })
+    void dbcode_de_conflicto_de_grupo_lanza_conflict_semantico(final String dbCode, final String expectedCode) {
+        final ConflictException exception = assertThrows(
+                ConflictException.class,
+                () -> translateFailure(
+                        "mensaje humano",
+                        "DBCODE=" + dbCode + "|detalle grupo",
+                        "registrarEstudianteEnGrupo"
+                )
+        );
+
+        assertEquals(expectedCode, exception.getCode());
+    }
+
+    @Test
+    void dbcode_de_grupo_no_existe_lanza_resource_not_found() {
+        final ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class,
+                () -> translateFailure(
+                        "mensaje humano",
+                        "DBCODE=ERR_GRUPO_NO_EXISTE|detalle grupo inexistente",
+                        "consultarGrupo"
+                )
+        );
+
+        assertEquals("ERR_GRUPO_NO_EXISTE", exception.getCode());
+    }
+
     @Test
     void cambiar_completamente_detalle_de_dbcode_no_cambia_clasificacion() {
         final ForbiddenException first = assertThrows(
