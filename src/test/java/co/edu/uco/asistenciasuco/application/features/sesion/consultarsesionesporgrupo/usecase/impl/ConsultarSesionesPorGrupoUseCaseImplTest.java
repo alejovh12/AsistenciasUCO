@@ -6,6 +6,7 @@ import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionespo
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.SesionRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
+import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -13,7 +14,9 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class ConsultarSesionesPorGrupoUseCaseImplTest {
@@ -40,6 +43,29 @@ class ConsultarSesionesPorGrupoUseCaseImplTest {
 
         assertEquals(1, resultado.size());
         assertEquals(GRUPO_PROPIO, resultado.getFirst().getGrupo());
+    }
+
+    @Test
+    void dominio_nulo_es_rechazado_sin_consultar_puertos() {
+        assertThrows(CrosscuttingException.class, () -> useCase.execute(null));
+
+        verifyNoInteractions(sesionRepositoryPort, institutionalScopePort);
+    }
+
+    @Test
+    void grupo_propio_sin_sesiones_devuelve_lista_vacia() {
+        when(institutionalScopePort.canDocenteAccessGrupo(DOCENTE_A, GRUPO_PROPIO)).thenReturn(true);
+        when(sesionRepositoryPort.consultarSesionesPorGrupo(GRUPO_PROPIO)).thenReturn(List.of());
+
+        assertTrue(useCase.execute(new ConsultarSesionesPorGrupoDomain(GRUPO_PROPIO, DOCENTE_A)).isEmpty());
+    }
+
+    @Test
+    void constructor_rechaza_puertos_nulos() {
+        assertThrows(NullPointerException.class,
+                () -> new ConsultarSesionesPorGrupoUseCaseImpl(null, institutionalScopePort));
+        assertThrows(NullPointerException.class,
+                () -> new ConsultarSesionesPorGrupoUseCaseImpl(sesionRepositoryPort, null));
     }
 
     @Test
