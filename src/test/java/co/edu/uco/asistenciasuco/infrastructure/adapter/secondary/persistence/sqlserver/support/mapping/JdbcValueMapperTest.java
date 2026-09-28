@@ -211,4 +211,34 @@ class JdbcValueMapperTest {
     void toString_con_valor_no_nulo_lo_convierte() {
         assertEquals("42", JdbcValueMapper.toString(42));
     }
+
+    @Test
+    void toLocalDateTimeUtc_con_nulo_retorna_nulo() {
+        assertNull(JdbcValueMapper.toLocalDateTimeUtc(null));
+    }
+
+    @Test
+    void toLocalDateTimeUtc_con_localdatetime_lo_retorna_sin_alterar() {
+        final LocalDateTime value = LocalDateTime.of(2026, 9, 14, 8, 30);
+
+        assertEquals(value, JdbcValueMapper.toLocalDateTimeUtc(value));
+    }
+
+    @Test
+    void toLocalDateTimeUtc_con_timestamp_lo_interpreta_como_instante_utc() {
+        final Timestamp timestamp = Timestamp.from(java.time.Instant.parse("2026-09-14T08:30:00Z"));
+
+        assertEquals(LocalDateTime.of(2026, 9, 14, 8, 30), JdbcValueMapper.toLocalDateTimeUtc(timestamp));
+    }
+
+    @Test
+    void toLocalDateTimeUtc_con_texto_iso_lo_parsea() {
+        assertEquals(LocalDateTime.of(2026, 9, 14, 8, 30), JdbcValueMapper.toLocalDateTimeUtc("2026-09-14T08:30:00"));
+    }
+
+    @Test
+    void toLocalDateTimeUtc_con_texto_invalido_falla_en_lugar_de_inventar_una_fecha() {
+        org.junit.jupiter.api.Assertions.assertThrows(java.time.format.DateTimeParseException.class,
+                () -> JdbcValueMapper.toLocalDateTimeUtc("no-es-fecha"));
+    }
 }

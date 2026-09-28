@@ -15,12 +15,14 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.jdbc.core.ResultSetExtractor;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 
 import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.TimeZone;
 import java.util.UUID;
 
@@ -244,5 +246,62 @@ class SesionRepositorySqlServerAdapterTest {
                 .thenThrow(new DataAccessResourceFailureException("sin conexión"));
         assertThrows(DatabaseOperationException.class,
                 () -> adapter.consultarSesion(new ConsultarSesionRepositoryDTO(SESSION)));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void consultarSesionesPorGrupoMapeaFilasDeLaVistaYFiltraPorGrupo() throws Exception {
+        final ResultSet resultSet = mock(ResultSet.class);
+        final LocalDateTime start = LocalDateTime.of(2026, 9, 14, 8, 0);
+        when(resultSet.getObject("id")).thenReturn(SESSION.toString());
+        when(resultSet.getObject("idGrupo")).thenReturn(GROUP);
+        when(resultSet.getObject("nombre")).thenReturn("Sesión 1");
+        when(resultSet.getObject("numero")).thenReturn(3L);
+        when(resultSet.getObject("codigo")).thenReturn("S03");
+        when(resultSet.getObject("numeroSemana")).thenReturn("4");
+        when(resultSet.getObject("codigoGrupo")).thenReturn("G01");
+        when(resultSet.getObject("nombreGrupo")).thenReturn("Grupo 1");
+        when(resultSet.getObject("fechaHoraInicio")).thenReturn(start);
+        when(resultSet.getObject("fechaHoraFin")).thenReturn(null);
+        when(jdbc.query(anyString(), any(MapSqlParameterSource.class), any(RowMapper.class)))
+                .thenAnswer(invocation -> List.of(((RowMapper<SesionRepositoryProjection>) invocation.getArgument(2))
+                        .mapRow(resultSet, 0)));
+
+        final List<SesionRepositoryProjection> result = adapter.consultarSesionesPorGrupo(GROUP);
+
+        assertEquals(1, result.size());
+        final SesionRepositoryProjection row = result.getFirst();
+        assertEquals(SESSION, row.getSesion());
+        assertEquals(GROUP, row.getGrupo());
+        assertEquals("Sesión 1", row.getNombre());
+        assertEquals(3, row.getNumero());
+        assertEquals("S03", row.getCodigo());
+        assertEquals(4, row.getNumeroSemana());
+        assertEquals("G01", row.getCodigoGrupo());
+        assertEquals("Grupo 1", row.getNombreGrupo());
+        assertEquals(start, row.getFechaHoraInicio());
+        assertNull(row.getFechaHoraFin());
+        final var sql = ArgumentCaptor.forClass(String.class);
+        final var params = ArgumentCaptor.forClass(MapSqlParameterSource.class);
+        verify(jdbc).query(sql.capture(), params.capture(), any(RowMapper.class));
+        assertTrue(sql.getValue().contains("FROM dbo.uv_sesion"));
+        assertTrue(sql.getValue().contains("WHERE idGrupo = :idGrupo"));
+        assertEquals(GROUP, params.getValue().getValue("idGrupo"));
+    }
+
+    @Test
+    void consultarSesionesPorGrupoDevuelveListaVaciaCuandoElGrupoNoTieneSesiones() {
+        when(jdbc.query(anyString(), any(MapSqlParameterSource.class), any(RowMapper.class))).thenReturn(List.of());
+
+        assertTrue(adapter.consultarSesionesPorGrupo(GROUP).isEmpty());
+    }
+
+    @Test
+    void consultarSesionesPorGrupoRechazaGrupoNuloYTraduceFallosJdbc() {
+        assertThrows(CrosscuttingException.class, () -> adapter.consultarSesionesPorGrupo(null));
+
+        when(jdbc.query(anyString(), any(MapSqlParameterSource.class), any(RowMapper.class)))
+                .thenThrow(new DataAccessResourceFailureException("sin conexión"));
+        assertThrows(DatabaseOperationException.class, () -> adapter.consultarSesionesPorGrupo(GROUP));
     }
 }

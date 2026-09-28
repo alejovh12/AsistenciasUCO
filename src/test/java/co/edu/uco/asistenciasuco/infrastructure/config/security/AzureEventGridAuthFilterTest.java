@@ -187,4 +187,39 @@ class AzureEventGridAuthFilterTest {
         assertEquals(401, outcome.status());
         assertEquals(false, outcome.chainContinued());
     }
+
+    @Test
+    void isWebhookRequest_reconoce_solo_la_ruta_exacta_sin_context_path() {
+        final MockHttpServletRequest exact = webhookRequest();
+        final MockHttpServletRequest withSuffix = new MockHttpServletRequest("POST", WEBHOOK_URI + "/extra");
+        withSuffix.setRequestURI(WEBHOOK_URI + "/extra");
+
+        assertEquals(true, AzureEventGridAuthFilter.isWebhookRequest(exact));
+        assertEquals(false, AzureEventGridAuthFilter.isWebhookRequest(withSuffix));
+    }
+
+    @Test
+    void isWebhookRequest_con_uri_nula_no_es_webhook() {
+        final MockHttpServletRequest request = new MockHttpServletRequest("POST", WEBHOOK_URI);
+        request.setRequestURI(null);
+
+        assertEquals(false, AzureEventGridAuthFilter.isWebhookRequest(request));
+    }
+
+    @Test
+    void isWebhookRequest_con_context_path_solo_lo_descuenta_si_es_prefijo_de_la_uri() {
+        final MockHttpServletRequest prefixed = new MockHttpServletRequest("POST", "/app" + WEBHOOK_URI);
+        prefixed.setContextPath("/app");
+        prefixed.setRequestURI("/app" + WEBHOOK_URI);
+        final MockHttpServletRequest notPrefix = new MockHttpServletRequest("POST", WEBHOOK_URI);
+        notPrefix.setContextPath("/app");
+        notPrefix.setRequestURI(WEBHOOK_URI);
+        final MockHttpServletRequest emptyContext = new MockHttpServletRequest("POST", WEBHOOK_URI);
+        emptyContext.setContextPath("");
+        emptyContext.setRequestURI(WEBHOOK_URI);
+
+        assertEquals(true, AzureEventGridAuthFilter.isWebhookRequest(prefixed));
+        assertEquals(true, AzureEventGridAuthFilter.isWebhookRequest(notPrefix));
+        assertEquals(true, AzureEventGridAuthFilter.isWebhookRequest(emptyContext));
+    }
 }

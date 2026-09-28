@@ -118,6 +118,41 @@ class ProcesarEventoAzureUseCaseImplTest {
     }
 
     @Test
+    void appConfigurationUsaElSubjectCuandoNoHayDataOLaClaveEsNula() {
+        final Map<String, Object> dataConClaveNula = new HashMap<>();
+        dataConClaveNula.put("key", null);
+
+        useCase.procesarEvento("Microsoft.AppConfiguration.KeyValueModified", "grupo:clave", null);
+        useCase.procesarEvento("Microsoft.AppConfiguration.KeyValueModified", "otro:valor", dataConClaveNula);
+        useCase.procesarEvento("Microsoft.AppConfiguration.KeyValueModified", "  messages:technical:ERR-1 ", Map.of());
+
+        assertEquals(List.of("parameter:grupo:clave", "parameter:otro:valor", "message:ERR-1"), invalidationPort.actions);
+    }
+
+    @Test
+    void appConfigurationConSubjectEnBlancoYSinClaveInvalidaTodo() {
+        useCase.procesarEvento("Microsoft.AppConfiguration.KeyValueDeleted", "   ", null);
+        useCase.procesarEvento("Microsoft.AppConfiguration.KeyValueDeleted", null, Map.of("otro", "dato"));
+
+        assertEquals(List.of("all", "all"), invalidationPort.actions);
+        assertTrue(realtimePublisherPort.events.isEmpty());
+    }
+
+    @Test
+    void keyVaultUsaElSubjectSiNoHayDataONoTraeObjectNameValido() {
+        final Map<String, Object> dataConObjetoNulo = new HashMap<>();
+        dataConObjetoNulo.put("ObjectName", null);
+
+        useCase.procesarEvento("Microsoft.KeyVault.SecretNewVersionCreated", " secreto-a ", null);
+        useCase.procesarEvento("Microsoft.KeyVault.SecretNewVersionCreated", "secreto-b", dataConObjetoNulo);
+        useCase.procesarEvento("Microsoft.KeyVault.SecretNewVersionCreated", "secreto-c", Map.of("ObjectName", " secreto-d "));
+        useCase.procesarEvento("Microsoft.KeyVault.SecretNewVersionCreated", "  ", null);
+        useCase.procesarEvento("Microsoft.KeyVault.SecretNewVersionCreated", null, Map.of());
+
+        assertEquals(List.of("secret:secreto-a", "secret:secreto-b", "secret:secreto-d"), invalidationPort.actions);
+    }
+
+    @Test
     void invalidaSecretoDesdeDataOSubjectYSinIdentidadIgnoraEvento() {
         useCase.procesarEvento(
                 "Microsoft.KeyVault.SecretNewVersionCreated",
