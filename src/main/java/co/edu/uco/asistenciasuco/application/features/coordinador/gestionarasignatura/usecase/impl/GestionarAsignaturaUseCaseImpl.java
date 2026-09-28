@@ -20,7 +20,7 @@ public final class GestionarAsignaturaUseCaseImpl implements GestionarAsignatura
     public void crear(final AsignaturaDomain domain) {
         validar(domain);
         commandPort.crearAsignatura(UUID.randomUUID(), domain.codigo(), domain.nombre(), domain.creditos(), domain.idPlanEstudio(),
-                domain.semestreNumero(), domain.nombreArea(), domain.nombreComponente());
+                domain.semestreNumero(), domain.nombreArea(), domain.nombreComponente(), domain.usuarioEjecutor());
     }
 
     @Override

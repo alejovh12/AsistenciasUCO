@@ -1,15 +1,23 @@
+---
+status: active
+type: runbook
+scope: backend
+owner: backend-team
+last-reviewed: 2026-09-20
+---
+
 # Guia de validacion del backend
 
 ## Modelo actual
 
 Las validaciones se distribuyen asi:
 
-- HTTP request: Bean Validation para forma de entrada publica (`@NotNull`, `@NotBlank`, `@Email`, `@Size`, tipos JSON).
+- HTTP request: validators propios + `RequestValidationGuard` y configuración JSON estricta; ver [input-validation](../architecture/input-validation.md). No usa Jakarta Bean Validation como mecanismo de entrada.
 - Application/domain: invariantes funcionales y normalizacion.
 - Infrastructure adapter: contrato JDBC/SQL Server, transaccion y traduccion SQL -> `ApplicationException`.
 - `GlobalExceptionHandler`: traduccion semantica a HTTP y respuestas seguras.
 
-Los errores tecnicos de request, como JSON roto, UUID invalido, tipo JSON incorrecto, binding invalido o Bean Validation fallida, deben responder 400 con `ApiErrorResponse` seguro.
+Los errores tecnicos de request, como JSON roto, UUID invalido, tipo JSON incorrecto, binding invalido o validación propia fallida, deben responder 400 con `ApiErrorResponse` seguro.
 
 ## Commands y queries
 
@@ -51,7 +59,9 @@ El flujo correcto es:
 HTTP -> CorrelationIdFilter -> CorrelationIdContext/MDC -> SQL Adapter -> @idCorrelacion
 ```
 
-`CorrelationIdContext` vive en `infrastructure/correlation` y no se mueve a application. `getOrCreate()` cubre integration tests, jobs futuros y ejecuciones internas sin request HTTP.
+`CorrelationIdContext` vive en `infrastructure/observability/correlation` y no se mueve a Application. El método actual es `require()`: falla si falta contexto; no existe `getOrCreate()`. Los IT lo establecen y limpian explícitamente. No inventar correlación en Application.
+
+La cobertura descrita abajo indica escenarios/tests existentes, no una corrida certificada. Resultados actuales en el work item; el [runbook](VALIDATION_RUNBOOK.md) gobierna ejecución.
 
 ## Mocks
 

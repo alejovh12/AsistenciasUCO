@@ -13,7 +13,7 @@ public final class ConsultarEstudiantesGrupoMapper {
     }
 
     public static ConsultarEstudiantesGrupoDomain toDomain(final ConsultarEstudiantesGrupoDTO dto) {
-        return new ConsultarEstudiantesGrupoDomain(dto.grupoId());
+        return new ConsultarEstudiantesGrupoDomain(dto.grupoId(), dto.usuarioEjecutor());
     }
 
     public static List<EstudianteGrupoDTO> toDTOs(final List<EstudianteGrupoEntity> entities) {

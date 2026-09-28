@@ -5,6 +5,7 @@ import java.util.UUID;
 
 public record RegistrarAsistenciasSesionRepositoryDTO(
         UUID sesion,
-        List<RegistroAsistenciaSesionRepositoryDTO> registros
+        List<RegistroAsistenciaSesionRepositoryDTO> registros,
+        UUID usuarioEjecutor
 ) {
 }

@@ -53,7 +53,7 @@ class AdminPortalControllerTest {
     private final AdminPortalController controller = new AdminPortalController(consultarDecanos, crearDecano,
             consultarParametros, ejecutarCierreMasivo, consultarInstituciones, consultarFacultades, consultarAreas, identity);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
-            .setControllerAdvice(new GlobalExceptionHandler()).build();
+            .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
 
     @Test
     void consultarDecanos_serializa_lista_del_puerto() throws Exception {

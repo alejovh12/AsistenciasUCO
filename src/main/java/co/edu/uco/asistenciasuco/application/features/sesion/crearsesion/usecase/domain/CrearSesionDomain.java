@@ -4,6 +4,7 @@ package co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.usecas
 
 import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
+import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
@@ -17,34 +18,25 @@ import java.time.LocalDateTime;
 public final class CrearSesionDomain {
 
     private final UUID grupo;
-    private final String tema;
-    private final String descripcion;
+    private final String nombre;
     private final LocalDateTime fechaHoraInicio;
     private final LocalDateTime fechaHoraFin;
-    private final String aula;
-    private final String tipo;
-    private final UUID docente;
+    private final UUID usuarioEjecutor;
 
     public CrearSesionDomain(
             final UUID grupo,
-            final String tema,
-            final String descripcion,
+            final String nombre,
             final LocalDateTime fechaHoraInicio,
             final LocalDateTime fechaHoraFin,
-            final String aula,
-            final String tipo,
-            final UUID docente
+            final UUID usuarioEjecutor
     ) {
         validarGrupo(grupo);
-        validarDocente(docente);
+        validarUsuarioEjecutor(usuarioEjecutor);
         validarFechas(fechaHoraInicio, fechaHoraFin);
-        this.tema = validarTema(tema);
-        this.descripcion = validarDescripcion(descripcion);
-        this.aula = TextHelper.trim(aula);
-        this.tipo = TextHelper.trim(tipo);
+        this.nombre = validarNombre(nombre);
         this.fechaHoraInicio = fechaHoraInicio;
         this.fechaHoraFin = fechaHoraFin;
-        this.docente = docente;
+        this.usuarioEjecutor = usuarioEjecutor;
 
         this.grupo = grupo;
     }
@@ -55,9 +47,9 @@ public final class CrearSesionDomain {
         }
     }
 
-    private void validarDocente(final UUID docente) {
-        if (ObjectHelper.isNull(docente)) {
-            throw new ValidationException(SesionErrorCode.ERR_DOCENTE_REQUERIDO);
+    private void validarUsuarioEjecutor(final UUID usuarioEjecutor) {
+        if (ObjectHelper.isNull(usuarioEjecutor)) {
+            throw new ValidationException(UsuarioErrorCode.ERR_USUARIO_REQUERIDO);
         }
     }
 
@@ -67,44 +59,26 @@ public final class CrearSesionDomain {
         }
     }
 
-    private String validarTema(final String tema) {
-        final String temaNormalizado = TextHelper.trim(tema);
+    private String validarNombre(final String nombre) {
+        final String normalizado = TextHelper.trim(nombre);
 
-        if (TextHelper.isNullOrBlank(temaNormalizado)) {
-            throw new ValidationException(SesionErrorCode.ERR_TEMA_SESION_REQUERIDO);
+        if (TextHelper.isNullOrBlank(normalizado)) {
+            throw new ValidationException(SesionErrorCode.ERR_NOMBRE_SESION_REQUERIDO);
         }
 
-        if (!TextHelper.hasLengthBetween(temaNormalizado, 5, 100)) {
-            throw new ValidationException(SesionErrorCode.ERR_TEMA_SESION_LONGITUD_INVALIDA);
+        if (!TextHelper.hasLengthBetween(normalizado, 1, 50)) {
+            throw new ValidationException(SesionErrorCode.ERR_NOMBRE_SESION_LONGITUD_INVALIDA);
         }
 
-        return temaNormalizado;
-    }
-
-    private String validarDescripcion(final String descripcion) {
-        final String descripcionNormalizada = TextHelper.trim(descripcion);
-
-        if (TextHelper.isNullOrBlank(descripcionNormalizada)) {
-            return null;
-        }
-
-        if (!TextHelper.hasLengthBetween(descripcionNormalizada, 10, 250)) {
-            throw new ValidationException(SesionErrorCode.ERR_DESCRIPCION_SESION_LONGITUD_INVALIDA);
-        }
-
-        return descripcionNormalizada;
+        return normalizado;
     }
 
     public UUID getGrupo() {
         return grupo;
     }
 
-    public String getTema() {
-        return tema;
-    }
-
-    public String getDescripcion() {
-        return descripcion;
+    public String getNombre() {
+        return nombre;
     }
 
     public LocalDateTime getFechaHoraInicio() {
@@ -115,16 +89,8 @@ public final class CrearSesionDomain {
         return fechaHoraFin;
     }
 
-    public String getAula() {
-        return aula;
-    }
-
-    public String getTipo() {
-        return tipo;
-    }
-
-    public UUID getDocente() {
-        return docente;
+    public UUID getUsuarioEjecutor() {
+        return usuarioEjecutor;
     }
 
 }

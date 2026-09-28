@@ -10,6 +10,7 @@ import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudiantee
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.primaryports.dto.RegistrarEstudianteDTO;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.primaryports.dto.RegistrarEstudianteResultadoDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -38,6 +39,7 @@ class GrupoControllerTest {
     private static final UUID ASIGNATURA = UUID.fromString("33641bab-e3cd-485c-b275-47e7b731e18c");
     private static final UUID DOCENTE = UUID.fromString("43641bab-e3cd-485c-b275-47e7b731e18c");
     private static final UUID GRUPO_BODY_IGNORADO = UUID.fromString("53641bab-e3cd-485c-b275-47e7b731e18c");
+    private static final AuthenticatedUserResolver AUTHENTICATED_USER_RESOLVER = () -> UUID.fromString("93641bab-e3cd-485c-b275-47e7b731e18c");
 
     @Test
     void consultarGrupos_responde_lista_publica_sin_correlacion() throws Exception {
@@ -130,9 +132,10 @@ class GrupoControllerTest {
                         mock(ActualizarGrupoInputPort.class),
                         registrarPort,
                         List::of,
-                        consultarEstudiantesPort
+                        consultarEstudiantesPort,
+                        AUTHENTICATED_USER_RESOLVER
                 ))
-                .setControllerAdvice(new GlobalExceptionHandler())
+                .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty()))
                 .build();
 
         mockMvc.perform(get("/api/v1/grupos/{grupoId}/estudiantes", GRUPO))
@@ -233,9 +236,10 @@ class GrupoControllerTest {
                         mock(ActualizarGrupoInputPort.class),
                         registrarPort,
                         consultarPort,
-                        dto -> List.of()
+                        dto -> List.of(),
+                        AUTHENTICATED_USER_RESOLVER
                 ))
-                .setControllerAdvice(new GlobalExceptionHandler())
+                .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty()))
                 .build();
     }
 

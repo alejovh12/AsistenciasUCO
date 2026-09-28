@@ -41,32 +41,32 @@ class AdapterCompositionRootRulesTest {
     @Test
     void application_no_depende_de_paquetes_de_proveedores_tecnologicos() {
         noClasses()
-                .that().resideInAPackage("..application..")
-                .should().dependOnClassesThat().resideInAnyPackage(
-                        "..keycloak..",
-                        "..sqlserver..",
-                        "..redis..",
-                        "..rabbit..",
-                        "..minio..",
-                        "..vault.."
-                )
-                .check(importedClasses());
+            .that().resideInAPackage("..application..")
+            .should().dependOnClassesThat().resideInAnyPackage(
+                "..keycloak..",
+                "..sqlserver..",
+                "..redis..",
+                "..rabbit..",
+                "..minio..",
+                "..azure.."
+            )
+            .check(importedClasses());
     }
 
     // 19.3: Domain (usecase.domain) tampoco debe conocer proveedores tecnológicos concretos.
     @Test
     void domain_no_depende_de_paquetes_de_proveedores_tecnologicos() {
         noClasses()
-                .that().resideInAPackage(DOMAIN_PACKAGE)
-                .should().dependOnClassesThat().resideInAnyPackage(
-                        "..keycloak..",
-                        "..sqlserver..",
-                        "..redis..",
-                        "..rabbit..",
-                        "..minio..",
-                        "..vault.."
-                )
-                .check(importedClasses());
+            .that().resideInAPackage(DOMAIN_PACKAGE)
+            .should().dependOnClassesThat().resideInAnyPackage(
+                "..keycloak..",
+                "..sqlserver..",
+                "..redis..",
+                "..rabbit..",
+                "..minio..",
+                "..azure.."
+            )
+            .check(importedClasses());
     }
 
     // 19.4: Los adapters SQL Server seleccionables por el Composition Root no deben

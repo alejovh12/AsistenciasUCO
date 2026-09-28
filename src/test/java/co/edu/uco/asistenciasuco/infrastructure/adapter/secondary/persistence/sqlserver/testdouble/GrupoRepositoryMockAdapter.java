@@ -36,11 +36,6 @@ public final class GrupoRepositoryMockAdapter implements GrupoRepositoryPort {
     }
 
     @Override
-    public GrupoCommandRepositoryProjection generarSesionesGrupo(final UUID grupoId) {
-        return new GrupoCommandRepositoryProjection(grupoId, "Sesiones generadas correctamente.");
-    }
-
-    @Override
     public RegistrarEstudianteRepositoryProjection registrarEstudianteEnGrupo(final RegistrarEstudianteRepositoryDTO dto) {
         if (ObjectHelper.isNull(dto)) {
             throw new CrosscuttingException("El dominio para registrar estudiante en grupo es obligatorio.");

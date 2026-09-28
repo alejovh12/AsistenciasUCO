@@ -146,7 +146,7 @@ class DocenteControllerTest {
                         registrar,
                         asignar
                 ))
-                .setControllerAdvice(new GlobalExceptionHandler())
+                .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty()))
                 .build();
     }
 

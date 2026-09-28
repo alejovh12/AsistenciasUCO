@@ -7,14 +7,20 @@ public final class RegistrarAsistenciasSesionDTO {
 
     private UUID sesion;
     private List<RegistroAsistenciaSesionDTO> registros;
+    private UUID usuarioEjecutor;
 
     public RegistrarAsistenciasSesionDTO() {
         super();
     }
 
-    public RegistrarAsistenciasSesionDTO(final UUID sesion, final List<RegistroAsistenciaSesionDTO> registros) {
+    public RegistrarAsistenciasSesionDTO(
+            final UUID sesion,
+            final List<RegistroAsistenciaSesionDTO> registros,
+            final UUID usuarioEjecutor
+    ) {
         setSesion(sesion);
         setRegistros(registros);
+        setUsuarioEjecutor(usuarioEjecutor);
     }
 
     public UUID getSesion() {
@@ -31,5 +37,13 @@ public final class RegistrarAsistenciasSesionDTO {
 
     public void setRegistros(final List<RegistroAsistenciaSesionDTO> registros) {
         this.registros = registros;
+    }
+
+    public UUID getUsuarioEjecutor() {
+        return usuarioEjecutor;
+    }
+
+    public void setUsuarioEjecutor(final UUID usuarioEjecutor) {
+        this.usuarioEjecutor = usuarioEjecutor;
     }
 }

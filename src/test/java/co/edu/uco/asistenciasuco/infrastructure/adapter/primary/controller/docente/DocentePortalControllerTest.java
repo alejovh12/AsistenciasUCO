@@ -43,7 +43,7 @@ class DocentePortalControllerTest {
     private final DocentePortalController controller =
             new DocentePortalController(horarios, asignaturas, resolverReclamo, identity);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
-            .setControllerAdvice(new GlobalExceptionHandler()).build();
+            .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
 
     @Test
     void consultarReclamos_no_implementado_lanza_featureUnavailable() {
@@ -83,7 +83,7 @@ class DocentePortalControllerTest {
     void consultarHorarios_usa_actor_autenticado() throws Exception {
         when(horarios.execute(ACTOR)).thenReturn(List.of(new HorarioDocenteDTO(
                 UUID.randomUUID(), ACTOR, UUID.randomUUID(), "MAT-01", "Calculo", "G1", "LUNES",
-                LocalTime.of(8, 0), LocalTime.of(10, 0), "Aula 1", 25)));
+                LocalTime.of(8, 0), LocalTime.of(10, 0), 25)));
 
         mvc.perform(get("/api/v1/docente/horarios"))
                 .andExpect(status().isOk())

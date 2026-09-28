@@ -35,13 +35,14 @@ class AsistenciaRepositoryMockAdapterTest {
     void metodos_de_comando_aceptan_dto_valido_sin_lanzar() {
         adapter.registrarAsistencia(new RegistrarAsistenciaRepositoryDTO(
                 UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), true, "A tiempo"));
-        adapter.registrarAsistenciasSesion(new RegistrarAsistenciasSesionRepositoryDTO(UUID.randomUUID(), List.of()));
+        adapter.registrarAsistenciasSesion(new RegistrarAsistenciasSesionRepositoryDTO(UUID.randomUUID(), List.of(), UUID.randomUUID()));
         adapter.registrarAsistenciaAutonoma(new RegistrarAsistenciaAutonomaRepositoryDTO(
-                UUID.randomUUID(), UUID.randomUUID(), "123456"));
+                UUID.randomUUID(), UUID.randomUUID(), "123456", UUID.randomUUID()));
         adapter.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
-                UUID.randomUUID(), UUID.randomUUID(), "SALUD", "Justificacion", "soporte.pdf", "https://example.com"));
+                UUID.randomUUID(), UUID.randomUUID(), "SALUD", "Justificacion", "soporte.pdf", "https://example.com",
+                UUID.randomUUID()));
         adapter.resolverSolicitudRevisionAsistencia(new ResolverSolicitudRevisionAsistenciaRepositoryDTO(
-                UUID.randomUUID(), UUID.randomUUID(), "APROBAR", "Aceptada"));
+                UUID.randomUUID(), UUID.randomUUID(), "APROBAR", "Aceptada", UUID.randomUUID()));
     }
 
     @Test

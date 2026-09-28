@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.sesion.cerrarsesion.useca
 
 
 import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
+import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
@@ -16,17 +17,21 @@ public final class CerrarSesionDomain {
     private final UUID sesion;
     private final UUID docente;
     private final String observacionCierre;
+    private final UUID usuarioEjecutor;
 
     public CerrarSesionDomain(
             final UUID sesion,
             final UUID docente,
-            final String observacionCierre
+            final String observacionCierre,
+            final UUID usuarioEjecutor
     ) {
         validarSesion(sesion);
         validarDocente(docente);
+        validarUsuarioEjecutor(usuarioEjecutor);
         this.observacionCierre = validarObservacionCierre(observacionCierre);
 
         this.docente = docente;
+        this.usuarioEjecutor = usuarioEjecutor;
         this.sesion = sesion;
     }
 
@@ -39,6 +44,12 @@ public final class CerrarSesionDomain {
     private void validarDocente(final UUID docente) {
         if (ObjectHelper.isNull(docente)) {
             throw new ValidationException(SesionErrorCode.ERR_DOCENTE_REQUERIDO);
+        }
+    }
+
+    private void validarUsuarioEjecutor(final UUID usuarioEjecutor) {
+        if (ObjectHelper.isNull(usuarioEjecutor)) {
+            throw new ValidationException(UsuarioErrorCode.ERR_USUARIO_REQUERIDO);
         }
     }
 
@@ -66,6 +77,10 @@ public final class CerrarSesionDomain {
 
     public String getObservacionCierre() {
         return observacionCierre;
+    }
+
+    public UUID getUsuarioEjecutor() {
+        return usuarioEjecutor;
     }
 
 }

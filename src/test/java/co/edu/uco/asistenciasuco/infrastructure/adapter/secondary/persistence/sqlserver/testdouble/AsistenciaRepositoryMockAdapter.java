@@ -63,6 +63,7 @@ public final class AsistenciaRepositoryMockAdapter implements AsistenciaReposito
                 dto.getGrupo(),
                 sesionSolicitada,
                 true,
+                "AN",
                 null
         ));
 
@@ -73,6 +74,7 @@ public final class AsistenciaRepositoryMockAdapter implements AsistenciaReposito
                     dto.getGrupo(),
                     SESION_2,
                     false,
+                    "SJC",
                     "Llego tarde y reporto novedad."
             ));
         }

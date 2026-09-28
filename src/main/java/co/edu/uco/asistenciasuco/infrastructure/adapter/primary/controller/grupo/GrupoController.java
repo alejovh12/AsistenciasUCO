@@ -22,6 +22,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -51,13 +52,15 @@ public final class GrupoController {
     private final RegistrarEstudianteInputPort registrarEstudianteInputPort;
     private final ConsultarGruposInputPort consultarGruposInputPort;
     private final ConsultarEstudiantesGrupoInputPort consultarEstudiantesGrupoInputPort;
+    private final AuthenticatedUserResolver authenticatedUserResolver;
 
     public GrupoController(
             final CrearGrupoInputPort crearGrupoInputPort,
             final ActualizarGrupoInputPort actualizarGrupoInputPort,
             final RegistrarEstudianteInputPort registrarEstudianteInputPort,
             final ConsultarGruposInputPort consultarGruposInputPort,
-            final ConsultarEstudiantesGrupoInputPort consultarEstudiantesGrupoInputPort
+            final ConsultarEstudiantesGrupoInputPort consultarEstudiantesGrupoInputPort,
+            final AuthenticatedUserResolver authenticatedUserResolver
     ) {
         this.crearGrupoInputPort = Objects.requireNonNull(crearGrupoInputPort, "CrearGrupoInputPort es obligatorio.");
         this.actualizarGrupoInputPort = Objects.requireNonNull(actualizarGrupoInputPort, "ActualizarGrupoInputPort es obligatorio.");
@@ -67,6 +70,7 @@ public final class GrupoController {
                 consultarEstudiantesGrupoInputPort,
                 "ConsultarEstudiantesGrupoInputPort es obligatorio."
         );
+        this.authenticatedUserResolver = Objects.requireNonNull(authenticatedUserResolver, "AuthenticatedUserResolver es obligatorio.");
     }
 
     @GetMapping
@@ -79,7 +83,9 @@ public final class GrupoController {
     public ResponseEntity<ApiDataResponse<CrearGrupoResultadoDTO>> crearGrupo(
             @RequestBody final CrearGrupoRequest request
     ) {
-        final CrearGrupoResultadoDTO resultado = crearGrupoInputPort.execute(GrupoHttpMapper.toApplicationDTO(request));
+        final CrearGrupoResultadoDTO resultado = crearGrupoInputPort.execute(
+                GrupoHttpMapper.toApplicationDTO(request, authenticatedUserResolver.requireAuthenticatedUserId())
+        );
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiDataResponse<>(true, resultado));
     }
 
@@ -89,7 +95,7 @@ public final class GrupoController {
             @RequestBody final ActualizarGrupoRequest request
     ) {
         final ActualizarGrupoResultadoDTO resultado = actualizarGrupoInputPort.execute(
-                GrupoHttpMapper.toApplicationDTO(id, request)
+                GrupoHttpMapper.toApplicationDTO(id, request, authenticatedUserResolver.requireAuthenticatedUserId())
         );
         return ResponseEntity.ok(new ApiDataResponse<>(true, resultado));
     }
@@ -99,7 +105,7 @@ public final class GrupoController {
             @PathVariable final UUID grupoId
     ) {
         final List<EstudianteGrupoDTO> estudiantes = consultarEstudiantesGrupoInputPort.execute(
-                new ConsultarEstudiantesGrupoDTO(grupoId)
+                new ConsultarEstudiantesGrupoDTO(grupoId, authenticatedUserResolver.requireAuthenticatedUserId())
         );
         return ResponseEntity.ok(new ApiListResponse<>(true, estudiantes, estudiantes.size()));
     }

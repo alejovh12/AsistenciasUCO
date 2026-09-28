@@ -17,8 +17,8 @@ public final class CrearGrupoMapper {
                 dto.codigo(),
                 dto.nombre(),
                 dto.idDocente(),
-                dto.aula(),
-                Boolean.TRUE.equals(dto.generarSesionesAutomaticas())
+                Boolean.TRUE.equals(dto.generarSesionesAutomaticas()),
+                dto.usuarioEjecutor()
         );
     }
 

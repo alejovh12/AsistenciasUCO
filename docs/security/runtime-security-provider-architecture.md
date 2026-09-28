@@ -1,3 +1,11 @@
+---
+status: active
+type: normative
+scope: backend
+owner: backend-team
+last-reviewed: 2026-09-26
+---
+
 # Arquitectura de Runtime Security (independiente del proveedor)
 
 ## 1. Alcance
@@ -239,50 +247,90 @@ institucional.
 
 ### 8.1 Modelo
 
-La API usa:
+`/api/v1/**` es una API REST **stateless** (`SessionCreationPolicy.STATELESS`). La API de negocio
+se autentica exclusivamente con una credencial explícita:
 
 ```http
 Authorization: Bearer <jwt>
 ```
 
-El navegador no adjunta automáticamente un bearer token elegido por la aplicación a un request
-cross-site, a diferencia de credenciales basadas en cookies.
+El webhook `/api/v1/internal/azure-events` se autentica con el header `aeg-sas-token`, validado
+por `AzureEventGridAuthFilter` (fail-closed). Su `permitAll` en `authorizeHttpRequests` solo
+significa que no exige JWT de negocio; no es un endpoint sin autenticación.
 
-`SecurityConfig` mantiene CSRF habilitado para peticiones inseguras sin Bearer y excluye del
-token CSRF únicamente las requests que presentan el encabezado Bearer.
+Ninguna ruta `/api/v1/**` autentica usuarios mediante cookies ni `HttpSession`. Un navegador no
+adjunta automáticamente un bearer token elegido por la aplicación a un request cross-site, a
+diferencia de credenciales basadas en cookies; por tanto no existe una credencial ambiente que
+un sitio ajeno pueda hacer valer y el token CSRF no protege nada en este modelo.
 
-Conceptualmente:
+`SecurityConfig` aplica una política explícita, no dependiente del contenido del request:
 
-```text
-request inseguro sin Bearer
-  -> CSRF se mantiene
-
-request con Authorization: Bearer ...
-  -> excepción CSRF
-  -> autenticación/autorización JWT siguen aplicando
+```java
+.csrf(csrf -> csrf.ignoringRequestMatchers("/api/v1/**"))
 ```
 
-Una cookie por sí sola no obtiene esta excepción.
+Consecuencias:
 
-### 8.2 Validación
+```text
+request inseguro a /api/v1/** sin credencial válida
+  -> llega al mecanismo de autenticación -> 401 (no 403 de CSRF)
 
-La suite de seguridad cubre, entre otros:
+request con Authorization: Bearer válido y rol insuficiente
+  -> 403 de autorización
 
-- POST sin Bearer ni CSRF -> rechazado;
+cookie (p. ej. JSESSIONID) sin Bearer
+  -> no autentica -> 401
+```
+
+Fuera de `/api/v1/**` la protección CSRF de Spring Security permanece activa.
+
+### 8.2 Invariantes que sustentan la exclusión
+
+- API stateless y Bearer explícito (`SessionCreationPolicy.STATELESS`);
+- el cliente Angular no envía peticiones con credenciales cross-origin (`withCredentials` no se
+  usa; los `fetch` directos al backend usan `credentials: 'omit'`);
+- realtime/SSE usa `credentials: 'omit'`;
+- CORS del backend no permite credenciales de navegador (`allowCredentials=false`);
+- el webhook usa un header secreto explícito validado por un filtro fail-closed.
+
+### 8.3 Validación
+
+La suite de seguridad (`RbacSecurityFilterChainTest`, `AzureWebhookSecurityChainTest`,
+`SecurityConfigTest`) cubre, entre otros:
+
+- POST/PUT/PATCH/DELETE protegido sin Bearer -> 401 (no 403 de CSRF);
+- POST/PUT/PATCH/DELETE con Bearer válido -> no requiere token CSRF y no crea `HttpSession`;
+- rol incorrecto -> 403;
 - cookie sin Bearer -> no concede acceso;
-- Bearer inválido -> no concede acceso;
-- Bearer vacío/malformado -> no concede acceso;
-- Bearer válido -> continúa hacia RBAC.
+- Bearer inválido, vacío o malformado -> 401;
+- webhook sin `aeg-sas-token`, con token inválido o sin token configurado -> 401; con token
+  válido atraviesa el filtro;
+- CORS: origen autorizado permitido, `Authorization` permitido, sin
+  `Access-Control-Allow-Credentials`.
 
-### 8.3 Sonar/CodeQL
+### 8.4 Sonar java:S4502 (Security Hotspot)
 
-El hallazgo CodeQL original por desactivar CSRF globalmente fue corregido.
+`java:S4502` («Make sure disabling Spring Security's CSRF protection is safe here») es un Security
+Hotspot y se revisa en SonarCloud como **Reviewed / Safe**; no se oculta con `NOSONAR`,
+`@SuppressWarnings`, exclusiones ni cambios al quality profile.
 
-Sonar `java:S4502` fue revisado explícitamente para el modelo stateless bearer y aceptado como
-decisión de seguridad documentada. No debe ocultarse mediante cambios artificiales al código.
+Justificación:
 
-Si cambia el mecanismo de autenticación, especialmente si algún día se introducen cookies
-autenticadas, esta decisión debe reabrirse y revisarse.
+> This backend exposes a stateless REST API. Business endpoints authenticate exclusively through
+> an explicit Authorization Bearer JWT and do not use cookie- or session-based authentication.
+> Spring Security is configured with SessionCreationPolicy.STATELESS. The Angular API client does
+> not send credentialed cross-origin requests, realtime explicitly uses credentials=omit, and
+> backend CORS does not allow browser credentials. The Azure Event Grid webhook uses an explicit
+> aeg-sas-token header validated by a fail-closed authentication filter. Therefore no
+> browser-managed authentication credential is automatically attached to unsafe API requests, so
+> the API CSRF exclusion is safe for the current architecture. This decision must be revisited
+> before introducing cookie/BFF/session authentication.
+
+### 8.5 Cuándo reabrir esta decisión
+
+Si en el futuro la API adopta autenticación mediante cookies, BFF con cookie `HttpOnly` o sesión
+de navegador, esta exclusión **debe revisarse** y CSRF **deberá volver a habilitarse** para ese
+flujo. Migrar a PKCE/BFF es deuda futura documentada y queda fuera de este cambio.
 
 ---
 
@@ -310,6 +358,9 @@ Header expuesto:
 ```text
 X-Correlation-Id
 ```
+
+`allowCredentials=false`: la API es Bearer-only y `Authorization` es un header explícito que no
+requiere credenciales de navegador. Nunca debe combinarse `allowedOrigins("*")` con credenciales.
 
 Si se cambian los clientes frontend permitidos, debe hacerse por configuración de entorno y no
 hardcodeando nuevos origins en lógica de negocio.
@@ -393,6 +444,9 @@ app.adapters.realtime.provider=local-sse
 
 ### 12.1 Autenticación
 
+Además de autenticación HTTP, `/stream` exige `grupoId` y `LocalSseRealtimeStreamGateway` verifica titularidad docente al suscribirse; no basta un JWT válido.
+
+
 El stream continúa protegido por Bearer. No se permite:
 
 ```text
@@ -438,62 +492,20 @@ docs/architecture/reactive-realtime.md
 
 ---
 
-## 13. Authorization contextual pendiente
+## 13. Autorización contextual y seguimiento
 
-Los siguientes endpoints requieren revisar/completar Layer 2 cuando se implemente o endurezca su
-flujo funcional:
+`GET /api/v1/sesiones/grupo/{grupoId}` ya verifica titularidad en `ConsultarSesionesPorGrupoUseCaseImpl`; no se mantiene como falta de implementación. El seguimiento de validación está en [TD-008](../baseline/TECHNICAL_DEBT.md#td-008).
 
-- `GET /api/v1/sesiones/{sesionId}`;
-- `GET /api/v1/sesiones/grupo/{grupoId}`;
-- `GET /api/v1/docentes/{docenteId}`;
-- `GET /api/v1/docentes/{docenteId}/asignaciones`;
-- `GET /api/v1/estudiantes/{estudianteId}`.
 
-La regla no debe improvisarse en el Controller. Debe resolverse desde Application mediante el
-scope institucional correspondiente.
+La lista única de endpoints pendientes y condición de cierre vive en [TD-016](../baseline/TECHNICAL_DEBT.md#td-016). No resolver ownership contextual en el Controller ni mezclarlo con Layer 1.
 
----
+## 14. Storage security
 
-## 14. Storage security debt
+La regla AS-IS de `/api/v1/archivos/**` es `authenticated()`. La abstracción y autorización funcional pendiente se registran en [TD-004](../baseline/TECHNICAL_DEBT.md#td-004); un matcher de roles no resuelve por sí solo ownership.
 
-`/api/v1/archivos/**` permanece temporalmente bajo:
+## 15. Provisioning security
 
-```text
-authenticated()
-```
-
-Hoy todavía no existe una abstracción completa de ownership/contexto alrededor del archivo.
-
-La fase Storage deberá introducir:
-
-```text
-GuardarArchivoInputPort
-GuardarArchivoUseCase
-FileStoragePort
-```
-
-y definir autorización Layer 2 con información como propietario/recurso/grupo cuando el contrato
-funcional esté formalizado.
-
-No debe intentarse resolver esta deuda solamente con un matcher de roles.
-
----
-
-## 15. Provisioning security debt
-
-`POST /api/v1/usuarios` continúa bajo `authenticated()`.
-
-El contrato funcional definitivo debe aclarar quién puede provisionar usuarios institucionales.
-No se inventa una política nueva sin respaldo funcional.
-
-Identity provisioning además mantiene deudas E2E/documentadas para ciertos roles institucionales.
-Ver:
-
-```text
-docs/security/keycloak-identity-provider.md
-```
-
----
+`POST /api/v1/usuarios` permanece bajo `authenticated()`. Política funcional/roles pendientes: [TD-013](../baseline/TECHNICAL_DEBT.md#td-013). Contrato y semántica DB-first: [keycloak-identity-provider](keycloak-identity-provider.md).
 
 ## 16. Cómo agregar otro runtime IdP
 
@@ -524,6 +536,9 @@ vendor.
 
 ## 17. Reglas de calidad y seguridad
 
+Los objetivos Sonar mencionados aquí requieren evidencia/configuración remota; no son umbrales comprobables en pom.xml. Los gates efectivos locales/CI se distinguen en [TESTING_STANDARD](../testing/TESTING_STANDARD.md).
+
+
 Cualquier cambio en seguridad debe conservar:
 
 ```text
@@ -544,6 +559,12 @@ No se permite “arreglar” scanners mediante:
 - hacer endpoints públicos;
 - pasar tokens por query string.
 
+## 17.1 Webhooks externos
+
+La autenticación de `POST /api/v1/internal/azure-events` es una frontera operacional externa y **no equivale** a OAuth2 Bearer JWT de la API de negocio. No cambia la matriz RBAC institucional.
+
+Las credenciales de webhook no pueden tener defaults funcionales inseguros, aceptarse por query parameter ni aparecer en logs/evidencia. El AS-IS y los hallazgos se documentan en [Azure Runtime Integration](../integration/azure-runtime-integration.md) y TD-051/TD-052; TD-051/TD-052 quedaron resueltas en LB-001D.2: sin default funcional, fail-closed sin credencial y header único `aeg-sas-token`. `permitAll` de autorización no equivale a endpoint sin autenticación.
+
 ---
 
 ## 18. Checklist de cambio de seguridad
@@ -558,7 +579,7 @@ Antes de integrar un cambio:
 [ ] principal = idUsuario
 [ ] Bearer inválido -> 401
 [ ] rol insuficiente -> 403
-[ ] CSRF no se desactiva globalmente
+[ ] CSRF solo se excluye en /api/v1/** (stateless, Bearer-only); revisar si aparecen cookies/sesión
 [ ] cookies no autentican accidentalmente
 [ ] CORS no se amplía sin necesidad
 [ ] Layer 1 y Layer 2 no se mezclan

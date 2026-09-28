@@ -22,7 +22,8 @@ public final class RegistrarAsistenciaAutonomaRepositoryMapper {
         return new RegistrarAsistenciaAutonomaRepositoryDTO(
                 estudianteId,
                 domain.getSesion(),
-                domain.getCodigoVerificacion()
+                domain.getCodigoVerificacion(),
+                domain.getUsuario()
         );
     }
 }

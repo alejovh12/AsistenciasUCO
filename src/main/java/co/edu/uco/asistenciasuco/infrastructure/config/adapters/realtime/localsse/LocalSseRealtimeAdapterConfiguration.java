@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.adapters.realtime.localsse;
 
+import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.contract.RealtimeStreamGateway;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.localsse.LocalSseRealtimeStreamGateway;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.realtime.localsse.ReactorRealtimeAdapter;
@@ -30,7 +31,10 @@ public class LocalSseRealtimeAdapterConfiguration {
     }
 
     @Bean
-    public RealtimeStreamGateway realtimeStreamGateway(final ReactorRealtimeAdapter realtimeAdapter) {
-        return new LocalSseRealtimeStreamGateway(realtimeAdapter);
+    public RealtimeStreamGateway realtimeStreamGateway(
+            final ReactorRealtimeAdapter realtimeAdapter,
+            final InstitutionalScopePort institutionalScopePort
+    ) {
+        return new LocalSseRealtimeStreamGateway(realtimeAdapter, institutionalScopePort);
     }
 }

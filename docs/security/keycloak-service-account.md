@@ -1,3 +1,11 @@
+---
+status: active
+type: runbook
+scope: backend
+owner: backend-team
+last-reviewed: 2026-09-20
+---
+
 # Configuración externa requerida en Keycloak — Service Account administrativo
 
 Este documento describe la configuración que debe existir en Keycloak para que
@@ -54,7 +62,7 @@ poder hacer exactamente esto, no más:
 
 | Operación que usa el adapter | Endpoint | Permiso `realm-management` requerido |
 | --- | --- | --- |
-| Consultar usuarios (búsqueda por username exacto tras un 409) | `GET /users` | `view-users` |
+| Consultar usuarios (búsqueda por idUsuario y verificación exacta de identidad) | `GET /users` | `view-users` |
 | Crear usuarios | `POST /users` | `manage-users` |
 | Eliminar usuarios (compensación) | `DELETE /users/{id}` | `manage-users` |
 | Actualizar credenciales de un usuario recién creado | `PUT /users/{id}/reset-password` | `manage-users` |
@@ -102,8 +110,7 @@ adapter busca vía `GET /clients/{id}/roles/{roleName}`.
 El adapter escribe `attributes.idUsuario` vía Admin API. Si el realm tiene habilitado un
 "Unmanaged attributes" restrictivo en el User Profile (Keycloak 24+), Keycloak podría ignorar o
 rechazar ese atributo silenciosamente al crear el usuario — por eso `bootstrap-keycloak.ps1`
-declara explícitamente el atributo `idUsuario` en el User Profile del realm (`view`/`edit`
-restringidos a `admin`), en vez de depender de una política permisiva de unmanaged attributes.
+declara explícitamente el atributo `idUsuario` en el User Profile del realm (`view=user,admin`, `edit=admin`), en vez de depender de una política permisiva de unmanaged attributes.
 Esto también evita que un usuario final pueda autoasignarse otro UUID institucional editando su
 propio perfil. Ver `infra/keycloak/README.md` sección 1 para el flujo DB-first completo de
 `idUsuario`.
@@ -124,8 +131,7 @@ KEYCLOAK_USER_ID_ATTRIBUTE=idUsuario
 Esto cubre únicamente lo que el adapter de **provisioning** necesita. La configuración del
 client de runtime security (audiencia del JWT, protocol mapper del claim `idUsuario` en el
 token de acceso de usuarios finales) está fuera de alcance de este documento — ver
-`docs/security/runtime-security-provider-architecture.md`, sección 19 (aspectos externos de
-Keycloak) del reporte del prompt de Runtime Security.
+[runtime-security-provider-architecture](runtime-security-provider-architecture.md) y [bootstrap Keycloak](../../infra/keycloak/README.md), secciones 3 y 6.
 
 La implementación estática del adapter espera esta configuración externa, pero este documento
 no afirma validación E2E contra un Keycloak real.

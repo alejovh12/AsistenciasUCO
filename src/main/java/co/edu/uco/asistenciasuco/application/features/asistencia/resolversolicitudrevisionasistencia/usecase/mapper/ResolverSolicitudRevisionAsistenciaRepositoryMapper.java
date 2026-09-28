@@ -23,7 +23,8 @@ public final class ResolverSolicitudRevisionAsistenciaRepositoryMapper {
                 domain.getSolicitud(),
                 docenteId,
                 domain.getAccion(),
-                domain.getRespuestaDocente()
+                domain.getRespuestaDocente(),
+                domain.getUsuario()
         );
     }
 }

@@ -1,3 +1,11 @@
+---
+status: active
+type: normative
+scope: backend
+owner: backend-team
+last-reviewed: 2026-09-20
+---
+
 # Reactividad realtime — Fase 3.1
 
 ## 1. Estado y objetivo
@@ -13,8 +21,7 @@ Estado de la decisión:
   `app.adapters.realtime.provider=local-sse`.
 - **Seguridad:** OAuth2 Resource Server / JWT Bearer; el stream no es público.
 - **Durabilidad:** ninguna en esta fase. El canal local es **best-effort y efímero**.
-- **Distribución entre instancias:** no existe todavía; se resolverá en la fase de mensajería
-  (RabbitMQ).
+- **Distribución entre instancias:** no existe todavía; se evalúa en LB-005 con ADR de proveedor.
 - **Application:** no depende de Reactor, WebFlux, SSE ni OpenTelemetry.
 
 La finalidad de Reactor aquí es modelar correctamente un flujo push de múltiples eventos y
@@ -111,17 +118,7 @@ Authorization: Bearer <token>
                          Angular / cliente
 ```
 
-El flujo de negocio actualmente conectado es:
-
-```text
-RegistrarAsistenciaUseCaseImpl
-        |
-        +--> AsistenciaRepositoryPort.registrarAsistencia(...)
-        |
-        |    [solo si persistencia terminó correctamente]
-        |
-        +--> RealtimePublisherPort.publish(ASISTENCIA_REGISTRADA)
-```
+El flujo de negocio conectado al Golden Path es `RegistrarAsistenciasSesionUseCaseImpl → AsistenciaRepositoryPort.registrarAsistenciasSesion → RealtimePublisherPort.publish(ASISTENCIAS_SESION_ACTUALIZADAS)`, solo tras el retorno exitoso de persistencia. Véanse [Golden Path](../baseline/GOLDEN_PATH_ASISTENCIA.md) y [contrato de eventos](../contracts/REALTIME_EVENT_STANDARD.md).
 
 Realtime es secundario. No existe una transacción distribuida SQL ↔ SSE.
 
@@ -339,6 +336,8 @@ POST /api/v1/realtime/emit
 
 ### 8.1 `/stream`
 
+Requiere `grupoId` UUID y Bearer. `LocalSseRealtimeStreamGateway.subscribe` comprueba titularidad docente una vez al suscribirse y filtra eventos por `payload.grupo`; los eventos sin grupo no se entregan por este canal. La autenticación HTTP por sí sola no concede la suscripción.
+
 Produce:
 
 ```http
@@ -425,40 +424,9 @@ reconexión del stream debe usar un access token vigente.
 
 ---
 
-## 10. Evento real conectado
+## 10. Eventos de negocio
 
-`RegistrarAsistenciaUseCaseImpl` publica:
-
-```text
-type = ASISTENCIA_REGISTRADA
-```
-
-después de que:
-
-```java
-AsistenciaRepositoryPort.registrarAsistencia(...)
-```
-
-retorna correctamente.
-
-Payload actual:
-
-```json
-{
-  "estudiante": "<uuid>",
-  "grupo": "<uuid>",
-  "sesion": "<uuid>",
-  "presente": true
-}
-```
-
-Reglas verificadas por pruebas:
-
-1. dominio inválido -> no publica;
-2. error de persistencia -> no publica;
-3. persistencia exitosa -> publica después de persistir;
-4. payload limitado a los datos definidos;
-5. una falla interna del provider realtime no debe revertir SQL.
+El contrato vigente del lote y su payload se mantiene en [REALTIME_EVENT_STANDARD](../contracts/REALTIME_EVENT_STANDARD.md). El use case individual conserva el evento `ASISTENCIA_REGISTRADA` con `estudiante`, `grupo`, `sesion`, `presente`, pero el adapter SQL de esa operación lanza `FeatureUnavailableException`; no se presenta como camino productivo certificado. El Golden Path actual es el lote, con publicación posterior al éxito de persistencia.
 
 ---
 
@@ -491,16 +459,7 @@ org.springframework.web.reactive..
 org.springframework.http.codec..
 ```
 
-Los gates globales continúan siendo:
-
-```text
-JaCoCo LINE   >= 80 %
-JaCoCo BRANCH >= 70 %
-Sonar New Code Coverage >= 80 %
-CodeQL sin nuevas vulnerabilidades
-Dependency Review sin nuevas dependencias High/Critical
-Docker build exitoso
-```
+Gates efectivos y diferencia entre checks locales/remotos: [TESTING_STANDARD](../testing/TESTING_STANDARD.md). No inferir el umbral remoto de Sonar ni una corrida exitosa desde esta arquitectura.
 
 ---
 
@@ -537,8 +496,7 @@ backend B -> subscribers de B
 
 un evento publicado en A no aparece automáticamente en B.
 
-**Bloqueo para escalar horizontalmente:** introducir mensajería distribuida (RabbitMQ) o un
-mecanismo equivalente.
+**Bloqueo para escalar horizontalmente:** validar un mecanismo distribuido aprobado mediante ADR (LB-005).
 
 ### 13.2 Sin durabilidad
 
@@ -547,8 +505,7 @@ Después de reconectar debe poder refrescar estado desde endpoints de consulta.
 
 ### 13.3 Autenticación del navegador
 
-El frontend todavía debe implementar consumo SSE con headers Bearer y política de reconexión.
-Hasta ese E2E no puede declararse cerrada la integración frontend↔realtime.
+El checkout no incluye el frontend: su consumo SSE con Bearer, reconexión y refresh no se certifica aquí. Hasta evidencia E2E no se cierra la integración frontend↔realtime; [TD-017](../baseline/TECHNICAL_DEBT.md#td-017).
 
 ### 13.4 Spring MVC sigue siendo servlet
 
@@ -579,68 +536,6 @@ eventos y las respuestas HTTP. Este documento es arquitectura, no reemplaza Open
 
 ---
 
-## 14. Evolución con RabbitMQ
+## 14. Evolución y cierre
 
-Estado actual:
-
-```text
-UseCase
-  -> RealtimePublisherPort
-  -> ReactorRealtimeAdapter
-  -> SSE
-```
-
-Evolución prevista:
-
-```text
-UseCase
-  -> EventPublisherPort
-  -> RabbitMQ
-  -> Consumer de infraestructura
-  -> RealtimePublisherPort
-  -> ReactorRealtimeAdapter
-  -> SSE
-```
-
-RabbitMQ resolverá distribución/durabilidad del evento de integración. Reactor seguirá
-resolviendo fan-out local hacia conexiones SSE.
-
-No se debe hacer que Application conozca RabbitMQ ni hacer que el controller consuma el broker
-directamente.
-
----
-
-## 15. Checklist operativo de esta fase
-
-Antes de merge:
-
-```text
-[ ] mvnw clean verify = BUILD SUCCESS
-[ ] JaCoCo global LINE >= 80 %
-[ ] JaCoCo global BRANCH >= 70 %
-[ ] Sonar Quality Gate = Passed
-[ ] New Code Coverage >= 80 %
-[ ] Sonar Security Hotspots nuevos = 0
-[ ] CodeQL = sin alertas nuevas
-[ ] Dependency Review = Passed
-[ ] Docker build = Passed
-[ ] Application -> Reactor = 0
-[ ] Application -> Infrastructure = 0
-[ ] provider local-sse seleccionado solo en Composition Root
-[ ] documentación actualizada
-```
-
----
-
-## 16. Próximo paso
-
-Después de integrar esta fase:
-
-1. implementar el consumidor SSE autenticado en Angular;
-2. validar E2E `Angular -> Keycloak -> backend -> SSE`;
-3. formalizar contratos con API First / Contract First;
-4. después introducir Redis para catálogos/cache;
-5. posteriormente RabbitMQ para eventos distribuidos.
-
-La reactividad queda así como una capability acotada y observable, no como una reescritura del
-backend.
+La distribución futura conserva puertos neutrales y requiere ADR antes de seleccionar tecnología. RabbitMQ/Redis/WebSocket no se incorporan por una mención histórica. Secuencia activa: [LINEA_BASE](../baseline/LINEA_BASE.md); estado de deuda: [TD-003](../baseline/TECHNICAL_DEBT.md#td-003), [TD-017](../baseline/TECHNICAL_DEBT.md#td-017), [TD-018](../baseline/TECHNICAL_DEBT.md#td-018); calidad y cierre: [DoD única](../baseline/DEFINITION_OF_DONE.md).

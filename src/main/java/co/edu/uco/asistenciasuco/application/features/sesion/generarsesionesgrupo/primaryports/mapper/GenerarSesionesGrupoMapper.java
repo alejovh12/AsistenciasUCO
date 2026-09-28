@@ -14,6 +14,6 @@ public final class GenerarSesionesGrupoMapper {
         if (ObjectHelper.isNull(dto)) {
             throw new CrosscuttingException("El DTO para generar sesiones de grupo es obligatorio.");
         }
-        return new GenerarSesionesGrupoDomain(dto.getGrupo());
+        return new GenerarSesionesGrupoDomain(dto.getGrupo(), dto.getUsuarioEjecutor());
     }
 }

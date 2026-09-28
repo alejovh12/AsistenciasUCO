@@ -45,6 +45,7 @@ public final class ConsultarAsistenciasPorGrupoRepositoryMapper {
                     entity.getGrupo(),
                     entity.getSesion(),
                     entity.isPresente(),
+                    entity.getEstado(),
                     entity.getObservacion()
             ));
         }

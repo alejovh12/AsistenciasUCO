@@ -18,7 +18,10 @@ public enum AsistenciaErrorCode implements ErrorDefinition {
     ERR_OBSERVACION_ASISTENCIA_LONGITUD_INVALIDA("ERR_OBSERVACION_ASISTENCIA_LONGITUD_INVALIDA", "Cuando se indique una observacion de asistencia, debe tener entre 5 y 250 caracteres.", ErrorKind.VALIDATION),
     ERR_OBSERVACION_ASISTENCIA_REQUERIDA("ERR_OBSERVACION_ASISTENCIA_REQUERIDA", "Debe indicar una observacion cuando el estudiante no asiste.", ErrorKind.VALIDATION),
     ERR_MOTIVO_REVISION_REQUERIDO("ERR_MOTIVO_REVISION_REQUERIDO", "El motivo de revision es obligatorio.", ErrorKind.VALIDATION),
-    ERR_MOTIVO_REVISION_LONGITUD_INVALIDA("ERR_MOTIVO_REVISION_LONGITUD_INVALIDA", "El motivo de revision debe tener entre 10 y 300 caracteres.", ErrorKind.VALIDATION);
+    ERR_MOTIVO_REVISION_LONGITUD_INVALIDA("ERR_MOTIVO_REVISION_LONGITUD_INVALIDA", "El motivo de revision debe tener entre 10 y 300 caracteres.", ErrorKind.VALIDATION),
+    ERR_ESTADO_ASISTENCIA_INVALIDO("ERR_ESTADO_ASISTENCIA_INVALIDO", "El estado de asistencia debe ser AN, SJC o EX.", ErrorKind.VALIDATION),
+    ERR_USUARIO_EJECUTOR_ASISTENCIA_REQUERIDO("ERR_USUARIO_EJECUTOR_ASISTENCIA_REQUERIDO", "El usuario autenticado que ejecuta el registro de asistencias es obligatorio.", ErrorKind.VALIDATION),
+    ERR_DOCENTE_SIN_TITULARIDAD_SESION("ERR_DOCENTE_SIN_TITULARIDAD_SESION", "El docente autenticado no tiene titularidad sobre la sesion indicada.", ErrorKind.FORBIDDEN);
 
     private final String code;
     private final String defaultMessage;

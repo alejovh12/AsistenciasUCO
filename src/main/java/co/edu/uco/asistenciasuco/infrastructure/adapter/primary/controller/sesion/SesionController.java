@@ -7,6 +7,8 @@ import co.edu.uco.asistenciasuco.application.features.sesion.cerrarsesion.primar
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.primaryports.ConsultarSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.primaryports.dto.ConsultarSesionDTO;
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.primaryports.dto.SesionConsultadaDTO;
+import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionesporgrupo.primaryports.ConsultarSesionesPorGrupoInputPort;
+import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionesporgrupo.primaryports.dto.ConsultarSesionesPorGrupoDTO;
 import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.primaryports.CrearSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.primaryports.dto.CrearSesionDTO;
 import co.edu.uco.asistenciasuco.application.features.sesion.generarsesionesgrupo.primaryports.GenerarSesionesGrupoInputPort;
@@ -28,6 +30,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contrac
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -35,6 +38,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -51,6 +55,7 @@ public final class SesionController {
 
     private final CrearSesionInputPort crearSesionInputPort;
     private final ConsultarSesionInputPort consultarSesionInputPort;
+    private final ConsultarSesionesPorGrupoInputPort consultarSesionesPorGrupoInputPort;
     private final CerrarSesionInputPort cerrarSesionInputPort;
     private final ActualizarSesionInputPort actualizarSesionInputPort;
     private final GenerarSesionesGrupoInputPort generarSesionesGrupoInputPort;
@@ -59,6 +64,7 @@ public final class SesionController {
     public SesionController(
             final CrearSesionInputPort crearSesionInputPort,
             final ConsultarSesionInputPort consultarSesionInputPort,
+            final ConsultarSesionesPorGrupoInputPort consultarSesionesPorGrupoInputPort,
             final CerrarSesionInputPort cerrarSesionInputPort,
             final ActualizarSesionInputPort actualizarSesionInputPort,
             final GenerarSesionesGrupoInputPort generarSesionesGrupoInputPort,
@@ -66,6 +72,10 @@ public final class SesionController {
     ) {
         this.crearSesionInputPort = Objects.requireNonNull(crearSesionInputPort, "CrearSesionInputPort es obligatorio.");
         this.consultarSesionInputPort = Objects.requireNonNull(consultarSesionInputPort, "ConsultarSesionInputPort es obligatorio.");
+        this.consultarSesionesPorGrupoInputPort = Objects.requireNonNull(
+                consultarSesionesPorGrupoInputPort,
+                "ConsultarSesionesPorGrupoInputPort es obligatorio."
+        );
         this.cerrarSesionInputPort = Objects.requireNonNull(cerrarSesionInputPort, "CerrarSesionInputPort es obligatorio.");
         this.actualizarSesionInputPort = Objects.requireNonNull(actualizarSesionInputPort, "ActualizarSesionInputPort es obligatorio.");
         this.generarSesionesGrupoInputPort = Objects.requireNonNull(generarSesionesGrupoInputPort, "GenerarSesionesGrupoInputPort es obligatorio.");
@@ -84,16 +94,21 @@ public final class SesionController {
     }
 
     @GetMapping("/grupo/{grupoId}")
-    public ResponseEntity<ApiListResponse<Void>> consultarSesionesPorGrupo(@PathVariable final UUID grupoId) {
-        throw new co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException(
-                "La base publica expone consulta de sesion por id, pero no una lectura agregada por grupo lista para esta respuesta."
+    public ResponseEntity<ApiListResponse<SesionConsultadaDTO>> consultarSesionesPorGrupo(@PathVariable final UUID grupoId) {
+        final ConsultarSesionesPorGrupoDTO dto = new ConsultarSesionesPorGrupoDTO(
+                grupoId,
+                authenticatedUserResolver.requireAuthenticatedUserId()
         );
+        final List<SesionConsultadaDTO> sesiones = consultarSesionesPorGrupoInputPort.execute(dto);
+        return ResponseEntity.ok(new ApiListResponse<>(true, sesiones, sesiones.size()));
     }
 
     @PostMapping("/grupo/{grupoId}/generacion")
     @AuditableOperation(action = "GENERAR_SESIONES_GRUPO", resourceType = "GRUPO", resourceIdPathVariable = "grupoId")
     public ResponseEntity<ApiMessageResponse> generarSesionesGrupo(@PathVariable final UUID grupoId) {
-        generarSesionesGrupoInputPort.execute(new GenerarSesionesGrupoDTO(grupoId));
+        generarSesionesGrupoInputPort.execute(
+                new GenerarSesionesGrupoDTO(grupoId, authenticatedUserResolver.requireAuthenticatedUserId())
+        );
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiMessageResponse(true, "Sesiones de grupo generadas correctamente."));
     }
@@ -123,10 +138,27 @@ public final class SesionController {
         return ResponseEntity.ok(new ApiMessageResponse(true, "Sesion cerrada correctamente."));
     }
 
-    @PutMapping("/{sesionId}")
+    @PatchMapping("/{sesionId}")
     public ResponseEntity<ApiDataResponse<Void>> actualizarSesion(
             @PathVariable final UUID sesionId,
             @RequestBody final ActualizarSesionRequest request
+    ) {
+        return executeActualizarSesion(sesionId, request);
+    }
+
+    /** Endpoint de compatibilidad; los consumidores deben migrar a PATCH. Mismo caso de uso. */
+    @Deprecated(forRemoval = false)
+    @PutMapping("/{sesionId}")
+    public ResponseEntity<ApiDataResponse<Void>> actualizarSesionLegacy(
+            @PathVariable final UUID sesionId,
+            @RequestBody final ActualizarSesionRequest request
+    ) {
+        return executeActualizarSesion(sesionId, request);
+    }
+
+    private ResponseEntity<ApiDataResponse<Void>> executeActualizarSesion(
+            final UUID sesionId,
+            final ActualizarSesionRequest request
     ) {
         final ActualizarSesionDTO dto = SesionHttpMapper.toApplicationDTO(
                 sesionId,

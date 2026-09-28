@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error;
 
 import co.edu.uco.asistenciasuco.application.exception.ApplicationException;
+import co.edu.uco.asistenciasuco.application.features.catalogo.resolvermensajeusuario.primaryports.ResolverMensajeUsuarioInputPort;
 import co.edu.uco.asistenciasuco.crosscutting.exception.TechnicalException;
 import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 import co.edu.uco.asistenciasuco.crosscutting.sanitization.SensitiveDataSanitizer;
@@ -26,6 +27,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -33,6 +35,12 @@ import java.util.UUID;
 public final class GlobalExceptionHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    private final ResolverMensajeUsuarioInputPort resolverMensajeUsuario;
+
+    public GlobalExceptionHandler(final ResolverMensajeUsuarioInputPort resolverMensajeUsuario) {
+        this.resolverMensajeUsuario = Objects.requireNonNull(resolverMensajeUsuario, "El puerto ResolverMensajeUsuarioInputPort es obligatorio.");
+    }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiErrorResponse> handleUnreadableMessage(
@@ -155,16 +163,29 @@ public final class GlobalExceptionHandler {
             final List<ApiFieldError> details
     ) {
         AuditRequestAttributes.storeErrorCode(request, descriptor.code());
+        final String resolvedMessage = resolveErrorMessage(descriptor);
         return ResponseEntity.status(descriptor.status()).body(new ApiErrorResponse(
                 OffsetDateTime.now(),
                 descriptor.status().value(),
                 descriptor.status().getReasonPhrase(),
                 descriptor.code(),
-                TextHelper.isNullOrBlank(descriptor.message()) ? descriptor.status().getReasonPhrase() : descriptor.message(),
+                resolvedMessage,
                 safePath(request),
                 CorrelationIdContext.getAsString(),
                 details == null ? List.of() : details
         ));
+    }
+
+    private String resolveErrorMessage(final ApiErrorDescriptor descriptor) {
+        try {
+            final Optional<String> catalogMessage = resolverMensajeUsuario.execute(descriptor.code());
+            if (catalogMessage.isPresent() && !TextHelper.isNullOrBlank(catalogMessage.get())) {
+                return catalogMessage.get();
+            }
+        } catch (final RuntimeException e) {
+            LOGGER.debug("No se pudo resolver mensaje de usuario para codigo: {}", descriptor.code());
+        }
+        return TextHelper.isNullOrBlank(descriptor.message()) ? descriptor.status().getReasonPhrase() : descriptor.message();
     }
 
     private void logControlled(

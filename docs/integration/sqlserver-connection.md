@@ -1,14 +1,22 @@
+---
+status: active
+type: runbook
+scope: backend
+owner: backend-team
+last-reviewed: 2026-09-20
+---
+
 # Conexion SQL Server local
 
 ## Arquitectura de ejecucion
 
-- Backend: Spring Boot 4.0.6 ejecutado desde `C:\Users\josev\AsistenciasUCO\AsistenciasUCO`.
+- Backend: Spring Boot 4.0.6, ejecutar desde la raíz de este repositorio con Java 25.
 - Servidor principal: Spring MVC sobre servlet.
 - Concurrencia: virtual threads habilitados.
 - Persistencia: Spring JDBC contra SQL Server.
 - Commands: Stored Procedures.
 - Queries: Views.
-- Reactive: WebFlux/Reactor estan disponibles como dependencia para adapters futuros, pero no se usan en el core imperativo.
+- Realtime: Reactor Core está activo para SSE sobre Spring MVC; no hay starter WebFlux. El core sigue imperativo/JDBC.
 - Base esperada: `gestionasistenciadb`.
 - URL JDBC esperada: `jdbc:sqlserver://localhost:1433;databaseName=gestionasistenciadb;encrypt=true;trustServerCertificate=true`.
 
@@ -47,7 +55,7 @@ APP_DATABASE_EXPECTED_NAME=gestionasistenciadb
 
 `EstudianteRepositorySqlServerIT` valida consultas reales de solo lectura para listado paginado y detalle de estudiantes.
 
-## Contratos SQL confirmados
+## Contratos SQL consumidos por el backend (confirmar versión desplegada)
 
 - `dbo.usp_registrar_estudiante_en_grupo_usuario_no_existente`
 - `dbo.uv_grupo`
@@ -58,10 +66,10 @@ APP_DATABASE_EXPECTED_NAME=gestionasistenciadb
 
 ## Contrato de errores SQL
 
-Los SPs confirmados retornan `estadoResultado`, `mensajeUsuarioResultado` y `mensajeTecnicoResultado`. No existe `codigoResultado`.
+El ejecutor Java espera que los SPs retornen `estadoResultado`, `mensajeUsuarioResultado` y `mensajeTecnicoResultado`. No existe `codigoResultado`.
 
 El backend clasifica los fallos funcionales exclusivamente en infraestructura, usando operacion + mensajes SQL, y propaga codigos internos `ERR_*`. `mensajeTecnicoResultado` solo se usa para diagnostico/log y no sale por REST.
 
 ## Deuda de seguridad de password
 
-`dbo.Usuario.password` esta definido como `nvarchar(500) NOT NULL`; no hay evidencia en el contrato inspeccionado de hashing robusto. Esto queda como `SECURITY DEBT - ALTA PRIORIDAD` y requiere coordinacion entre backend, DB y autenticacion.
+El hallazgo histórico y la evidencia posterior de `PasswordEncoderPort`/`UsuarioPasswordHashSqlServerIT` se consolidan en [TD-020](../baseline/TECHNICAL_DEBT.md#td-020). No afirmar credenciales planas actuales ni validación runtime sin evidencia. Nunca imprimir valores para comprobarlo.

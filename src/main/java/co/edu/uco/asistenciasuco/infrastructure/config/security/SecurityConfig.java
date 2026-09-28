@@ -20,7 +20,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.List;
 
@@ -39,6 +38,9 @@ public class SecurityConfig {
     @Value("${app.security.cors.allowed-origins:http://localhost:4200}")
     private String allowedOrigins;
 
+    @Value("${app.security.azure-events.webhook-token:}")
+    private String azureWebhookToken;
+
     @Bean
     public InstitutionalJwtAuthenticationConverter institutionalJwtAuthenticationConverter(
             final JwtClaimsExtractor jwtClaimsExtractor
@@ -56,17 +58,41 @@ public class SecurityConfig {
     ) throws Exception {
         http
             .cors(Customizer.withDefaults())
-            // El cliente envía JWT en Authorization: Bearer. Ese header no se adjunta
-            // automáticamente en una petición cross-site, a diferencia de una cookie.
-            // Mantenemos CSRF para cualquier petición insegura sin Bearer.
-            .csrf(csrf -> csrf.ignoringRequestMatchers(SecurityConfig::hasBearerAuthorization))
+            // Política CSRF explícita (Sonar java:S4502, hotspot revisado como Safe):
+            // /api/v1/** es una API REST stateless. La API de negocio se autentica solo con un JWT
+            // en Authorization: Bearer (credencial explícita que el navegador NO adjunta solo, a
+            // diferencia de una cookie) y el webhook /api/v1/internal/azure-events, con el header
+            // aeg-sas-token validado por AzureEventGridAuthFilter (fail-closed). Ninguna ruta
+            // /api/v1/** autentica por cookie ni HttpSession (SessionCreationPolicy.STATELESS), así
+            // que no hay credencial ambiente que un sitio ajeno pueda hacer valer y el token CSRF
+            // no protege nada. Además, una petición insegura sin Bearer debe llegar al mecanismo de
+            // autenticación y responder 401, no 403 de CSRF.
+            // REVISAR ESTA DECISIÓN antes de introducir autenticación por cookie, BFF con cookie
+            // HttpOnly o sesión de navegador: CSRF deberá volver a habilitarse para ese flujo.
+            // Fuera de /api/v1/** la protección CSRF de Spring Security sigue activa.
+            .csrf(csrf -> csrf.ignoringRequestMatchers("/api/v1/**"))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .addFilterBefore(
+                    new AzureEventGridAuthFilter(azureWebhookToken),
+                    org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class
+            )
             .exceptionHandling(exceptionHandling -> exceptionHandling
                 .authenticationEntryPoint(authenticationEntryPoint)
                 .accessDeniedHandler(accessDeniedHandler)
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/**").permitAll()
+                // permitAll de AUTORIZACION: la autenticacion la exige AzureEventGridAuthFilter (header
+                // aeg-sas-token, fail-closed). No equivale a un endpoint sin autenticacion.
+                .requestMatchers(AzureEventGridAuthFilter.WEBHOOK_PATH).permitAll()
+                // Solo lectura de documentación runtime. La propiedad de Swagger UI controla
+                // si estos handlers existen; ningún endpoint de negocio se abre por esta regla.
+                .requestMatchers(
+                        HttpMethod.GET,
+                        "/swagger-ui",
+                        "/swagger-ui/**",
+                        "/openapi/openapi-golden-path.yaml"
+                ).permitAll()
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMINISTRADOR")
                 .requestMatchers("/api/v1/decano/**").hasAnyRole("DECANO", "ADMINISTRADOR")
                 .requestMatchers("/api/v1/coordinador/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")
@@ -90,6 +116,10 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PATCH, "/api/v1/sesiones/**").hasRole("DOCENTE")
                 // Generación del QR/PIN de una sesión: acción del docente que dicta la sesión.
                 .requestMatchers(HttpMethod.GET, "/api/v1/sesiones/*/qr-token").hasRole("DOCENTE")
+                // Sesiones agrupadas por grupo: usadas por el docente para elegir la sesion sobre
+                // la que va a tomar asistencia. La titularidad sobre el grupo se valida en
+                // Application via InstitutionalScopePort (ver ConsultarSesionesPorGrupoUseCaseImpl).
+                .requestMatchers(HttpMethod.GET, "/api/v1/sesiones/grupo/*").hasRole("DOCENTE")
                 .requestMatchers(HttpMethod.POST, "/api/v1/asistencias/lote").hasRole("DOCENTE")
                 .requestMatchers(HttpMethod.POST, "/api/v1/asistencias/revisiones").hasRole("ESTUDIANTE")
                 .requestMatchers(HttpMethod.POST, "/api/v1/asistencias").hasRole("DOCENTE")
@@ -97,8 +127,15 @@ public class SecurityConfig {
                 // GET /api/v1/grupos/{grupoId}/asistencias.
                 .requestMatchers(HttpMethod.POST, "/api/v1/asistencias/consultas/grupo")
                     .hasAnyRole("DOCENTE", "COORDINADOR", "ADMINISTRADOR")
-                // Grupos: los commands de coordinación (crear/actualizar/matricular) requieren
-                // COORDINADOR; las queries también las necesita el DOCENTE (ver sus grupos).
+                // Listado institucional completo de grupos: NO es la fuente de "mis grupos" del
+                // docente (esa es GET /api/v1/docente/horarios, ya scopeada por Usuario->Docente).
+                // Abrir este listado a DOCENTE permitiria enumerar grupos de otros docentes.
+                .requestMatchers(HttpMethod.GET, "/api/v1/grupos")
+                    .hasAnyRole("COORDINADOR", "ADMINISTRADOR")
+                // Sub-recursos de un grupo especifico (estudiantes, asistencias): el DOCENTE si
+                // los necesita, pero scopeados a su propio grupo en Application via
+                // InstitutionalScopePort (ver ConsultarEstudiantesGrupoUseCaseImpl /
+                // ConsultarAsistenciasPorGrupoUseCaseImpl).
                 .requestMatchers(HttpMethod.GET, "/api/v1/grupos/**")
                     .hasAnyRole("DOCENTE", "COORDINADOR", "ADMINISTRADOR")
                 .requestMatchers(HttpMethod.POST, "/api/v1/grupos/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")
@@ -124,11 +161,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    private static boolean hasBearerAuthorization(final HttpServletRequest request) {
-        final String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
-        return authorization != null && authorization.regionMatches(true, 0, "Bearer ", 0, 7);
-    }
-
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         final CorsConfiguration configuration = new CorsConfiguration();
@@ -151,7 +183,9 @@ public class SecurityConfig {
                 HttpHeaders.ACCEPT
         ));
         configuration.setExposedHeaders(List.of("X-Correlation-Id"));
-        configuration.setAllowCredentials(true);
+        // La API es Bearer-only: Authorization es un header explícito y no requiere credenciales
+        // de navegador (cookies, auth HTTP, certificados TLS de cliente).
+        configuration.setAllowCredentials(false);
         configuration.setMaxAge(3600L);
 
         final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

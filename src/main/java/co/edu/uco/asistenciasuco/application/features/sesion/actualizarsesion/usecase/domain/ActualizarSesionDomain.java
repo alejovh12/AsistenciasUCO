@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.sesion.actualizarsesion.u
 
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
+import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 
@@ -14,28 +15,22 @@ public final class ActualizarSesionDomain {
     private final String nombre;
     private final LocalDateTime fechaHoraInicio;
     private final LocalDateTime fechaHoraFin;
-    private final String aula;
-    private final String descripcion;
-    private final UUID docente;
+    private final UUID usuarioEjecutor;
 
     public ActualizarSesionDomain(
             final UUID sesion,
             final String nombre,
             final LocalDateTime fechaHoraInicio,
             final LocalDateTime fechaHoraFin,
-            final String aula,
-            final String descripcion,
-            final UUID docente
+            final UUID usuarioEjecutor
     ) {
         validarSesion(sesion);
-        validarDocente(docente);
+        validarUsuarioEjecutor(usuarioEjecutor);
         validarFechas(fechaHoraInicio, fechaHoraFin);
         this.nombre = validarNombre(nombre);
-        this.descripcion = validarDescripcion(descripcion);
-        this.aula = TextHelper.trim(aula);
         this.fechaHoraInicio = fechaHoraInicio;
         this.fechaHoraFin = fechaHoraFin;
-        this.docente = docente;
+        this.usuarioEjecutor = usuarioEjecutor;
         this.sesion = sesion;
     }
 
@@ -45,9 +40,9 @@ public final class ActualizarSesionDomain {
         }
     }
 
-    private void validarDocente(final UUID docente) {
-        if (ObjectHelper.isNull(docente)) {
-            throw new ValidationException(SesionErrorCode.ERR_DOCENTE_REQUERIDO);
+    private void validarUsuarioEjecutor(final UUID usuarioEjecutor) {
+        if (ObjectHelper.isNull(usuarioEjecutor)) {
+            throw new ValidationException(UsuarioErrorCode.ERR_USUARIO_REQUERIDO);
         }
     }
 
@@ -60,23 +55,12 @@ public final class ActualizarSesionDomain {
     private String validarNombre(final String nombre) {
         final String normalizado = TextHelper.trim(nombre);
         if (TextHelper.isNullOrBlank(normalizado)) {
-            throw new ValidationException(SesionErrorCode.ERR_TEMA_SESION_REQUERIDO);
+            throw new ValidationException(SesionErrorCode.ERR_NOMBRE_SESION_REQUERIDO);
         }
-        if (!TextHelper.hasLengthBetween(normalizado, 1, 150)) {
-            throw new ValidationException(SesionErrorCode.ERR_TEMA_SESION_LONGITUD_INVALIDA);
+        if (!TextHelper.hasLengthBetween(normalizado, 1, 50)) {
+            throw new ValidationException(SesionErrorCode.ERR_NOMBRE_SESION_LONGITUD_INVALIDA);
         }
         return normalizado;
-    }
-
-    private String validarDescripcion(final String descripcion) {
-        final String normalizada = TextHelper.trim(descripcion);
-        if (TextHelper.isNullOrBlank(normalizada)) {
-            return null;
-        }
-        if (!TextHelper.hasLengthBetween(normalizada, 10, 250)) {
-            throw new ValidationException(SesionErrorCode.ERR_DESCRIPCION_SESION_LONGITUD_INVALIDA);
-        }
-        return normalizada;
     }
 
     public UUID getSesion() {
@@ -95,15 +79,7 @@ public final class ActualizarSesionDomain {
         return fechaHoraFin;
     }
 
-    public String getAula() {
-        return aula;
-    }
-
-    public String getDescripcion() {
-        return descripcion;
-    }
-
-    public UUID getDocente() {
-        return docente;
+    public UUID getUsuarioEjecutor() {
+        return usuarioEjecutor;
     }
 }

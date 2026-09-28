@@ -6,6 +6,8 @@ import co.edu.uco.asistenciasuco.application.features.sesion.cerrarsesion.primar
 import co.edu.uco.asistenciasuco.application.features.sesion.cerrarsesion.usecase.impl.CerrarSesionUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.primaryports.interactor.ConsultarSesionInteractor;
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.usecase.impl.ConsultarSesionUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionesporgrupo.primaryports.interactor.ConsultarSesionesPorGrupoInteractor;
+import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionesporgrupo.usecase.impl.ConsultarSesionesPorGrupoUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.primaryports.interactor.CrearSesionInteractor;
 import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.usecase.impl.CrearSesionUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.sesion.generarsesionesgrupo.primaryports.interactor.GenerarSesionesGrupoInteractor;
@@ -32,6 +34,11 @@ class SesionWiringConfigurationTest {
         final var consultarSesionUseCase = config.consultarSesionUseCase(sesionRepositoryPort);
         assertInstanceOf(ConsultarSesionUseCaseImpl.class, consultarSesionUseCase);
         assertInstanceOf(ConsultarSesionInteractor.class, config.consultarSesionInputPort(consultarSesionUseCase));
+
+        final var consultarSesionesPorGrupoUseCase = config.consultarSesionesPorGrupoUseCase(sesionRepositoryPort, scopePort);
+        assertInstanceOf(ConsultarSesionesPorGrupoUseCaseImpl.class, consultarSesionesPorGrupoUseCase);
+        assertInstanceOf(ConsultarSesionesPorGrupoInteractor.class,
+                config.consultarSesionesPorGrupoInputPort(consultarSesionesPorGrupoUseCase));
 
         final var cerrarSesionUseCase = config.cerrarSesionUseCase(sesionRepositoryPort, scopePort);
         assertInstanceOf(CerrarSesionUseCaseImpl.class, cerrarSesionUseCase);

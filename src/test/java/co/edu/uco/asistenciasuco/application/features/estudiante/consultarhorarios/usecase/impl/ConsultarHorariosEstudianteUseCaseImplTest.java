@@ -40,7 +40,7 @@ class ConsultarHorariosEstudianteUseCaseImplTest {
         when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.of(estudiante));
         when(queryPort.consultarHorarioEstudiante(estudiante)).thenReturn(List.of(new HorarioEstudianteProjection(
                 id, estudiante, UUID.randomUUID(), "MAT-01", "Calculo", "G1", "LUNES",
-                LocalTime.of(8, 0), LocalTime.of(10, 0), "Aula 1", "Docente Uno")));
+                LocalTime.of(8, 0), LocalTime.of(10, 0), "Docente Uno")));
 
         final List<HorarioEstudianteDomain> result = useCase.execute(actor);
 

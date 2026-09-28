@@ -35,10 +35,32 @@ public final class AsignaturaSqlServerAdapter implements AsignaturaQueryPort, As
             final UUID idPlanEstudio,
             final Integer semestreNumero,
             final String nombreArea,
-            final String nombreComponente
+            final String nombreComponente,
+            final UUID usuarioEjecutor
     ) {
-        ejecutarGuardarAsignatura("crearAsignatura", "usp_crear_asignatura", idAsignatura, codigo, nombre, creditos,
-                idPlanEstudio, semestreNumero, nombreArea, nombreComponente);
+        procedureExecutor.execute("crearAsignatura", """
+                EXEC dbo.usp_crear_asignatura
+                     @idAsignatura = :idAsignatura,
+                     @codigo = :codigo,
+                     @nombre = :nombre,
+                     @creditos = :creditos,
+                     @idPlanEstudio = :idPlanEstudio,
+                     @semestreNumero = :semestreNumero,
+                     @nombreArea = :nombreArea,
+                     @nombreComponente = :nombreComponente,
+                     @idCorrelacion = :idCorrelacion,
+                     @idUsuarioEjecutor = :idUsuarioEjecutor
+                """, new MapSqlParameterSource()
+                .addValue("idAsignatura", idAsignatura)
+                .addValue("codigo", codigo)
+                .addValue("nombre", nombre)
+                .addValue("creditos", creditos)
+                .addValue("idPlanEstudio", idPlanEstudio)
+                .addValue("semestreNumero", semestreNumero)
+                .addValue("nombreArea", nombreArea)
+                .addValue("nombreComponente", nombreComponente)
+                .addValue("idCorrelacion", CorrelationIdContext.require())
+                .addValue("idUsuarioEjecutor", usuarioEjecutor));
     }
 
     @Override

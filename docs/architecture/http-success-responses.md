@@ -1,3 +1,11 @@
+---
+status: active
+type: normative
+scope: backend
+owner: backend-team
+last-reviewed: 2026-09-20
+---
+
 # HTTP success responses
 
 Los responses HTTP exitosos que usan envoltorios en el Primary Adapter se representan mediante tipos inmutables y explicitos.

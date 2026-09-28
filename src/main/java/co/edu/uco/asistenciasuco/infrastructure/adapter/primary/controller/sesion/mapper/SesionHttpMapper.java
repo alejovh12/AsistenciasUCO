@@ -18,17 +18,14 @@ public final class SesionHttpMapper {
     private SesionHttpMapper() {
     }
 
-    public static CrearSesionDTO toApplicationDTO(final CrearSesionRequest request, final UUID docenteId) {
+    public static CrearSesionDTO toApplicationDTO(final CrearSesionRequest request, final UUID usuarioEjecutor) {
         Objects.requireNonNull(request, "El request HTTP para crear sesion es obligatorio.");
         return new CrearSesionDTO(
                 request.getGrupo(),
-                request.getTema(),
-                request.getDescripcion(),
+                request.getNombre(),
                 HttpTemporalParser.parseLocalDateTime(request.getFechaHoraInicio(), "fechaHoraInicio"),
                 HttpTemporalParser.parseLocalDateTime(request.getFechaHoraFin(), "fechaHoraFin"),
-                request.getAula(),
-                request.getTipo(),
-                docenteId
+                usuarioEjecutor
         );
     }
 
@@ -37,15 +34,15 @@ public final class SesionHttpMapper {
         return new ConsultarSesionDTO(request.getSesion());
     }
 
-    public static CerrarSesionDTO toApplicationDTO(final CerrarSesionRequest request, final UUID docenteId) {
+    public static CerrarSesionDTO toApplicationDTO(final CerrarSesionRequest request, final UUID usuarioEjecutor) {
         Objects.requireNonNull(request, "El request HTTP para cerrar sesion es obligatorio.");
-        return new CerrarSesionDTO(request.getSesion(), docenteId, request.getObservacionCierre());
+        return new CerrarSesionDTO(request.getSesion(), usuarioEjecutor, request.getObservacionCierre(), usuarioEjecutor);
     }
 
     public static ActualizarSesionDTO toApplicationDTO(
             final UUID sesionId,
             final ActualizarSesionRequest request,
-            final UUID docenteId
+            final UUID usuarioEjecutor
     ) {
         Objects.requireNonNull(request, "El request HTTP para actualizar sesion es obligatorio.");
         return new ActualizarSesionDTO(
@@ -53,9 +50,7 @@ public final class SesionHttpMapper {
                 request.getNombre(),
                 HttpTemporalParser.parseLocalDateTime(request.getFechaHoraInicio(), "fechaHoraInicio"),
                 HttpTemporalParser.parseLocalDateTime(request.getFechaHoraFin(), "fechaHoraFin"),
-                request.getAula(),
-                request.getDescripcion(),
-                docenteId
+                usuarioEjecutor
         );
     }
 }

@@ -4,6 +4,7 @@ import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryp
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.domain.CrearDecanoDomain;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.exception.TipoIdentificacionErrorCode;
+import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 
@@ -22,6 +23,9 @@ public final class CrearDecanoMapper {
         if (dto.tipoIdentificacionId() == null) {
             throw new ValidationException(TipoIdentificacionErrorCode.ERR_TIPO_IDENTIFICACION_REQUERIDA);
         }
+        if (dto.usuarioEjecutor() == null) {
+            throw new ValidationException(UsuarioErrorCode.ERR_USUARIO_REQUERIDO);
+        }
 
         return new CrearDecanoDomain(
                 dto.tipoIdentificacionId(),
@@ -32,7 +36,8 @@ public final class CrearDecanoMapper {
                 dto.segundoApellido(),
                 dto.correo(),
                 dto.password(),
-                dto.idFacultad()
+                dto.idFacultad(),
+                dto.usuarioEjecutor()
         );
     }
 }

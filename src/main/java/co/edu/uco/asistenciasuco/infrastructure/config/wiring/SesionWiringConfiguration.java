@@ -12,6 +12,10 @@ import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.pri
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.primaryports.interactor.ConsultarSesionInteractor;
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.usecase.ConsultarSesionUseCase;
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.usecase.impl.ConsultarSesionUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionesporgrupo.primaryports.ConsultarSesionesPorGrupoInputPort;
+import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionesporgrupo.primaryports.interactor.ConsultarSesionesPorGrupoInteractor;
+import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionesporgrupo.usecase.ConsultarSesionesPorGrupoUseCase;
+import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionesporgrupo.usecase.impl.ConsultarSesionesPorGrupoUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.primaryports.CrearSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.primaryports.interactor.CrearSesionInteractor;
 import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.usecase.CrearSesionUseCase;
@@ -49,6 +53,21 @@ public class SesionWiringConfiguration {
     @Bean
     public ConsultarSesionInputPort consultarSesionInputPort(final ConsultarSesionUseCase consultarSesionUseCase) {
         return new ConsultarSesionInteractor(consultarSesionUseCase);
+    }
+
+    @Bean
+    public ConsultarSesionesPorGrupoUseCase consultarSesionesPorGrupoUseCase(
+            final SesionRepositoryPort sesionRepositoryPort,
+            final InstitutionalScopePort institutionalScopePort
+    ) {
+        return new ConsultarSesionesPorGrupoUseCaseImpl(sesionRepositoryPort, institutionalScopePort);
+    }
+
+    @Bean
+    public ConsultarSesionesPorGrupoInputPort consultarSesionesPorGrupoInputPort(
+            final ConsultarSesionesPorGrupoUseCase consultarSesionesPorGrupoUseCase
+    ) {
+        return new ConsultarSesionesPorGrupoInteractor(consultarSesionesPorGrupoUseCase);
     }
 
     @Bean

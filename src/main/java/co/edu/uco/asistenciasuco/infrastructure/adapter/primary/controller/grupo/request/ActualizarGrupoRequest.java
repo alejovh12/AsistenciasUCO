@@ -10,7 +10,6 @@ public final class ActualizarGrupoRequest {
     private UUID idDocente;
     private UUID docenteId;
     private Integer cupoMaximo;
-    private String aula;
     private List<String> dias;
     private String horaInicio;
     private String horaFin;
@@ -57,18 +56,6 @@ public final class ActualizarGrupoRequest {
 
     public void setCupoMaximo(final Integer cupoMaximo) {
         this.cupoMaximo = cupoMaximo;
-    }
-
-    public String getAula() {
-        return aula;
-    }
-
-    public void setAula(final String aula) {
-        this.aula = aula;
-    }
-
-    public void setRoom(final String room) {
-        this.aula = room;
     }
 
     public List<String> getDias() {

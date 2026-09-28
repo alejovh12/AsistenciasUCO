@@ -23,6 +23,7 @@ import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudiantee
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -81,9 +82,10 @@ public class GrupoWiringConfiguration {
 
     @Bean
     public ConsultarEstudiantesGrupoUseCase consultarEstudiantesGrupoUseCase(
-            final GrupoRepositoryPort grupoRepositoryPort
+            final GrupoRepositoryPort grupoRepositoryPort,
+            final InstitutionalScopePort institutionalScopePort
     ) {
-        return new ConsultarEstudiantesGrupoUseCaseImpl(grupoRepositoryPort);
+        return new ConsultarEstudiantesGrupoUseCaseImpl(grupoRepositoryPort, institutionalScopePort);
     }
 
     @Bean

@@ -6,8 +6,8 @@ import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorKind;
 public enum SesionErrorCode implements ErrorDefinition {
     ERR_SESION_NO_EXISTE("ERR_SESION_NO_EXISTE", "La sesion consultada no existe.", ErrorKind.NOT_FOUND),
     ERR_SESION_REQUERIDA("ERR_SESION_REQUERIDA", "La sesion es obligatoria.", ErrorKind.VALIDATION),
-    ERR_TEMA_SESION_REQUERIDO("ERR_TEMA_SESION_REQUERIDO", "El tema de la sesion es obligatorio.", ErrorKind.VALIDATION),
-    ERR_TEMA_SESION_LONGITUD_INVALIDA("ERR_TEMA_SESION_LONGITUD_INVALIDA", "El tema de la sesion debe tener entre 5 y 100 caracteres.", ErrorKind.VALIDATION),
+    ERR_NOMBRE_SESION_REQUERIDO("ERR_NOMBRE_SESION_REQUERIDO", "El nombre de la sesion es obligatorio.", ErrorKind.VALIDATION),
+    ERR_NOMBRE_SESION_LONGITUD_INVALIDA("ERR_NOMBRE_SESION_LONGITUD_INVALIDA", "El nombre de la sesion debe tener entre 1 y 50 caracteres.", ErrorKind.VALIDATION),
     ERR_DOCENTE_REQUERIDO("ERR_DOCENTE_REQUERIDO", "El docente autenticado es obligatorio para operar la sesion.", ErrorKind.VALIDATION),
     ERR_RANGO_FECHAS_SESION_INVALIDO("ERR_RANGO_FECHAS_SESION_INVALIDO", "El rango de fechas de la sesion no es valido.", ErrorKind.VALIDATION),
     ERR_DESCRIPCION_SESION_LONGITUD_INVALIDA("ERR_DESCRIPCION_SESION_LONGITUD_INVALIDA", "Cuando se indique una descripcion, debe tener entre 10 y 250 caracteres.", ErrorKind.VALIDATION),

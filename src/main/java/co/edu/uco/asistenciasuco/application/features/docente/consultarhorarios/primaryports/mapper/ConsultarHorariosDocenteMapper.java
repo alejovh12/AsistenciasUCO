@@ -11,6 +11,6 @@ public final class ConsultarHorariosDocenteMapper {
     public static HorarioDocenteDTO toDTO(final HorarioDocenteDomain domain) {
         return new HorarioDocenteDTO(domain.id(), domain.idDocente(), domain.idGrupo(), domain.codigoMateria(),
                 domain.nombreMateria(), domain.seccion(), domain.dia(), domain.horaInicio(), domain.horaFin(),
-                domain.aula(), domain.totalEstudiantes());
+                domain.totalEstudiantes());
     }
 }

@@ -39,16 +39,19 @@ class AsignaturaSqlServerAdapterTest {
         CorrelationIdContext.set(CORRELACION);
         final UUID id = UUID.randomUUID();
         final UUID plan = UUID.randomUUID();
+        final UUID usuarioEjecutor = UUID.randomUUID();
 
-        adapter.crearAsignatura(id, "COD1", "Nombre", 3, plan, 1, "Area", "Componente");
+        adapter.crearAsignatura(id, "COD1", "Nombre", 3, plan, 1, "Area", "Componente", usuarioEjecutor);
 
         final var sql = ArgumentCaptor.forClass(String.class);
         final var params = ArgumentCaptor.forClass(MapSqlParameterSource.class);
         verify(procedures).execute(org.mockito.ArgumentMatchers.eq("crearAsignatura"), sql.capture(), params.capture());
         assertTrue(sql.getValue().contains("usp_crear_asignatura"));
+        assertTrue(sql.getValue().contains("@idUsuarioEjecutor"));
         assertEquals(id, params.getValue().getValue("idAsignatura"));
         assertEquals("COD1", params.getValue().getValue("codigo"));
         assertEquals(CORRELACION, params.getValue().getValue("idCorrelacion"));
+        assertEquals(usuarioEjecutor, params.getValue().getValue("idUsuarioEjecutor"));
     }
 
     @Test

@@ -6,6 +6,12 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:com.microsoft.sqlserver.jdbc.SQLServerDriver}
+  # LB-002.1: defaults seguros por si se habilitara la auto-configuracion JPA de Boot (hoy excluida
+  # en AsistenciasUcoApplication; el EMF explicito fija hbm2ddl=none). Hibernate no administra el schema.
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
   sql:
     init:
       mode: never
@@ -18,6 +24,10 @@ spring:
 
 server:
   port: 8080
+
+asistencias:
+  swagger-ui:
+    enabled: ${ASISTENCIAS_SWAGGER_UI_ENABLED:false}
 
 management:
   endpoints:
@@ -76,10 +86,19 @@ app:
   adapters:
     persistence:
       provider: ${APP_ADAPTERS_PERSISTENCE_PROVIDER:sqlserver}
+      # LB-002.1: tecnologia de SOLO consultarAsistenciasPorGrupo (jdbc | jpa). Los commands son
+      # siempre JDBC. Rollback = jdbc. Valor no soportado => falla el arranque.
+      asistencia-query-provider: ${APP_ADAPTERS_PERSISTENCE_ASISTENCIA_QUERY_PROVIDER:jdbc}
     identity:
       provider: ${APP_ADAPTERS_IDENTITY_PROVIDER:keycloak}
     security:
       provider: ${APP_ADAPTERS_SECURITY_PROVIDER:keycloak}
+    vault:
+      provider: ${APP_ADAPTERS_VAULT_PROVIDER:azure_keyvault}
+    parameter-catalog:
+      provider: ${APP_ADAPTERS_PARAMETER_CATALOG_PROVIDER:azure_appconfig}
+    message-catalog:
+      provider: ${APP_ADAPTERS_MESSAGE_CATALOG_PROVIDER:azure}
     storage:
       provider: ${APP_ADAPTERS_STORAGE_PROVIDER:local}
     realtime:
@@ -88,12 +107,17 @@ app:
       provider: ${APP_ADAPTERS_AUDIT_PROVIDER:logging}
 
   providers:
+    # Azure Key Vault y App Configuration (autenticacion por DefaultAzureCredential con Azure CLI)
+    azure-keyvault:
+      endpoint: ${AZURE_KEYVAULT_ENDPOINT:https://kv-asist-dev-21245.vault.azure.net/}
+    azure-appconfig:
+      endpoint: ${AZURE_APPCONFIG_ENDPOINT:https://appcs-asist-dev-29183.azconfig.io}
     # Identity provisioning administrativo (crear/verificar/eliminar cuentas institucionales
     # y asignar client roles vía Admin REST API). NO confundir con keycloak-security: esto
     # nunca participa en la validación de JWT de cada request. Ver
     # docs/security/keycloak-identity-provider.md.
     keycloak-identity:
-      server-url: ${KEYCLOAK_SERVER_URL:http://127.0.0.1:8081}
+      server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8081}
       realm: ${KEYCLOAK_REALM:asistencias-uco}
       admin-client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:asistencias-backend-admin}
       admin-client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:}
@@ -102,7 +126,7 @@ app:
     # Runtime security (validacion de JWT). Ver
     # docs/security/runtime-security-provider-architecture.md.
     keycloak-security:
-      issuer-uri: ${KEYCLOAK_ISSUER_URI:http://127.0.0.1:8081/realms/asistencias-uco}
+      issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8081/realms/asistencias-uco}
       api-client-id: ${KEYCLOAK_API_CLIENT_ID:asistencias-api}
       expected-audience: ${KEYCLOAK_EXPECTED_AUDIENCE:asistencias-api}
       user-id-claim: ${KEYCLOAK_USER_ID_CLAIM:idUsuario}
@@ -113,4 +137,7 @@ app:
   # directamente via @Value.
   security:
     cors:
-      allowed-origins: ${APP_SECURITY_CORS_ALLOWED_ORIGINS:http://localhost:4200}
+      allowed-origins: ${APP_SECURITY_CORS_ALLOWED_ORIGINS:http://localhost:4200,http://127.0.0.1:4200}
+    azure-events:
+      # Sin valor por defecto funcional: vacio = webhook Event Grid rechaza todo (401, fail-closed).
+      webhook-token: ${AZURE_EVENTGRID_WEBHOOK_TOKEN:}

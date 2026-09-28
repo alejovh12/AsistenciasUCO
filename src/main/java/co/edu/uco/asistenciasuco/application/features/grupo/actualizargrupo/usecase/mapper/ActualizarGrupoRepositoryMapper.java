@@ -17,7 +17,7 @@ public final class ActualizarGrupoRepositoryMapper {
                 domain.nombre(),
                 domain.idDocente(),
                 domain.cupoMaximo(),
-                domain.aula()
+                domain.usuarioEjecutor()
         );
     }
 

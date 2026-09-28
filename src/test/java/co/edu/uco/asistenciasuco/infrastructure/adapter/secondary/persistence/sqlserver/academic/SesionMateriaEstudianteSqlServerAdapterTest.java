@@ -9,8 +9,10 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 
 import java.sql.ResultSet;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -41,8 +43,8 @@ class SesionMateriaEstudianteSqlServerAdapterTest {
         when(rs.getObject("idGrupo")).thenReturn(UUID.randomUUID());
         when(rs.getObject("codigoGrupo")).thenReturn("G1");
         when(rs.getObject("nombreGrupo")).thenReturn("Grupo 1");
-        when(rs.getObject("fechaHoraInicio")).thenReturn(Timestamp.valueOf(LocalDateTime.of(2026, 1, 20, 8, 0)));
-        when(rs.getObject("fechaHoraFin")).thenReturn(Timestamp.valueOf(LocalDateTime.of(2026, 1, 20, 10, 0)));
+        when(rs.getObject("fechaHoraInicio")).thenReturn(Timestamp.from(Instant.parse("2026-01-20T08:00:00Z")));
+        when(rs.getObject("fechaHoraFin")).thenReturn(Timestamp.from(Instant.parse("2026-01-20T10:00:00Z")));
         when(jdbc.query(anyString(), any(MapSqlParameterSource.class), any(RowMapper.class)))
                 .thenAnswer(invocation -> List.of(((RowMapper<SesionMateriaEstudianteProjection>) invocation.getArgument(2)).mapRow(rs, 0)));
 
@@ -66,5 +68,33 @@ class SesionMateriaEstudianteSqlServerAdapterTest {
                 UUID.randomUUID(), UUID.randomUUID());
 
         assertTrue(resultado.isEmpty());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void consultarSesionesMateria_decodifica_datetime2_como_utc_sin_depender_del_timezone_host() throws Exception {
+        final TimeZone original = TimeZone.getDefault();
+        try {
+            TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+            final LocalDateTime expectedStart = LocalDateTime.of(2026, 6, 15, 8, 30);
+            final LocalDateTime expectedEnd = LocalDateTime.of(2026, 6, 15, 10, 30);
+            final Timestamp start = Timestamp.valueOf(expectedStart);
+            final Timestamp end = Timestamp.valueOf(expectedEnd);
+            final ResultSet rs = mock(ResultSet.class);
+            when(rs.getObject("fechaHoraInicio")).thenReturn(start);
+            when(rs.getObject("fechaHoraFin")).thenReturn(end);
+            when(jdbc.query(anyString(), any(MapSqlParameterSource.class), any(RowMapper.class)))
+                    .thenAnswer(invocation -> List.of(((RowMapper<SesionMateriaEstudianteProjection>) invocation.getArgument(2))
+                            .mapRow(rs, 0)));
+
+            TimeZone.setDefault(TimeZone.getTimeZone("Asia/Tokyo"));
+            final SesionMateriaEstudianteProjection projection = adapter.consultarSesionesMateria(
+                    UUID.randomUUID(), UUID.randomUUID()).getFirst();
+
+            assertEquals(expectedStart, projection.fechaHoraInicio());
+            assertEquals(expectedEnd, projection.fechaHoraFin());
+        } finally {
+            TimeZone.setDefault(original);
+        }
     }
 }

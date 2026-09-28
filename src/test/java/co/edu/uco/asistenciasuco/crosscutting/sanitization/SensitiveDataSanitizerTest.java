@@ -18,6 +18,16 @@ class SensitiveDataSanitizerTest {
     }
 
     @Test
+    void sanitizeForLog_reemplaza_cr_y_lf_y_redacta_secretos() {
+        final String sanitized = SensitiveDataSanitizer.sanitizeForLog("linea1\r\nlinea2\npassword=hunter2");
+
+        assertFalse(sanitized.contains("\r"));
+        assertFalse(sanitized.contains("\n"));
+        assertFalse(sanitized.contains("hunter2"));
+        assertTrue(sanitized.startsWith("linea1__linea2_"));
+    }
+
+    @Test
     void sanitizeForLog_trunca_valores_muy_largos() {
         final String largo = "a".repeat(600);
 

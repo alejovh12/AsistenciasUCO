@@ -16,13 +16,14 @@ class AsistenciaConsultadaDTOTest {
         final UUID grupo = UUID.randomUUID();
         final UUID sesion = UUID.randomUUID();
 
-        final AsistenciaConsultadaDTO dto = new AsistenciaConsultadaDTO(asistencia, estudiante, grupo, sesion, true, "A tiempo");
+        final AsistenciaConsultadaDTO dto = new AsistenciaConsultadaDTO(asistencia, estudiante, grupo, sesion, true, "EX", "A tiempo");
 
         assertEquals(asistencia, dto.getAsistencia());
         assertEquals(estudiante, dto.getEstudiante());
         assertEquals(grupo, dto.getGrupo());
         assertEquals(sesion, dto.getSesion());
         assertEquals(true, dto.getPresente());
+        assertEquals("EX", dto.getEstado());
         assertEquals("A tiempo", dto.getObservacion());
     }
 
@@ -36,11 +37,13 @@ class AsistenciaConsultadaDTOTest {
         dto.setGrupo(null);
         dto.setSesion(null);
         dto.setPresente(false);
+        dto.setEstado(null);
         dto.setObservacion(null);
 
         assertEquals(asistencia, dto.getAsistencia());
         assertNull(dto.getEstudiante());
         assertEquals(false, dto.getPresente());
+        assertNull(dto.getEstado());
         assertNull(dto.getObservacion());
     }
 }

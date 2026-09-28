@@ -16,6 +16,7 @@ public final class CrearDecanoDomain {
     private final String correo;
     private final String password;
     private final UUID idFacultad;
+    private final UUID usuarioEjecutor;
 
     public CrearDecanoDomain(
             final UUID tipoIdentificacionId,
@@ -26,7 +27,8 @@ public final class CrearDecanoDomain {
             final String segundoApellido,
             final String correo,
             final String password,
-            final UUID idFacultad
+            final UUID idFacultad,
+            final UUID usuarioEjecutor
     ) {
         this.tipoIdentificacionId = tipoIdentificacionId;
         this.numeroIdentificacion = numeroIdentificacion;
@@ -37,6 +39,7 @@ public final class CrearDecanoDomain {
         this.correo = correo;
         this.password = password;
         this.idFacultad = idFacultad;
+        this.usuarioEjecutor = usuarioEjecutor;
     }
 
     public UUID getTipoIdentificacionId() {
@@ -73,5 +76,9 @@ public final class CrearDecanoDomain {
 
     public UUID getIdFacultad() {
         return idFacultad;
+    }
+
+    public UUID getUsuarioEjecutor() {
+        return usuarioEjecutor;
     }
 }

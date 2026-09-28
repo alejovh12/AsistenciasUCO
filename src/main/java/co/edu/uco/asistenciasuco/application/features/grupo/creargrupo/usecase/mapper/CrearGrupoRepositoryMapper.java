@@ -20,7 +20,7 @@ public final class CrearGrupoRepositoryMapper {
                 domain.codigo(),
                 domain.nombre(),
                 domain.idDocente(),
-                domain.aula()
+                domain.usuarioEjecutor()
         );
     }
 

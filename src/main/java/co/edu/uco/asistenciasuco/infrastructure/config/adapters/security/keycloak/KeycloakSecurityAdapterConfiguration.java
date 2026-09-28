@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.infrastructure.config.adapters.security.keyclo
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.keycloak.KeycloakJwtClaimsExtractor;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.contract.JwtClaimsExtractor;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.validation.AudienceValidator;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.validation.InstitutionalIssuerValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.validation.RequiredUuidClaimValidator;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.KeycloakSecurityProviderProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -14,7 +15,7 @@ import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtDecoders;
-import org.springframework.security.oauth2.jwt.JwtValidators;
+import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 
 /**
@@ -54,13 +55,15 @@ public class KeycloakSecurityAdapterConfiguration {
     public JwtDecoder jwtDecoder(final KeycloakSecurityProviderProperties properties) {
         final NimbusJwtDecoder jwtDecoder = JwtDecoders.fromIssuerLocation(properties.issuerUri());
 
+        final OAuth2TokenValidator<Jwt> timestampValidator = new JwtTimestampValidator();
         final OAuth2TokenValidator<Jwt> issuerValidator =
-                JwtValidators.createDefaultWithIssuer(properties.issuerUri());
+                new InstitutionalIssuerValidator(properties.issuerUri());
         final OAuth2TokenValidator<Jwt> audienceValidator = new AudienceValidator(properties.expectedAudience());
         final OAuth2TokenValidator<Jwt> userIdClaimValidator =
                 new RequiredUuidClaimValidator(properties.userIdClaim());
 
         jwtDecoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
+                timestampValidator,
                 issuerValidator,
                 audienceValidator,
                 userIdClaimValidator

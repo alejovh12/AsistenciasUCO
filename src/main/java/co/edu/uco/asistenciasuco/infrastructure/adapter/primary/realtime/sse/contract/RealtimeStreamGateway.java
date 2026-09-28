@@ -4,6 +4,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.res
 import reactor.core.publisher.Flux;
 
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Puerta de entrada tecnica que expone el canal realtime a los controllers, sin que estos
@@ -14,7 +15,16 @@ import java.util.Map;
  */
 public interface RealtimeStreamGateway {
 
-    Flux<RealtimeEventResponse> subscribe();
+    /**
+     * Suscribe al {@code usuarioId} autenticado al canal de eventos de negocio de un
+     * {@code grupoId} especifico. La autorizacion (titularidad del docente sobre el grupo) se
+     * valida UNA sola vez al establecer la suscripcion; el filtrado por grupo ocurre despues en
+     * memoria sobre el {@link Flux}, sin volver a consultar la base de datos por cada evento.
+     *
+     * @throws co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException
+     *         si el usuario no tiene acceso autorizado al grupo solicitado.
+     */
+    Flux<RealtimeEventResponse> subscribe(UUID usuarioId, UUID grupoId);
 
     int activeSubscribersCount();
 

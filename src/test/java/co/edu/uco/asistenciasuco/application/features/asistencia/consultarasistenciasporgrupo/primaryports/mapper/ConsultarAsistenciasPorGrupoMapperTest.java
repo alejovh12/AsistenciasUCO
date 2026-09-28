@@ -26,11 +26,13 @@ class ConsultarAsistenciasPorGrupoMapperTest {
         final UUID grupo = UUID.randomUUID();
         final UUID sesion = UUID.randomUUID();
 
+        final UUID usuarioEjecutor = UUID.randomUUID();
         final ConsultarAsistenciasPorGrupoDomain domain =
-                ConsultarAsistenciasPorGrupoMapper.toDomain(new ConsultarAsistenciasPorGrupoDTO(grupo, sesion));
+                ConsultarAsistenciasPorGrupoMapper.toDomain(new ConsultarAsistenciasPorGrupoDTO(grupo, sesion, usuarioEjecutor));
 
         assertEquals(grupo, domain.getGrupo());
         assertEquals(sesion, domain.getSesion());
+        assertEquals(usuarioEjecutor, domain.getUsuarioEjecutor());
     }
 
     @Test
@@ -41,12 +43,13 @@ class ConsultarAsistenciasPorGrupoMapperTest {
     @Test
     void toDTOs_mapea_entidad_completa() {
         final AsistenciaConsultadaEntity entity = new AsistenciaConsultadaEntity(
-                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), true, "A tiempo");
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), true, "EX", "A tiempo");
 
         final List<AsistenciaConsultadaDTO> resultado = ConsultarAsistenciasPorGrupoMapper.toDTOs(List.of(entity));
 
         assertEquals(1, resultado.size());
         assertEquals(entity.getAsistencia(), resultado.getFirst().getAsistencia());
         assertTrue(resultado.getFirst().getPresente());
+        assertEquals("EX", resultado.getFirst().getEstado());
     }
 }

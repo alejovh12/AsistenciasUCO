@@ -11,6 +11,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 
 import java.sql.ResultSet;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -40,8 +41,8 @@ class ReporteAsistenciaSqlServerAdapterTest {
         when(rs.getObject("numeroSesion")).thenReturn(3);
         when(rs.getInt("numeroSesion")).thenReturn(3);
         when(rs.getObject("nombreSesion")).thenReturn("Sesion 3");
-        when(rs.getObject("fechaHoraInicio")).thenReturn(Timestamp.valueOf(LocalDateTime.of(2026, 1, 20, 8, 0)));
-        when(rs.getObject("fechaHoraFin")).thenReturn(Timestamp.valueOf(LocalDateTime.of(2026, 1, 20, 10, 0)));
+        when(rs.getObject("fechaHoraInicio")).thenReturn(Timestamp.from(Instant.parse("2026-01-20T08:00:00Z")));
+        when(rs.getObject("fechaHoraFin")).thenReturn(Timestamp.from(Instant.parse("2026-01-20T10:00:00Z")));
         when(rs.getObject("documentoEstudiante")).thenReturn("123456789");
         when(rs.getObject("nombreEstudiante")).thenReturn("Ana Perez");
         when(rs.getObject("correoEstudiante")).thenReturn("ana@uco.edu.co");
@@ -56,6 +57,8 @@ class ReporteAsistenciaSqlServerAdapterTest {
         assertEquals(1, resultado.size());
         assertEquals("G1", resultado.getFirst().codigoGrupo());
         assertEquals(3, resultado.getFirst().numeroSesion());
+        assertEquals(LocalDateTime.of(2026, 1, 20, 8, 0), resultado.getFirst().fechaHoraInicio());
+        assertEquals(LocalDateTime.of(2026, 1, 20, 10, 0), resultado.getFirst().fechaHoraFin());
         assertTrue(resultado.getFirst().asistio());
         assertNull(resultado.getFirst().razonCausa());
         final var params = ArgumentCaptor.forClass(MapSqlParameterSource.class);

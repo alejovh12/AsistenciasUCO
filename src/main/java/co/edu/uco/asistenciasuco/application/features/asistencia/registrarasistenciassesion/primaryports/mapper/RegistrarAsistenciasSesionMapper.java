@@ -26,6 +26,6 @@ public final class RegistrarAsistenciasSesionMapper {
                                 registro == null ? null : registro.getEstado()
                         ))
                         .toList();
-        return new RegistrarAsistenciasSesionDomain(dto.getSesion(), registros);
+        return new RegistrarAsistenciasSesionDomain(dto.getSesion(), registros, dto.getUsuarioEjecutor());
     }
 }

@@ -66,11 +66,11 @@ public final class SesionConsultadaEntity {
         final String nombreNormalizado = TextHelper.trim(nombre);
 
         if (TextHelper.isNullOrBlank(nombreNormalizado)) {
-            throw new ValidationException(SesionErrorCode.ERR_TEMA_SESION_REQUERIDO);
+            throw new ValidationException(SesionErrorCode.ERR_NOMBRE_SESION_REQUERIDO);
         }
 
-        if (!TextHelper.hasLengthBetween(nombreNormalizado, 1, 150)) {
-            throw new ValidationException(SesionErrorCode.ERR_TEMA_SESION_LONGITUD_INVALIDA);
+        if (!TextHelper.hasLengthBetween(nombreNormalizado, 1, 50)) {
+            throw new ValidationException(SesionErrorCode.ERR_NOMBRE_SESION_LONGITUD_INVALIDA);
         }
 
         return nombreNormalizado;

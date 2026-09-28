@@ -1,3 +1,11 @@
+---
+status: active
+type: normative
+scope: backend
+owner: backend-team
+last-reviewed: 2026-09-26
+---
+
 # Estructura de Infrastructure y Crosscutting
 
 Este documento es la referencia oficial del árbol de `infrastructure` y `crosscutting` tras el
@@ -12,6 +20,7 @@ infrastructure/
   adapter/
     primary/                         # entrada externa al backend
       controller/                    # controllers REST por feature (admin, asistencia, ...)
+        azure/                       # AzureEventGridWebhookController -> Application InputPort
       realtime/sse/
         controller/                  # RealtimeEventsController
         contract/                    # RealtimeStreamGateway (contrato interno, no Application Port)
@@ -40,6 +49,11 @@ infrastructure/
       identity/keycloak/             # KeycloakIdentityProviderAdapter
       realtime/localsse/             # ReactorRealtimeAdapter
       cryptography/password/spring/  # SpringPasswordEncoderAdapter
+      catalog/
+        azure/                       # App Configuration: mensajes y parámetros
+        sqlserver/                   # providers SQL Server de catálogos
+        composite/                   # implementación de CatalogInvalidationPort
+      vault/{azure,local}/           # Key Vault / variables de entorno
   audit/                             # ver sección 4 (no es observability)
     model/                           # AuditEvent, AuditActorType, AuditOutcome, RequestActor
     contract/                        # AuditEventPublisher
@@ -60,6 +74,8 @@ infrastructure/
                                       # PasswordEncoderAdapterConfiguration
       realtime/localsse/             # LocalSseRealtimeAdapterConfiguration
       audit/                         # AuditAdapterConfiguration
+      catalog/{azure,invalidation}/  # App Configuration e invalidación
+      vault/{azure,local}/           # Key Vault / local env
     wiring/                          # Composition Root: ENSAMBLAJE de UseCase+Interactor a
                                       # partir de Application Ports, cero tecnología
                                       # (<Feature>WiringConfiguration, uno por feature)
@@ -83,9 +99,9 @@ Cada carpeta bajo `infrastructure/adapter/secondary` (y sus pares en `config/ada
 `audit/adapter`) sigue el mismo patrón de tres niveles:
 
 1. **Capability**: la capacidad que Application necesita (`persistence`, `identity`, `realtime`,
-   `cryptography`, `audit`). Nombra el "qué", nunca el "cómo".
+   `cryptography`, `catalog`, `vault`, `audit`). Nombra el "qué", nunca el "cómo".
 2. **Provider**: la tecnología/proveedor concreto que satisface esa capability hoy
-   (`sqlserver`, `keycloak`, `localsse`, `spring`, `logging`). Puede haber más de uno por
+   (`sqlserver`, `keycloak`, `localsse`, `spring`, `azure`, `local`, `logging`). Puede haber más de uno por
    capability (p. ej. `audit/adapter/{logging,sqlserver}`).
 3. **Implementación**: la(s) clase(s) concreta(s) dentro de ese provider.
 
@@ -104,6 +120,8 @@ reorganiza la capability existente.
   Application secondary port (`*RepositoryPort`, `*QueryPort`, `IdentityProviderPort`,
   `RealtimePublisherPort`, `PasswordEncoderPort`, `InstitutionalScopePort`) contra una tecnología
   concreta.
+
+El webhook Azure es un Primary Adapter: `AzureEventGridWebhookController → ProcesarEventoAzureInputPort → CatalogInvalidationPort`. Nunca llama directamente a `AzureKeyVaultAdapter` ni a los adapters de App Configuration.
 
 ## 4. Application Port vs contrato interno de Infrastructure
 
@@ -148,7 +166,7 @@ No toda tecnología externa necesita un Application Port. La regla:
   que Application ni siquiera debería saber que existe: métricas (Micrometer + exporter
   Prometheus + scrape), tracing (OpenTelemetry + OTLP + collector Tempo/Alloy), logs
   estructurados (Logback + Loki), dashboards (Grafana, consumidor puro, nunca productor). Estas
-  piezas se configuran vía `application.yml`/`build.gradle`/`pom.xml`, nunca vía un Port de
+  piezas se configuran vía `application.yml`/`pom.xml`, nunca vía un Port de
   Application.
 
 Ver también la sección 8.
@@ -165,18 +183,7 @@ repartido entre `infrastructure.observability.audit` (modelo + contrato),
 Infrastructure (`adapter/{logging,sqlserver}`), separado explícitamente de
 `infrastructure.observability` (correlation, tracing).
 
-**DEUDA ARQUITECTÓNICA CONOCIDA**: `infrastructure.audit.adapter.sqlserver.AuditEventJdbcRepository`
-ejecuta `INSERT`/`SELECT` directos contra `dbo.AuditoriaEvento` vía `JdbcTemplate`
-(`NamedParameterJdbcTemplate.update(SQL_INSERT, ...)` / `JdbcTemplate.query(SQL_FIND_BY_CORRELATION_ID, ...)`),
-sin pasar por un stored procedure `usp_*` público, violando la regla "nunca DML directo, solo
-contratos `usp_*` públicos, nunca `usp_*_interno`" que el resto de la capa de persistencia
-respeta. Este refactor **relocalizó la clase por organización, sin tocar su DML**: crear un
-stored procedure nuevo o modificar la base de datos es un cambio de comportamiento/contrato de
-base de datos, fuera del alcance de un refactor puramente estructural, y se documenta aquí en
-lugar de improvisarse. Queda como **P1 para una fase futura dedicada de base de datos**: exponer
-`usp_RegistrarEventoAuditoria` / `usp_ConsultarEventoAuditoriaPorCorrelationId` (o equivalente) y
-migrar `AuditEventJdbcRepository` a usarlos vía `CanonicalStoredProcedureExecutor`, igual que el
-resto de `persistence.sqlserver`.
+**Excepción AS-IS:** `AuditEventJdbcRepository` todavía hace DML directo. La descripción, impacto, prioridad y condición de cierre se conservan exclusivamente en [TD-010](../baseline/TECHNICAL_DEBT.md#td-010). No es precedente para nuevos adapters ni autorización para crear SP en esta tarea.
 
 ## 8. Neutralidad de vendor de observabilidad
 
@@ -188,8 +195,8 @@ en `infrastructure.adapter`. Se integran exclusivamente vía estándares:
 - **Tracing -> Tempo**: OpenTelemetry SDK exporta spans vía OTLP a un collector (Alloy), que los
   reenvía a Tempo. `infrastructure.observability.tracing.opentelemetry.TraceContextSnapshot` es
   el único punto de Infrastructure que toca el SDK de OTel.
-- **Logs -> Loki**: logging estructurado (Logback) va a stdout; Alloy lo recolecta y lo envía a
-  Loki. Ningún código productivo importa un cliente de Loki.
+- **Logs -> Loki**: logging estructurado (Logback) se escribe actualmente en archivos JSONL; Alloy
+  lee el directorio montado y lo envía a Loki (`application.yml` y `infra/observability/alloy/config.alloy`). stdout/OTLP en cloud es evolución, no el flujo local actual. Ningún código productivo importa un cliente de Loki.
 - **Dashboards -> Grafana**: consumidor puro de Prometheus/Loki/Tempo vía `infra/observability/grafana/provisioning`;
   nunca es tocado por Application ni por Infrastructure en tiempo de ejecución.
 
@@ -237,35 +244,9 @@ sin conocer ninguna tecnología (no importa `infrastructure.adapter.secondary..`
   `FileStoragePort` en Application cuando exista un caso de uso real (ver deuda pendiente,
   sección 10), luego `infrastructure/adapter/secondary/storage/minio/`.
 
-## 10. KNOWN ARCHITECTURAL DEBT
+## 10. Seguimiento de deuda
 
-Deuda identificada durante este refactor o ya documentada previamente, listada aquí para que
-quede en un único lugar:
-
-1. **`AuditEventJdbcRepository` hace DML directo** (INSERT/SELECT) en lugar de usar un stored
-   procedure `usp_*` público. Ver sección 7. Relocalizado, no corregido (requiere cambio de base
-   de datos, fuera de alcance de este refactor).
-2. **`FileStoragePort` no existe todavía**: no hay capability de almacenamiento de archivos en
-   Application. Cualquier adapter de MinIO/S3 debe esperar a que exista un caso de uso real que
-   lo motive (regla de la sección 6): no se crea un Port especulativo.
-3. **El `DataSource` no tiene todavía una property/Composition Root explícitamente
-   provider-specific** más allá de `app.adapters.persistence.provider=sqlserver`: agregar un
-   segundo motor SQL (Postgres) requerirá extraer `PersistenceAdapterProperties` en properties
-   por provider si empiezan a divergir en forma (host/puerto/driver).
-4. **RabbitMQ no existe**: no hay capability de mensajería asíncrona en Application. Se agrega
-   siguiendo el mismo patrón capability->provider cuando exista un caso de uso real.
-5. **Redis no existe**: ni como cache ni como Pub/Sub para realtime. Mismo criterio que RabbitMQ.
-6. **Autorización contextual**: `InstitutionalScopePort`/`InstitutionalScopeSqlServerAdapter`
-   cubre el caso actual (¿puede este usuario ver este grupo/sesión?); una autorización más fina
-   basada en atributos (ABAC) no está implementada y no fue tocada por este refactor.
-7. **Realtime en el frontend**: el backend expone `GET /api/v1/realtime/events` (SSE) y
-   `POST /api/v1/realtime/emit` (utilidad de desarrollo); el consumo desde el frontend no es
-   responsabilidad de este backend y no fue tocado.
-8. **Naming inconsistente en un test ya existente**: `infrastructure/config/FeaturesBeansConfigTest.java`
-   (no movido por este refactor porque prueba `SqlServerCoreRepositoryAdapterConfiguration`, un
-   Composition Root de adapters, no una "Feature Config"/wiring) tiene un nombre de archivo que
-   ya no refleja lo que prueba. Se deja documentado para una futura limpieza menor en lugar de
-   generar churn adicional en este PR.
+Consultar el [ledger único](../baseline/TECHNICAL_DEBT.md): auditoría DML TD-010; storage TD-004; DataSource TD-012; autorización TD-016; frontend/realtime TD-017; nombre de test TD-026. RabbitMQ/Redis son evoluciones sin implementación, sujetas a necesidad real y [LINEA_BASE](../baseline/LINEA_BASE.md), no requisitos de crear infraestructura por anticipado.
 
 ## 11. Ejemplos correctos e incorrectos
 
@@ -292,5 +273,5 @@ un estándar de plataforma consumido vía Micrometer, no una capability de negoc
 
 ---
 
-Ver también `docs/architecture/infrastructure-refactor-mapping.md` para la tabla completa
+Ver también `docs/archive/infrastructure-refactor-mapping.md` para la tabla completa
 ruta-anterior -> ruta-nueva con justificación de cada movimiento significativo.

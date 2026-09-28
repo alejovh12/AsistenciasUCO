@@ -23,8 +23,7 @@ public final class CrearSesionRequestValidator implements Validator<CrearSesionR
                 "El grupo es obligatorio.",
                 "El identificador del grupo no es valido."
         );
-        validateRequiredLength(builder, "tema", request.getTema(), 5, 100, "El tema es obligatorio.", "El tema debe tener entre 5 y 100 caracteres.");
-        validateOptionalMaxLength(builder, "descripcion", request.getDescripcion(), 250, "La descripcion puede tener maximo 250 caracteres.");
+        validateRequiredLength(builder, "nombre", request.getNombre(), 1, 50, "El nombre es obligatorio.", "El nombre debe tener entre 1 y 50 caracteres.");
         return builder.build();
     }
 
@@ -47,22 +46,5 @@ public final class CrearSesionRequestValidator implements Validator<CrearSesionR
                 ValidationErrorType.INVALID_LENGTH,
                 lengthMessage
         );
-    }
-
-    private static void validateOptionalMaxLength(
-            final ValidationResultBuilder builder,
-            final String field,
-            final String value,
-            final int max,
-            final String lengthMessage
-    ) {
-        if (ValidationHelper.hasText(value)) {
-            builder.addIf(
-                    !ValidationHelper.isLengthAtMost(value.trim(), max),
-                    field,
-                    ValidationErrorType.INVALID_LENGTH,
-                    lengthMessage
-            );
-        }
     }
 }

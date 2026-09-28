@@ -15,7 +15,8 @@ class CrearDecanoIdentityMapperTest {
     void usa_perfil_canonico_y_role_decano() {
         final UUID idUsuario = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
         final CrearDecanoDomain domain = new CrearDecanoDomain(
-                UUID.randomUUID(), 123456789, "Ana", "Maria", "Perez", "Gomez", "nuevo@uco.edu.co", "Clave123!", UUID.randomUUID()
+                UUID.randomUUID(), 123456789, "Ana", "Maria", "Perez", "Gomez", "nuevo@uco.edu.co", "Clave123!",
+                UUID.randomUUID(), UUID.randomUUID()
         );
         final var dto = CrearDecanoIdentityMapper.toCrearCuentaIdentidadDTO(
                 domain, new UsuarioIdentidadRepositoryProjection(

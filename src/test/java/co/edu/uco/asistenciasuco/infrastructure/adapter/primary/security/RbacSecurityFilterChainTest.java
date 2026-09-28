@@ -26,16 +26,23 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -82,6 +89,16 @@ class RbacSecurityFilterChainTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Test
+    void swaggerUiAndCanonicalOpenApiArePublicButBusinessApiRemainsProtected() throws Exception {
+        mockMvc.perform(get("/swagger-ui/index.html"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/openapi/openapi-golden-path.yaml"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/docentes"))
+                .andExpect(status().isUnauthorized());
+    }
+
     // --- /api/v1/docentes/** : directorio general (COORDINADOR/ADMINISTRADOR) ---
 
     @Test
@@ -103,6 +120,81 @@ class RbacSecurityFilterChainTest {
                 .andExpect(status().isOk());
     }
 
+    // --- GET /api/v1/grupos : listado institucional completo (NO es "mis grupos" del docente) ---
+
+    @Test
+    void listar_grupos_docente_recibe_403() throws Exception {
+        // El listado completo institucional no es la fuente de "mis grupos" del docente
+        // (esa es GET /api/v1/docente/horarios); abrirlo permitiria enumerar grupos ajenos.
+        mockMvc.perform(get("/api/v1/grupos").header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void listar_grupos_coordinador_es_permitido() throws Exception {
+        mockMvc.perform(get("/api/v1/grupos").header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
+                .andExpect(status().isOk());
+    }
+
+    // --- GET /api/v1/grupos/{grupoId}/estudiantes : sub-recurso de un grupo (DOCENTE si accede,
+    // scopeado a su propio grupo en Application) ---
+
+    @Test
+    void estudiantes_de_grupo_docente_es_permitido_por_security_filter_chain() throws Exception {
+        mockMvc.perform(get("/api/v1/grupos/{grupoId}/estudiantes", "11111111-1111-1111-1111-111111111111")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isOk());
+    }
+
+    // --- GET /api/v1/sesiones/grupo/{grupoId} : sesiones de un grupo, usadas por el docente
+    // para elegir sobre cual tomar asistencia ---
+
+    @Test
+    void sesiones_por_grupo_docente_es_permitido_por_security_filter_chain() throws Exception {
+        mockMvc.perform(get("/api/v1/sesiones/grupo/{grupoId}", "11111111-1111-1111-1111-111111111111")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void sesiones_por_grupo_coordinador_recibe_403() throws Exception {
+        mockMvc.perform(get("/api/v1/sesiones/grupo/{grupoId}", "11111111-1111-1111-1111-111111111111")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
+                .andExpect(status().isForbidden());
+    }
+
+    // --- PUT (legacy) y PATCH /api/v1/sesiones/{sesionId}: misma autorización DOCENTE (LB-001C.2A) ---
+
+    @Test
+    void actualizar_sesion_put_y_patch_docente_permitido() throws Exception {
+        mockMvc.perform(put("/api/v1/sesiones/{id}", "11111111-1111-1111-1111-111111111111")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isOk());
+        mockMvc.perform(patch("/api/v1/sesiones/{id}", "11111111-1111-1111-1111-111111111111")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void actualizar_sesion_put_y_patch_coordinador_recibe_403() throws Exception {
+        mockMvc.perform(put("/api/v1/sesiones/{id}", "11111111-1111-1111-1111-111111111111")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(patch("/api/v1/sesiones/{id}", "11111111-1111-1111-1111-111111111111")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void actualizar_sesion_put_y_patch_con_bearer_invalido_recibe_401() throws Exception {
+        mockMvc.perform(put("/api/v1/sesiones/{id}", "11111111-1111-1111-1111-111111111111")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer token-invalido"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(patch("/api/v1/sesiones/{id}", "11111111-1111-1111-1111-111111111111")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer token-invalido"))
+                .andExpect(status().isUnauthorized());
+    }
+
     // --- POST /api/v1/grupos : command de coordinación ---
 
     @Test
@@ -117,10 +209,54 @@ class RbacSecurityFilterChainTest {
                 .andExpect(status().isOk());
     }
 
+    // --- Política CSRF: /api/v1/** es stateless y Bearer-only; sin Bearer => 401, nunca 403 de CSRF ---
+
     @Test
-    void peticion_insegura_solo_con_cookie_requiere_csrf() throws Exception {
+    void peticion_insegura_solo_con_cookie_de_sesion_no_autentica_y_responde_401() throws Exception {
         mockMvc.perform(post("/api/v1/grupos").cookie(new Cookie("JSESSIONID", "session-de-prueba")))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void metodos_inseguros_protegidos_sin_bearer_responden_401_y_no_403_de_csrf() throws Exception {
+        mockMvc.perform(post("/api/v1/grupos")).andExpect(status().isUnauthorized());
+        mockMvc.perform(put("/api/v1/sesiones/{id}", "s-1")).andExpect(status().isUnauthorized());
+        mockMvc.perform(patch("/api/v1/sesiones/{id}", "s-1")).andExpect(status().isUnauthorized());
+        mockMvc.perform(delete("/api/v1/grupos/{id}", "g-1")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void metodos_inseguros_con_bearer_valido_no_requieren_token_csrf() throws Exception {
+        mockMvc.perform(post("/api/v1/grupos").header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
+                .andExpect(status().isOk());
+        mockMvc.perform(put("/api/v1/sesiones/{id}", "s-1").header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isOk());
+        mockMvc.perform(patch("/api/v1/sesiones/{id}", "s-1").header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isOk());
+        mockMvc.perform(delete("/api/v1/grupos/{id}", "g-1").header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void metodos_inseguros_con_rol_incorrecto_responden_403_de_autorizacion() throws Exception {
+        mockMvc.perform(post("/api/v1/grupos").header(HttpHeaders.AUTHORIZATION, bearer("ESTUDIANTE")))
                 .andExpect(status().isForbidden());
+        mockMvc.perform(put("/api/v1/sesiones/{id}", "s-1").header(HttpHeaders.AUTHORIZATION, bearer("ESTUDIANTE")))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(patch("/api/v1/sesiones/{id}", "s-1").header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(delete("/api/v1/grupos/{id}", "g-1").header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void la_sesion_http_no_se_crea_al_autenticar_con_bearer() throws Exception {
+        final var result = mockMvc.perform(
+                        post("/api/v1/grupos").header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertNull(result.getRequest().getSession(false));
     }
 
     @Test
@@ -144,13 +280,9 @@ class RbacSecurityFilterChainTest {
         mockMvc.perform(post("/api/v1/grupos").header(HttpHeaders.AUTHORIZATION, "Bearer "))
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(post("/api/v1/grupos").header(HttpHeaders.AUTHORIZATION, "Bearer"))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
-    void post_sin_bearer_y_sin_token_csrf_permanece_bloqueado() throws Exception {
-        mockMvc.perform(post("/api/v1/grupos"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/v1/grupos").header(HttpHeaders.AUTHORIZATION, "Basic dXNlcjpwYXNz"))
+                .andExpect(status().isUnauthorized());
     }
 
     // --- POST /api/v1/asistencias/lote : registro docente por lote ---
@@ -256,6 +388,16 @@ class RbacSecurityFilterChainTest {
     @RestController
     static final class RbacProbeController {
 
+        @GetMapping("/swagger-ui/index.html")
+        String swaggerUi() {
+            return "ok";
+        }
+
+        @GetMapping("/openapi/openapi-golden-path.yaml")
+        String canonicalOpenApi() {
+            return "openapi: 3.1.2";
+        }
+
         @GetMapping("/api/v1/docentes")
         String docentes() {
             return "ok";
@@ -266,8 +408,38 @@ class RbacSecurityFilterChainTest {
             return "ok";
         }
 
+        @GetMapping("/api/v1/grupos")
+        String listarGrupos() {
+            return "ok";
+        }
+
+        @GetMapping("/api/v1/grupos/{grupoId}/estudiantes")
+        String estudiantesDeGrupo() {
+            return "ok";
+        }
+
+        @GetMapping("/api/v1/sesiones/grupo/{grupoId}")
+        String sesionesPorGrupo() {
+            return "ok";
+        }
+
+        @PutMapping("/api/v1/sesiones/{sesionId}")
+        String actualizarSesionLegacy() {
+            return "ok";
+        }
+
+        @PatchMapping("/api/v1/sesiones/{sesionId}")
+        String actualizarSesion() {
+            return "ok";
+        }
+
         @PostMapping("/api/v1/grupos")
         String crearGrupo() {
+            return "ok";
+        }
+
+        @DeleteMapping("/api/v1/grupos/{grupoId}")
+        String eliminarGrupo() {
             return "ok";
         }
 
@@ -314,6 +486,11 @@ class RbacSecurityFilterChainTest {
                 }
                 return jwt;
             };
+        }
+
+        @Bean
+        co.edu.uco.asistenciasuco.application.features.catalogo.resolvermensajeusuario.primaryports.ResolverMensajeUsuarioInputPort resolverMensajeUsuarioInputPort() {
+            return codigo -> java.util.Optional.empty();
         }
 
         @Bean

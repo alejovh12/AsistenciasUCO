@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.co
 
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.response.RealtimeEventResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.contract.RealtimeStreamGateway;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
@@ -15,6 +16,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -22,8 +24,12 @@ import static org.mockito.Mockito.when;
 
 class RealtimeEventsControllerTest {
 
+    private static final UUID USUARIO = UUID.randomUUID();
+    private static final UUID GRUPO = UUID.randomUUID();
+
     private final RealtimeStreamGateway gateway = mock(RealtimeStreamGateway.class);
-    private final RealtimeEventsController controller = new RealtimeEventsController(gateway);
+    private final AuthenticatedUserResolver authenticatedUserResolver = () -> USUARIO;
+    private final RealtimeEventsController controller = new RealtimeEventsController(gateway, authenticatedUserResolver);
 
     @Test
     void subscribe_produce_serverSentEvent_conservando_id_y_type_del_evento() {
@@ -34,9 +40,9 @@ class RealtimeEventsControllerTest {
                 "corr-1",
                 Map.of("estudiante", "123")
         );
-        when(gateway.subscribe()).thenReturn(Flux.just(response));
+        when(gateway.subscribe(USUARIO, GRUPO)).thenReturn(Flux.just(response));
 
-        StepVerifier.create(controller.subscribe())
+        StepVerifier.create(controller.subscribe(GRUPO))
                 .assertNext(sse -> {
                     assertEquals(response.eventId().toString(), sse.id());
                     assertEquals("ASISTENCIA_REGISTRADA", sse.event());
@@ -47,12 +53,21 @@ class RealtimeEventsControllerTest {
     }
 
     @Test
+    void subscribe_resuelve_usuario_autenticado_y_delega_grupoId_en_el_gateway() {
+        when(gateway.subscribe(any(), any())).thenReturn(Flux.never());
+
+        controller.subscribe(GRUPO).subscribe().dispose();
+
+        verify(gateway).subscribe(USUARIO, GRUPO);
+    }
+
+    @Test
     void subscribe_emite_varios_eventos_en_orden() {
         final RealtimeEventResponse first = response("A");
         final RealtimeEventResponse second = response("B");
-        when(gateway.subscribe()).thenReturn(Flux.just(first, second));
+        when(gateway.subscribe(USUARIO, GRUPO)).thenReturn(Flux.just(first, second));
 
-        StepVerifier.create(controller.subscribe())
+        StepVerifier.create(controller.subscribe(GRUPO))
                 .expectNextMatches(sse -> first.eventId().toString().equals(sse.id()))
                 .expectNextMatches(sse -> second.eventId().toString().equals(sse.id()))
                 .thenCancel()
@@ -61,9 +76,9 @@ class RealtimeEventsControllerTest {
 
     @Test
     void subscribe_emite_heartbeat_como_comentario_sse() {
-        when(gateway.subscribe()).thenReturn(Flux.never());
+        when(gateway.subscribe(USUARIO, GRUPO)).thenReturn(Flux.never());
 
-        StepVerifier.withVirtualTime(controller::subscribe)
+        StepVerifier.withVirtualTime(() -> controller.subscribe(GRUPO))
                 .thenAwait(RealtimeEventsController.HEARTBEAT_INTERVAL)
                 .assertNext(sse -> assertEquals("heartbeat", sse.comment()))
                 .thenCancel()
@@ -74,9 +89,9 @@ class RealtimeEventsControllerTest {
     void subscribe_delega_en_el_gateway_y_la_desconexion_no_lanza() {
         final Sinks.Many<RealtimeEventResponse> sink =
                 Sinks.many().multicast().directBestEffort();
-        when(gateway.subscribe()).thenReturn(sink.asFlux());
+        when(gateway.subscribe(USUARIO, GRUPO)).thenReturn(sink.asFlux());
 
-        final reactor.core.Disposable subscription = controller.subscribe().subscribe();
+        final reactor.core.Disposable subscription = controller.subscribe(GRUPO).subscribe();
         assertEquals(Sinks.EmitResult.OK, sink.tryEmitNext(response("VIVO")));
 
         subscription.dispose();

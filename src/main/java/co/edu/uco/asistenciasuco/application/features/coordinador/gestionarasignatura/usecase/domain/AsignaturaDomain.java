@@ -13,6 +13,7 @@ public record AsignaturaDomain(
         Integer creditos,
         Integer semestreNumero,
         String nombreArea,
-        String nombreComponente
+        String nombreComponente,
+        UUID usuarioEjecutor
 ) {
 }

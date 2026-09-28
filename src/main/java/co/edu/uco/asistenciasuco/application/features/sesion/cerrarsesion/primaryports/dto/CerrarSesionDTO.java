@@ -10,6 +10,7 @@ public final class CerrarSesionDTO {
     private UUID sesion;
     private UUID docente;
     private String observacionCierre;
+    private UUID usuarioEjecutor;
 
     public CerrarSesionDTO() {
         super();
@@ -18,11 +19,13 @@ public final class CerrarSesionDTO {
     public CerrarSesionDTO(
             final UUID sesion,
             final UUID docente,
-            final String observacionCierre
+            final String observacionCierre,
+            final UUID usuarioEjecutor
     ) {
         setSesion(sesion);
         setDocente(docente);
         setObservacionCierre(observacionCierre);
+        setUsuarioEjecutor(usuarioEjecutor);
     }
 
     public UUID getSesion() {
@@ -47,6 +50,14 @@ public final class CerrarSesionDTO {
 
     public void setObservacionCierre(final String observacionCierre) {
         this.observacionCierre = observacionCierre;
+    }
+
+    public UUID getUsuarioEjecutor() {
+        return usuarioEjecutor;
+    }
+
+    public void setUsuarioEjecutor(final UUID usuarioEjecutor) {
+        this.usuarioEjecutor = usuarioEjecutor;
     }
 
 }

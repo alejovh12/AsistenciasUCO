@@ -29,6 +29,12 @@ app:
   adapters:
     persistence:
       provider: sqlserver
+    vault:
+      provider: local_env
+    parameter-catalog:
+      provider: sqlserver
+    message-catalog:
+      provider: sqlserver
     identity:
       provider: keycloak
     security:

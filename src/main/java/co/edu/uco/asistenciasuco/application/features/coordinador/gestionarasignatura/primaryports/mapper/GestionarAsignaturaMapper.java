@@ -26,7 +26,8 @@ public final class GestionarAsignaturaMapper {
                 dto.creditos(),
                 dto.semestreNumero(),
                 dto.nombreArea(),
-                dto.nombreComponente()
+                dto.nombreComponente(),
+                dto.usuarioEjecutor()
         );
     }
 }

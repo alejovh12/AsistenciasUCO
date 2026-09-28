@@ -50,9 +50,10 @@ class AsistenciaRepositorySqlServerAdapterTest {
 
     @Test
     void batchRegistrationSerializesEntriesAndCallsPublicProcedure() {
+        final UUID usuarioEjecutor = UUID.randomUUID();
         CorrelationIdContext.set(CORRELATION);
         adapter.registrarAsistenciasSesion(new RegistrarAsistenciasSesionRepositoryDTO(SESSION,
-                List.of(new RegistroAsistenciaSesionRepositoryDTO(STUDENT, "ASISTIO"))));
+                List.of(new RegistroAsistenciaSesionRepositoryDTO(STUDENT, "AN")), usuarioEjecutor));
 
         final var operation = ArgumentCaptor.forClass(String.class);
         final var sql = ArgumentCaptor.forClass(String.class);
@@ -60,23 +61,28 @@ class AsistenciaRepositorySqlServerAdapterTest {
         verify(procedures).execute(operation.capture(), sql.capture(), params.capture());
         assertEquals("registrarAsistenciasSesion", operation.getValue());
         assertTrue(sql.getValue().contains("dbo.usp_registrar_asistencias_sesion"));
+        assertTrue(sql.getValue().contains("@idUsuarioEjecutor"));
         assertEquals(SESSION, params.getValue().getValue("idSesion"));
         final String serialized = (String) params.getValue().getValue("asistenciaJSON");
         assertTrue(serialized.contains(STUDENT.toString()));
-        assertTrue(serialized.contains("ASISTIO"));
+        assertTrue(serialized.contains("AN"));
         assertEquals(CORRELATION, params.getValue().getValue("idCorrelacion"));
+        assertEquals(usuarioEjecutor, params.getValue().getValue("idUsuarioEjecutor"));
     }
 
     @Test
     void autonomousRegistrationAndReviewUseExpectedProceduresAndParameters() {
         final UUID request = UUID.randomUUID();
         final UUID teacher = UUID.randomUUID();
+        final UUID studentUsuarioEjecutor = UUID.randomUUID();
+        final UUID teacherUsuarioEjecutor = UUID.randomUUID();
         CorrelationIdContext.set(CORRELATION);
-        adapter.registrarAsistenciaAutonoma(new RegistrarAsistenciaAutonomaRepositoryDTO(STUDENT, SESSION, "123456"));
+        adapter.registrarAsistenciaAutonoma(
+                new RegistrarAsistenciaAutonomaRepositoryDTO(STUDENT, SESSION, "123456", studentUsuarioEjecutor));
         adapter.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(STUDENT, SESSION,
-                "SALUD", "Justificación", "soporte.pdf", "https://example.com/soporte"));
+                "SALUD", "Justificación", "soporte.pdf", "https://example.com/soporte", studentUsuarioEjecutor));
         adapter.resolverSolicitudRevisionAsistencia(new ResolverSolicitudRevisionAsistenciaRepositoryDTO(request,
-                teacher, "APROBAR", "Aceptada"));
+                teacher, "APROBAR", "Aceptada", teacherUsuarioEjecutor));
 
         final var operation = ArgumentCaptor.forClass(String.class);
         final var sql = ArgumentCaptor.forClass(String.class);
@@ -87,10 +93,14 @@ class AsistenciaRepositorySqlServerAdapterTest {
         assertTrue(sql.getAllValues().get(0).contains("dbo.usp_registrar_asistencia_estudiante_autonomo"));
         assertTrue(sql.getAllValues().get(1).contains("dbo.usp_radicar_solicitud_revision_asistencia"));
         assertTrue(sql.getAllValues().get(2).contains("dbo.usp_resolver_solicitud_revision_asistencia"));
+        sql.getAllValues().forEach(value -> assertTrue(value.contains("@idUsuarioEjecutor")));
         assertEquals("123456", params.getAllValues().get(0).getValue("codigoVerificacion"));
         assertEquals("soporte.pdf", params.getAllValues().get(1).getValue("soporteNombre"));
         assertEquals(request, params.getAllValues().get(2).getValue("idSolicitud"));
         assertEquals(teacher, params.getAllValues().get(2).getValue("idDocente"));
+        assertEquals(studentUsuarioEjecutor, params.getAllValues().get(0).getValue("idUsuarioEjecutor"));
+        assertEquals(studentUsuarioEjecutor, params.getAllValues().get(1).getValue("idUsuarioEjecutor"));
+        assertEquals(teacherUsuarioEjecutor, params.getAllValues().get(2).getValue("idUsuarioEjecutor"));
         params.getAllValues().forEach(value -> assertEquals(CORRELATION, value.getValue("idCorrelacion")));
     }
 
@@ -104,6 +114,7 @@ class AsistenciaRepositorySqlServerAdapterTest {
         when(resultSet.getObject("grupo")).thenReturn(GROUP.toString());
         when(resultSet.getObject("sesion")).thenReturn(SESSION);
         when(resultSet.getBoolean("presente")).thenReturn(true);
+        when(resultSet.getObject("estado")).thenReturn("EX");
         when(resultSet.getObject("observacion")).thenReturn("A tiempo");
         when(jdbc.query(anyString(), any(MapSqlParameterSource.class), any(RowMapper.class)))
                 .thenAnswer(invocation -> List.of(((RowMapper<AsistenciaRepositoryProjection>) invocation.getArgument(2))
@@ -115,11 +126,13 @@ class AsistenciaRepositorySqlServerAdapterTest {
         assertEquals(attendance, result.getFirst().getAsistencia());
         assertEquals(STUDENT, result.getFirst().getEstudiante());
         assertTrue(result.getFirst().isPresente());
+        assertEquals("EX", result.getFirst().getEstado());
         assertEquals("A tiempo", result.getFirst().getObservacion());
         final var sql = ArgumentCaptor.forClass(String.class);
         final var params = ArgumentCaptor.forClass(MapSqlParameterSource.class);
         verify(jdbc).query(sql.capture(), params.capture(), any(RowMapper.class));
         assertTrue(sql.getValue().contains("dbo.uv_detalle_asistencia"));
+        assertTrue(sql.getValue().contains("codigoRazonCausa"));
         assertEquals(GROUP, params.getValue().getValue("idGrupo"));
         assertEquals(SESSION, params.getValue().getValue("idSesion"));
     }

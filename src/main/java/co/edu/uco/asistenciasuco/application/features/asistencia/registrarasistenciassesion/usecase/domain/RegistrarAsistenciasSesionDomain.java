@@ -11,16 +11,25 @@ public final class RegistrarAsistenciasSesionDomain {
 
     private final UUID sesion;
     private final List<RegistroAsistenciaSesionDomain> registros;
+    private final UUID usuarioEjecutor;
 
-    public RegistrarAsistenciasSesionDomain(final UUID sesion, final List<RegistroAsistenciaSesionDomain> registros) {
+    public RegistrarAsistenciasSesionDomain(
+            final UUID sesion,
+            final List<RegistroAsistenciaSesionDomain> registros,
+            final UUID usuarioEjecutor
+    ) {
         if (ObjectHelper.isNull(sesion)) {
             throw new ValidationException(AsistenciaErrorCode.ERR_SESION_ASISTENCIA_REQUERIDA);
         }
         if (ObjectHelper.isNull(registros) || registros.isEmpty()) {
             throw new ValidationException(AsistenciaErrorCode.ERR_REGISTROS_ASISTENCIA_REQUERIDOS);
         }
+        if (ObjectHelper.isNull(usuarioEjecutor)) {
+            throw new ValidationException(AsistenciaErrorCode.ERR_USUARIO_EJECUTOR_ASISTENCIA_REQUERIDO);
+        }
         this.sesion = sesion;
         this.registros = List.copyOf(registros);
+        this.usuarioEjecutor = usuarioEjecutor;
     }
 
     public UUID getSesion() {
@@ -29,5 +38,9 @@ public final class RegistrarAsistenciasSesionDomain {
 
     public List<RegistroAsistenciaSesionDomain> getRegistros() {
         return registros;
+    }
+
+    public UUID getUsuarioEjecutor() {
+        return usuarioEjecutor;
     }
 }

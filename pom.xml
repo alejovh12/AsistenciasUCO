@@ -29,6 +29,8 @@
     <properties>
         <java.version>25</java.version>
         <jacoco.version>0.8.15</jacoco.version>
+        <swagger-parser.version>2.1.46</swagger-parser.version>
+        <swagger-ui.version>5.32.15</swagger-ui.version>
         <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
     </properties>
     <dependencies>
@@ -62,6 +64,17 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+        <!--
+            LB-002.1: JPA/Hibernate solo para el piloto de query de asistencia (Infrastructure).
+            La auto-configuracion JPA de Boot se excluye en AsistenciasUcoApplication; el
+            EntityManagerFactory se construye explicitamente en el Composition Root y solo cuando
+            app.adapters.persistence.asistencia-query-provider=jpa. La version de Hibernate la
+            administra Spring Boot.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.security</groupId>
@@ -118,7 +131,41 @@
             <artifactId>reactor-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.swagger.parser.v3</groupId>
+            <artifactId>swagger-parser</artifactId>
+            <version>${swagger-parser.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-security-keyvault-secrets</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-data-appconfiguration</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-identity</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
     </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.azure</groupId>
+                <artifactId>azure-sdk-bom</artifactId>
+                <version>1.2.32</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
         <plugins>
@@ -189,6 +236,64 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.9.0</version>
+                <executions>
+                    <execution>
+                        <id>unpack-swagger-ui-assets</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.webjars</groupId>
+                                    <artifactId>swagger-ui</artifactId>
+                                    <version>${swagger-ui.version}</version>
+                                    <type>jar</type>
+                                    <outputDirectory>${project.build.outputDirectory}/runtime-docs/swagger-ui</outputDirectory>
+                                    <includes>
+                                        META-INF/resources/webjars/swagger-ui/${swagger-ui.version}/swagger-ui.css,
+                                        META-INF/resources/webjars/swagger-ui/${swagger-ui.version}/swagger-ui-bundle.js,
+                                        META-INF/resources/webjars/swagger-ui/${swagger-ui.version}/swagger-ui-standalone-preset.js,
+                                        META-INF/resources/webjars/swagger-ui/${swagger-ui.version}/favicon-16x16.png,
+                                        META-INF/resources/webjars/swagger-ui/${swagger-ui.version}/favicon-32x32.png
+                                    </includes>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-canonical-openapi</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/runtime-docs/openapi</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/docs/contracts/openapi</directory>
+                                    <filtering>false</filtering>
+                                    <includes>
+                                        <include>openapi-golden-path.yaml</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
@@ -209,6 +314,51 @@
                             </systemPropertyVariables>
                             <includes>
                                 <include>**/*IT.java</include>
+                            </includes>
+                            <!-- Cloud Integration (Azure real) solo se ejecuta con -Pazure-integration. -->
+                            <excludes>
+                                <exclude>**/*CloudIntegrationIT.java</exclude>
+                            </excludes>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <!--
+            Cloud Integration Azure (Key Vault / App Configuration reales, solo lectura).
+            Comando: .\mvnw.cmd -Pazure-integration verify
+            Ejecuta unicamente *CloudIntegrationIT via Failsafe; Surefire (unit/component) y el
+            gate JaCoCo no aplican en este alcance. Requiere identidad DefaultAzureCredential y
+            AZURE_KEYVAULT_ENDPOINT / AZURE_APPCONFIG_ENDPOINT; sin ambiente la prueba FALLA.
+        -->
+        <profile>
+            <id>azure-integration</id>
+            <properties>
+                <jacoco.skip>true</jacoco.skip>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <configuration>
+                            <includes>
+                                <include>**/*CloudIntegrationIT.java</include>
                             </includes>
                         </configuration>
                         <executions>

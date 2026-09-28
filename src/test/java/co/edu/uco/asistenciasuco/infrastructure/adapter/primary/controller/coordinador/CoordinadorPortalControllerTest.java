@@ -57,7 +57,7 @@ class CoordinadorPortalControllerTest {
     private final CoordinadorPortalController controller = new CoordinadorPortalController(plans, planSubjects,
             subjects, periods, students, managePlans, manageSubjects, identity);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
-            .setControllerAdvice(new GlobalExceptionHandler()).build();
+            .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
 
     @Test
     void queryEndpointsPassActorAndSerializePortResults() throws Exception {

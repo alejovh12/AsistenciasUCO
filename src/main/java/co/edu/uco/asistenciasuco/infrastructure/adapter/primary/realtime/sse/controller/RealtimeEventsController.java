@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.co
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.response.RealtimeEventResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.contract.RealtimeStreamGateway;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
@@ -19,6 +21,7 @@ import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Canal HTTP SSE de la vertical realtime.
@@ -38,24 +41,36 @@ public class RealtimeEventsController {
     static final Duration HEARTBEAT_INTERVAL = Duration.ofSeconds(25);
 
     private final RealtimeStreamGateway realtimeStreamGateway;
+    private final AuthenticatedUserResolver authenticatedUserResolver;
 
-    public RealtimeEventsController(final RealtimeStreamGateway realtimeStreamGateway) {
+    public RealtimeEventsController(
+            final RealtimeStreamGateway realtimeStreamGateway,
+            final AuthenticatedUserResolver authenticatedUserResolver
+    ) {
         this.realtimeStreamGateway = Objects.requireNonNull(
                 realtimeStreamGateway,
                 "RealtimeStreamGateway es requerido."
         );
+        this.authenticatedUserResolver = Objects.requireNonNull(
+                authenticatedUserResolver,
+                "AuthenticatedUserResolver es requerido."
+        );
     }
 
     /**
-     * Canal SSE permanente.
+     * Canal SSE permanente, scopeado por grupo.
      *
-     * <p>Los comentarios heartbeat mantienen actividad en conexiones ociosas sin contaminar el
-     * flujo de eventos de negocio ni las metricas del publisher.</p>
+     * <p>{@code grupoId} es obligatorio: la titularidad del docente autenticado sobre ese grupo
+     * se valida una unica vez al establecer la suscripcion (ver {@link RealtimeStreamGateway});
+     * el stream resultante solo entrega eventos de negocio de ese grupo. Los comentarios
+     * heartbeat mantienen actividad en conexiones ociosas sin contaminar el flujo de eventos de
+     * negocio ni las metricas del publisher.</p>
      */
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<RealtimeEventResponse>> subscribe() {
+    public Flux<ServerSentEvent<RealtimeEventResponse>> subscribe(@RequestParam final UUID grupoId) {
+        final UUID usuarioId = authenticatedUserResolver.requireAuthenticatedUserId();
         final Flux<ServerSentEvent<RealtimeEventResponse>> businessEvents =
-                realtimeStreamGateway.subscribe().map(RealtimeEventsController::toServerSentEvent);
+                realtimeStreamGateway.subscribe(usuarioId, grupoId).map(RealtimeEventsController::toServerSentEvent);
 
         final Flux<ServerSentEvent<RealtimeEventResponse>> heartbeats =
                 Flux.interval(HEARTBEAT_INTERVAL)

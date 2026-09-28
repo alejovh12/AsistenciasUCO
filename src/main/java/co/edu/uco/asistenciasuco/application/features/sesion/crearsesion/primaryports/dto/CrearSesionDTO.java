@@ -9,13 +9,10 @@ import java.time.LocalDateTime;
 public final class CrearSesionDTO {
 
     private UUID grupo;
-    private String tema;
-    private String descripcion;
+    private String nombre;
     private LocalDateTime fechaHoraInicio;
     private LocalDateTime fechaHoraFin;
-    private String aula;
-    private String tipo;
-    private UUID docente;
+    private UUID usuarioEjecutor;
 
     public CrearSesionDTO() {
         super();
@@ -23,22 +20,16 @@ public final class CrearSesionDTO {
 
     public CrearSesionDTO(
             final UUID grupo,
-            final String tema,
-            final String descripcion,
+            final String nombre,
             final LocalDateTime fechaHoraInicio,
             final LocalDateTime fechaHoraFin,
-            final String aula,
-            final String tipo,
-            final UUID docente
+            final UUID usuarioEjecutor
     ) {
         setGrupo(grupo);
-        setTema(tema);
-        setDescripcion(descripcion);
+        setNombre(nombre);
         setFechaHoraInicio(fechaHoraInicio);
         setFechaHoraFin(fechaHoraFin);
-        setAula(aula);
-        setTipo(tipo);
-        setDocente(docente);
+        setUsuarioEjecutor(usuarioEjecutor);
     }
 
     public UUID getGrupo() {
@@ -49,20 +40,12 @@ public final class CrearSesionDTO {
         this.grupo = grupo;
     }
 
-    public String getTema() {
-        return tema;
+    public String getNombre() {
+        return nombre;
     }
 
-    public void setTema(final String tema) {
-        this.tema = tema;
-    }
-
-    public String getDescripcion() {
-        return descripcion;
-    }
-
-    public void setDescripcion(final String descripcion) {
-        this.descripcion = descripcion;
+    public void setNombre(final String nombre) {
+        this.nombre = nombre;
     }
 
     public LocalDateTime getFechaHoraInicio() {
@@ -81,28 +64,12 @@ public final class CrearSesionDTO {
         this.fechaHoraFin = fechaHoraFin;
     }
 
-    public String getAula() {
-        return aula;
+    public UUID getUsuarioEjecutor() {
+        return usuarioEjecutor;
     }
 
-    public void setAula(final String aula) {
-        this.aula = aula;
-    }
-
-    public String getTipo() {
-        return tipo;
-    }
-
-    public void setTipo(final String tipo) {
-        this.tipo = tipo;
-    }
-
-    public UUID getDocente() {
-        return docente;
-    }
-
-    public void setDocente(final UUID docente) {
-        this.docente = docente;
+    public void setUsuarioEjecutor(final UUID usuarioEjecutor) {
+        this.usuarioEjecutor = usuarioEjecutor;
     }
 
 }

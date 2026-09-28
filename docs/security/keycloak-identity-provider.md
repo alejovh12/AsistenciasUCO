@@ -1,3 +1,11 @@
+---
+status: active
+type: normative
+scope: backend
+owner: backend-team
+last-reviewed: 2026-09-20
+---
+
 # Identity Provisioning — Keycloak Admin API
 
 Este documento describe cómo AsistenciasUCO provisiona cuentas institucionales en Keycloak
@@ -11,8 +19,7 @@ con la Admin REST API, el contrato tipado de `IdentityProviderPort` endurecido e
 2B.2-A (Identity Contract Hardening), y la integración DB-first de
 `RegistrarEstudianteUseCaseImpl` con este Port (Microfase 2B.2-B), y la integración DB-first de
 `CrearDecanoUseCaseImpl` (Microfase 2B.2-C1). `CrearCoordinadorUseCase` todavía no llama a
-Identity — ver sección "Deuda
-explícita" al final.
+Identity — ver sección "Estado de la integración y trazabilidad" al final.
 
 ## 1. `IdentityProviderPort`
 
@@ -319,11 +326,11 @@ Puntos de diseño:
 - **Mapper propio de la feature**: `RegistrarEstudianteIdentityMapper`
   (`usecase.mapper`) construye el `CrearCuentaIdentidadDTO` a partir del Domain — no reutiliza
   `ProvisionarUsuarioIdentityMapper` (evita acoplar dominios de features distintas).
-- **Composition Root**: `GrupoBeansConfig` inyecta `IdentityProviderPort` (la interfaz de
+- **Composition Root**: `GrupoWiringConfiguration` inyecta `IdentityProviderPort` (la interfaz de
   Application, nunca `KeycloakIdentityProviderAdapter`) en el bean de
   `RegistrarEstudianteUseCase`.
 
-## 8. Deuda explícita
+## 8. Estado de la integración y trazabilidad
 
 Desde 2B.2-C1.2, `CrearDecanoUseCaseImpl` también es DB-first: valida Facultad y consulta
 `dbo.uv_usuario` por correo normalizado y por documento compuesto (`tipoIdentificacionId` +
@@ -368,18 +375,4 @@ Estado real de qué flujo provisiona identidad, a la fecha:
 | `CrearCoordinadorUseCaseImpl` | No | — |
 | `RegistrarDocenteDesdeUsuarioUseCaseImpl` | No | — |
 
-Pendiente — fuera de alcance de 2B.2-A/2B.2-B, para **2B.2-D** y fases posteriores:
-
-- `ProvisionarUsuarioUseCaseImpl` sigue pasando siempre `InstitutionalRole.ESTUDIANTE` — ahora
-  tipado, pero el hardcode funcional **no está resuelto**: el UseCase genérico de
-  `/api/v1/usuarios` sigue sin integrarse con
-  `CrearDecanoUseCase`/`CrearCoordinadorUseCase`/`RegistrarDocenteDesdeUsuarioUseCase`. A
-  diferencia de `RegistrarEstudianteUseCaseImpl` (donde ESTUDIANTE es la única semántica
-  funcionalmente posible para esa feature), en `ProvisionarUsuarioUseCaseImpl` sigue siendo un
-  hardcode porque ese endpoint es genérico y podría en teoría provisionar cualquier rol.
-- No hay compensación DB→Keycloak ni Keycloak→DB coordinada a nivel de UseCase: si el command de
-  DB tiene éxito pero `identityProviderPort.crearCuenta(...)` falla, el UseCase transforma el
-  fallo en un error controlado de Application (`InternalApplicationException`) y lo relanza — la
-  DB permanece confirmada, nunca se hace rollback ficticio ni se invoca
-  `eliminarCuenta` como compensación distribuida. La reconciliación DB↔IdP para ese caso es una
-  capability de una fase posterior.
+Seguimiento único de pendientes: [TD-013](../baseline/TECHNICAL_DEBT.md#td-013) (roles/provisioning), [TD-014](../baseline/TECHNICAL_DEBT.md#td-014) (confianza de correo), [TD-015](../baseline/TECHNICAL_DEBT.md#td-015) (consistencia/reconciliación). La semántica técnica de DB-first y compensación se conserva arriba; no implica una corrida E2E acreditada.
