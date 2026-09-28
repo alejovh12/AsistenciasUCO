@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.azure;
 
 import co.edu.uco.asistenciasuco.application.features.admin.procesareventoazure.primaryports.ProcesarEventoAzureInputPort;
+import co.edu.uco.asistenciasuco.crosscutting.sanitization.SensitiveDataSanitizer;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,11 +72,19 @@ public class AzureEventGridWebhookController {
             @SuppressWarnings("unchecked")
             final Map<String, Object> data = (dataObj instanceof Map) ? (Map<String, Object>) dataObj : Map.of();
 
-            LOGGER.info("Evento Azure recibido: eventType={}, subject={}", eventType, subject);
+            LOGGER.info("Evento Azure recibido: eventType={}, subject={}", sanitizeForLog(eventType), sanitizeForLog(subject));
             procesarEventoAzureInputPort.procesarEvento(eventType, subject, data);
             processedCount++;
         }
 
         return ResponseEntity.ok(new ApiDataResponse<>(true, Map.of("processed", processedCount)));
+    }
+
+    /**
+     * eventType y subject provienen del cuerpo de la peticion (dato no confiable): se sanean antes de
+     * escribirlos en el log para impedir inyeccion de saltos de linea (log forging).
+     */
+    private static String sanitizeForLog(final String value) {
+        return SensitiveDataSanitizer.sanitizeForLog(value).replaceAll("[\r\n]", "_");
     }
 }

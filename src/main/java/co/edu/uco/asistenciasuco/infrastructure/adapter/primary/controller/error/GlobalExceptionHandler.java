@@ -179,7 +179,7 @@ public final class GlobalExceptionHandler {
     private String resolveErrorMessage(final ApiErrorDescriptor descriptor) {
         try {
             final Optional<String> catalogMessage = resolverMensajeUsuario.execute(descriptor.code());
-            if (catalogMessage != null && catalogMessage.isPresent() && !TextHelper.isNullOrBlank(catalogMessage.get())) {
+            if (catalogMessage.isPresent() && !TextHelper.isNullOrBlank(catalogMessage.get())) {
                 return catalogMessage.get();
             }
         } catch (final RuntimeException e) {

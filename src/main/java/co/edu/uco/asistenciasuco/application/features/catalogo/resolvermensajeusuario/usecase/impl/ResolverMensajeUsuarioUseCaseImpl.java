@@ -27,11 +27,9 @@ public final class ResolverMensajeUsuarioUseCaseImpl implements ResolverMensajeU
             return Optional.empty();
         }
         try {
-            final Optional<String> mensaje = messageCatalogPort.findUserMessage(codigo);
-            if (mensaje == null) {
-                return Optional.empty();
-            }
-            return mensaje.filter(texto -> !texto.isBlank());
+            // Un Optional nulo viola el contrato del puerto; el NPE resultante cae en el catch
+            // de abajo y se degrada a Optional.empty(), igual que cualquier otro fallo del catalogo.
+            return messageCatalogPort.findUserMessage(codigo).filter(texto -> !texto.isBlank());
         } catch (final RuntimeException e) {
             LOGGER.debug("No se pudo resolver mensaje en catalogo. codigo={}, causa={}", codigo, e.getClass().getSimpleName());
             return Optional.empty();
