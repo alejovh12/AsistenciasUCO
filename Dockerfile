@@ -12,6 +12,7 @@ COPY mvnw pom.xml ./
 RUN chmod +x mvnw && ./mvnw -B -ntp dependency:go-offline
 
 COPY src/ src/
+COPY docs/contracts/openapi/openapi-golden-path.yaml docs/contracts/openapi/openapi-golden-path.yaml
 RUN ./mvnw -B -ntp clean verify
 
 FROM eclipse-temurin:25-jre-alpine

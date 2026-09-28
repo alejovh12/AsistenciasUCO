@@ -3,7 +3,7 @@ status: active
 type: ledger
 scope: backend
 owner: backend-team
-last-reviewed: 2026-09-26
+last-reviewed: 2026-09-27
 ---
 
 # Ledger único de deuda técnica
@@ -56,7 +56,7 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 | [TD-040](#td-040) | `uv_estudiante_identidad`/`uv_usuario` no documentadas en el contrato DB, usadas por `GET /api/v1/grupos/{grupoId}/estudiantes` | CLOSED — EVIDENCE_RESOLVED (LB-001B.4; salvedad: TD-046) | no |
 | [TD-041](#td-041) | Rama DB origen `feat/db-golden-path-baseline-freeze` no fusionada a `main`/`develop` del repo DB | ABIERTA | sí, si el snapshot congelado se desactualiza antes del freeze de LB-001C |
 | [TD-042](#td-042) | Test de serialización ISO-8601 UTC de `RealtimeEvent.occurredAt` sin contexto Spring real | CLOSED (LB-001B.4A, `RealtimeEventResponseSpringJsonTest` con `@SpringBootTest`) | no |
-| [TD-043](#td-043) | NON_GOLDEN_DB_CONTRACT_DRIFT: 3 SP consumidos por el backend no existen en la DB oficial (`usp_sincronizar_usuario`, `usp_registrar_o_actualizar_plan_estudio`, `usp_registrar_estudiante_en_grupo_usuario_no_existente`) | ABIERTA | no (fuera del Golden Path LB-001); sí antes de liberar esas features |
+| [TD-043](#td-043) | NON_GOLDEN_DB_CONTRACT_DRIFT: 3 SP consumidos por el backend no existen en la DB oficial (`usp_sincronizar_usuario`, `usp_registrar_o_actualizar_plan_estudio`, `usp_registrar_estudiante_en_grupo_usuario_no_existente`) | ABIERTA / DEFERRED (LB-002.1C; `NOT_GREEN_TD043`) | no (fuera del Golden Path LB-001); sí antes de liberar esas features |
 | [TD-044](#td-044) | 2 skips de `DocenteRepositorySqlServerIT` (`assumeTrue` por datos, sin fixture propio) | ABIERTA | no (fuera del Golden Path) |
 | [TD-045](#td-045) | Riesgo de `CPI`/`CPVP` históricos en `RazonCausa` frente a la lectura fail-closed de estado | ABIERTA | no |
 | [TD-046](#td-046) | Vistas `uv_estudiante_grupo`, `uv_estudiante_identidad`, `uv_usuario` sin documentar en `DB_BASELINE_CONTRACT.md` | ABIERTA (acción equipo DB) | no |
@@ -562,7 +562,23 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 - **Resolución esperada:** work item contractual propio (DB owner vs backend consumer) antes de liberar cada feature: crear el SP en DB o adaptar el backend, con decisión explícita de OWNER.
 - **Bloquea línea base:** no para el Golden Path; sí para liberar las tres features anteriores.
 - **Actualización LB-002.1 (2026-09-26) — nueva evidencia, deuda NO cerrada:** `.\mvnw.cmd -Pintegration verify` contra `sql_server_asistencias`/`gestionasistenciadb` (freeze DB desplegado) da 6 fallos: `SqlStoredProcedureContractIT` ×3 (los tres SP de esta deuda), `GrupoRepositorySqlServerIT` ×2 y `UsuarioPasswordHashSqlServerIT` ×1 (`Could not find stored procedure`, error 2812). Son **idénticos sobre `HEAD` limpio (`df66a67`) sin cambios JPA**: preexistentes al piloto JPA, sin regresión causada por LB-002.1. El perfil `-Pintegration` global continúa `NOT_GREEN_TD043`; no se convierte en PASS. Los ITs no se modificaron (sin `@Disabled`, `Assumptions`, exclusiones, mocks ni cambio de expected); no se tocó DB. Ver [LB-002.1-VALIDATION](../work-items/LB-002-jpa-incremental/LB-002.1-VALIDATION.md).
-- **Estado:** OPEN / NON_GOLDEN_DB_CONTRACT_DRIFT (no resuelta; requiere work item propio si se decide resolver). **Work item relacionado:** [LB-001B.4](../work-items/LB-001B.4-final-backend-contract-closure/CONTRACT_DECISION_TD043.md).
+- **Actualización LB-002.1C (2026-09-27) — consolidación NON-GOLDEN, deuda DIFERIDA (solo documental; no resuelta):** por decisión humana de priorización, la remediación de TD-043 se **difiere** y el trabajo independiente del Golden Path continúa. Sin cambios de Java, tests, OpenAPI, DB ni frontend; sin nuevos RED ni investigación adicional. Los tres componentes conocidos (no se asume equivalencia por parecido de nombre; ver también la tabla de arriba):
+
+```text
+TD-043:                     NON_GOLDEN_DB_CONTRACT_DRIFT
+STATUS:                     OPEN / DEFERRED
+GLOBAL EFFECT:              mvn -Pintegration verify permanece NOT_GREEN_TD043
+GOLDEN PATH EFFECT:         NONE
+```
+
+  - **A. STUDENT ENROLLMENT** — backend espera `dbo.usp_registrar_estudiante_en_grupo_usuario_no_existente` (`GrupoRepositorySqlServerAdapter`, `SQL_REGISTRAR_ESTUDIANTE`). DB: SP legacy eliminado; el contrato público de reemplazo (`dbo.usp_registrar_estudiante_en_grupo`) **no es equivalente**. Evidencia: análisis LB-002.1C-B1 (commit `7f46023`, rama `work/lb-002.1c-b1-backend-as-is`, aún no integrada en `sergio`) y decisión LB-002.1C-B2 (`LB-002.1C-B2-DECISION.md`, documento local sin versionar al momento de esta actualización; no se incorpora aquí). Remediación futura: `DB_THEN_BACKEND`. Estado: **DEFERRED — B1/B2 EVIDENCE AVAILABLE**.
+  - **B. USER SYNCHRONIZATION** — backend espera `dbo.usp_sincronizar_usuario` (`UsuarioRepositorySqlServerAdapter`, `SQL_SINCRONIZAR_USUARIO`). DB: objeto público ausente en el contrato congelado/vigente. Remediación futura: análisis dedicado de consumidor/contrato **antes** de implementar. No asumir que el SP interno (`usp_sincronizar_usuario_interno`) es un reemplazo público válido. Estado: **DEFERRED — ANALYSIS_REQUIRED**.
+  - **C. STUDY PLAN COMMAND** — backend espera `dbo.usp_registrar_o_actualizar_plan_estudio` (`PlanEstudioSqlServerAdapter.registrarOActualizarPlanEstudio`). DB: objeto público ausente en el contrato congelado/vigente; el código consumidor sigue presente. Remediación futura: análisis dedicado de consumidor/contrato antes de implementar **o retirar**. Estado: **DEFERRED — ANALYSIS_REQUIRED**.
+
+  **Sin falsas afirmaciones:** TD-043 permanece OPEN; `-Pintegration verify` global permanece `NOT_GREEN_TD043` (6 fallos idénticos, no re-ejecutados en esta actualización); los ITs no se deshabilitan y las expectativas contractuales no se borran ni se ocultan. Esto **no** significa LB-002 GLOBAL CLOSED, `-Pintegration` GREEN ni TD-043 RESOLVED.
+
+  **Excepción de continuidad del Golden Path (decisión de planificación):** TD-043 es NON-GOLDEN y el Golden Path funcional de asistencia es independiente de estas tres capabilities. `NON-GOLDEN TD-043 REMEDIATION: DEFERRED` · `GOLDEN PATH ENGINEERING: AUTHORIZED TO CONTINUE` (por priorización humana). Siguiente objetivo autorizado: Golden Path `registrarAsistenciasSesion`, fase técnica **LB-002.2 — JPA COMMAND PILOT** (TD-043 permanece como excepción/deuda NON-GOLDEN reconocida). Ver [LINEA_BASE](LINEA_BASE.md).
+- **Estado:** **OPEN / DEFERRED** — NON_GOLDEN_DB_CONTRACT_DRIFT (no resuelta; requiere work item propio si se decide resolver). **Work item relacionado:** [LB-001B.4](../work-items/LB-001B.4-final-backend-contract-closure/CONTRACT_DECISION_TD043.md).
 
 ## TD-044
 
