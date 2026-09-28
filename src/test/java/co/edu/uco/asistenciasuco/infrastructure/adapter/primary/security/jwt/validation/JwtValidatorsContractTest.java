@@ -78,11 +78,10 @@ class JwtValidatorsContractTest {
         final InstitutionalIssuerValidator sameIssuer = new InstitutionalIssuerValidator(" https://issuer.uco.edu.co/realms/uco ");
         final InstitutionalIssuerValidator otherIssuer = new InstitutionalIssuerValidator("https://issuer.uco.edu.co/realms/otro");
 
-        assertEquals(a, a);
         assertEquals(a, sameIssuer);
+        assertEquals(sameIssuer, a);
         assertEquals(a.hashCode(), sameIssuer.hashCode());
         assertNotEquals(a, otherIssuer);
-        assertNotEquals(a, "https://issuer.uco.edu.co/realms/uco");
         assertNotEquals(a, null);
     }
 
@@ -98,11 +97,12 @@ class JwtValidatorsContractTest {
     void audience_igualdad_depende_solo_de_la_audiencia_esperada() {
         final AudienceValidator api = new AudienceValidator("asistencias-api");
 
-        assertEquals(api, api);
-        assertEquals(api, new AudienceValidator("asistencias-api"));
-        assertEquals(api.hashCode(), new AudienceValidator("asistencias-api").hashCode());
+        final AudienceValidator sameAudience = new AudienceValidator("asistencias-api");
+
+        assertEquals(api, sameAudience);
+        assertEquals(sameAudience, api);
+        assertEquals(api.hashCode(), sameAudience.hashCode());
         assertNotEquals(api, new AudienceValidator("otra-api"));
-        assertNotEquals(api, "asistencias-api");
         assertNotEquals(api, null);
     }
 

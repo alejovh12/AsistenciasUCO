@@ -82,9 +82,10 @@ public class AzureEventGridWebhookController {
 
     /**
      * eventType y subject provienen del cuerpo de la peticion (dato no confiable): se sanean antes de
-     * escribirlos en el log para impedir inyeccion de saltos de linea (log forging).
+     * escribirlos en el log. {@link SensitiveDataSanitizer} ya reemplaza los caracteres de control
+     * (incluidos CR/LF), redacta secretos, trunca y es null-safe; no se duplica esa logica aqui.
      */
     private static String sanitizeForLog(final String value) {
-        return SensitiveDataSanitizer.sanitizeForLog(value).replaceAll("[\r\n]", "_");
+        return SensitiveDataSanitizer.sanitizeForLog(value);
     }
 }

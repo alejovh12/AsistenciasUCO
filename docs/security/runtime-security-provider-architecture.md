@@ -247,50 +247,90 @@ institucional.
 
 ### 8.1 Modelo
 
-La API usa:
+`/api/v1/**` es una API REST **stateless** (`SessionCreationPolicy.STATELESS`). La API de negocio
+se autentica exclusivamente con una credencial explícita:
 
 ```http
 Authorization: Bearer <jwt>
 ```
 
-El navegador no adjunta automáticamente un bearer token elegido por la aplicación a un request
-cross-site, a diferencia de credenciales basadas en cookies.
+El webhook `/api/v1/internal/azure-events` se autentica con el header `aeg-sas-token`, validado
+por `AzureEventGridAuthFilter` (fail-closed). Su `permitAll` en `authorizeHttpRequests` solo
+significa que no exige JWT de negocio; no es un endpoint sin autenticación.
 
-`SecurityConfig` mantiene CSRF habilitado para peticiones inseguras sin Bearer y excluye del
-token CSRF únicamente las requests que presentan el encabezado Bearer.
+Ninguna ruta `/api/v1/**` autentica usuarios mediante cookies ni `HttpSession`. Un navegador no
+adjunta automáticamente un bearer token elegido por la aplicación a un request cross-site, a
+diferencia de credenciales basadas en cookies; por tanto no existe una credencial ambiente que
+un sitio ajeno pueda hacer valer y el token CSRF no protege nada en este modelo.
 
-Conceptualmente:
+`SecurityConfig` aplica una política explícita, no dependiente del contenido del request:
 
-```text
-request inseguro sin Bearer
-  -> CSRF se mantiene
-
-request con Authorization: Bearer ...
-  -> excepción CSRF
-  -> autenticación/autorización JWT siguen aplicando
+```java
+.csrf(csrf -> csrf.ignoringRequestMatchers("/api/v1/**"))
 ```
 
-Una cookie por sí sola no obtiene esta excepción.
+Consecuencias:
 
-### 8.2 Validación
+```text
+request inseguro a /api/v1/** sin credencial válida
+  -> llega al mecanismo de autenticación -> 401 (no 403 de CSRF)
 
-La suite de seguridad cubre, entre otros:
+request con Authorization: Bearer válido y rol insuficiente
+  -> 403 de autorización
 
-- POST sin Bearer ni CSRF -> rechazado;
+cookie (p. ej. JSESSIONID) sin Bearer
+  -> no autentica -> 401
+```
+
+Fuera de `/api/v1/**` la protección CSRF de Spring Security permanece activa.
+
+### 8.2 Invariantes que sustentan la exclusión
+
+- API stateless y Bearer explícito (`SessionCreationPolicy.STATELESS`);
+- el cliente Angular no envía peticiones con credenciales cross-origin (`withCredentials` no se
+  usa; los `fetch` directos al backend usan `credentials: 'omit'`);
+- realtime/SSE usa `credentials: 'omit'`;
+- CORS del backend no permite credenciales de navegador (`allowCredentials=false`);
+- el webhook usa un header secreto explícito validado por un filtro fail-closed.
+
+### 8.3 Validación
+
+La suite de seguridad (`RbacSecurityFilterChainTest`, `AzureWebhookSecurityChainTest`,
+`SecurityConfigTest`) cubre, entre otros:
+
+- POST/PUT/PATCH/DELETE protegido sin Bearer -> 401 (no 403 de CSRF);
+- POST/PUT/PATCH/DELETE con Bearer válido -> no requiere token CSRF y no crea `HttpSession`;
+- rol incorrecto -> 403;
 - cookie sin Bearer -> no concede acceso;
-- Bearer inválido -> no concede acceso;
-- Bearer vacío/malformado -> no concede acceso;
-- Bearer válido -> continúa hacia RBAC.
+- Bearer inválido, vacío o malformado -> 401;
+- webhook sin `aeg-sas-token`, con token inválido o sin token configurado -> 401; con token
+  válido atraviesa el filtro;
+- CORS: origen autorizado permitido, `Authorization` permitido, sin
+  `Access-Control-Allow-Credentials`.
 
-### 8.3 Sonar/CodeQL
+### 8.4 Sonar java:S4502 (Security Hotspot)
 
-El hallazgo CodeQL original por desactivar CSRF globalmente fue corregido.
+`java:S4502` («Make sure disabling Spring Security's CSRF protection is safe here») es un Security
+Hotspot y se revisa en SonarCloud como **Reviewed / Safe**; no se oculta con `NOSONAR`,
+`@SuppressWarnings`, exclusiones ni cambios al quality profile.
 
-Sonar `java:S4502` fue revisado explícitamente para el modelo stateless bearer y aceptado como
-decisión de seguridad documentada. No debe ocultarse mediante cambios artificiales al código.
+Justificación:
 
-Si cambia el mecanismo de autenticación, especialmente si algún día se introducen cookies
-autenticadas, esta decisión debe reabrirse y revisarse.
+> This backend exposes a stateless REST API. Business endpoints authenticate exclusively through
+> an explicit Authorization Bearer JWT and do not use cookie- or session-based authentication.
+> Spring Security is configured with SessionCreationPolicy.STATELESS. The Angular API client does
+> not send credentialed cross-origin requests, realtime explicitly uses credentials=omit, and
+> backend CORS does not allow browser credentials. The Azure Event Grid webhook uses an explicit
+> aeg-sas-token header validated by a fail-closed authentication filter. Therefore no
+> browser-managed authentication credential is automatically attached to unsafe API requests, so
+> the API CSRF exclusion is safe for the current architecture. This decision must be revisited
+> before introducing cookie/BFF/session authentication.
+
+### 8.5 Cuándo reabrir esta decisión
+
+Si en el futuro la API adopta autenticación mediante cookies, BFF con cookie `HttpOnly` o sesión
+de navegador, esta exclusión **debe revisarse** y CSRF **deberá volver a habilitarse** para ese
+flujo. Migrar a PKCE/BFF es deuda futura documentada y queda fuera de este cambio.
 
 ---
 
@@ -318,6 +358,9 @@ Header expuesto:
 ```text
 X-Correlation-Id
 ```
+
+`allowCredentials=false`: la API es Bearer-only y `Authorization` es un header explícito que no
+requiere credenciales de navegador. Nunca debe combinarse `allowedOrigins("*")` con credenciales.
 
 Si se cambian los clientes frontend permitidos, debe hacerse por configuración de entorno y no
 hardcodeando nuevos origins en lógica de negocio.
@@ -536,7 +579,7 @@ Antes de integrar un cambio:
 [ ] principal = idUsuario
 [ ] Bearer inválido -> 401
 [ ] rol insuficiente -> 403
-[ ] CSRF no se desactiva globalmente
+[ ] CSRF solo se excluye en /api/v1/** (stateless, Bearer-only); revisar si aparecen cookies/sesión
 [ ] cookies no autentican accidentalmente
 [ ] CORS no se amplía sin necesidad
 [ ] Layer 1 y Layer 2 no se mezclan

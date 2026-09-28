@@ -142,15 +142,15 @@ class AzureWebhookSecurityChainTest {
 
     @Test
     void la_api_de_negocio_sigue_protegida_y_el_header_del_webhook_no_la_abre() throws Exception {
-        // AS-IS inalterado: GET sin JWT => 401; POST sin Bearer ni CSRF => 403 (CSRF sigue activo
-        // fuera del webhook). El header del webhook no abre ninguna ruta de negocio.
+        // GET/POST sin JWT => 401 (CSRF está excluido en /api/v1/**: API stateless y Bearer-only).
+        // El header del webhook no abre ninguna ruta de negocio.
         mockMvc.perform(get("/api/v1/sesiones"))
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/sesiones").header("aeg-sas-token", TEST_ONLY_WEBHOOK_TOKEN))
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(post("/api/v1/sesiones").header("aeg-sas-token", TEST_ONLY_WEBHOOK_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON).content("{}"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
         verify(procesarEventoAzureInputPort, never()).procesarEvento(any(), any(), any());
     }
 

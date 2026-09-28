@@ -195,6 +195,38 @@ class SecurityConfigTest {
     }
 
     @Test
+    void cors_no_habilita_credenciales_de_navegador() {
+        final CorsConfiguration configuration = corsConfigurationSource.getCorsConfiguration(corsRequest("http://localhost:4200"));
+
+        assertFalse(Boolean.TRUE.equals(configuration.getAllowCredentials()));
+        assertFalse(configuration.getAllowedOrigins().contains("*"));
+    }
+
+    @Test
+    void cors_preflight_de_origen_autorizado_permite_authorization_y_no_anuncia_credenciales() throws Exception {
+        mockMvc.perform(options("/api/v1/protegido")
+                        .header(HttpHeaders.ORIGIN, "http://localhost:4200")
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, HttpMethod.POST.name())
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS,
+                                HttpHeaders.AUTHORIZATION + ", " + CorrelationIdFilter.HEADER_NAME))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:4200"))
+                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS,
+                        org.hamcrest.Matchers.containsStringIgnoringCase(HttpHeaders.AUTHORIZATION)))
+                .andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS));
+    }
+
+    @Test
+    void cors_peticion_bearer_de_origen_autorizado_funciona_sin_allow_credentials() throws Exception {
+        mockMvc.perform(get("/api/v1/protegido")
+                        .header(HttpHeaders.ORIGIN, "http://localhost:4200")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer valid-do"))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:4200"))
+                .andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS));
+    }
+
+    @Test
     void cors_no_acepta_origen_arbitrario() throws Exception {
         mockMvc.perform(options("/api/v1/protegido")
                         .header(HttpHeaders.ORIGIN, "http://evil.example")

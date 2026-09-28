@@ -20,7 +20,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.List;
 
@@ -59,13 +58,19 @@ public class SecurityConfig {
     ) throws Exception {
         http
             .cors(Customizer.withDefaults())
-            // El cliente envía JWT en Authorization: Bearer. Ese header no se adjunta
-            // automáticamente en una petición cross-site, a diferencia de una cookie.
-            // Mantenemos CSRF para cualquier petición insegura sin Bearer.
-            .csrf(csrf -> csrf.ignoringRequestMatchers(
-                    SecurityConfig::hasBearerAuthorization,
-                    AzureEventGridAuthFilter::isWebhookRequest
-            ))
+            // Política CSRF explícita (Sonar java:S4502, hotspot revisado como Safe):
+            // /api/v1/** es una API REST stateless. La API de negocio se autentica solo con un JWT
+            // en Authorization: Bearer (credencial explícita que el navegador NO adjunta solo, a
+            // diferencia de una cookie) y el webhook /api/v1/internal/azure-events, con el header
+            // aeg-sas-token validado por AzureEventGridAuthFilter (fail-closed). Ninguna ruta
+            // /api/v1/** autentica por cookie ni HttpSession (SessionCreationPolicy.STATELESS), así
+            // que no hay credencial ambiente que un sitio ajeno pueda hacer valer y el token CSRF
+            // no protege nada. Además, una petición insegura sin Bearer debe llegar al mecanismo de
+            // autenticación y responder 401, no 403 de CSRF.
+            // REVISAR ESTA DECISIÓN antes de introducir autenticación por cookie, BFF con cookie
+            // HttpOnly o sesión de navegador: CSRF deberá volver a habilitarse para ese flujo.
+            // Fuera de /api/v1/** la protección CSRF de Spring Security sigue activa.
+            .csrf(csrf -> csrf.ignoringRequestMatchers("/api/v1/**"))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(
                     new AzureEventGridAuthFilter(azureWebhookToken),
@@ -156,11 +161,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    private static boolean hasBearerAuthorization(final HttpServletRequest request) {
-        final String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
-        return authorization != null && authorization.regionMatches(true, 0, "Bearer ", 0, 7);
-    }
-
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         final CorsConfiguration configuration = new CorsConfiguration();
@@ -183,7 +183,9 @@ public class SecurityConfig {
                 HttpHeaders.ACCEPT
         ));
         configuration.setExposedHeaders(List.of("X-Correlation-Id"));
-        configuration.setAllowCredentials(true);
+        // La API es Bearer-only: Authorization es un header explícito y no requiere credenciales
+        // de navegador (cookies, auth HTTP, certificados TLS de cliente).
+        configuration.setAllowCredentials(false);
         configuration.setMaxAge(3600L);
 
         final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

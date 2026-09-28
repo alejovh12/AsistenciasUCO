@@ -26,6 +26,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,10 +37,12 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -206,10 +209,54 @@ class RbacSecurityFilterChainTest {
                 .andExpect(status().isOk());
     }
 
+    // --- Política CSRF: /api/v1/** es stateless y Bearer-only; sin Bearer => 401, nunca 403 de CSRF ---
+
     @Test
-    void peticion_insegura_solo_con_cookie_requiere_csrf() throws Exception {
+    void peticion_insegura_solo_con_cookie_de_sesion_no_autentica_y_responde_401() throws Exception {
         mockMvc.perform(post("/api/v1/grupos").cookie(new Cookie("JSESSIONID", "session-de-prueba")))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void metodos_inseguros_protegidos_sin_bearer_responden_401_y_no_403_de_csrf() throws Exception {
+        mockMvc.perform(post("/api/v1/grupos")).andExpect(status().isUnauthorized());
+        mockMvc.perform(put("/api/v1/sesiones/{id}", "s-1")).andExpect(status().isUnauthorized());
+        mockMvc.perform(patch("/api/v1/sesiones/{id}", "s-1")).andExpect(status().isUnauthorized());
+        mockMvc.perform(delete("/api/v1/grupos/{id}", "g-1")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void metodos_inseguros_con_bearer_valido_no_requieren_token_csrf() throws Exception {
+        mockMvc.perform(post("/api/v1/grupos").header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
+                .andExpect(status().isOk());
+        mockMvc.perform(put("/api/v1/sesiones/{id}", "s-1").header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isOk());
+        mockMvc.perform(patch("/api/v1/sesiones/{id}", "s-1").header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isOk());
+        mockMvc.perform(delete("/api/v1/grupos/{id}", "g-1").header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void metodos_inseguros_con_rol_incorrecto_responden_403_de_autorizacion() throws Exception {
+        mockMvc.perform(post("/api/v1/grupos").header(HttpHeaders.AUTHORIZATION, bearer("ESTUDIANTE")))
                 .andExpect(status().isForbidden());
+        mockMvc.perform(put("/api/v1/sesiones/{id}", "s-1").header(HttpHeaders.AUTHORIZATION, bearer("ESTUDIANTE")))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(patch("/api/v1/sesiones/{id}", "s-1").header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(delete("/api/v1/grupos/{id}", "g-1").header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void la_sesion_http_no_se_crea_al_autenticar_con_bearer() throws Exception {
+        final var result = mockMvc.perform(
+                        post("/api/v1/grupos").header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertNull(result.getRequest().getSession(false));
     }
 
     @Test
@@ -233,13 +280,9 @@ class RbacSecurityFilterChainTest {
         mockMvc.perform(post("/api/v1/grupos").header(HttpHeaders.AUTHORIZATION, "Bearer "))
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(post("/api/v1/grupos").header(HttpHeaders.AUTHORIZATION, "Bearer"))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
-    void post_sin_bearer_y_sin_token_csrf_permanece_bloqueado() throws Exception {
-        mockMvc.perform(post("/api/v1/grupos"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/v1/grupos").header(HttpHeaders.AUTHORIZATION, "Basic dXNlcjpwYXNz"))
+                .andExpect(status().isUnauthorized());
     }
 
     // --- POST /api/v1/asistencias/lote : registro docente por lote ---
@@ -392,6 +435,11 @@ class RbacSecurityFilterChainTest {
 
         @PostMapping("/api/v1/grupos")
         String crearGrupo() {
+            return "ok";
+        }
+
+        @DeleteMapping("/api/v1/grupos/{grupoId}")
+        String eliminarGrupo() {
             return "ok";
         }
 

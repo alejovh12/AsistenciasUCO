@@ -168,6 +168,33 @@ class AzureEventGridWebhookControllerTest {
     }
 
     @Test
+    void evento_con_tipo_y_subject_nulos_no_lanza_y_se_registra_sin_valores() {
+        final ResponseEntity<?> response = controller.handleAzureEvent(null, List.of(event(null, null, null)));
+
+        assertEquals(200, response.getStatusCode().value());
+        assertTrue(logAppender.list.stream()
+                .anyMatch(e -> e.getFormattedMessage().equals("Evento Azure recibido: eventType=, subject=")));
+        verify(inputPort).procesarEvento("", "", Map.of());
+    }
+
+    @Test
+    void secretos_y_texto_largo_del_evento_se_redactan_y_truncan_en_el_log() {
+        final String subject = "asistencias:clave password=hunter2, " + "x".repeat(600);
+
+        controller.handleAzureEvent(null, List.of(event(CHANGE_EVENT_TYPE, subject, Map.of())));
+
+        final String message = logAppender.list.stream()
+                .map(ILoggingEvent::getFormattedMessage)
+                .filter(m -> m.startsWith("Evento Azure recibido"))
+                .findFirst()
+                .orElseThrow();
+        assertFalse(message.contains("hunter2"));
+        assertTrue(message.contains("[REDACTED]"));
+        assertTrue(message.contains("..."));
+        assertTrue(message.length() < 700);
+    }
+
+    @Test
     void los_saltos_de_linea_del_evento_no_llegan_al_log_pero_si_al_caso_de_uso() {
         final String tipoMalicioso = CHANGE_EVENT_TYPE + "\r\nFAKE-LOG-LINE level=ERROR";
         final String subjectMalicioso = "asistencias:clave\nFORGED";
