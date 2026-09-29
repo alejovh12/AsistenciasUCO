@@ -453,22 +453,16 @@ class RbacSecurityFilterChainTest {
             return "ok";
         }
 
-<<<<<<< HEAD
-=======
         @PostMapping("/api/v1/grupos/{grupoId}/estudiantes")
         String registrarEstudianteEnGrupo() {
             return "ok";
         }
 
->>>>>>> a677cee (feat(grupo): alinear adaptacion jdbc de registro de estudiante y autorizar docente en security filter chain)
         @DeleteMapping("/api/v1/grupos/{grupoId}")
         String eliminarGrupo() {
             return "ok";
         }
-<<<<<<< HEAD
 
-=======
->>>>>>> a677cee (feat(grupo): alinear adaptacion jdbc de registro de estudiante y autorizar docente en security filter chain)
         @PostMapping("/api/v1/asistencias/lote")
         String registrarAsistenciasLote() {
             return "ok";
