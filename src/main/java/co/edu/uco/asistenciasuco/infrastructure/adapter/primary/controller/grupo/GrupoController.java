@@ -123,7 +123,11 @@ public final class GrupoController {
             );
         }
         final RegistrarEstudianteResultadoDTO resultado = registrarEstudianteInputPort.execute(
-                RegistrarEstudianteHttpMapper.toApplicationDTO(grupoId, request)
+                RegistrarEstudianteHttpMapper.toApplicationDTO(
+                        grupoId,
+                        request,
+                        authenticatedUserResolver.requireAuthenticatedUserId()
+                )
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
     }

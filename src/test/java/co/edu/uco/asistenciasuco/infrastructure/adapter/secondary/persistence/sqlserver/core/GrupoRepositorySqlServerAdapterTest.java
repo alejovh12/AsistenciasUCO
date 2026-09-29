@@ -53,6 +53,7 @@ class GrupoRepositorySqlServerAdapterTest {
     private static final UUID CORRELACION = UUID.fromString("93641bab-e3cd-485c-b275-47e7b731e18c");
     private static final UUID ASIGNATURA = UUID.fromString("33641bab-e3cd-485c-b275-47e7b731e18c");
     private static final UUID DOCENTE = UUID.fromString("43641bab-e3cd-485c-b275-47e7b731e18c");
+    private static final UUID USUARIO_EJECUTOR = UUID.fromString("53641bab-e3cd-485c-b275-47e7b731e18c");
 
     @AfterEach
     void clearCorrelationContext() {
@@ -83,19 +84,20 @@ class GrupoRepositorySqlServerAdapterTest {
 
         assertTrue(transaccionEjecutada.get());
         assertEquals("registrarEstudianteEnGrupo", operationCaptor.getValue());
-        assertTrue(sqlCaptor.getValue().contains("dbo.usp_registrar_estudiante_en_grupo_usuario_no_existente"));
+        assertTrue(sqlCaptor.getValue().contains("dbo.usp_registrar_estudiante_en_grupo\n") || sqlCaptor.getValue().contains("dbo.usp_registrar_estudiante_en_grupo\r\n"));
         assertTrue(sqlCaptor.getValue().contains("@idTipoIdIdentificacion = :idTipoIdIdentificacion"));
-        assertEquals(TIPO_IDENTIFICACION, parametros.getValue(GrupoRepositorySqlServerAdapter.PARAM_ID_TIPO_ID_IDENTIFICACION));
+        assertEquals(GRUPO, parametros.getValue(GrupoRepositorySqlServerAdapter.PARAM_ID_GRUPO));
         assertEquals(123456789, parametros.getValue(GrupoRepositorySqlServerAdapter.PARAM_NUMERO_IDENTIFICACION));
-        assertEquals("PEREZ", parametros.getValue(GrupoRepositorySqlServerAdapter.PARAM_PRIMER_APELLIDO));
-        assertEquals("GOMEZ", parametros.getValue(GrupoRepositorySqlServerAdapter.PARAM_SEGUNDO_APELLIDO));
         assertEquals("ANA", parametros.getValue(GrupoRepositorySqlServerAdapter.PARAM_PRIMER_NOMBRE));
         assertEquals("MARIA", parametros.getValue(GrupoRepositorySqlServerAdapter.PARAM_SEGUNDO_NOMBRE));
+        assertEquals("PEREZ", parametros.getValue(GrupoRepositorySqlServerAdapter.PARAM_PRIMER_APELLIDO));
+        assertEquals("GOMEZ", parametros.getValue(GrupoRepositorySqlServerAdapter.PARAM_SEGUNDO_APELLIDO));
         assertEquals("ana.perez@uco.edu.co", parametros.getValue(GrupoRepositorySqlServerAdapter.PARAM_CORREO));
         assertEquals("Clave123!", parametros.getValue(GrupoRepositorySqlServerAdapter.PARAM_PASSWORD));
-        assertEquals(GRUPO, parametros.getValue(GrupoRepositorySqlServerAdapter.PARAM_ID_GRUPO));
         assertEquals(CORRELACION, parametros.getValue(GrupoRepositorySqlServerAdapter.PARAM_ID_CORRELACION));
-        assertEquals(10, parametros.getValues().size());
+        assertEquals(USUARIO_EJECUTOR, parametros.getValue(GrupoRepositorySqlServerAdapter.PARAM_ID_USUARIO_EJECUTOR));
+        assertEquals(TIPO_IDENTIFICACION, parametros.getValue(GrupoRepositorySqlServerAdapter.PARAM_ID_TIPO_ID_IDENTIFICACION));
+        assertEquals(11, parametros.getValues().size());
         assertEquals("Estudiante registrado.", resultado.getMensajeUsuario());
     }
 
@@ -386,7 +388,8 @@ class GrupoRepositorySqlServerAdapterTest {
                 "MARIA",
                 "ana.perez@uco.edu.co",
                 "Clave123!",
-                GRUPO
+                GRUPO,
+                USUARIO_EJECUTOR
         );
     }
 

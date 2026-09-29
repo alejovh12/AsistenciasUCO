@@ -92,17 +92,18 @@ public final class GrupoRepositorySqlServerAdapter implements GrupoRepositoryPor
                  @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
     static final String SQL_REGISTRAR_ESTUDIANTE = """
-            EXEC dbo.usp_registrar_estudiante_en_grupo_usuario_no_existente
-                 @idTipoIdIdentificacion = :idTipoIdIdentificacion,
+            EXEC dbo.usp_registrar_estudiante_en_grupo
+                 @idGrupo = :idGrupo,
                  @numeroIdentificacion = :numeroIdentificacion,
-                 @primerApellido = :primerApellido,
-                 @segundoApellido = :segundoApellido,
                  @primerNombre = :primerNombre,
                  @segundoNombre = :segundoNombre,
+                 @primerApellido = :primerApellido,
+                 @segundoApellido = :segundoApellido,
                  @correo = :correo,
                  @password = :password,
-                 @idGrupo = :idGrupo,
-                 @idCorrelacion = :idCorrelacion
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor,
+                 @idTipoIdIdentificacion = :idTipoIdIdentificacion
             """;
     static final String SQL_CONSULTAR_GRUPOS = """
             SELECT
@@ -267,15 +268,16 @@ public final class GrupoRepositorySqlServerAdapter implements GrupoRepositoryPor
             final UUID correlationId
     ) {
         return new MapSqlParameterSource()
-                .addValue(PARAM_ID_TIPO_ID_IDENTIFICACION, dto.getTipoIdentificacionId())
+                .addValue(PARAM_ID_GRUPO, dto.getGrupoId())
                 .addValue(PARAM_NUMERO_IDENTIFICACION, dto.getNumeroIdentificacion())
-                .addValue(PARAM_PRIMER_APELLIDO, dto.getPrimerApellido())
-                .addValue(PARAM_SEGUNDO_APELLIDO, dto.getSegundoApellido())
                 .addValue(PARAM_PRIMER_NOMBRE, dto.getPrimerNombre())
                 .addValue(PARAM_SEGUNDO_NOMBRE, dto.getSegundoNombre())
+                .addValue(PARAM_PRIMER_APELLIDO, dto.getPrimerApellido())
+                .addValue(PARAM_SEGUNDO_APELLIDO, dto.getSegundoApellido())
                 .addValue(PARAM_CORREO, dto.getCorreo())
                 .addValue(PARAM_PASSWORD, dto.getPassword())
-                .addValue(PARAM_ID_GRUPO, dto.getGrupoId())
-                .addValue(PARAM_ID_CORRELACION, correlationId);
+                .addValue(PARAM_ID_CORRELACION, correlationId)
+                .addValue(PARAM_ID_USUARIO_EJECUTOR, dto.getUsuarioEjecutor())
+                .addValue(PARAM_ID_TIPO_ID_IDENTIFICACION, dto.getTipoIdentificacionId());
     }
 }

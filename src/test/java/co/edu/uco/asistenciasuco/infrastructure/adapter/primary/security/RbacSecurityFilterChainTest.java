@@ -209,8 +209,23 @@ class RbacSecurityFilterChainTest {
                 .andExpect(status().isOk());
     }
 
-    // --- Política CSRF: /api/v1/** es stateless y Bearer-only; sin Bearer => 401, nunca 403 de CSRF ---
+    // --- POST /api/v1/grupos/{grupoId}/estudiantes : matrícula docente / coordinación ---
 
+    @Test
+    void registrar_estudiante_en_grupo_docente_es_permitido_por_security_filter_chain() throws Exception {
+        mockMvc.perform(post("/api/v1/grupos/11111111-1111-1111-1111-111111111111/estudiantes")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void registrar_estudiante_en_grupo_estudiante_recibe_403() throws Exception {
+        mockMvc.perform(post("/api/v1/grupos/11111111-1111-1111-1111-111111111111/estudiantes")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("ESTUDIANTE")))
+                .andExpect(status().isForbidden());
+    }
+
+    // --- Política CSRF: /api/v1/** es stateless y Bearer-only; sin Bearer => 401, nunca 403 de CSRF ---
     @Test
     void peticion_insegura_solo_con_cookie_de_sesion_no_autentica_y_responde_401() throws Exception {
         mockMvc.perform(post("/api/v1/grupos").cookie(new Cookie("JSESSIONID", "session-de-prueba")))
@@ -438,11 +453,22 @@ class RbacSecurityFilterChainTest {
             return "ok";
         }
 
+<<<<<<< HEAD
+=======
+        @PostMapping("/api/v1/grupos/{grupoId}/estudiantes")
+        String registrarEstudianteEnGrupo() {
+            return "ok";
+        }
+
+>>>>>>> a677cee (feat(grupo): alinear adaptacion jdbc de registro de estudiante y autorizar docente en security filter chain)
         @DeleteMapping("/api/v1/grupos/{grupoId}")
         String eliminarGrupo() {
             return "ok";
         }
+<<<<<<< HEAD
 
+=======
+>>>>>>> a677cee (feat(grupo): alinear adaptacion jdbc de registro de estudiante y autorizar docente en security filter chain)
         @PostMapping("/api/v1/asistencias/lote")
         String registrarAsistenciasLote() {
             return "ok";

@@ -214,17 +214,18 @@ class SqlStoredProcedureContractIT {
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@idUsuarioEjecutor", "uniqueidentifier")
                 )),
-                Arguments.of("usp_registrar_estudiante_en_grupo_usuario_no_existente", List.of(
-                        input("@idTipoIdIdentificacion", "uniqueidentifier"),
+                Arguments.of("usp_registrar_estudiante_en_grupo", List.of(
+                        input("@idGrupo", "uniqueidentifier"),
                         input("@numeroIdentificacion", "int"),
-                        input("@primerApellido", "nvarchar"),
-                        input("@segundoApellido", "nvarchar"),
                         input("@primerNombre", "nvarchar"),
                         input("@segundoNombre", "nvarchar"),
+                        input("@primerApellido", "nvarchar"),
+                        input("@segundoApellido", "nvarchar"),
                         input("@correo", "nvarchar"),
                         input("@password", "nvarchar"),
-                        input("@idGrupo", "uniqueidentifier"),
-                        input("@idCorrelacion", "uniqueidentifier")
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idTipoIdIdentificacion", "uniqueidentifier")
                 )),
                 Arguments.of("usp_crear_sesion", List.of(
                         input("@idGrupo", "uniqueidentifier"),

@@ -138,6 +138,8 @@ public class SecurityConfig {
                 // ConsultarAsistenciasPorGrupoUseCaseImpl).
                 .requestMatchers(HttpMethod.GET, "/api/v1/grupos/**")
                     .hasAnyRole("DOCENTE", "COORDINADOR", "ADMINISTRADOR")
+                .requestMatchers(HttpMethod.POST, "/api/v1/grupos/*/estudiantes")
+                    .hasAnyRole("DOCENTE", "COORDINADOR", "ADMINISTRADOR")
                 .requestMatchers(HttpMethod.POST, "/api/v1/grupos/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")
                 .requestMatchers(HttpMethod.PUT, "/api/v1/grupos/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")
                 .requestMatchers(HttpMethod.DELETE, "/api/v1/grupos/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")
