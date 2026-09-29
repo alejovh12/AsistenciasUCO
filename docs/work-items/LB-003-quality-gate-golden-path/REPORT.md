@@ -1,5 +1,5 @@
 ---
-status: active
+status: closed
 type: report
 scope: backend
 owner: backend-team
@@ -10,20 +10,13 @@ last-reviewed: 2026-09-29
 
 ## Resultado ejecutivo
 
-El Golden Path técnico quedó certificado localmente sin cambios de comportamiento: gate normal
-verde, cobertura sobre umbrales, arquitectura y OpenAPI verdes, SQL Server targeted 59/59, matriz
-de seguridad y errores seguros verdes, correlation verde, write/read y realtime verdes.
-
-El ruleset `Protect develop` y sus 4 required status checks quedaron `OBSERVED / ACTIVE` por
-revisión humana autenticada de GitHub. LB-003 no puede declararse listo para cierre humano porque
-la DoD exige evidencia de esos checks ejecutándose sobre el checkout actual: los runs visibles
-cubren el commit base (`0bfc02a`), no los cambios locales acumulados de LB-002/LB-003.
+LB-003 queda lista para cierre humano. El Golden Path técnico quedó certificado sin cambios de comportamiento y el bloqueo remoto ya fue resuelto sobre el PR #14 / SHA `e92afb73221ac3a967e63c673312d3961cfb0688`.
 
 ```text
-LB-003: BLOCKED
-CAUSE: BLOCKED_PENDING_REMOTE_CI
-RULESET_DEVELOP: PASS / OBSERVED
-REMOTE_CI_CURRENT_CHECKOUT: PENDING
+LB-003: READY_FOR_HUMAN_CLOSURE_REVIEW
+LOCAL_QUALITY_GATE: PASS
+SQL_SERVER_GOLDEN_PATH: PASS
+REMOTE_CI_CURRENT_IMPLEMENTATION: PASS
 ```
 
 ## Consolidado
@@ -36,28 +29,41 @@ REMOTE_CI_CURRENT_CHECKOUT: PENDING
 | OpenAPI | PASS — 16/16 |
 | SQL Server Golden Path | PASS — 59/59, 0 F/E/S, paridad sin mismatches |
 | Seguridad | PASS |
-| Errores seguros | PASS_PREVIOUS_EVIDENCE, reconfirmado |
+| Errores seguros | PASS |
 | Correlation | PASS |
 | Auditoría | NOT_OBSERVABLE; TD-010 abierta y no bloqueante para este alcance |
 | Write/read | PASS |
 | Realtime | PASS |
 | MV-006 | SSE dos clientes PASS; reconexión PASS; ~25 s; HTTP source of truth PASS |
+| Ruleset `Protect develop` | PASS / OBSERVED / ACTIVE |
+| Backend Quality Gate | PASS sobre PR #14 |
+| CodeQL Java Analysis | PASS sobre PR #14 |
+| Dependency Review | PASS sobre PR #14 |
+| SonarCloud Code Analysis | PASS sobre PR #14 — Quality Gate passed |
+| Code scanning / CodeQL adicional | PASS — no new alerts in code changed by PR |
 | TD-008 | CLOSED — LB-003 |
-| TD-023 / MV-004 | OPEN / PARTIAL: ruleset/required checks OBSERVED; falta run de esos checks sobre el checkout actual |
-| TD-043 | OPEN / DEFERRED / NON-GOLDEN; perfil global `NOT_GREEN_TD043` |
+| MV-004 | PASS |
+| TD-023 | OPEN / PARTIAL — solo CI DB reproducible pendiente |
+| TD-043 | OPEN / DEFERRED / NON-GOLDEN |
+
+## Evidencia remota
+
+- PR: `#14` — `complete JPA attendance baseline and quality gate`.
+- Base: `develop`.
+- Head: `jose-valencia/lb-002.2a-jpa-command-plan`.
+- SHA certificado: `e92afb73221ac3a967e63c673312d3961cfb0688`.
+- Backend CI run #44: SUCCESS.
+- Backend Security run #44: SUCCESS.
+- SonarCloud: Quality Gate PASS, 0 Security Hotspots, 100 % coverage on new code, 0 % duplication on new code. Sonar también reporta 37 new issues; quedan como observación/backlog de calidad porque el Quality Gate configurado pasó.
+
+Ver [REMOTE_CI_EVIDENCE](REMOTE_CI_EVIDENCE.md).
 
 ## Decisiones
 
 1. No se crean tests nuevos: no apareció hueco que justificara duplicar cobertura existente.
-2. Se cierra TD-008 porque todas sus condiciones de resolución tienen evidencia actual y trazable.
-3. `AUDIT` permanece `NOT_OBSERVABLE`; los tests unitarios no se presentan como certificación DB.
-4. TD-010 no bloquea LB-003: su ámbito normativo es la deuda de DML/auditoría para release DB, no
-   un requisito para ampliar esta fase sin autorización.
-5. TD-023 sí bloquea: el ruleset y los 4 required checks quedaron OBSERVED/ACTIVE, pero los runs
-   remotos disponibles no incluyen los cambios locales de LB-002/LB-003. La evidencia parcial no se
-   promueve a PASS mientras falte esa ejecución sobre el checkout actual.
-6. TD-043 se conserva; el perfil global no forma parte del gate Golden Path.
-
-La evidencia detallada y los comandos están en [VALIDATION](VALIDATION.md); la evaluación fila por
-fila de DoD está en [DOD_MATRIX](DOD_MATRIX.md).
-
+2. TD-008 queda cerrada por evidencia runtime/SQL actual.
+3. `AUDIT` permanece `NOT_OBSERVABLE`; no se presenta como certificación DB real.
+4. TD-010 no bloquea LB-003.
+5. El componente remoto de TD-023 que bloqueaba LB-003 queda satisfecho; TD-023 permanece `OPEN / PARTIAL` por CI DB reproducible/versionada, a tratar en LB-006 salvo nueva decisión normativa.
+6. TD-043 se conserva fuera del Golden Path.
+7. LB-004 no se inicia automáticamente; requiere su propio DoR/planificación.

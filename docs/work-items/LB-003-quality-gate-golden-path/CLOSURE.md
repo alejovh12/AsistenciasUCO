@@ -1,5 +1,5 @@
 ---
-status: blocked
+status: closed
 type: closure
 scope: backend
 owner: backend-team
@@ -12,60 +12,57 @@ last-reviewed: 2026-09-29
 
 ```text
 LB-003:
-BLOCKED
+CLOSED / PASS
 
-BLOCKER:
-BLOCKED_PENDING_REMOTE_CI
+HUMAN_REVIEW:
+APPROVED
+
+REMOTE_CI_CURRENT_IMPLEMENTATION:
+PASS
 ```
 
-No se declara `READY_FOR_HUMAN_CLOSURE_REVIEW`: [DOD_MATRIX](DOD_MATRIX.md) conserva un check CI
-obligatorio pendiente. Revisión humana autenticada de GitHub confirmó el ruleset `Protect develop`
-(`status: active`, `target: refs/heads/develop`) con PR requerido, `deletion`/`non-fast-forward`
-bloqueados, sin bypass, y 4 required status checks configurados: `Backend Quality Gate`, `CodeQL
-Java Analysis`, `Dependency Review`, `SonarCloud Code Analysis` —
-`RULESET_DEVELOP: PASS / OBSERVED`, `REQUIRED_CHECKS_CONFIGURED: YES`.
-[MV-004](../../baseline/MANUAL_VALIDATION_LEDGER.md) contiene evidencia parcial de runs verdes del
-commit base, pero no un run del checkout local actual con esos 4 checks;
-[TD-023](../../baseline/TECHNICAL_DEBT.md#td-023) permanece `OPEN / PARTIAL`.
+La condición `BLOCKED_PENDING_REMOTE_CI` quedó resuelta al ejecutar los required checks del ruleset `Protect develop` sobre el PR #14 y el SHA `e92afb73221ac3a967e63c673312d3961cfb0688`.
 
-## Condición para desbloquear
+## Evidencia de cierre
 
-El mantenedor del repositorio debe hacer commit, push y abrir el PR hacia `develop` con los cambios
-actuales, y que `Backend Quality Gate`, `CodeQL Java Analysis`, `Dependency Review` y `SonarCloud
-Code Analysis` corran sobre ese commit/PR. Debe enlazarse desde MV-004 y reevaluar TD-023. No se
-requiere repetir los gates locales mientras no cambien código o tests.
+- `clean verify`: PASS — 1426 tests, 0 failures/errors/skips.
+- JaCoCo: LINE 91.52 %, BRANCH 81.17 %.
+- ArchUnit: PASS — 85/85.
+- OpenAPI: PASS — 16/16.
+- SQL Server Golden Path targeted: PASS — 59/59, 0 F/E/S, 0 mismatches.
+- Seguridad/errores/correlation/write-read/realtime: PASS.
+- MV-006: dos clientes SSE PASS, reconexión/reconvergencia ~25 s, HTTP source of truth.
+- `Backend Quality Gate`: PASS.
+- `CodeQL Java Analysis`: PASS.
+- `Dependency Review`: PASS.
+- `SonarCloud Code Analysis`: PASS — Quality Gate passed.
+- check adicional `Code scanning results / CodeQL`: PASS.
+- PR #14 sin conflictos con `develop` al momento de la revisión.
 
-## Evidencia cerrada
+Ver [REMOTE_CI_EVIDENCE](REMOTE_CI_EVIDENCE.md), [VALIDATION](VALIDATION.md), [REPORT](REPORT.md) y [DOD_MATRIX](DOD_MATRIX.md).
 
-- [VALIDATION](VALIDATION.md): gate normal, targeted SQL, seguridad, errores, correlation,
-  auditoría, write/read, realtime y CI remoto parcial.
-- [REPORT](REPORT.md): dictamen y decisiones.
-- [TEST_PLAN](TEST_PLAN.md): behavioral matrix y alcance.
-- [DOD_MATRIX](DOD_MATRIX.md): resultado por fila normativa.
+## Deuda al cierre
+
 - TD-008: `CLOSED — LB-003`.
-- TD-043: `OPEN / DEFERRED / NON-GOLDEN`, sin cambios.
+- MV-004: `PASS` para CI remoto y protección de rama del checkout certificado.
+- TD-023: `OPEN / PARTIAL`; la parte de quality/security gates remotos que bloqueaba LB-003 está satisfecha. Solo queda CI DB reproducible/versionada, diferida a LB-006 salvo nueva decisión normativa.
+- TD-043: `OPEN / DEFERRED / NON-GOLDEN`; sin cambios.
+- TD-010: abierta; auditoría SQL real del request `NOT_OBSERVABLE` en este harness y no bloqueante para LB-003.
 
 ## Control de alcance
 
 ```text
-PRODUCTION_CODE_CHANGED: NO
-TEST_CODE_CHANGED: NO
+PRODUCTION_CODE_CHANGED_IN_LB003: NO
+TEST_CODE_CHANGED_IN_LB003: NO
 DB_CHANGED: NO
 FRONTEND_CHANGED: NO
 CONTRACT_CHANGED: NO
-GLOBAL_INTEGRATION_PROFILE_RUN: NO
-RULESET_DEVELOP: PASS / OBSERVED
-REQUIRED_CHECKS_CONFIGURED: YES
-REMOTE_RUN_FOR_CURRENT_CHECKOUT: NO / PENDING
-COMMIT: NO
-PUSH: NO
+REMOTE_CI: PASS
 LB-004_STARTED: NO
 ```
 
-## Próxima acción
+## Siguiente fase
 
-Usuario hará manualmente commit, push y PR hacia `develop`. No se inicia LB-004.
+`LB-004 — Stateless / Serverless readiness` queda como `NEXT_PHASE / NOT_STARTED`.
 
-Si LB-003 se desbloquea y cierra mediante decisión humana, la fase siguiente será
-`LB-004 — STATELESS / SERVERLESS READINESS`. No se inició.
-
+No se inicia automáticamente. Requiere DoR/PLAN propio y autorización explícita.
