@@ -33,3 +33,7 @@ La auditoría previa reportó 41 archivos de test eliminados, 52 añadidos y 54 
 
 ## Recalcular por commit
 SHA + fecha + run Actions; Maven clean verify, reportes Surefire/JaCoCo XML frescos; LINE covered/missed y BRANCH covered/missed por clase; Sonar new_lines_to_cover, uncovered, new_coverage y ratings sobre mismo SHA. Verificar importación XML y reporte de excludes sin cambiarlos. Separar Failsafe -Pintegration y sus skips. Publicar diff coverage y evidencia de issues, no optimizar contadores cosméticos.
+
+## Ampliación del inventario de cobertura
+
+Nuevas suites candidatas por área, sin porcentaje prometido: `ParameterCatalogJpaBehaviorTest` ↔ ParameterCatalogJpaRepository; `MessageCatalogJpaBehaviorTest` ↔ MessageCatalogJpaRepository; `CoreViewJpaProjectionBehaviorTest` ↔ CoreViewJpaProjectionMapper; `AcademicViewJpaProjectionBehaviorTest` ↔ AcademicViewJpaProjectionMapper; `ArchivoControllerSecurityBoundaryTest` ↔ ArchivoController. Los resultados de cobertura se deberán recalcular desde XML CI del SHA final; las suites nuevas no alteran por sí solas la cobertura global ni Sonar hasta ejecutar y superar los tests.

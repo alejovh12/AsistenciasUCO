@@ -26,3 +26,7 @@ Tras Q4 merge aprobado: equipo DB decide/libera metadata y relación fileId→re
 
 ## Immediate handoff: tests already committed (unverified)
 Before touching production: use Java 25 and run `./mvnw -B -ntp -Dtest=ClamAvProtocolBoundaryTest,CompressionPolicyExpansionBoundaryTest,MinioReadBudgetTest test` (Windows: `.\\mvnw.cmd -B -ntp '-Dtest=ClamAvProtocolBoundaryTest,CompressionPolicyExpansionBoundaryTest,MinioReadBudgetTest' test`). Record compiler errors separately from true assertion RED; if the SDK mock or fake socket helper needs a test-only correction, do it with tester role and re-freeze test SHA before implementation. Confirm valid controls PASS and malformed/oversize behaviors fail as intended. THEN seek approval/DoR for Q2 implementation and preserve tests unchanged. Sonar issue extraction Q1 is still pending; treat these as independent hardening tests, not a claim of vulnerability identification. See TEST_PLAN and VALIDATION.
+
+## Encargo integral a Codex/Claude
+
+Texto completo, con autoridad y stop conditions, en [IMPLEMENTATION_BRIEF](IMPLEMENTATION_BRIEF.md). Recomendación: ejecutar Q1+validación RED+Q2 y Q3 por lotes pequeños, haciendo test-only repairs primero si corresponde, preservando los hashes de RED. **No** cambiar expected/assertions desde implementador para obtener GREEN. Q4 sólo después de nuevo CI remote SHA.

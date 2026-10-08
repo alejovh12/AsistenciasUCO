@@ -28,3 +28,7 @@ No declarar DONE integral ni LB-004 CLOSED a partir de Q0. Auditoría independie
 
 ## Candidate unit tests added after Q0
 Three **new src/test/** files were authored; no src/main, DB, pom or runtime configuration changed. JDK25 and dependencies were not available for reliable Maven verification in the authoring environment (Java21 only). State: TEST_SOURCE_PREPARED / COMPILATION_NOT_RUN / RED_NOT_CERTIFIED / GREEN_NOT_RUN. Codex/Claude must run directed tests, repair test-only compilation defects through tester role and record exact RED cause and SHA before implementation. Existing CI will remain red intentionally until correct implementation. No Sonar issues attributed to these tests. Q0 documentation remains a separate completed commit.
+
+## Ampliación del alcance TESTER (candidatos, no certificados)
+
+Se añadieron cinco nuevas suites de pruebas unitarias JPA/mappers/seguridad (29 casos) y dos escenarios adicionales en ClamAvProtocolBoundaryTest (FOUND válido y respuesta ERROR). Ninguna fue ejecutada con Java25; compilación NO VERIFICADA, RED NOT_RUN, GREEN NOT_RUN; validar aislamiento antes de implementar. Esta iteración modifica src/test/** + documentación, no src/main/**. La ejecución de `clean verify` en CI podría fallar por los RED deliberados: no confundir ese estado con regresión de producción o CI recuperado. El auditor debe verificar validez de los mocks y tipos Mockito/JUnit antes de atribuir el fallo a funcionalidad.

@@ -50,3 +50,16 @@ RED_SNAPSHOT Q0: NO APLICA — DOCUMENTATION_ONLY. Q2/Q3: NOT_RUN; registrar bas
 | F04 oversize remote object | src/test/java/co/edu/uco/asistenciasuco/infrastructure/adapter/secondary/storage/minio/MinioReadBudgetTest.java | current transferTo consumes full oversize | bounded-read assertion fails |
 
 Test source authoring is NOT equivalent to certified RED. First run tests with JDK25. If a test fails compilation or environment setup, fix the **test alone as tester**, record the cause and freeze new SHA; do not ask implementer to edit RED or claim it was a behavioral RED. Freeze the compiled, causal RED commit/hash only after assertions demonstrate the expected defect. All *IT remain separate. The 5MiB threshold is a baseline content limit; if DB or storage contract indicates a different allowed expansion representation, record CONTRACT_CONFLICT rather than weakening the test silently.
+
+## Q2/Q3 — paquete ampliado de tests de comportamiento (2026-10-08)
+
+Además de los 3 candidatos de seguridad/storage de la iteración previa se incorporan **5 suites / 29 métodos**:
+- ParameterCatalogJpaBehaviorTest: claves nulas/blancas sin DB, normalización y cache hit, miss no cacheado, requerido ausente, conversiones tipadas, boolean válido, entero inválido, tipo no soportado, excepción preservada.
+- MessageCatalogJpaBehaviorTest: código inválido, cache positivo, miss reconsultado, formatos y args, canales técnico/usuario separados, error del proveedor preservado.
+- CoreViewJpaProjectionBehaviorTest: sesión con código y UTC; null del código como ausencia real versus cadena literal; flags de grupo.
+- AcademicViewJpaProjectionBehaviorTest: hora académica local, hora ausente, periodo y fechas, institución flag nullable, plan estudio habilitado con int=1.
+- ArchivoControllerSecurityBoundaryTest: identidad ausente, fileId inválido, filename hostil sin CRLF/cabecera inyectada.
+
+Son pruebas a nivel unitario y contract del adaptador, NO pruebas de SQL Server real ni JWT filter chain. JPA smoke/parity IT existentes (`CatalogJpaParityIT`, `AcademicQueryJpaParityIT`, `AuthorizationReportJpaParityIT`) se mantienen; verificarlos posteriormente con `-Pintegration`. Los casos de nulabilidad de CoreView proponen paridad con `JdbcBaselineValueMapper.toString(null)=null` y pueden revelar bug real; NO cambiar contrato a `"null"` para verde.
+
+**Ejecución de validación obligatoria previa a implementación:** Java25, `./mvnw -B -ntp "-Dtest=ParameterCatalogJpaBehaviorTest,MessageCatalogJpaBehaviorTest,CoreViewJpaProjectionBehaviorTest,AcademicViewJpaProjectionBehaviorTest,ArchivoControllerSecurityBoundaryTest" test`. Primero resolver solo defectos de compilación/fixture por el rol tester y registrar hash; demostrar fallos RED causales y controles positivos; después congelar snapshot. Separar de los 3 candidatos anteriores (ClamAvProtocolBoundaryTest, CompressionPolicyExpansionBoundaryTest, MinioReadBudgetTest), igualmente no certificados. Los mocks de clase JPA son solo test de mapeo; no certificar SQL real. Revisar y aprobar decisiones de manejo boolean inválido y nosniff antes de crear RED nuevos.
