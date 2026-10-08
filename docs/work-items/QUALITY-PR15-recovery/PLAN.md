@@ -67,3 +67,6 @@ Véanse [TEST_PLAN](TEST_PLAN.md), [COVERAGE_MATRIX](COVERAGE_MATRIX.md), [SONAR
 
 ## Q2-RED candidate preparation (2026-10-08)
 The user authorized the tester role to add three independent unit-test suites ahead of implementation; production remains untouched. Test sources: ClamAvProtocolBoundaryTest, CompressionPolicyExpansionBoundaryTest, MinioReadBudgetTest. Contract sources: CONTENT_SECURITY, MalwareScanPort, FileStoragePort and the existing adapters. They are **UNEXECUTED RED CANDIDATES** until Java25 Surefire confirms compilation and the expected behavioral failures. Q1 exact Sonar issue identification remains pending, so none of these tests is presented as a fix for a confirmed Sonar issue. Q2 implementation DoR remains NOT_READY until tester verifies RED and auditor/contract owners approve the scope. No implementation authorized by this documentation.
+
+## Estado 2026-10-08 (tras Q1–Q3)
+Q1 COMPLETADO (SONAR_TRIAGE). Q2/Q3: RED certificado y congelado en `de714e8` (RED_SNAPSHOT), GREEN en `df21fa4`, `c741b66`, `ab3e9fa`; cobertura conductual en `7040b68`, `ac63aa9`, `812a313`. Q4: checks remotos verdes en `ab3e9fa` (VALIDATION). Pendiente: auditoría independiente, decisión `nosniff` y booleano inválido de ParameterCatalog (`DECISION_REQUIRED`), aprobación humana del merge. L4/L5 (LB-004 funcional) sin iniciar.

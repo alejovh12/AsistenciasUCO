@@ -51,3 +51,18 @@ Base `31dbddd`; HEAD validado `812a313b78c0d873afd5db21daf8c2d88fe3e17d`. Entorn
 | Integración completa | `mvnw -B -ntp -Pintegration -Dtest=NoSuchUnitTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true verify` | **191 IT, 0 failures, 0 errors, 1 skipped** (exit 0). Skip: `DocenteRepositorySqlServerIT`, `assumeTrue` por ausencia de docente con múltiples asignaciones en la DB local (preexistente, no tocado) |
 
 Primera corrida de `clean verify` (HEAD `c741b66`, antes de las suites de cobertura): 1389 tests PASS, LINE 85.05 % / BRANCH 76.70 %, New Code estimado 62.5 %.
+
+## Evidencia remota (mismo SHA)
+| SHA | Check | Resultado |
+|---|---|---|
+| 812a313 | Backend Quality Gate (run 37745…, job 113203694471) | FAIL solo por el paso Sonar `qualitygate.wait` (Reliability E por S2095/S5863 nuevos); Maven verify y JaCoCo previos PASS |
+| 812a313 | SonarCloud | coverage 87.47 %, Security A, Reliability E → corregido en ab3e9fa |
+| 812a313 | CodeQL / CodeQL Java / Dependency Review | PASS |
+| **ab3e9fa** | Backend Quality Gate — https://github.com/alejovh12/AsistenciasUCO/actions/runs/37745656337/job/113206399619 | **PASS** |
+| **ab3e9fa** | SonarCloud Code Analysis — https://github.com/alejovh12/AsistenciasUCO/runs/113207525976 | **PASS**: new_coverage 87.5 %, Reliability A, Security A, Maintainability A, duplicación 1.6 %, hotspots 100 %; 0 issues SECURITY/RELIABILITY abiertos |
+| **ab3e9fa** | CodeQL — https://github.com/alejovh12/AsistenciasUCO/runs/113207348986 | PASS |
+| **ab3e9fa** | CodeQL Java Analysis — job 113206400160 | PASS |
+| **ab3e9fa** | Dependency Review — job 113206399920 | PASS |
+
+Local para ab3e9fa: `clean verify` 1443 tests PASS, JaCoCo LINE 90.24 % / BRANCH 80.22 %.
+Estado: **PR_READY_FOR_REVIEW** (gates de calidad verdes). Merge a `develop` NO realizado: requiere revisión y autorización humana. Auditoría independiente pendiente (tester e implementador fueron la misma herramienta). LB-004 funcional sigue abierto: `REVIEW_BINDING: BLOCKED_BY_DB_CONTRACT`, docente `DENY_BY_DEFAULT`; sin cambios de esquema SQL ni Angular en este PR.
