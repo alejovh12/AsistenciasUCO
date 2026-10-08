@@ -24,3 +24,7 @@ Ejemplo de work item técnico cerrado: [TECH-001](TECH-001-restaurar-gate-arquit
 
 ## Work item transversal quality
 [QUALITY-PR15-recovery](QUALITY-PR15-recovery/PLAN.md) documenta recuperación de checks del PR #15 y no inaugura una baseline funcional. Q0 documental, Q1 diagnóstico, Q2/Q3 implementación con DoR+RED independientes, Q4 certificación remota; LB-004 sigue separada.
+
+## Revisión y reanudación — octubre 2026
+- [Auditoría independiente PR #15](QUALITY-PR15-recovery/INDEPENDENT_REVIEW_2026-10-08.md): evidencia remota, riesgos y checklist humano de merge.
+- [Plan LB-004 después de PR #15](LB-004-stateless-serverless-readiness/RESUMPTION_CONTRACT_PLAN_2026-10-08.md): análisis contractual DB antes de backend/frontend. Sin implementación autorizada todavía.

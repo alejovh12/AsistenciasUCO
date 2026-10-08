@@ -8,7 +8,7 @@ last-reviewed: 2026-10-08
 # QUALITY-PR15 — issues Sonar y security hardening
 
 Fuente: https://sonarcloud.io/dashboard?id=alejovh12_AsistenciasUCO&pullRequest=15
-Snapshot: New Code Coverage 48.4% (mínimo 80%), Security C (requerido A), Reliability C (requerido A). ISSUE_KEYS/RULES/LINES: NOT_RETRIEVED. No adjudicar issues por suposición. CodeQL Java PASS histórico no corrige Sonar.
+HISTÓRICO (SHA 4cae0a3): New Code Coverage 48.4% (mínimo 80%), Security C (requerido A), Reliability C (requerido A). Las claves/issues se recuperaron posteriormente en Q1 (tabla de esta página). No usar esta primera cifra como estado actual.
 
 ## Procedimiento Q1
 1. Filtrar issues abiertos de New Code en el PR y confirmar SHA, Bug, Vulnerability y Security Hotspot (proceso separado).
@@ -61,3 +61,6 @@ Quality Gate: ERROR solo por Reliability. new_coverage **87.47 %** (1690 líneas
 |---|---|---|---|---|
 | AaEadmQLnVWcy-F4pE3k | java:S2095 | CompressionPolicy.java:74 | `Inflater` liberado con `end()` en `finally`; en Java 25 es `AutoCloseable` y la regla exige try-with-resources | try-with-resources (sin cambio de comportamiento; GREEN de CompressionPolicy*/DescargarArchivo* intacto) |
 | AaEadnGtnVWcy-F4pE30 | java:S5863 | ViewCompositeIdentityTest.java:39 (test propio, no RED congelado) | `assertEquals(key, key)` para reflexividad | `assertTrue(key.equals(key))` |
+
+## Auditoría externa de salida (HEAD 2554312, 2026-10-08)
+GitHub confirmó Sonar Quality Gate PASSED (new coverage 87,5 %, duplicación 1,6 %, 0 security hotspots, 0 accepted issues). El comentario del bot también reporta **206 New issues**: esto **no** significa 206 vulnerabilidades. FALTA inventario por tipo/regla/severidad del nuevo SHA para priorizar deuda de maintainability y confirmar distribución, sin inferir que 0 accepted=0 issues. Ver [INDEPENDENT_REVIEW](INDEPENDENT_REVIEW_2026-10-08.md). Los 10 issues de seguridad/fiabilidad originales y los 2 de fiabilidad reintroducidos quedan descritos históricamente arriba con sus fixes; no borrar esa trazabilidad.

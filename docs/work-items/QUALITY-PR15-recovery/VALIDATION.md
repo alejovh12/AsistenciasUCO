@@ -66,3 +66,7 @@ Primera corrida de `clean verify` (HEAD `c741b66`, antes de las suites de cobert
 
 Local para ab3e9fa: `clean verify` 1443 tests PASS, JaCoCo LINE 90.24 % / BRANCH 80.22 %.
 Estado: **PR_READY_FOR_REVIEW** (gates de calidad verdes). Merge a `develop` NO realizado: requiere revisión y autorización humana. Auditoría independiente pendiente (tester e implementador fueron la misma herramienta). LB-004 funcional sigue abierto: `REVIEW_BINDING: BLOCKED_BY_DB_CONTRACT`, docente `DENY_BY_DEFAULT`; sin cambios de esquema SQL ni Angular en este PR.
+
+## Adenda de revisión independiente estática (2026-10-08, HEAD 2554312)
+
+Ver [INDEPENDENT_REVIEW](INDEPENDENT_REVIEW_2026-10-08.md). GitHub confirmó para este HEAD: Backend CI SUCCESS (run 37746517241), Backend Security SUCCESS (run 37746517267); comentario Sonar Quality Gate PASSED, new coverage 87,5 %, duplicación 1,6 %, 206 issues nuevos y 0 accepted issues. No atribuir tipología a esos 206 hasta exportar issue inventory. Esta revisión no ejecutó Java/Docker/DB ni validó frontend. Persiste un IT saltado según VALIDATION del implementador; evidencia independiente y excepción/reproducción del fixture pendientes. Estado recomendado: `PR_READY_FOR_HUMAN_REVIEW_WITH_RESIDUAL_ACTIONS`, no merge automático, no LB-004 DONE.
