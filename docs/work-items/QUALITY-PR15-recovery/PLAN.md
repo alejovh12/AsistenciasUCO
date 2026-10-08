@@ -64,3 +64,6 @@ STOP: HEAD divergente, secreto, drift contractual, archivo fuera de scope, ausen
 ## DoR
 Q0 DOCUMENTATION_ONLY: READY. Q1 análisis: READY para investigar. Q2/Q3 IMPLEMENTATION: NOT_READY hasta matrices, contrato aprobado y RED causal. LB-004 binding: NOT_READY hasta release DB.
 Véanse [TEST_PLAN](TEST_PLAN.md), [COVERAGE_MATRIX](COVERAGE_MATRIX.md), [SONAR_TRIAGE](SONAR_TRIAGE.md), [HANDOFF](HANDOFF.md), [VALIDATION](VALIDATION.md), [PAUSE](../LB-004-stateless-serverless-readiness/PAUSE.md).
+
+## Q2-RED candidate preparation (2026-10-08)
+The user authorized the tester role to add three independent unit-test suites ahead of implementation; production remains untouched. Test sources: ClamAvProtocolBoundaryTest, CompressionPolicyExpansionBoundaryTest, MinioReadBudgetTest. Contract sources: CONTENT_SECURITY, MalwareScanPort, FileStoragePort and the existing adapters. They are **UNEXECUTED RED CANDIDATES** until Java25 Surefire confirms compilation and the expected behavioral failures. Q1 exact Sonar issue identification remains pending, so none of these tests is presented as a fix for a confirmed Sonar issue. Q2 implementation DoR remains NOT_READY until tester verifies RED and auditor/contract owners approve the scope. No implementation authorized by this documentation.

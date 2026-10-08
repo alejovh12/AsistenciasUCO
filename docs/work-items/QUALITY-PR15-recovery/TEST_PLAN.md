@@ -38,3 +38,15 @@ Derivar cada test del comportamiento/contrato, congelar RED_SNAPSHOT antes de sr
 
 TEST_TOO_WEAK si ninguna implementación incorrecta hace fallar el test. No cambiar expected para resolver GREEN. No simular provider con Mockito como prueba de integration. No habilitar docente hasta binding DB aprobado.
 RED_SNAPSHOT Q0: NO APLICA — DOCUMENTATION_ONLY. Q2/Q3: NOT_RUN; registrar base commit, paths/hash, comando, exit code y fallo esperado antes de implementación. No es permiso para empezar Q2/Q3.
+
+## Concrete RED candidate files — tester authored, NOT_RUN
+| Scenario | Source | Expected on audited production | Required JDK25 assertion |
+|---|---|---|---|
+| S01 control | src/test/java/co/edu/uco/asistenciasuco/infrastructure/adapter/secondary/malwarescan/clamav/ClamAvProtocolBoundaryTest.java | valid stream: OK NUL → CLEAN | PASS |
+| S03 malformed suffix | same | current endsWith("OK") incorrectly returns CLEAN | assertion fails for malformed response |
+| S03 missing NUL | same | current EOF treated as valid response | assertion fails for truncated response |
+| F05 valid 5 MiB | src/test/java/co/edu/uco/asistenciasuco/application/features/archivo/shared/contentsecurity/CompressionPolicyExpansionBoundaryTest.java | roundtrip full bytes | PASS |
+| F05 >5 MiB expand | same | current inflate has no expansion limit | assertThrows fails |
+| F04 oversize remote object | src/test/java/co/edu/uco/asistenciasuco/infrastructure/adapter/secondary/storage/minio/MinioReadBudgetTest.java | current transferTo consumes full oversize | bounded-read assertion fails |
+
+Test source authoring is NOT equivalent to certified RED. First run tests with JDK25. If a test fails compilation or environment setup, fix the **test alone as tester**, record the cause and freeze new SHA; do not ask implementer to edit RED or claim it was a behavioral RED. Freeze the compiled, causal RED commit/hash only after assertions demonstrate the expected defect. All *IT remain separate. The 5MiB threshold is a baseline content limit; if DB or storage contract indicates a different allowed expansion representation, record CONTRACT_CONFLICT rather than weakening the test silently.

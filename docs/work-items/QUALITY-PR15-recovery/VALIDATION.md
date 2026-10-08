@@ -25,3 +25,6 @@ Q0 solamente valida enlaces/scope/documentación al publicar. Quality Gate PR y 
 | Issues Sonar exactos | NOT_RETRIEVED | Q1 |
 
 No declarar DONE integral ni LB-004 CLOSED a partir de Q0. Auditoría independiente humana pendiente.
+
+## Candidate unit tests added after Q0
+Three **new src/test/** files were authored; no src/main, DB, pom or runtime configuration changed. JDK25 and dependencies were not available for reliable Maven verification in the authoring environment (Java21 only). State: TEST_SOURCE_PREPARED / COMPILATION_NOT_RUN / RED_NOT_CERTIFIED / GREEN_NOT_RUN. Codex/Claude must run directed tests, repair test-only compilation defects through tester role and record exact RED cause and SHA before implementation. Existing CI will remain red intentionally until correct implementation. No Sonar issues attributed to these tests. Q0 documentation remains a separate completed commit.

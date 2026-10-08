@@ -30,3 +30,6 @@ Snapshot: New Code Coverage 48.4% (mínimo 80%), Security C (requerido A), Relia
 - IT con valores dev por defecto: verificar si Sonar reporta secretos, sin imprimirlos.
 - CoreViewJpaProjectionMapper String.valueOf(null) puede formar "null".
 - ParameterCatalogJpaRepository Boolean.valueOf texto inválido transforma en false sin fallo: confirmar contrato.
+
+## Security test candidates are not Sonar issue evidence
+Three code-level RED candidate suites are prepared for protocol validation, decompression limits and MinIO bounded reads. No Sonar rule key has yet been retrieved or linked; classification remains NOT_RETRIEVED. Q1 triage is still required independently of these tests. Do not claim ratings improved without post-push report.
