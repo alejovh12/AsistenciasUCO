@@ -16,6 +16,7 @@ public final class RegistrarEstudianteRepositoryDTO {
     private String correo;
     private String password;
     private UUID grupoId;
+    private UUID usuarioEjecutor;
 
     public RegistrarEstudianteRepositoryDTO() {
         super();
@@ -30,7 +31,8 @@ public final class RegistrarEstudianteRepositoryDTO {
             final String segundoNombre,
             final String correo,
             final String password,
-            final UUID grupoId
+            final UUID grupoId,
+            final UUID usuarioEjecutor
     ) {
         setTipoIdentificacionId(tipoIdentificacionId);
         setNumeroIdentificacion(numeroIdentificacion);
@@ -41,6 +43,7 @@ public final class RegistrarEstudianteRepositoryDTO {
         setCorreo(correo);
         setPassword(password);
         setGrupoId(grupoId);
+        setUsuarioEjecutor(usuarioEjecutor);
     }
 
     public UUID getTipoIdentificacionId() {
@@ -113,5 +116,13 @@ public final class RegistrarEstudianteRepositoryDTO {
 
     public void setGrupoId(final UUID grupoId) {
         this.grupoId = grupoId;
+    }
+
+    public UUID getUsuarioEjecutor() {
+        return usuarioEjecutor;
+    }
+
+    public void setUsuarioEjecutor(final UUID usuarioEjecutor) {
+        this.usuarioEjecutor = usuarioEjecutor;
     }
 }

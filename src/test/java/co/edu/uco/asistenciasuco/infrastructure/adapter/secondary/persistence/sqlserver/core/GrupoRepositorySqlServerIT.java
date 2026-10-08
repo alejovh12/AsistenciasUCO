@@ -50,7 +50,17 @@ class GrupoRepositorySqlServerIT {
                 FROM dbo.uv_tipo_identificacion
                 ORDER BY tipoIdentificacion
                 """);
+        // Ejecutor REAL con perfil permitido (DOCENTE/COORDINADOR): asi el SP supera RBAC y llega al grupo.
+        final Optional<UUID> ejecutorAutorizado = firstUuid("""
+                SELECT TOP 1 idUsuario AS id
+                FROM dbo.uv_usuario_perfil
+                WHERE codigoPerfil IN ('DOCENTE', 'COORDINADOR')
+                   OR UPPER(nombrePerfil) LIKE '%DOCENTE%'
+                   OR UPPER(nombrePerfil) LIKE '%COORDINADOR%'
+                ORDER BY idUsuario
+                """);
         assumeTrue(tipoIdentificacion.isPresent(), "No hay tipos de identificacion para ejecutar la IT.");
+        assumeTrue(ejecutorAutorizado.isPresent(), "No hay usuario DOCENTE/COORDINADOR para ejecutar la IT.");
 
         final TestIdentity identity = uniqueIdentity("rollback");
         assertCounts(identity, 0, 0, 0, 0);
@@ -68,11 +78,12 @@ class GrupoRepositorySqlServerIT {
                         "MARIA",
                         identity.correo(),
                         "Clave123!",
-                        UUID.randomUUID()
+                        UUID.randomUUID(),
+                        ejecutorAutorizado.get()
                 ))
         );
 
-        assertEquals("ERR_GRUPO_NO_HABILITADO", exception.getCode());
+        assertEquals("ERR_GRUPO_NO_EXISTE", exception.getCode());
         assertCounts(identity, 0, 0, 0, 0);
     }
 
@@ -83,16 +94,31 @@ class GrupoRepositorySqlServerIT {
                 FROM dbo.uv_tipo_identificacion
                 ORDER BY tipoIdentificacion
                 """);
-        final Optional<UUID> grupo = firstUuid("""
-                SELECT TOP 1 id
-                FROM dbo.uv_grupo
-                WHERE grupoEstaHablitado = 1
-                  AND cuposDisponibles > 0
-                ORDER BY id
-                """);
+        // Grupo habilitado, con cupo y docente titular; el ejecutor es el Usuario.id de ese titular.
+        final List<UUID[]> grupoYTitular = jdbcTemplate.query("""
+                SELECT TOP 1 g.id AS idGrupo, di.idUsuario AS idTitular
+                FROM dbo.uv_grupo g
+                INNER JOIN dbo.uv_docente_identidad di ON di.id = g.idDocente
+                WHERE g.grupoEstaHablitado = 1
+                  AND g.cuposDisponibles > 0
+                  AND EXISTS (
+                      SELECT 1
+                      FROM dbo.uv_usuario_perfil up
+                      WHERE up.idUsuario = di.idUsuario
+                        AND (up.codigoPerfil = 'DOCENTE' OR UPPER(up.nombrePerfil) LIKE '%DOCENTE%')
+                  )
+                ORDER BY g.id
+                """,
+                (resultSet, rowNumber) -> new UUID[] {
+                        UUID.fromString(String.valueOf(resultSet.getObject("idGrupo"))),
+                        UUID.fromString(String.valueOf(resultSet.getObject("idTitular")))
+                });
 
         assumeTrue(tipoIdentificacion.isPresent(), "No hay tipos de identificacion para ejecutar la IT.");
-        assumeTrue(grupo.isPresent(), "No hay grupo habilitado con cupos para validar success path.");
+        assumeTrue(!grupoYTitular.isEmpty(),
+                "No hay grupo habilitado, con cupos y docente titular para validar success path.");
+        final UUID grupo = grupoYTitular.get(0)[0];
+        final UUID titular = grupoYTitular.get(0)[1];
 
         final TestIdentity identity = uniqueIdentity("success");
         assertCounts(identity, 0, 0, 0, 0);
@@ -108,7 +134,8 @@ class GrupoRepositorySqlServerIT {
                     "MARIA",
                     identity.correo(),
                     "Clave123!",
-                    grupo.get()
+                    grupo,
+                    titular
             )));
             assertEquals(1, usuarioCount(identity));
             assertEquals(1, estudianteCount(identity));

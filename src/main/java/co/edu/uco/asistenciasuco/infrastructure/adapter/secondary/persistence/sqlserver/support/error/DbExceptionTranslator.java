@@ -55,10 +55,12 @@ public final class DbExceptionTranslator {
             UsuarioErrorCode.ERR_USUARIO_INACTIVO,
             EstudianteErrorCode.ERR_ESTUDIANTE_INACTIVO,
             DocenteErrorCode.ERR_DOCENTE_INACTIVO,
-            DocenteErrorCode.ERR_DOCENTE_YA_REGISTRADO
+            DocenteErrorCode.ERR_DOCENTE_YA_REGISTRADO,
+            CommonErrorCode.CONFLICT
     );
     private static final Set<ErrorDefinition> VALIDATION_CODES = Set.of(
             UsuarioErrorCode.ERR_NOMBRE_PERSONA_INVALIDO,
+            UsuarioErrorCode.ERR_PASSWORD_POLITICA_INVALIDA,
             AsistenciaErrorCode.ERR_ESTADO_ASISTENCIA_INVALIDO,
             CommonErrorCode.VALIDATION_ERROR
     );
@@ -97,7 +99,7 @@ public final class DbExceptionTranslator {
             }
         }
 
-        throw new DatabaseOperationException(DatabaseErrorCode.ERR_DB_UNCLASSIFIED);
+        throw new DatabaseOperationException(code);
     }
 
     private static void logFailedResult(

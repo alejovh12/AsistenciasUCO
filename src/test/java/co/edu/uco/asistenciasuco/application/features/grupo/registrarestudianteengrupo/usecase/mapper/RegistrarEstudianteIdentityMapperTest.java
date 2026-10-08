@@ -15,12 +15,13 @@ class RegistrarEstudianteIdentityMapperTest {
     private static final UUID TIPO_IDENTIFICACION = UUID.fromString("13641bab-e3cd-485c-b275-47e7b731e18c");
     private static final UUID GRUPO = UUID.fromString("23641bab-e3cd-485c-b275-47e7b731e18c");
     private static final UUID ID_USUARIO = UUID.fromString("93641bab-e3cd-485c-b275-47e7b731e18c");
+    private static final UUID USUARIO_EJECUTOR = UUID.fromString("a3641bab-e3cd-485c-b275-47e7b731e18c");
 
     @Test
     void toCrearCuentaIdentidadDTO_mapea_datos_del_dominio_con_rol_estudiante() {
         final RegistrarEstudianteDomain domain = new RegistrarEstudianteDomain(
                 TIPO_IDENTIFICACION, 123456789, "Perez", "Gomez", "Ana", "Maria",
-                "ana.perez@uco.edu.co", "Clave123!", GRUPO
+                "ana.perez@uco.edu.co", "Clave123!", GRUPO, USUARIO_EJECUTOR
         );
 
         final CrearCuentaIdentidadDTO dto = RegistrarEstudianteIdentityMapper.toCrearCuentaIdentidadDTO(
@@ -40,7 +41,7 @@ class RegistrarEstudianteIdentityMapperTest {
     void toCrearCuentaIdentidadDTO_propaga_password_nulo_sin_inventar_credencial() {
         final RegistrarEstudianteDomain domain = new RegistrarEstudianteDomain(
                 TIPO_IDENTIFICACION, 123456789, "Perez", "Gomez", "Ana", "Maria",
-                "ana.perez@uco.edu.co", null, GRUPO
+                "ana.perez@uco.edu.co", null, GRUPO, USUARIO_EJECUTOR
         );
 
         final CrearCuentaIdentidadDTO dto = RegistrarEstudianteIdentityMapper.toCrearCuentaIdentidadDTO(

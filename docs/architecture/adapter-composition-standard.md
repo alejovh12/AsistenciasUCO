@@ -43,8 +43,6 @@ Los perfiles (`local`, `test`, `staging`, `prod`) no seleccionan tecnologías. L
 ```yaml
 app:
   adapters:
-    persistence:
-      provider: ${APP_ADAPTERS_PERSISTENCE_PROVIDER:sqlserver}
     identity:
       provider: ${APP_ADAPTERS_IDENTITY_PROVIDER:keycloak}
     security:
@@ -136,6 +134,10 @@ class LocalSseRealtimeAdapterConfiguration {
 ```
 
 Así cambiar un provider no exige tocar Domain, Application ni Controllers.
+
+La regla anterior no aplica a los repositories JPA productivos definidos por [ADR-004](../adr/ADR-004-jpa-repository-architecture.md).
+Esos componentes llevan obligatoriamente `@Repository`, implementan el secondary port directamente y pueden
+declarar la condición del provider en la propia clase. No se registran mediante `@Bean` manual.
 
 ### 2.4 No Service Locator
 
@@ -424,6 +426,25 @@ No se modifica la regla contractual actual:
 - lecturas respetan las views/contratos definidos;
 - la DB no se modifica desde esta fase de infraestructura.
 
+**HISTÓRICO:** LB-002 introdujo selectores JDBC/JPA, adapter híbrido y fallback JDBC para certificar
+el piloto de Asistencia. JPA-01 retiró esos mecanismos de la vertical y JPA-02A normalizó el
+bootstrap; ya no describen el runtime vigente.
+
+**TARGET ACTUAL:** [ADR-003](../adr/ADR-003-jpa-only-persistence.md) y LB-008 establecen
+`PERSISTENCE_PROVIDER = JPA_ONLY`. No se crean nuevos selectores `jdbc|jpa`, adapters híbridos ni
+fallback JDBC productivo. Una capacidad cerrada usa JPA en runtime; la coexistencia solo se tolera
+durante su comparación de paridad.
+
+Desde JPA-06A, [ADR-004](../adr/ADR-004-jpa-repository-architecture.md) fija la forma:
+
+```text
+Application Port -> @Repository XxxJpaRepository -> EntityManager
+```
+
+No hay `SqlServerAdapter` ni `JpaCommandPersistence/JpaQueryPersistence` delegadores entre el port y el
+repository. El component scanning estándar reemplaza los beans manuales de repositorio; la configuración
+técnica de Hibernate/JPA se conserva.
+
 ---
 
 ## 11. Storage
@@ -508,7 +529,7 @@ src/main/java/co/edu/uco/asistenciasuco/application/features/coordinador/common/
 
 | Capability | Port / SPI | Adapter actual | Selector | Estado | Trabajo pendiente |
 |---|---|---|---|---|---|
-| Persistence | `*RepositoryPort`, `*QueryPort`, `*CommandPort`, `InstitutionalScopePort` | SQL Server adapters | `app.adapters.persistence.provider=sqlserver`; `app.adapters.persistence.asistencia-query-provider` (jdbc sin perfil; **jpa en perfiles `local`/`dev`** desde LB-002.1B; env `APP_ADAPTERS_PERSISTENCE_ASISTENCIA_QUERY_PROVIDER` gana y permite rollback a jdbc) (solo `consultarAsistenciasPorGrupo`) | Ports desacoplados; solo SQL Server; JPA solo en la query piloto | DataSource provider-specific antes de otra DB |
+| Persistence | `*RepositoryPort`, `*QueryPort`, `*CommandPort`, `InstitutionalScopePort` | SQL Server adapters: Asistencia JPA-only; resto de verticales JDBC heredado | Ninguno en Asistencia; el resto no tiene selector | JPA-02A PASS: bootstrap estándar de Boot y `JpaTransactionManager`; Asistencia cumple ADR-003; resto AS-IS JDBC | JPA-02B READY_WITH_SCOPED_DB_BLOCKER para commands de Sesión + Grupo; retirar el JDBC restante por capacidad; DataSource provider-specific antes de otra DB |
 | Secret Vault | `SecretVaultPort` | `AzureKeyVaultAdapter`, `LocalEnvSecretVaultAdapter` | `app.adapters.vault.provider=azure_keyvault` | Reemplazable; Azure usa `DefaultAzureCredential`; Caffeine local 50/5 min | Evidencia operacional MV-003; seguridad webhook en LB-001D.2 |
 | Parameter Catalog | `ParameterCatalogPort` | `AzureAppConfigParameterCatalogAdapter`, `SqlServerParameterCatalogAdapter` | `app.adapters.parameter-catalog.provider=azure_appconfig` | Reemplazable; Azure usa Caffeine local 1000/10 min | Evidencia operacional MV-003 |
 | Message Catalog | `MessageCatalogPort` | `AzureAppConfigMessageCatalogAdapter`, `SqlServerMessageCatalogAdapter` | `app.adapters.message-catalog.provider=azure` | Reemplazable; Azure usa dos caches locales 2000/30 min; label `es` para usuario | Evidencia operacional MV-003 |

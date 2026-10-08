@@ -89,18 +89,18 @@ class CoordinadorPortalControllerTest {
     @Test
     void commandsMapBodyAndPathToInputPorts() throws Exception {
         mvc.perform(post("/api/v1/coordinador/planes-estudio").contentType("application/json")
-                        .content("{\"codigo\":\"P01\",\"nombre\":\"Plan A\"}"))
+                        .content("{\"inp\":2026}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.exitoso").value(true));
         mvc.perform(put("/api/v1/coordinador/planes-estudio/{id}", PLAN).contentType("application/json")
-                        .content("{\"codigo\":\"P02\",\"nombre\":\"Plan B\"}"))
+                        .content("{\"inp\":2027}"))
                 .andExpect(status().isOk());
         final var planCaptor = ArgumentCaptor.forClass(GuardarPlanEstudioDTO.class);
         verify(managePlans, org.mockito.Mockito.times(2)).guardar(planCaptor.capture());
         assertNull(planCaptor.getAllValues().get(0).idPlanEstudio());
-        assertEquals("P01", planCaptor.getAllValues().get(0).codigo());
+        assertEquals(2026, planCaptor.getAllValues().get(0).inp());
         assertEquals(ACTOR, planCaptor.getAllValues().get(0).usuario());
         assertEquals(PLAN, planCaptor.getAllValues().get(1).idPlanEstudio());
-        assertEquals("Plan B", planCaptor.getAllValues().get(1).nombre());
+        assertEquals(2027, planCaptor.getAllValues().get(1).inp());
 
         final String body = "{\"codigo\":\"A01\",\"nombre\":\"Álgebra\",\"creditos\":3,"
                 + "\"semestreNumero\":2,\"nombreArea\":\"Matemáticas\",\"nombreComponente\":\"Básico\"}";

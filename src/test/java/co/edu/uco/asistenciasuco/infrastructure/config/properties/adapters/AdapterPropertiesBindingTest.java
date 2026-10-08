@@ -11,23 +11,12 @@ class AdapterPropertiesBindingTest {
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withUserConfiguration(AdapterPropertiesConfiguration.class)
             .withPropertyValues(
-                    "app.adapters.persistence.provider=sqlserver",
                     "app.adapters.identity.provider=keycloak",
                     "app.adapters.security.provider=keycloak",
-                    "app.adapters.storage.provider=local",
+                    "app.adapters.storage.provider=minio",
                     "app.adapters.realtime.provider=local-sse",
                     "app.adapters.audit.provider=logging"
             );
-
-    @Test
-    void bind_persistence_provider_sqlserver() {
-        contextRunner
-                .withPropertyValues("app.adapters.persistence.provider=sqlserver")
-                .run(context -> assertEquals(
-                        PersistenceAdapterProperties.Provider.SQLSERVER,
-                        context.getBean(PersistenceAdapterProperties.class).provider()
-                ));
-    }
 
     @Test
     void bind_identity_provider_keycloak() {
@@ -39,14 +28,24 @@ class AdapterPropertiesBindingTest {
                 ));
     }
 
+    // LB-004B.2: minio es el unico provider soportado (decision humana, ver
+    // docs/work-items/LB-004-stateless-serverless-readiness/PROFESSOR_DECISION.md); no hay
+    // fallback local.
     @Test
-    void bind_storage_provider_local() {
+    void bind_storage_provider_minio() {
         contextRunner
-                .withPropertyValues("app.adapters.storage.provider=local")
+                .withPropertyValues("app.adapters.storage.provider=minio")
                 .run(context -> assertEquals(
-                        StorageAdapterProperties.Provider.LOCAL,
+                        StorageAdapterProperties.Provider.MINIO,
                         context.getBean(StorageAdapterProperties.class).provider()
                 ));
+    }
+
+    @Test
+    void invalid_storage_provider_value_falla_binding_sin_fallback_local() {
+        contextRunner
+                .withPropertyValues("app.adapters.storage.provider=local")
+                .run(context -> assertNotNull(context.getStartupFailure()));
     }
 
     @Test
@@ -71,8 +70,9 @@ class AdapterPropertiesBindingTest {
 
     @Test
     void invalid_provider_value_falla_binding_sin_fallback() {
-        contextRunner
-                .withPropertyValues("app.adapters.persistence.provider=technology-that-does-not-exist")
+        new ApplicationContextRunner()
+                .withUserConfiguration(AdapterPropertiesConfiguration.class)
+                .withPropertyValues("app.adapters.audit.provider=technology-that-does-not-exist")
                 .run(context -> assertNotNull(context.getStartupFailure()));
     }
 }

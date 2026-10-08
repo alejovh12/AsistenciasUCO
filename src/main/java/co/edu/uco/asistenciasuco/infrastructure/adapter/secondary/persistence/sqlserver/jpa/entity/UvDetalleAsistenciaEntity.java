@@ -25,12 +25,15 @@ public class UvDetalleAsistenciaEntity {
     @Column(name = "idAsistencia")
     private UUID idAsistencia;
 
-    /** Nullable en el mapeo (defensivo): la semantica publica sigue siendo {@code ResultSet#getBoolean}. */
+    /** Nullable en el mapeo (defensivo): la semantica publica sigue siendo la de un flag {@code bit}. */
     @Column(name = "asistio")
     private Boolean asistio;
 
     @Column(name = "codigoRazonCausa")
     private String codigoRazonCausa;
+    /** Requerido por el reporte de asistencia (JPA-05); no altera el piloto de asistencia. */
+    @Column(name = "nombreRazonCausa")
+    private String nombreRazonCausa;
 
     protected UvDetalleAsistenciaEntity() {
         // requerido por JPA

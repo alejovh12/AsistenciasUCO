@@ -15,6 +15,7 @@ public final class RegistrarEstudianteDomain {
 
     private final UsuarioRegistroDomain usuarioRegistro;
     private final UUID grupoId;
+    private final UUID usuarioEjecutor;
 
     public RegistrarEstudianteDomain(
             final UUID tipoIdentificacionId,
@@ -25,7 +26,8 @@ public final class RegistrarEstudianteDomain {
             final String segundoNombre,
             final String correo,
             final String password,
-            final UUID grupoId
+            final UUID grupoId,
+            final UUID usuarioEjecutor
     ) {
         this.usuarioRegistro = UsuarioRegistroDomain.crear(
                 tipoIdentificacionId,
@@ -38,6 +40,7 @@ public final class RegistrarEstudianteDomain {
                 password
         );
         this.grupoId = validarGrupo(grupoId);
+        this.usuarioEjecutor = usuarioEjecutor;
     }
 
     private UUID validarGrupo(final UUID grupoId) {
@@ -84,6 +87,10 @@ public final class RegistrarEstudianteDomain {
 
     public UUID getGrupoId() {
         return grupoId;
+    }
+
+    public UUID getUsuarioEjecutor() {
+        return usuarioEjecutor;
     }
 
     public String resolverCredencialNueva() {

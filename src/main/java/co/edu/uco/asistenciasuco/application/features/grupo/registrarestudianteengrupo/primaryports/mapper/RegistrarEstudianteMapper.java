@@ -29,7 +29,8 @@ public final class RegistrarEstudianteMapper {
                 dto.getSegundoNombre(),
                 dto.getCorreo(),
                 dto.getPassword(),
-                dto.getGrupoId()
+                dto.getGrupoId(),
+                dto.getUsuarioEjecutor()
         );
     }
 

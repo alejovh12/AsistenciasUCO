@@ -73,8 +73,9 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
 
     /**
      * Resuelve el UUID institucional definitivo DESPUES del command, usando la identificacion
-     * (tipo + numero) como referencia — no el correo, que el SP no garantiza actualizar para un
-     * usuario preexistente encontrado por documento (ver docs de esta feature).
+     * (tipo + numero) como referencia. El SP solo reutiliza un usuario cuando correo y documento
+     * ya apuntaban al mismo usuario (o crea uno nuevo si ninguno existia); un usuario identificado
+     * por una sola clave es conflicto IDN_001 y nunca llega aqui.
      */
     private UsuarioIdentidadRepositoryProjection resolverUsuarioPostCommand(final RegistrarEstudianteDomain domain) {
         return usuarioRepositoryPort.consultarUsuarioPorIdentificacion(
@@ -118,12 +119,18 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
                 )
         );
 
-        if (idPorCorreo.isPresent()
-                && idPorIdentificacion.isPresent()
-                && !idPorCorreo.get().equals(idPorIdentificacion.get())) {
+        final boolean existePorCorreo = idPorCorreo.isPresent();
+        final boolean existePorDocumento = idPorIdentificacion.isPresent();
+
+        // Regla DB (IDN_001): solo se reutiliza si correo y documento resuelven al MISMO usuario;
+        // solo una clave, o claves de usuarios distintos, es conflicto de identidad.
+        if (existePorCorreo != existePorDocumento) {
             throw new ConflictException(UsuarioErrorCode.ERR_IDENTIDAD_USUARIO_CONFLICTO);
         }
-        return idPorCorreo.isPresent() || idPorIdentificacion.isPresent();
+        if (existePorCorreo && !idPorCorreo.get().equals(idPorIdentificacion.get())) {
+            throw new ConflictException(UsuarioErrorCode.ERR_IDENTIDAD_USUARIO_CONFLICTO);
+        }
+        return existePorCorreo;
     }
 
     private String resolverPasswordParaPersistir(

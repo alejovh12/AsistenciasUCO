@@ -3,7 +3,7 @@ package co.edu.uco.asistenciasuco.infrastructure.audit.adapter.logging;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
-import co.edu.uco.asistenciasuco.infrastructure.audit.adapter.sqlserver.AuditEventJdbcRepository;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository.AuditEventJpaRepository;
 import co.edu.uco.asistenciasuco.infrastructure.audit.model.AuditActorType;
 import co.edu.uco.asistenciasuco.infrastructure.audit.model.AuditEvent;
 import co.edu.uco.asistenciasuco.infrastructure.audit.model.AuditOutcome;
@@ -29,7 +29,7 @@ class LoggingAuditEventPublisherTest {
 
     @Test
     void publish_persistencia_exitosa_registra_eventType_audit() {
-        final AuditEventJdbcRepository repository = mock(AuditEventJdbcRepository.class);
+        final AuditEventJpaRepository repository = mock(AuditEventJpaRepository.class);
         final LoggingAuditEventPublisher publisher = new LoggingAuditEventPublisher(provider(repository));
         final AuditEvent event = event();
         final ch.qos.logback.classic.Logger logger =
@@ -51,7 +51,7 @@ class LoggingAuditEventPublisherTest {
 
     @Test
     void publish_fallo_persistencia_registra_error_seguro_y_no_propaga() {
-        final AuditEventJdbcRepository repository = mock(AuditEventJdbcRepository.class);
+        final AuditEventJpaRepository repository = mock(AuditEventJpaRepository.class);
         final AuditEvent event = event();
         final RuntimeException failure = new RuntimeException("db unavailable");
         doThrow(failure).when(repository).insert(event);
@@ -89,8 +89,8 @@ class LoggingAuditEventPublisherTest {
         }
     }
 
-    private ObjectProvider<AuditEventJdbcRepository> provider(final AuditEventJdbcRepository repository) {
-        final ObjectProvider<AuditEventJdbcRepository> provider = mock();
+    private ObjectProvider<AuditEventJpaRepository> provider(final AuditEventJpaRepository repository) {
+        final ObjectProvider<AuditEventJpaRepository> provider = mock();
         when(provider.getIfAvailable()).thenReturn(repository);
         return provider;
     }

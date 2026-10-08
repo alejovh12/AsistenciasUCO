@@ -1,10 +1,9 @@
-package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa;
+package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarAsistenciasPorGrupoRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.AsistenciaRepositoryProjection;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.core.AsistenciaRepositorySqlServerAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.CanonicalStoredProcedureExecutor;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.CanonicalJdbcBaselineExecutor;
 import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
@@ -12,6 +11,8 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.JdbcBaselineTestConfiguration;
+import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -37,8 +38,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * produccion no tiene ORDER BY contractual). La comparacion es campo a campo, no por
  * {@code toString}.</p>
  */
+@Import(JdbcBaselineTestConfiguration.class)
 @Tag("integration")
-@SpringBootTest(properties = "app.adapters.persistence.asistencia-query-provider=jpa")
+@SpringBootTest
 @MockitoBean(types = JwtDecoder.class)
 class AsistenciaQueryJpaParityIT {
 
@@ -55,7 +57,7 @@ class AsistenciaQueryJpaParityIT {
     private NamedParameterJdbcOperations namedJdbc;
 
     @Autowired
-    private CanonicalStoredProcedureExecutor procedureExecutor;
+    private CanonicalJdbcBaselineExecutor procedureExecutor;
 
     @Autowired
     private EntityManagerFactory entityManagerFactory;
@@ -64,12 +66,12 @@ class AsistenciaQueryJpaParityIT {
     private JdbcTemplate jdbcTemplate;
 
     private AsistenciaRepositoryPort jdbcBaseline() {
-        return new AsistenciaRepositorySqlServerAdapter(namedJdbc, procedureExecutor);
+        return new AsistenciaJdbcBaselineOracle(namedJdbc, procedureExecutor);
     }
 
     @Test
     void el_puerto_resuelto_con_provider_jpa_no_es_el_adapter_jdbc() {
-        assertFalse(jpaRoutedPort instanceof AsistenciaRepositorySqlServerAdapter);
+        assertFalse(jpaRoutedPort instanceof AsistenciaJdbcBaselineOracle);
         assertNotNull(entityManagerFactory);
     }
 

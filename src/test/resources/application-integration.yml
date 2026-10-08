@@ -40,12 +40,26 @@ app:
     security:
       provider: keycloak
     storage:
-      provider: local
+      # LB-004B.2: minio es el unico provider soportado. La construccion del bean MinioClient no
+      # conecta eagerly, asi que IT que no ejercitan storage (p.ej. AsistenciaRepositorySqlServerIT)
+      # no requieren MinIO corriendo; solo MinioFileStorageAdapterIT/ClamAvMalwareScanAdapterIT lo
+      # necesitan realmente arriba (docker compose up -d minio clamav).
+      provider: minio
     realtime:
       provider: local-sse
     audit:
       provider: logging
   providers:
+    minio:
+      endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+      access-key: ${MINIO_ACCESS_KEY:asistencias-minio-dev}
+      secret-key: ${MINIO_SECRET_KEY:asistencias-minio-dev-secret}
+      bucket: ${MINIO_BUCKET:asistencias-soportes}
+    clamav:
+      host: ${CLAMAV_HOST:localhost}
+      port: ${CLAMAV_PORT:3310}
+      connect-timeout-millis: 5000
+      read-timeout-millis: 15000
     keycloak-identity:
       server-url: http://127.0.0.1:65534
       realm: asistencias-uco

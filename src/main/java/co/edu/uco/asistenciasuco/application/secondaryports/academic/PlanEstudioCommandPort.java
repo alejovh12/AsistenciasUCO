@@ -4,5 +4,5 @@ import java.util.UUID;
 
 public interface PlanEstudioCommandPort {
 
-    void registrarOActualizarPlanEstudio(UUID idPlanEstudio, UUID idPrograma, String codigo, String nombre);
+    void registrarOActualizarPlanEstudio(UUID idPlanEstudio, UUID idPrograma, Integer inp);
 }

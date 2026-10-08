@@ -12,9 +12,10 @@ class RegistrarEstudianteHttpMapperTest {
 
     private static final UUID TIPO_IDENTIFICACION = UUID.fromString("13641bab-e3cd-485c-b275-47e7b731e18c");
     private static final UUID GRUPO = UUID.fromString("23641bab-e3cd-485c-b275-47e7b731e18c");
+    private static final UUID USUARIO_EJECUTOR = UUID.fromString("33641bab-e3cd-485c-b275-47e7b731e18c");
 
     @Test
-    void toApplicationDTO_combina_path_y_body_sin_grupoId_en_request_http() {
+    void toApplicationDTO_combina_path_body_y_usuario_autenticado_sin_grupoId_en_request_http() {
         final RegistrarEstudianteRequest request = new RegistrarEstudianteRequest();
         request.setTipoIdentificacionId(TIPO_IDENTIFICACION);
         request.setNumeroIdentificacion(123456789);
@@ -25,7 +26,7 @@ class RegistrarEstudianteHttpMapperTest {
         request.setCorreo("ana.perez@uco.edu.co");
         request.setPassword("Clave123!");
 
-        final RegistrarEstudianteDTO dto = RegistrarEstudianteHttpMapper.toApplicationDTO(GRUPO, request);
+        final RegistrarEstudianteDTO dto = RegistrarEstudianteHttpMapper.toApplicationDTO(GRUPO, request, USUARIO_EJECUTOR);
 
         assertEquals(TIPO_IDENTIFICACION, dto.getTipoIdentificacionId());
         assertEquals(123456789, dto.getNumeroIdentificacion());
@@ -36,5 +37,6 @@ class RegistrarEstudianteHttpMapperTest {
         assertEquals("ana.perez@uco.edu.co", dto.getCorreo());
         assertEquals("Clave123!", dto.getPassword());
         assertEquals(GRUPO, dto.getGrupoId());
+        assertEquals(USUARIO_EJECUTOR, dto.getUsuarioEjecutor());
     }
 }

@@ -34,8 +34,7 @@ public final class GestionarPlanEstudioUseCaseImpl implements GestionarPlanEstud
         commandPort.registrarOActualizarPlanEstudio(
                 domain.idPlanEstudio() == null ? UUID.randomUUID() : domain.idPlanEstudio(),
                 programa,
-                domain.codigo(),
-                domain.nombre()
+                domain.inp()
         );
     }
 }

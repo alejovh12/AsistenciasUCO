@@ -1,12 +1,15 @@
-package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa;
+package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
+
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository.*;
+
 
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarAsistenciasPorGrupoRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.AsistenciaRepositoryProjection;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.projection.AsistenciaQueryRow;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.DatabaseOperationException;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.JpaProcedureExecutor;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TypedQuery;
 import org.junit.jupiter.api.Test;
@@ -24,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -32,19 +36,17 @@ import static org.mockito.Mockito.when;
  * Flujo y traduccion de errores de la persistencia JPA con fakes. NO certifica que JPA/SQL Server
  * funcione: eso lo certifica {@code AsistenciaQueryJpaParityIT}.
  */
-class AsistenciaJpaQueryPersistenceTest {
+class AsistenciaJpaRepositoryTest {
 
     private static final UUID GRUPO = UUID.randomUUID();
     private static final UUID SESION = UUID.randomUUID();
 
-    private final EntityManagerFactory factory = mock(EntityManagerFactory.class);
     private final EntityManager entityManager = mock(EntityManager.class);
     @SuppressWarnings("unchecked")
     private final TypedQuery<AsistenciaQueryRow> query = mock(TypedQuery.class);
-    private final AsistenciaJpaQueryPersistence persistence = new AsistenciaJpaQueryPersistence(factory);
+    private final AsistenciaJpaRepository persistence = new AsistenciaJpaRepository(entityManager, new JpaProcedureExecutor(entityManager));
 
     private void wireQuery() {
-        when(factory.createEntityManager()).thenReturn(entityManager);
         when(entityManager.createQuery(anyString(), eq(AsistenciaQueryRow.class))).thenReturn(query);
         when(query.setParameter(anyString(), org.mockito.ArgumentMatchers.any())).thenReturn(query);
     }
@@ -55,12 +57,17 @@ class AsistenciaJpaQueryPersistenceTest {
                 assertThrows(CrosscuttingException.class, () -> persistence.consultarAsistenciasPorGrupo(null));
 
         assertEquals("El dominio para consultar asistencias por grupo es obligatorio.", exception.getMessage());
-        verifyNoInteractions(factory);
+        verifyNoInteractions(entityManager);
     }
 
     @Test
-    void constructor_exige_entity_manager_factory() {
-        assertThrows(NullPointerException.class, () -> new AsistenciaJpaQueryPersistence(null));
+    void constructor_exige_entity_manager() {
+        assertThrows(NullPointerException.class, () -> new AsistenciaJpaRepository(null, new JpaProcedureExecutor(entityManager)));
+    }
+
+    @Test
+    void constructor_exige_procedure_executor() {
+        assertThrows(NullPointerException.class, () -> new AsistenciaJpaRepository(entityManager, null));
     }
 
     @Test
@@ -81,7 +88,7 @@ class AsistenciaJpaQueryPersistenceTest {
         assertEquals("", result.getFirst().getObservacion());
         verify(query).setParameter("grupo", GRUPO);
         verify(query).setParameter("sesion", SESION);
-        verify(entityManager).close();
+        verify(entityManager, never()).close();
     }
 
     @Test
@@ -98,7 +105,7 @@ class AsistenciaJpaQueryPersistenceTest {
 
     @Test
     void hql_es_una_sola_query_no_native_sin_order_by_ni_auth() {
-        final String hql = AsistenciaJpaQueryPersistence.HQL_CONSULTAR_ASISTENCIAS.toLowerCase();
+        final String hql = AsistenciaJpaRepository.HQL_CONSULTAR_ASISTENCIAS.toLowerCase();
 
         assertFalse(hql.contains("order by"), "La query no debe introducir orden observable.");
         assertFalse(hql.contains("uv_auth"));
@@ -118,12 +125,13 @@ class AsistenciaJpaQueryPersistenceTest {
 
         assertEquals("No fue posible consultar las asistencias de base de datos.", exception.getMessage());
         assertSame(cause, exception.getCause());
-        verify(entityManager).close();
+        verify(entityManager, never()).close();
     }
 
     @Test
-    void illegal_state_al_abrir_entity_manager_tambien_se_traduce() {
-        when(factory.createEntityManager()).thenThrow(new IllegalStateException("factory closed"));
+    void illegal_state_del_entity_manager_compartido_tambien_se_traduce() {
+        when(entityManager.createQuery(anyString(), eq(AsistenciaQueryRow.class)))
+                .thenThrow(new IllegalStateException("entity manager closed"));
 
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
                 () -> persistence.consultarAsistenciasPorGrupo(new ConsultarAsistenciasPorGrupoRepositoryDTO(GRUPO, null)));

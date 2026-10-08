@@ -81,8 +81,7 @@ public final class CoordinadorPortalController {
     public ResponseEntity<ApiDataResponse<Void>> crearPlanEstudio(@RequestBody final GuardarPlanEstudioRequest request) {
         gestionarPlanEstudioInputPort.guardar(new GuardarPlanEstudioDTO(
                 null,
-                request == null ? null : request.getCodigo(),
-                request == null ? null : request.getNombre(),
+                request == null ? null : request.getInp(),
                 authenticatedUserResolver.requireAuthenticatedUserId()
         ));
         return ResponseEntity.ok(new ApiDataResponse<>(true, null));
@@ -94,8 +93,7 @@ public final class CoordinadorPortalController {
     ) {
         gestionarPlanEstudioInputPort.guardar(new GuardarPlanEstudioDTO(
                 id,
-                request == null ? null : request.getCodigo(),
-                request == null ? null : request.getNombre(),
+                request == null ? null : request.getInp(),
                 authenticatedUserResolver.requireAuthenticatedUserId()
         ));
         return ResponseEntity.ok(new ApiDataResponse<>(true, null));

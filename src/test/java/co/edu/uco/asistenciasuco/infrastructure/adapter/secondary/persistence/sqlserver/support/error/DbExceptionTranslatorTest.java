@@ -100,6 +100,26 @@ class DbExceptionTranslatorTest {
     }
 
     @Test
+    void dbcode_cupo_inferior_ocupacion_lanza_conflict_semantico() {
+        final ConflictException exception = assertThrows(
+                ConflictException.class,
+                () -> translateFailure("irrelevante", "DBCODE=ERR_CUPO_INFERIOR_OCUPACION|detalle", OPERATION)
+        );
+
+        assertEquals("CONFLICT", exception.getCode());
+    }
+
+    @Test
+    void dbcode_programa_facultad_inconsistente_lanza_validation_semantico() {
+        final ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> translateFailure("irrelevante", "DBCODE=ERR_PROGRAMA_FACULTAD_INCONSISTENTE|detalle", OPERATION)
+        );
+
+        assertEquals("VALIDATION_ERROR", exception.getCode());
+    }
+
+    @Test
     void dbcode_de_grupo_no_existe_lanza_resource_not_found() {
         final ResourceNotFoundException exception = assertThrows(
                 ResourceNotFoundException.class,
@@ -131,6 +151,128 @@ class DbExceptionTranslatorTest {
         assertEquals(first.getClass(), second.getClass());
         assertEquals(first.getCode(), second.getCode());
         assertEquals("FORBIDDEN", second.getCode());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "USU_001, ERR_USUARIO_NO_EXISTE",
+            "EST_001, ERR_ESTUDIANTE_NO_EXISTE"
+    })
+    void dbcode_formal_de_inexistencia_lanza_not_found_con_codigo_especifico(final String dbCode, final String expectedCode) {
+        final ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class,
+                () -> translateFailure("irrelevante", "DBCODE=" + dbCode + "|detalle", OPERATION)
+        );
+
+        assertEquals(expectedCode, exception.getCode());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"PROG_001", "PER_001"})
+    void dbcode_formal_de_programa_y_periodo_lanza_resource_not_found(final String dbCode) {
+        final ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class,
+                () -> translateFailure("irrelevante", "DBCODE=" + dbCode + "|detalle", OPERATION)
+        );
+
+        assertEquals("RESOURCE_NOT_FOUND", exception.getCode());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "IDN_001, ERR_IDENTIDAD_USUARIO_CONFLICTO",
+            "ERR_UNICIDAD_DOCUMENTO, ERR_UNICIDAD_DOCUMENTO",
+            "USU_002, ERR_USUARIO_INACTIVO",
+            "HOR_001, ERR_CRUCE_HORARIO_ESTUDIANTE",
+            "VAL_006, CONFLICT"
+    })
+    void dbcode_formal_de_conflicto_lanza_conflict_con_codigo_especifico(final String dbCode, final String expectedCode) {
+        final ConflictException exception = assertThrows(
+                ConflictException.class,
+                () -> translateFailure("irrelevante", "DBCODE=" + dbCode + "|detalle", OPERATION)
+        );
+
+        assertEquals(expectedCode, exception.getCode());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"PLA_001", "VAL_001", "VAL_002", "VAL_003", "VAL_004", "VAL_005"})
+    void dbcode_formal_de_validacion_ampliado_lanza_validation_exception(final String dbCode) {
+        final ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> translateFailure("irrelevante", "DBCODE=" + dbCode + "|detalle", OPERATION)
+        );
+
+        assertEquals("VALIDATION_ERROR", exception.getCode());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "CAT_001, ERR_DB_CATALOG_INCONSISTENT",
+            "SYS_001, ERR_DB_UNCLASSIFIED",
+            "GEN_001, ERR_DB_UNCLASSIFIED"
+    })
+    void dbcode_formal_tecnico_o_ambiguo_lanza_database_operation_exception(final String dbCode, final String expectedCode) {
+        final DatabaseOperationException exception = assertThrows(
+                DatabaseOperationException.class,
+                () -> translateFailure("irrelevante", "DBCODE=" + dbCode + "|detalle", OPERATION)
+        );
+
+        assertEquals(expectedCode, exception.getCode());
+    }
+
+    @Test
+    void gen_001_no_se_convierte_en_404_falso_de_tipo_identificacion_aunque_el_texto_lo_sugiera() {
+        final DatabaseOperationException exception = assertThrows(
+                DatabaseOperationException.class,
+                () -> translateFailure(
+                        "El tipo de identificacion seleccionado no existe en el sistema.",
+                        "DBCODE=GEN_001|tipo de identificacion no existe en uv_tipo_identificacion",
+                        "registrarEstudianteEnGrupo"
+                )
+        );
+
+        assertEquals("ERR_DB_UNCLASSIFIED", exception.getCode());
+    }
+
+    @Test
+    void val_007_en_crear_usuario_es_politica_de_password_invalida() {
+        final ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> translateFailure("irrelevante", "DBCODE=VAL_007|detalle", "crearUsuario")
+        );
+
+        assertEquals("ERR_PASSWORD_POLITICA_INVALIDA", exception.getCode());
+    }
+
+    @Test
+    void val_007_en_asistencia_autonoma_es_validation_error() {
+        final ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> translateFailure("irrelevante", "DBCODE=VAL_007|detalle", "registrarAsistenciaAutonoma")
+        );
+
+        assertEquals("VALIDATION_ERROR", exception.getCode());
+    }
+
+    @Test
+    void val_007_en_resolver_solicitud_revision_es_forbidden() {
+        final ForbiddenException exception = assertThrows(
+                ForbiddenException.class,
+                () -> translateFailure("irrelevante", "DBCODE=VAL_007|detalle", "resolverSolicitudRevisionAsistencia")
+        );
+
+        assertEquals("FORBIDDEN", exception.getCode());
+    }
+
+    @Test
+    void val_007_en_operacion_desconocida_falla_cerrado() {
+        final DatabaseOperationException exception = assertThrows(
+                DatabaseOperationException.class,
+                () -> translateFailure("irrelevante", "DBCODE=VAL_007|detalle", OPERATION)
+        );
+
+        assertEquals("ERR_DB_UNCLASSIFIED", exception.getCode());
     }
 
     @Test

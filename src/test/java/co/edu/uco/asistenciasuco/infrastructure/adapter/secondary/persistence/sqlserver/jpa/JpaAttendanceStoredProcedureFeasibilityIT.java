@@ -1,14 +1,16 @@
-package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa;
+package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
+
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository.*;
+
 
 import co.edu.uco.asistenciasuco.application.exception.ApplicationException;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciasSesionRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistroAsistenciaSesionRepositoryDTO;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.core.AsistenciaRepositorySqlServerAdapter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.DbExceptionTranslator;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.mapping.JdbcValueMapper;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.CanonicalStoredProcedureExecutor;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.mapping.JdbcBaselineValueMapper;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.CanonicalJdbcBaselineExecutor;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import com.zaxxer.hikari.HikariDataSource;
 import jakarta.persistence.EntityManager;
@@ -21,6 +23,8 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.JdbcBaselineTestConfiguration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
@@ -53,11 +57,11 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * LB-002.2B — JPA STORED PROCEDURE FEASIBILITY PROBES (U-01..U-05).
  *
- * <p><b>NO es AsistenciaJpaCommandPersistence ni un RED.</b> Es un probe de solo-test que responde si
+ * <p><b>NO es AsistenciaJpaRepository ni un RED.</b> Es un probe de solo-test que responde si
  * Hibernate 7.2 / Jakarta Persistence / {@link StoredProcedureQuery} pueden consumir el SP congelado
  * {@code dbo.usp_registrar_asistencias_sesion} contra SQL Server REAL (sin H2, sin mocks del
  * {@code EntityManager}). No certifica el command JPA (eso es paridad en 2.2D); solo la viabilidad del
- * mecanismo. Usa {@code asistencia-query-provider=jpa} unicamente porque hoy es la forma aprobada de
+ * mecanismo. Usaba {@code asistencia-query-provider=jpa} (histórico LB-002; el selector se retiró en LB-008) porque entonces era la forma aprobada de
  * construir el EMF; NO modifica perfiles productivos.</p>
  *
  * <p>El pool se limita a UNA conexion ({@code hikari.maximum-pool-size=1}): permite observar el estado
@@ -66,9 +70,9 @@ import static org.junit.jupiter.api.Assertions.fail;
  * INDEPENDIENTE ({@code DriverManager}) con {@code LOCK_TIMEOUT}. No se loguea el payload ni IDs; las
  * observaciones se emiten con el prefijo {@code [FEASIBILITY-OBS]}.</p>
  */
+@Import(JdbcBaselineTestConfiguration.class)
 @Tag("integration")
 @SpringBootTest(properties = {
-        "app.adapters.persistence.asistencia-query-provider=jpa",
         "spring.datasource.hikari.maximum-pool-size=1",
         // Solo texto SQL (sin valores enlazados): evidencia de la sintaxis {call ...} que emite Hibernate.
         "logging.level.org.hibernate.SQL=DEBUG"
@@ -108,7 +112,7 @@ class JpaAttendanceStoredProcedureFeasibilityIT {
     @Autowired
     private NamedParameterJdbcOperations namedJdbc;
     @Autowired
-    private CanonicalStoredProcedureExecutor procedureExecutor;
+    private CanonicalJdbcBaselineExecutor procedureExecutor;
     @Autowired
     private SesionRepositoryPort sesionRepositoryPort;
     @Autowired
@@ -173,8 +177,8 @@ class JpaAttendanceStoredProcedureFeasibilityIT {
         assertFalse(outcome.txActiveBefore(), "No debe haber transaccion JPA antes de ejecutar.");
         assertFalse(outcome.txActiveAfterExecute(), "El probe no abre transaccion JPA.");
         assertFalse(outcome.joinedToTransaction(), "El EntityManager no debe estar unido a ninguna transaccion.");
-        assertTrue(JdbcValueMapper.toBoolean(outcome.single()[3]), "El SP debe completar con exito. trace=" + outcome.trace());
-        assertEquals(correlacion, JdbcValueMapper.toUuid(outcome.single()[0]), "Eco de correlacion.");
+        assertTrue(JdbcBaselineValueMapper.toBoolean(outcome.single()[3]), "El SP debe completar con exito. trace=" + outcome.trace());
+        assertEquals(correlacion, JdbcBaselineValueMapper.toUuid(outcome.single()[0]), "Eco de correlacion.");
         assertEquals(3, outcome.visibleFromIndependentConnectionWhileOpen(),
                 "Los 3 detalles deben ser visibles desde OTRA conexion antes de cerrar el EM (commit inmediato).");
         assertFalse(outcome.entityManagerOpenAfterClose(), "El EntityManager debe quedar cerrado.");
@@ -194,7 +198,7 @@ class JpaAttendanceStoredProcedureFeasibilityIT {
                 fixture.docenteUsuarioId(), () -> independentDetalleCount(sesion));
 
         final Object[] row = outcome.single();
-        assertFalse(JdbcValueMapper.toBoolean(row[3]), "Lote con estado invalido debe rechazarse.");
+        assertFalse(JdbcBaselineValueMapper.toBoolean(row[3]), "Lote con estado invalido debe rechazarse.");
         assertEquals("RC_001", dbCode(row));
         assertEquals(0, outcome.visibleFromIndependentConnectionWhileOpen());
         assertEquals(0, fixture.countAsistencia(sesion));
@@ -214,7 +218,7 @@ class JpaAttendanceStoredProcedureFeasibilityIT {
         }
         final Outcome ok = invoke(DEFAULT_BINDING, sesion, json("AN", "SJC", "EX"), UUID.randomUUID(),
                 fixture.docenteUsuarioId(), null);
-        assertTrue(JdbcValueMapper.toBoolean(ok.single()[3]));
+        assertTrue(JdbcBaselineValueMapper.toBoolean(ok.single()[3]));
         assertEquals(3, fixture.countDetalle(sesion));
         assertSingleConnectionClean("tras 25 rechazos + 1 exito");
     }
@@ -269,7 +273,7 @@ class JpaAttendanceStoredProcedureFeasibilityIT {
         obs("u07_column_types=" + Arrays.stream(row)
                 .map(o -> o == null ? "null" : o.getClass().getSimpleName()).toList());
         assertEquals(4, row.length, "El result set canonico tiene 4 columnas.");
-        assertTrue(JdbcValueMapper.toBoolean(row[3]));
+        assertTrue(JdbcBaselineValueMapper.toBoolean(row[3]));
     }
 
     /**
@@ -317,7 +321,7 @@ class JpaAttendanceStoredProcedureFeasibilityIT {
         final Outcome outcome = invoke(Binding.NAMED, sesion, json("AN", "SJC", "EX"), UUID.randomUUID(),
                 fixture.docenteUsuarioId(), null);
 
-        assertTrue(JdbcValueMapper.toBoolean(outcome.single()[3]), "binding NAMED debe ejecutar el SP con exito.");
+        assertTrue(JdbcBaselineValueMapper.toBoolean(outcome.single()[3]), "binding NAMED debe ejecutar el SP con exito.");
         assertEquals(3, fixture.countDetalle(sesion));
         obs("u03_named=OK");
     }
@@ -337,8 +341,8 @@ class JpaAttendanceStoredProcedureFeasibilityIT {
                 fixture.docenteUsuarioId(), null);
 
         final Object[] row = outcome.single();
-        obs("u03_named_reordered success=" + JdbcValueMapper.toBoolean(row[3]) + " dbcode=" + dbCode(row));
-        assertFalse(JdbcValueMapper.toBoolean(row[3]),
+        obs("u03_named_reordered success=" + JdbcBaselineValueMapper.toBoolean(row[3]) + " dbcode=" + dbCode(row));
+        assertFalse(JdbcBaselineValueMapper.toBoolean(row[3]),
                 "Registro reordenado => argumentos cruzados => el SP NO debe completar con exito.");
         assertEquals(0, fixture.countDetalle(sesion));
     }
@@ -349,7 +353,7 @@ class JpaAttendanceStoredProcedureFeasibilityIT {
         final Outcome outcome = invoke(Binding.POSITIONAL, sesion, json("AN", "SJC", "EX"), UUID.randomUUID(),
                 fixture.docenteUsuarioId(), null);
 
-        assertTrue(JdbcValueMapper.toBoolean(outcome.single()[3]), "binding POSITIONAL debe ejecutar el SP con exito.");
+        assertTrue(JdbcBaselineValueMapper.toBoolean(outcome.single()[3]), "binding POSITIONAL debe ejecutar el SP con exito.");
         assertEquals(3, fixture.countDetalle(sesion));
         obs("u03_positional=OK");
     }
@@ -540,7 +544,7 @@ class JpaAttendanceStoredProcedureFeasibilityIT {
     // ------------------------------------------------------------------ baseline JDBC y traduccion
 
     private AsistenciaRepositoryPort jdbcBaseline() {
-        return new AsistenciaRepositorySqlServerAdapter(namedJdbc, procedureExecutor);
+        return new AsistenciaJdbcBaselineOracle(namedJdbc, procedureExecutor);
     }
 
     private Throwable baselineFailure(final UUID sesion, final List<String> estados, final UUID ejecutor) {
@@ -568,12 +572,12 @@ class JpaAttendanceStoredProcedureFeasibilityIT {
 
     /** Traduce una fila canonica cruda con el MISMO traductor que usa el baseline (DbExceptionTranslator). */
     private static Throwable translate(final Object[] row, final UUID correlacion) {
-        assertEquals(correlacion, JdbcValueMapper.toUuid(row[0]), "El eco de correlacion debe coincidir.");
+        assertEquals(correlacion, JdbcBaselineValueMapper.toUuid(row[0]), "El eco de correlacion debe coincidir.");
         try {
             DbExceptionTranslator.throwIfFailed(
-                    JdbcValueMapper.toBoolean(row[3]),
-                    JdbcValueMapper.toString(row[1]),
-                    JdbcValueMapper.toString(row[2]),
+                    JdbcBaselineValueMapper.toBoolean(row[3]),
+                    JdbcBaselineValueMapper.toString(row[1]),
+                    JdbcBaselineValueMapper.toString(row[2]),
                     correlacion.toString(),
                     OPERATION);
             return null;
@@ -599,7 +603,7 @@ class JpaAttendanceStoredProcedureFeasibilityIT {
     }
 
     private static String dbCode(final Object[] row) {
-        final Matcher matcher = DBCODE.matcher(String.valueOf(JdbcValueMapper.toString(row[2])));
+        final Matcher matcher = DBCODE.matcher(String.valueOf(JdbcBaselineValueMapper.toString(row[2])));
         return matcher.find() ? matcher.group(1) : "";
     }
 

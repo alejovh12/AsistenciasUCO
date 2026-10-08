@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa;
+package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.CrearSesionRepositoryDTO;
@@ -44,6 +44,7 @@ final class AttendanceCommandParityFixture {
     private UUID grupoId;
     private UUID docenteId;
     private UUID docenteUsuarioId;
+    private UUID otroDocenteId;
     private UUID otroDocenteUsuarioId;
     private List<UUID> estudiantes;
 
@@ -55,7 +56,9 @@ final class AttendanceCommandParityFixture {
     /** Requiere {@code CorrelationIdContext} establecido (crear sesion es un SP canonico). */
     void prepare() {
         resolverGrupoYDocente();
-        this.otroDocenteUsuarioId = crearDocenteTemporal()[1];
+        final UUID[] otroDocente = crearDocenteTemporal();
+        this.otroDocenteId = otroDocente[0];
+        this.otroDocenteUsuarioId = otroDocente[1];
         this.estudiantes = resolverTresEstudiantesActivos();
     }
 
@@ -70,6 +73,11 @@ final class AttendanceCommandParityFixture {
     /** {@code Usuario.id} del docente titular del grupo (ejecutor valido). */
     UUID docenteUsuarioId() {
         return docenteUsuarioId;
+    }
+
+    /** {@code Docente.id} de un docente que NO es titular del grupo. */
+    UUID otroDocenteId() {
+        return otroDocenteId;
     }
 
     /** {@code Usuario.id} de un docente que NO es titular del grupo. */

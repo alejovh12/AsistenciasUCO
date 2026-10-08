@@ -24,14 +24,17 @@ class RegistrarEstudianteMapperTest {
     void toDomain_con_dto_valido_mapea_campos() {
         final UUID tipoId = UUID.randomUUID();
         final UUID grupoId = UUID.randomUUID();
+        final UUID usuarioEjecutor = UUID.randomUUID();
         final RegistrarEstudianteDTO dto = new RegistrarEstudianteDTO(
-                tipoId, 123456789, "PEREZ", "GOMEZ", "ANA", "MARIA", "ana@uco.edu.co", "Clave123!", grupoId);
+                tipoId, 123456789, "PEREZ", "GOMEZ", "ANA", "MARIA", "ana@uco.edu.co", "Clave123!", grupoId,
+                usuarioEjecutor);
 
         final RegistrarEstudianteDomain domain = RegistrarEstudianteMapper.toDomain(dto);
 
         assertEquals(tipoId, domain.getTipoIdentificacionId());
         assertEquals(grupoId, domain.getGrupoId());
         assertEquals("PEREZ", domain.getPrimerApellido());
+        assertEquals(usuarioEjecutor, domain.getUsuarioEjecutor());
     }
 
     @Test

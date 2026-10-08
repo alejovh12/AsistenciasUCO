@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa;
+package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
 import co.edu.uco.asistenciasuco.application.exception.ApplicationException;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
@@ -6,8 +6,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRep
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciasSesionRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistroAsistenciaSesionRepositoryDTO;
 import co.edu.uco.asistenciasuco.crosscutting.exception.TechnicalException;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.core.AsistenciaRepositorySqlServerAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.CanonicalStoredProcedureExecutor;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.CanonicalJdbcBaselineExecutor;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +14,8 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.JdbcBaselineTestConfiguration;
+import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -41,11 +42,9 @@ import static org.junit.jupiter.api.Assertions.fail;
  * (sesion propia, sin bypass manual), y se compara el estado final convergente. Sincronizacion
  * deterministica con {@link CyclicBarrier}; sin {@code sleep} como mecanismo de espera.
  */
+@Import(JdbcBaselineTestConfiguration.class)
 @Tag("integration")
-@SpringBootTest(properties = {
-        "app.adapters.persistence.asistencia-query-provider=jdbc",
-        "app.adapters.persistence.asistencia-command-provider=jpa"
-})
+@SpringBootTest
 @MockitoBean(types = JwtDecoder.class)
 class AsistenciaCommandConcurrencyIT {
 
@@ -58,7 +57,7 @@ class AsistenciaCommandConcurrencyIT {
     private NamedParameterJdbcOperations namedJdbc;
 
     @Autowired
-    private CanonicalStoredProcedureExecutor procedureExecutor;
+    private CanonicalJdbcBaselineExecutor procedureExecutor;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -89,7 +88,7 @@ class AsistenciaCommandConcurrencyIT {
     }
 
     private AsistenciaRepositoryPort jdbcBaseline() {
-        return new AsistenciaRepositorySqlServerAdapter(namedJdbc, procedureExecutor);
+        return new AsistenciaJdbcBaselineOracle(namedJdbc, procedureExecutor);
     }
 
     @Test

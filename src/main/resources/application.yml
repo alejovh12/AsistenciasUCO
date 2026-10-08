@@ -6,8 +6,8 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:com.microsoft.sqlserver.jdbc.SQLServerDriver}
-  # LB-002.1: defaults seguros por si se habilitara la auto-configuracion JPA de Boot (hoy excluida
-  # en AsistenciasUcoApplication; el EMF explicito fija hbm2ddl=none). Hibernate no administra el schema.
+  # LB-008 / JPA-02A: bootstrap JPA estandar de Spring Boot. Hibernate no administra el schema;
+  # ddl-auto permanece deshabilitado y el acceso a metadata JDBC se controla desde la configuracion JPA.
   jpa:
     hibernate:
       ddl-auto: none
@@ -21,6 +21,15 @@ spring:
   threads:
     virtual:
       enabled: true
+  # LB-004B.2: limite de 5 MiB alineado con ContentSecurityValidator.MAX_FILE_SIZE_BYTES.
+  # El threshold igual al maximo contractual mantiene en memoria los archivos validos (<= 5 MiB).
+  # Esto elimina persistencia contractual/local del archivo; no significa que la JVM no use
+  # memoria transitoria durante la request.
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+      file-size-threshold: 5MB
 
 server:
   port: 8080
@@ -84,14 +93,6 @@ logging:
 # ──────────────────────────────────────────────────────────────
 app:
   adapters:
-    persistence:
-      provider: ${APP_ADAPTERS_PERSISTENCE_PROVIDER:sqlserver}
-      # LB-002.1: tecnologia de SOLO consultarAsistenciasPorGrupo (jdbc | jpa).
-      # Rollback = jdbc. Valor no soportado => falla el arranque.
-      asistencia-query-provider: ${APP_ADAPTERS_PERSISTENCE_ASISTENCIA_QUERY_PROVIDER:jdbc}
-      # LB-002.2: tecnologia de SOLO registrarAsistenciasSesion (jdbc | jpa); los demas commands son
-      # siempre JDBC. Independiente del selector de query. Rollback = jdbc. Valor no soportado => falla el arranque.
-      asistencia-command-provider: ${APP_ADAPTERS_PERSISTENCE_ASISTENCIA_COMMAND_PROVIDER:jdbc}
     identity:
       provider: ${APP_ADAPTERS_IDENTITY_PROVIDER:keycloak}
     security:
@@ -103,7 +104,10 @@ app:
     message-catalog:
       provider: ${APP_ADAPTERS_MESSAGE_CATALOG_PROVIDER:azure}
     storage:
-      provider: ${APP_ADAPTERS_STORAGE_PROVIDER:local}
+      # LB-004B.2: minio es el unico provider soportado (decision humana, ver
+      # docs/work-items/LB-004-stateless-serverless-readiness/PROFESSOR_DECISION.md). No hay
+      # fallback local: un valor no soportado falla el arranque (fail-closed).
+      provider: ${APP_ADAPTERS_STORAGE_PROVIDER:minio}
     realtime:
       provider: ${APP_ADAPTERS_REALTIME_PROVIDER:local-sse}
     audit:
@@ -133,8 +137,19 @@ app:
       api-client-id: ${KEYCLOAK_API_CLIENT_ID:asistencias-api}
       expected-audience: ${KEYCLOAK_EXPECTED_AUDIENCE:asistencias-api}
       user-id-claim: ${KEYCLOAK_USER_ID_CLAIM:idUsuario}
-    local-storage:
-      upload-directory: ${APP_STORAGE_UPLOAD_DIRECTORY:uploads/soportes}
+    # LB-004B.2: MinIO privado (bucket provisionado por docker-compose/minio-init). Credenciales
+    # SOLO por variables de entorno, sin valor por defecto funcional (fail-fast si faltan).
+    minio:
+      endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+      access-key: ${MINIO_ACCESS_KEY:}
+      secret-key: ${MINIO_SECRET_KEY:}
+      bucket: ${MINIO_BUCKET:asistencias-soportes}
+    # LB-004B.2: ClamAV local via protocolo clamd/INSTREAM.
+    clamav:
+      host: ${CLAMAV_HOST:localhost}
+      port: ${CLAMAV_PORT:3310}
+      connect-timeout-millis: ${CLAMAV_CONNECT_TIMEOUT_MILLIS:5000}
+      read-timeout-millis: ${CLAMAV_READ_TIMEOUT_MILLIS:15000}
 
   # CORS es neutral (no conoce ningun proveedor de identidad); SecurityConfig lo lee
   # directamente via @Value.

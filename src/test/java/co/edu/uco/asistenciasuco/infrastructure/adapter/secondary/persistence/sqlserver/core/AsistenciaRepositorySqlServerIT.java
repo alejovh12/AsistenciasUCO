@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Certifica el borde REAL entre el backend y {@code gestionasistenciadb}:
- * {@code Java -> AsistenciaRepositoryPort -> CanonicalStoredProcedureExecutor -> SQL Server ->
+ * {@code Java -> AsistenciaRepositoryPort -> CanonicalJdbcBaselineExecutor -> SQL Server ->
  * usp_registrar_asistencias_sesion}.
  *
  * <p>No mockea JDBC/DataSource/adapter: usa el contexto Spring real contra SQL Server real (perfil

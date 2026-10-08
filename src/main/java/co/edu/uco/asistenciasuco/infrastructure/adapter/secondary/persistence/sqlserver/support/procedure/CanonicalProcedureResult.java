@@ -5,7 +5,7 @@ import java.util.UUID;
 /**
  * Resultado canonico devuelto por los procedimientos almacenados publicos.
  */
-public final class CanonicalProcedureResult {
+public final class CanonicalProcedureResult implements ProcedureResult {
 
     private final UUID idCorrelacion;
     private final String mensajeUsuarioResultado;
@@ -37,6 +37,11 @@ public final class CanonicalProcedureResult {
     }
 
     public boolean isEstadoResultado() {
+        return estadoResultado;
+    }
+
+    @Override
+    public boolean getEstadoResultado() {
         return estadoResultado;
     }
 }

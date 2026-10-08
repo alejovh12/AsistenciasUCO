@@ -130,11 +130,18 @@ Requisitos funcionales, autorización y orden/ausencia de efectos mediante puert
 - traducción de errores;
 - no filtrar excepciones técnicas al cliente.
 
-### Integration — SQL Server actual y JPA futura
+### Integration — SQL Server y JPA
 
-JPA todavía no está implementado. Existen IT SQL Server bajo persistence/sqlserver, incluidos AsistenciaRepositorySqlServerIT, GrupoRepositorySqlServerIT, SqlStoredProcedureContractIT y UsuarioPasswordHashSqlServerIT. Comprobar fixtures/ambiente y revisar assumptions/skips; una suite omitida no certifica integración.
+**HISTÓRICO / AS-IS HEREDADO:** LB-002 introdujo JPA piloto para la query de Asistencia y para
+`registrarAsistenciasSesion`, con convivencia y selectores JDBC/JPA. Existen IT SQL Server bajo
+`persistence/sqlserver`, incluidos `AsistenciaRepositorySqlServerIT`, `GrupoRepositorySqlServerIT`,
+`SqlStoredProcedureContractIT` y `UsuarioPasswordHashSqlServerIT`.
 
-### Requisitos de integración JPA futura
+**TARGET ACTUAL:** ADR-003 + LB-008 = JPA-only. Cada capacidad migrada exige integración real y
+paridad antes de retirar su baseline JDBC. Comprobar fixtures/ambiente y revisar assumptions/skips;
+una suite omitida no certifica integración.
+
+### Requisitos de integración JPA
 
 No mockear `EntityManager`/repository Spring Data como evidencia de que JPA funciona. Usar una
 prueba de integración contra el motor/contrato SQL Server cuando la query, SP o mapping depende de

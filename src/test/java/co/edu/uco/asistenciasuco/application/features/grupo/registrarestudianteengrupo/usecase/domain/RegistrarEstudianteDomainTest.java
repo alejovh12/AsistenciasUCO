@@ -13,6 +13,7 @@ class RegistrarEstudianteDomainTest {
 
     private static final UUID TIPO_IDENTIFICACION = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private static final UUID GRUPO = UUID.fromString("22222222-2222-2222-2222-222222222222");
+    private static final UUID USUARIO_EJECUTOR = UUID.fromString("44444444-4444-4444-4444-444444444444");
     private static final UUID EMPTY_UUID = new UUID(0L, 0L);
 
     @Test
@@ -35,6 +36,7 @@ class RegistrarEstudianteDomainTest {
         assertEquals("ANA", domain.getPrimerNombre());
         assertEquals("ana.perez@uco.edu.co", domain.getCorreo());
         assertEquals(GRUPO, domain.getGrupoId());
+        assertEquals(USUARIO_EJECUTOR, domain.getUsuarioEjecutor());
         assertEquals(usuario.getTipoIdentificacionId(), domain.getTipoIdentificacionId());
         assertEquals(usuario.getNumeroIdentificacion(), domain.getNumeroIdentificacion());
         assertEquals(usuario.getPrimerApellido(), domain.getPrimerApellido());
@@ -56,7 +58,8 @@ class RegistrarEstudianteDomainTest {
                 "",
                 "ana.perez@uco.edu.co",
                 "Clave123!",
-                GRUPO
+                GRUPO,
+                USUARIO_EJECUTOR
         ));
         assertThrows(ValidationException.class, () -> new RegistrarEstudianteDomain(
                 TIPO_IDENTIFICACION,
@@ -67,7 +70,8 @@ class RegistrarEstudianteDomainTest {
                 "",
                 "ana.perez@uco.edu.co",
                 "Clave123!",
-                GRUPO
+                GRUPO,
+                USUARIO_EJECUTOR
         ));
     }
 
@@ -82,7 +86,8 @@ class RegistrarEstudianteDomainTest {
                 "",
                 "correo-invalido",
                 "Clave123!",
-                GRUPO
+                GRUPO,
+                USUARIO_EJECUTOR
         ));
         assertThrows(ValidationException.class, () -> new RegistrarEstudianteDomain(
                 TIPO_IDENTIFICACION,
@@ -93,7 +98,8 @@ class RegistrarEstudianteDomainTest {
                 "",
                 "ana.perez@uco.edu.co",
                 "Clave123!",
-                null
+                null,
+                USUARIO_EJECUTOR
         ));
     }
 
@@ -117,7 +123,8 @@ class RegistrarEstudianteDomainTest {
                 "",
                 " ANA.PEREZ@UCO.EDU.CO ",
                 "Clave123!",
-                GRUPO
+                GRUPO,
+                USUARIO_EJECUTOR
         );
     }
 
@@ -155,7 +162,8 @@ class RegistrarEstudianteDomainTest {
                         segundoNombre,
                         correo,
                         password,
-                        GRUPO
+                        GRUPO,
+                        USUARIO_EJECUTOR
                 )
         );
 

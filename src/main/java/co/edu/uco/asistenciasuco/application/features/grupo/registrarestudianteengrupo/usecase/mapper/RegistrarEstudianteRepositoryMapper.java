@@ -44,7 +44,8 @@ public final class RegistrarEstudianteRepositoryMapper {
                 domain.getSegundoNombre(),
                 domain.getCorreo(),
                 password,
-                domain.getGrupoId()
+                domain.getGrupoId(),
+                domain.getUsuarioEjecutor()
         );
     }
 

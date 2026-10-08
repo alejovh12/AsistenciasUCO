@@ -7,7 +7,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.repository.Asistenci
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
-import co.edu.uco.asistenciasuco.infrastructure.audit.adapter.sqlserver.AuditEventJdbcRepository;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository.AuditEventJpaRepository;
 import co.edu.uco.asistenciasuco.infrastructure.audit.model.AuditActorType;
 import co.edu.uco.asistenciasuco.infrastructure.audit.model.AuditEvent;
 import co.edu.uco.asistenciasuco.infrastructure.audit.model.AuditOutcome;
@@ -63,7 +63,7 @@ class AuditHttpIT {
     private int port;
 
     @Autowired
-    private AuditEventJdbcRepository auditEventJdbcRepository;
+    private AuditEventJpaRepository auditEventJpaRepository;
 
     @MockitoBean
     private JwtDecoder jwtDecoder;
@@ -122,7 +122,7 @@ class AuditHttpIT {
         assertEquals(202, response.getStatusCode().value());
         assertEquals(correlationId, response.getHeaders().getFirst("X-Correlation-Id"));
 
-        final AuditEvent event = auditEventJdbcRepository.findLatestByCorrelationId(correlationId).orElseThrow();
+        final AuditEvent event = auditEventJpaRepository.findLatestByCorrelationId(correlationId).orElseThrow();
         assertEquals(AuditOutcome.SUCCESS, event.outcome());
         assertEquals("SOLICITAR_REVISION_ASISTENCIA", event.action());
         assertEquals("SESION", event.resourceType());
@@ -168,7 +168,7 @@ class AuditHttpIT {
         assertEquals(correlationId, response.getHeaders().getFirst("X-Correlation-Id"));
         assertTrue(response.getBody().contains("\"code\":\"ERR_GRUPO_NO_HABILITADO\""));
 
-        final AuditEvent event = auditEventJdbcRepository.findLatestByCorrelationId(correlationId).orElseThrow();
+        final AuditEvent event = auditEventJpaRepository.findLatestByCorrelationId(correlationId).orElseThrow();
         assertEquals(AuditOutcome.FAILURE, event.outcome());
         assertEquals("REGISTRAR_ESTUDIANTE_EN_GRUPO", event.action());
         assertEquals("GRUPO", event.resourceType());

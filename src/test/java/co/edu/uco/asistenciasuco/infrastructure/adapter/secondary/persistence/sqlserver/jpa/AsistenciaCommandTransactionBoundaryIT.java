@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa;
+package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
@@ -42,8 +42,6 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @Tag("integration")
 @SpringBootTest(properties = {
-        "app.adapters.persistence.asistencia-query-provider=jdbc",
-        "app.adapters.persistence.asistencia-command-provider=jpa",
         "spring.datasource.hikari.maximum-pool-size=1"
 })
 @MockitoBean(types = JwtDecoder.class)
