@@ -34,6 +34,25 @@ public class EstudianteJpaRepository implements EstudianteRepositoryPort {
                 u.estaActivoUsuario)
             """;
     private static final String ORDER = " order by u.primerApellido, u.primerNombre, u.numeroIdentificacion, e.id";
+    /**
+     * Filtros opcionales con texto JPQL constante: un filtro ausente se enlaza como {@code null} y
+     * su predicado queda neutro. Ningun valor del usuario se concatena en la consulta (java:S2077).
+     */
+    private static final String FILTERS = """
+             where (:tipoIdentificacionId is null or u.idTipoIdentificacion = :tipoIdentificacionId)
+               and (:numeroIdentificacion is null or u.numeroIdentificacion = :numeroIdentificacion)
+               and (:nombre is null or upper(u.nombreCompleto) like :nombre)
+               and (:correo is null or lower(u.correo) like :correo)
+               and (:activo is null or u.estaActivoUsuario = :activo)
+               and ((:institucionId is null and :facultadId is null and :programaId is null and :grupoId is null)
+                    or exists (select 1 from UvEstudianteEntity a where a.id = e.id
+                        and (:institucionId is null or a.idInstitucion = :institucionId)
+                        and (:facultadId is null or a.idFacultad = :facultadId)
+                        and (:programaId is null or a.idPrograma = :programaId)
+                        and (:grupoId is null or a.idGrupo = :grupoId)))
+            """;
+    static final String HQL_COUNT = "select count(e.id)" + BASE_FROM + FILTERS;
+    static final String HQL_PAGE = SELECT_RESUMEN + BASE_FROM + FILTERS + ORDER;
     static final String HQL_CONTEXTOS = """
             select distinct a
             from UvEstudianteEntity a
@@ -56,15 +75,13 @@ public class EstudianteJpaRepository implements EstudianteRepositoryPort {
                 "consultarEstudiantes",
                 "No fue posible consultar los estudiantes.",
                 () -> {
-                    final Map<String, Object> parameters = new LinkedHashMap<>();
-                    final String where = buildWhere(dto, parameters);
-                    final TypedQuery<Long> countQuery =
-                            entityManager.createQuery("select count(e.id)" + BASE_FROM + where, Long.class);
+                    final Map<String, Object> parameters = filterParameters(dto);
+                    final TypedQuery<Long> countQuery = entityManager.createQuery(HQL_COUNT, Long.class);
                     bind(countQuery, parameters);
                     final long total = countQuery.getSingleResult();
 
-                    final TypedQuery<EstudianteResumenQueryRow> rows = entityManager.createQuery(
-                            SELECT_RESUMEN + BASE_FROM + where + ORDER, EstudianteResumenQueryRow.class);
+                    final TypedQuery<EstudianteResumenQueryRow> rows =
+                            entityManager.createQuery(HQL_PAGE, EstudianteResumenQueryRow.class);
                     bind(rows, parameters);
                     final List<EstudianteResumenRepositoryProjection> items = rows
                             .setFirstResult(dto.page() * dto.size()).setMaxResults(dto.size()).getResultList().stream()
@@ -101,34 +118,21 @@ public class EstudianteJpaRepository implements EstudianteRepositoryPort {
         );
     }
 
-    private static String buildWhere(final ConsultarEstudiantesRepositoryDTO dto,
-                                     final Map<String, Object> parameters) {
-        final StringBuilder where = new StringBuilder(" where 1 = 1");
-        add(where, parameters, "tipoIdentificacionId", "u.idTipoIdentificacion", dto.tipoIdentificacionId());
-        add(where, parameters, "numeroIdentificacion", "u.numeroIdentificacion", dto.numeroIdentificacion());
-        if (!TextHelper.isNullOrBlank(dto.nombre())) {
-            where.append(" and upper(u.nombreCompleto) like :nombre");
-            parameters.put("nombre", "%" + dto.nombre().toUpperCase(Locale.ROOT) + "%");
-        }
-        if (!TextHelper.isNullOrBlank(dto.correo())) {
-            where.append(" and lower(u.correo) like :correo");
-            parameters.put("correo", "%" + dto.correo().toLowerCase(Locale.ROOT) + "%");
-        }
-        add(where, parameters, "activo", "u.estaActivoUsuario", dto.activo());
-        if (dto.institucionId() != null || dto.facultadId() != null || dto.programaId() != null || dto.grupoId() != null) {
-            where.append(" and exists (select 1 from UvEstudianteEntity a where a.id = e.id");
-            add(where, parameters, "institucionId", "a.idInstitucion", dto.institucionId());
-            add(where, parameters, "facultadId", "a.idFacultad", dto.facultadId());
-            add(where, parameters, "programaId", "a.idPrograma", dto.programaId());
-            add(where, parameters, "grupoId", "a.idGrupo", dto.grupoId());
-            where.append(')');
-        }
-        return where.toString();
-    }
-
-    private static void add(final StringBuilder where, final Map<String, Object> parameters,
-                            final String parameter, final String field, final Object value) {
-        if (value != null) { where.append(" and ").append(field).append(" = :").append(parameter); parameters.put(parameter, value); }
+    /** Todos los parametros de {@link #FILTERS} se enlazan siempre; {@code null} significa filtro ausente. */
+    private static Map<String, Object> filterParameters(final ConsultarEstudiantesRepositoryDTO dto) {
+        final Map<String, Object> parameters = new LinkedHashMap<>();
+        parameters.put("tipoIdentificacionId", dto.tipoIdentificacionId());
+        parameters.put("numeroIdentificacion", dto.numeroIdentificacion());
+        parameters.put("nombre", TextHelper.isNullOrBlank(dto.nombre())
+                ? null : "%" + dto.nombre().toUpperCase(Locale.ROOT) + "%");
+        parameters.put("correo", TextHelper.isNullOrBlank(dto.correo())
+                ? null : "%" + dto.correo().toLowerCase(Locale.ROOT) + "%");
+        parameters.put("activo", dto.activo());
+        parameters.put("institucionId", dto.institucionId());
+        parameters.put("facultadId", dto.facultadId());
+        parameters.put("programaId", dto.programaId());
+        parameters.put("grupoId", dto.grupoId());
+        return parameters;
     }
 
     private static void bind(final Query query, final Map<String, Object> parameters) {
