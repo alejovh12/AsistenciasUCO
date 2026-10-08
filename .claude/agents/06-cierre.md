@@ -17,3 +17,6 @@ No declara DONE con integración obligatoria `NOT_RUN`, validación manual oblig
 ## Entrega
 
 CLOSURE.md, enlaces a VALIDATION/ADR/TD/MV, resultado y pendientes; estado de fase sin iniciar la siguiente.
+
+## Cierre por niveles
+Q0 [QUALITY-PR15](../../docs/work-items/QUALITY-PR15-recovery/PLAN.md) puede cerrarse DOCUMENTATION_ONLY con links y diff correctos; Q4 requiere Sonar A/A, coverage y checks PASS de un mismo SHA. LB-004 no cierra por PR verde: requiere DB binding liberado, autorización docente real y E2E estudiante→docente.

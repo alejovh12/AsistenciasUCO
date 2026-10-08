@@ -208,3 +208,6 @@ queda como regresión permanente salvo que cambie el contrato aprobado.
 ## Ejecución y resultados
 
 Seguir [VALIDATION_RUNBOOK](VALIDATION_RUNBOOK.md); un mock HTTP/DB no demuestra E2E. Sin ambiente registrar `VALIDATION_BLOCKED_BY_ENVIRONMENT` con causa. Si falla una prueba real, registrar FAIL y el test, sin reclasificarlo como fallo ambiental. Para E2E indicar si incluye frontend real o únicamente backend/DB.
+
+## Addendum: cobertura nueva de Sonar (2026-10-08)
+JaCoCo BUNDLE LINE >=80%/BRANCH >=70% se mide distinto a Sonar New Code Coverage. PR #15 requiere según comentario remoto new coverage >=80%, Security A y Reliability A; esos requisitos son evidencia de ese PR, no política local del pom. Contar únicamente tests ejecutados en Surefire clean verify para ese gate; Failsafe *IT -Pintegration demuestra provider/SQL pero no corre automáticamente. Asociar issues a key/rule/línea + test RED causal, sin ocultarlos mediante exclusions, false positives sin justificación, disabled o cambios de umbral. [Proceso](../work-items/QUALITY-PR15-recovery/SONAR_TRIAGE.md).

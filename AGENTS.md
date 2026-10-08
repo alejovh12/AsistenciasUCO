@@ -73,3 +73,6 @@ El work item activo determina el alcance autorizado.
 Ninguna fase comienza automáticamente.
 LINEA_BASE + Definition of Ready + work item activo determinan qué puede modificarse.
 `NOT_READY` impide implementación.
+
+## Gates de PR y soportes (adenda 2026-10-08)
+Para PR #15 cargar [uco-quality-gate](.claude/skills/uco-quality-gate/SKILL.md) y el [work item](docs/work-items/QUALITY-PR15-recovery/PLAN.md). No igualar JaCoCo global a Sonar New Code, ni CodeQL PASS a Sonar Security A; issues deben registrarse por key/regla/línea y SHA. Para soportes LB-004 cargar [uco-files](.claude/skills/uco-files/SKILL.md) y preservar [decisión docente y storage](docs/work-items/LB-004-stateless-serverless-readiness/PROFESSOR_DECISION.md). El contrato SQL es del owner DB; el PR quality no autoriza ese cambio. Q0 documental NO autoriza Q2/Q3 ni cierre funcional. Sin force-push ni merge con gates rojos.

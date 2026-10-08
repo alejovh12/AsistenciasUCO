@@ -1,0 +1,40 @@
+---
+status: active
+type: work-item
+scope: backend
+owner: backend-team
+last-reviewed: 2026-10-08
+---
+# QUALITY-PR15 — Test plan futuro; ningún RED ejecutado en Q0
+
+Derivar cada test del comportamiento/contrato, congelar RED_SNAPSHOT antes de src/main y asignar actor distinto a tester/implementador. Unit mock solo de colaboradores; mocks nunca certifican provider ni SQL Server.
+
+| ID | Escenario | Observable/condición incorrecta detectada | Nivel |
+|---|---|---|---|
+| S01 | ClamAV CLEAN completo válido | Aceptar cualquier string que termine OK debe fallar | Unit + protocolo |
+| S02 | FOUND/EICAR de prueba | Nunca escribir bytes infectados | Unit + ClamAV IT |
+| S03 | Respuesta ClamAV vacía/truncada/malformada | Fallar cerrado, no CLEAN silencioso | Unit |
+| S04 | Timeout/socket indisponible/cierre stream | Error técnico seguro; no objeto almacenado | Unit + IT |
+| F01 | MinIO put/get/delete en dos clientes | Bytes round-trip y referencia durable | Unit + MinIO IT |
+| F02 | NoSuchKey/NoSuchObject, metadatos faltantes | Respuesta controlada y sin NPE | Unit |
+| F03 | bucket inválido, timeout y error SDK | No confirmar operación fallida | Unit |
+| F04 | Objeto remoto mayor al presupuesto | Lectura limitada sin OutOfMemory/bytes parciales | Unit |
+| F05 | Archivo comprimido con expansión excesiva | Inflate abortado dentro de límite | Unit |
+| F06 | Checksum incorrecto, truncamiento | No entregar contenido corrupto | Unit + IT |
+| F07 | Compresión >=10% vs sin ahorro | Solo comprimir si mejora; restaurar bytes | Unit |
+| F08 | Dueño, docente ajeno, anónimo | Autorización según contrato sin filtrar existencia | App + HTTP IT |
+| F09 | MIME y filename manipulados, descarga inline | Content-Type verificado, cabeceras seguras | HTTP unit/contract |
+| J01 | AcademicView mapper proyecciones completas/null | Contrato de columnas, conversiones y flags | Unit |
+| J02 | CoreView mapper proyecciones/null | Evitar string literal "null" si contrato exige null | Unit |
+| J03 | ParameterCatalog cache hit/miss, tipos y parse inválido | Ningún boolean inválido silencioso sin decisión | Unit + SQL IT |
+| J04 | MessageCatalog faltantes/formato/cache | Reglas de catálogo preservadas | Unit + SQL IT |
+| J05 | Estudiante filtros 0/N combinados y paginación | Semántica de queries intacta | Unit + SQL IT |
+| J06 | InstitutionalScope grant/deny/fallo | Fallar cerrado; no escalada | Unit + SQL IT |
+| J07 | Commands/queries migradas comparadas con fixture legacy | Paridad SQL y rollback/correlación | SQL IT |
+| G01 | clean verify Java25, JaCoCo XML de ese run | Contadores y skips reales, no stale report | Maven/Surefire |
+| G02 | Sonar para nuevo SHA | coverage >=80%, ratings A/A e issues resueltos | Sonar remoto |
+| G03 | CodeQL/Dependency Review / Docker | Required checks PASS sin jobs skipped | GitHub |
+| L01 | LB-004 futuro estudiante→docente | FileId→revisión SQL, bytes iguales, autorizado | E2E posterior |
+
+TEST_TOO_WEAK si ninguna implementación incorrecta hace fallar el test. No cambiar expected para resolver GREEN. No simular provider con Mockito como prueba de integration. No habilitar docente hasta binding DB aprobado.
+RED_SNAPSHOT Q0: NO APLICA — DOCUMENTATION_ONLY. Q2/Q3: NOT_RUN; registrar base commit, paths/hash, comando, exit code y fallo esperado antes de implementación. No es permiso para empezar Q2/Q3.

@@ -21,3 +21,6 @@ Convención: `LB-XXX-descripcion/`, con `PLAN.md`, `TEST_PLAN.md`, `VALIDATION.m
 Los work items activos se determinan desde [LINEA_BASE.md](../baseline/LINEA_BASE.md). La carpeta conserva trabajo activo y cerrado.
 
 Ejemplo de work item técnico cerrado: [TECH-001](TECH-001-restaurar-gate-arquitectura/CLOSURE.md).
+
+## Work item transversal quality
+[QUALITY-PR15-recovery](QUALITY-PR15-recovery/PLAN.md) documenta recuperación de checks del PR #15 y no inaugura una baseline funcional. Q0 documental, Q1 diagnóstico, Q2/Q3 implementación con DoR+RED independientes, Q4 certificación remota; LB-004 sigue separada.
