@@ -11,6 +11,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * QUALITY-PR15 J07: identidad de las claves compuestas de vistas. Hibernate deduplica filas por
@@ -36,7 +37,7 @@ class ViewCompositeIdentityTest {
     void mismos_componentes_son_la_misma_fila(final BiFunction<UUID, UUID, Object> factory) {
         final Object key = factory.apply(FIRST, SECOND);
 
-        assertEquals(key, key);
+        assertTrue(key.equals(key), "La identidad debe ser reflexiva.");
         assertEquals(key, factory.apply(FIRST, SECOND));
         assertEquals(key.hashCode(), factory.apply(FIRST, SECOND).hashCode());
     }
