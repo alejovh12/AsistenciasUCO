@@ -46,6 +46,8 @@ class CoreViewJpaProjectionBehaviorTest {
     @Test
     void sesion_sin_codigo_grupo_preserva_null_conforme_al_oraculo_jdbc() {
         final UvSesionEntity row = mock(UvSesionEntity.class);
+        // Correccion tester: Mockito devuelve 0 (no null) para Integer; la ausencia DB se modela explicitamente.
+        when(row.codigoGrupo()).thenReturn(null);
         assertNull(JdbcBaselineValueMapper.toString(null));
         assertNull(CoreViewJpaProjectionMapper.toSesion(row).getCodigoGrupo(),
                 "La ausencia en DB no es la cadena literal 'null'.");
@@ -68,6 +70,8 @@ class CoreViewJpaProjectionBehaviorTest {
     @Test
     void grupo_sin_codigo_preserva_null_como_el_oraculo_de_paridad() {
         final UvGrupoEntity row = mock(UvGrupoEntity.class);
+        // Correccion tester: Mockito devuelve 0 (no null) para Integer; la ausencia DB se modela explicitamente.
+        when(row.codigo()).thenReturn(null);
         assertNull(CoreViewJpaProjectionMapper.toGrupo(row).getCodigo());
     }
 }
