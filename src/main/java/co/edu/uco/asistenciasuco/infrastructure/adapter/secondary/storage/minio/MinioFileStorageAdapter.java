@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
@@ -31,6 +30,11 @@ public final class MinioFileStorageAdapter implements FileStoragePort {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MinioFileStorageAdapter.class);
     private static final String OBJECT_KEY_PREFIX = "soportes/";
+    /**
+     * Presupuesto de lectura: un soporte valido nunca supera 5 MiB originales y su representacion
+     * almacenada (comprimida solo si es estrictamente menor) tampoco (CONTENT_SECURITY de LB-004).
+     */
+    private static final long MAX_OBJECT_BYTES = 5L * 1024 * 1024;
 
     private static final String META_OWNER_SUBJECT = "owner-subject";
     private static final String META_ORIGINAL_FILENAME = "original-filename";
@@ -80,9 +84,16 @@ public final class MinioFileStorageAdapter implements FileStoragePort {
                     .bucket(bucket)
                     .object(objectKey)
                     .build());
-            final byte[] content = readAllBytes(objectKey);
+            final long declaredSize = stat.size();
+            if (declaredSize < 0 || declaredSize > MAX_OBJECT_BYTES) {
+                LOGGER.error("storage download rejected. fileId={}, reason=object_size_out_of_budget", fileId);
+                throw new StorageUnavailableException("El objeto almacenado excede el tamano maximo permitido.", null);
+            }
+            final byte[] content = readBoundedBytes(objectKey, (int) declaredSize);
             LOGGER.info("storage download success. fileId={}, size={}", fileId, content.length);
             return new StoredObject(fileId, content, fromUserMetadata(stat));
+        } catch (final StorageException exception) {
+            throw exception;
         } catch (final ErrorResponseException exception) {
             if (isNotFound(exception)) {
                 LOGGER.info("storage download not_found. fileId={}", fileId);
@@ -130,14 +141,22 @@ public final class MinioFileStorageAdapter implements FileStoragePort {
         }
     }
 
-    private byte[] readAllBytes(final String objectKey) throws Exception {
+    /**
+     * Lee exactamente {@code declaredSize} bytes (ya validado contra {@link #MAX_OBJECT_BYTES}). Un
+     * cuerpo mas corto o mas largo que la metadata del objeto es inconsistente y falla cerrado sin
+     * consumir el resto del stream.
+     */
+    private byte[] readBoundedBytes(final String objectKey, final int declaredSize) throws Exception {
         try (InputStream stream = minioClient.getObject(GetObjectArgs.builder()
                 .bucket(bucket)
                 .object(objectKey)
                 .build())) {
-            final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            stream.transferTo(buffer);
-            return buffer.toByteArray();
+            final byte[] content = stream.readNBytes(declaredSize);
+            if (content.length != declaredSize || stream.read() != -1) {
+                throw new StorageUnavailableException(
+                        "El contenido leido desde MinIO no coincide con el tamano del objeto.", null);
+            }
+            return content;
         } catch (final IOException exception) {
             throw new StorageUnavailableException("No fue posible leer el contenido del archivo desde MinIO.", exception);
         }

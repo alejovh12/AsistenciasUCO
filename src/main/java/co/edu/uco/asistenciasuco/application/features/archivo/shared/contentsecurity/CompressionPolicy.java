@@ -3,10 +3,10 @@ package co.edu.uco.asistenciasuco.application.features.archivo.shared.contentsec
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
 
 import java.io.ByteArrayOutputStream;
+import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.Inflater;
-import java.util.zip.InflaterOutputStream;
 
 /**
  * Politica de compresion: "si se puede comprimir, se comprima" interpretado como evaluacion
@@ -23,6 +23,8 @@ public final class CompressionPolicy {
 
     /** Ahorro minimo para considerar la compresion materialmente beneficiosa. */
     private static final double MIN_SAVINGS_RATIO = 0.10;
+
+    private static final int INFLATE_CHUNK_BYTES = 8192;
 
     private CompressionPolicy() {
     }
@@ -63,16 +65,34 @@ public final class CompressionPolicy {
         return buffer.toByteArray();
     }
 
+    /**
+     * Restaura el contenido original sin superar {@link ContentSecurityValidator#MAX_FILE_SIZE_BYTES}:
+     * ningun soporte valido puede expandirse por encima del limite contractual, asi que una
+     * expansion mayor (o un flujo truncado) falla cerrado antes de reservar memoria adicional.
+     */
     private static byte[] inflate(final byte[] compressedContent) {
         final Inflater inflater = new Inflater();
-        final ByteArrayOutputStream buffer = new ByteArrayOutputStream(compressedContent.length * 2);
-        try (InflaterOutputStream inflaterStream = new InflaterOutputStream(buffer, inflater)) {
-            inflaterStream.write(compressedContent);
-        } catch (final java.io.IOException exception) {
+        try {
+            inflater.setInput(compressedContent);
+            final ByteArrayOutputStream buffer = new ByteArrayOutputStream(
+                    (int) Math.min(ContentSecurityValidator.MAX_FILE_SIZE_BYTES, compressedContent.length * 2L));
+            final byte[] chunk = new byte[INFLATE_CHUNK_BYTES];
+            while (!inflater.finished()) {
+                final int inflated = inflater.inflate(chunk);
+                if (inflated == 0 && (inflater.needsInput() || inflater.needsDictionary())) {
+                    throw new InternalApplicationException("El contenido comprimido del archivo esta incompleto.");
+                }
+                if ((long) buffer.size() + inflated > ContentSecurityValidator.MAX_FILE_SIZE_BYTES) {
+                    throw new InternalApplicationException(
+                            "El contenido restaurado del archivo excede el limite permitido.");
+                }
+                buffer.write(chunk, 0, inflated);
+            }
+            return buffer.toByteArray();
+        } catch (final DataFormatException exception) {
             throw new InternalApplicationException("No fue posible restaurar el contenido original del archivo.", exception);
         } finally {
             inflater.end();
         }
-        return buffer.toByteArray();
     }
 }

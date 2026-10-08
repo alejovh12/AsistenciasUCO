@@ -43,7 +43,9 @@ public final class DescargarArchivoUseCaseImpl implements DescargarArchivoUseCas
             throw new ResourceNotFoundException("El archivo solicitado no existe.");
         }
 
-        if (!stored.metadata().ownerSubject().equals(domain.requesterSubject().toString())) {
+        // DENY_BY_DEFAULT: metadata ausente o sin propietario nunca concede acceso.
+        if (stored.metadata() == null
+                || !domain.requesterSubject().toString().equals(stored.metadata().ownerSubject())) {
             throw new ResourceNotFoundException("El archivo solicitado no existe.");
         }
 

@@ -1,6 +1,8 @@
 package co.edu.uco.asistenciasuco.application.secondaryports.storage;
 
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * Puerto secundario neutral para almacenar y recuperar los bytes de un soporte de revision.
@@ -35,9 +37,58 @@ public interface FileStoragePort {
     void delete(String fileId);
 
     record StoreObjectCommand(String fileId, byte[] content, StoredObjectMetadata metadata) {
+
+        @Override
+        public boolean equals(final Object other) {
+            if (this == other) {
+                return true;
+            }
+            return other instanceof StoreObjectCommand that
+                    && Objects.equals(fileId, that.fileId)
+                    && Arrays.equals(content, that.content)
+                    && Objects.equals(metadata, that.metadata);
+        }
+
+        @Override
+        public int hashCode() {
+            return 31 * Objects.hash(fileId, metadata) + Arrays.hashCode(content);
+        }
+
+        /** No expone el payload del archivo; solo su longitud. */
+        @Override
+        public String toString() {
+            return "StoreObjectCommand[fileId=" + fileId + ", content=" + describe(content)
+                    + ", metadata=" + metadata + "]";
+        }
     }
 
     record StoredObject(String fileId, byte[] content, StoredObjectMetadata metadata) {
+
+        @Override
+        public boolean equals(final Object other) {
+            if (this == other) {
+                return true;
+            }
+            return other instanceof StoredObject that
+                    && Objects.equals(fileId, that.fileId)
+                    && Arrays.equals(content, that.content)
+                    && Objects.equals(metadata, that.metadata);
+        }
+
+        @Override
+        public int hashCode() {
+            return 31 * Objects.hash(fileId, metadata) + Arrays.hashCode(content);
+        }
+
+        /** No expone el payload del archivo; solo su longitud. */
+        @Override
+        public String toString() {
+            return "StoredObject[fileId=" + fileId + ", content=" + describe(content) + ", metadata=" + metadata + "]";
+        }
+    }
+
+    private static String describe(final byte[] content) {
+        return content == null ? "null" : content.length + " bytes";
     }
 
     record StoredObjectMetadata(
