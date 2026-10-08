@@ -32,3 +32,22 @@ Three **new src/test/** files were authored; no src/main, DB, pom or runtime con
 ## Ampliación del alcance TESTER (candidatos, no certificados)
 
 Se añadieron cinco nuevas suites de pruebas unitarias JPA/mappers/seguridad (29 casos) y dos escenarios adicionales en ClamAvProtocolBoundaryTest (FOUND válido y respuesta ERROR). Ninguna fue ejecutada con Java25; compilación NO VERIFICADA, RED NOT_RUN, GREEN NOT_RUN; validar aislamiento antes de implementar. Esta iteración modifica src/test/** + documentación, no src/main/**. La ejecución de `clean verify` en CI podría fallar por los RED deliberados: no confundir ese estado con regresión de producción o CI recuperado. El auditor debe verificar validez de los mocks y tipos Mockito/JUnit antes de atribuir el fallo a funcionalidad.
+
+## Q1–Q3 ejecución con Java 25 (2026-10-08, Claude; independencia limitada tester/implementador)
+Base `31dbddd`; HEAD validado `812a313b78c0d873afd5db21daf8c2d88fe3e17d`. Entorno: Windows 11, JDK 25 (`mvnw.cmd`), SQL Server local `gestionasistenciadb`, MinIO y ClamAV de `infra/files` (contenedores sanos). Credenciales cargadas desde `.env` sin imprimirse.
+
+| Check | Comando | Resultado |
+|---|---|---|
+| Compilación de las 8 suites candidatas | `mvnw -B -ntp test-compile` | PASS (exit 0) |
+| Certificación RED inicial (8 suites) | ver RED_SNAPSHOT §1 | 37 tests, 5 failures, 0 errors (exit 1) |
+| RED congelado (12 suites) | ver RED_SNAPSHOT §4, commit `de714e8` | 79 tests, 25 failures semánticas, 0 errors (exit 1) |
+| GREEN Q2 dirigido | `-Dtest=ClamAv*Boundary*,CompressionPolicy*Test,MinioReadBudgetTest,ByteArrayRecordValueSemanticsTest,DescargarArchivo*Test,SubirArchivo*Test,ArchivoController*Test,ContentSecurityValidatorTest` | 91/91 PASS (exit 0) |
+| Provider IT Q2 (ClamAV + MinIO + flujo HTTP) | `-Pintegration -Dit.test=ClamAvMalwareScanAdapterIT,MinioFileStorageAdapterIT,ArchivoUploadDownloadFlowIT` | 11/11 PASS, 0 skips (exit 0); EICAR detectado |
+| GREEN Q3 dirigido | `-Dtest=CoreView*Test,EstudianteJpaQueryContractTest,AcademicView*Test,*Catalog*Test,JpaRepository*Test` | 110/110 PASS (exit 0) |
+| Paridad SQL Server Q3 | `-Pintegration -Dit.test=CoreViewQueriesJpaParityIT,AcademicQueryJpaParityIT,CatalogJpaParityIT,AuthorizationReportJpaParityIT` + `EstudianteAcademicFilterJpaParityIT` | 29/29 + 3/3 PASS, 0 skips |
+| `clean verify` final (HEAD 812a313) | `mvnw -B -ntp clean verify` | **1443 tests, 0 failures, 0 errors, 0 skipped**; ArchUnit/OpenAPI incluidos; JaCoCo check PASS (exit 0) |
+| JaCoCo global (mismo run) | `target/site/jacoco/jacoco.xml` | **LINE 90.25 %, BRANCH 80.22 %** (gate 80/70) |
+| Estimación New Code (diff `0b7905c..HEAD`, src/main, líneas+condiciones JaCoCo) | script local sobre XML | 87.6 % (líneas 1475/1644, ramas 357/448). Estimación: **no** sustituye a Sonar |
+| Integración completa | `mvnw -B -ntp -Pintegration -Dtest=NoSuchUnitTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true verify` | **191 IT, 0 failures, 0 errors, 1 skipped** (exit 0). Skip: `DocenteRepositorySqlServerIT`, `assumeTrue` por ausencia de docente con múltiples asignaciones en la DB local (preexistente, no tocado) |
+
+Primera corrida de `clean verify` (HEAD `c741b66`, antes de las suites de cobertura): 1389 tests PASS, LINE 85.05 % / BRANCH 76.70 %, New Code estimado 62.5 %.
