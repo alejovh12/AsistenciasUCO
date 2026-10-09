@@ -124,7 +124,15 @@ class OpenApiEstudiantesDirectoryConformanceTest {
 
         final Schema<?> items = property("EstudiantePagina", "items");
         assertType(items, "EstudiantePagina.items", "array");
-        assertEquals("#/components/schemas/EstudianteResumen", items.getItems().get$ref());
+        // Swagger Parser 3.1 may inline nested array refs; accept the ref or the identical shape.
+        final Schema<?> itemSchema = items.getItems();
+        assertNotNull(itemSchema, "EstudiantePagina.items debe declarar items");
+        if (itemSchema.get$ref() != null) {
+            assertEquals("#/components/schemas/EstudianteResumen", itemSchema.get$ref());
+        } else {
+            assertEquals(schema("EstudianteResumen").getProperties().keySet(), itemSchema.getProperties().keySet(),
+                    "EstudiantePagina.items debe tener la forma de EstudianteResumen");
+        }
         assertType(property("EstudiantePagina", "totalItems"), "totalItems", "integer");
         assertEquals("int64", property("EstudiantePagina", "totalItems").getFormat());
         for (String counter : List.of("totalPages", "page", "size")) {
