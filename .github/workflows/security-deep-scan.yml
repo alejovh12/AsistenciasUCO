@@ -121,6 +121,16 @@ jobs:
           actual="$(docker image inspect --format '{{.Config.User}}' "$image")"
           echo "Container runtime identity: $actual"
           test "$actual" = "10001:10001"
+      - name: Verify patched SQL Server JDBC artifact in runtime image
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s scripts/security -p 'test_verify_jdbc_artifact.py' -v
+          image="asistencias-uco-security-scan:${{ github.sha }}"
+          cid="$(docker create "$image")"
+          trap 'docker rm -f "$cid" >/dev/null 2>&1 || true' EXIT
+          docker cp "$cid":/app/app.jar "${RUNNER_TEMP}/asistencias-runtime.jar"
+          python3 scripts/security/verify_jdbc_artifact.py "${RUNNER_TEMP}/asistencias-runtime.jar"
       - name: Scan built Docker image (inventory-only)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # signed v0.36.0, immutable SHA
         with:
