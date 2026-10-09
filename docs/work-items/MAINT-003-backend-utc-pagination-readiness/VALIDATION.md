@@ -75,3 +75,25 @@ Fecha de ejecución: 2026-10-09, zona `America/Bogota`. Los valores de conexión
 Intentos PR19 con exit 1 antes de tests: ACL de `target` en worktree gestionado y pipe de attach de Mockito bloqueado por sandbox. No se usaron como evidencia; la repetición limpia posterior es la reportada.
 
 **Resultado actualizado:** `PAGINATION_AND_CACHE_REAL_SQL_PASS / UTC_CONTRACT_BLOCKED / BACKEND_READY_FOR_FRONTEND = NO`.
+
+## Segunda pasada — 2026-10-09 (Claude Code)
+
+| Worktree / SHA | Comando o acción | Exit | Resultado |
+|---|---|---:|---|
+| clon + fuente | `post_test_invariants.sql`, `pagination_readonly_diagnostics.sql` (solo lectura) | 0 | clon 11/12/1 multigrupo, páginas 5/5/1; fuente 3/3/24/3 intacta antes y después |
+| PR18 `3b1ddb4` | focales `-Pintegration` (2 IT + 2 unit) | 0 | IT 10/0/0/0, unit 13/0/0/0 |
+| PR18 `3b1ddb4` | IT de tres páginas contra la fuente | 1 esperado | falla por `>=11` requerido: no pasa en vacío |
+| PR18 `3b1ddb4` | `clean verify` / `-Pintegration verify` | 0 / 0 | 1452/0/0/0; 192 IT/0/0/0 |
+| PR18 `d0468e3` | `clean verify` / `-Pintegration verify` | 0 / 0 | 1458/0/0/0; 192 IT/0/0/0; JaCoCo combinado 92.53 % / 80.97 % |
+| Keycloak local | `seed-e2e-users.ps1` (4 roles) | 0 | tokens verificados por rol, idUsuario y audience |
+| backend jar `3b1ddb4` + clon | matriz HTTP JWT real | 0 | 42 PASS / 0 FAIL |
+| PR18 OpenAPI | RED `e7803ca` → GREEN `d0468e3` | 1 → 0 | 7 fallos esperados → 23/0/0/0 |
+| PR20 `b512bb4` | guarda + sesión + codec | 0 | 23/0/0/0; control negativo (controller `/api/v2` sembrado) → falla, retirado |
+| RED `e85feff` | tests UTC v2 | 1 esperado | 11 fallos por ausencia de v2, 0 errores; v1 congelado y guarda GREEN |
+| owner DB `f2871a9` + fuente | lectura de SP, semillas, `CatalogoParametro`, `AuditoriaEvento` | 0 | insumos de UTC-D06; sin escrituras |
+
+Incidencias honestas: un borrador de la matriz HTTP falló por una variable PowerShell que pisaba la URL base y otro por usar `nombre=Estudiante01` (inválido por diseño); el primer borrador de la guarda esperaba `VALIDATION_ERROR` y el AS-IS real es `ERR_FECHA_HORA_INVALIDA`. Todos se corrigieron antes de registrar resultados; ninguno se cuenta como PASS.
+
+CI remoto al cerrar esta pasada: en `9ed690f` y `b512bb4`, Dependency Review y Trivy repo `success`; Backend Quality Gate, ArchUnit, CodeQL y Trivy image `in_progress`. No se declara PASS remoto hasta su conclusión.
+
+**Resultado:** `PAGINATION_CONTRACT_PUBLISHED_AND_JWT_4_ROLES_PASS / UTC_D06_DECISION_REQUIRED / BACKEND_READY_FOR_FRONTEND = NO`.

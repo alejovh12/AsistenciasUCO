@@ -110,3 +110,40 @@ No se autoriza `UPDATE`, `AT TIME ZONE` masivo ni reinterpretación de v1. La pr
 **Owner DB/funcional — interpretación histórica:** PENDIENTE.  
 **Frontend handoff:** BLOQUEADO.  
 **Autorización de merge:** NO.
+
+---
+
+## Actualización — 2026-10-09, segunda pasada (Claude Code)
+
+**Estado se mantiene:** `NOT_READY` — `FRONTEND_BLOCKED_BY_BACKEND_CONTRACT`. **BACKEND_READY_FOR_FRONTEND = NO.**
+
+### Identidad de entrega actualizada
+
+| Pieza | Branch / SHA | Cambio en esta pasada |
+|---|---|---|
+| PR #18 | `jose-valencia/maint-001-jpa-pagination-safety` / `9ed690f` | `3b1ddb4` (P1 fixture) certificado; `7a5eceb` seed E2E 4 roles; `e7803ca` RED OpenAPI; `1c96162` oráculo; `d0468e3` contrato `GET /api/v1/estudiantes`; `9ed690f` evidencia |
+| PR #20 | `jose-valencia/maint-003-backend-utc-pagination-readiness` / `b512bb4` | `0bd1119` whitespace P3; `b512bb4` guarda v1 + bloqueo `/api/v2/**` |
+| RED UTC v2 | `jose-valencia/maint-003b-utc-v2-red` / `e85feff` | sin PR; 11 RED esperados |
+| PR #19 | sin cambios (`3985b0a`) | — |
+
+### Resueltos respecto de la primera pasada
+
+1. **P1 certificación PR #18:** `3b1ddb4` exige `total >= 11`, tamaños 5/5/1 e IDs distintos. Contra la fuente de 3 estudiantes falla con mensaje accionable (control negativo); contra el clon pasa. `clean verify` 1452/0/0/0 y `-Pintegration verify` 192 IT/0/0/0 en `3b1ddb4`; 1458/0/0/0 y 192/0/0/0 en `d0468e3`.
+2. **P1 contractual PR #18:** `GET /api/v1/estudiantes` publicado en el OpenAPI canónico (1.1.0) con RED previo y 23/0/0/0 tras el contrato. Sin cambios de runtime ni DB.
+3. **JWT real COORDINADOR y ESTUDIANTE:** 42/42 casos HTTP PASS con los cuatro roles reales (detalle en `MAINT-001/VALIDATION.md`).
+4. **P3 PR #20:** whitespace eliminado; `git diff --check` limpio en el rango del PR.
+
+### Pendiente (motivos vigentes del NOT_READY)
+
+- UTC-D06 sin decisión del owner DB/funcional; alternativas en [UTC_D06_HISTORICAL_PROVENANCE_OPTIONS](UTC_D06_HISTORICAL_PROVENANCE_OPTIONS.md). D01–D05/D07–D09 solo aceptadas como diseño inicial sujeto a pruebas.
+- API v2 no implementada: POST/GET/PATCH v2, SQL UTC y DST end-to-end `NOT_RUN` por diseño. RED preparado ([diseño](UTC_V2_MICRO_PR_DESIGN.md)).
+- PR #18, #19 y #20 abiertos, sin merge (no autorizado).
+- P2 gobernanza PR #18: se añadió `MAINT-01C` con autorización y rollback; la cabecera `DOCUMENTATION_ONLY` original del PLAN se conserva como histórico y requiere revisión humana.
+- Validación manual del usuario y firma de handoff.
+
+### Rollback de esta pasada
+
+- PR #18: `git revert 9ed690f d0468e3 1c96162 e7803ca 7a5eceb` (en ese orden) devuelve el contrato a 9 operaciones y el seed a 2 roles; ningún efecto runtime/DB. Los usuarios Keycloak locales `coordinador.prueba` y `estudiante.prueba` se eliminan por consola/Admin REST si se desea; sus valores viven solo en `infra/keycloak/.env` (ignorado).
+- PR #20: `git revert b512bb4 0bd1119`.
+- RED: borrar la rama `jose-valencia/maint-003b-utc-v2-red` (no tiene PR).
+- DB: ninguna escritura en la fuente; el clon y su backup siguen como evidencia.
