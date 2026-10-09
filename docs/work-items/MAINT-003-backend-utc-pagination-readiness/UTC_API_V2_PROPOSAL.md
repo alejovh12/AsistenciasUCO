@@ -32,6 +32,18 @@ last-reviewed: 2026-10-09
 | UTC-D08 | Roles y ownership no cambian: escritura DOCENTE y validación de titularidad existente; lectura mantiene el matcher/alcance contractual vigente. El actor se obtiene del JWT, nunca del body. |
 | UTC-D09 | La compatibilidad `PUT` solo existe en v1. v2 publica PATCH; cualquier fecha de deprecación o retiro de v1 necesita inventario de consumidores y decisión separada. |
 
+## Estado de revisión — 2026-10-09
+
+Ninguna decisión queda aprobada automáticamente.
+
+| ID | Estado |
+|---|---|
+| UTC-D01..D05, UTC-D07..D09 | `ACCEPTED_AS_INITIAL_DESIGN_SUBJECT_TO_TESTS`: base del RED en `jose-valencia/maint-003b-utc-v2-red`; no es firma contractual ni autoriza implementación |
+| UTC-D06 | `CONTRACT_DECISION_REQUIRED`: la redacción actual no dice cómo distinguir una fila histórica de una UTC fiable; con v1 escribiendo, ninguna fecha de corte lo resuelve. Alternativas y preguntas al owner en [UTC_D06_HISTORICAL_PROVENANCE_OPTIONS](UTC_D06_HISTORICAL_PROVENANCE_OPTIONS.md) |
+| UTC-D02 (detalle) | abierto: v1 AS-IS responde `ERR_FECHA_HORA_INVALIDA`, la propuesta v2 dice `VALIDATION_ERROR`; confirmar si la divergencia es intencional |
+
+Diseño del micro-PR y pruebas preparadas: [UTC_V2_MICRO_PR_DESIGN](UTC_V2_MICRO_PR_DESIGN.md). GET v2 no se activa y v1 no cambia; la guarda `SesionUtcActivationGuardTest` (PR #20) lo hace verificable.
+
 ## Forma propuesta
 
 Request POST v2:
