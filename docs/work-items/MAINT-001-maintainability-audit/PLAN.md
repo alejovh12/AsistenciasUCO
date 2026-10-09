@@ -60,3 +60,8 @@ READY: inventario/análisis. Implementación: NOT_READY hasta tests y autoridad 
 - Errores de datos inválidos mantienen el tipo `CrosscuttingException` usado actualmente para DTO nulo. Revisar traducción HTTP end-to-end antes de ampliar la validación a controlador; no añadir 400 inventado en este PR.
 - No SQL/Angular/SP/OpenAPI/sesión JWT modificados. Tests Java25 **NOT_RUN** desde herramienta que escribe, los Actions sobre nuevo PR deben certificar Suite/Sonar/ArchUnit. SQL Server IT posterior (si aplica), `VALIDATION.md` en fase posterior.
 - La microfase M01 de `JpaQueryExecutor` sigue `CONTRACT_DECISION_REQUIRED`: existen tests actuales que **exigen** envolver `ArithmeticException`, `IllegalArgumentException` e `IllegalStateException` dentro de DatabaseOperationException. No cambiar en bloque sin rediseñar contratos/test oracle.
+
+
+## MAINT-01B — referencia Arquisoft y vistas SQL (2026-10-09)
+
+Estudio documentado: [PAGINATION_REFERENCE_ANALYSIS](PAGINATION_REFERENCE_ANALYSIS.md). La arquitectura actual sí pagina mediante JPA sobre `dbo.uv_estudiante_identidad` y filtra con EXISTS contra `dbo.uv_estudiante`. Mantener vistas existentes, no copiar `@Subselect` PostgreSQL ni agregar `Pageable` a Application solo por imitación. Actualizar la validación HTTP combinada page*size, caso SQL Server IT para páginas 0/1/2 y guía de fixtures >10. PR #17 SEC-002 fusionado `bfc4fd3`; PR #18 sincroniza esa base conservando cambios. GREEN nuevo SHA: pendiente.

@@ -34,3 +34,19 @@ RED ni GREEN certificados: NOT_RUN. Algunos comportamientos necesitan decisión;
 | JPA-PAG-04 | page=2,size=10 y 21 items | mismos `setFirstResult(20)`, `totalPages=3` y DTO | cambio accidental semántica de página |
 
 La test suite previa ya incluye JPA-PAG-04 y cobertura de JPQL constante/parametrizado. Implementación/test nuevos sin Maven local; CI/GREEN y test del driver real todavía pendientes.
+
+
+## MAINT-01B — criterios del profesor y pruebas de vistas
+
+| Caso | Entrada/fixture | Observable | Nivel |
+|---|---|---|---|
+| VISTA-01 | uv_estudiante_identidad con 0/N estudiantes | total y page correctos, no carga masiva | SQL Server IT |
+| VISTA-02 | páginas 0/1/2, size=5 | mismos IDs/orden que SQL `ORDER BY ... OFFSET ... FETCH` | SQL Server IT |
+| VISTA-03 | mismo apellido/nombre/documento | desempate por UUID `e.id`, sin duplicados | SQL Server IT con fixture >10 |
+| VISTA-04 | estudiante en múltiples grupos | filtro `EXISTS` sobre uv_estudiante no duplica identidad | SQL Server IT con fixture multigrupo |
+| HTTP-01 | page=0,size=20 | válido | Unit validator |
+| HTTP-02 | page=MAX_INT,size=1 | offset permitido por JPA | Unit validator |
+| HTTP-03 | page=MAX_INT,size=100 | error de validación en page, sin truncamiento | Unit validator |
+| HTTP-04 | size=0 o 101 | regla HTTP 1..100 preservada | Unit validator |
+
+`VISTA-03/04` requieren fixture SQL aprobada y datos suficientes; no declararlos PASS con test mock o IT vacía. Tests nuevos preparados en `ConsultarEstudiantesPaginationValidatorTest` y `CoreViewQueriesJpaParityIT`. No SQL DDL, no cambio wire ni orden de aplicación.

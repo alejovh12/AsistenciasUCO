@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.6</version>
+        <version>4.0.8</version>
         <relativePath/>
     </parent>
     <groupId>co.edu.uco.asistenciasuco</groupId>
@@ -28,9 +28,18 @@
     </scm>
     <properties>
         <java.version>25</java.version>
+        <!-- Trivy SEC-002: align ALL embedded Tomcat modules on the patched 11.0.x line. -->
+        <tomcat.version>11.0.26</tomcat.version>
+        <!-- SEC-002: two independent Jackson API generations, aligned through Boot's own BOM properties. -->
+        <jackson-2-bom.version>2.21.7</jackson-2-bom.version>
+        <jackson-bom.version>3.1.7</jackson-bom.version>
         <jacoco.version>0.8.15</jacoco.version>
         <swagger-parser.version>2.1.46</swagger-parser.version>
         <swagger-ui.version>5.32.15</swagger-ui.version>
+        <!-- SEC-002: POI 5.4.1 references commons-compress; align to patched 1.28.0. -->
+        <commons-compress.version>1.28.0</commons-compress.version>
+        <!-- SEC-002: patched baggage propagation; align the entire OpenTelemetry core family. -->
+        <opentelemetry.version>1.62.0</opentelemetry.version>
         <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
     </properties>
     <dependencies>
@@ -117,7 +126,7 @@
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
-            <version>5.2.5</version>
+            <version>5.4.1</version>
         </dependency>
         <dependency>
             <groupId>io.projectreactor</groupId>
@@ -171,6 +180,20 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- SEC-002: override transitive POI archive parser; fixes CVE-2024-25710/26308. -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>${commons-compress.version}</version>
+            </dependency>
+            <!-- SEC-002: keep all Bouncy Castle jdk18on artifacts aligned; CVE-2026-8763. -->
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bc-jdk18on-bom</artifactId>
+                <version>1.85.2</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>com.azure</groupId>
                 <artifactId>azure-sdk-bom</artifactId>
