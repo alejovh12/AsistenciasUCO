@@ -12,7 +12,10 @@ last-reviewed: 2026-10-08
 Inspeccionar deuda técnica en el backend JPA-only / LB-004 posterior al merge PR #15 sin reemplazar arquitectura ni interrumpir PR #16 security. Referencia de develop revisado: `551594179c2de582cbe62b4490276879d1ffc886` (merge #15); 20 suites de arquitectura / 82 tests pasan en run de PR #16, no garantizan maintainability total.
 
 ## Clasificación, restricciones y gobernanza
-- Cambio actual: DOCUMENTATION_ONLY, sin modificaciones Java/DB/Angular/pom/OpenAPI ni tests.
+- Alcance histórico de MAINT-00 (auditoría inicial): DOCUMENTATION_ONLY. Esta clasificación NO describe el alcance acumulado del PR #18.
+- Alcance vigente de PR #18, documentado por microfases: MAINT-01A = BEHAVIOR_CHANGE acotado (validación de offset JPA + tests); MAINT-01B = HTTP_VALIDATION_AND_SQL_PARITY_TESTS (validación combinada y test de vistas); MAINT-01C = CONTRACT_PUBLICATION_OF_AS_IS (OpenAPI canónico + conformance tests + seed E2E de Keycloak opcional).
+- Afecta Java de producción exclusivamente en el adaptador de estudiantes/validador HTTP, tests JPA/HTTP/contrato, docs OpenAPI, script E2E Keycloak y work-item; no cambia DB, SP, vistas, POM ni frontend.
+- Evidencia de autorización por microfase, rollback y ejecución real: secciones MAINT-01A/B/C y [VALIDATION](VALIDATION.md). Esta línea es clasificación actual, no autorización de merge.
 - Fuente de verdad: AGENTS.md → SOURCE_OF_TRUTH → DoR → skill → test plan → contratos.
 - Sonar: comentario PR #15 histórico tenía **206 New issues** con Quality Gate PASSED y Maintainability A; **reglas, líneas y distribución de los 206 NO RECUPERADAS** en esta auditoría. No calificar cada candidato de `Sonar issue`.
 - No tomar número 206 como medida actual de `develop`, ni atribuir seguridad/criticidad sin claves.
