@@ -50,3 +50,13 @@ Inspeccionar deuda técnica en el backend JPA-only / LB-004 posterior al merge P
 
 ## Definition of Ready / Done
 READY: inventario/análisis. Implementación: NOT_READY hasta tests y autoridad de microfase. Criterios: GREEN local JDK25, -Pintegration cuando corresponda, Sonar issues cerrados en nuevo SHA, ningún contrato roto, Sonar Quality Gate y ArchUnit PASS. No mover BD durante este work item para desbloquear fixture sin autorización.
+
+
+## MAINT-01A — paginación JPA segura, implementación acotada
+
+- Clase `EstudianteJpaRepository.consultarEstudiantes` calcula `page * size` usando `int`. Como `ConsultarEstudiantesRepositoryDTO` (secondary port) no impone invariantes, un page extremo puede desbordar a negativo y entrar en `setFirstResult`, donde `JpaQueryExecutor` lo traduce potencialmente como error de BD. No hay evidencia de una ruta HTTP pública explotable; es defensa de frontera del adapter.
+- Cambio aprobado por esta microfase: validar `page >=0`, `size>0`, `offset <= Integer.MAX_VALUE` usando multiplicación `long` **antes** del executor. No imponer máximo arbitrario de tamaño ni alterar DTO/JPQL o consulta SQL. Para entradas válidas el offset y la respuesta son idénticos.
+- Pruebas de comportamiento agregadas a `EstudianteJpaQueryContractTest`: page negativa, tamaño 0/negativo y producto > max int rechazados **sin interacción con EntityManager**; conservar pruebas existentes de filtros, página normal, 0 resultados y nulidad.
+- Errores de datos inválidos mantienen el tipo `CrosscuttingException` usado actualmente para DTO nulo. Revisar traducción HTTP end-to-end antes de ampliar la validación a controlador; no añadir 400 inventado en este PR.
+- No SQL/Angular/SP/OpenAPI/sesión JWT modificados. Tests Java25 **NOT_RUN** desde herramienta que escribe, los Actions sobre nuevo PR deben certificar Suite/Sonar/ArchUnit. SQL Server IT posterior (si aplica), `VALIDATION.md` en fase posterior.
+- La microfase M01 de `JpaQueryExecutor` sigue `CONTRACT_DECISION_REQUIRED`: existen tests actuales que **exigen** envolver `ArithmeticException`, `IllegalArgumentException` e `IllegalStateException` dentro de DatabaseOperationException. No cambiar en bloque sin rediseñar contratos/test oracle.

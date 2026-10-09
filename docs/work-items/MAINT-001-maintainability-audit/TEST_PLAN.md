@@ -22,3 +22,15 @@ last-reviewed: 2026-10-08
 | M09a | docente de fixture con múltiples grupos | query JPA real | sin skip, paridad SQL | green falso por @Disabled/assumption | SQL IT |
 
 RED ni GREEN certificados: NOT_RUN. Algunos comportamientos necesitan decisión; nunca forzar fail-only en branch principal. ArchUnit no reemplaza unit/e2e funcional.
+
+
+## MAINT-01A — pruebas implementadas candidatas de paginación
+
+| Caso | Entrada | Salida esperada | Antirregresión |
+|---|---|---|---|
+| JPA-PAG-01 | page=-1, size=10 | CrosscuttingException sin interacción JPA | `setFirstResult(-10)` silencioso |
+| JPA-PAG-02 | page=0, size=0 o -10 | CrosscuttingException sin interacción JPA | division por cero / tamaño negativo |
+| JPA-PAG-03 | page=2^31-1, size=2 | CrosscuttingException sin interacción JPA | overflow de `int` / excepción SQL mal clasificada |
+| JPA-PAG-04 | page=2,size=10 y 21 items | mismos `setFirstResult(20)`, `totalPages=3` y DTO | cambio accidental semántica de página |
+
+La test suite previa ya incluye JPA-PAG-04 y cobertura de JPQL constante/parametrizado. Implementación/test nuevos sin Maven local; CI/GREEN y test del driver real todavía pendientes.
