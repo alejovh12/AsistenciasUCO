@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -30,7 +29,7 @@ public final class HttpUtcInstantCodec {
                     .withOffsetSameInstant(ZoneOffset.UTC).toLocalDateTime();
             validateDatabasePrecision(utc);
             return utc;
-        } catch (DateTimeParseException | java.time.DateTimeException exception) {
+        } catch (java.time.DateTimeException exception) {
             throw invalidFormat();
         }
     }
