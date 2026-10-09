@@ -38,6 +38,8 @@
         <swagger-ui.version>5.32.15</swagger-ui.version>
         <!-- SEC-002: POI 5.4.1 references commons-compress; align to patched 1.28.0. -->
         <commons-compress.version>1.28.0</commons-compress.version>
+        <!-- SEC-002: patched baggage propagation; align the entire OpenTelemetry core family. -->
+        <opentelemetry.version>1.62.0</opentelemetry.version>
         <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
     </properties>
     <dependencies>

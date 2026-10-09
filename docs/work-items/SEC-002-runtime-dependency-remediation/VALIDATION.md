@@ -31,3 +31,10 @@ Se completaron **Trivy FS e imagen** en HEAD `6d2d4b3`, run 37872449097. Conteos
 **Antes del cambio:** [run 37873166385](https://github.com/alejovh12/AsistenciasUCO/actions/runs/37873166385) PR #17 SHA `f9a08f4`: Backend CI, CodeQL/Dependency Review, Trivy Repo/Image y ArchUnit PASS; image SARIF **8 findings (CRITICAL 0, HIGH 1, MEDIUM 7)**. FS SARIF 7 findings. El único HIGH es MSSQL JDBC con versión de JAR aparente corregida, marcado INVESTIGATE, no como falso positivo confirmado.
 
 **Cambio preparado (sin Java/SQL):** POI `5.4.1`, Commons Compress `1.28.0` managed, Alpine libpng/zlib upgrade en imagen runtime, guard Docker USER `10001:10001` en CI. `OpenTelemetry 1.55.0` pendiente de microfase, `HEALTHCHECK` LOW decisión requerida. **Post-change Maven/Trivy:** NOT_RUN al redactar, validar por nuevo GitHub SHA. Nunca declarar CVE CLOSED basándose solamente en un POM modificado.
+
+
+## OTel 1.62.0 follow-up — NOT_RUN AT COMMIT TIME
+
+Last measured **image** on `26a6301b` (run 37873876538): 0 critical, 1 high, 2 medium. Last FS: 2 medium plus 2 LOW HEALTHCHECK warnings. Source: SARIF artifacts `11591871596` and `11591866278`. These are **baseline**, not metrics of the OTel change.
+
+Proposed next commit: `opentelemetry.version=1.62.0` through Spring Boot dependency management; unit suite `OtelBaggagePropagationBoundaryTest` with 3 cases based on upstream security remediation. Java25 compile/test: NOT_RUN; Boot startup/external exporter/trace context, Docker and -Pintegration: NOT_RUN; postcommit Sonar/Trivy: NOT_RUN. Required: verify 3 tests, all Maven/ArchUnit/CodeQL gates, runtime OTel family versions, no new runtime breakages. Not a claim of CLOSED until evidence.

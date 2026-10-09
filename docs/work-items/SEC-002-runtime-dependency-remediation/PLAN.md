@@ -85,3 +85,20 @@ Baseline **SHA f9a08f4** / [scan 37873166385](https://github.com/alejovh12/Asist
 - Red Java: NO APLICA para actualización de dependencias; pruebas de regresión existentes + ArchUnit/OpenAPI/Sonar y Docker build real en CI. Pruebas OOXML malicioso de entradas ZIP duplicadas pueden ser añadidas en microfase si existe consumo de OOXML externo, previa validación de threat model.
 - No se modifica API, JWT, autorización, acceso SQL Server, eventos ni contrato DB. `mvn dependency:tree` debe mostrar POI `5.4.1`, Commons Compress `1.28.0`; imagen reconstruida debe mostrar versiones `libpng`/`zlib` corregidas; si no aparecen, BLOCKED y no marcar CVE closed.
 - Estado actual del tercer lote al escribir: `PROPOSED, NOT_TESTED`. Nuevo GitHub Actions run/SARIF deben documentarse en VALIDATION; no hacer merge hasta revisar.
+
+
+## Fourth remediation batch — OpenTelemetry baggage propagation
+
+Baseline: PR #17 HEAD `26a6301b72d3300635e001ae84760034360c91d9`, Trivy [run 37873876538](https://github.com/alejovh12/AsistenciasUCO/actions/runs/37873876538), image artifact `11591871596`, filesystem artifact `11591866278`. Image has **3 findings**: 0 CRITICAL, 1 HIGH (CVE-2025-59250 MSSQL JDBC), 2 MEDIUM (same CVE-2026-45292 for OTel API and trace propagators). Filesystem additionally reports 2 LOW Dockerfile HEALTHCHECK warnings. Reports were read from SARIF, not inferred from job status.
+
+### Risk and targeted change
+
+CVE-2026-45292 / GHSA-rcgg-9c38-7xpx is an unbounded baggage propagation resource-allocation issue. Affected `io.opentelemetry:opentelemetry-api` and `opentelemetry-extension-trace-propagators` through 1.61.0; patch is 1.62.0. Upstream introduced a 64-entry cap and 8192-byte limit. Ref: https://github.com/advisories/GHSA-rcgg-9c38-7xpx .
+
+Spring Boot 4.0.8 exposes `opentelemetry.version` as a managed override property (https://docs.spring.io/spring-boot/4.0/appendix/dependency-versions/properties.html). Set to `1.62.0` to align the **whole core OTel family**, rather than fixing `api` alone. Upstream release https://github.com/open-telemetry/opentelemetry-java/releases/tag/v1.62.0 .
+
+Behavioral regression suite `OtelBaggagePropagationBoundaryTest`: (1) valid baggage retains 3 fields, (2) 90 entries truncated to 64, (3) >8192-byte baggage ignored. It tests library behavior directly, not a simulated external tracer or E2E. Existing `CorrelationIdFilterTest`, architecture suites and observability tests remain mandatory. Original 1.55.0 behavior would fail the excessive-entry regression. Do not change the assertion to meet an incompatible package; investigate BOM convergence first.
+
+Compatibility risk: OpenTelemetry exporter/autoconfiguration may have binary API evolution. Mandatory Java25 `clean verify`, Boot startup, trace-header propagation + SSE reconnection smoke, Docker build and new Trivy FS/image SARIF from same SHA. Do **not** declare CVE fixed without all new effective runtime components at >=1.62.0 and a completed scan.
+
+**MSSQL JDBC HIGH is not hidden or ignored.** Trivy identifies `mssql-jdbc-13.2.1.jre11.jar` but reports installed Maven version `13.2.1` and fixed `13.2.1.jre11`. This discrepancy is under investigation: https://github.com/aquasecurity/trivy/discussions/9745 ; collect vendor advisory, effective dependency and embedded jar metadata before considering suppression, upgrade or compensating control. No `.trivyignore` without approved exception.
