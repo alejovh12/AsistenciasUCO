@@ -118,3 +118,7 @@ Cuando se agreguen nuevas capacidades, CI debe crecer con ellas:
 
 ## Incidente histórico PR #15 (2026-10-08)
 Backend Quality Gate: Maven clean verify y XML JaCoCo PASS; SonarCloud FAIL por 48.4% new coverage (<80%), Security C y Reliability C (requiere A/A); Docker/JAR downstream omitidos. CodeQL PASS separado. No es una medición del commit siguiente. Para recuperar: [QUALITY-PR15](../docs/work-items/QUALITY-PR15-recovery/PLAN.md). No confundir global JaCoCo y métricas Sonar; no bajar umbrales ni convertir skips en PASS.
+
+## SEC-001 — Trivy + evidencia ArchUnit dirigida (postmerge PR #15)
+
+Workflow adicional [security-deep-scan.yml](workflows/security-deep-scan.yml) ejecuta ArchUnit dirigido y Trivy filesystem/imagen con versión/commit verificados. Primera etapa **report-only**: un run verde no equivale a 0 vulnerabilidades. El equipo debe revisar SARIF y aprobar el cambio a fail-on y required checks. Ver [runbook](../docs/testing/TRIVY_ARCHUNIT_RUNBOOK.md) y [work item](../docs/work-items/SEC-001-trivy-archunit/PLAN.md). No reemplaza CodeQL, Sonar o SQL integration.

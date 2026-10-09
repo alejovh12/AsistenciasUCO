@@ -86,3 +86,7 @@ La frase histórica anterior «JDBC → JPA incremental; no implementada» en es
 
 - [Revisión independiente de lectura del HEAD 2554312](work-items/QUALITY-PR15-recovery/INDEPENDENT_REVIEW_2026-10-08.md): CI verde, riesgos no bloqueantes por definir, un IT omitido y revisión humana pendiente.
 - [Plan contractual de reanudación LB-004](work-items/LB-004-stateless-serverless-readiness/RESUMPTION_CONTRACT_PLAN_2026-10-08.md): primero DB y ownership, después backend JPA, Angular y E2E; no constituye aprobación de cambio de esquema.
+
+## Seguridad adicional postmerge PR #15
+
+El profesor solicita Trivy + ArchUnit tras Sonar. [Runbook de escaneos](testing/TRIVY_ARCHUNIT_RUNBOOK.md), [SEC-001](work-items/SEC-001-trivy-archunit/PLAN.md) y [evidencia pendiente](work-items/SEC-001-trivy-archunit/VALIDATION.md). La ejecución inicial es inventario, no certificación sin CVE; cambios de infraestructura de seguridad se integran por PR separado.

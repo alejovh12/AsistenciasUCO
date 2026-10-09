@@ -1,0 +1,127 @@
+name: Backend Deep Security Scan
+
+on:
+  pull_request:
+    branches: [develop]
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deep-security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  archunit:
+    name: ArchUnit Architectural Guardrails
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+      - name: Set up JDK 25
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - name: Execute architectural rules only
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x mvnw
+          ./mvnw -B -ntp --no-transfer-progress "-Dtest=co/edu/uco/asistenciasuco/architecture/*Test" test
+          count=$(find target/surefire-reports -name 'TEST-co.edu.uco.asistenciasuco.architecture.*.xml' | wc -l)
+          echo "Architectural test classes with XML evidence: $count"
+          test "$count" -ge 20
+      - name: Upload ArchUnit reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: archunit-${{ github.run_id }}
+          path: target/surefire-reports/TEST-co.edu.uco.asistenciasuco.architecture.*.xml
+          if-no-files-found: error
+          retention-days: 21
+
+  trivy-repository:
+    name: Trivy Repository Vulnerability and Misconfiguration Scan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+      - name: Scan repository with Trivy (inventory-only)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # signed v0.36.0, immutable SHA
+        with:
+          version: v0.74.0
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,misconfig
+          severity: HIGH,CRITICAL
+          format: sarif
+          output: trivy-fs.sarif
+          exit-code: '0' # Baseline inventory; remediation/threshold requires approved decision.
+          cache: 'true'
+      - name: Publish findings to Code Scanning
+        if: always() && hashFiles('trivy-fs.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-fs.sarif
+          category: trivy-filesystem
+      - name: Preserve sanitized vulnerability report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: trivy-fs-${{ github.run_id }}
+          path: trivy-fs.sarif
+          if-no-files-found: warn
+          retention-days: 21
+
+  trivy-image:
+    name: Trivy Production Docker Image Scan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+      - name: Build production image from current source (Dockerfile executes clean verify)
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build --tag asistencias-uco-security-scan:${{ github.sha }} .
+      - name: Scan built Docker image (inventory-only)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # signed v0.36.0, immutable SHA
+        with:
+          version: v0.74.0
+          scan-type: image
+          image-ref: asistencias-uco-security-scan:${{ github.sha }}
+          scanners: vuln
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+          format: sarif
+          output: trivy-image.sarif
+          exit-code: '0' # Initial inventory; not a "no vulnerabilities" gate.
+          cache: 'true'
+      - name: Publish image findings to Code Scanning
+        if: always() && hashFiles('trivy-image.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-image.sarif
+          category: trivy-production-image
+      - name: Preserve sanitized image report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: trivy-image-${{ github.run_id }}
+          path: trivy-image.sarif
+          if-no-files-found: warn
+          retention-days: 21
