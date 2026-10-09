@@ -25,3 +25,7 @@ Se contrastó con `arquisoft-backend-develop(1).zip` proporcionado por el profes
 
 ## Cierre
 No declarar nuevos tests GREEN antes de GitHub Actions. No hacer merge automático. La fase funcional DB para soportes LB-004 permanece independiente.
+
+## Ajuste adicional al oráculo SQL Server
+
+En `CoreViewQueriesJpaParityIT.estudiantes_conservan_paginacion_detalle_contextos_y_not_found`, comparar los primeros 100 registros de la vista con la página `size=100`, conservando `assertEquals(before.size(), page.totalItems())`. El assert anterior comparaba erróneamente **todos** los registros con una única página y fallaría al superar 100 estudiantes. Se trata de un ajuste en la prueba que preserva la semántica, sin modificación de producción. La nueva prueba de páginas 0/1/2 cubre slicing por SQL Server real. Estado de nueva ejecución: NOT_RUN hasta nuevo run GitHub.

@@ -218,7 +218,10 @@ class CoreViewQueriesJpaParityIT {
         final var page = estudiantes.consultarEstudiantes(new ConsultarEstudiantesRepositoryDTO(
                 null, null, null, null, null, null, null, null, null, 0, 100));
         assertEquals(before.size(), page.totalItems());
-        assertEquals(before, page.items().stream().map(CoreViewQueriesJpaParityIT::studentJpa).toList());
+        // The query requests size=100: compare only the first page, not all rows
+        // in the baseline view when a fixture contains 101+ students.
+        assertEquals(before.stream().limit(100).toList(),
+                page.items().stream().map(CoreViewQueriesJpaParityIT::studentJpa).toList());
         assumeFalse(before.isEmpty(), "No hay estudiantes para comparar detalle.");
 
         final UUID studentId = (UUID) before.getFirst().getFirst();
