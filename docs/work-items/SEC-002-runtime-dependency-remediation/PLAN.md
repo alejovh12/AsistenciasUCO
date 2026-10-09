@@ -47,3 +47,23 @@ DoR: APPROVED_SCOPE_POM_ONLY por solicitud de corrección de vulnerabilidades, r
 - Jackson 2.x/3.x: existen varios HIGH con fixed versions diversas; evitar override por módulo que cree classpath mixto, estudiar BOM alineados o Boot update adicional.
 - Tomcat/Netty/Spring: comprobar en Trivy nuevos CVEs o false positives; no inferir remediación completa desde POM.
 - P1/P2 mantenibilidad pertenece a MAINT-001, en PR separado para no mezclar refactor con actualización de dependencias.
+
+## Adenda correctiva — CVE restantes después del primer parche (HEAD 6d2d4b3)
+
+Se inspeccionaron SARIF de [run 37872449097](https://github.com/alejovh12/AsistenciasUCO/actions/runs/37872449097) (Docker image artifact 11589969593, filesystem artifact 11591205030). Comparado con imagen previa: **125 → 24 registros**; **CRITICAL 10 → 1**; HIGH **49 → 12**; MEDIUM 11. Conteos de hallazgos en imagen (no explotabilidad). Nuevo baseline detectado:
+- `org.bouncycastle:bcprov-jdk18on:1.84`: CVE-2026-8763 CRITICAL y CVE-2026-13506 HIGH (fixed 1.85). Usar un solo BOM `org.bouncycastle:bc-jdk18on-bom:1.85.2`.
+- Jackson 2.x `2.21.5`: 5 HIGH, 2 MEDIUM en jackson-core/databind; fix `2.21.7`.
+- Jackson 3.x `3.1.5`: 5 HIGH, 2 MEDIUM; fix `3.1.7`.
+- `mssql-jdbc:13.2.1` (sin sufijo): CVE-2025-59250 HIGH en escáner, fixed `13.2.1.jre11` según SARIF; comprobar equivalencia de versión y advisory antes de cualquier override.
+- `OpenTelemetry:1.55.0` MEDIUM (dos paquetes), `commons-compress:1.25.0` MEDIUM (dos CVE), `poi-ooxml:5.2.5` MEDIUM; pendientes en siguiente lote con origen transitivo/versión validada.
+- Imagen Alpine: `libpng 1.6.58-r1` MEDIUM, `zlib 1.3.2-r0` MEDIUM; requieren parche de image base o paquetes, con nuevo Docker build.
+- Trivy FS misconfig `DS-0002` HIGH: Dockerfile en stage final sin USER. Se añade `USER 10001:10001` tras COPY; no cambiar usuario del stage build. `DS-0026` LOW HEALTHCHECK pendiente de decisión (Kubernetes/Compose también puede definir healthcheck).
+
+### Implementación del segundo lote
+- Properties de Spring Boot parent: `jackson-2-bom.version=2.21.7`, `jackson-bom.version=3.1.7`. Actualiza las familias completas y evita versionado individual de módulos.
+- Import de `org.bouncycastle:bc-jdk18on-bom:1.85.2` bajo dependencyManagement del módulo, sin nueva dependencia runtime directa.
+- `USER 10001:10001` en imagen productiva, con UID/GID numéricos estables. No prometer compatibilidad con escrituras en `/app` hasta validar que la aplicación no intenta persistir allí.
+- No se cambia código Java, esquema DB, frontend, rutas HTTP ni umbrales de Trivy.
+
+### Gates exigidos
+Maven JDK25 clean verify, ArchUnit, CI Sonar, Security y **nuevo Trivy image/fs** del SHA publicado. Revisar que efectivamente aparecen Jackson `2.21.7/3.1.7` y Bouncy Castle `1.85.2` en dependency:tree y Trivy. Comprobar `docker inspect --format='{{.Config.User}}'` y startup con UID sin privilegios. Las pruebas integradas SQL/MinIO/ClamAV quedan pendientes hasta ambiente real. No declarar DONE hasta nuevo escaneo y prueba de arranque.

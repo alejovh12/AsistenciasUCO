@@ -19,5 +19,8 @@ RUN ./mvnw -B -ntp clean verify
 FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 COPY --from=build /workspace/target/AsistenciasUCO-0.0.1-SNAPSHOT.jar app.jar
+# SEC-002 defense-in-depth: production JVM runs without root privileges.
+# JAR is copied as world-readable and Java can use /tmp on Alpine.
+USER 10001:10001
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
