@@ -113,6 +113,14 @@ jobs:
         run: |
           set -euo pipefail
           docker build --tag asistencias-uco-security-scan:${{ github.sha }} .
+      - name: Verify runtime Docker identity is non-root
+        shell: bash
+        run: |
+          set -euo pipefail
+          image="asistencias-uco-security-scan:${{ github.sha }}"
+          actual="$(docker image inspect --format '{{.Config.User}}' "$image")"
+          echo "Container runtime identity: $actual"
+          test "$actual" = "10001:10001"
       - name: Scan built Docker image (inventory-only)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # signed v0.36.0, immutable SHA
         with:

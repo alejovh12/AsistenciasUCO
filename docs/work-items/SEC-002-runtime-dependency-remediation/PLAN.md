@@ -67,3 +67,21 @@ Se inspeccionaron SARIF de [run 37872449097](https://github.com/alejovh12/Asiste
 
 ### Gates exigidos
 Maven JDK25 clean verify, ArchUnit, CI Sonar, Security y **nuevo Trivy image/fs** del SHA publicado. Revisar que efectivamente aparecen Jackson `2.21.7/3.1.7` y Bouncy Castle `1.85.2` en dependency:tree y Trivy. Comprobar `docker inspect --format='{{.Config.User}}'` y startup con UID sin privilegios. Las pruebas integradas SQL/MinIO/ClamAV quedan pendientes hasta ambiente real. No declarar DONE hasta nuevo escaneo y prueba de arranque.
+
+## Tercer lote — remediación de hallazgos restantes después de Bouncy Castle/Jackson
+
+Baseline **SHA f9a08f4** / [scan 37873166385](https://github.com/alejovh12/AsistenciasUCO/actions/runs/37873166385) (image SARIF artifact 11591685128, filesystem SARIF artifact 11591106912):
+- **Imagen: 8 resultados**, CRITICAL 0, HIGH 1, MEDIUM 7. No tratar `exit-code:0` como ausencia CVE.
+- `mssql-jdbc-13.2.1.jre11.jar`: `CVE-2025-59250` HIGH. Trivy identifica metadata como `13.2.1` y lista `13.2.1.jre11` entre versiones corregidas. **POTENTIAL_FALSE_POSITIVE / REQUIRES_ADVISORY_REVIEW** (no ignorado). Existe reporte upstream de ese mismo caso en https://github.com/aquasecurity/trivy/discussions/9745 . Confirmar paquete efectivo/artefacto Maven y advisory Microsoft antes de suppression o version bump; sin falsificar reportes.
+- `org.apache.poi:poi-ooxml 5.2.5`: `CVE-2025-31672` MEDIUM; parser ZIP OOXML puede aceptar entradas duplicadas. Vendor Apache indica fix >=5.4.0. Propuesto `5.4.1` ([POM original](https://central.sonatype.com/artifact/org.apache.poi/poi-ooxml/5.4.1)).
+- `org.apache.commons:commons-compress 1.25.0`: `CVE-2024-25710` y `CVE-2024-26308` MEDIUM; fixed >=1.26.0; override único en dependencyManagement `1.28.0` (versión estable Apache), preservando compatibilidad con POI.
+- `libpng 1.6.58-r1`: `CVE-2026-46675` MEDIUM, fixed `1.6.59-r0`; `zlib 1.3.2-r0`: `CVE-2026-85091` MEDIUM, fixed `1.3.2-r1`. Se ejecuta `apk upgrade --no-cache libpng zlib` solo en stage runtime antes del USER. Si mirror Alpine no tiene versión fixed, el build debe bloquear y registrarse.
+- `OpenTelemetry 1.55.0`: `CVE-2026-45292` MEDIUM en `api` y `extension-trace-propagators`; fixed `1.62.0`, **no actualizado en este lote** porque Boot 4.0.8 gestiona toda la familia 1.55.0 y el exporter/tracing puede sufrir incompatibilidad. Próximo lote específico con `opentelemetry.version` y pruebas de propagación/observabilidad.
+- Filesystem SARIF: 7 resultados, incluyendo `DS-0026` LOW por `HEALTHCHECK` ausente en dos Dockerfiles. DECISION_REQUIRED: Compose/orchestrator puede definir probes; no añadir un `HEALTHCHECK` inconsistente con rutas de autorización o sin revisar los consumers.
+
+### Validación de este lote
+
+- Se cambia `pom.xml` (POI/Commons Compress), `Dockerfile` runtime (apk) y `security-deep-scan.yml` para **afirmar USER no-root en la imagen realmente construida**.
+- Red Java: NO APLICA para actualización de dependencias; pruebas de regresión existentes + ArchUnit/OpenAPI/Sonar y Docker build real en CI. Pruebas OOXML malicioso de entradas ZIP duplicadas pueden ser añadidas en microfase si existe consumo de OOXML externo, previa validación de threat model.
+- No se modifica API, JWT, autorización, acceso SQL Server, eventos ni contrato DB. `mvn dependency:tree` debe mostrar POI `5.4.1`, Commons Compress `1.28.0`; imagen reconstruida debe mostrar versiones `libpng`/`zlib` corregidas; si no aparecen, BLOCKED y no marcar CVE closed.
+- Estado actual del tercer lote al escribir: `PROPOSED, NOT_TESTED`. Nuevo GitHub Actions run/SARIF deben documentarse en VALIDATION; no hacer merge hasta revisar.
