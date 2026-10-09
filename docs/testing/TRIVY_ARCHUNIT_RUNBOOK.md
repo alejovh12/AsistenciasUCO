@@ -45,3 +45,11 @@ No introducir tags de acción mutables: Trivy sufrió alteración de tags en mar
 - No considerar 0 findings cuando falló actualización de bases o se escaneó una imagen vieja.
 - Arquitectura: cada falla ArchUnit debe asociarse a clase origen, dependencia destino y regla infringida; no desactivar reglas para obtener PASS.
 - Guardar `run ID` + SHA, métricas de ArchUnit, SARIF y fecha de Trivy DB. Solicitar aprobación de política fail-on HIGH/CRITICAL en work item posterior.
+
+## Incidente reproducido: Trivy FS 429 en PR #16
+
+Run https://github.com/alejovh12/AsistenciasUCO/actions/runs/37868603212: job filesystem abortó antes del SARIF: `remote Maven repository returned 429 Too Many Requests`, `spring-framework-bom-7.0.7.pom`, `Retry-After:1800`. No es una CVE ni un fallo de ArchUnit. El job de imagen y ArchUnit sí se ejecutaron.
+
+Cambio propuesto en este PR: `actions/setup-java@v6` con `cache:maven` y Maven `dependency:go-offline dependency:resolve` previo al escaneo filesystem. Trivy reutiliza `~/.m2` y reduce peticiones remotas. Fuente: https://trivy.dev/docs/dev/guide/references/troubleshooting/ .
+
+Esta mitigación **requiere nuevo run** y puede seguir fallando si Maven Central limita IP o faltan POMs en caché. No usar `--offline-scan` como forma de presentar un PASS: Trivy advierte que puede omitir transitivas no descargadas. Tampoco excluir `pom.xml` para maquillar resultados. El SARIF de FS debe existir y analizarse para cerrar.

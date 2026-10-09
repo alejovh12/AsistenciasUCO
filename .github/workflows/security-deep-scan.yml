@@ -56,6 +56,21 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v7
+      # Trivy resolves transitive Maven POMs; an empty ~/.m2 may exhaust
+      # Maven Central rate limits (HTTP 429). Resolve+cache before filesystem scan.
+      # Do not switch to --offline-scan: missing POMs would silently reduce coverage.
+      - name: Set up Java 25 and cache Maven
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - name: Warm Maven POM and dependency cache for Trivy
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x mvnw
+          ./mvnw -B -ntp --no-transfer-progress -DskipTests dependency:go-offline dependency:resolve
       - name: Scan repository with Trivy (inventory-only)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # signed v0.36.0, immutable SHA
         with:
