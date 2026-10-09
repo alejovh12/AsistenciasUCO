@@ -179,7 +179,13 @@ class CoreViewQueriesJpaParityIT {
                 INNER JOIN dbo.uv_usuario u ON e.idUsuario = u.id
                 """, Long.class);
         assertNotNull(total);
+        // A three-page integration test must not pass vacuously on an empty or
+        // tiny database. Populate an isolated SQL Server fixture (at least 11
+        // distinct students) before running -Pintegration.
+        assertTrue(total >= 11L,
+                "Paginacion SQL real requiere fixture aislada con >=11 estudiantes distintos; encontrados: " + total);
         final int pageSize = 5;
+        final List<UUID> observedIds = new java.util.ArrayList<>();
 
         for (int pageNumber : List.of(0, 1, 2)) {
             final List<List<Object>> expected = jdbc.query("""
@@ -200,9 +206,16 @@ class CoreViewQueriesJpaParityIT {
             assertEquals((int) Math.ceil((double) total / pageSize), actual.totalPages());
             assertEquals(pageNumber, actual.page());
             assertEquals(pageSize, actual.size());
+            final int expectedCount = (int) Math.min((long) pageSize, total - (long) pageNumber * pageSize);
+            assertEquals(expectedCount, expected.size(), "Pagina SQL inesperada: " + pageNumber);
+            assertEquals(expectedCount, actual.items().size(), "Pagina JPA incompleta: " + pageNumber);
             assertEquals(expected, actual.items().stream()
                     .map(CoreViewQueriesJpaParityIT::studentJpa).toList());
+            actual.items().forEach(item -> observedIds.add(item.id()));
         }
+        assertEquals(Math.min(total.longValue(), 3L * pageSize), observedIds.size());
+        assertEquals(observedIds.size(), observedIds.stream().distinct().count(),
+                "Una identidad de estudiante aparece en paginas diferentes.");
     }
 
     @Test
