@@ -26,6 +26,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asist
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.request.RegistrarAsistenciasSesionRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.request.RegistroAsistenciaRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.DocentePortalController;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.estudiante.EstudianteController;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo.GrupoController;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesion.SesionController;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesion.request.ActualizarSesionRequest;
@@ -94,7 +95,7 @@ class OpenApiGoldenPathConformanceTest {
     }
 
     @Test
-    void specContainsExactlyTheFrozenGoldenPathControllerMappings() throws ReflectiveOperationException {
+    void specContainsExactlyTheFrozenControllerMappings() throws ReflectiveOperationException {
         final Set<OperationKey> controllerMappings = new java.util.LinkedHashSet<>();
         addMapping(controllerMappings, DocentePortalController.class, "consultarHorarios");
         addMapping(controllerMappings, SesionController.class, "consultarSesionesPorGrupo", UUID.class);
@@ -105,6 +106,10 @@ class OpenApiGoldenPathConformanceTest {
         addMapping(controllerMappings, SesionController.class, "crearSesion", CrearSesionRequest.class);
         addMapping(controllerMappings, SesionController.class, "actualizarSesion", UUID.class, ActualizarSesionRequest.class);
         addMapping(controllerMappings, SesionController.class, "actualizarSesionLegacy", UUID.class, ActualizarSesionRequest.class);
+        // MAINT-001 contract-first: directorio paginado publicado fuera del set Golden Path.
+        addMapping(controllerMappings, EstudianteController.class, "consultarEstudiantes",
+                UUID.class, Integer.class, String.class, String.class, UUID.class, UUID.class, UUID.class,
+                UUID.class, Boolean.class, Integer.class, Integer.class);
 
         final Set<OperationKey> specificationMappings = new java.util.LinkedHashSet<>();
         OPEN_API.getPaths().forEach((path, item) -> item.readOperationsMap()
@@ -112,8 +117,8 @@ class OpenApiGoldenPathConformanceTest {
                         new OperationKey(path, HttpMethod.valueOf(method.name())))));
 
         assertEquals(controllerMappings, specificationMappings);
-        assertEquals(9, specificationMappings.size());
-        assertEquals(Map.of(HttpMethod.GET, 5L, HttpMethod.POST, 2L, HttpMethod.PUT, 1L, HttpMethod.PATCH, 1L),
+        assertEquals(10, specificationMappings.size());
+        assertEquals(Map.of(HttpMethod.GET, 6L, HttpMethod.POST, 2L, HttpMethod.PUT, 1L, HttpMethod.PATCH, 1L),
                 specificationMappings.stream().collect(java.util.stream.Collectors.groupingBy(
                         OperationKey::method, java.util.stream.Collectors.counting())));
     }
