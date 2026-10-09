@@ -65,3 +65,7 @@ READY: inventario/análisis. Implementación: NOT_READY hasta tests y autoridad 
 ## MAINT-01B — referencia Arquisoft y vistas SQL (2026-10-09)
 
 Estudio documentado: [PAGINATION_REFERENCE_ANALYSIS](PAGINATION_REFERENCE_ANALYSIS.md). La arquitectura actual sí pagina mediante JPA sobre `dbo.uv_estudiante_identidad` y filtra con EXISTS contra `dbo.uv_estudiante`. Mantener vistas existentes, no copiar `@Subselect` PostgreSQL ni agregar `Pageable` a Application solo por imitación. Actualizar la validación HTTP combinada page*size, caso SQL Server IT para páginas 0/1/2 y guía de fixtures >10. PR #17 SEC-002 fusionado `bfc4fd3`; PR #18 sincroniza esa base conservando cambios. GREEN nuevo SHA: pendiente.
+
+## MAINT-01C — contrato OpenAPI del directorio paginado (2026-10-09)
+
+Autorización: solicitud explícita del usuario (Fase 1 backend, 2026-10-09) de publicar `GET /api/v1/estudiantes` en el OpenAPI canónico mediante microfase contract-first, sin alterar endpoints ni esquema DB. Clase de cambio: `CONTRACT_PUBLICATION_OF_AS_IS`. Rutas permitidas: `docs/contracts/openapi/**`, `docs/contracts/OPENAPI_STANDARD.md`, `src/test/java/**/openapi/**`, `infra/keycloak/**` (seed E2E opcional) y documentación del work item. Prohibido: `src/main/**`, SQL, `pom.xml`. Secuencia RED → contrato → validación registrada en [VALIDATION](VALIDATION.md). Rollback: revert de `d0468e3`, `1c96162` y `e7803ca` (el contrato vuelve a 9 operaciones sin afectar runtime).
