@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.6</version>
+        <version>4.0.8</version>
         <relativePath/>
     </parent>
     <groupId>co.edu.uco.asistenciasuco</groupId>
@@ -28,6 +28,8 @@
     </scm>
     <properties>
         <java.version>25</java.version>
+        <!-- Trivy SEC-002: align ALL embedded Tomcat modules on the patched 11.0.x line. -->
+        <tomcat.version>11.0.26</tomcat.version>
         <jacoco.version>0.8.15</jacoco.version>
         <swagger-parser.version>2.1.46</swagger-parser.version>
         <swagger-ui.version>5.32.15</swagger-ui.version>
