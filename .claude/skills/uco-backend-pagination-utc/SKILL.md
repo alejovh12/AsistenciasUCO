@@ -4,7 +4,7 @@ description: Workflow for SQL-view paging and UTC session contract validation ag
 ---
 
 # Paginación por vistas + UTC: skill de integración real
-1. Source truth DB en `johnjduque/gestion-asistencia-db`; no simular proveedor real con mocks para cierre E2E. 
+1. Source truth DB en `johnjduque/gestion-asistencia-db`; no simular proveedor real con mocks para cierre E2E.
 2. Query estudiantes identidad 1:1 desde `uv_estudiante_identidad`, filtros `EXISTS uv_estudiante`, `COUNT`, `ORDER BY` estable, `OFFSET/FETCH` ejecutado en SQL Server.
 3. Datos: fixture controlado >=11, multigrupo; no ejecutar DML en producción. Validar 3 páginas, resultados, conteo, RBAC, negativos, overflows y ausencia de duplicados.
 4. SQL `Sesion.datetime2` = UTC por contrato, no contiene offset. En API legacy v1 `LocalDateTime` sin offset => ambigüedad; **no reinterpretar** sin ADR. Target v2 explicit RFC3339 offset + respuesta Z, sin reescritura de históricos.
