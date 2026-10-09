@@ -22,6 +22,11 @@ final class DbFailureClassifier {
 
     private static final String OPERATION_ASIGNAR_DOCENTE = "asignarDocenteAGrupo";
     private static final String OPERATION_REGISTRAR_ESTUDIANTE = "registrarEstudianteEnGrupo";
+    // Operaciones reales de los repositories JPA (OP_* en UsuarioJpaRepository / AsistenciaJpaRepository).
+    private static final String OPERATION_CREAR_USUARIO = "crearUsuario";
+    private static final String OPERATION_SINCRONIZAR_USUARIO = "sincronizarUsuario";
+    private static final String OPERATION_REGISTRAR_ASISTENCIA_AUTONOMA = "registrarAsistenciaAutonoma";
+    private static final String OPERATION_RESOLVER_SOLICITUD_REVISION = "resolverSolicitudRevisionAsistencia";
 
     private DbFailureClassifier() {
     }
@@ -29,7 +34,7 @@ final class DbFailureClassifier {
     static ErrorDefinition classify(final String userMessage, final String technicalMessage, final String operation) {
         final var formalError = DbTechnicalError.parse(technicalMessage);
         if (formalError.isPresent()) {
-            return classifyDbCode(formalError.get().codigo());
+            return classifyDbCode(formalError.get().codigo(), operation);
         }
         if (DbTechnicalError.hasDbCodeMarker(technicalMessage)) {
             return DatabaseErrorCode.ERR_DB_UNCLASSIFIED;
@@ -37,19 +42,59 @@ final class DbFailureClassifier {
         return classifyLegacy(userMessage, technicalMessage, operation);
     }
 
-    private static ErrorDefinition classifyDbCode(final String code) {
+    private static ErrorDefinition classifyDbCode(final String code, final String operation) {
         return switch (code) {
             case "SEC_001", "SEC_002", "EST_004" -> SecurityErrorCode.FORBIDDEN;
-            case "ATT_001", "ATT_002", "ATT_003", "GEN_002", "RC_001", "SES_004" ->
-                    CommonErrorCode.VALIDATION_ERROR;
-            case "SES_001" -> CommonErrorCode.RESOURCE_NOT_FOUND;
+            case "ATT_001", "ATT_002", "ATT_003", "GEN_002", "RC_001", "SES_004", "PLA_001",
+                 "VAL_001", "VAL_002", "VAL_003", "VAL_004", "VAL_005" -> CommonErrorCode.VALIDATION_ERROR;
+            case "VAL_006" -> CommonErrorCode.CONFLICT;
+            case "VAL_007" -> classifyVal007(operation);
+            case "ERR_UNICIDAD_DOCUMENTO" -> UsuarioErrorCode.ERR_UNICIDAD_DOCUMENTO;
+            case "USU_002" -> UsuarioErrorCode.ERR_USUARIO_INACTIVO;
+            case "HOR_001" -> GrupoErrorCode.ERR_CRUCE_HORARIO_ESTUDIANTE;
+            case "SES_001", "PROG_001", "PER_001" -> CommonErrorCode.RESOURCE_NOT_FOUND;
+            // USU_001: validacion de usuario inexistente por id, emitida por los SP publicos que la exigen.
+            case "USU_001" -> UsuarioErrorCode.ERR_USUARIO_NO_EXISTE;
+            // IDN_001: usp_registrar_estudiante_en_grupo (conflicto de identidad correo/documento).
+            case "IDN_001" -> UsuarioErrorCode.ERR_IDENTIDAD_USUARIO_CONFLICTO;
+            // GEN_001: codigo GENERICO de existencia (tipo de identificacion, facultad, perfil, periodo,
+            // grupo, parametros...). No se puede inferir la entidad: queda tecnico/no clasificado
+            // hasta que la DB publique codigos especificos. Cae por el default de este switch.
+            // EST_001: usp_registrar_estudiante_en_grupo (estudiante no resoluble tras sincronizar usuario).
+            case "EST_001" -> EstudianteErrorCode.ERR_ESTUDIANTE_NO_EXISTE;
             case "ERR_GRUPO_NO_EXISTE" -> GrupoErrorCode.ERR_GRUPO_NO_EXISTE;
             case "ERR_CUPO_SUPERADO" -> GrupoErrorCode.ERR_CUPO_SUPERADO;
             case "ERR_MATRICULA_DUPLICADA" -> GrupoErrorCode.ERR_MATRICULA_DUPLICADA;
             case "ERR_GRUPO_NO_HABILITADO" -> GrupoErrorCode.ERR_GRUPO_NO_HABILITADO;
+            // No puede reducirse la capacidad del grupo por debajo de su ocupacion actual.
+            case "ERR_CUPO_INFERIOR_OCUPACION" -> CommonErrorCode.CONFLICT;
+            // Combinacion Programa/Facultad invalida enviada a la operacion.
+            case "ERR_PROGRAMA_FACULTAD_INCONSISTENTE" -> CommonErrorCode.VALIDATION_ERROR;
             case "SES_003" -> DatabaseErrorCode.FEATURE_UNAVAILABLE;
+            // CAT_001: inconsistencia interna de catalogo DB (p. ej. dbo.Estado sin un codigo esperado).
+            // Fallo tecnico conocido, no se reclasifica como 4xx.
+            case "CAT_001" -> DatabaseErrorCode.ERR_DB_CATALOG_INCONSISTENT;
+            // SYS_001: catch-all tecnico de los SP publicos. Caso explicito para que quede clasificado
+            // (no caido por el default) aunque su tratamiento sea el mismo que lo no clasificado.
+            case "SYS_001" -> DatabaseErrorCode.ERR_DB_UNCLASSIFIED;
             default -> DatabaseErrorCode.ERR_DB_UNCLASSIFIED;
         };
+    }
+
+    /**
+     * VAL_007 no tiene semantica unica en la DB: depende del SP publico que lo emite.
+     */
+    private static ErrorDefinition classifyVal007(final String operation) {
+        if (OPERATION_CREAR_USUARIO.equals(operation) || OPERATION_SINCRONIZAR_USUARIO.equals(operation)) {
+            return UsuarioErrorCode.ERR_PASSWORD_POLITICA_INVALIDA;
+        }
+        if (OPERATION_REGISTRAR_ASISTENCIA_AUTONOMA.equals(operation)) {
+            return CommonErrorCode.VALIDATION_ERROR;
+        }
+        if (OPERATION_RESOLVER_SOLICITUD_REVISION.equals(operation)) {
+            return SecurityErrorCode.FORBIDDEN;
+        }
+        return DatabaseErrorCode.ERR_DB_UNCLASSIFIED;
     }
 
     private static ErrorDefinition classifyLegacy(

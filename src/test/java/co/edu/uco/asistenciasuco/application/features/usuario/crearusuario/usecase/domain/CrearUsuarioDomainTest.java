@@ -15,6 +15,7 @@ class CrearUsuarioDomainTest {
     private static final UUID TIPO_IDENTIFICACION = UUID.fromString("13641bab-e3cd-485c-b275-47e7b731e18c");
     private static final UUID EMPTY_UUID = new UUID(0L, 0L);
     private static final UUID GRUPO = UUID.fromString("23641bab-e3cd-485c-b275-47e7b731e18c");
+    private static final UUID USUARIO_EJECUTOR = UUID.fromString("a3641bab-e3cd-485c-b275-47e7b731e18c");
 
     @Test
     void crear_normaliza_campos_de_texto_y_correo_igual_que_registrar_estudiante() {
@@ -37,7 +38,8 @@ class CrearUsuarioDomainTest {
                 "  maria ",
                 "  ANA.PEREZ@UCO.EDU.CO ",
                 "Clave123!",
-                GRUPO
+                GRUPO,
+                USUARIO_EJECUTOR
         );
 
         assertEquals("PEREZ", domain.getPrimerApellido());
@@ -248,7 +250,8 @@ class CrearUsuarioDomainTest {
                         segundoNombre,
                         correo,
                         password,
-                        GRUPO
+                        GRUPO,
+                        USUARIO_EJECUTOR
                 )
         );
 

@@ -16,10 +16,12 @@ public final class RegistrarEstudianteHttpMapper {
 
     public static RegistrarEstudianteDTO toApplicationDTO(
             final UUID grupoId,
-            final RegistrarEstudianteRequest request
+            final RegistrarEstudianteRequest request,
+            final UUID usuarioEjecutor
     ) {
         Objects.requireNonNull(grupoId, "El identificador del grupo es obligatorio para realizar el mapping.");
         Objects.requireNonNull(request, "El request HTTP para registrar estudiante en grupo es obligatorio.");
+        Objects.requireNonNull(usuarioEjecutor, "El usuario ejecutor autenticado es obligatorio para realizar el mapping.");
         return new RegistrarEstudianteDTO(
                 request.getTipoIdentificacionId(),
                 request.getNumeroIdentificacion(),
@@ -29,7 +31,8 @@ public final class RegistrarEstudianteHttpMapper {
                 request.getSegundoNombre(),
                 request.getCorreo(),
                 request.getPassword(),
-                grupoId
+                grupoId,
+                usuarioEjecutor
         );
     }
 }

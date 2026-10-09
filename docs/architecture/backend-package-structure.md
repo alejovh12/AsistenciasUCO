@@ -47,11 +47,12 @@ application/secondaryports/repository/
     projection/
 
 infrastructure/adapter/secondary/persistence/sqlserver/
-    core/           (*RepositoryPort SQL Server: asistencia, docente, estudiante, grupo, sesion,
-                     tipoidentificacion, usuario)
-    academic/       (adapters de solo-lectura sobre el catálogo académico)
-    reporting/      (modelos de lectura especializados, p.ej. ReporteAsistenciaSqlServerAdapter)
-    authorization/  (InstitutionalScopeSqlServerAdapter)
+    jpa/
+        repository/ (@Repository XxxJpaRepository: implementan directamente cada Port; reciben EntityManager)
+        entity/     (@Entity @Immutable de vistas y tablas; nunca expuestas por HTTP)
+        projection/ (QueryRow solo para resultados compuestos JOIN/multi-entidad)
+        mapper/     (proyecciones JPA -> proyecciones de Port)
+        converter/
     support/
         error/      (traducción de excepciones SQL a errores de dominio)
         mapping/    (row mappers)

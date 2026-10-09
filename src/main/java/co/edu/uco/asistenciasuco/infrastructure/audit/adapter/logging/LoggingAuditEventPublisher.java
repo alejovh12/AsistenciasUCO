@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.audit.adapter.logging;
 
 import co.edu.uco.asistenciasuco.crosscutting.sanitization.SensitiveDataSanitizer;
-import co.edu.uco.asistenciasuco.infrastructure.audit.adapter.sqlserver.AuditEventJdbcRepository;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository.AuditEventJpaRepository;
 import co.edu.uco.asistenciasuco.infrastructure.audit.model.AuditEvent;
 import co.edu.uco.asistenciasuco.infrastructure.audit.contract.AuditEventPublisher;
 import org.slf4j.Logger;
@@ -11,9 +11,9 @@ import org.springframework.beans.factory.ObjectProvider;
 public final class LoggingAuditEventPublisher implements AuditEventPublisher {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggingAuditEventPublisher.class);
-    private final AuditEventJdbcRepository repository;
+    private final AuditEventJpaRepository repository;
 
-    public LoggingAuditEventPublisher(final ObjectProvider<AuditEventJdbcRepository> repositoryProvider) {
+    public LoggingAuditEventPublisher(final ObjectProvider<AuditEventJpaRepository> repositoryProvider) {
         this.repository = repositoryProvider.getIfAvailable();
     }
 

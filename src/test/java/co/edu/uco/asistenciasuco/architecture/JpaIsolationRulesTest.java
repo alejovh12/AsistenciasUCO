@@ -47,11 +47,33 @@ class JpaIsolationRulesTest {
     }
 
     @Test
-    void entidades_jpa_solo_viven_en_infrastructure_persistence_jpa_y_son_inmutables() {
+    void entidades_jpa_solo_viven_en_infrastructure_persistence_jpa() {
         classes()
                 .that().areAnnotatedWith(jakarta.persistence.Entity.class)
                 .should().resideInAPackage("..infrastructure.adapter.secondary.persistence.sqlserver.jpa..")
-                .andShould().beAnnotatedWith(org.hibernate.annotations.Immutable.class)
+                .allowEmptyShould(true)
+                .check(importedClasses());
+    }
+
+    @Test
+    void entidades_de_vista_uv_son_inmutables() {
+        // Convencion estructural: toda entidad de vista sigue el nombre Uv*Entity (solo lectura).
+        classes()
+                .that().areAnnotatedWith(jakarta.persistence.Entity.class)
+                .and().haveSimpleNameStartingWith("Uv")
+                .should().beAnnotatedWith(org.hibernate.annotations.Immutable.class)
+                .allowEmptyShould(true)
+                .check(importedClasses());
+    }
+
+    @Test
+    void entidades_de_tabla_de_escritura_no_son_inmutables() {
+        // Convencion estructural: las entidades que no son vistas Uv* son tablas de escritura
+        // (p.ej. AuditEventEntity sobre dbo.AuditoriaEvento, TD-010 OPTION A) y NO llevan @Immutable.
+        classes()
+                .that().areAnnotatedWith(jakarta.persistence.Entity.class)
+                .and().haveSimpleNameNotStartingWith("Uv")
+                .should().notBeAnnotatedWith(org.hibernate.annotations.Immutable.class)
                 .allowEmptyShould(true)
                 .check(importedClasses());
     }

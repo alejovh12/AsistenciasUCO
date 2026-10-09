@@ -8,19 +8,37 @@ last-reviewed: 2026-09-26
 
 # Estándar de migración JDBC -> JPA
 
-Estrategia aprobada en [ADR-002](../adr/ADR-002-jpa-incremental.md). No ejecutada; su implementación pertenece a LB-002, después de cerrar el contrato de persistencia del Golden Path (LB-001A).
+## 0. Estado de la estrategia: AS-IS histórico/piloto vs TARGET actual
+
+| Ámbito | Documento | Vigencia |
+|---|---|---|
+| **AS-IS histórico / piloto** (JDBC + JPA coexistiendo, fallback JDBC, migración incremental) | [ADR-002](../adr/ADR-002-jpa-incremental.md), secciones 2–4 y 6 de este documento | Evidencia de LB-002 (CLOSED / FROZEN). No se reescribe. |
+| **TARGET actual: JPA-only** | [ADR-003](../adr/ADR-003-jpa-only-persistence.md) (`SUPERSEDES_TARGET_OF: ADR-002`), [LB-008](../work-items/LB-008-jpa-only-persistence-migration/PLAN.md) | Vigente. Reemplaza la convivencia permanente y el fallback JDBC como objetivo. |
+
+Las reglas de convivencia, selectores, fallback y «JDBC aún no retirado» de este documento describen el piloto histórico. No son el TARGET. El TARGET actual es:
+
+- JDBC directo fuera de `src/main` (`DIRECT_JDBC_IN_SRC_MAIN = 0`); el driver `mssql-jdbc` queda como transporte interno de Hibernate.
+- Commands de SP, patrón único TARGET: `EntityManager` + `createNativeQuery("EXEC …")` + `setParameter(...)` + `getResultList()` + `ProcedureResultMapper` + `ProcedureResultValidator`.
+- `StoredProcedureQuery` fue utilizado en el piloto LB-002. Es historia, no un segundo patrón regular nuevo; solo puede reconsiderarse por bloqueo técnico demostrado y nueva decisión explícita.
+- Vistas: `@Entity @Immutable` solo en Infrastructure, consultadas con `EntityManager`.
+- Sin selectores `jdbc|jpa`, sin hybrid adapters, sin fallback JDBC productivo.
+- Configuración JPA estándar de Spring Boot, `open-in-view=false`, `ddl-auto` `none` o `validate`.
+
+Mientras LB-008 no esté cerrada, el código real no está terminado: Asistencia ya es JPA-only (commands y queries, sin selectores ni híbrido) y el bootstrap JPA es el estándar de Spring Boot (JPA-02A); el resto del JDBC directo (44 archivos) sigue pendiente de su microfase.
+
+Estrategia original del piloto aprobada en [ADR-002](../adr/ADR-002-jpa-incremental.md). No ejecutada en su totalidad; su implementación pertenece a LB-002, después de cerrar el contrato de persistencia del Golden Path (LB-001A).
 
 ## 1. Objetivo
 
 Migrar persistencia sin reescribir reglas de negocio ni contaminar Clean Architecture. La primera
 vertical es el Golden Path de asistencia.
 
-## 2. Estado actual
+## 2. Estado histórico auditado y AS-IS heredado
 
 - Spring Boot 4.x / Java 25.
 - Spring MVC + virtual threads.
 - `spring-boot-starter-jdbc` activo.
-- No hay `@Entity`, `JpaRepository` ni `EntityManager` en el estado auditado.
+- El estado auditado original no tenía `@Entity`, `JpaRepository` ni `EntityManager`. LB-002 incorporó posteriormente entidades JPA de Asistencia, `EntityManager` y un command piloto con `StoredProcedureQuery`; LB-008 debe normalizar ese piloto al TARGET actual.
 - Los puertos de Application ya aíslan buena parte del acceso a datos.
 
 ## 3. Reglas obligatorias
@@ -71,11 +89,13 @@ spring.jpa.open-in-view=false
 
 ### 3.4 Commands
 
-Un command ya encapsulado y validado en un stored procedure NO se reescribe en Java durante el
-piloto. Se puede invocar desde Infrastructure usando Spring Data `@Procedure` cuando la firma es
-simple o `EntityManager`/`StoredProcedureQuery` cuando se necesita control explícito.
+Un command ya encapsulado y validado en un stored procedure NO se reescribe en Java. En LB-008 se
+invoca desde Infrastructure con el único patrón TARGET: `EntityManager`,
+`createNativeQuery("EXEC dbo.usp_xxx …")`, binding nombrado, `getResultList()`,
+`ProcedureResultMapper` y `ProcedureResultValidator`. No se permite SQL/SP en el Use Case.
 
-La elección debe justificarse en el plan. No se permite SQL/SP en el Use Case.
+`StoredProcedureQuery` pertenece al piloto histórico LB-002. No se incorpora en migraciones nuevas
+ni se conserva en una capacidad cerrada, salvo bloqueo técnico demostrado y nueva decisión explícita.
 
 ### 3.5 Queries
 
@@ -136,10 +156,14 @@ Comparar:
 
 ### Paso E — Retiro JDBC de la vertical
 
-Solo después de paridad y gates verdes. El resto del backend puede seguir en JDBC mientras se migra
-vertical por vertical.
+Solo después de paridad y gates verdes. El resto del backend NO puede permanecer en JDBC por estar fuera
+del Golden Path: el Golden Path prioriza y valida, pero toda persistencia productiva converge a JPA
+(LB-008, ADR-003). Lo no migrado todavía tiene microfase asignada en
+[JDBC_RESIDUAL_INVENTORY](../work-items/LB-008-jpa-only-persistence-migration/JDBC_RESIDUAL_INVENTORY.md).
 
-Commands y queries pueden migrar y seleccionarse por separado. El PLAN debe conservar un selector/rollback practicable al provider JDBC; no hay big bang ni retiro del baseline durante el piloto.
+En el piloto histórico LB-002, commands y queries pudieron seleccionarse por separado y el selector
+permitió rollback al provider JDBC. En LB-008 no se crean selectores ni fallback nuevos: el baseline
+JDBC solo permanece durante la comparación controlada y se retira de la capacidad al certificarla.
 
 ### Alcance del piloto de query (LB-002.0, [DECISION](../work-items/LB-002-jpa-incremental/LB-002.0-DECISION.md))
 
@@ -178,4 +202,16 @@ No crear un nuevo `shared:jpa` hasta tener al menos dos consumidores reales de u
 
 ## Evidencia AS-IS y límites
 
-[pom.xml](../../pom.xml) declara JDBC/SQL Server, Java 25, Spring Boot 4.0.6 y, desde LB-002.1, `spring-boot-starter-data-jpa` (Hibernate 7.2.12.Final administrado por Boot) usado solo por el piloto de query de asistencia (selector `app.adapters.persistence.asistencia-query-provider`; desde LB-002.1B `jpa` en perfiles `local`/`dev` y `jdbc` sin perfil (base/prod-like), rollback por variable de entorno; ver [LB-002.1-DECISION](../work-items/LB-002-jpa-incremental/LB-002.1-DECISION.md)). [Inventario](../integration/repository-mock-inventory.md) y [Golden Path](../baseline/GOLDEN_PATH_ASISTENCIA.md) enlazan puertos/adapters reales. Las firmas SQL consumidas no prueban schema/SP liberados; sin ese contrato: `BLOCKED_BY_MISSING_EVIDENCE`. Coexistencia temporal significa una implementación seleccionada por operación/vertical, nunca dos escrituras productivas.
+[pom.xml](../../pom.xml) declara JDBC/SQL Server, Java 25, Spring Boot 4.0.6 y
+`spring-boot-starter-data-jpa` (Hibernate administrado por Boot). Desde JPA-02A el bootstrap es el
+estándar de Spring Boot, con un único `EntityManagerFactory` y `JpaTransactionManager`; Asistencia
+usa JPA-only en commands y queries. JDBC directo permanece temporalmente en 44 archivos de otras
+verticales, todos asignados a una microfase de LB-008. [Inventario](../integration/repository-mock-inventory.md)
+y [Golden Path](../baseline/GOLDEN_PATH_ASISTENCIA.md) enlazan puertos/adapters reales. Las firmas SQL
+consumidas no prueban por sí solas el schema/SP liberado; sin ese contrato se aplica
+`BLOCKED_BY_MISSING_EVIDENCE` a la capacidad concreta.
+
+`OUTSIDE_GOLDEN_PATH != OUTSIDE_JPA_MIGRATION`: el Golden Path determina prioridad, evidencia y
+orden, no qué código puede permanecer en JDBC. Todo acceso JDBC productivo debe migrar a JPA antes
+del cierre de LB-008. La coexistencia solo es temporal durante la comparación controlada de una
+microfase y nunca implica dual-write productivo.

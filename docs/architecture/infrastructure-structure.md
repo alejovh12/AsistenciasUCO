@@ -37,11 +37,9 @@ infrastructure/
           validation/                # AudienceValidator, RequiredUuidClaimValidator
     secondary/                       # salidas del backend, agrupadas por capability -> provider
       persistence/sqlserver/
-        core/                        # *RepositoryPort sobre SQL Server (asistencia, docente,
-                                      # estudiante, grupo, sesion, tipoidentificacion, usuario)
-        academic/                    # adapters de solo-lectura sobre catálogo académico
-        reporting/                   # modelos de lectura especializados (ReporteAsistencia...)
-        authorization/                # InstitutionalScopeSqlServerAdapter
+        jpa/                         # @Repository XxxJpaRepository: implementan directamente cada Port
+                                      # (EntityManager; SP vía createNativeQuery("EXEC ..."), vistas vía JPQL)
+          repository/ entity/ projection/ mapper/ converter/
         support/
           error/                     # DbExceptionTranslator, DbFailureClassifier, ...
           mapping/                   # row mappers, JdbcValueMapper
@@ -143,7 +141,7 @@ Dos categorías de interfaz, deliberadamente distintas:
 | Sufijo | Significado | Uso |
 |---|---|---|
 | `Port` | Contrato de Application | `AsistenciaRepositoryPort`, `IdentityProviderPort` |
-| `Adapter` | Implementación técnica concreta de un Port o contrato interno | `AsistenciaRepositorySqlServerAdapter`, `KeycloakIdentityProviderAdapter`, `SpringPasswordEncoderAdapter`. **Nunca** como sufijo de interfaz (ver `InfrastructureStructureRulesTest.ninguna_interfaz_productiva_termina_en_adapter`) |
+| `Adapter` | Implementación técnica concreta de un Port o contrato interno | `AsistenciaJpaRepository`, `KeycloakIdentityProviderAdapter`, `SpringPasswordEncoderAdapter`. **Nunca** como sufijo de interfaz (ver `InfrastructureStructureRulesTest.ninguna_interfaz_productiva_termina_en_adapter`) |
 | `Gateway` | Frontera interna entre un primary adapter y el resto de Infrastructure | `RealtimeStreamGateway` |
 | `Resolver` | Resuelve contexto/información a partir del entorno de ejecución | `AuthenticatedUserResolver`, `SecurityContextAuthenticatedUserResolver`, `RequestActorResolver` |
 | `Extractor` | Extrae/interpreta datos de una estructura externa | `JwtClaimsExtractor`, `KeycloakJwtClaimsExtractor` |
@@ -210,13 +208,15 @@ cambia únicamente el exporter/endpoint OTLP en `application.yml` y la configura
 
 ## 9. Composition Root
 
-`infrastructure/config/adapters/**` es el único lugar donde se decide, en el arranque de Spring,
+`infrastructure/config/adapters/**` es el lugar donde se decide, en el arranque de Spring,
 qué implementación concreta usar por capability, vía `app.adapters.<capability>.provider`
 (`ConditionalOnProperty`, nunca `@Profile` — un profile mezcla entorno con tecnología). Los
-adapters seleccionables (`*SqlServerAdapter`, `KeycloakIdentityProviderAdapter`,
-`ReactorRealtimeAdapter`, `AuditEventJdbcRepository`) **no llevan** `@Component`/`@Service`/`@Repository`:
-solo se instancian si el Composition Root los registra explícitamente
-(`AdapterCompositionRootRulesTest` lo verifica). `infrastructure/config/wiring/**` es el
+adapters seleccionables no persistentes (`KeycloakIdentityProviderAdapter`,
+`ReactorRealtimeAdapter`, `AuditEventJdbcRepository`) no se auto-registran: el Composition Root los registra
+explícitamente. **Excepción normativa de persistencia JPA (ADR-004):** un
+`@Repository XxxJpaRepository` de Infrastructure implementa directamente los secondary ports y puede usar
+`@ConditionalOnProperty` para conservar la selección del provider; no requiere un `@Bean` manual.
+`infrastructure/config/wiring/**` es el
 Composition Root de features: ensambla `UseCase` + `Interactor` a partir de Application Ports,
 sin conocer ninguna tecnología (no importa `infrastructure.adapter.secondary..`).
 
@@ -250,10 +250,10 @@ Consultar el [ledger único](../baseline/TECHNICAL_DEBT.md): auditoría DML TD-0
 
 ## 11. Ejemplos correctos e incorrectos
 
-**Correcto**: `infrastructure.adapter.secondary.persistence.sqlserver.core.AsistenciaRepositorySqlServerAdapter`
-implementa `application.secondaryports.repository.AsistenciaRepositoryPort`; se registra en
-`config.adapters.persistence.sqlserver.SqlServerCoreRepositoryAdapterConfiguration` condicionado
-a `app.adapters.persistence.provider=sqlserver`; no lleva `@Repository`.
+**Correcto**: `infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository.AsistenciaJpaRepository`
+implementa `application.secondaryports.repository.AsistenciaRepositoryPort`, lleva `@Repository`, recibe
+`EntityManager` por constructor y se descubre mediante component scanning estándar. La condición del provider,
+cuando aplique, vive declarativamente en el repository; no existe bean manual equivalente.
 
 **Incorrecto** (lo que este refactor eliminó): un paquete `infrastructure.adapter.secondary.repository.adapter`
 que mezclaba el concepto "repository" (Port de Application) con el rol "adapter" (implementación),

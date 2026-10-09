@@ -2,7 +2,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.DatabaseOperationException;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.mapping.JdbcValueMapper;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.mapping.JdbcBaselineValueMapper;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,7 +85,7 @@ final class SqlServerTestDiagnostics {
                 FROM dbo.uv_tipo_identificacion
                 ORDER BY tipoIdentificacion, id
                 """, (resultSet, rowNumber) -> new TipoIdentificacionProbeRow(
-                JdbcValueMapper.toUuid(resultSet.getObject("id")),
+                JdbcBaselineValueMapper.toUuid(resultSet.getObject("id")),
                 resultSet.getString("tipoIdentificacion"),
                 resultSet.getString("nombre")
         ));

@@ -51,7 +51,7 @@ class GrupoRepositoryMockAdapterTest {
     void registrarEstudianteEnGrupo_retorna_mensaje_fijo() {
         final RegistrarEstudianteRepositoryProjection resultado = adapter.registrarEstudianteEnGrupo(
                 new RegistrarEstudianteRepositoryDTO(UUID.randomUUID(), 123456789, "PEREZ", "GOMEZ",
-                        "ANA", "MARIA", "ana@uco.edu.co", "Clave123!", UUID.randomUUID()));
+                        "ANA", "MARIA", "ana@uco.edu.co", "Clave123!", UUID.randomUUID(), UUID.randomUUID()));
 
         assertEquals("Estudiante registrado correctamente.", resultado.getMensajeUsuario());
     }

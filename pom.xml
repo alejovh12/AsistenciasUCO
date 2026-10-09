@@ -54,23 +54,16 @@
             Reactor Core puro (NO spring-boot-starter-webflux): la vertical realtime/SSE se
             construye sobre Spring MVC + soporte reactivo nativo de RequestMappingHandlerAdapter
             (Flux<ServerSentEvent<T>> ya es manejado por spring-web/spring-webmvc sin necesidad
-            de WebFlux). El resto del backend sigue siendo Spring MVC + JDBC bloqueante. Version
+            de WebFlux). El resto del backend sigue siendo Spring MVC + JPA/Hibernate bloqueante. Version
             administrada por el reactor-bom que importa spring-boot-dependencies.
         -->
         <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-core</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-jdbc</artifactId>
-        </dependency>
         <!--
-            LB-002.1: JPA/Hibernate solo para el piloto de query de asistencia (Infrastructure).
-            La auto-configuracion JPA de Boot se excluye en AsistenciasUcoApplication; el
-            EntityManagerFactory se construye explicitamente en el Composition Root y solo cuando
-            app.adapters.persistence.asistencia-query-provider=jpa. La version de Hibernate la
-            administra Spring Boot.
+            LB-008: JPA/Hibernate es el target global de persistencia. JPA-02A usa el bootstrap
+            estandar de Spring Boot; la version de Hibernate la administra Spring Boot.
         -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -152,6 +145,27 @@
         <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>
             <artifactId>caffeine</artifactId>
+        </dependency>
+        <!--
+            LB-004B.2: MinIO Java SDK oficial, solo en Infrastructure (MinioFileStorageAdapter).
+            Application no conoce este tipo; ver docs/work-items/LB-004-stateless-serverless-readiness/MINIO_STORAGE_CONTRACT.md.
+        -->
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+            <version>9.0.3</version>
+        </dependency>
+        <!--
+            okhttp 5.x se reestructuro en modulos Kotlin Multiplatform: el artefacto
+            com.squareup.okhttp3:okhttp (declarado transitivamente por minio) ya no contiene las
+            clases JVM (p.ej. HttpUrl); estas viven en okhttp-jvm. Se fija explicitamente la misma
+            version que minio solicita para evitar un classpath mixto con la version mas vieja que
+            trae opentelemetry-exporter-sender-okhttp transitivamente.
+        -->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp-jvm</artifactId>
+            <version>5.3.2</version>
         </dependency>
     </dependencies>
 

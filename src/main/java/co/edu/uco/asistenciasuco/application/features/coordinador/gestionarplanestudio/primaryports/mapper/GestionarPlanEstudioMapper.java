@@ -18,6 +18,6 @@ public final class GestionarPlanEstudioMapper {
             throw new CrosscuttingException("El DTO para guardar plan de estudio es obligatorio.");
         }
 
-        return new PlanEstudioDomain(dto.idPlanEstudio(), dto.codigo(), dto.nombre(), dto.usuario());
+        return new PlanEstudioDomain(dto.idPlanEstudio(), dto.inp(), dto.usuario());
     }
 }

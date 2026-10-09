@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa;
+package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
@@ -41,7 +41,7 @@ import static org.mockito.Mockito.verify;
  *
  * <p>Usa la clase REAL {@link RegistrarAsistenciasSesionUseCaseImpl} (sin modificarla), construida
  * directamente con el {@link AsistenciaRepositoryPort} candidato JPA REAL resuelto por el Composition
- * Root ({@code asistencia-command-provider=jpa}) y los puertos reales de sesion/autorizacion, igual que
+ * Root (JPA-only, LB-008) y los puertos reales de sesion/autorizacion, igual que
  * otros ITs de este work item construyen manualmente el adapter JDBC baseline. Solo el
  * {@link RealtimePublisherPort} es un {@code Mockito.mock} de test puro (no un bean de Spring): sustituir
  * el bean real via {@code @MockitoBean} rompe el wiring del gateway SSE local, que reutiliza esa misma
@@ -51,10 +51,7 @@ import static org.mockito.Mockito.verify;
  * <p>CMD-RT-004 (E2E SSE/browser) NO se ejecuta en esta fase — pertenece a LB-002.2E.</p>
  */
 @Tag("integration")
-@SpringBootTest(properties = {
-        "app.adapters.persistence.asistencia-query-provider=jdbc",
-        "app.adapters.persistence.asistencia-command-provider=jpa"
-})
+@SpringBootTest
 @MockitoBean(types = JwtDecoder.class)
 class AsistenciaCommandRealtimeIT {
 

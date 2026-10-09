@@ -5,7 +5,6 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties({
-        PersistenceAdapterProperties.class,
         IdentityAdapterProperties.class,
         SecurityAdapterProperties.class,
         StorageAdapterProperties.class,

@@ -18,30 +18,26 @@ last-reviewed: 2026-09-29
 POST /api/v1/asistencias/lote
  → AsistenciaController → RegistrarAsistenciasSesionInputPort → Interactor → UseCase
  → SesionRepositoryPort (resuelve grupo) → InstitutionalScopePort (titularidad)
- → AsistenciaRepositoryPort → Composition Root (selectores independientes query/command)
-   → AsistenciaRepositoryHybridSqlServerAdapter
-       ├─ registrarAsistenciasSesion → JDBC (baseline) o JPA (AsistenciaJpaCommandPersistence →
-       │    EntityManager.createStoredProcedureQuery), según `asistencia-command-provider`
-       │    (`jdbc`|`jpa`, default `jdbc`; `jpa` en perfil `local` desde LB-002.2E)
+ → AsistenciaRepositoryPort → Composition Root (LB-008: JPA-only, sin selectores)
+   → AsistenciaJpaRepository (@Repository, EntityManager; implementa AsistenciaRepositoryPort)
+       ├─ registrarAsistenciasSesion → EntityManager.createNativeQuery("EXEC dbo.usp_registrar_asistencias_sesion …")
        │    → mismo SP dbo.usp_registrar_asistencias_sesion
-       └─ demás commands de Asistencia → siempre JDBC (AsistenciaRepositorySqlServerAdapter)
+       └─ registrarAsistenciaAutonoma / solicitarRevision / resolverSolicitud → la misma vía JPA
+            (createNativeQuery "EXEC" → ProcedureResultMapper → ProcedureResultValidator)
  → RealtimePublisherPort → ReactorRealtimeAdapter (local-sse)
  → RealtimeStreamGateway → GET /api/v1/realtime/stream?grupoId={UUID}
 
 GET /api/v1/grupos/{grupoId}/asistencias?sesionId={UUID}
  → AsistenciaQueryController → InputPort/UseCase → scope → AsistenciaRepositoryPort
-   → AsistenciaRepositoryHybridSqlServerAdapter → JDBC o JPA (AsistenciaJpaQueryPersistence),
-     según `asistencia-query-provider` (`jdbc`|`jpa`, default `jdbc`; `jpa` en `local`/`dev` desde
-     LB-002.1B)
+   → AsistenciaJpaRepository (JPQL sobre entidades de vista, JPA-only)
  → uv_detalle_asistencia + uv_asistencia + uv_estudiante_grupo
 ```
 
 El request por lote contiene `sesionId` y `registros[{estudianteId, estado}]`; retorna 201 con `ApiMessageResponse`. El usuario ejecutor viene del principal autenticado. El dominio Java admite `AN`, `SJC`, `EX`; esto no certifica el catálogo desplegado en DB. El adapter serializa `idEstudiante`/`estado` para el SP, con `idSesion`, `asistenciaJSON`, `idCorrelacion`, `idUsuarioEjecutor`; el mismo contrato de parámetros y el mismo SP se preservan sea JDBC o JPA el provider activo.
 
-`AsistenciaRepositoryPort` ya no implica JDBC únicamente: desde LB-002.1B (query) y LB-002.2E
-(command en `local`) el `AsistenciaRepositoryHybridSqlServerAdapter` puede resolver a JPA según el
-selector correspondiente, sin cambiar el puerto, el contrato HTTP, el SP ni la DB. JDBC permanece
-disponible como fallback explícito para ambos selectores (`jdbc`, default, fail-closed). Resumen de
+Desde LB-008 (JPA-01 COMMANDS) `AsistenciaRepositoryPort` se resuelve **exclusivamente** a
+`AsistenciaJpaRepository`: commands y queries usan JPA/Hibernate, sin selectores, sin
+adapter híbrido y sin fallback JDBC. El puerto, el contrato HTTP, los SP y la DB no cambian. Resumen de
 evidencia: [LB-002.2C](../work-items/LB-002-jpa-incremental/LB-002.2-jpa-command-pilot/CLOSURE.md)
 (implementación + quality gates), [LB-002.2D](../work-items/LB-002-jpa-incremental/LB-002.2-jpa-command-pilot/LB-002.2D-CLOSURE.md)
 (paridad JDBC↔JPA en SQL Server real) y [LB-002.2E](../work-items/LB-002-jpa-incremental/LB-002.2-jpa-command-pilot/LB-002.2E-CLOSURE.md)
@@ -66,10 +62,7 @@ Esto prueba existencia estática, no ejecución E2E ni commit real en el ambient
 | Query HTTP | [Query HTTP](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/asistencia/AsistenciaQueryController.java) |
 | Use case query | [Use case query](../../src/main/java/co/edu/uco/asistenciasuco/application/features/asistencia/consultarasistenciasporgrupo/usecase/impl/ConsultarAsistenciasPorGrupoUseCaseImpl.java) |
 | Port | [Port](../../src/main/java/co/edu/uco/asistenciasuco/application/secondaryports/repository/AsistenciaRepositoryPort.java) |
-| Hybrid adapter (selectores query/command) | [Hybrid adapter](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/secondary/persistence/sqlserver/core/AsistenciaRepositoryHybridSqlServerAdapter.java) |
-| Adapter JDBC (baseline, demás commands) | [Adapter JDBC](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/secondary/persistence/sqlserver/core/AsistenciaRepositorySqlServerAdapter.java) |
-| Command JPA (`registrarAsistenciasSesion`) | [Command JPA](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/secondary/persistence/sqlserver/jpa/AsistenciaJpaCommandPersistence.java) |
-| Query JPA | [Query JPA](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/secondary/persistence/sqlserver/jpa/AsistenciaJpaQueryPersistence.java) |
+| Repository JPA-only (commands y query) | [Repository JPA](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/secondary/persistence/sqlserver/jpa/repository/AsistenciaJpaRepository.java) |
 | Stream | [Stream](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/realtime/sse/controller/RealtimeEventsController.java) |
 | Gateway | [Gateway](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/realtime/sse/localsse/LocalSseRealtimeStreamGateway.java) |
 | RBAC | [RBAC](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/config/security/SecurityConfig.java) |

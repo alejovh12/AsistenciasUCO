@@ -1,19 +1,20 @@
 ---
 name: uco-persistencia
-description: Revisar persistencia JDBC y planificar o ejecutar un piloto JDBC a JPA cuando esté autorizado.
+description: Revisar persistencia y planificar o ejecutar la migración JPA-only de LB-008 cuando esté autorizada.
 ---
 
 # uco-persistencia
 
 ## Cuándo usar
 
-Revisar persistencia JDBC y planificar o ejecutar un piloto JDBC a JPA cuando esté autorizado.
+Revisar persistencia JDBC/JPA y planificar o ejecutar la migración JPA-only de LB-008 cuando esté autorizada.
 
 ## Fuentes autoritativas
 
 Lee [AGENTS](../../../AGENTS.md) y la [precedencia](../../../docs/governance/SOURCE_OF_TRUTH.md). Luego carga solo las fuentes pertinentes:
 
 - [JDBC_TO_JPA.md](../../../docs/persistence/JDBC_TO_JPA.md)
+- [ADR-003-jpa-only-persistence.md](../../../docs/adr/ADR-003-jpa-only-persistence.md)
 - [ADR-002-jpa-incremental.md](../../../docs/adr/ADR-002-jpa-incremental.md)
 - [repository-mock-inventory.md](../../../docs/integration/repository-mock-inventory.md)
 - [GOLDEN_PATH_ASISTENCIA.md](../../../docs/baseline/GOLDEN_PATH_ASISTENCIA.md)
@@ -28,11 +29,29 @@ Lee [AGENTS](../../../AGENTS.md) y la [precedencia](../../../docs/governance/SOU
 
 Regla obligatoria: no iniciar JDBC → JPA sobre un contrato DB con `MISMATCH`, `DECISION_REQUIRED` o `BLOCKED_BY_MISSING_EVIDENCE` en la parte migrada.
 
+## LB-002 / HISTÓRICO
+
+- LB-002 usó una migración incremental y JDBC/JPA coexistieron temporalmente.
+- Los selectores `jdbc|jpa` y el fallback JDBC fueron mecanismos de certificación y rollback del piloto.
+- Ese patrón se conserva como evidencia histórica; ya no es el TARGET.
+
+## LB-008 / TARGET ACTUAL
+
+`PERSISTENCE_PROVIDER = JPA_ONLY`, conforme a [ADR-003](../../../docs/adr/ADR-003-jpa-only-persistence.md):
+
+- no crear nuevos adapters híbridos ni nuevos selectores `jdbc|jpa`;
+- no introducir fallback JDBC productivo;
+- la coexistencia JDBC/JPA solo puede existir temporalmente dentro de una microfase para comparar paridad;
+- al cerrar una capacidad migrada, su runtime debe ser JPA;
+- `DIRECT_JDBC_IN_SRC_MAIN = 0` al cierre de LB-008;
+- los commands de SP nuevos convergen en `EntityManager + createNativeQuery("EXEC ...") + getResultList()`;
+- `StoredProcedureQuery` queda como mecanismo histórico del piloto LB-002, no como segundo patrón regular.
+
 ## Reglas obligatorias
 
-Carga puerto y adapter JDBC afectados, contrato DB liberado e IT. Migración incremental, query primero y SP complejo conservado inicialmente. RepositoryPort estable, @Entity solo Infrastructure; JDBC/JPA pueden coexistir temporalmente. Sin dual-write; paridad antes de retiro. Hibernate validate/none y open-in-view=false. Evitar N+1, EAGER como parche y cascadas generales; justificar native query y fronteras transaccionales.
+Carga puerto y adapter JDBC afectados, contrato DB liberado e IT. Migra por microfases sin cambiar el RepositoryPort; `@Entity` solo en Infrastructure. JDBC/JPA pueden coexistir únicamente durante la comparación controlada de una microfase. Sin dual-write; paridad antes del retiro y runtime JPA-only al cerrar cada capacidad. Hibernate validate/none y open-in-view=false. Evitar N+1, EAGER como parche y cascadas generales; justificar fronteras transaccionales.
 
-La paridad es obligatoria antes del switch: mismo fixture, semántica y proyección; baseline JDBC y candidato JPA comparados field-by-field. Commands y queries pueden migrar por separado. H2, repository mock o `EntityManager` mock no certifican SQL Server/JPA. El PLAN define selector y rollback al provider JDBC.
+La paridad es obligatoria antes del switch: mismo fixture, semántica y proyección; baseline JDBC y candidato JPA comparados field-by-field. Commands y queries pueden migrar por separado. H2, repository mock o `EntityManager` mock no certifican SQL Server/JPA. El baseline JDBC puede permanecer durante la comparación, pero se elimina de la capacidad al certificarla; no se agrega selector ni fallback nuevo.
 
 Piloto de query (LB-002.1, ver [LB-002.0-DECISION](../../../docs/work-items/LB-002-jpa-incremental/LB-002.0-DECISION.md)): migración de tecnología, no de autorización. Usa las vistas base `uv_detalle_asistencia`/`uv_asistencia`/`uv_estudiante_grupo`; no `uv_auth_*`, no `SESSION_CONTEXT`, no `usp_consultar_grupos_paginado`/paginación; `InstitutionalScopePort` y roles/ownership intactos. Paridad obligatoria en SQL Server real con el freeze DB desplegado.
 

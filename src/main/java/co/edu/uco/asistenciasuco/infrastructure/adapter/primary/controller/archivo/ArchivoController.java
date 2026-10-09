@@ -1,153 +1,113 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.archivo;
 
+import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.features.archivo.descargararchivo.primaryports.DescargarArchivoInputPort;
+import co.edu.uco.asistenciasuco.application.features.archivo.descargararchivo.primaryports.dto.DescargarArchivoDTO;
+import co.edu.uco.asistenciasuco.application.features.archivo.descargararchivo.primaryports.dto.DescargarArchivoResultado;
+import co.edu.uco.asistenciasuco.application.features.archivo.subirarchivo.primaryports.SubirArchivoInputPort;
+import co.edu.uco.asistenciasuco.application.features.archivo.subirarchivo.primaryports.dto.SubirArchivoDTO;
+import co.edu.uco.asistenciasuco.application.features.archivo.subirarchivo.primaryports.dto.SubirArchivoResultado;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 
 /**
- * Controlador REST para carga y descarga física de soportes de inasistencia (HU014).
+ * Adaptador primario REST para subida/descarga de soportes de revision (HU014).
+ *
+ * <p>Depende exclusivamente de InputPorts de Application: no conoce MinIO, ClamAV, filesystem ni
+ * ningun detalle de Infrastructure. Ver
+ * docs/work-items/LB-004-stateless-serverless-readiness/MINIO_STORAGE_CONTRACT.md.</p>
  */
 @RestController
 @RequestMapping("/api/v1/archivos")
-public class ArchivoController {
+public final class ArchivoController {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ArchivoController.class);
+    private final SubirArchivoInputPort subirArchivoInputPort;
+    private final DescargarArchivoInputPort descargarArchivoInputPort;
+    private final AuthenticatedUserResolver authenticatedUserResolver;
 
-    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("pdf", "png", "jpg", "jpeg");
-    private static final long MAX_FILE_SIZE = 5L * 1024 * 1024; // 5 MB
-
-    private final Path storageDirectory;
-
-    public ArchivoController(@Value("${app.providers.local-storage.upload-directory:uploads/soportes}") final String uploadDir) {
-        this.storageDirectory = Paths.get(uploadDir).toAbsolutePath().normalize();
-        try {
-            Files.createDirectories(this.storageDirectory);
-        } catch (IOException e) {
-            LOGGER.error("No fue posible inicializar el directorio de almacenamiento de archivos: {}", this.storageDirectory, e);
-        }
+    public ArchivoController(
+            final SubirArchivoInputPort subirArchivoInputPort,
+            final DescargarArchivoInputPort descargarArchivoInputPort,
+            final AuthenticatedUserResolver authenticatedUserResolver
+    ) {
+        this.subirArchivoInputPort = Objects.requireNonNull(subirArchivoInputPort, "SubirArchivoInputPort es obligatorio.");
+        this.descargarArchivoInputPort = Objects.requireNonNull(descargarArchivoInputPort, "DescargarArchivoInputPort es obligatorio.");
+        this.authenticatedUserResolver = Objects.requireNonNull(authenticatedUserResolver, "AuthenticatedUserResolver es obligatorio.");
     }
 
     @PostMapping("/subir")
     public ResponseEntity<ApiDataResponse<Map<String, Object>>> subirArchivo(
-            @RequestParam("archivo") final MultipartFile file
+            @RequestParam("archivo") final MultipartFile archivo
     ) {
-        if (file == null || file.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El archivo adjunto no puede estar vacío.");
-        }
+        final UUID ownerSubject = authenticatedUserResolver.requireAuthenticatedUserId();
+        final byte[] content = readBytes(archivo);
+        final String originalFilename = archivo == null ? null : archivo.getOriginalFilename();
+        final String declaredContentType = archivo == null ? null : archivo.getContentType();
 
-        if (file.getSize() > MAX_FILE_SIZE) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El archivo excede el tamaño máximo permitido (5 MB).");
-        }
+        final SubirArchivoResultado resultado = subirArchivoInputPort.execute(
+                new SubirArchivoDTO(ownerSubject, originalFilename, declaredContentType, content));
 
-        final String originalFilename = Objects.requireNonNullElse(file.getOriginalFilename(), "archivo");
-        if (!isSimpleFilename(originalFilename)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nombre de archivo no válido.");
-        }
-        final String extension = getExtension(originalFilename).toLowerCase();
+        final Map<String, Object> data = new HashMap<>();
+        data.put("fileId", resultado.fileId());
+        data.put("nombre", resultado.nombre());
+        data.put("url", resultado.url());
+        data.put("tamanio", resultado.tamanio());
 
-        if (!ALLOWED_EXTENSIONS.contains(extension)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Formato de archivo no permitido. Solo se aceptan archivos PDF, PNG o JPG.");
-        }
-
-        final String savedFilename = UUID.randomUUID() + "_" + originalFilename.replaceAll("[^a-zA-Z0-9.-]", "_");
-
-        try {
-            final Path targetLocation = this.storageDirectory.resolve(savedFilename).normalize();
-            if (!targetLocation.startsWith(this.storageDirectory)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ruta de archivo no válida.");
-            }
-
-            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-
-            final Map<String, Object> data = new HashMap<>();
-            data.put("nombre", originalFilename);
-            data.put("nombreGuardado", savedFilename);
-            data.put("url", "/api/v1/archivos/" + savedFilename);
-            data.put("tamanio", file.getSize());
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(new ApiDataResponse<>(true, data));
-        } catch (IOException ex) {
-            LOGGER.error("Error al almacenar archivo en disco: {}", savedFilename, ex);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno al guardar el soporte.");
-        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiDataResponse<>(true, data));
     }
 
-    @GetMapping("/{nombreArchivo:.+}")
-    public ResponseEntity<Resource> descargarArchivo(@PathVariable final String nombreArchivo) {
-        if (!isSimpleFilename(nombreArchivo)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "El archivo solicitado no existe.");
+    @GetMapping("/{fileId}")
+    public ResponseEntity<byte[]> descargarArchivo(@PathVariable final String fileId) {
+        final UUID requesterSubject = authenticatedUserResolver.requireAuthenticatedUserId();
+        final UUID parsedFileId = parseFileId(fileId);
+
+        final DescargarArchivoResultado resultado = descargarArchivoInputPort.execute(
+                new DescargarArchivoDTO(parsedFileId, requesterSubject));
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(resultado.contentType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + sanitizeForHeader(resultado.filename()) + "\"")
+                .body(resultado.content());
+    }
+
+    private byte[] readBytes(final MultipartFile archivo) {
+        if (archivo == null) {
+            return new byte[0];
         }
         try {
-            final Path filePath = this.storageDirectory.resolve(nombreArchivo).normalize();
-            if (!filePath.startsWith(this.storageDirectory) || !Files.exists(filePath)) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "El archivo solicitado no existe.");
-            }
-            if (!filePath.toRealPath().startsWith(this.storageDirectory.toRealPath()) || !Files.isRegularFile(filePath)) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "El archivo solicitado no existe.");
-            }
-
-            final Resource resource = new UrlResource(filePath.toUri());
-            if (!resource.exists() || !resource.isReadable()) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "El archivo no se encuentra disponible.");
-            }
-
-            final String contentType = determineContentType(nombreArchivo);
-
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(contentType))
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
-                    .body(resource);
-
-        } catch (IOException ex) {
-            LOGGER.error("Error resolviendo URL de archivo: {}", nombreArchivo, ex);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Archivo no encontrado.");
+            return archivo.getBytes();
+        } catch (final IOException exception) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno al leer el archivo adjunto.");
         }
     }
 
-    private static boolean isSimpleFilename(final String filename) {
-        if (filename == null || filename.isBlank() || filename.equals(".") || filename.contains("..")
-                || filename.indexOf('/') >= 0 || filename.indexOf('\\') >= 0 || filename.indexOf(':') >= 0) {
-            return false;
-        }
+    private UUID parseFileId(final String fileId) {
         try {
-            final Path path = Paths.get(filename);
-            return !path.isAbsolute() && path.getNameCount() == 1;
-        } catch (InvalidPathException exception) {
-            return false;
+            return UUID.fromString(fileId);
+        } catch (final IllegalArgumentException exception) {
+            throw new ResourceNotFoundException("El archivo solicitado no existe.");
         }
     }
 
-    private String getExtension(final String filename) {
-        final int lastDot = filename.lastIndexOf('.');
-        return (lastDot == -1) ? "" : filename.substring(lastDot + 1);
-    }
-
-    private String determineContentType(final String filename) {
-        final String ext = getExtension(filename).toLowerCase();
-        return switch (ext) {
-            case "pdf" -> "application/pdf";
-            case "png" -> "image/png";
-            case "jpg", "jpeg" -> "image/jpeg";
-            default -> "application/octet-stream";
-        };
+    private String sanitizeForHeader(final String filename) {
+        return filename == null ? "archivo" : filename.replaceAll("[\"\\r\\n]", "_");
     }
 }

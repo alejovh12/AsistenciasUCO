@@ -115,3 +115,6 @@ Cuando se agreguen nuevas capacidades, CI debe crecer con ellas:
 - OpenAPI: validación contract-first.
 - Observability: smoke tests de health/metrics y convenciones.
 - CD: imágenes inmutables, SBOM, container scanning y promoción por ambientes.
+
+## Incidente histórico PR #15 (2026-10-08)
+Backend Quality Gate: Maven clean verify y XML JaCoCo PASS; SonarCloud FAIL por 48.4% new coverage (<80%), Security C y Reliability C (requiere A/A); Docker/JAR downstream omitidos. CodeQL PASS separado. No es una medición del commit siguiente. Para recuperar: [QUALITY-PR15](../docs/work-items/QUALITY-PR15-recovery/PLAN.md). No confundir global JaCoCo y métricas Sonar; no bajar umbrales ni convertir skips en PASS.

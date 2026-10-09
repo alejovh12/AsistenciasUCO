@@ -17,3 +17,6 @@ Checklist obligatorio: behavior observable, negativos suficientes, integración 
 ## Entrega
 
 VALIDATION.md con PASS/FAIL, NO APLICA justificados y VALIDATION_BLOCKED_BY_ENVIRONMENT cuando corresponda; lista de bloqueantes y evidencia.
+
+## Auditoría PR #15
+Leer [SONAR_TRIAGE](../../docs/work-items/QUALITY-PR15-recovery/SONAR_TRIAGE.md) y [uco-quality-gate](../skills/uco-quality-gate/SKILL.md). Confirmar issue key/regla/línea, SHA, cobertura NEW vs BUNDLE, Security/Reliability, skips y regresiones; CodeQL/Maven PASS no sustituyen Sonar. Emitir hallazgos, no corregirlos durante auditoría.

@@ -37,3 +37,6 @@ Gates reales en TESTING_STANDARD: verify, ArchUnit, líneas ≥80 %/ramas ≥70 
 TEST_PLAN con Behavioral Matrix, integración requerida/ambiente, negativos, side effects/rollback, falla RED causal, archivos/hash aprobados, GREEN, contadores JaCoCo y VALIDATION con exit code/limitaciones.
 
 Registrar resultados en el [work item](../../../docs/work-items/README.md). Ante evidencia necesaria ausente o contradicción autoritativa, aplicar los protocolos de AGENTS y no implementar el alcance bloqueado.
+
+## PR nuevo código y paridad
+Usar [uco-quality-gate](../uco-quality-gate/SKILL.md) para Sonar, JaCoCo y runs por SHA. Test unit en Surefire para lógica nueva de adapter; IT provider/SQL sigue siendo imprescindible cuando aplique. [Matriz PR #15](../../../docs/work-items/QUALITY-PR15-recovery/COVERAGE_MATRIX.md). Tester mapea antiguos tests JDBC a contratos JPA y congela RED; implementador no edita RED. Cobertura jamás reemplaza asserts de comportamiento.

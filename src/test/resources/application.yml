@@ -7,3 +7,14 @@ app:
   providers:
     keycloak-identity:
       admin-client-secret: test-only-not-used
+    # LB-004B.2: valores test-only para que un futuro SpringBootTest de contexto completo sin
+    # -Pintegration no falle al enlazar MinioProviderProperties (fail-fast si faltan). No se usan
+    # para conectar a ningun MinIO real en la suite normal.
+    minio:
+      endpoint: http://127.0.0.1:65535
+      access-key: test-only-not-used
+      secret-key: test-only-not-used
+      bucket: test-only-not-used
+    clamav:
+      host: 127.0.0.1
+      port: 65535

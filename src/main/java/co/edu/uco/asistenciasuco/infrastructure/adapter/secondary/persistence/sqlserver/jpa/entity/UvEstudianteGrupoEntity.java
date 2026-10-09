@@ -23,8 +23,17 @@ public class UvEstudianteGrupoEntity {
     @Column(name = "idEstudiante")
     private UUID idEstudiante;
 
+    @Column(name = "nombreCompletoEstudiante")
+    private String nombreCompletoEstudiante;
+
     @Column(name = "idGrupo")
     private UUID idGrupo;
+
+    @Column(name = "codigoEstadoEstudiante")
+    private String codigoEstadoEstudiante;
+
+    @Column(name = "nombreEstadoEstudiante")
+    private String nombreEstadoEstudiante;
 
     protected UvEstudianteGrupoEntity() {
         // requerido por JPA

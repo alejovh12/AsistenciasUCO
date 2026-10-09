@@ -10,18 +10,21 @@ last-reviewed: 2026-09-20
 
 ## Linea base actual
 
-La persistencia productiva/default usa SQL Server mediante Spring JDBC. Los commands se ejecutan por Stored Procedures y las queries por Views. No hay JPA, Hibernate ORM ni R2DBC en la linea base.
+SQL Server es el provider de persistencia. Asistencia usa JPA/Hibernate exclusivamente; las demás
+verticales conservan JDBC de forma transitoria mientras avanzan las microfases de LB-008. Los
+commands siguen ejecutando Stored Procedures y las queries siguen consumiendo Views. JPA-02A usa
+el bootstrap estándar de Spring Boot y `JpaTransactionManager`.
 
 ## REAL / DEFAULT
 
-| Feature | Puerto | Adapter SQL Server | Contrato SQL |
-|---------|--------|--------------------|--------------|
-| TipoIdentificacion | `TipoIdentificacionRepositoryPort` | `TipoIdentificacionRepositorySqlServerAdapter` | `dbo.uv_tipo_identificacion` |
-| Usuario | `UsuarioRepositoryPort` | `UsuarioRepositorySqlServerAdapter` | `dbo.usp_sincronizar_usuario` (contrato consumido por Java) |
-| Docente | `DocenteRepositoryPort` | `DocenteRepositorySqlServerAdapter` | `dbo.uv_docente_identidad`, `dbo.uv_docente`; commands no disponibles sin contrato público |
-| Grupo | `GrupoRepositoryPort` | `GrupoRepositorySqlServerAdapter` | `dbo.uv_grupo`, `dbo.usp_registrar_estudiante_en_grupo_usuario_no_existente` |
-| Sesion | `SesionRepositoryPort` | `SesionRepositorySqlServerAdapter` | Views/SPs de sesion disponibles estaticamente, pendiente validacion E2E |
-| Asistencia | `AsistenciaRepositoryPort` | `AsistenciaRepositorySqlServerAdapter` | SPs de asistencia disponibles estaticamente, pendiente validacion E2E |
+| Feature | Puerto | Repository JPA (SQL Server, JPA-06A) | Contrato SQL |
+|---------|--------|--------------------------------------|--------------|
+| TipoIdentificacion | `TipoIdentificacionRepositoryPort` | `TipoIdentificacionJpaRepository` | `dbo.uv_tipo_identificacion` |
+| Usuario | `UsuarioRepositoryPort` | `UsuarioJpaRepository` | `dbo.usp_sincronizar_usuario` (contrato consumido por Java) |
+| Docente | `DocenteRepositoryPort` | `DocenteJpaRepository` | `dbo.uv_docente_identidad`, `dbo.uv_docente`; commands no disponibles sin contrato público |
+| Grupo | `GrupoRepositoryPort` | `GrupoJpaRepository` | `dbo.uv_grupo`, `dbo.usp_registrar_estudiante_en_grupo_usuario_no_existente` |
+| Sesion | `SesionRepositoryPort` | `SesionJpaRepository` | Views/SPs de sesion disponibles estaticamente, pendiente validacion E2E |
+| Asistencia | `AsistenciaRepositoryPort` | `AsistenciaJpaRepository` (LB-008, JPA-only) | SPs de asistencia disponibles estaticamente, pendiente validacion E2E |
 
 ## Mocks para testing
 

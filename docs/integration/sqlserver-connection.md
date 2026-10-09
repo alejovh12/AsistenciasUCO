@@ -13,10 +13,12 @@ last-reviewed: 2026-09-20
 - Backend: Spring Boot 4.0.6, ejecutar desde la raíz de este repositorio con Java 25.
 - Servidor principal: Spring MVC sobre servlet.
 - Concurrencia: virtual threads habilitados.
-- Persistencia: Spring JDBC contra SQL Server.
+- Persistencia: JPA/Hibernate contra SQL Server para Asistencia; JDBC residual transitorio en las
+  demás verticales durante LB-008.
 - Commands: Stored Procedures.
 - Queries: Views.
-- Realtime: Reactor Core está activo para SSE sobre Spring MVC; no hay starter WebFlux. El core sigue imperativo/JDBC.
+- Realtime: Reactor Core está activo para SSE sobre Spring MVC; no hay starter WebFlux. El core
+  sigue imperativo; su persistencia converge a JPA por microfases.
 - Base esperada: `gestionasistenciadb`.
 - URL JDBC esperada: `jdbc:sqlserver://localhost:1433;databaseName=gestionasistenciadb;encrypt=true;trustServerCertificate=true`.
 

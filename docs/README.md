@@ -34,7 +34,7 @@ Entrada operativa: [AGENTS](../AGENTS.md). **NORMATIVE** significa regla activa;
 
 ## Persistence
 
-- **NORMATIVE, estrategia futura:** [JDBC → JPA incremental](persistence/JDBC_TO_JPA.md); no implementada.
+- **NORMATIVE TARGET ACTUAL:** [JPA-only / ADR-003](adr/ADR-003-jpa-only-persistence.md), [arquitectura JPA / ADR-004](adr/ADR-004-jpa-repository-architecture.md) y [LB-008](work-items/LB-008-jpa-only-persistence-migration/PLAN.md). [JDBC → JPA incremental](persistence/JDBC_TO_JPA.md) documenta el piloto histórico; el PR #15 aún requiere merge aprobado.
 - AS-IS: [inventario JDBC/test doubles](integration/repository-mock-inventory.md).
 
 ## Testing
@@ -78,3 +78,11 @@ Entrada operativa: [AGENTS](../AGENTS.md). **NORMATIVE** significa regla activa;
 - [Históricos y reemplazos](archive/README.md). Roadmaps, prompts y mapas de refactor sustituidos no autorizan implementación.
 
 Azure Key Vault, App Configuration y Event Grid ya son capabilities implementadas y se documentan como AS-IS. Eso no prueba despliegue, IaC, CD ni validación cloud; esas evidencias y evoluciones siguen gobernadas por la línea base y MV-003.
+
+## Estado actualizado (2026-10-08)
+La frase histórica anterior «JDBC → JPA incremental; no implementada» en este índice describe LB-002, **no** el TARGET vigente. TARGET JPA-only: [ADR-003](adr/ADR-003-jpa-only-persistence.md), [ADR-004](adr/ADR-004-jpa-repository-architecture.md), [LB-008](work-items/LB-008-jpa-only-persistence-migration/PLAN.md). El merge sigue condicionado por PR #15. Recuperación: [QUALITY-PR15](work-items/QUALITY-PR15-recovery/PLAN.md), [matriz](work-items/QUALITY-PR15-recovery/COVERAGE_MATRIX.md), [triage](work-items/QUALITY-PR15-recovery/SONAR_TRIAGE.md), [handoff](work-items/QUALITY-PR15-recovery/HANDOFF.md). LB-004 conserva [PAUSE](work-items/LB-004-stateless-serverless-readiness/PAUSE.md), binding DB y E2E pendientes. Skills: [uco-quality-gate](../.claude/skills/uco-quality-gate/SKILL.md) y [uco-files](../.claude/skills/uco-files/SKILL.md).
+
+## Auditoría de salida PR #15 y continuación LB-004 (2026-10-08)
+
+- [Revisión independiente de lectura del HEAD 2554312](work-items/QUALITY-PR15-recovery/INDEPENDENT_REVIEW_2026-10-08.md): CI verde, riesgos no bloqueantes por definir, un IT omitido y revisión humana pendiente.
+- [Plan contractual de reanudación LB-004](work-items/LB-004-stateless-serverless-readiness/RESUMPTION_CONTRACT_PLAN_2026-10-08.md): primero DB y ownership, después backend JPA, Angular y E2E; no constituye aprobación de cambio de esquema.

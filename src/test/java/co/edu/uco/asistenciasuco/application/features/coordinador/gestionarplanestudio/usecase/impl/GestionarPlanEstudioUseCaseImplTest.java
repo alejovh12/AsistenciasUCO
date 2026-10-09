@@ -32,7 +32,7 @@ class GestionarPlanEstudioUseCaseImplTest {
     @Test
     void guardar_lanza_forbidden_cuando_no_resuelve_programa_del_coordinador() {
         final UUID usuario = UUID.randomUUID();
-        final PlanEstudioDomain domain = new PlanEstudioDomain(null, "P01", "Plan A", usuario);
+        final PlanEstudioDomain domain = new PlanEstudioDomain(null, 2026, usuario);
         when(scopePort.findProgramaIdByCoordinadorUsuario(usuario)).thenReturn(Optional.empty());
 
         assertThrows(ForbiddenException.class, () -> useCase.guardar(domain));
@@ -42,14 +42,14 @@ class GestionarPlanEstudioUseCaseImplTest {
     void guardar_con_idPlanEstudio_nulo_genera_uno_nuevo() {
         final UUID usuario = UUID.randomUUID();
         final UUID programa = UUID.randomUUID();
-        final PlanEstudioDomain domain = new PlanEstudioDomain(null, "P01", "Plan A", usuario);
+        final PlanEstudioDomain domain = new PlanEstudioDomain(null, 2026, usuario);
         when(scopePort.findProgramaIdByCoordinadorUsuario(usuario)).thenReturn(Optional.of(programa));
 
         useCase.guardar(domain);
 
         final ArgumentCaptor<UUID> idCaptor = ArgumentCaptor.forClass(UUID.class);
         verify(commandPort).registrarOActualizarPlanEstudio(idCaptor.capture(), org.mockito.ArgumentMatchers.eq(programa),
-                org.mockito.ArgumentMatchers.eq("P01"), org.mockito.ArgumentMatchers.eq("Plan A"));
+                org.mockito.ArgumentMatchers.eq(2026));
         assertNotNull(idCaptor.getValue());
     }
 
@@ -58,11 +58,11 @@ class GestionarPlanEstudioUseCaseImplTest {
         final UUID usuario = UUID.randomUUID();
         final UUID programa = UUID.randomUUID();
         final UUID planId = UUID.randomUUID();
-        final PlanEstudioDomain domain = new PlanEstudioDomain(planId, "P02", "Plan B", usuario);
+        final PlanEstudioDomain domain = new PlanEstudioDomain(planId, 2027, usuario);
         when(scopePort.findProgramaIdByCoordinadorUsuario(usuario)).thenReturn(Optional.of(programa));
 
         useCase.guardar(domain);
 
-        verify(commandPort).registrarOActualizarPlanEstudio(planId, programa, "P02", "Plan B");
+        verify(commandPort).registrarOActualizarPlanEstudio(planId, programa, 2027);
     }
 }

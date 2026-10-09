@@ -122,6 +122,12 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/sesiones/grupo/*").hasRole("DOCENTE")
                 .requestMatchers(HttpMethod.POST, "/api/v1/asistencias/lote").hasRole("DOCENTE")
                 .requestMatchers(HttpMethod.POST, "/api/v1/asistencias/revisiones").hasRole("ESTUDIANTE")
+                // Subida de soportes de revision: unicamente el estudiante propietario sube en su
+                // propio nombre (OWNERSHIP_DECISION.md: DOCENTE upload = OUT_OF_SCOPE, sin
+                // capability). La descarga GET /api/v1/archivos/{fileId} queda en la regla
+                // catch-all authenticated() de abajo: el ownership real (404 para no-propietario,
+                // incluido cualquier rol) se resuelve en Application, no aqui.
+                .requestMatchers(HttpMethod.POST, "/api/v1/archivos/subir").hasRole("ESTUDIANTE")
                 .requestMatchers(HttpMethod.POST, "/api/v1/asistencias").hasRole("DOCENTE")
                 // Consulta de asistencias por grupo (ruta legacy vía POST): mismo criterio que
                 // GET /api/v1/grupos/{grupoId}/asistencias.
@@ -138,6 +144,12 @@ public class SecurityConfig {
                 // ConsultarAsistenciasPorGrupoUseCaseImpl).
                 .requestMatchers(HttpMethod.GET, "/api/v1/grupos/**")
                     .hasAnyRole("DOCENTE", "COORDINADOR", "ADMINISTRADOR")
+                // Matricula de estudiante en grupo: la DB controla titularidad (DOCENTE titular del
+                // grupo O COORDINADOR del programa, ver usp_registrar_estudiante_en_grupo, SEC_002).
+                // ADMINISTRADOR no tiene bypass en la DB para esta operacion; por eso no se incluye
+                // aqui, a diferencia de crear/actualizar grupo.
+                .requestMatchers(HttpMethod.POST, "/api/v1/grupos/*/estudiantes")
+                    .hasAnyRole("DOCENTE", "COORDINADOR")
                 .requestMatchers(HttpMethod.POST, "/api/v1/grupos/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")
                 .requestMatchers(HttpMethod.PUT, "/api/v1/grupos/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")
                 .requestMatchers(HttpMethod.DELETE, "/api/v1/grupos/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")

@@ -130,11 +130,18 @@ Requisitos funcionales, autorización y orden/ausencia de efectos mediante puert
 - traducción de errores;
 - no filtrar excepciones técnicas al cliente.
 
-### Integration — SQL Server actual y JPA futura
+### Integration — SQL Server y JPA
 
-JPA todavía no está implementado. Existen IT SQL Server bajo persistence/sqlserver, incluidos AsistenciaRepositorySqlServerIT, GrupoRepositorySqlServerIT, SqlStoredProcedureContractIT y UsuarioPasswordHashSqlServerIT. Comprobar fixtures/ambiente y revisar assumptions/skips; una suite omitida no certifica integración.
+**HISTÓRICO / AS-IS HEREDADO:** LB-002 introdujo JPA piloto para la query de Asistencia y para
+`registrarAsistenciasSesion`, con convivencia y selectores JDBC/JPA. Existen IT SQL Server bajo
+`persistence/sqlserver`, incluidos `AsistenciaRepositorySqlServerIT`, `GrupoRepositorySqlServerIT`,
+`SqlStoredProcedureContractIT` y `UsuarioPasswordHashSqlServerIT`.
 
-### Requisitos de integración JPA futura
+**TARGET ACTUAL:** ADR-003 + LB-008 = JPA-only. Cada capacidad migrada exige integración real y
+paridad antes de retirar su baseline JDBC. Comprobar fixtures/ambiente y revisar assumptions/skips;
+una suite omitida no certifica integración.
+
+### Requisitos de integración JPA
 
 No mockear `EntityManager`/repository Spring Data como evidencia de que JPA funciona. Usar una
 prueba de integración contra el motor/contrato SQL Server cuando la query, SP o mapping depende de
@@ -201,3 +208,6 @@ queda como regresión permanente salvo que cambie el contrato aprobado.
 ## Ejecución y resultados
 
 Seguir [VALIDATION_RUNBOOK](VALIDATION_RUNBOOK.md); un mock HTTP/DB no demuestra E2E. Sin ambiente registrar `VALIDATION_BLOCKED_BY_ENVIRONMENT` con causa. Si falla una prueba real, registrar FAIL y el test, sin reclasificarlo como fallo ambiental. Para E2E indicar si incluye frontend real o únicamente backend/DB.
+
+## Addendum: cobertura nueva de Sonar (2026-10-08)
+JaCoCo BUNDLE LINE >=80%/BRANCH >=70% se mide distinto a Sonar New Code Coverage. PR #15 requiere según comentario remoto new coverage >=80%, Security A y Reliability A; esos requisitos son evidencia de ese PR, no política local del pom. Contar únicamente tests ejecutados en Surefire clean verify para ese gate; Failsafe *IT -Pintegration demuestra provider/SQL pero no corre automáticamente. Asociar issues a key/rule/línea + test RED causal, sin ocultarlos mediante exclusions, false positives sin justificación, disabled o cambios de umbral. [Proceso](../work-items/QUALITY-PR15-recovery/SONAR_TRIAGE.md).

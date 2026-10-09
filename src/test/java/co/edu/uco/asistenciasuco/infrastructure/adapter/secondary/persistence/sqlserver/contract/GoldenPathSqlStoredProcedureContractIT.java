@@ -1,5 +1,8 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.contract;
 
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository.*;
+
+
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -31,9 +34,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * de asistencias/sesion validadas aqui.</p>
  *
  * <p>Las columnas de vistas se derivan de los SELECT reales de los adapters Java
- * ({@code HorarioDocenteSqlServerAdapter}, {@code HorarioEstudianteSqlServerAdapter},
- * {@code SesionRepositorySqlServerAdapter}, {@code GrupoRepositorySqlServerAdapter},
- * {@code AsistenciaRepositorySqlServerAdapter}, {@code InstitutionalScopeSqlServerAdapter}).
+ * ({@code HorarioDocenteJpaRepository}, {@code HorarioEstudianteJpaRepository},
+ * {@code SesionJpaRepository}, {@code GrupoJpaRepository},
+ * {@code AsistenciaJdbcBaselineOracle}, {@code InstitutionalScopeJpaRepository}).
  * {@code aula} ya no es consumida: {@code uv_horario_estudiante} y {@code uv_grupo} no deben exponerla.</p>
  */
 @Tag("integration")

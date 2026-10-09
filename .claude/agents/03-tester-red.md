@@ -17,3 +17,6 @@ Deriva una Behavioral Matrix desde requirements y cubre, cuando apliquen: negati
 ## Entrega
 
 TEST_PLAN.md con Behavioral Matrix, nivel/entorno de integración, negativos, side effects/rollback y sección `RED_SNAPSHOT` (base commit, archivos de test, SHA-256 o commit del estado RED, comando, exit code, fallo esperado, cuando aplique). El auditor compara el snapshot contra la versión usada para aprobar GREEN. Documentación pura: NO APLICA funcional justificado.
+
+## RED de quality
+Consultar [TEST_PLAN QUALITY-PR15](../../docs/work-items/QUALITY-PR15-recovery/TEST_PLAN.md). Congelar RED causal para ClamAV/MinIO, mappers y repositorios; Unit Surefire distinto de IT Failsafe; EntityManager mock no prueba SQL real. No rediseñar assertions para subir porcentajes.

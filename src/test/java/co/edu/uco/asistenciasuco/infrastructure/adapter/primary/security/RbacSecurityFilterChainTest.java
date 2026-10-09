@@ -209,6 +209,30 @@ class RbacSecurityFilterChainTest {
                 .andExpect(status().isOk());
     }
 
+    // --- POST /api/v1/grupos/{grupoId}/estudiantes : matricula. La DB controla titularidad
+    // (DOCENTE titular del grupo O COORDINADOR del programa); ADMINISTRADOR no tiene bypass. ---
+
+    @Test
+    void matricular_estudiante_docente_es_permitido_por_security_filter_chain() throws Exception {
+        mockMvc.perform(post("/api/v1/grupos/{grupoId}/estudiantes", "11111111-1111-1111-1111-111111111111")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void matricular_estudiante_coordinador_es_permitido_por_security_filter_chain() throws Exception {
+        mockMvc.perform(post("/api/v1/grupos/{grupoId}/estudiantes", "11111111-1111-1111-1111-111111111111")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void matricular_estudiante_administrador_recibe_403() throws Exception {
+        mockMvc.perform(post("/api/v1/grupos/{grupoId}/estudiantes", "11111111-1111-1111-1111-111111111111")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("ADMINISTRADOR")))
+                .andExpect(status().isForbidden());
+    }
+
     // --- Política CSRF: /api/v1/** es stateless y Bearer-only; sin Bearer => 401, nunca 403 de CSRF ---
 
     @Test
@@ -297,6 +321,33 @@ class RbacSecurityFilterChainTest {
     void registrar_asistencias_lote_docente_es_permitido_por_security_filter_chain() throws Exception {
         mockMvc.perform(post("/api/v1/asistencias/lote").header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
                 .andExpect(status().isOk());
+    }
+
+    // --- POST /api/v1/archivos/subir : subida de soportes (LB-004B.2, SEC-001/OWNERSHIP_DECISION) ---
+
+    @Test
+    void subir_archivo_sin_bearer_recibe_401() throws Exception {
+        mockMvc.perform(post("/api/v1/archivos/subir"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void subir_archivo_estudiante_es_permitido_por_security_filter_chain() throws Exception {
+        mockMvc.perform(post("/api/v1/archivos/subir").header(HttpHeaders.AUTHORIZATION, bearer("ESTUDIANTE")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void subir_archivo_docente_recibe_403() throws Exception {
+        // OWNERSHIP_DECISION.md: DOCENTE upload = OUT_OF_SCOPE, sin capability.
+        mockMvc.perform(post("/api/v1/archivos/subir").header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void subir_archivo_coordinador_recibe_403() throws Exception {
+        mockMvc.perform(post("/api/v1/archivos/subir").header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
+                .andExpect(status().isForbidden());
     }
 
     // --- /api/v1/estudiantes/** : directorio institucional general (distinto del portal
@@ -438,6 +489,11 @@ class RbacSecurityFilterChainTest {
             return "ok";
         }
 
+        @PostMapping("/api/v1/grupos/{grupoId}/estudiantes")
+        String matricularEstudiante() {
+            return "ok";
+        }
+
         @DeleteMapping("/api/v1/grupos/{grupoId}")
         String eliminarGrupo() {
             return "ok";
@@ -460,6 +516,11 @@ class RbacSecurityFilterChainTest {
 
         @PostMapping("/api/v1/realtime/emit")
         String realtimeEmit() {
+            return "ok";
+        }
+
+        @PostMapping("/api/v1/archivos/subir")
+        String subirArchivo() {
             return "ok";
         }
     }

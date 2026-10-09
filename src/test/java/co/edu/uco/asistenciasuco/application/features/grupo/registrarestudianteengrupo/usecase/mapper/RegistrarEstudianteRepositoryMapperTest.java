@@ -15,6 +15,7 @@ class RegistrarEstudianteRepositoryMapperTest {
 
     private static final UUID TIPO_IDENTIFICACION = UUID.fromString("13641bab-e3cd-485c-b275-47e7b731e18c");
     private static final UUID GRUPO = UUID.fromString("23641bab-e3cd-485c-b275-47e7b731e18c");
+    private static final UUID USUARIO_EJECUTOR = UUID.fromString("33641bab-e3cd-485c-b275-47e7b731e18c");
 
     @Test
     void toRepositoryDTO_mapea_datos_funcionales_sin_correlation_id() {
@@ -29,6 +30,7 @@ class RegistrarEstudianteRepositoryMapperTest {
         assertEquals("ana.perez@uco.edu.co", dto.getCorreo());
         assertEquals("Clave123!", dto.getPassword());
         assertEquals(GRUPO, dto.getGrupoId());
+        assertEquals(USUARIO_EJECUTOR, dto.getUsuarioEjecutor());
     }
 
     @Test
@@ -51,7 +53,8 @@ class RegistrarEstudianteRepositoryMapperTest {
                 "Maria",
                 "ana.perez@uco.edu.co",
                 "Clave123!",
-                GRUPO
+                GRUPO,
+                USUARIO_EJECUTOR
         );
     }
 }

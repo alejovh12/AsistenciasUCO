@@ -17,3 +17,6 @@ Debe responder antes de READY: ¿qué behavior cambia?, ¿qué contract aplica?,
 ## Entrega
 
 PLAN.md con READY/NOT_READY y referencia a TEST_PLAN; ninguna implementación.
+
+## Recuperación PR #15
+Usar [QUALITY-PR15](../../docs/work-items/QUALITY-PR15-recovery/PLAN.md) y [uco-quality-gate](../skills/uco-quality-gate/SKILL.md). Dividir Q1 issues, Q2 storage, Q3 JPA, Q4 gates. No iniciar DB/Angular funcional por un déficit de cobertura; cada implementación requiere DoR propio.

@@ -2,5 +2,5 @@ package co.edu.uco.asistenciasuco.application.features.coordinador.gestionarplan
 
 import java.util.UUID;
 
-public record GuardarPlanEstudioDTO(UUID idPlanEstudio, String codigo, String nombre, UUID usuario) {
+public record GuardarPlanEstudioDTO(UUID idPlanEstudio, Integer inp, UUID usuario) {
 }

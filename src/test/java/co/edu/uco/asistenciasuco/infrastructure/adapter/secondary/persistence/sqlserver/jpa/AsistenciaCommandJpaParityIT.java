@@ -1,4 +1,7 @@
-package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa;
+package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
+
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository.*;
+
 
 import co.edu.uco.asistenciasuco.application.exception.ApplicationException;
 import co.edu.uco.asistenciasuco.crosscutting.exception.TechnicalException;
@@ -8,17 +11,19 @@ import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.Consu
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciasSesionRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistroAsistenciaSesionRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.AsistenciaRepositoryProjection;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.core.AsistenciaRepositorySqlServerAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.CanonicalStoredProcedureExecutor;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.CanonicalJdbcBaselineExecutor;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.JpaProcedureExecutor;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import com.zaxxer.hikari.HikariDataSource;
-import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.JdbcBaselineTestConfiguration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
@@ -37,6 +42,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -47,9 +53,9 @@ import static org.junit.jupiter.api.Assertions.fail;
  * {@code AsistenciaRepositoryPort.registrarAsistenciasSesion} sobre SQL Server real
  * ({@code gestionasistenciadb}, freeze DB desplegado).
  *
- * <p>Aisla la variable principal: {@code asistencia-query-provider=jdbc},
- * {@code asistencia-command-provider=jpa}. El baseline JDBC se construye manualmente
- * ({@code new AsistenciaRepositorySqlServerAdapter(...)}), nunca a traves del Composition Root. El
+ * <p>Aisla el candidato JPA del command frente al oraculo JDBC congelado (LB-008: sin selectores).
+ * El baseline JDBC se construye manualmente (oraculo de test).
+ * ({@code new AsistenciaJdbcBaselineOracle(...)}), nunca a traves del Composition Root. El
  * candidato JPA es el {@code AsistenciaRepositoryPort} REAL resuelto por el Composition Root bajo esa
  * propiedad (sin bypass manual). SESSION A (JDBC) y SESSION B (JPA) son SIEMPRE filas {@code Sesion}
  * distintas: JDBC y JPA nunca comparten sesion para comparar efectos (LB-002.2D &sect;9).</p>
@@ -58,11 +64,9 @@ import static org.junit.jupiter.api.Assertions.fail;
  * {@link #assertParity}, y (B) el oráculo contractual absoluto (verdad de DB), nunca solo "ambos
  * hicieron lo mismo".</p>
  */
+@Import(JdbcBaselineTestConfiguration.class)
 @Tag("integration")
-@SpringBootTest(properties = {
-        "app.adapters.persistence.asistencia-query-provider=jdbc",
-        "app.adapters.persistence.asistencia-command-provider=jpa"
-})
+@SpringBootTest
 @MockitoBean(types = JwtDecoder.class)
 class AsistenciaCommandJpaParityIT {
 
@@ -89,10 +93,10 @@ class AsistenciaCommandJpaParityIT {
     private NamedParameterJdbcOperations namedJdbc;
 
     @Autowired
-    private CanonicalStoredProcedureExecutor procedureExecutor;
+    private CanonicalJdbcBaselineExecutor procedureExecutor;
 
     @Autowired
-    private EntityManagerFactory entityManagerFactory;
+    private EntityManager entityManager;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -129,18 +133,18 @@ class AsistenciaCommandJpaParityIT {
     }
 
     private AsistenciaRepositoryPort jdbcBaseline() {
-        return new AsistenciaRepositorySqlServerAdapter(namedJdbc, procedureExecutor);
+        return new AsistenciaJdbcBaselineOracle(namedJdbc, procedureExecutor);
     }
 
     // ------------------------------------------------------------------ evidencia de composicion (2.2D#8)
 
     @Test
-    void el_candidato_resuelto_con_command_provider_jpa_no_es_el_adapter_jdbc_puro() {
-        assertFalse(jpaRoutedPort instanceof AsistenciaRepositorySqlServerAdapter,
+    void el_puerto_resuelto_por_el_composition_root_es_el_adapter_jpa_solo_y_no_el_oraculo_jdbc() {
+        assertInstanceOf(AsistenciaJpaRepository.class, jpaRoutedPort,
+                "Asistencia es JPA-only: el composition root no puede resolver el oraculo JDBC.");
+        assertFalse(jpaRoutedPort instanceof AsistenciaJdbcBaselineOracle,
                 "El candidato JPA no debe ser el adapter JDBC puro.");
-        assertNotNull(entityManagerFactory, "El EntityManagerFactory debe existir con command-provider=jpa.");
-        assertEquals("jpa", environment.getProperty("app.adapters.persistence.asistencia-command-provider"));
-        assertEquals("jdbc", environment.getProperty("app.adapters.persistence.asistencia-query-provider"));
+        assertNotNull(entityManager, "El EntityManager administrado de Asistencia debe existir siempre.");
     }
 
     // ------------------------------------------------------------------ CMD-PAR-001 / 002
@@ -190,7 +194,8 @@ class AsistenciaCommandJpaParityIT {
         assertNotEquals("SJC", filaJdbc.getEstado());
 
         // Lectura via query JPA (CMD-PAR-015: readback JDBC y JPA).
-        final List<AsistenciaRepositoryProjection> viaJpaQuery = new AsistenciaJpaQueryPersistence(entityManagerFactory)
+        final List<AsistenciaRepositoryProjection> viaJpaQuery = new AsistenciaJpaRepository(
+                        entityManager, new JpaProcedureExecutor(entityManager))
                 .consultarAsistenciasPorGrupo(new ConsultarAsistenciasPorGrupoRepositoryDTO(fixture.grupoId(), sesion));
         final AsistenciaRepositoryProjection filaJpa = soloDe(viaJpaQuery, estudiante);
         assertEquals("EX", filaJpa.getEstado());
@@ -502,8 +507,8 @@ class AsistenciaCommandJpaParityIT {
     // ------------------------------------------------------------------ CMD-PAR-016 (correlacion / auditoria)
 
     /**
-     * El eco de correlacion lo exige {@code CanonicalStoredProcedureExecutor}/{@code
-     * CanonicalProcedureResultValidator} de forma IDENTICA para JDBC y JPA (ambos lanzan
+     * El eco de correlacion lo exige {@code CanonicalJdbcBaselineExecutor}/{@code
+     * ProcedureResultValidator} de forma IDENTICA para JDBC y JPA (ambos lanzan
      * {@code DatabaseOperationException(ERR_DB_CANONICAL_CONTRACT)} si el SP devolviera una
      * correlacion distinta a la enviada). Toda ejecucion exitosa de este arnes que NO produce ese
      * codigo ya es evidencia de que la correlacion se propago correctamente en ambos caminos.

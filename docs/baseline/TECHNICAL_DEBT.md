@@ -17,13 +17,13 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 | [TD-001](#td-001) | Piloto JDBC → JPA pendiente | CLOSED (LB-002.2) | no |
 | [TD-002](#td-002) | Contrato OpenAPI no consolidado | CLOSED (LB-001C.1) | no |
 | [TD-003](#td-003) | Realtime local efímero y por JVM | ABIERTA | sí, LB-005 |
-| [TD-004](#td-004) | Storage local y ownership | ABIERTA | sí, LB-004 |
+| [TD-004](#td-004) | Storage local y ownership | PARTIAL (storage foundation resuelta LB-004B.2; docente-read bloqueado por DB) | sí, LB-004 |
 | [TD-005](#td-005) | Política temporal DB/API | CLOSED_FOR_GOLDEN_PATH (wire HTTP congelado en LB-001C.1; política global no cerrada) | no para Golden Path |
 | [TD-006](#td-006) | Identificación numérica | ABIERTA | no, salvo alcance de identificación |
 | [TD-007](#td-007) | Códigos DB machine-readable | ABIERTA | sí, si bloquea contrato de errores LB-001/002 |
 | [TD-008](#td-008) | Validación runtime de sesión/asistencia | CLOSED — LB-003 | no |
 | [TD-009](#td-009) | Estados de asistencia y registro individual | ABIERTA | sí, para contrato afectado; individual fuera del Golden Path |
-| [TD-010](#td-010) | Auditoría SQL con DML directo | ABIERTA | no para LB-000; revisar release DB |
+| [TD-010](#td-010) | Auditoría SQL con DML directo | RESUELTA (Opción A, JPA-06B, 2026-10-06) | auditoría por JPA directo sin SP nuevo ni cambio DB; ver sección |
 | [TD-011](#td-011) | Outbox y consistencia durable | ABIERTA | sí, LB-005 si exige durabilidad |
 | [TD-012](#td-012) | DataSource específico por provider | ABIERTA | no, salvo incorporar otro provider |
 | [TD-013](#td-013) | Provisioning institucional incompleto | ABIERTA | no para Golden Path; sí antes de liberar provisioning afectado |
@@ -52,15 +52,15 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 | [TD-036](#td-036) | Mapeo determinista de errores DB (`SEC_001/SEC_002/ATT_001-3/SES_003/SES_004/GEN_002`) sin señal de clasificación formal | CLOSED (LB-001B.4) | no |
 | [TD-037](#td-037) | `SesionMateriaEstudianteSqlServerAdapter` lee `Sesion.fechaHoraInicio/fechaHoraFin` con `toLocalDateTime` dependiente de `TimeZone.getDefault()`, no UTC fijo | CLOSED (LB-001B.4) | no |
 | [TD-038](#td-038) | `ReporteAsistenciaSqlServerAdapterTest` no asevera `fechaHoraInicio`/`fechaHoraFin`; no detectaría una regresión de `toLocalDateTimeUtc` a `toLocalDateTime` | CLOSED (LB-001B.4) | no |
-| [TD-039](#td-039) | Firma exacta de parámetros de `usp_cerrar_sesion` no documentada en `DB_BASELINE_CONTRACT.md` | BLOCKED_BY_MISSING_EVIDENCE | no para Golden Path (endpoint fuera de alcance) |
+| [TD-039](#td-039) | Firma exacta de parámetros de `usp_cerrar_sesion` no documentada en `DB_BASELINE_CONTRACT.md` | **CLOSED (2026-10-07)** — cerrada por la alineación final de la DB; el backend consume el contrato final | no |
 | [TD-040](#td-040) | `uv_estudiante_identidad`/`uv_usuario` no documentadas en el contrato DB, usadas por `GET /api/v1/grupos/{grupoId}/estudiantes` | CLOSED — EVIDENCE_RESOLVED (LB-001B.4; salvedad: TD-046) | no |
 | [TD-041](#td-041) | Rama DB origen `feat/db-golden-path-baseline-freeze` no fusionada a `main`/`develop` del repo DB | ABIERTA | sí, si el snapshot congelado se desactualiza antes del freeze de LB-001C |
 | [TD-042](#td-042) | Test de serialización ISO-8601 UTC de `RealtimeEvent.occurredAt` sin contexto Spring real | CLOSED (LB-001B.4A, `RealtimeEventResponseSpringJsonTest` con `@SpringBootTest`) | no |
-| [TD-043](#td-043) | NON_GOLDEN_DB_CONTRACT_DRIFT: 3 SP consumidos por el backend no existen en la DB oficial (`usp_sincronizar_usuario`, `usp_registrar_o_actualizar_plan_estudio`, `usp_registrar_estudiante_en_grupo_usuario_no_existente`) | ABIERTA / DEFERRED (LB-002.1C; `NOT_GREEN_TD043`) | no (fuera del Golden Path LB-001); sí antes de liberar esas features |
-| [TD-044](#td-044) | 2 skips de `DocenteRepositorySqlServerIT` (`assumeTrue` por datos, sin fixture propio) | ABIERTA | no (fuera del Golden Path) |
+| [TD-043](#td-043) | NON_GOLDEN_DB_CONTRACT_DRIFT: 3 SP consumidos por el backend no existen en la DB oficial (`usp_sincronizar_usuario`, `usp_registrar_o_actualizar_plan_estudio`, `usp_registrar_estudiante_en_grupo_usuario_no_existente`) | **CLOSED (2026-10-07)** — los tres providers existen en la DB final | no |
+| [TD-044](#td-044) | 2 skips de `DocenteRepositorySqlServerIT` (`assumeTrue` por datos, sin fixture propio) | OPEN / NON_BLOCKING | no invalida JPA-01 ni bloquea JPA-02A; sí antes de certificar esa consulta |
 | [TD-045](#td-045) | Riesgo de `CPI`/`CPVP` históricos en `RazonCausa` frente a la lectura fail-closed de estado | ABIERTA | no |
-| [TD-046](#td-046) | Vistas `uv_estudiante_grupo`, `uv_estudiante_identidad`, `uv_usuario` sin documentar en `DB_BASELINE_CONTRACT.md` | ABIERTA (acción equipo DB) | no |
-| [TD-047](#td-047) | `USU_001` sin mapeo formal DBCODE (cae en `ERR_DB_UNCLASSIFIED`) | ABIERTA | no (fuera del Golden Path) |
+| [TD-046](#td-046) | Vistas `uv_estudiante_grupo`, `uv_estudiante_identidad`, `uv_usuario` sin documentar en `DB_BASELINE_CONTRACT.md` | **CLOSED (2026-10-07)** — cerrada por la alineación final de la DB; el backend consume el contrato final | no |
+| [TD-047](#td-047) | `USU_001` sin mapeo formal DBCODE (cae en `ERR_DB_UNCLASSIFIED`) | **CLOSED (2026-10-07)** — `USU_001` mapeado y probado | no |
 | [TD-048](#td-048) | `Sesion.nombre` es `nvarchar(50)` en DB pero el backend valida 1..150 (nombres de 51..150 fallarían en persistencia como error técnico) | CLOSED (LB-001B.4B) | no |
 | [TD-049](#td-049) | `/usuarios/perfil` responde 501 | ABIERTA / OUT_OF_GOLDEN_PATH / NON_BLOCKING | no |
 | [TD-050](#td-050) | Latencia de reconciliación realtime observada en MV-001 | ABIERTA / NON_BLOCKING | no |
@@ -68,6 +68,10 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 | [TD-052](#td-052) | Webhook Azure acepta credencial por URL/query | RESUELTA (LB-001D.2) | no |
 | [TD-053](#td-053) | Cloud Integration Azure corre como test normal | RESUELTA (LB-001D.2) | no |
 | [TD-054](#td-054) | Semántica Azure→realtime sin decisión explícita | DECISION_REQUIRED | no para documentación; sí para cambio realtime futuro |
+| [TD-055](#td-055) | JDBC directo residual en `src/main` (0 archivos reales tras JPA-07; 4 tras JPA-06; 9 tras JPA-05; 29 tras JPA-04; baseline histórica JPA-00: 45) durante la migración JPA-only | RESUELTA — LB-008 JPA-07 (2026-10-06) | `DIRECT_JDBC_IN_SRC_MAIN = 0`; ver sección |
+| [TD-056](#td-056) | `usp_registrar_asistencia_estudiante_autonomo` sin frontera transaccional entre `Asistencia` y `DetalleAsistencia` (comportamiento heredado del SP) | **CLOSED (2026-10-07)** — la DB final garantiza atomicidad de `Asistencia` + `DetalleAsistencia`; el backend consume el contrato final | no |
+| [TD-057](#td-057) | Catálogo `dbo.Estado` desplegado sin códigos `P`/`PEND`/`APRO`/`RECH`: los SP de solicitudes de revisión caen a `TOP 1 ORDER BY id` y toda solicitud queda en `A` (aceptada), también las rechazadas | **CLOSED (2026-10-07)** — cerrada por la alineación final de la DB; el backend consume el contrato final | no |
+| [TD-058](#td-058) | `usp_ejecutar_cierre_masivo_periodo` resuelve el periodo con fallback al periodo más reciente de TODA la tabla cuando el código no coincide: un código inexistente con ejecutor ADMINISTRADOR válido cerraría un periodo real | **CLOSED (2026-10-07)** — cerrada por la alineación final de la DB; el backend consume el contrato final | no |
 
 ## TD-001
 
@@ -118,7 +122,18 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 - **Motivo:** Necesita contrato funcional de propietario/recurso/grupo antes de puerto y adapter.
 - **Resolución esperada:** InputPort/UseCase/Port con consumidor real, autorización contextual y almacenamiento adecuado.
 - **Bloquea línea base:** sí, LB-004.
-- **Estado:** ABIERTA.
+- **Estado:** `PARTIAL`.
+- **Actualización LB-004B.2 (2026-09-30):** resuelto para la storage foundation: `ArchivoController`
+  delega en `SubirArchivoInputPort`/`DescargarArchivoInputPort`; `FileStoragePort` (adapter MinIO
+  real, certificado por `MinioFileStorageAdapterIT`) reemplaza el filesystem local
+  (`LOCAL_FILESYSTEM_CONTRACTUAL_STATE: 0`, `StorageProviderIsolationRulesTest`); `POST
+  /api/v1/archivos/subir` exige rol `ESTUDIANTE`; ownership técnico del propietario (`ownerSubject`
+  == identidad JWT) implementado y probado, ajeno → `404` fail-closed. Malware scanning obligatorio
+  (ClamAV real, `ClamAvMalwareScanAdapterIT`). **No se cierra** porque `DOCENTE_READ_RELATED` sigue
+  `DENY_BY_DEFAULT` (bloqueado por `DR-LB004-DB-002`, ver
+  [METADATA_CONTRACT_TARGET](../work-items/LB-004-stateless-serverless-readiness/METADATA_CONTRACT_TARGET.md))
+  y no existe binding DB `fileId → revisión`. Detalle completo:
+  [LB-004B.2-VALIDATION](../work-items/LB-004-stateless-serverless-readiness/LB-004B.2-VALIDATION.md).
 
 ## TD-005
 
@@ -170,7 +185,7 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 
 - **Descripción:** Estados de asistencia y registro individual. Java lote admite AN/SJC/EX. Históricos A/T y mapeo idEstadoAsistencia individual no tienen contrato DB inequívoco; registrarAsistencia lanza FeatureUnavailableException.
 - **Impacto:** Alto.
-- **Evidencia:** RegistroAsistenciaSesionDomain; [AsistenciaRepositorySqlServerAdapter](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/secondary/persistence/sqlserver/core/AsistenciaRepositorySqlServerAdapter.java); archive/pendientes-arquitectura.md.
+- **Evidencia:** RegistroAsistenciaSesionDomain; [AsistenciaRepositoryJpaSqlServerAdapter](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/secondary/persistence/sqlserver/jpa/AsistenciaRepositoryJpaSqlServerAdapter.java); archive/pendientes-arquitectura.md.
 - **Motivo:** No extrapolar enum de lote al registro individual.
 - **Resolución esperada:** Contrato DB liberado y semántica individual acordada; paridad/negativos certificados. LB-001B añade el lado de **lectura**: `GET …/asistencias` devuelve `codigoRazonCausa` sin filtrar y el consumer solo admite AN/SJC/EX ([DR-006](../work-items/LB-001B-backend-frontend-asistencia/CONTRACT_MATRIX.md#dr-006--dominio-de-estado-en-lectura)).
 - **Bloquea línea base:** sí, para contrato afectado; individual fuera del Golden Path.
@@ -182,9 +197,35 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 - **Impacto:** Alto.
 - **Evidencia:** infrastructure/audit/adapter/sqlserver/AuditEventJdbcRepository.java; [infrastructure-structure.md](../architecture/infrastructure-structure.md).
 - **Motivo:** Requiere SPs DB; nombres usp_RegistrarEventoAuditoria/usp_ConsultarEventoAuditoriaPorCorrelationId son propuestas, no objetos comprobados.
-- **Resolución esperada:** Contratos públicos liberados y adapter con CanonicalStoredProcedureExecutor, pruebas de auditoría.
+- **Resolución esperada:** `DECISION_REQUIRED` del owner DB. Opción A: si se autoriza DML directo a `AuditoriaEvento`, `@Entity + EntityManager`. Opción B: si DB publica SP canónico, `EntityManager + createNativeQuery("EXEC …") + ProcedureResult`. No se decide A/B por inferencia y no se propone `CanonicalStoredProcedureExecutor` JDBC como solución futura.
 - **Bloquea línea base:** no para LB-000; revisar release DB.
-- **Estado:** ABIERTA.
+- **Evidencia LB-008 (2026-10-03):** la tabla `dbo.AuditoriaEvento` existe en el repo DB (`schema/tables/AuditoriaEvento.sql`) y `DB_BASELINE_CONTRACT.md` la describe como inmutable, pero **no hay SP público de auditoría**; el backend hace `INSERT` y `SELECT TOP 1` directos. Los nombres `usp_RegistrarEventoAuditoria` / `usp_ConsultarEventoAuditoriaPorCorrelationId` siguen sin objeto comprobado.
+- **Decisión requerida (D-LB008-04):** el owner DB debe elegir (a) DML directo autorizado y documentado, que se implementaría con `@Entity + EntityManager`, o (b) SP público canónico, que se invocaría con `EntityManager + createNativeQuery("EXEC …") + ProcedureResult`. Hasta entonces JPA-06 no migra la auditoría.
+- **Estado:** **DECISION_REQUIRED** (sin decisión A/B; evidencia actualizada por LB-008).
+- **Análisis de gobernanza LB-008 JPA-06 (2026-10-05):** ni `DB_BASELINE_CONTRACT.md` ni ADR-003 deciden A o B. La DB no
+  tiene SP público de auditoría, ni `TRIGGER` ni `DENY` que haga cumplir la inmutabilidad de `AuditoriaEvento`, y el SP
+  `usp_ejecutar_cierre_masivo_periodo` escribe en la tabla por DML directo (patrón del owner, no autorización para el
+  backend). Resultado: `JPA06_AUDIT_STATUS = BLOCKED_BY_TD010_DECISION`. No se implementa auditoría ni se crea RED de
+  auditoría. Detalle en [CONTRACT_MATRIX](../work-items/LB-008-jpa-only-persistence-migration/CONTRACT_MATRIX.md#análisis-de-gobernanza-para-td-010-jpa-06-2026-10-05).
+  **TD-010 sigue OPEN / DECISION_REQUIRED.**
+  > **HISTORICAL SNAPSHOT** (JPA-06 auditoría `BLOCKED`): el párrafo anterior conserva el estado previo a la decisión.
+- **Actualización LB-008 JPA-07 (2026-10-06) — interpretación de "AuditoriaEvento immutable":** `DB_BASELINE_CONTRACT`
+  describe `dbo.AuditoriaEvento` como *immutable por contrato*. Esa afirmación significa que **schema/shape no se
+  auto-migra** desde el backend. **NO significa** tabla sin `INSERT`: la inserción DML directa autorizada por OPCIÓN A es
+  compatible con el contrato. El contrato DB externo no se modificó. `AuditEventEntity` es una entidad de **tabla de
+  escritura**: NO lleva `@Immutable` (regla ArchUnit por convención: solo las `Uv*Entity` son vistas inmutables).
+  `TD-010 = RESOLVED` (OPCIÓN A, JPA-06B); sin cambio DB y sin SP nuevo.
+- **Actualización LB-008 JPA-06B (2026-10-06) — RESOLVED:** decisión arquitectónica **OPCIÓN A**: DML directo JPA autorizado para
+  `dbo.AuditoriaEvento`. Sin SP nuevo y sin cambio de DB. Justificación: la tabla tiene PK, CHECK constraints, índices y
+  `occurredAt DATETIMEOFFSET`; los tests de DB insertan directamente; `usp_ejecutar_cierre_masivo_periodo` inserta
+  directamente; no existe SP público de auditoría. Implementación: `AuditEventEntity` (`@Entity`, sin `@Immutable`, 17 columnas)
+  y `AuditEventJpaRepository` (`@Repository`, `EntityManager.persist`, `REQUIRES_NEW` para replicar el autocommit JDBC).
+  El JDBC previo (`AuditEventJdbcRepository`, `SqlServerAuditSupportConfiguration`) se retiró de `src/main`; su oráculo
+  vive solo en `src/test`. Evidencia: paridad INSERT JDBC-vs-JPA y `findLatestByCorrelationId` en SQL Server real
+  (`AuditEventJpaParityIT`, 4 tests), `AuditHttpIT` y tests unitarios del repositorio. Nota: la aprobación de la Opción A
+  proviene de la instrucción del arquitecto en esta sesión; no consta una aprobación formal escrita del owner de DB.
+  **Excepción ArchUnit:** `JpaIsolationRulesTest` exige `@Immutable` en entidades JPA; se añade exclusión nominal únicamente
+  para `AuditEventEntity` (entidad de escritura). Requiere confirmación del arquitecto.
 
 ## TD-011
 
@@ -528,6 +569,8 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 - **Bloquea línea base:** no para el Golden Path (endpoint fuera de alcance); sí antes de incluir `POST /sesiones/cierres` en cualquier contrato congelado futuro.
 - **Estado:** BLOCKED_BY_MISSING_EVIDENCE. **Work item relacionado:** [LB-001B.3](../work-items/LB-001B.3-backend-db-alignment/CLOSURE.md).
 
+- **Actualización LB-008 cierre de alineación (2026-10-07) — CLOSED:** deuda cerrada mediante la alineación/corrección final de la DB; el Backend ahora consume ese contrato final. Los bloques anteriores (BLOCKED_BY_MISSING_EVIDENCE) son históricos. Estado vigente: **CLOSED**.
+
 ## TD-040
 
 - **Fecha / responsable:** 2026-09-23 / backend-team + equipo DB.
@@ -598,17 +641,41 @@ GOLDEN PATH EFFECT:         NONE
   **Sin falsas afirmaciones:** TD-043 permanece OPEN; `-Pintegration verify` global permanece `NOT_GREEN_TD043` (6 fallos idénticos, no re-ejecutados en esta actualización); los ITs no se deshabilitan y las expectativas contractuales no se borran ni se ocultan. Esto **no** significa LB-002 GLOBAL CLOSED, `-Pintegration` GREEN ni TD-043 RESOLVED.
 
   **Excepción de continuidad del Golden Path (decisión de planificación):** TD-043 es NON-GOLDEN y el Golden Path funcional de asistencia es independiente de estas tres capabilities. `NON-GOLDEN TD-043 REMEDIATION: DEFERRED` · `GOLDEN PATH ENGINEERING: AUTHORIZED TO CONTINUE` (por priorización humana). Siguiente objetivo autorizado: Golden Path `registrarAsistenciasSesion`, fase técnica **LB-002.2 — JPA COMMAND PILOT** (TD-043 permanece como excepción/deuda NON-GOLDEN reconocida). Ver [LINEA_BASE](LINEA_BASE.md).
-- **Estado:** **OPEN / DEFERRED** — NON_GOLDEN_DB_CONTRACT_DRIFT (no resuelta; requiere work item propio si se decide resolver). **Work item relacionado:** [LB-001B.4](../work-items/LB-001B.4-final-backend-contract-closure/CONTRACT_DECISION_TD043.md).
+- **Actualización LB-008 JPA-01 COMMANDS (2026-10-05):** esta deuda es la **excepción de baseline** que permite `READY_WITH_APPROVED_BASELINE_EXCEPTION` en JPA-01 COMMANDS ([PLAN, DoR](../work-items/LB-008-jpa-only-persistence-migration/PLAN.md)). `clean verify -Pintegration` = **NOT_GREEN_TD043**: 6 fallos, idénticos al conjunto documentado (3 + 2 + 1), sin fallos nuevos. Ningún command de Asistencia invoca los tres SP ausentes (verificado por `grep` sobre los cuatro SP de Asistencia). No se oculta, no se marca PASS y no se cierra.
+- **Actualización LB-008 JPA-02B IMPLEMENTADO (2026-10-05, evidencia real):** el command
+  `dbo.usp_registrar_estudiante_en_grupo_usuario_no_existente` ya es **`CODE_MIGRATION_STATUS = JPA`**
+  (`GrupoJpaCommandPersistence.registrarEstudianteEnGrupo`, mismo nombre de SP y mismo contrato de parámetros).
+  `DB_PROVIDER_STATUS = MISSING`: el SP sigue sin existir en `schema/stored-procedures` del repositorio DB, y no
+  se sustituyó por `usp_registrar_estudiante_en_grupo*`. **TD-043 permanece OPEN.** En SQL Server real la
+  llamada falla con `DATABASE_OPERATION_ERROR` (`GRP_04` en `SesionGrupoCommandsSpParityIT`), la misma
+  clasificación que el baseline JDBC. Los seis commands restantes (sesión y grupo) sí tienen provider y su paridad
+  se certificó; el global `-Pintegration` sigue `NOT_GREEN_TD043` por los mismos 6 fallos conocidos.
+- **Actualización LB-008 JPA-02B (2026-10-05):** TD-043 es un **SCOPED_BLOCKER**, no un
+  bloqueo global de la migración. Dentro de JPA-02B afecta únicamente a
+  `dbo.usp_registrar_estudiante_en_grupo_usuario_no_existente`. Los otros seis commands de Sesión
+  y Grupo tienen provider DB disponible y pueden avanzar con su RED, paridad y cleanup. Para el
+  command afectado, `CODE_MIGRATION_STATUS = JPA_REQUIRED` y
+  `DB_PROVIDER_STATUS = MISSING / BLOCKED_TD043`; no se inventa ni se selecciona automáticamente
+  `usp_registrar_estudiante_en_grupo` ni otro sustituto.
+- **Estado:** **OPEN / DEFERRED / PREEXISTING / SCOPED_BLOCKER** —
+  NON_GOLDEN_DB_CONTRACT_DRIFT. No invalida JPA-01/JPA-02A ni bloquea globalmente JPA-02B; sí
+  bloquea la ejecución/certificación de cada capacidad cuyo provider falta. **Work item
+  relacionado:** [LB-001B.4](../work-items/LB-001B.4-final-backend-contract-closure/CONTRACT_DECISION_TD043.md).
+
+- **Actualización LB-008 JPA-03 (2026-10-05) — estado sin cambio, código migrado:** `usp_registrar_o_actualizar_plan_estudio` y `usp_sincronizar_usuario` tienen ahora su command en JPA (`CODE_MIGRATION_STATUS = JPA`, `DB_PROVIDER = MISSING`). Verificado en `sys.procedures` sobre `gestionasistenciadb`: ausentes. No se sustituyen por otro SP (en particular, `usp_sincronizar_usuario_interno` no es equivalente). Paridad: `PLA_01` y `USU_01` idénticos BEFORE JDBC = AFTER JPA, con la misma clasificación aplicativa. TD-043 permanece OPEN.
+
+- **Actualización LB-008 cierre de alineación (2026-10-07) — CLOSED:** los providers públicos `usp_registrar_estudiante_en_grupo`, `usp_sincronizar_usuario` y `usp_registrar_o_actualizar_plan_estudio` existen en la DB final y sus firmas coinciden con el backend (`SqlStoredProcedureContractIT`, 19 SP productivos). El backend no invoca `_interno` ni el provider legado `usp_registrar_estudiante_en_grupo_usuario_no_existente`. `-Pintegration clean verify`: BUILD SUCCESS (188 ITs, 0 fallos). Los bloques anteriores de esta deuda (OPEN/`NOT_GREEN_TD043`) son históricos. Evidencia: [VALIDATION](../work-items/LB-008-jpa-only-persistence-migration/VALIDATION.md) (addendum final).
 
 ## TD-044
 
 - **Fecha / responsable:** 2026-09-23 / backend-team (condición del auditor de LB-001B.4).
+- **Actualización LB-008 JPA-01 COMMANDS (2026-10-05):** los 2 skips se reconfirman en el run global (`DocenteRepositorySqlServerIT`). Son `NON_BLOCKING` para JPA-01: la baseline dirigida de Asistencia no los incluye. Sin cambios en el test ni en su `assumeTrue`.
 - **Descripción:** `DocenteRepositorySqlServerIT` omite 2 tests (`assumeTrue` por ausencia de datos). Prueban `consultarAsignacionesAcademicas` (`GET /api/v1/docentes/{docenteId}/asignaciones`), no `GET /api/v1/docente/horarios` (que usa `uv_horario_docente`, verificada por `GoldenPathSqlStoredProcedureContractIT`).
 - **Impacto:** Bajo. Un skip no es PASS: esa consulta no está certificada contra DB real.
 - **Evidencia:** [AUDIT](../work-items/LB-001B.4-final-backend-contract-closure/AUDIT.md) (§Los 2 skips); [VALIDATION](../work-items/LB-001B.4-final-backend-contract-closure/VALIDATION.md).
 - **Resolución esperada:** fixture autocontenido con prefijo `IT-LB001B4-`, sin `assumeTrue`, y limpieza verificable.
 - **Bloquea línea base:** no (fuera del Golden Path); sí antes de certificar esa consulta.
-- **Estado:** ABIERTA. **Work item relacionado:** [LB-001B.4](../work-items/LB-001B.4-final-backend-contract-closure/CLOSURE.md).
+- **Estado:** **OPEN / NON_BLOCKING**. No invalida el cierre causal de JPA-01 ni bloquea JPA-02A. **Work item relacionado:** [LB-001B.4](../work-items/LB-001B.4-final-backend-contract-closure/CLOSURE.md).
 
 ## TD-045
 
@@ -630,6 +697,8 @@ GOLDEN PATH EFFECT:         NONE
 - **Bloquea línea base:** no.
 - **Estado:** ABIERTA (acción externa, equipo DB). **Work item relacionado:** [LB-001B.4](../work-items/LB-001B.4-final-backend-contract-closure/CLOSURE.md).
 
+- **Actualización LB-008 cierre de alineación (2026-10-07) — CLOSED:** deuda cerrada mediante la alineación/corrección final de la DB; el Backend ahora consume ese contrato final. Los bloques anteriores (ABIERTA) son históricos. Estado vigente: **CLOSED**.
+
 ## TD-047
 
 - **Fecha / responsable:** 2026-09-23 / backend-team + equipo DB.
@@ -639,6 +708,8 @@ GOLDEN PATH EFFECT:         NONE
 - **Resolución esperada:** definir HTTP/código semántico de `USU_001` en el contrato de la vertical de usuarios.
 - **Bloquea línea base:** no (fuera del Golden Path).
 - **Estado:** ABIERTA. **Work item relacionado:** [LB-001B.4](../work-items/LB-001B.4-final-backend-contract-closure/CLOSURE.md).
+
+- **Actualización LB-008 cierre de alineación (2026-10-07) — CLOSED:** `USU_001` → `UsuarioErrorCode.ERR_USUARIO_NO_EXISTE` (NotFound) en `DbFailureClassifier`, probado en `DbExceptionTranslatorTest` junto con el resto de DBCODE formales. Estado vigente: **CLOSED**.
 
 ## TD-048
 
@@ -724,3 +795,69 @@ GOLDEN PATH EFFECT:         NONE
 - **Resolución esperada:** decisión explícita A/B/C, contrato/consumidores y tests antes de cualquier cambio realtime.
 - **Bloquea línea base:** no para LB-001D.1; sí para un cambio realtime relacionado.
 - **Estado:** DECISION_REQUIRED. **Work item:** [LB-001D.1](../work-items/LB-001D-governance-hardening/LB-001D.1-PLAN.md).
+
+## TD-055
+
+- **Fecha / responsable:** 2026-10-03 / backend-team (LB-008).
+- **Clasificación:** `PERSISTENCE_MIGRATION_DEBT`.
+- **Descripción:** mientras LB-008 no cierre, **6** archivos reales de `src/main` conservan API JDBC o `java.sql` (`NamedParameterJdbc*`, `JdbcTemplate`, `RowMapper`, `MapSqlParameterSource`, `java.sql.*`): auditoría (TD-010) y soporte de procedimientos (JPA-07). Estado tras JPA-06 (catálogos cerrados); 9 tras JPA-05, 29 tras JPA-04, baseline histórica JPA-00: 45. Asistencia y las queries core JPA-04 ya tienen cero JDBC directo; selectores `jdbc|jpa`, adapter híbrido y fallback JDBC fueron retirados.
+- **Impacto:** el objetivo global JPA-only (ADR-003) todavía no se cumple; fuera de Asistencia siguen coexistiendo módulos JDBC con la capacidad JPA ya migrada.
+- **Evidencia:** [CONTRACT_MATRIX](../work-items/LB-008-jpa-only-persistence-migration/CONTRACT_MATRIX.md#inventario-jdbc-baseline) (baseline JPA-00: 47 tokens, 2 falsos positivos y 45 reales; estado certificado tras JPA-01: 44); [ADR-003](../adr/ADR-003-jpa-only-persistence.md).
+- **Motivo para no resolver ahora:** la migración se ejecuta por microfases. JPA-01 y JPA-02A
+  están cerradas. JPA-02B inicia con un bloqueo DB acotado al command de registro de estudiante;
+  los otros seis commands no quedan detenidos. El global `-Pintegration` permanece
+  `NOT_GREEN_TD043`; JPA-03 y JPA-06 mantienen sus propios bloqueos de capacidad (TD-043, TD-010).
+- **Resolución esperada:** JPA-07 con `DIRECT_JDBC_IN_SRC_MAIN = 0`, `HYBRID_JDBC_JPA_RUNTIME = 0`, `JDBC_FALLBACK_RUNTIME = 0`, `JDBC_PROVIDER_SELECTOR = 0`.
+- **Bloquea línea base:** no para LB-003 (cerrada); sí para cerrar LB-008.
+- **Estado:** **RESUELTA** (LB-008 JPA-07, 2026-10-06). `DIRECT_JDBC_IN_SRC_MAIN = 0`. Retirados `CanonicalStoredProcedureExecutor`,
+  `CanonicalProcedureResultMapper`, `JdbcValueMapper` y `SqlServerProcedureSupportConfiguration` de `src/main`; oráculos JDBC
+  migrados a `src/test` (`CanonicalJdbcBaselineExecutor`, `CanonicalJdbcBaselineResultMapper`, `JdbcBaselineValueMapper`).
+  Los consumidores de SP de producción usan `EntityManager + createNativeQuery("EXEC …") + ProcedureResultMapper`.
+  Lo que cierra esta deuda no es un cambio de DB. **Work item:** [LB-008](../work-items/LB-008-jpa-only-persistence-migration/PLAN.md).
+- **Actualización LB-008 JPA-01 COMMANDS (2026-10-04, búsqueda real):** `src/main` importa `org.springframework.jdbc`/`java.sql` en **44** archivos (antes 45; se retiró `AsistenciaRepositorySqlServerAdapter`). Asistencia (commands y queries) = **0** directos en `src/main`; `StoredProcedureQuery`/`ParameterMode` = **0** en `src/main`; selectores `jdbc|jpa` = 0; adapter híbrido = 0. Restan 44 fuera de Asistencia: academic (16), core Grupo/Usuario/Sesion/Docente/Estudiante/TipoIdentificacion, reporting (incluido `ReporteAsistenciaSqlServerAdapter`, capacidad de reportes, JPA-05), catalog, audit (TD-010), authorization y soporte compartido (`CanonicalStoredProcedureExecutor`, `JdbcValueMapper`). El oráculo JDBC de Asistencia vive solo en test (`AsistenciaJdbcBaselineOracle`).
+- **Actualización LB-008 JPA-02B (2026-10-05, búsqueda real):** `src/main` mantiene **44** archivos reales con JDBC directo (el conteo bruto es 45 porque incluye el falso positivo `UvDetalleAsistenciaEntity`, un `ResultSet` en Javadoc). Los command paths de Sesión (4) y Grupo (3) pasan a JPA: `JDBC_COMMAND_PATHS_SESION = 0`, `JDBC_COMMAND_PATHS_GRUPO = 0`. El conteo de archivos no baja porque los adapters `Sesion`/`Grupo` conservan consultas JDBC hasta JPA-04. Sin migrar: `uv_sesion`, `uv_grupo`, `usp_crear_asignatura`, `usp_registrar_o_actualizar_plan_estudio`, `usp_sincronizar_usuario`, auditoría y el resto de la lista de 44.
+- **Actualización LB-008 JPA-02A (2026-10-05, búsqueda real):** JDBC directo en `src/main` = **44** archivos reales fuera de Asistencia (`DIRECT_JDBC_ASISTENCIA = 0`). Cada archivo tiene microfase asignada (JPA-02B a JPA-07) y patrón destino en [JDBC_RESIDUAL_INVENTORY](../work-items/LB-008-jpa-only-persistence-migration/JDBC_RESIDUAL_INVENTORY.md). Los bloqueos DB no detienen su migración de código: TD-043 (tres SP ausentes) afecta a #17, #22 y #25 solo en su ejecución real; TD-010 afecta a #37 (auditoría). JPA-02A no migra archivos; el bootstrap pasa a ser el estándar de Boot. La deuda sigue **ABIERTA** hasta JPA-07.
+- **Actualización LB-008 JPA-04 (2026-10-05, búsqueda real):** `DIRECT_JDBC_GLOBAL` baja de **43 a 29** archivos reales (30 coincidencias brutas menos el falso positivo Javadoc `UvDetalleAsistenciaEntity`). Las seis capabilities core de lectura quedan con `CORE_QUERY_DIRECT_JDBC = 0`; se retiran siete `RowMapper` sin consumidores y el wiring core ya solo recibe `EntityManager`/componentes JPA. `JdbcValueMapper` permanece por lectores academic/reporting de JPA-05. Paridad SQL Server `CoreViewQueriesJpaParityIT` 6/6 PASS. TD-055 sigue **ABIERTA** hasta cero global en JPA-07.
+- **Actualización LB-008 JPA-05 (2026-10-05, búsqueda real):** `DIRECT_JDBC_GLOBAL` baja de **11 a 9** archivos reales (10 coincidencias brutas menos el falso positivo Javadoc `UvDetalleAsistenciaEntity`). `DIRECT_JDBC_JPA05_SCOPE = 0`. Residual: catálogos (#1, #2, #3), auditoría (#4, #5; TD-010), soporte de procedimientos (`CanonicalStoredProcedureExecutor` con `PRODUCTIVE_CONSUMERS = 0`, `CanonicalProcedureResultMapper`, `SqlServerProcedureSupportConfiguration`) y `JdbcValueMapper`. Todo asignado a JPA-06 / JPA-07. TD-055 sigue **ABIERTA** hasta cero global en JPA-07.
+- **Actualización LB-008 JPA-06 (2026-10-05, búsqueda real):** `DIRECT_JDBC_GLOBAL` baja de **9 a 6** archivos reales (7 coincidencias brutas menos el falso positivo Javadoc `UvDetalleAsistenciaEntity`). Catálogos (#1, #2, #3) migrados a JPA (`CatalogJpaQueryPersistence`, `UvMensajeUsuarioEntity`, `UvMensajeTecnicoEntity`, `UvParametroEntity`); paridad `CatalogJpaParityIT` 11/11 PASS contra SQL Server real. Residual: auditoría (#4, #5; **TD-010 `BLOCKED_BY_TD010_DECISION`**, sin implementación) y soporte de procedimientos (`JdbcValueMapper`, `CanonicalProcedureResultMapper`, `CanonicalStoredProcedureExecutor`, `SqlServerProcedureSupportConfiguration`), asignado a JPA-07. TD-055 sigue **ABIERTA** hasta cero global; no puede cerrarse mientras TD-010 esté abierta.
+
+## TD-056
+
+- **Fecha / responsable:** 2026-10-04 / backend-team (LB-008, auditoría transaccional command por command).
+- **Clasificación:** `PERSISTENCE_BEHAVIOR_DEBT` (heredada del SP; no introducida por JPA).
+- **Descripción:** `dbo.usp_registrar_asistencia_estudiante_autonomo` no abre transacción en su cuerpo y delega en `dbo.usp_sincronizar_asistencia_estudiante_interno`, que inserta `dbo.Asistencia` y después `dbo.DetalleAsistencia` (`INSERT`/`UPDATE`) sin `BEGIN TRANSACTION`. Si la segunda escritura falla tras la primera, el SP no revierte la primera.
+- **Impacto:** medio. Posible estado parcial (cabecera de asistencia sin detalle) ante un fallo técnico intermedio. Los fallos funcionales (validación, código de verificación, pertenencia al grupo) se detectan antes de escribir y no producen efectos.
+- **Evidencia:** [CONTRACT_MATRIX](../work-items/LB-008-jpa-only-persistence-migration/CONTRACT_MATRIX.md#transacciones) (`SP_MANAGES_TRANSACTION = NO`); scripts `schema/stored-procedures/usp_registrar_asistencia_estudiante_autonomo.sql` y `usp_sincronizar_asistencia_estudiante_interno.sql` del repo DB.
+- **Motivo para no resolver ahora:** el cambio de tecnología de persistencia debe preservar el comportamiento del baseline. Corregir el SP cambia DB, fuera de alcance de LB-008 (`FORBIDDEN_PATHS: schema/, SP`).
+- **Resolución esperada:** decisión del owner DB para envolver el flujo autónomo en una transacción propia (o savepoint) y certificar rollback real. Después, paridad JPA con el mismo comportamiento.
+- **Bloquea línea base:** no. **Estado:** **OPEN / PREEXISTING / NON_BLOCKING / DB CONTRACT-BEHAVIOR**. No se corrige ni se decide atomicidad desde el backend. **Work item:** [LB-008](../work-items/LB-008-jpa-only-persistence-migration/CONTRACT_MATRIX.md#transacciones).
+
+- **Actualización LB-008 cierre de alineación (2026-10-07) — CLOSED:** deuda cerrada mediante la alineación/corrección final de la DB, que ahora garantiza la atomicidad de `Asistencia` + `DetalleAsistencia` en el registro autónomo; el Backend ahora consume ese contrato final. Los bloques anteriores (OPEN) son históricos. Estado vigente: **CLOSED**.
+
+## TD-057
+
+- **Fecha / responsable:** 2026-10-04 / backend-team (LB-008, verificación de paridad real command por command). **Clasificación:** `DB_CATALOG_CONTRACT_DRIFT`. **Prioridad:** ALTA.
+- **Descripción:** en la DB desplegada (`gestionasistenciadb`) `dbo.Estado` contiene **solo dos filas**: `A` (aceptada) y `R` (rechazada). Los SP de solicitudes de revisión buscan otros códigos:
+  - `usp_radicar_solicitud_revision_asistencia`: estado pendiente por `codigo IN ('P','PEND')`; no existe → `SELECT TOP 1 id FROM dbo.Estado ORDER BY id`.
+  - `usp_resolver_solicitud_revision_asistencia`: estado nuevo por `codigo = 'APRO'` (APROBADA) o `'RECH'` (otro valor); no existe → mismo fallback `TOP 1 ORDER BY id`.
+  - Como el primer `id` ordenado es el de `A`, **toda solicitud nace en `A` y ninguna transición llega a `R`**: una solicitud rechazada queda como aceptada.
+- **Impacto:** alto para el flujo funcional de revisión de asistencias. No introducido por JPA: JDBC produce el mismo resultado (verificado en `AsistenciaCommandsSpParityIT`, RAD_01 y RES_01, con paridad 0 mismatches).
+- **Evidencia:** lectura de solo lectura de `dbo.Estado` (2 filas: `A`, `R`); `schema/stored-procedures/usp_radicar_solicitud_revision_asistencia.sql` (líneas 120–123) y `usp_resolver_solicitud_revision_asistencia.sql` (líneas 108–116) del repo DB.
+- **Motivo para no resolver ahora:** la corrección es de datos/contrato DB (catálogo y SP), fuera de alcance de la migración JPA-only (`FORBIDDEN_PATHS: schema/, SP, seeds`). Los tests `AsistenciaCommandsSpParityIT` fijan el estado observado como **caracterización** y citan esta deuda; no lo presentan como contrato.
+- **Resolución esperada:** decisión del owner DB: (a) añadir al catálogo los códigos canónicos usados por los SP (`P`/`PEND`, `APRO`, `RECH`) o (b) alinear los SP a los códigos existentes (`A`/`R`) con decisión explícita. Después retirar la caracterización y añadir aserciones de transición real.
+- **Bloquea línea base:** no para JPA-02A; sí para liberar el flujo de revisión. **Estado:** **OPEN / HIGH / DB_OWNER / PREEXISTING / NON_CAUSAL_TO_JPA**. JDBC y JPA presentan el mismo comportamiento; **NO ES REGRESIÓN JPA**. **Work item:** [LB-008](../work-items/LB-008-jpa-only-persistence-migration/CONTRACT_MATRIX.md#transacciones).
+
+- **Actualización LB-008 cierre de alineación (2026-10-07) — CLOSED:** deuda cerrada mediante la alineación/corrección final de la DB (catálogo `dbo.Estado` y SP de solicitudes de revisión); el Backend ahora consume ese contrato final. Los bloques anteriores (OPEN) son históricos. Estado vigente: **CLOSED**.
+
+## TD-058
+
+- **Fecha / responsable:** 2026-10-05 / backend-team (LB-008 JPA-03, cierre de éxito con fixture aislado). **Clasificación:** `DB_SP_RESOLUTION_DEFECT`. **Prioridad:** ALTA.
+- **Descripción:** en `dbo.usp_ejecutar_cierre_masivo_periodo` la búsqueda del periodo objetivo tiene dos pasos. Primero busca por `nombre = @codigoPeriodo` o `CAST(codigo) = @codigoPeriodo`. Si no encuentra nada, **no falla**: toma el periodo con mayor `anio` (y `codigo`) de toda `uv_periodo_academico` y ejecuta el cierre sobre él. Con ejecutor ADMINISTRADOR válido, un código inexistente cierra un periodo real que el llamador no nombró.
+- **Impacto:** alto para la integridad de datos académicos (estados `EstudianteGrupo`, contadores de `Grupo` y `AuditoriaEvento`). No introducido por JPA: el SP es el mismo para JDBC y JPA.
+- **Evidencia:** lectura de la definición viva (`OBJECT_DEFINITION`, solo lectura) en `gestionasistenciadb`. En esa DB hay un único periodo (`2026-2`) con dos estudiantes activos. No se ejecutó el SP con código inexistente y ejecutor válido, precisamente para no alterar datos ajenos.
+- **Protección actual accidental:** `AcademicUserCommandsSpParityIT` CIE_01 usa un ejecutor aleatorio que falla la validación RBAC (`ADMINISTRADOR`) antes de llegar a la resolución del periodo. No es una protección del SP.
+- **Mitigación en tests (JPA-03):** los success tests crean un periodo con código único, verifican que solo ese código identifica un periodo (`COUNT = 1`) y comprueban que el periodo compartido de la semilla no cambia.
+- **Resolución esperada:** decisión del owner DB: (a) devolver `VAL_002` cuando el código no coincide, sin fallback, o (b) un fallback explícito y documentado con contrato aprobado. Después añadir un IT de código inexistente con ejecutor ADMINISTRADOR que verifique que no cambia ninguna fila.
+- **Bloquea línea base:** no bloquea JPA-03 ni JPA-04. Bloquea el uso operativo seguro del cierre masivo mientras la deuda esté abierta. **Estado:** **OPEN / HIGH / DB_OWNER / PREEXISTING / NON_CAUSAL_TO_JPA**. **Work item:** [LB-008](../work-items/LB-008-jpa-only-persistence-migration/TEST_PLAN.md#jpa-03--academic--user-commands).
+
+- **Actualización LB-008 cierre de alineación (2026-10-07) — CLOSED:** deuda cerrada mediante la alineación/corrección final de la DB; el Backend ahora consume ese contrato final. Los bloques anteriores (OPEN) son históricos. Estado vigente: **CLOSED**.
