@@ -97,3 +97,24 @@ Incidencias honestas: un borrador de la matriz HTTP falló por una variable Powe
 CI remoto al cerrar esta pasada: en `9ed690f` y `b512bb4`, Dependency Review y Trivy repo `success`; Backend Quality Gate, ArchUnit, CodeQL y Trivy image `in_progress`. No se declara PASS remoto hasta su conclusión.
 
 **Resultado:** `PAGINATION_CONTRACT_PUBLISHED_AND_JWT_4_ROLES_PASS / UTC_D06_DECISION_REQUIRED / BACKEND_READY_FOR_FRONTEND = NO`.
+
+## MAINT-003C — 2026-10-09 (Claude Code)
+
+Fecha/zona: 2026-10-09, `America/Bogota`. Credenciales leídas de `.env` local sin imprimirse; consultas con `ApplicationIntent=ReadOnly`.
+
+| Entorno / SHA | Comando o acción | Exit | Resultado |
+|---|---|---:|---|
+| GitHub API | `commits/7e2827d1/check-runs` | 0 | 9/9 `success` (`head_sha` 7e2827d1) |
+| GitHub API | `commits/3985b0ac/check-runs`, `commits/b512bb40/check-runs` | 0 | 9/9 `success` cada uno |
+| SonarCloud | `qualitygates/project_status?pullRequest=18`, `project_pull_requests/list` | 0 | `OK`; PR18 analizado en `7e2827d1`, PR19 `3985b0ac`, PR20 `b512bb40` |
+| git | `diff --stat bfc4fd3..7e2827d1` | 0 | 18 archivos; producción solo validador HTTP + adapter JPA |
+| SQL Server fuente | `d06_impact.sql` (columnas, dependencias, triggers, CHECK, CDC, parámetros SP, conteos, `CatalogoParametro TIEMPO`) | 0 | ver acta MAINT-003C; un primer borrador falló por columna inexistente (`DetalleAsistencia.sesion`) antes de producir resultados |
+| SQL Server fuente | `d06_defs.sql` (`OBJECT_DEFINITION` de 4 vistas, uso de `fechaHora`/`AT TIME ZONE`) | 0 | vistas con lista explícita; solo `usp_generar_sesiones_grupo` convierte |
+| repo owner DB | `git fetch --all`; `git log --since=2026-10-01` | 0 | sin commits nuevos; sin decisión D06 |
+| JDK 25 jshell | parseo `ISO_OFFSET_DATE_TIME` de 15 entradas | 0 | acepta `+02`, `+02:00:30`, `-00:00`, sin segundos, 9 decimales, minúsculas |
+| RED `19b5a95` | `mvnw test -Dtest=HttpUtcInstantCodec*Test,SesionV2HttpContractRedTest,SesionUtcActivationGuardTest,OpenApiSesionesV2ContractRedTest` | 1 esperado | guarda 3/0/0/0; codec 7/0/0/0; estricto 8 tests/4 RED («nothing was thrown»); HTTP 13/13 RED («ningún @RestController mapea /api/v2/sesiones»); OpenAPI 4/3 RED |
+| RED `19b5a95` | `mvnw clean test -Dmaven.test.failure.ignore=true -Djacoco.skip=true` | 0 | 1481 tests, 20 failures = exactamente los RED anteriores, 0 errores, 0 skips |
+
+No se ejecutó: `-Pintegration`, JaCoCo, Sonar/CodeQL/Trivy locales ni HTTP real para MAINT-003C (no hay código de producción nuevo; la rama RED falla por diseño). No se ejecutó DDL, `UPDATE`, merge ni force-push.
+
+**Resultado:** `REVIEW_COMPLETE / OWNER_PROPOSAL_READY / RED_D02_CAUSAL / UTC_V2_NOT_IMPLEMENTED / BACKEND_READY_FOR_FRONTEND = NO`.
