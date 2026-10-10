@@ -16,11 +16,11 @@
     (test/fixtures/dev del repo DB) y el backend con app.sesiones.v2.enabled=true.
 
 .EXAMPLE
-    .\scripts\e2e\utc-real-jwt-e2e.ps1 -BaseUrl http://127.0.0.1:18080 -TimeZoneLabel America/Bogota
+    .\scripts\e2e\utc-real-jwt-e2e.ps1 -BaseUrl http://127.0.0.1:18181 -TimeZoneLabel America/Bogota
 #>
 [CmdletBinding()]
 param(
-    [string]$BaseUrl = 'http://127.0.0.1:18080',
+    [string]$BaseUrl = 'http://127.0.0.1:18181',
     [string]$SqlContainer = 'sql_server_asistencias',
     [string]$TimeZoneLabel = 'default',
     [string]$ReportPath
@@ -63,7 +63,8 @@ function Invoke-Http([string]$Method, [string]$Path, [string]$Token, $Body = $nu
         $resp = $_.Exception.Response
         if ($null -eq $resp) { throw }
         $status = [int]$resp.StatusCode
-        $text = $_.ErrorDetails.Message
+        $text = $null
+        if ($null -ne $_.ErrorDetails) { $text = $_.ErrorDetails.Message }
     }
     $json = $null
     if ($text) { try { $json = $text | ConvertFrom-Json } catch { $json = $null } }
@@ -77,13 +78,22 @@ function Get-UserToken([string]$Username, [string]$Password) {
 }
 
 function Invoke-Sql([string]$Query) {
-    $out = docker exec -e "Q=$Query" $SqlContainer bash -c '/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -d gestionasistenciadb -h -1 -W -s "|" -Q "SET NOCOUNT ON; $Q"'
-    if ($LASTEXITCODE -ne 0) { throw "SQL failed: $($out -join ' ')" }
-    return @($out | Where-Object { $_ -and $_.Trim() })
+    # La password de sa nunca sale del contenedor: sqlcmd la lee de MSSQL_SA_PASSWORD; la consulta viaja en un archivo temporal ASCII.
+    # Separador de columnas: coma (los valores consultados no la contienen).
+    $tmp = [IO.Path]::GetTempFileName()
+    try {
+        [IO.File]::WriteAllText($tmp, "SET NOCOUNT ON; $Query", (New-Object System.Text.UTF8Encoding($false)))
+        docker cp $tmp "${SqlContainer}:/tmp/uco_e2e.sql" | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw 'docker cp failed' }
+        $out = docker exec $SqlContainer bash -c '/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $MSSQL_SA_PASSWORD -C -d gestionasistenciadb -h -1 -W -s , -i /tmp/uco_e2e.sql'
+        if ($LASTEXITCODE -ne 0) { throw "SQL failed: $($out -join ' ')" }
+        return @($out | Where-Object { $_ -and $_.Trim() })
+    }
+    finally { Remove-Item $tmp -ErrorAction SilentlyContinue }
 }
 
 function Get-Ticks([string]$IsoLocal) {
-    return [datetime]::ParseExact($IsoLocal.TrimEnd('Z'), @('yyyy-MM-ddTHH:mm:ss', 'yyyy-MM-ddTHH:mm:ss.FFFFFFF'), [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::None).Ticks
+    return [datetime]::ParseExact($IsoLocal.TrimEnd('Z'), [string[]]@("yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd'T'HH:mm:ss.FFFFFFF"), [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::None).Ticks
 }
 
 $e2eDocenteUser = Get-KcEnvValue -EnvMap $envMap -Key 'E2E_DOCENTE_USERNAME'
@@ -135,9 +145,9 @@ try {
         $ok = ($r.Status -eq 200)
         $mismatch = 0; $count = 0
         if ($ok) {
-            $sql = Invoke-Sql ("SELECT CAST(id AS VARCHAR(36)), CONVERT(VARCHAR(27), fechaHoraInicio, 126), CONVERT(VARCHAR(27), fechaHoraFin, 126) FROM dbo.Sesion WHERE grupo = '$($g.id)' AND nombre NOT LIKE 'E2E-%'")
+            $sql = @(Invoke-Sql ("SELECT CAST(id AS VARCHAR(36)), CONVERT(VARCHAR(27), fechaHoraInicio, 126), CONVERT(VARCHAR(27), fechaHoraFin, 126) FROM dbo.Sesion WHERE grupo = '$($g.id)' AND nombre NOT LIKE 'E2E-%'"))
             foreach ($line in $sql) {
-                $p = $line -split '\|'
+                $p = $line -split ','
                 $row = @($r.Json.datos | Where-Object { $_.sesion -eq $p[0].ToLower() })
                 $count++
                 if ($row.Count -ne 1 -or (Get-Ticks $row[0].fechaHoraInicio) -ne (Get-Ticks $p[1]) -or (Get-Ticks $row[0].fechaHoraFin) -ne (Get-Ticks $p[2])) { $mismatch++ }
@@ -162,8 +172,8 @@ try {
     Add-Result 'TIM-07 GET v2 tras POST: id estable y UTC exacta' ($null -ne $created -and $created.fechaHoraInicio -eq '2042-07-16T01:00:00.1234567Z' -and $created.fechaHoraFin -eq '2042-07-16T03:30:00.7654321Z' -and $created.procedenciaTemporal -eq 'UTC_V2') ("ini=" + $(if ($created) { $created.fechaHoraInicio } else { 'n/a' }))
     if ($created) {
         $sid = $created.sesion
-        $sql = Invoke-Sql "SELECT CONVERT(VARCHAR(27), fechaHoraInicio, 126), CONVERT(VARCHAR(27), fechaHoraFin, 126), procedenciaTemporal FROM dbo.Sesion WHERE id = '$sid'"
-        Add-Result 'TIM-07b SQL datetime2(7) UTC + marca' ($sql[0] -eq '2042-07-16T01:00:00.1234567|2042-07-16T03:30:00.7654321|UTC_V2') "sql=$($sql[0])"
+        $sql = @(Invoke-Sql "SELECT CONVERT(VARCHAR(27), fechaHoraInicio, 126), CONVERT(VARCHAR(27), fechaHoraFin, 126), procedenciaTemporal FROM dbo.Sesion WHERE id = '$sid'")
+        Add-Result 'TIM-07b SQL datetime2(7) UTC + marca' ($sql[0] -eq '2042-07-16T01:00:00.1234567,2042-07-16T03:30:00.7654321,UTC_V2') "sql=$($sql[0])"
         $r = Invoke-Http 'GET' "/api/v2/sesiones/$sid" $owner
         Add-Result 'GET v2 por id' ($r.Status -eq 200 -and $r.Json.datos.fechaHoraInicio -eq '2042-07-16T01:00:00.1234567Z') "status=$($r.Status)"
         $r = Invoke-Http 'PATCH' "/api/v2/sesiones/$sid" $owner @{ nombre = "$nombre-b"; fechaHoraInicio = '2042-07-16T03:00:00.1234567+02:00'; fechaHoraFin = '2042-07-16T05:30:00.7654321+02:00' }
