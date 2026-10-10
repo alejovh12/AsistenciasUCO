@@ -1,32 +1,39 @@
-# MAINT-003K — Tests y oráculos de salida (BACKEND ONLY)
+# MAINT-003K — Tests y oráculos de salida
 
-**Estado:** pruebas documentadas; no se han ejecutado en esta revisión GitHub.
+**Estado:** EJECUTADO el 2026-10-10 contra `sql_server_asistencias` / `gestionasistenciadb` (DB reconstruida desde Git), Java 25, backend en el código de `b60a6a1`.
+Evidencia y cifras: [VALIDATION.md](VALIDATION.md). JVM probadas: `UTC`, `America/Bogota`, `Europe/Berlin`.
 
-| Caso | Configuración | Oráculo |
-|---|---|---|
-| TIM-01 | SQL `datetime2(7)` = 2026-07-16 14:00:00.1234567; JVM UTC | GET v1 devuelve literal 14:00:00.1234567, sin +/− desplazamiento |
-| TIM-02 | MISMA fila; JVM America/Bogota | GET v1 devuelve mismo 14:00:00.1234567 |
-| TIM-03 | MISMA fila; JVM Europe/Berlin | GET v1 devuelve mismo 14:00:00.1234567 |
-| TIM-04 | `UvSesionEntity` mapeado Hibernate | `fechaHoraInicio/Fin` son `LocalDateTimeJdbcType`, no `Date/Timestamp` |
-| TIM-05 | registro UTC_V2 confirmado UTC=2026-07-16T01:00:00Z | GET v2 siempre devuelve Z exacta sin desplazamiento en las 3 JVM |
-| TIM-06 | sesión histórica `procedenciaTemporal=NULL` | GET v2 conserva fila, horas NULL, estado INDETERMINADA |
-| TIM-07 | v2 POST 2026-07-15T20:00:00-05:00 | SQL UTC 2026-07-16 01:00:00.0000000, marca UTC_V2 |
-| TIM-08 | v2 PATCH same instant offset Berlín +02 | SQL UTC exacto, sin doble conversión; GET v2 Z idéntica |
-| TIM-09 | 0 a 7 decimales, +HH:mm/Z estricto | aceptación correcta; 8+ decimales, offset sin minutos, naive => 400 con campo |
-| TIM-10 | v1 consultas con UUID y grupo inexistente | mismo HTTP not-found/empty que baseline |
-| AUTH-01 | sin bearer JWT | 401 (o contrato OFF explicitado por capa de filtros) |
-| AUTH-02 | bearer de rol distinto de DOCENTE | 403 sin ejecutar input port |
-| AUTH-03 | DOCENTE ajeno consulta/cambia sesión | 403 por ownership; no datos/mutación |
-| AUTH-04 | DOCENTE dueño | POST/GET/PATCH/GET, id estable, UTC preciso |
-| GATE-01 | v2 disabled, JWT válido y sin JWT | resolver precedencia SecurityFilter/MVC y preservar no-exposición |
-| GATE-02 | v2 enabled contra DB sin vista/SP | Spring aborta arranque |
-| COMP-01 | v1 OpenAPI 9 operaciones | mismas rutas/métodos/esquemas; v2 4 adicionales |
-| COMP-02 | PUT v2 | HTTP 405; v1 no cambia de forma accidental |
-| REG-01 | Failsafe SQL+Keycloak mínimo | 0 fallos, 0 errores, 0 skips focales; fixtures reales |
-| REG-02 | JaCoCo | líneas >= 80%, ramas >= 70% |
-| REG-03 | ArchUnit + guards | sin violaciones; no JDBC nuevo |
-| REG-04 | CI HEAD | Checks exigidos realmente PASS, Sonar/CodeQL/Trivy sin hallazgos bloqueantes |
+| Caso | Configuración | Oráculo | Resultado |
+|---|---|---|---|
+| TIM-01 | SQL `datetime2(7)` = 2026-09-14 13:00:00.1234567; JVM UTC | GET v1 devuelve el literal, sin desplazamiento | PASS (E2E `TIM-v1` + ITs de paridad) |
+| TIM-02 | MISMA fila; JVM America/Bogota | mismo literal | PASS |
+| TIM-03 | MISMA fila; JVM Europe/Berlin | mismo literal | PASS |
+| TIM-04 | `UvSesionEntity` mapeado Hibernate | `fechaHoraInicio/Fin` son `LocalDateTimeJdbcType`, no `Date/Timestamp` | PASS (`SesionLocalClockProjectionTest`) |
+| TIM-04b | Otros lectores de Sesión (materia del estudiante, reporte de asistencia) | `LocalDateTime` literal; ejecutan contra SQL real | PASS tras corrección (antes: `Missing constructor` en runtime) |
+| TIM-05 | UTC_V2 confirmado `2026-09-14T13:00:00.1234567Z` | GET v2 siempre devuelve Z exacta en las 3 JVM | PASS (28/28 por JVM) |
+| TIM-06 | sesión histórica `procedenciaTemporal=NULL` (creada por SP v1) | GET v2 conserva fila, horas NULL, INDETERMINADA | PASS |
+| TIM-07 | v2 POST `2042-07-15T20:00:00.1234567-05:00` | SQL UTC `2042-07-16 01:00:00.1234567`, marca `UTC_V2` | PASS |
+| TIM-08 | v2 PATCH mismo instante con offset Berlín +02:00 | SQL UTC exacto, sin doble conversión; GET v2 Z idéntica | PASS |
+| TIM-09 | naive, 8 decimales, offset sin minutos | 400 | PASS (3 casos) |
+| TIM-10 | v1 consultas con UUID y grupo inexistente | mismo not-found/empty que baseline | PASS (ITs de paridad) |
+| AUTH-01 | sin bearer | 401 | PASS (POST/GET v2 y GET v1) |
+| AUTH-02 | rol ESTUDIANTE | 403 | PASS |
+| AUTH-03 | DOCENTE ajeno consulta/cambia sesión | 403, sin mutación | PASS (POST, GET grupo, GET id, PATCH, GET v1) |
+| AUTH-04 | DOCENTE titular | POST→GET→PATCH→GET, id estable, UTC preciso | PASS |
+| AUTH-05 | actor en el body | 400 `FIELD_UNKNOWN` | PASS |
+| GATE-01 | v2 deshabilitado | con JWT 404 (POST y GET); sin JWT 401 (el filtro de seguridad precede a MVC); v1 sigue 200 | PASS |
+| GATE-02 | v2 habilitado contra DB sin contrato D06 (backup pre-D06 restaurado) | el arranque aborta (`IllegalStateException … UTC-D06-POST-FREEZE`) | PASS |
+| COMP-01 | OpenAPI 9 operaciones v1 + 4 v2 | rutas/métodos/esquemas | PASS (`OpenApiGoldenPathConformanceTest` 9, `…ValidationTest` 2, `…SesionesV2ContractRedTest` 4) |
+| COMP-02 | PUT v2 | 405 | PASS |
+| REG-01 | Failsafe SQL+Keycloak | 0 fallos, 0 errores, 0 skips | PASS: 196/196 |
+| REG-02 | JaCoCo | líneas ≥80 %, ramas ≥70 % | PASS: 91,31 % / 78,83 % |
+| REG-03 | ArchUnit + guards | sin violaciones | PASS (`CleanArchitectureRulesTest` 20, `JpaRepositoryArchitectureRulesTest` 3) |
+| REG-04 | CI HEAD | checks exigidos | **NOT_RUN** (sin PR) |
+| VOL-01 | ITs de listado de estudiantes con 5003 estudiantes sintéticos | recorren todas las páginas; oráculo SQL == concatenación de páginas | PASS tras volver los ITs independientes del volumen |
+| ORD-01 | reporte de asistencia con estudiantes homónimos | orden total `(numero, inicio, nombre, ei.id, eg.id)` idéntico a JDBC | PASS (3 JVM) |
 
-**Advertencia**: `SesionLocalClockProjectionTest` prueba mapeo y salida del mapper aislado; por sí solo no demuestra comportamiento JDBC/JPA, por lo que TIM-01 a TIM-03 son obligatorios con SQL real. No inventar números ni sustituir DB real por H2 o mocks.
+**Advertencia:** `SesionLocalClockProjectionTest` prueba el mapper aislado; TIM-01..03 se demuestran con SQL real (ITs de paridad ×3 JVM y E2E HTTP ×3 JVM). No se sustituyó la DB real por H2 ni mocks.
 
-Comandos locales de referencia: Java25, `./mvnw -B -ntp clean verify` y `./mvnw -B -ntp -Pintegration verify`. Seleccionar perfiles/flags con lectura del POM vigente; capturar Surefire/Failsafe XML, jacoco.xml, SQL fingerprint, puertos y PID del jar de prueba para no invocar un backend viejo.
+Comandos de referencia (Java 25; `.env` cargado en el proceso):
+`./mvnw -B -ntp -Pintegration clean verify`; matriz de zona: `JAVA_TOOL_OPTIONS=-Duser.timezone=<zona>` + `-Dit.test=<ITs> -Djacoco.skip=true verify`;
+E2E: backend `java -Duser.timezone=<zona> -jar target/AsistenciasUCO-0.0.1-SNAPSHOT.jar` con `SERVER_PORT=18181 APP_SESIONES_V2_ENABLED=true` y `scripts/e2e/utc-real-jwt-e2e.ps1 -BaseUrl http://127.0.0.1:18181 -TimeZoneLabel <zona>`.
