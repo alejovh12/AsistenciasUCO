@@ -17,6 +17,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * proposed OpenAPI pattern rejects and {@code dbo.Sesion.fechaHoraInicio datetime2(7)} cannot store
  * losslessly (UTC-D04: same instant, same SQL bytes). Expected today: the four rejection tests fail
  * because the codec accepts those inputs; the remaining tests characterise behaviour to keep.
+ *
+ * <p>MAINT-003F: the {@code .5Z} rejection contradicted the D02 decision (1..7 fractional digits) and
+ * was moved to {@code d02d04AcceptsOneFractionalDigitWithExactDatetime2Precision}; the 8-digit
+ * rejection was added so the original intent (no rounding into DATETIME2(7)) keeps two oracles.
  */
 class HttpUtcInstantCodecStrictProfileRedTest {
 
@@ -43,7 +47,15 @@ class HttpUtcInstantCodecStrictProfileRedTest {
         assertThrows(IllegalArgumentException.class,
                 () -> HttpUtcInstantCodec.toUtcDatabaseDateTime("2026-07-15T14:00:00.123456789Z"));
         assertThrows(IllegalArgumentException.class,
-                () -> HttpUtcInstantCodec.toUtcDatabaseDateTime("2026-07-15T14:00:00.5Z"));
+                () -> HttpUtcInstantCodec.toUtcDatabaseDateTime("2026-07-15T14:00:00.12345678Z"));
+    }
+
+    @Test
+    void d02d04AcceptsOneFractionalDigitWithExactDatetime2Precision() {
+        // MAINT-003E D02: ".5Z" is valid (500 000 000 ns, representable in DATETIME2(7)); it used to be
+        // asserted as invalid here, contradicting D02. Moved to the positive set without rounding.
+        assertEquals(LocalDateTime.of(2026, 7, 15, 14, 0, 0, 500_000_000),
+                HttpUtcInstantCodec.toUtcDatabaseDateTime("2026-07-15T14:00:00.5Z"));
     }
 
     @Test

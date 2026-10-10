@@ -92,6 +92,11 @@ logging:
 # Ver docs/architecture/adapter-composition-standard.md
 # ──────────────────────────────────────────────────────────────
 app:
+  # MAINT-003F: contrato UTC v2 de sesiones. OFF por defecto; activar solo cuando la DB del ambiente
+  # tenga desplegado UTC-D06-POST-FREEZE (SesionV2SchemaCompatibilityVerifier lo comprueba al arrancar).
+  sesiones:
+    v2:
+      enabled: ${APP_SESIONES_V2_ENABLED:false}
   adapters:
     identity:
       provider: ${APP_ADAPTERS_IDENTITY_PROVIDER:keycloak}
