@@ -49,8 +49,8 @@ append-only no se tocaron) y se repitio todo en el puerto 18081 con el harness c
 Con la JVM en la zona por defecto de este host (Bogota, UTC-5) `GET /api/v1/sesiones/{id}` devuelve +5 h respecto al valor almacenado: una
 sesion v2 almacenada `2042-07-16 14:00:00` se lee `2042-07-16T19:00:00` y una sesion v1 enviada con `08:00:00` (almacenada `08:00:00`) se lee
 `13:00:00`. Con `-Duser.timezone=UTC` la lectura v1 es exacta (`14:00:00` / `08:00:00`). El **jar baseline** previo se comporta igual en ambos
-casos, por lo que no es una regresion de MAINT-003H: la lectura v1 depende de la zona horaria de la JVM (`UvSesionEntity` mapea `java.util.Date`
-y `CoreViewJpaProjectionMapper.toUtcLocalDateTime` lo interpreta como UTC). v2 no esta afectado (sus instantes son exactos en ambas zonas).
+casos, por lo que no es una regresion de MAINT-003H: la lectura v1 depende de la zona horaria de la JVM (causa probable, no diagnosticada a fondo:
+`UvSesionEntity` mapea `java.util.Date` y `CoreViewJpaProjectionMapper.toUtcLocalDateTime` lo interpreta como UTC). v2 no esta afectado (sus instantes son exactos en ambas zonas).
 Recomendacion: desplegar la JVM en UTC o abrir un work item UTC para fijar la lectura v1.
 
 ## Sin falsos PASS / no ejecutado
