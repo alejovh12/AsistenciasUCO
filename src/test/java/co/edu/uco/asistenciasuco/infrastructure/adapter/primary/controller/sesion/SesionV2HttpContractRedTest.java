@@ -32,6 +32,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -43,11 +46,12 @@ import static org.springframework.core.annotation.AnnotatedElementUtils.findMerg
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * RED for the UTC v2 write surface (MAINT-003B, UTC-D01..D05, D08, D09).
+ * RED for the UTC v2 write surface (MAINT-003B, UTC-D01..D05, D08, D09; D02 error contract MAINT-003C).
  *
  * <p>Derived from UTC_API_V2_PROPOSAL, not from an implementation: the controller is discovered by
  * its /api/v2/sesiones mapping and built from the existing input ports, so the test does not
@@ -119,6 +123,65 @@ class SesionV2HttpContractRedTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.details[0].field").value("fechaHoraFin"));
         verifyNoInteractions(create);
+    }
+
+    @Test
+    void d02MissingInstantIsReportedAsFieldRequired() throws Exception {
+        mvc().perform(post("/api/v2/sesiones").contentType("application/json").content("""
+                        {"grupo":"%s","nombre":"Clase de prueba","fechaHoraFin":"2026-07-15T17:00:00+02:00"}
+                        """.formatted(GROUP)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.details[0].field").value("fechaHoraInicio"))
+                .andExpect(jsonPath("$.details[0].code").value("FIELD_REQUIRED"));
+        verifyNoInteractions(create);
+    }
+
+    @Test
+    void d02OffsetOutsideTheProfileIsFieldInvalidFormatNotInternalError() throws Exception {
+        // MAINT-003C: the codec signals IllegalArgumentException, which GlobalExceptionHandler maps to 500.
+        mvc().perform(post("/api/v2/sesiones").contentType("application/json").content(body(
+                        "2026-07-15T16:00:00+02", "2026-07-15T17:00:00+02:00")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.details[0].field").value("fechaHoraInicio"))
+                .andExpect(jsonPath("$.details[0].code").value("FIELD_INVALID_FORMAT"));
+        verifyNoInteractions(create);
+    }
+
+    @Test
+    void d02FieldErrorsAreAggregatedInOneValidationResponse() throws Exception {
+        mvc().perform(post("/api/v2/sesiones").contentType("application/json").content("""
+                        {"grupo":"%s","nombre":"","fechaHoraInicio":"2026-07-15T16:00:00",
+                         "fechaHoraFin":"2026-07-15T17:00:00+02:00"}
+                        """.formatted(GROUP)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.details[*].field", containsInAnyOrder("nombre", "fechaHoraInicio")));
+        verifyNoInteractions(create);
+    }
+
+    @Test
+    void d02ErrorBodyDoesNotEchoTheSuppliedDateTime() throws Exception {
+        final String supplied = "2026-07-15T16:00:00+99:99";
+        mvc().perform(post("/api/v2/sesiones").contentType("application/json").content(body(
+                        supplied, "2026-07-15T17:00:00+02:00")))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(not(containsString(supplied))));
+        verifyNoInteractions(create);
+    }
+
+    @Test
+    void d02PatchValidatesInstantsBeforeReachingThePort() throws Exception {
+        // v1 PATCH has no HTTP validator; v2 must not inherit that gap.
+        mvc().perform(patch("/api/v2/sesiones/{id}", SESSION).contentType("application/json").content("""
+                        {"nombre":"Clase movida",
+                         "fechaHoraInicio":"2026-07-15T16:00:00","fechaHoraFin":"2026-07-15T17:30:00+02:00"}
+                        """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.details[0].field").value("fechaHoraInicio"));
+        verifyNoInteractions(update);
     }
 
     @Test
