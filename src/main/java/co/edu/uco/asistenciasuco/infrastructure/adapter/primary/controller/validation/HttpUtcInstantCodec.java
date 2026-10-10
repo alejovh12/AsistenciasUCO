@@ -4,43 +4,62 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 /**
- * Pure adapter-side codec for a future opt-in offset-aware HTTP session contract.
- *
- * <p>SQL Server Sesion.* stores UTC clock values in DATETIME2 (no offset).
- * The legacy v1 API accepts LocalDateTime without an offset; this class MUST
- * NOT be wired to v1 until a separately approved API contract handles migration.
- * Missing offsets are intentionally rejected rather than guessing the browser
- * or server time zone.
+ * Inactive adapter-side UTC codec for the future approved v2 session contract.
+ * DATETIME2(7) stores UTC clock values without an offset. Do NOT wire into v1.
  */
 public final class HttpUtcInstantCodec {
+    // Separate the clock and offset to keep each regex simple while preserving strict RFC3339 input.
+    private static final Pattern STRICT_DATE_TIME = Pattern.compile(
+            "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,7})?");
+    private static final Pattern STRICT_OFFSET = Pattern.compile("Z|[+-]\\d{2}:\\d{2}");
+    private static final LocalDateTime MIN_SQL = LocalDateTime.of(1, 1, 1, 0, 0);
+    private static final LocalDateTime MAX_SQL = LocalDateTime.of(9999, 12, 31, 23, 59, 59, 999999900);
 
-    private HttpUtcInstantCodec() {
-    }
+    private HttpUtcInstantCodec() { }
 
-    /** Convert RFC3339 / ISO offset date-time to UTC-local DATETIME2 values. */
-    public static LocalDateTime toUtcDatabaseDateTime(final String offsetDateTime) {
-        if (offsetDateTime == null || offsetDateTime.isBlank()) {
-            throw new IllegalArgumentException("Se requiere fecha-hora ISO con offset.");
-        }
+    public static LocalDateTime toUtcDatabaseDateTime(final String text) {
+        validateFormat(text);
         try {
-            return OffsetDateTime.parse(offsetDateTime.trim(),
-                            DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                    .withOffsetSameInstant(ZoneOffset.UTC)
-                    .toLocalDateTime();
-        } catch (DateTimeParseException exception) {
-            // Never echo user-supplied date strings or internals in a public error.
-            throw new IllegalArgumentException("Fecha-hora invalida: requiere un offset Z o +/-HH:mm.", exception);
+            final LocalDateTime utc = OffsetDateTime.parse(text, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                    .withOffsetSameInstant(ZoneOffset.UTC).toLocalDateTime();
+            validateDatabasePrecision(utc);
+            return utc;
+        } catch (java.time.DateTimeException _) {
+            throw invalidFormat();
         }
     }
 
-    /** Treat an already canonical DB UTC DATETIME2 as an instant (not local time). */
-    public static String fromUtcDatabaseDateTime(final LocalDateTime databaseUtcValue) {
-        Objects.requireNonNull(databaseUtcValue, "El valor de base de datos UTC es obligatorio.");
-        return databaseUtcValue.atOffset(ZoneOffset.UTC)
-                .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+    public static String fromUtcDatabaseDateTime(final LocalDateTime utcValue) {
+        Objects.requireNonNull(utcValue, "UTC database value must not be null");
+        validateDatabasePrecision(utcValue);
+        return utcValue.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+    }
+
+    private static void validateFormat(final String text) {
+        // The shortest valid value has 19 clock characters plus "Z".
+        if (text == null || text.length() < 20 || text.endsWith("-00:00")) {
+            throw invalidFormat();
+        }
+        final int offsetLength = text.endsWith("Z") ? 1 : 6;
+        final int offsetStart = text.length() - offsetLength;
+        if (!STRICT_DATE_TIME.matcher(text.substring(0, offsetStart)).matches()
+                || !STRICT_OFFSET.matcher(text.substring(offsetStart)).matches()) {
+            throw invalidFormat();
+        }
+    }
+
+    private static void validateDatabasePrecision(final LocalDateTime utcValue) {
+        if (utcValue.isBefore(MIN_SQL) || utcValue.isAfter(MAX_SQL)
+                || utcValue.getNano() % 100 != 0) {
+            throw new IllegalArgumentException("UTC value cannot be represented by SQL DATETIME2(7).");
+        }
+    }
+
+    private static IllegalArgumentException invalidFormat() {
+        return new IllegalArgumentException("ISO date-time with seconds, max 7 fractional digits and explicit offset required.");
     }
 }

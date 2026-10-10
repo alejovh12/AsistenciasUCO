@@ -97,3 +97,7 @@ Incidencias honestas: un borrador de la matriz HTTP falló por una variable Powe
 CI remoto al cerrar esta pasada: en `9ed690f` y `b512bb4`, Dependency Review y Trivy repo `success`; Backend Quality Gate, ArchUnit, CodeQL y Trivy image `in_progress`. No se declara PASS remoto hasta su conclusión.
 
 **Resultado:** `PAGINATION_CONTRACT_PUBLISHED_AND_JWT_4_ROLES_PASS / UTC_D06_DECISION_REQUIRED / BACKEND_READY_FOR_FRONTEND = NO`.
+
+## Reconciliación contra develop — 2026-10-10
+
+La evidencia anterior es una bitácora histórica de pruebas ejecutadas el 2026-10-09. Los PR #18, #19 y #20 ya fueron fusionados a develop. Las diferencias de PR #21 se reconciliaron preservando las versiones actuales del código; detalles en [PR21_CONFLICT_RESOLUTION.md](PR21_CONFLICT_RESOLUTION.md). Nuevos checks y `-Pintegration` siguen pendientes de ejecución/verificación sobre el nuevo HEAD.
