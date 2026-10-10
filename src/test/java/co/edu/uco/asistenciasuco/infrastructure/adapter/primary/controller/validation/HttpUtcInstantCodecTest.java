@@ -71,8 +71,9 @@ class HttpUtcInstantCodecTest {
         assertEquals(exact, HttpUtcInstantCodec.toUtcDatabaseDateTime("2026-07-15T16:00:00.1234567+02:00"));
         assertEquals("2026-07-15T14:00:00.1234567Z",
                 HttpUtcInstantCodec.fromUtcDatabaseDateTime(exact));
-        assertThrows(IllegalArgumentException.class, () -> HttpUtcInstantCodec.fromUtcDatabaseDateTime(
-                LocalDateTime.of(2026, 7, 15, 14, 0, 0, 123456789)));
+        final LocalDateTime invalidPrecision = LocalDateTime.of(2026, 7, 15, 14, 0, 0, 123456789);
+        assertThrows(IllegalArgumentException.class,
+                () -> HttpUtcInstantCodec.fromUtcDatabaseDateTime(invalidPrecision));
     }
 
     @Test
