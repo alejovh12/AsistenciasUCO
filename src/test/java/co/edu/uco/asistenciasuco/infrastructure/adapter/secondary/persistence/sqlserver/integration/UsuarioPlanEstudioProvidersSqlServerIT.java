@@ -100,7 +100,9 @@ class UsuarioPlanEstudioProvidersSqlServerIT {
             assertEquals(1, planesConId(plan), "El reintento exacto no debe duplicar el plan.");
 
             planEstudioCommandPort.registrarOActualizarPlanEstudio(plan, programa, inp + 1, coordinador);
-            assertEquals(String.valueOf(inp + 1), inpDelPlan(plan));
+            // JDBC y no el puerto: dentro de la misma transaccion el EntityManager devolveria la entidad ya gestionada
+            // (estado anterior) aunque el SP haya actualizado la fila.
+            assertEquals(inp + 1, inpEnVista(plan));
             assertEquals(1, planesConId(plan));
             status.setRollbackOnly();
         });
@@ -195,6 +197,10 @@ class UsuarioPlanEstudioProvidersSqlServerIT {
         final List<String> inps = planes.stream().filter(p -> plan.equals(p.id())).map(PlanEstudioProjection::inp).toList();
         assertEquals(1, inps.size(), "El plan debe aparecer exactamente una vez en uv_plan_estudio.");
         return inps.get(0);
+    }
+
+    private int inpEnVista(final UUID plan) {
+        return jdbcTemplate.queryForObject("SELECT inp FROM dbo.uv_plan_estudio WHERE id = ?", Integer.class, plan.toString());
     }
 
     private int planesConId(final UUID plan) {
