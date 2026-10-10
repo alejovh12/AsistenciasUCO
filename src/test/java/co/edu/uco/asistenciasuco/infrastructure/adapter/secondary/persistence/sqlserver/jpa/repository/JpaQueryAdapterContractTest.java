@@ -95,7 +95,7 @@ class JpaQueryAdapterContractTest {
     @Test
     void sesiones_por_id_y_por_grupo() {
         final UvSesionEntity sesion = HydratedViewRow.of(UvSesionEntity.class, Map.of("id", ID, "idGrupo", OTHER,
-                "nombre", "Parcial", "fechaHoraInicio", Date.from(Instant.parse("2026-10-08T13:00:00Z"))));
+                "nombre", "Parcial", "fechaHoraInicio", LocalDateTime.of(2026, 10, 8, 13, 0)));
         final TypedQuery<UvSesionEntity> porId = query(SesionJpaRepository.HQL_POR_ID, UvSesionEntity.class,
                 List.of(sesion));
         final TypedQuery<UvSesionEntity> porGrupo = query(SesionJpaRepository.HQL_POR_GRUPO, UvSesionEntity.class,
