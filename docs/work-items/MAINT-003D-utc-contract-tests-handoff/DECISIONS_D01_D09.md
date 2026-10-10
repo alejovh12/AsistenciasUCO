@@ -53,3 +53,6 @@ La respuesta real preservará además los otros campos existentes de sesión. La
 
 ## Compatibilidad y rollback
 Desplegar DB backward-compatible primero y backend v2 después; vigilar uso de v1. Ante incidente, revertir backend v2, frontend v2, luego DB únicamente tras respaldo/plan aprobado por owner. La eliminación de `procedenciaTemporal` sin exportación id/valor/evidencia pierde información no reconstruible. No aplicar DDL desde este repositorio.
+
+## Conflictos abiertos detectados en la implementación (2026-10-09)
+- **`TEST_CONTRACT_CONFLICT` D02 fracciones de segundo.** D02 de este documento (y HTTP-08 / `HttpUtcInstantCodecD02ContractRedTest.retainsExactlySevenDecimalPlacesWithoutRounding`) admite 1..7 decimales. La propuesta MAINT-003C [UTC_D02_ERROR_CONTRACT_PROPOSAL](../MAINT-003-backend-utc-pagination-readiness/UTC_D02_ERROR_CONTRACT_PROPOSAL.md) §1 rechaza toda fracción, y su test `HttpUtcInstantCodecStrictProfileRedTest.d02d04RejectsFractionalSecondsInsteadOfRoundingInDatetime2` exige rechazar `2026-07-15T14:00:00.5Z`. Ambos no pueden pasar. El codec implementa D02 (este documento) y el test 003C se conserva **intacto y en RED**, sin deshabilitar, por decisión del usuario. Resolución pendiente: owner de contratos + tester mediante nueva revisión conjunta de D02 y tests. Detalle en [VALIDATION.md](VALIDATION.md).
