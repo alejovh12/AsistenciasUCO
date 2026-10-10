@@ -3,7 +3,7 @@ param(
     [Parameter(Mandatory = $true)][string]$DbPasswordFile,
     [Parameter(Mandatory = $true)][string]$OutDir,
     [string]$ContainerName = 'cc003g01_sqltest',
-    [int]$Port = 18080,
+    [int]$Port = 18081,
     [string]$JvmTimezone = ''
 )
 # Regresion UTC v2 de punta a punta: backend real + SQL Server aislado (login de minimo privilegio) + Keycloak local real.
@@ -101,6 +101,7 @@ try {
     [Environment]::SetEnvironmentVariable('APP_DATABASE_EXPECTED_NAME', 'gestionasistenciadb', 'Process')
     [Environment]::SetEnvironmentVariable('APP_SESIONES_V2_ENABLED', 'true', 'Process')
     [Environment]::SetEnvironmentVariable('SERVER_PORT', "$Port", 'Process')
+    if (Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue) { throw "Port $Port is already in use by another process; refusing to test against a foreign backend." }
     $outLog = Join-Path $OutDir 'backend.out.log'; $errLog = Join-Path $OutDir 'backend.err.log'
     $backend = Start-Process -FilePath (Join-Path $env:JAVA_HOME 'bin\java.exe') -ArgumentList $(if ($JvmTimezone) { @("-Duser.timezone=$JvmTimezone", '-jar', $Jar) } else { @('-jar', $Jar) }) -PassThru -WindowStyle Hidden -RedirectStandardOutput $outLog -RedirectStandardError $errLog
     $ready = $false
@@ -111,6 +112,8 @@ try {
         if (-not $ready) { try { $x = Invoke-WebRequest -Uri "http://127.0.0.1:$Port/api/v2/sesiones/$([guid]::Empty)" -UseBasicParsing -TimeoutSec 3 } catch { if ($_.Exception.Response) { $ready = $true } } }
     }
     if (-not $ready) { throw "Backend did not start (exited=$($backend.HasExited)). See $errLog" }
+    $listener = @(Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique)
+    if ($backend.HasExited -or $listener -notcontains $backend.Id) { throw "Port $Port is served by process(es) $($listener -join ','), not by the backend started by this harness (pid $($backend.Id))." }
     Add-Result 'backend_starts_with_runtime_least_privilege_login' $true 'arranque con login SQL miembro solo de rol_asistencias_runtime y guard de esquema UTC-D06'
 
     $nombre = "E2E-CC003G01-$tag"
@@ -180,6 +183,8 @@ try {
     # Auditoria: el login de minimo privilegio puede escribir AuditoriaEvento (unica tabla con DML directo)
     $aud = @(Invoke-DbSa "SET NOCOUNT ON; SELECT COUNT(*) FROM dbo.AuditoriaEvento WHERE occurredAt > DATEADD(MINUTE, -30, SYSDATETIMEOFFSET());")
     Add-Result 'audit_rows_written_by_runtime_login' ([int]$aud[0] -ge 0) "filas recientes=$($aud[0])"
+    $persisted = @(Invoke-DbSa "SET NOCOUNT ON; SELECT COUNT(*) FROM dbo.Sesion WHERE nombre LIKE N'E2E-CC003G01-%$tag%';")
+    Add-Result 'sessions_persisted_in_the_target_isolated_db' ([int]$persisted[0] -ge 2) "sesiones de prueba en la DB objetivo=$($persisted[0])"
 }
 catch {
     Add-Result 'e2e_execution_error' $false $_.Exception.Message

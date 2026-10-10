@@ -27,22 +27,31 @@ Keycloak local del proyecto. No se uso la DB principal, no hubo merge, no se des
 | 3 | Gates JaCoCo del `pom.xml` (LINE >= 80 %, BRANCH >= 70 %) | misma corrida | `All coverage checks have been met`. Cobertura medida: **LINE 91,31 % (8221/9003), BRANCH 78,87 % (1904/2414)** — no inferior a la reportada antes (91,06 % / 78,77 %) |
 | 4 | Quality gate SQL (repo DB, despliegue limpio) | `deploy_schema.ps1` + `test_summary.ps1` | **219 ejecutadas, 218 PASS, 0 FAILED, 1 skip permitido** (`XACT_STATE_MINUS_ONE_RUNTIME`, igual que el baseline: 179/178/0/1), `DB GATE PASS` |
 | 5 | Regresion UTC-D06 SQL | dentro del gate (22 ids `UTC_D06_*`) | PASS, incluidos `_RUNTIME_PERMISSIONS`, `_DIRECT_UPDATE_REJECTED`, `_CONCURRENT_V2_CREATE`; `FREEZE_MANIFEST_OK` sin cambios |
-| 6 | Regresion UTC v2 HTTP real (JWT de Keycloak local, backend real con **login SQL de minimo privilegio**, `app.sesiones.v2.enabled=true`) | [evidence/utc_e2e_harness.ps1](evidence/utc_e2e_harness.ps1) | **18/18 PASS** (tabla abajo). La misma bateria contra el **jar baseline** previo da 18/18 con los mismos valores |
+| 6 | Regresion UTC v2 HTTP real (JWT de Keycloak local, backend real arrancado por el harness con **login SQL de minimo privilegio**, `app.sesiones.v2.enabled=true`, puerto 18081) | [evidence/utc_e2e_harness.ps1](evidence/utc_e2e_harness.ps1) sobre el jar de `78e1c6f` | JVM en zona por defecto del host (Bogota): **20/20 PASS**; JVM `-Duser.timezone=UTC`: **21/21 PASS**. El **jar baseline** previo da los mismos resultados (20/20 y 21/21) |
 
-### Detalle de la regresion UTC v2 (corrida con el jar de este SHA)
+### Detalle de la regresion UTC v2 (jar de `78e1c6f`, DB aislada desplegada desde `0749c3a`)
 
 401 sin JWT; POST v2 Bogota `-05:00` (201); listado por grupo; GET tras POST conserva `2042-07-15T14:00:00.1234567Z` y
 `2042-07-15T15:30:00.7654321Z` con `procedenciaTemporal=UTC_V2`; PATCH Berlin `+02:00` (200) y GET devuelve `2042-07-16T14:00:00Z` /
 `2042-07-16T16:30:00.25Z`; 403 para DOCENTE no titular (GET, PATCH, POST) y para rol no DOCENTE; PUT v2 -> 405; POST sin offset -> 400;
 v1 sigue funcionando (201), su GET conserva el formato local sin offset, una sesion creada por v1 es `INDETERMINADA` en v2; el login de minimo
-privilegio escribe auditoria. Los usuarios temporales de Keycloak, el login SQL y las sesiones de prueba se eliminaron al terminar.
+privilegio escribe auditoria y las sesiones de prueba quedan en la DB objetivo. Los usuarios temporales de Keycloak (0 restantes), el login SQL
+(0 restantes) y las sesiones de prueba se eliminaron al terminar. El harness rechaza correr si el puerto ya esta ocupado por otro proceso y
+verifica que el listener sea el backend que el mismo lanzo.
+
+**Corridas descartadas (honestidad):** las primeras ejecuciones del harness contestaron en realidad desde un backend antiguo de una sesion
+previa (PID 23100, puerto 18080, ligado a otra DB aislada) porque el harness aun no validaba el listener. Se detecto, se descartaron sus
+resultados, se retiraron de esa otra DB (`utc_d06_sqltest`) las 10 sesiones `E2E-CC003G01-*` que habian quedado (las filas de auditoria
+append-only no se tocaron) y se repitio todo en el puerto 18081 con el harness corregido. El proceso antiguo del puerto 18080 **no se detuvo**.
 
 ### Observacion (NO causada por este cambio, no corregida aqui)
 
-En esta maquina (zona Bogota) `GET /api/v1/sesiones/{id}` devuelve para un valor almacenado `2042-07-16 14:00:00` (UTC, escrito por v2) el
-valor `2042-07-16T19:00:00`, y una sesion creada por v1 con `08:00:00` se lee como `13:00:00` (+5 h). Se obtiene **identico con el jar baseline**
-anterior (sin los cambios de MAINT-003H) y tambien al arrancar la JVM con `-Duser.timezone=UTC`, por lo que no es una regresion de este trabajo.
-No se diagnostico la causa; se deja para un work item UTC (el mapper v1 usa `Date`/`toUtcLocalDateTime`). No afecta a v2 (sus instantes son exactos).
+Con la JVM en la zona por defecto de este host (Bogota, UTC-5) `GET /api/v1/sesiones/{id}` devuelve +5 h respecto al valor almacenado: una
+sesion v2 almacenada `2042-07-16 14:00:00` se lee `2042-07-16T19:00:00` y una sesion v1 enviada con `08:00:00` (almacenada `08:00:00`) se lee
+`13:00:00`. Con `-Duser.timezone=UTC` la lectura v1 es exacta (`14:00:00` / `08:00:00`). El **jar baseline** previo se comporta igual en ambos
+casos, por lo que no es una regresion de MAINT-003H: la lectura v1 depende de la zona horaria de la JVM (`UvSesionEntity` mapea `java.util.Date`
+y `CoreViewJpaProjectionMapper.toUtcLocalDateTime` lo interpreta como UTC). v2 no esta afectado (sus instantes son exactos en ambas zonas).
+Recomendacion: desplegar la JVM en UTC o abrir un work item UTC para fijar la lectura v1.
 
 ## Sin falsos PASS / no ejecutado
 

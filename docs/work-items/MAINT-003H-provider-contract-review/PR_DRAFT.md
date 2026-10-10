@@ -15,8 +15,8 @@
 
 ## Evidencia (ver VALIDATION.md y FAILURES_AND_SKIPS.md)
 Java 25: Surefire 1499/0/0/0; Failsafe 196 tests, 0 failures, 0 errors, 0 skips (original 191/3/0/3); JaCoCo 91,31 % / 78,87 %; gate SQL 219/218/0/1;
-regresion UTC v2 HTTP real con JWT de Keycloak y login SQL de minimo privilegio 18/18.
+regresion UTC v2 HTTP real con JWT de Keycloak y login SQL de minimo privilegio 20/20 (21/21 con JVM en UTC).
 
 ## Riesgos
 Orden de despliegue: DB primero. Un backend viejo contra la DB nueva recibe `GEN_002` en planes (rechazo seguro). Sin cambios HTTP/OpenAPI.
-Observacion fuera de alcance: lectura v1 de sesiones desplazada +5 h en esta maquina (identica en baseline) — ver VALIDATION.md.
+Observacion fuera de alcance: la lectura v1 de sesiones depende de la zona horaria de la JVM (+5 h con zona Bogota; exacta en UTC; identica en baseline) — ver VALIDATION.md.
