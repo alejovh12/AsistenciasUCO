@@ -118,3 +118,20 @@ Fecha/zona: 2026-10-09, `America/Bogota`. Credenciales leídas de `.env` local s
 No se ejecutó: `-Pintegration`, JaCoCo, Sonar/CodeQL/Trivy locales ni HTTP real para MAINT-003C (no hay código de producción nuevo; la rama RED falla por diseño). No se ejecutó DDL, `UPDATE`, merge ni force-push.
 
 **Resultado:** `REVIEW_COMPLETE / OWNER_PROPOSAL_READY / RED_D02_CAUSAL / UTC_V2_NOT_IMPLEMENTED / BACKEND_READY_FOR_FRONTEND = NO`.
+
+## MAINT-003F / UTC-D06 — 2026-10-10
+
+Fecha/zona: 2026-10-10, `America/Bogota`. Los secretos de conexión se inyectaron localmente y no se registran.
+
+| Entorno / SHA | Comando o acción | Exit | Resultado |
+|---|---|---:|---|
+| backend `2199321871aaa024aae2506d1d807c5a34f7fed3` | Java 25 `mvnw.cmd -B -ntp clean verify` | 0 | 1492 tests, 0 failures/errors/skips; JaCoCo LINE 88.80 %, BRANCH 78.31 %; ArchUnit y gates pasan |
+| backend + SQL Server aislado | `mvnw.cmd -B -ntp clean verify -Pintegration` | 1 | 191 tests: 11 failures, 1 error, 3 skips; faltan SP/fixtures y configuración de nombre esperado; no se cuenta como PASS |
+| DB `feat/utc-d06-post-freeze` `6946a73` | `test/test_utc_d06_procedencia_temporal.sql` en `utc_d06_sqltest` | 0 | Todos los checks UTC-D06 pasaron: esquema, históricos, v1/v2, ownership, permisos, clasificación, DST, no-escritura inválida y concurrencia |
+| DB `feat/utc-d06-post-freeze` `6946a73` | `test_summary.ps1 -ContainerName utc_d06_sqltest` | 0 | 179 ejecutados, 178 PASS, 0 FAIL, 1 skip explícito; 31 SP públicos y 56 vistas presentes |
+| DB aislada | inventario post-D06 de `dbo.Sesion` | 0 | 5 filas antes/después, mismos ids y timestamps; 5 `procedenciaTemporal=NULL`; 3 objetos v2 presentes |
+| container | `docker inspect` + `rg` backend/DB | 0 | SQL Server 2022, puerto local 14333, sin volumen, restart `no`; no se hallaron referencias permanentes en repositorios |
+
+La prueba HTTP v2 contra un IdP/JWT real queda `NOT_RUN`; los tests JWT unitarios/contractuales sí forman parte del build unitario verde. La integración Java bloqueada y la ausencia de una prueba HTTP real impiden cerrar `BACKEND_READY_FOR_FRONTEND`.
+
+No se ejecutaron merge, despliegue en base principal, activación productiva de v2 ni eliminación de `utc_d06_sqltest`.
