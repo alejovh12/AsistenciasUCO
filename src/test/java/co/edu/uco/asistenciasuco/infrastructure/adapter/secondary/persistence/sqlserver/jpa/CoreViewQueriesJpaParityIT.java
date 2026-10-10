@@ -226,11 +226,13 @@ class CoreViewQueriesJpaParityIT {
                 .map(value -> row(value.getId(), value.getTipoIdentificacion(), value.getNombre())).toList());
     }
 
+    // DATETIME2(7) is a timezone-free SQL value; fetch LocalDateTime directly, not Timestamp->Instant.
+    // This oracle intentionally tests the DB clock fields rather than reproducing the old +5h JPA bug.
     private static List<Object> sessionJdbc(final ResultSet rs) throws SQLException {
         return row(uuid(rs, "id"), uuid(rs, "idGrupo"), string(rs, "nombre"), integer(rs, "numero"),
                 string(rs, "codigo"), integer(rs, "numeroSemana"), string(rs, "codigoGrupo"),
-                string(rs, "nombreGrupo"), JdbcBaselineValueMapper.toLocalDateTimeUtc(rs.getObject("fechaHoraInicio")),
-                JdbcBaselineValueMapper.toLocalDateTimeUtc(rs.getObject("fechaHoraFin")));
+                string(rs, "nombreGrupo"), rs.getObject("fechaHoraInicio", java.time.LocalDateTime.class),
+                rs.getObject("fechaHoraFin", java.time.LocalDateTime.class));
     }
 
     private static List<Object> sessionJpa(final SesionRepositoryProjection value) {
