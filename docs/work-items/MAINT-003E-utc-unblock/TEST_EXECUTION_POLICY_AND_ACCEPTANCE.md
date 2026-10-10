@@ -4,22 +4,22 @@ status: TEST_DESIGN_FINAL_CODE_IMPLEMENTATION_PENDING
 # Política de pruebas sin esconder RED y sin bloquear los PR de codec
 
 ## Dos gates (no mezclarlos)
-- **GATE_A_CODEC_GREEN**: rama/PR de codec sin implementación v2; verificar \`HttpUtcInstantCodecTest\` (7/7), \`HttpUtcInstantCodecD02ContractRedTest\` (5/5), strict 003C **8/8 tras reparar aserción ".5Z"**, \`SesionUtcActivationGuardTest\` (3/3), regresión v1, JaCoCo, ArchUnit, Maven Java25. Los 16 assertions de HTTP/OpenAPI v2 son **candidatos RED de otra fase**, no certificado de funcionalidad presente. Recomendar micro-PR aislado en vez de excluir tests arbitrariamente de la suite de release.
-- **GATE_B_V2_CONTRACT_RED_THEN_GREEN**: conservar \`SesionV2HttpContractRedTest\` + \`OpenApiSesionesV2ContractRedTest\` en rama de contrato y registrar fallo causal mientras no haya implementación. Al activar v2, integrar los tests en suite normal y pasar **todos**. No usar \`@Disabled\`, assumptions, capturas genéricas ni eliminar aserciones.
+- **GATE_A_CODEC_GREEN**: rama/PR de codec sin implementación v2; verificar `HttpUtcInstantCodecTest` (7/7), `HttpUtcInstantCodecD02ContractRedTest` (5/5), strict 003C **8/8 tras reparar aserción ".5Z"**, `SesionUtcActivationGuardTest` (3/3), regresión v1, JaCoCo, ArchUnit, Maven Java25. Los 16 assertions de HTTP/OpenAPI v2 son **candidatos RED de otra fase**, no certificado de funcionalidad presente. Recomendar micro-PR aislado en vez de excluir tests arbitrariamente de la suite de release.
+- **GATE_B_V2_CONTRACT_RED_THEN_GREEN**: conservar `SesionV2HttpContractRedTest` + `OpenApiSesionesV2ContractRedTest` en rama de contrato y registrar fallo causal mientras no haya implementación. Al activar v2, integrar los tests en suite normal y pasar **todos**. No usar `@Disabled`, assumptions, capturas genéricas ni eliminar aserciones.
 - **GATE_C_SQL_E2E_RELEASE**: después de work item owner DB y despliegue de ensayo SQL real + Keycloak, verificar POST/GET/PATCH v2, inexistente/indeterminada, 401/403, licencia de propietario, rollback, vista v1 exacta y RLS/ownership real. Cualquier TEST focal skip = NOT_CERTIFIED. Un skip heredado no UTC debe quedar nombrado/explicado; no presentar totalidad 191/191 si 1 fue skip.
 
 ## Contrato de decimales: comportamiento esperado
 | Entrada con fecha-hora válida | Resultado |
 |---|---|
-| \`2026-07-15T14:00:00Z\` | 14:00 UTC |
-| \`2026-07-15T14:00:00.5Z\` | 14:00:00.5000000 UTC |
-| \`2026-07-15T14:00:00.0000001Z\` | 14:00:00.0000001 UTC |
-| \`2026-07-15T14:00:00.1234567Z\` | 14:00:00.1234567 UTC |
-| \`2026-07-15T14:00:00.12345678Z\` | 400 FIELD_INVALID_FORMAT |
-| \`2026-07-15T14:00:00.123456789Z\` | 400 FIELD_INVALID_FORMAT |
-| \`2026-07-15T14:00Z\` | 400 FIELD_INVALID_FORMAT |
-| \`2026-07-15T14:00:00+02\` | 400 FIELD_INVALID_FORMAT |
-| \`2026-07-15T14:00:00+02:00:30\` | 400 FIELD_INVALID_FORMAT |
+| `2026-07-15T14:00:00Z` | 14:00 UTC |
+| `2026-07-15T14:00:00.5Z` | 14:00:00.5000000 UTC |
+| `2026-07-15T14:00:00.0000001Z` | 14:00:00.0000001 UTC |
+| `2026-07-15T14:00:00.1234567Z` | 14:00:00.1234567 UTC |
+| `2026-07-15T14:00:00.12345678Z` | 400 FIELD_INVALID_FORMAT |
+| `2026-07-15T14:00:00.123456789Z` | 400 FIELD_INVALID_FORMAT |
+| `2026-07-15T14:00Z` | 400 FIELD_INVALID_FORMAT |
+| `2026-07-15T14:00:00+02` | 400 FIELD_INVALID_FORMAT |
+| `2026-07-15T14:00:00+02:00:30` | 400 FIELD_INVALID_FORMAT |
 
 ## Matriz de escenarios E2E obligatorios — SQL Server 2022
 | ID | Setup y operación | Oráculo |
