@@ -2,6 +2,9 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvSesionEntity;
 import org.junit.jupiter.api.Test;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.type.descriptor.jdbc.LocalDateTimeJdbcType;
+import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
@@ -13,6 +16,17 @@ import static org.mockito.Mockito.*;
  * the JPA projection, not a claim that legacy v1 timestamps are proven UTC.
  */
 class SesionLocalClockProjectionTest {
+
+    @Test
+    void sessionViewTimesAreMappedAsTimezoneFreeDatetime2Values() throws NoSuchFieldException {
+        for (String column : new String[] { "fechaHoraInicio", "fechaHoraFin" }) {
+            final Field field = UvSesionEntity.class.getDeclaredField(column);
+            assertEquals(LocalDateTime.class, field.getType(), column + " must not use java.util.Date");
+            final JdbcType mapping = field.getAnnotation(JdbcType.class);
+            assertNotNull(mapping, column + " must declare a timezone-free Hibernate JDBC type");
+            assertEquals(LocalDateTimeJdbcType.class, mapping.value(), column);
+        }
+    }
 
     @Test
     void sessionProjectionPreservesExactSqlClockAndSevenFractionalDigits() {
