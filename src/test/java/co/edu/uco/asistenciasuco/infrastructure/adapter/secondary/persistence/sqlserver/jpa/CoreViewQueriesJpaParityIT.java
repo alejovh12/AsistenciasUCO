@@ -179,10 +179,21 @@ class CoreViewQueriesJpaParityIT {
                 INNER JOIN dbo.uv_usuario u ON e.idUsuario = u.id
                 ORDER BY u.primerApellido, u.primerNombre, u.numeroIdentificacion, e.id
                 """, (rs, row) -> studentJdbc(rs));
-        final var page = estudiantes.consultarEstudiantes(new ConsultarEstudiantesRepositoryDTO(
-                null, null, null, null, null, null, null, null, null, 0, 100));
-        assertEquals(before.size(), page.totalItems());
-        assertEquals(before, page.items().stream().map(CoreViewQueriesJpaParityIT::studentJpa).toList());
+        // Recorre todas las paginas (tamano 100): el oraculo JDBC completo debe coincidir fila a fila y en orden con
+        // la concatenacion de paginas, con cualquier volumen de datos (seed minimo o fixtures de 5000 estudiantes).
+        final List<List<Object>> paged = new java.util.ArrayList<>();
+        long totalItems = 0;
+        for (int pagina = 0; pagina == 0 || paged.size() < totalItems; pagina++) {
+            final var page = estudiantes.consultarEstudiantes(new ConsultarEstudiantesRepositoryDTO(
+                    null, null, null, null, null, null, null, null, null, pagina, 100));
+            totalItems = page.totalItems();
+            if (page.items().isEmpty()) {
+                break;
+            }
+            page.items().stream().map(CoreViewQueriesJpaParityIT::studentJpa).forEach(paged::add);
+        }
+        assertEquals(before.size(), totalItems);
+        assertEquals(before, paged);
         assumeFalse(before.isEmpty(), "No hay estudiantes para comparar detalle.");
 
         final UUID studentId = (UUID) before.getFirst().getFirst();
