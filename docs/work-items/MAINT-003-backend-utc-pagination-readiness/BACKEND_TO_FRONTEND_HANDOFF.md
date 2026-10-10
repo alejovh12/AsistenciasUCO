@@ -19,3 +19,5 @@ Authorization Bearer de `COORDINADOR` o `ADMINISTRADOR`. Estructura `{items:[{id
 
 ## Semáforo del handoff
 `BLOCKED` hasta VALIDATION final con: hashes de GitHub PR18, PR19, UTC v2, evidencia SQL DB read/write, historial legacy, tests horarios Berlín/Londres/Bogotá+verano/invierno, seguridad y permisos, frontend Swagger contract freeze. No ir a fase frontend integral antes de publicación del contrato de backend.
+
+Ejecución independiente y estado actualizado: [BACKEND_READY_FOR_FRONTEND](BACKEND_READY_FOR_FRONTEND.md). Decisiones UTC pendientes de aprobación: [UTC_API_V2_PROPOSAL](UTC_API_V2_PROPOSAL.md).
