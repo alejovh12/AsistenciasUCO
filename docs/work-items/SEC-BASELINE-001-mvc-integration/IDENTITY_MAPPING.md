@@ -2,6 +2,10 @@
 
 Estado: **`BLOCKED_BY_IDENTITY_CONTRACT`** para el E2E académico (2xx, roles locales, ownership).
 
+> 2026-10-14: resuelto **solo en laboratorio** por [SEC-BASELINE-002](../SEC-BASELINE-002-shared-identity-e2e/IDENTITY_DECISION.md)
+> (opción 2: el realm del laboratorio emite `idUsuario` verificado en SQL y el backend 8083 confía en ese issuer por
+> configuración de proceso). El bloqueo institucional sigue abierto.
+
 ## Hechos comprobados en el laboratorio (2026-10-14)
 
 Claims observados (sin imprimir tokens):

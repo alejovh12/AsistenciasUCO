@@ -109,3 +109,16 @@ script automatiza exactamente estas llamadas:
 | Concesión | `POST /api/v1/roles/{roleId}/resources {roleId, resourceId}` | Idempotente |
 | Asignación | `POST /api/v1/roles/{roleId}/assignments {roleId, userId, applicationId}` | `userId` es el id interno del PDP (`GET /api/v1/users`), no el `sub` |
 | Rotar credencial | `POST /api/v1/applications/{id}/credential-rotations` | Guardar el nuevo valor en `lab.env` |
+
+## Identidad compartida y E2E académico (SEC-BASELINE-002)
+
+```powershell
+& infra\security-baseline-lab\scripts\verify-academic-identity.ps1 -Mode Verify   # solo SELECT
+python -I infra\security-baseline-lab\scripts\provision_shared_identity_e2e.py
+& infra\security-baseline-lab\scripts\start-backend-pep-lab.ps1 -IdentityMode SharedLab
+python -I infra\security-baseline-lab\scripts\lab_matrix.py e2e
+```
+
+Casos de PEP caído y de respuesta anómala (stub `pep_fault_stub.py`): ver
+[MANUAL_TEST_GUIDE](../SEC-BASELINE-002-shared-identity-e2e/MANUAL_TEST_GUIDE.md). `lab_matrix.py` devuelve 0 (todo
+PASS), 1 (fallo propio) o 2 (solo `KNOWN_UPSTREAM_FAIL`, p. ej. PEP-03).

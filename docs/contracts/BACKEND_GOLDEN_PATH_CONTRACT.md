@@ -67,6 +67,7 @@ La lectura (4) solo devuelve asistencias persistidas (`INNER JOIN` desde `uv_det
 | `FEATURE_UNAVAILABLE` | 501 | DB `SES_003` (cierre legacy; fuera del Golden Path) |
 | `CONFLICT` | 409 | conflicto de estado |
 | `INTERNAL_ERROR` / `ERR_DB_UNCLASSIFIED` | 500 | DBCODE desconocido/malformado (fail-closed) o error no clasificado |
+| `ACCESS_DECISION_UNAVAILABLE` | 503 | **EXPERIMENTAL, solo rama `jose-valencia/experiment-security-baseline-mvc`.** Emitido únicamente con `SECURITY_BASELINE_PEP_ENABLED=true` (OFF por defecto): PEP inaccesible, timeout o respuesta sin decisión válida (ALLOW exige `204` + `X-Decision-Id`); fail-closed, el handler no se ejecuta. OpenAPI: overlay [experimental/security-baseline-pep.overlay.yaml](openapi/experimental/security-baseline-pep.overlay.yaml), no el YAML canónico. Pendiente de aprobación contractual antes de merge ([SEC-BASELINE-001 D-007](../work-items/SEC-BASELINE-001-mvc-integration/DECISIONS.md), [SEC-BASELINE-002](../work-items/SEC-BASELINE-002-shared-identity-e2e/SECURITY_CONTRACT_MATRIX.md)) |
 | `ERR_*` de catálogo de feature (p. ej. `ERR_ESTADO_ASISTENCIA_INVALIDO`, `ERR_FECHA_HORA_INVALIDA`) | según `ErrorKind` | validaciones de Application/HTTP |
 
 ## H. DBCODE es interno

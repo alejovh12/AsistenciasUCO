@@ -1,0 +1,191 @@
+{
+  "workItem": "SEC-BASELINE-002",
+  "provisionedAt": "2026-10-14T13:01:58.925115+00:00",
+  "sqlVerification": {
+    "verifiedAt": "2026-10-14T12:59:59.7302505Z",
+    "source": {
+      "host": "127.0.0.1,1433",
+      "database": "gestionasistenciadb",
+      "edition": "Developer Edition (64-bit)",
+      "version": "16.0.4265.3",
+      "access": "SELECT only (ApplicationIntent=ReadOnly; no read-only principal exists)"
+    },
+    "verified": [
+      "de000003-0000-4000-8000-000000000001",
+      "de000003-0000-4000-8000-000000000002",
+      "de000003-0000-4000-8000-000000000003"
+    ]
+  },
+  "keycloak": {
+    "issuer": "http://keycloak.localhost:19090/realms/security-baseline",
+    "clients": [
+      "asistencias-api",
+      "asistencias-lab-e2e",
+      "asistencias-lab-e2e-wrong-aud"
+    ],
+    "users": {
+      "lab-e2e-docente-fixpag300": {
+        "keycloakId": "c05297af-5179-40bf-9898-fef166acd69d",
+        "idUsuario": "de000003-0000-4000-8000-000000000001",
+        "role": "DOCENTE"
+      },
+      "lab-e2e-rol-incorrecto": {
+        "keycloakId": "1644887e-6f75-4969-badd-17e04fdd546e",
+        "idUsuario": "de000003-0000-4000-8000-000000000002",
+        "role": "ESTUDIANTE"
+      },
+      "lab-e2e-docente-sin-pdp": {
+        "keycloakId": "59da9a71-1ee3-4b4b-9c8f-fba378b08e12",
+        "idUsuario": "de000003-0000-4000-8000-000000000003",
+        "role": "DOCENTE"
+      },
+      "lab-e2e-sin-idusuario": {
+        "keycloakId": "862531e6-3caf-48c3-9aa3-f707c0f526da",
+        "idUsuario": null,
+        "role": "DOCENTE"
+      }
+    }
+  },
+  "pdp": {
+    "applicationId": "8cdd5dcb-bd85-4170-a172-a7459bfcb2fb",
+    "roleId": "f8c21f75-fa1d-4bbc-aba7-3a5740c4d65e",
+    "resources": {
+      "GET /api/v1/docente/horarios": "e3161d93-5ba8-4ef9-8cae-a3ec14ac37c6",
+      "GET /api/v1/realtime/stream": "14b9e40f-dfbf-4d39-ac81-d9fd2c7ec105",
+      "GET /api/v1/grupos/de000005-0000-4000-8000-000000000001/estudiantes": "6a1ad3bd-2b9a-42c7-a5b3-4e6d7a655c37",
+      "GET /api/v2/sesiones/grupo/de000005-0000-4000-8000-000000000001": "f29a80e9-ab7d-4cce-9a0c-4f64c28f3ac9",
+      "GET /api/v1/grupos/de000005-0000-4000-8000-000000000002/estudiantes": "aea269ce-8323-4e81-a09a-ab146cd191f1",
+      "GET /api/v2/sesiones/grupo/de000005-0000-4000-8000-000000000002": "5b1a5ee6-7389-4b8a-92ff-4e7d004d2fa7"
+    },
+    "pdpUserIds": {
+      "lab-e2e-docente-fixpag300": "0e1e296a-504c-4bd8-939c-4f7356ad7dc1",
+      "lab-e2e-rol-incorrecto": "6c57b6f0-bbe1-4326-9b13-80a09c1ff029",
+      "lab-e2e-docente-sin-pdp": "d5436a7c-bf72-4a67-afb4-c049fd91da5f",
+      "lab-e2e-sin-idusuario": "a0912a7d-ddfb-4602-8575-cea96326859b"
+    },
+    "summary": {
+      "resources": 7,
+      "roles": 3,
+      "profiles": 0,
+      "administrators": 1,
+      "roleAssignments": 5,
+      "profileAssignments": 0
+    }
+  },
+  "claims": [
+    {
+      "client": "asistencias-lab-e2e",
+      "user": "lab-e2e-docente-fixpag300",
+      "alg": "RS256",
+      "kidInJwks": true,
+      "iss": "http://keycloak.localhost:19090/realms/security-baseline",
+      "aud": [
+        "asistencias-api",
+        "security-baseline-bff",
+        "security-baseline-pdp"
+      ],
+      "azp": "asistencias-lab-e2e",
+      "roles": [
+        "DOCENTE"
+      ],
+      "idUsuario": "de000003-0000-4000-8000-000000000001",
+      "sub": "c05297af-5179-40bf-9898-fef166acd69d",
+      "subIsKeycloakId": true,
+      "subDiffersFromIdUsuario": true,
+      "lifetimeSeconds": 300,
+      "tenant": "universidad-uco",
+      "verdict": "PASS"
+    },
+    {
+      "client": "asistencias-lab-e2e",
+      "user": "lab-e2e-rol-incorrecto",
+      "alg": "RS256",
+      "kidInJwks": true,
+      "iss": "http://keycloak.localhost:19090/realms/security-baseline",
+      "aud": [
+        "asistencias-api",
+        "security-baseline-bff",
+        "security-baseline-pdp"
+      ],
+      "azp": "asistencias-lab-e2e",
+      "roles": [
+        "ESTUDIANTE"
+      ],
+      "idUsuario": "de000003-0000-4000-8000-000000000002",
+      "sub": "1644887e-6f75-4969-badd-17e04fdd546e",
+      "subIsKeycloakId": true,
+      "subDiffersFromIdUsuario": true,
+      "lifetimeSeconds": 300,
+      "tenant": "universidad-uco",
+      "verdict": "PASS"
+    },
+    {
+      "client": "asistencias-lab-e2e",
+      "user": "lab-e2e-docente-sin-pdp",
+      "alg": "RS256",
+      "kidInJwks": true,
+      "iss": "http://keycloak.localhost:19090/realms/security-baseline",
+      "aud": [
+        "asistencias-api",
+        "security-baseline-bff",
+        "security-baseline-pdp"
+      ],
+      "azp": "asistencias-lab-e2e",
+      "roles": [
+        "DOCENTE"
+      ],
+      "idUsuario": "de000003-0000-4000-8000-000000000003",
+      "sub": "59da9a71-1ee3-4b4b-9c8f-fba378b08e12",
+      "subIsKeycloakId": true,
+      "subDiffersFromIdUsuario": true,
+      "lifetimeSeconds": 300,
+      "tenant": "universidad-uco",
+      "verdict": "PASS"
+    },
+    {
+      "client": "asistencias-lab-e2e",
+      "user": "lab-e2e-sin-idusuario",
+      "alg": "RS256",
+      "kidInJwks": true,
+      "iss": "http://keycloak.localhost:19090/realms/security-baseline",
+      "aud": [
+        "asistencias-api",
+        "security-baseline-bff",
+        "security-baseline-pdp"
+      ],
+      "azp": "asistencias-lab-e2e",
+      "roles": [
+        "DOCENTE"
+      ],
+      "idUsuario": null,
+      "sub": "862531e6-3caf-48c3-9aa3-f707c0f526da",
+      "subIsKeycloakId": true,
+      "subDiffersFromIdUsuario": true,
+      "lifetimeSeconds": 300,
+      "tenant": "universidad-uco",
+      "verdict": "PASS"
+    },
+    {
+      "client": "asistencias-lab-e2e-wrong-aud",
+      "user": "lab-e2e-docente-fixpag300",
+      "alg": "RS256",
+      "kidInJwks": true,
+      "iss": "http://keycloak.localhost:19090/realms/security-baseline",
+      "aud": [
+        "security-baseline-bff",
+        "security-baseline-pdp"
+      ],
+      "azp": "asistencias-lab-e2e-wrong-aud",
+      "roles": [
+        "DOCENTE"
+      ],
+      "idUsuario": "de000003-0000-4000-8000-000000000001",
+      "sub": "c05297af-5179-40bf-9898-fef166acd69d",
+      "subIsKeycloakId": true,
+      "subDiffersFromIdUsuario": true,
+      "lifetimeSeconds": 300,
+      "tenant": "universidad-uco",
+      "verdict": "PASS"
+    }
+  ]
+}

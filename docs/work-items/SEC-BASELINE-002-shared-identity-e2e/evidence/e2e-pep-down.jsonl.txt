@@ -1,0 +1,5 @@
+{"case": "E2E-10a PEP inaccesible: horarios", "expected": 503, "status": 503, "code": "ACCESS_DECISION_UNAVAILABLE", "correlationId": "dfeede1e-8af8-4f97-b0e9-14c867d6f5f4", "decisionId": null, "layer": "PEP client fail-closed", "count": null, "verdict": "PASS", "note": ""}
+{"case": "E2E-10b PEP inaccesible: SSE", "expected": 503, "status": 503, "code": "ACCESS_DECISION_UNAVAILABLE", "correlationId": "cc77a0f3-0ba7-4b73-99da-5a8b6c86f352", "decisionId": null, "layer": "PEP client fail-closed", "count": null, "verdict": "PASS", "note": ""}
+{"case": "E2E-10c PEP inaccesible: sin token", "expected": 401, "status": 401, "code": "UNAUTHORIZED", "correlationId": "946bf12a-bcef-4af2-831e-da60b72782f7", "decisionId": null, "layer": "Spring Resource Server / sin credencial", "count": null, "verdict": "PASS", "note": ""}
+{"case": "E2E-10d PEP inaccesible: actuator", "expected": 200, "status": 200, "code": null, "correlationId": "1c335303-c3bd-4ed3-8a11-f25b7fff82e7", "decisionId": null, "layer": "Ruta pública (sin PEP)", "count": null, "verdict": "PASS", "note": ""}
+TOTAL=4 PASS=4 FAIL=0 KNOWN_UPSTREAM_FAIL=0
