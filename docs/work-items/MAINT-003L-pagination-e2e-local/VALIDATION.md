@@ -2,7 +2,7 @@
 
 ## Dictamen
 
-`VALIDATION_BLOCKED_BY_ENVIRONMENT` para el gate visual Angular; el alcance backend + SQL Server + Keycloak + HTTP real está PASS. No se declara cierre funcional completo mientras no exista el frontend AsistenciasUCO real.
+`PARTIAL`: backend + SQL Server + Keycloak + HTTP real PASS; Maven `verify` PASS (segundo intento); visual Angular PASS para coordinador y docente 300 (validación manual reportada por el usuario); visual de docentes 1000/5000 `NOT_RUN`. No se declara cierre funcional completo.
 
 ## Comandos ejecutados
 
@@ -20,6 +20,9 @@
 | 2026-10-11 / backend | `mvnw.cmd spring-boot:run -DskipTests`, `SERVER_PORT=8082`, `APP_SESIONES_V2_ENABLED=true` | 0 | PASS | Arranque verificó UTC-D06-POST-FREEZE; proceso detenido al terminar |
 | 2026-10-13 / worktree `jose-valencia/maint-003l-pagination-e2e-local` | `.\mvnw.cmd -B -ntp verify` | 1 | INTERRUPTED | Java 25 compiló 871 clases de producción y 353 de test; Surefire quedó sin progreso observable en `CrearDecanoUseCaseImplTest` durante más de 90 s y se interrumpió. No se declara PASS de Maven, JaCoCo ni ArchUnit. |
 | 2026-10-14 / worktree `jose-valencia/maint-003l-pagination-e2e-local` | `.\mvnw.cmd -B -ntp verify` | 0 | PASS | 1534/1534 tests; ArchUnit PASS; JaCoCo LINE 90.63% / BRANCH 80.51%; duración 02:43. La fila anterior queda como intento histórico interrumpido. |
+| Posterior al cierre técnico / frontend real AsistenciasUCO (manual, usuario) | Login coordinador; directorio con paginación; búsqueda por nombre y por documento | n/a | PASS (reportado) | Ejecutado y reportado por el usuario; sin capturas versionadas |
+| Posterior al cierre técnico / frontend real AsistenciasUCO (manual, usuario) | Login `docente.paginacion300`; grupo con 300 estudiantes | n/a | PASS (reportado) | Ejecutado y reportado por el usuario; sin capturas versionadas |
+| — | Login `docente.paginacion1000` / `docente.paginacion5000` en el frontend | n/a | NOT_RUN | No ejecutado; no se afirma |
 
 ## Checks
 
@@ -34,7 +37,7 @@
 | Build | Maven | PASS | `.\mvnw.cmd -B -ntp verify` terminó con Java 25: 1534/1534 tests, ArchUnit PASS y JaCoCo LINE 90.63% / BRANCH 80.51%. La ejecución anterior interrumpida se conserva como evidencia histórica. |
 | Seguridad | Secretos/RBAC | PASS | No se imprimieron passwords/JWT; tres cuentas solo `DOCENTE`; `docente.prueba` intacto |
 | Documentos | Evidencia | PASS | Este work item contiene trazabilidad y limitaciones |
-| Angular | Pantallas reales | NOT_RUN | El checkout disponible `C:\Users\josev\Front-eatup\eatup-frontend` es EatUp y no contiene rutas/servicios de docente AsistenciasUCO |
+| Angular | Pantallas reales | PARTIAL | Primer intento NOT_RUN: el checkout `C:\Users\josev\Front-eatup\eatup-frontend` es EatUp. Después el usuario validó manualmente en el frontend real: coordinador (paginación y búsqueda por nombre/documento) y docente 300 PASS; docentes 1000/5000 NOT_RUN |
 
 ## Integridad de RED
 
@@ -51,8 +54,8 @@ NO APLICA: no se cambiaron tests RED ni código productivo.
 
 ## Bloqueantes y limitaciones
 
-El gate Angular requiere el repositorio/servidor frontend de AsistenciasUCO. El puerto 8080 estaba ocupado; la validación backend se ejecutó en 8082 y el proceso temporal fue detenido. No se hizo merge, despliegue ni reconstrucción de DB.
+El gate Angular de los docentes 1000/5000 sigue pendiente. El puerto 8080 estaba ocupado; la validación backend se ejecutó en 8082 y el proceso temporal fue detenido. No se hizo merge, despliegue ni reconstrucción de DB.
 
 ## Evidencias remotas/manuales pendientes
 
-No aplica CI remoto. La prueba visual Angular queda pendiente de un frontend compatible.
+No aplica CI remoto. Pendiente: validación visual de `docente.paginacion1000` y `docente.paginacion5000` en el frontend real. La validación visual de coordinador y docente 300 está registrada arriba como manual reportada por el usuario.

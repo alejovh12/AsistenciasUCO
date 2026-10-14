@@ -2,7 +2,7 @@
 
 ## Resultado
 
-`PENDIENTE` para cierre funcional completo: backend, SQL Server, Keycloak y HTTP real están preparados y verificados; la visualización Angular no pudo ejecutarse porque el checkout disponible no es el frontend de AsistenciasUCO.
+`PARCIAL — PENDIENTE` para cierre funcional completo. Backend, SQL Server, Keycloak y HTTP real están preparados y verificados (PASS). La validación visual en el frontend real de AsistenciasUCO fue ejecutada manualmente por el usuario para el coordinador y el docente de 300 estudiantes (PASS reportado); los docentes de 1000 y 5000 no tienen validación visual (`NOT_RUN`).
 
 ## Alcance entregado y decisiones
 
@@ -18,7 +18,12 @@ Ninguna deuda técnica nueva. La validación visual pendiente es una limitación
 
 ## Validación manual
 
-Ver `VALIDATION.md`: HTTP real PASS; Angular `NOT_RUN`; Maven `verify` global quedó `INTERRUPTED` en una prueba preexistente sin salida observable.
+Ver `VALIDATION.md`:
+
+- HTTP real: PASS (300/1000/5000, ownership 403, directorio coordinador 200, docente 403).
+- Maven `verify`: dos intentos. 2026-10-13 `INTERRUPTED` (Surefire sin progreso observable en `CrearDecanoUseCaseImplTest`; no se declaró PASS); 2026-10-14 PASS, exit `0`, 1534/1534 tests, ArchUnit PASS, JaCoCo LINE 90.63 % / BRANCH 80.51 %. El resultado vigente es el segundo; el primero se conserva como intento histórico.
+- Visual Angular (manual, ejecutada y reportada por el usuario después del cierre técnico): login de coordinador, paginación y búsqueda de estudiantes por nombre y por documento PASS; login de `docente.paginacion300` y visualización de su grupo de 300 estudiantes PASS.
+- Visual Angular de `docente.paginacion1000` y `docente.paginacion5000`: `NOT_RUN`; no se afirma.
 
 ## ADR relacionados
 
@@ -26,7 +31,7 @@ No aplica: no cambió una decisión duradera de arquitectura, contrato o proveed
 
 ## Elementos pendientes y bloqueos
 
-Repetir login y navegación en el frontend real de AsistenciasUCO, verificando que cada docente visualiza su grupo y la tabla de 300/1000/5000.
+Completar en el frontend real de AsistenciasUCO el login y la navegación de `docente.paginacion1000` y `docente.paginacion5000`, verificando que cada uno visualiza su grupo y la tabla paginada de 1000/5000. Coordinador y docente 300 ya fueron validados visualmente por el usuario.
 
 ## Cambios fuera de alcance
 
@@ -34,4 +39,4 @@ No se tocaron `docente.prueba`, el realm bootstrap, el backend productivo, OpenA
 
 ## Condición de parada
 
-No iniciar otra fase ni declarar DONE hasta adjuntar evidencia visual del frontend correcto.
+No declarar DONE hasta registrar la validación visual de los docentes de 1000 y 5000 (o una decisión explícita del owner que la excluya del alcance).
