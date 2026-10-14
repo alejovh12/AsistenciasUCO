@@ -1,6 +1,5 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.security;
 
-import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.CommonErrorCode;
 import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.SecurityErrorCode;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.handler.SecurityErrorResponseWriter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.securitybaseline.PepDecision;
@@ -11,9 +10,12 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.web.cors.CorsUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -21,15 +23,21 @@ import java.util.UUID;
 
 /**
  * Enforcement servlet opt-in. El filtro agrega una decisión PEP; no autentica ni concede roles.
+ *
+ * <p>Se ejecuta solo dentro de la {@code SecurityFilterChain}, inmediatamente después del
+ * {@code BearerTokenAuthenticationFilter}: su registro automático como filtro servlet está
+ * deshabilitado en {@code SecurityBaselinePepConfiguration}. Toda ruta no declarada pública en
+ * {@link SecurityPublicEndpoints} exige una decisión permitida; los dispatches ASYNC/ERROR
+ * heredan la decisión de su REQUEST original (comportamiento de {@link OncePerRequestFilter}).
  */
 public final class SecurityBaselinePepFilter extends OncePerRequestFilter {
 
     private static final String DECISION_ID = "X-Decision-Id";
-    private static final String CORRELATION_ID = "X-Correlation-Id";
 
     private final SecurityBaselinePepClient client;
     private final SecurityBaselinePepProperties properties;
     private final SecurityErrorResponseWriter responseWriter;
+    private final RequestMatcher exempt;
 
     public SecurityBaselinePepFilter(
             final SecurityBaselinePepClient client,
@@ -39,12 +47,14 @@ public final class SecurityBaselinePepFilter extends OncePerRequestFilter {
         this.client = client;
         this.properties = properties;
         this.responseWriter = responseWriter;
+        this.exempt = SecurityPublicEndpoints.pepExempt();
     }
 
     @Override
     protected boolean shouldNotFilter(final HttpServletRequest request) {
-        return !properties.enabled() || !isProtectedPath(request.getRequestURI())
-                || "OPTIONS".equalsIgnoreCase(request.getMethod());
+        return !properties.enabled()
+                || CorsUtils.isPreFlightRequest(request)
+                || exempt.matches(request);
     }
 
     @Override
@@ -54,27 +64,23 @@ public final class SecurityBaselinePepFilter extends OncePerRequestFilter {
             final FilterChain filterChain
     ) throws ServletException, IOException {
         if (!isAuthenticated()) {
+            // Sin autenticación válida decide el resource server / AuthorizationFilter (401).
             filterChain.doFilter(request, response);
             return;
         }
 
-        final PepDecision decision = client.evaluate(request, correlationId(request));
+        final PepDecision decision = client.evaluate(request, correlationId());
         switch (decision.outcome()) {
             case ALLOW -> {
-                if (decision.decisionId() != null && !decision.decisionId().isBlank()) {
-                    response.setHeader(DECISION_ID, decision.decisionId());
-                }
+                response.setHeader(DECISION_ID, decision.decisionId());
                 filterChain.doFilter(request, response);
             }
             case UNAUTHORIZED -> responseWriter.write(
-                    request, response, org.springframework.http.HttpStatus.UNAUTHORIZED,
-                    SecurityErrorCode.UNAUTHORIZED);
+                    request, response, HttpStatus.UNAUTHORIZED, SecurityErrorCode.UNAUTHORIZED);
             case FORBIDDEN -> responseWriter.write(
-                    request, response, org.springframework.http.HttpStatus.FORBIDDEN,
-                    SecurityErrorCode.FORBIDDEN);
+                    request, response, HttpStatus.FORBIDDEN, SecurityErrorCode.FORBIDDEN);
             case UNAVAILABLE -> responseWriter.write(
-                    request, response, org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE,
-                    CommonErrorCode.INTERNAL_ERROR);
+                    request, response, HttpStatus.SERVICE_UNAVAILABLE, SecurityErrorCode.ACCESS_DECISION_UNAVAILABLE);
         }
     }
 
@@ -85,17 +91,9 @@ public final class SecurityBaselinePepFilter extends OncePerRequestFilter {
                 && !(authentication instanceof AnonymousAuthenticationToken);
     }
 
-    private String correlationId(final HttpServletRequest request) {
-        final String header = request.getHeader(CORRELATION_ID);
-        if (header != null && !header.isBlank()) {
-            return header;
-        }
+    /** Solo el valor ya saneado por {@code CorrelationIdFilter}; nunca el header crudo. */
+    private String correlationId() {
         final String contextValue = CorrelationIdContext.getAsString();
         return contextValue == null || contextValue.isBlank() ? UUID.randomUUID().toString() : contextValue;
-    }
-
-    private boolean isProtectedPath(final String path) {
-        return path != null && (path.startsWith("/api/v1/") || "/api/v1".equals(path)
-                || path.startsWith("/api/v2/sesiones/") || "/api/v2/sesiones".equals(path));
     }
 }

@@ -1,6 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.securitybaseline;
 
-import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.CommonErrorCode;
+import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.SecurityErrorCode;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.handler.SecurityErrorResponseWriter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.securitybaseline.PepDecision;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.securitybaseline.SecurityBaselinePepClient;
@@ -55,7 +55,7 @@ class SecurityBaselinePepFilterTest {
         filter.doFilter(request, response, chain);
 
         assertEquals(503, response.getStatus());
-        assertTrue(response.getContentAsString().contains(CommonErrorCode.INTERNAL_ERROR.code()));
+        assertTrue(response.getContentAsString().contains(SecurityErrorCode.ACCESS_DECISION_UNAVAILABLE.code()));
         assertEquals(0, chainCalls.get());
     }
 
