@@ -19,6 +19,7 @@
 | 2026-10-11 / backend 8082 | `validate-pagination-e2e.ps1` | 0 | PASS | Horarios 200/1; estudiantes 200/300, 200/1000, 200/5000; V2: 4 `UTC_V2` en cada grupo y 1 sesión histórica indeterminada adicional en 300; ownership 403; directorio coordinador 200/20/5003; docente 403 |
 | 2026-10-11 / backend | `mvnw.cmd spring-boot:run -DskipTests`, `SERVER_PORT=8082`, `APP_SESIONES_V2_ENABLED=true` | 0 | PASS | Arranque verificó UTC-D06-POST-FREEZE; proceso detenido al terminar |
 | 2026-10-13 / worktree `jose-valencia/maint-003l-pagination-e2e-local` | `.\mvnw.cmd -B -ntp verify` | 1 | INTERRUPTED | Java 25 compiló 871 clases de producción y 353 de test; Surefire quedó sin progreso observable en `CrearDecanoUseCaseImplTest` durante más de 90 s y se interrumpió. No se declara PASS de Maven, JaCoCo ni ArchUnit. |
+| 2026-10-14 / worktree `jose-valencia/maint-003l-pagination-e2e-local` | `.\mvnw.cmd -B -ntp verify` | 0 | PASS | 1534/1534 tests; ArchUnit PASS; JaCoCo LINE 90.63% / BRANCH 80.51%; duración 02:43. La fila anterior queda como intento histórico interrumpido. |
 
 ## Checks
 
@@ -30,7 +31,7 @@
 | Tests | Scripts/negativos | PASS | Parseo, idempotencia, cleanup, ownership cruzado y directorio DOCENTE 403 |
 | Coverage | JaCoCo | NO APLICA | No se agregó código Java productivo |
 | Integración | SQL Server, Keycloak, backend | PASS | Proveedores reales locales; sin contenedores nuevos |
-| Build | Maven | INTERRUPTED | `spring-boot:run -DskipTests` arrancó con Java 25; `mvnw.cmd -B -ntp verify` llegó a `CrearDecanoUseCaseImplTest`, quedó sin salida por más de 90 s y se interrumpió con exit 1. No se declara PASS global. |
+| Build | Maven | PASS | `.\mvnw.cmd -B -ntp verify` terminó con Java 25: 1534/1534 tests, ArchUnit PASS y JaCoCo LINE 90.63% / BRANCH 80.51%. La ejecución anterior interrumpida se conserva como evidencia histórica. |
 | Seguridad | Secretos/RBAC | PASS | No se imprimieron passwords/JWT; tres cuentas solo `DOCENTE`; `docente.prueba` intacto |
 | Documentos | Evidencia | PASS | Este work item contiene trazabilidad y limitaciones |
 | Angular | Pantallas reales | NOT_RUN | El checkout disponible `C:\Users\josev\Front-eatup\eatup-frontend` es EatUp y no contiene rutas/servicios de docente AsistenciasUCO |
