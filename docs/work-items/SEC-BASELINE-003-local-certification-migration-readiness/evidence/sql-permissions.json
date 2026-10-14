@@ -64,6 +64,22 @@
         "verdict":  "PASS"
     },
     {
+        "case":  "RO-09 EXEC usp_crear_sesion_v2 (solo VIEW DEFINITION)",
+        "login":  "asistencias_e2e_readonly",
+        "expected":  "DENIED",
+        "outcome":  "DENIED",
+        "sqlError":  229,
+        "verdict":  "PASS"
+    },
+    {
+        "case":  "RO-10 OBJECT_ID de los SP v2 visible (arranque del backend)",
+        "login":  "asistencias_e2e_readonly",
+        "expected":  "ALLOWED",
+        "outcome":  "ALLOWED",
+        "sqlError":  null,
+        "verdict":  "PASS"
+    },
+    {
         "case":  "RT-01 SELECT vista uv_sesion_v2",
         "login":  "asistencias_e2e_runtime",
         "expected":  "ALLOWED",

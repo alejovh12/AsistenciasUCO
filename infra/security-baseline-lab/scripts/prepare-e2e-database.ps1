@@ -16,7 +16,8 @@
       * huella idéntica a la del principal (si difiere, se detiene);
       * login asistencias_e2e_runtime -> rol EXISTENTE rol_asistencias_runtime (definido por el owner DB);
       * login asistencias_e2e_readonly -> rol nuevo rol_asistencias_e2e_lectura = SOLO los SELECT sobre
-        vistas que ya concede rol_asistencias_runtime (sin EXECUTE, sin INSERT).
+        vistas que ya concede rol_asistencias_runtime + VIEW DEFINITION de los 2 SP v2 que el backend
+        comprueba al arrancar (metadatos, sin EXECUTE, sin INSERT).
     Escribe %USERPROFILE%\.asistencias-security-lab\e2e-sql-runtime.env y e2e-sql-readonly.env
     (SPRING_DATASOURCE_*) para start-backend-pep-lab.ps1 -DatasourceEnv. Evidencia sin secretos en
     -EvidenceFile.
@@ -144,6 +145,9 @@ WHERE p.grantee_principal_id = DATABASE_PRINCIPAL_ID('rol_asistencias_runtime') 
   AND p.state_desc = 'GRANT' AND o.type = 'V';
 EXEC (@g);
 IF IS_ROLEMEMBER('rol_asistencias_e2e_lectura', 'asistencias_e2e_readonly') = 0 ALTER ROLE [rol_asistencias_e2e_lectura] ADD MEMBER [asistencias_e2e_readonly];
+-- El backend verifica al arrancar OBJECT_ID de los SP v2 (SesionV2SchemaCompatibilityVerifier): solo metadatos, sin EXECUTE.
+GRANT VIEW DEFINITION ON dbo.usp_crear_sesion_v2 TO [rol_asistencias_e2e_lectura];
+GRANT VIEW DEFINITION ON dbo.usp_actualizar_sesion_v2 TO [rol_asistencias_e2e_lectura];
 "@ -NonQuery | Out-Null
     $perm = Invoke-E2eSql $e @"
 SELECT pr.name role_, p.permission_name perm, p.state_desc st, COUNT(*) n

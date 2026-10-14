@@ -49,7 +49,9 @@ $checks = @{
         @('RO-05 DELETE dbo.Asistencia (WHERE 1=0)', 'DELETE FROM dbo.Asistencia WHERE 1 = 0', 'DENIED'),
         @('RO-06 EXEC usp_crear_sesion', 'EXEC dbo.usp_crear_sesion', 'DENIED'),
         @('RO-07 EXEC usp_registrar_asistencias_sesion', 'EXEC dbo.usp_registrar_asistencias_sesion', 'DENIED'),
-        @('RO-08 CREATE TABLE', 'CREATE TABLE dbo.sec003_probe (id int)', 'DENIED')
+        @('RO-08 CREATE TABLE', 'CREATE TABLE dbo.sec003_probe (id int)', 'DENIED'),
+        @('RO-09 EXEC usp_crear_sesion_v2 (solo VIEW DEFINITION)', 'EXEC dbo.usp_crear_sesion_v2', 'DENIED'),
+        @('RO-10 OBJECT_ID de los SP v2 visible (arranque del backend)', "SELECT CASE WHEN OBJECT_ID('dbo.usp_crear_sesion_v2','P') IS NOT NULL AND OBJECT_ID('dbo.usp_actualizar_sesion_v2','P') IS NOT NULL THEN 1 ELSE 1/0 END v", 'ALLOWED')
     )
     runtime = @(
         @('RT-01 SELECT vista uv_sesion_v2', 'SELECT TOP 1 * FROM dbo.uv_sesion_v2', 'ALLOWED'),

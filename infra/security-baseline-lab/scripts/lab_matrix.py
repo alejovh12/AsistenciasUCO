@@ -6,6 +6,7 @@ Uso:  python -I lab_matrix.py pep                  -> decisiones reales PEP/PDP 
       python -I lab_matrix.py e2e [url]            -> SEC-BASELINE-002, backend 8083 en IdentityMode SharedLab
       python -I lab_matrix.py e2e-pep-down [url]   -> idem con el contenedor pep detenido
       python -I lab_matrix.py e2e-fault [url]      -> idem con SECURITY_BASELINE_PEP_URL hacia pep_fault_stub.py
+      python -I lab_matrix.py e2e-pdp-down [url]   -> SEC-BASELINE-003, PEP arriba y contenedor pdp detenido
       python -I lab_matrix.py stable [url]         -> SEC-BASELINE-003, mismo jar con PEP OFF e identidad institucional
       python -I lab_matrix.py selftest             -> pruebas del propio arnés (sin red)
 
@@ -532,6 +533,26 @@ def run_stable(base):
     record("ST-09 actuator público", 200, *backend_get(base, "/actuator/health"), layer=L_PUBLIC)
 
 
+def run_e2e_pdp_down(base):
+    """SEC-BASELINE-003: PEP arriba y PDP detenido (docker stop asistencias-security-lab-pdp-1). El PEP no
+    puede decidir; el backend debe cerrar (503) sin datos y sin propagar decisiones."""
+    env = L.read_env()
+    credential = env["SECURITY_BASELINE_PEP_APPLICATION_CREDENTIAL"]
+    docente = lab_token(env, "lab-e2e-docente-fixpag300")
+    status, headers, body = pep_decision(credential, docente, "/api/v1/docente/horarios")
+    record("E2E-16-pre PEP con PDP detenido (directo)", [500, 502, 503, 504], status, headers, body,
+           layer="PEP directo (precondición)", checks=[("sin X-Decision-Id", "x-decision-id" not in lower_headers(headers))])
+    status, headers, body = backend_get(base, "/api/v1/docente/horarios", docente)
+    record("E2E-16a PDP inaccesible: horarios", 503, status, headers, body, layer=L_UNAVAILABLE,
+           checks=[("code ACCESS_DECISION_UNAVAILABLE", parse_body(body).get("code") == "ACCESS_DECISION_UNAVAILABLE"),
+                   ("sin datos", not items(body))])
+    status, headers, body = sse_open(base, f"/api/v1/realtime/stream?grupoId={GROUP_OWN}", docente)
+    record("E2E-16b PDP inaccesible: SSE", 503, status, headers, body, layer=L_UNAVAILABLE,
+           checks=[("code ACCESS_DECISION_UNAVAILABLE", parse_body(body).get("code") == "ACCESS_DECISION_UNAVAILABLE")])
+    record("E2E-16c PDP inaccesible: sin token", 401, *backend_get(base, "/api/v1/docente/horarios"), layer=L_ENTRY)
+    record("E2E-16d PDP inaccesible: actuator", 200, *backend_get(base, "/actuator/health"), layer=L_PUBLIC)
+
+
 # Rutas que pep_fault_stub.py asocia a cada respuesta anómala.
 FAULTS = [
     ("E2E-11a PEP 200 vacío sin decisión (comportamiento PEP-03)", "/api/v1/docente/horarios"),
@@ -601,7 +622,8 @@ if __name__ == "__main__":
     modes = {"pep": run_pep, "backend": lambda: run_backend(target),
              "backend-pep-down": lambda: run_backend(target, pep_down=True),
              "e2e": lambda: run_e2e(target), "e2e-pep-down": lambda: run_e2e_pep_down(target),
-             "e2e-fault": lambda: run_e2e_fault(target), "stable": lambda: run_stable(target)}
+             "e2e-fault": lambda: run_e2e_fault(target), "stable": lambda: run_stable(target),
+             "e2e-pdp-down": lambda: run_e2e_pdp_down(target)}
     if mode == "selftest":
         sys.exit(selftest())
     if mode not in modes:

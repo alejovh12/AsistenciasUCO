@@ -1,0 +1,156 @@
+{
+    "workItem":  "SEC-BASELINE-003",
+    "verifiedAt":  "2026-10-14T14:20:37.4747809Z",
+    "source":  "127.0.0.1,14333/gestionasistenciadb_e2e (login asistencias_e2e_readonly, solo SELECT)",
+    "identities":  [
+                       {
+                           "username":  "lab-e2e-administrador",
+                           "role":  "ADMINISTRADOR",
+                           "source":  "unica fila dbo.uv_administrador",
+                           "idUsuario":  "e1f2a3b4-0000-0000-0000-000000000006",
+                           "verified":  true,
+                           "checks":  {
+                                          "usuarioExiste":  true,
+                                          "usuarioActivo":  true,
+                                          "unaFilaDelRol":  true,
+                                          "rolActivo":  true
+                                      }
+                       },
+                       {
+                           "username":  "lab-e2e-decano",
+                           "role":  "DECANO",
+                           "source":  "unica fila dbo.uv_decano",
+                           "idUsuario":  "e1f2a3b4-0000-0000-0000-000000000001",
+                           "verified":  true,
+                           "checks":  {
+                                          "usuarioExiste":  true,
+                                          "usuarioActivo":  true,
+                                          "unaFilaDelRol":  true,
+                                          "rolActivo":  true
+                                      }
+                       },
+                       {
+                           "username":  "lab-e2e-coordinador",
+                           "role":  "COORDINADOR",
+                           "source":  "E2E_COORDINADOR_ID_USUARIO",
+                           "idUsuario":  "e1f2a3b4-0000-0000-0000-000000000002",
+                           "verified":  true,
+                           "checks":  {
+                                          "usuarioExiste":  true,
+                                          "usuarioActivo":  true,
+                                          "unaFilaDelRol":  true,
+                                          "rolActivo":  true
+                                      }
+                       },
+                       {
+                           "username":  "lab-e2e-docente-seed",
+                           "role":  "DOCENTE",
+                           "source":  "E2E_DOCENTE_ID_USUARIO",
+                           "idUsuario":  "e1f2a3b4-0000-0000-0000-000000000003",
+                           "verified":  true,
+                           "checks":  {
+                                          "usuarioExiste":  true,
+                                          "usuarioActivo":  true,
+                                          "unaFilaDelRol":  true,
+                                          "rolActivo":  true
+                                      }
+                       },
+                       {
+                           "username":  "lab-e2e-estudiante",
+                           "role":  "ESTUDIANTE",
+                           "source":  "E2E_ESTUDIANTE_ID_USUARIO",
+                           "idUsuario":  "e1f2a3b4-0000-0000-0000-000000000004",
+                           "verified":  true,
+                           "checks":  {
+                                          "usuarioExiste":  true,
+                                          "usuarioActivo":  true,
+                                          "unaFilaDelRol":  true,
+                                          "rolActivo":  true
+                                      }
+                       },
+                       {
+                           "username":  "lab-e2e-docente-fixpag1000",
+                           "role":  "DOCENTE",
+                           "source":  "fixture FIX-PAG-1000",
+                           "idUsuario":  "de000003-0000-4000-8000-000000000002",
+                           "verified":  true,
+                           "checks":  {
+                                          "usuarioExiste":  true,
+                                          "usuarioActivo":  true,
+                                          "unaFilaDelRol":  true,
+                                          "rolActivo":  true
+                                      }
+                       },
+                       {
+                           "username":  "lab-e2e-docente-fixpag5000",
+                           "role":  "DOCENTE",
+                           "source":  "fixture FIX-PAG-5000",
+                           "idUsuario":  "de000003-0000-4000-8000-000000000003",
+                           "verified":  true,
+                           "checks":  {
+                                          "usuarioExiste":  true,
+                                          "usuarioActivo":  true,
+                                          "unaFilaDelRol":  true,
+                                          "rolActivo":  true
+                                      }
+                       },
+                       {
+                           "username":  "lab-e2e-revocable",
+                           "role":  "DOCENTE",
+                           "source":  "fixture FIX-PAG-300 (cuenta dedicada a revocación)",
+                           "idUsuario":  "de000003-0000-4000-8000-000000000001",
+                           "verified":  true,
+                           "checks":  {
+                                          "usuarioExiste":  true,
+                                          "usuarioActivo":  true,
+                                          "unaFilaDelRol":  true,
+                                          "rolActivo":  true
+                                      }
+                       },
+                       {
+                           "username":  "lab-e2e-sin-rol",
+                           "role":  "DOCENTE",
+                           "source":  "E2E_DOCENTE_ID_USUARIO (sin client role en el token)",
+                           "idUsuario":  "e1f2a3b4-0000-0000-0000-000000000003",
+                           "verified":  true,
+                           "checks":  {
+                                          "usuarioExiste":  true,
+                                          "usuarioActivo":  true,
+                                          "unaFilaDelRol":  true,
+                                          "rolActivo":  true
+                                      }
+                       }
+                   ],
+    "context":  {
+                    "grupoDocenteSeed":  "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+                    "estudianteSeedId":  "f1a2b3c4-0000-0000-0000-000000000004",
+                    "estudianteSeedMatriculas":  1,
+                    "estudianteSeedGrupo":  "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+                    "estudianteSeedEstado":  "A",
+                    "fixPag":  [
+                                   {
+                                       "grupo":  "de000005-0000-4000-8000-000000000002",
+                                       "nombre":  "FIX-PAG-1000 Paginacion 1000 estudiantes",
+                                       "matriculas":  1000
+                                   },
+                                   {
+                                       "grupo":  "de000005-0000-4000-8000-000000000001",
+                                       "nombre":  "FIX-PAG-300 Paginacion 300 estudiantes",
+                                       "matriculas":  300
+                                   },
+                                   {
+                                       "grupo":  "de000005-0000-4000-8000-000000000003",
+                                       "nombre":  "FIX-PAG-5000 Paginacion 5000 estudiantes",
+                                       "matriculas":  5000
+                                   }
+                               ],
+                    "estudianteEnGrupoDelDocenteSeed":  true
+                },
+    "findings":  [
+                     {
+                         "id":  "E2E_ADMIN_ID_USUARIO",
+                         "existsInDb":  false,
+                         "note":  "idUsuario del administrador E2E institucional (8081) frente a la copia de la DB"
+                     }
+                 ]
+}
