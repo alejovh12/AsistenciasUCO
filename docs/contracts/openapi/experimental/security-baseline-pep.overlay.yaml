@@ -1,0 +1,43 @@
+# EXPERIMENTAL — solo rama jose-valencia/experiment-security-baseline-mvc (SEC-BASELINE-001/002).
+#
+# OpenAPI Overlay 1.0.0 sobre ../openapi-golden-path.yaml. NO forma parte del contrato canónico:
+# describe la respuesta adicional que existe únicamente con SECURITY_BASELINE_PEP_ENABLED=true
+# (OFF por defecto). El YAML canónico, su SHA-256 y sus tests de conformidad no cambian, porque con el
+# flag OFF el backend nunca emite 503 ACCESS_DECISION_UNAVAILABLE.
+# Requiere aprobación contractual antes de cualquier merge (SEC-BASELINE-001 D-007).
+overlay: 1.0.0
+info:
+  title: Security Baseline PEP enforcement (experimental)
+  version: 0.1.0-sec-baseline-002
+actions:
+  - target: $.components.responses
+    description: Respuesta reutilizable del enforcement PEP fail-closed.
+    update:
+      AccessDecisionUnavailable:
+        description: |
+          El PEP no respondió, excedió el timeout o devolvió una respuesta sin decisión válida
+          (ALLOW exige 204 + X-Decision-Id con formato [A-Za-z0-9_.:-]{1,128}). La petición se
+          rechaza sin ejecutar el handler. Solo con SECURITY_BASELINE_PEP_ENABLED=true.
+        x-experimental: true
+        headers:
+          X-Correlation-Id:
+            $ref: '#/components/headers/CorrelationId'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiErrorResponse'
+            example:
+              timestamp: '2026-10-14T08:10:31-05:00'
+              status: 503
+              error: Service Unavailable
+              code: ACCESS_DECISION_UNAVAILABLE
+              message: No fue posible verificar la autorizacion en este momento. Intente nuevamente.
+              path: /api/v1/docente/horarios
+              correlationId: dfeede1e-8af8-4f97-b0e9-14c867d6f5f4
+  - target: $.paths.*.*[?(@.security)].responses
+    description: |
+      Toda operación con Bearer puede responder 503 con el enforcement activo (deny-by-default; solo
+      las rutas públicas de SecurityPublicEndpoints y el preflight CORS quedan fuera del PEP).
+    update:
+      '503':
+        $ref: '#/components/responses/AccessDecisionUnavailable'

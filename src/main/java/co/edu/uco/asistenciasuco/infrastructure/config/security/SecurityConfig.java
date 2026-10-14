@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.infrastructure.config.security;
 
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.InstitutionalJwtAuthenticationConverter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.contract.JwtClaimsExtractor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -55,7 +56,8 @@ public class SecurityConfig {
             final JwtDecoder jwtDecoder,
             final InstitutionalJwtAuthenticationConverter institutionalJwtAuthenticationConverter,
             final AuthenticationEntryPoint authenticationEntryPoint,
-            final AccessDeniedHandler accessDeniedHandler
+            final AccessDeniedHandler accessDeniedHandler,
+            final ObjectProvider<SecurityBaselinePepFilter> securityBaselinePepFilter
     ) throws Exception {
         http
             .cors(Customizer.withDefaults())
@@ -84,18 +86,13 @@ public class SecurityConfig {
                 .accessDeniedHandler(accessDeniedHandler)
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/actuator/**").permitAll()
+                .requestMatchers(SecurityPublicEndpoints.ACTUATOR).permitAll()
                 // permitAll de AUTORIZACION: la autenticacion la exige AzureEventGridAuthFilter (header
                 // aeg-sas-token, fail-closed). No equivale a un endpoint sin autenticacion.
                 .requestMatchers(AzureEventGridAuthFilter.WEBHOOK_PATH).permitAll()
                 // Solo lectura de documentación runtime. La propiedad de Swagger UI controla
                 // si estos handlers existen; ningún endpoint de negocio se abre por esta regla.
-                .requestMatchers(
-                        HttpMethod.GET,
-                        "/swagger-ui",
-                        "/swagger-ui/**",
-                        "/openapi/openapi-golden-path.yaml"
-                ).permitAll()
+                .requestMatchers(HttpMethod.GET, SecurityPublicEndpoints.documentationGet()).permitAll()
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMINISTRADOR")
                 .requestMatchers("/api/v1/decano/**").hasAnyRole("DECANO", "ADMINISTRADOR")
                 .requestMatchers("/api/v1/coordinador/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")
@@ -176,6 +173,14 @@ public class SecurityConfig {
                     .jwtAuthenticationConverter(institutionalJwtAuthenticationConverter)
                 )
             );
+
+        // SEC-BASELINE-001: unico punto de registro del filtro PEP (su FilterRegistrationBean servlet
+        // esta deshabilitado). Despues de autenticar el Bearer y antes de AuthorizationFilter.
+        securityBaselinePepFilter.ifAvailable(filter ->
+                http.addFilterAfter(
+                        filter,
+                        org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class
+                ));
 
         return http.build();
     }

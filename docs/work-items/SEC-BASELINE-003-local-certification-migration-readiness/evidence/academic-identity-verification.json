@@ -1,0 +1,175 @@
+{
+    "workItem":  "SEC-BASELINE-002",
+    "verifiedAt":  "2026-10-14T14:02:40.6265180Z",
+    "source":  {
+                   "host":  "127.0.0.1,1433",
+                   "database":  "gestionasistenciadb",
+                   "edition":  "Developer Edition (64-bit)",
+                   "version":  "16.0.4265.3",
+                   "access":  "SELECT only (ApplicationIntent=ReadOnly; no read-only principal exists)"
+               },
+    "identities":  [
+                       {
+                           "idUsuario":  "de000003-0000-4000-8000-000000000001",
+                           "docenteId":  "de000004-0000-4000-8000-000000000001",
+                           "grupoId":  "de000005-0000-4000-8000-000000000001",
+                           "grupo":  "FIX-PAG-300 Paginacion 300 estudiantes",
+                           "checks":  {
+                                          "usuarioExiste":  true,
+                                          "usuarioActivo":  true,
+                                          "unDocente":  true,
+                                          "grupoExiste":  true,
+                                          "grupoNombreUnico":  true,
+                                          "titularDelGrupo":  true
+                                      },
+                           "verified":  true,
+                           "expected":  {
+                                            "horarios":  [
+                                                             {
+                                                                 "id":  "351b49d9-d652-4897-af84-4eae7ce60f33",
+                                                                 "grupo":  "de000005-0000-4000-8000-000000000001"
+                                                             }
+                                                         ],
+                                            "matriculas":  300,
+                                            "sesiones":  [
+                                                             {
+                                                                 "id":  "de000007-0000-4000-8000-010100000000",
+                                                                 "procedenciaTemporal":  "UTC_V2",
+                                                                 "inicio":  "2026-09-14T13:00:00.1234567",
+                                                                 "fin":  "2026-09-14T15:00:00.7654321"
+                                                             },
+                                                             {
+                                                                 "id":  "de000007-0000-4000-8000-010200000000",
+                                                                 "procedenciaTemporal":  "UTC_V2",
+                                                                 "inicio":  "2026-09-21T13:00:00",
+                                                                 "fin":  "2026-09-21T15:00:00"
+                                                             },
+                                                             {
+                                                                 "id":  "de000007-0000-4000-8000-010300000000",
+                                                                 "procedenciaTemporal":  "UTC_V2",
+                                                                 "inicio":  "2026-09-28T13:00:00",
+                                                                 "fin":  "2026-09-28T15:00:00"
+                                                             },
+                                                             {
+                                                                 "id":  "de000007-0000-4000-8000-010400000000",
+                                                                 "procedenciaTemporal":  "UTC_V2",
+                                                                 "inicio":  "2026-10-05T13:00:00",
+                                                                 "fin":  "2026-10-05T15:00:00"
+                                                             },
+                                                             {
+                                                                 "id":  "3eab8ff3-3674-4490-aa2d-14f366f43b6b",
+                                                                 "procedenciaTemporal":  null,
+                                                                 "inicio":  "2026-10-13T08:00:00",
+                                                                 "fin":  "2026-10-13T10:00:00"
+                                                             },
+                                                             {
+                                                                 "id":  "8244100e-8447-4fe8-b1bc-876ea7e8faf0",
+                                                                 "procedenciaTemporal":  null,
+                                                                 "inicio":  "2040-01-15T08:00:00",
+                                                                 "fin":  "2040-01-15T10:00:00"
+                                                             }
+                                                         ]
+                                        }
+                       },
+                       {
+                           "idUsuario":  "de000003-0000-4000-8000-000000000002",
+                           "docenteId":  "de000004-0000-4000-8000-000000000002",
+                           "grupoId":  "de000005-0000-4000-8000-000000000002",
+                           "grupo":  "FIX-PAG-1000 Paginacion 1000 estudiantes",
+                           "checks":  {
+                                          "usuarioExiste":  true,
+                                          "usuarioActivo":  true,
+                                          "unDocente":  true,
+                                          "grupoExiste":  true,
+                                          "grupoNombreUnico":  true,
+                                          "titularDelGrupo":  true
+                                      },
+                           "verified":  true,
+                           "expected":  {
+                                            "horarios":  [
+                                                             {
+                                                                 "id":  "de00000b-0000-4000-8000-000000000002",
+                                                                 "grupo":  "de000005-0000-4000-8000-000000000002"
+                                                             }
+                                                         ],
+                                            "matriculas":  1000,
+                                            "sesiones":  [
+                                                             {
+                                                                 "id":  "de000007-0000-4000-8000-020100000000",
+                                                                 "procedenciaTemporal":  "UTC_V2",
+                                                                 "inicio":  "2026-09-14T13:00:00.1234567",
+                                                                 "fin":  "2026-09-14T15:00:00.7654321"
+                                                             },
+                                                             {
+                                                                 "id":  "de000007-0000-4000-8000-020200000000",
+                                                                 "procedenciaTemporal":  "UTC_V2",
+                                                                 "inicio":  "2026-09-21T13:00:00",
+                                                                 "fin":  "2026-09-21T15:00:00"
+                                                             },
+                                                             {
+                                                                 "id":  "de000007-0000-4000-8000-020300000000",
+                                                                 "procedenciaTemporal":  "UTC_V2",
+                                                                 "inicio":  "2026-09-28T13:00:00",
+                                                                 "fin":  "2026-09-28T15:00:00"
+                                                             },
+                                                             {
+                                                                 "id":  "de000007-0000-4000-8000-020400000000",
+                                                                 "procedenciaTemporal":  "UTC_V2",
+                                                                 "inicio":  "2026-10-05T13:00:00",
+                                                                 "fin":  "2026-10-05T15:00:00"
+                                                             }
+                                                         ]
+                                        }
+                       },
+                       {
+                           "idUsuario":  "de000003-0000-4000-8000-000000000003",
+                           "docenteId":  "de000004-0000-4000-8000-000000000003",
+                           "grupoId":  "de000005-0000-4000-8000-000000000003",
+                           "grupo":  "FIX-PAG-5000 Paginacion 5000 estudiantes",
+                           "checks":  {
+                                          "usuarioExiste":  true,
+                                          "usuarioActivo":  true,
+                                          "unDocente":  true,
+                                          "grupoExiste":  true,
+                                          "grupoNombreUnico":  true,
+                                          "titularDelGrupo":  true
+                                      },
+                           "verified":  true,
+                           "expected":  {
+                                            "horarios":  [
+                                                             {
+                                                                 "id":  "de00000b-0000-4000-8000-000000000003",
+                                                                 "grupo":  "de000005-0000-4000-8000-000000000003"
+                                                             }
+                                                         ],
+                                            "matriculas":  5000,
+                                            "sesiones":  [
+                                                             {
+                                                                 "id":  "de000007-0000-4000-8000-030100000000",
+                                                                 "procedenciaTemporal":  "UTC_V2",
+                                                                 "inicio":  "2026-09-14T13:00:00.1234567",
+                                                                 "fin":  "2026-09-14T15:00:00.7654321"
+                                                             },
+                                                             {
+                                                                 "id":  "de000007-0000-4000-8000-030200000000",
+                                                                 "procedenciaTemporal":  "UTC_V2",
+                                                                 "inicio":  "2026-09-21T13:00:00",
+                                                                 "fin":  "2026-09-21T15:00:00"
+                                                             },
+                                                             {
+                                                                 "id":  "de000007-0000-4000-8000-030300000000",
+                                                                 "procedenciaTemporal":  "UTC_V2",
+                                                                 "inicio":  "2026-09-28T13:00:00",
+                                                                 "fin":  "2026-09-28T15:00:00"
+                                                             },
+                                                             {
+                                                                 "id":  "de000007-0000-4000-8000-030400000000",
+                                                                 "procedenciaTemporal":  "UTC_V2",
+                                                                 "inicio":  "2026-10-05T13:00:00",
+                                                                 "fin":  "2026-10-05T15:00:00"
+                                                             }
+                                                         ]
+                                        }
+                       }
+                   ]
+}

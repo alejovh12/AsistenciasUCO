@@ -1,0 +1,30 @@
+{"path": "/api/v1/docente/horarios", "method": "GET", "behaviour": "200-empty", "credentialPresent": true, "bearerPresent": true, "correlationId": "0ccbac75-ce8a-49b8-8f10-8ba602f05815"}
+{"path": "/api/v1/realtime/stream", "method": "GET", "behaviour": "204-no-decision", "credentialPresent": true, "bearerPresent": true, "correlationId": "2a07fe4c-7c68-4bdb-85f9-42e7ae3a9e57"}
+{"path": "/api/v1/grupos/de000005-0000-4000-8000-000000000001/estudiantes", "method": "GET", "behaviour": "204-invalid-decision", "credentialPresent": true, "bearerPresent": true, "correlationId": "a3a0e2df-3e49-4cef-b720-095c84c67fa4"}
+{"path": "/api/v2/sesiones/grupo/de000005-0000-4000-8000-000000000001", "method": "GET", "behaviour": "500", "credentialPresent": true, "bearerPresent": true, "correlationId": "4a579b6e-aaab-4e5a-8782-ee60d53a66ef"}
+{"path": "/api/v1/grupos/de000005-0000-4000-8000-000000000002/estudiantes", "method": "GET", "behaviour": "302", "credentialPresent": true, "bearerPresent": true, "correlationId": "d6d9345e-74c3-418c-8da8-1989b09193bb"}
+{"path": "/api/v2/sesiones/grupo/de000005-0000-4000-8000-000000000002", "method": "GET", "behaviour": "200-with-decision", "credentialPresent": true, "bearerPresent": true, "correlationId": "e07bd56e-557d-483c-b232-598187721012"}
+{"path": "/api/v1/docente/asignaturas", "method": "GET", "behaviour": "timeout", "credentialPresent": true, "bearerPresent": true, "correlationId": "dc0d5061-466a-49db-b5c6-c84747db501a"}
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 58581)
+Traceback (most recent call last):
+  File "C:\Python314\Lib\socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\socketserver.py", line 766, in __init__
+    self.handle()
+    ~~~~~~~~~~~^^
+  File "C:\Python314\Lib\http\server.py", line 487, in handle
+    self.handle_one_request()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Python314\Lib\http\server.py", line 453, in handle_one_request
+    self.raw_requestline = self.rfile.readline(65537)
+                           ~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Python314\Lib\socket.py", line 725, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+ConnectionAbortedError: [WinError 10053] Se ha anulado una conexión establecida por el software en su equipo host
+----------------------------------------

@@ -1,0 +1,5 @@
+isolation guard: {"isolated":true,"pid":18668,"port":8083,"e2e":["asistencias_e2e_readonly@gestionasistenciadb_e2e x10"],"principalSessionsOfPid":0,"checkedAt":"2026-10-14T14:38:19.8959049Z"}
+{"case": "RO-HTTP-01 lectura con login de solo lectura", "expected": 200, "status": 200, "code": null, "correlationId": "e82f9d80-5237-481f-9396-3cf4673c989c", "decisionId": "f773253d-368b-4d9b-8c52-a1b0201fab71", "layer": "PEP/PDP allow + Spring + Application", "count": null, "verdict": "PASS", "note": ""}
+{"case": "RO-HTTP-02 escritura con login de solo lectura: SQL Server la deniega", "expected": [500, 503], "status": 500, "code": "DATABASE_OPERATION_ERROR", "correlationId": "b744e51b-0536-4ab1-bb80-e28d8bbc2730", "decisionId": "dbb076c8-ebd1-4b21-a520-20ddb46f6be6", "layer": "SQL Server (permiso EXECUTE denegado)", "count": null, "verdict": "PASS", "note": ""}
+guard: {"isolated":true,"pid":18668,"port":8083,"e2e":["asistencias_e2e_readonly@gestionasistenciadb_e2e x10"],"principalSessionsOfPid":0,"checkedAt":"2026-10-14T14:38:19.8959049Z"}
+TOTAL=2 PASS=2

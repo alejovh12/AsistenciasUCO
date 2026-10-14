@@ -1,0 +1,269 @@
+{
+  "workItem": "SEC-BASELINE-003",
+  "provisionedAt": "2026-10-14T14:26:59.420509+00:00",
+  "sqlVerification": "2026-10-14T14:20:37.4747809Z",
+  "keycloak": {
+    "issuer": "http://keycloak.localhost:19090/realms/security-baseline",
+    "users": {
+      "lab-e2e-administrador": {
+        "keycloakId": "9369828b-63b4-4f3e-863c-a11e8fbd6ba4",
+        "idUsuario": "e1f2a3b4-0000-0000-0000-000000000006",
+        "role": "ADMINISTRADOR"
+      },
+      "lab-e2e-decano": {
+        "keycloakId": "3ba646f8-27b7-4b3e-a12f-938c3962992a",
+        "idUsuario": "e1f2a3b4-0000-0000-0000-000000000001",
+        "role": "DECANO"
+      },
+      "lab-e2e-coordinador": {
+        "keycloakId": "82518d37-4ded-4a2b-91be-0c0eb92a41ff",
+        "idUsuario": "e1f2a3b4-0000-0000-0000-000000000002",
+        "role": "COORDINADOR"
+      },
+      "lab-e2e-docente-seed": {
+        "keycloakId": "b8fb5da7-b2c2-4f9e-9e51-1a02e709d687",
+        "idUsuario": "e1f2a3b4-0000-0000-0000-000000000003",
+        "role": "DOCENTE"
+      },
+      "lab-e2e-estudiante": {
+        "keycloakId": "303b3b7b-33d1-4342-a109-383268fda449",
+        "idUsuario": "e1f2a3b4-0000-0000-0000-000000000004",
+        "role": "ESTUDIANTE"
+      },
+      "lab-e2e-docente-fixpag1000": {
+        "keycloakId": "e7261a4a-2a31-4b62-b271-c4fa1d6c1433",
+        "idUsuario": "de000003-0000-4000-8000-000000000002",
+        "role": "DOCENTE"
+      },
+      "lab-e2e-docente-fixpag5000": {
+        "keycloakId": "17c72f2c-3b42-44c2-900a-22c4a5ce11ff",
+        "idUsuario": "de000003-0000-4000-8000-000000000003",
+        "role": "DOCENTE"
+      },
+      "lab-e2e-revocable": {
+        "keycloakId": "ccfdb78b-81ac-48cf-860c-c2841c88bc9a",
+        "idUsuario": "de000003-0000-4000-8000-000000000001",
+        "role": "DOCENTE"
+      },
+      "lab-e2e-sin-rol": {
+        "keycloakId": "550b70c7-a833-4b35-a0d0-71ee5eb57002",
+        "idUsuario": "e1f2a3b4-0000-0000-0000-000000000003",
+        "role": "DOCENTE"
+      }
+    }
+  },
+  "pdp": {
+    "applicationId": "8cdd5dcb-bd85-4170-a172-a7459bfcb2fb",
+    "roleId": "2be67cbe-08b8-4980-b24d-1887f97ca74a",
+    "resources": {
+      "GET /api/v1/admin/sedes": "d2fcd62c-613b-421f-9e76-09ebf55954ba",
+      "GET /api/v1/decano/coordinadores": "88f1193e-d09b-42e7-bdf0-a61a4b97274c",
+      "GET /api/v1/coordinador/docentes": "5241ad41-aa7c-4bf9-bca9-fd767733faf6",
+      "GET /api/v1/docente/horarios": "e3161d93-5ba8-4ef9-8cae-a3ec14ac37c6",
+      "GET /api/v1/estudiante/horarios": "40fd4b0e-dd38-4b42-842f-1829fd8293a2",
+      "GET /api/v1/docentes": "73bc1706-a50a-42de-95fc-f26a39526c0d",
+      "GET /api/v1/estudiantes": "e77e1569-5569-4523-866a-c0cfefc298c5",
+      "GET /api/v1/grupos": "29b9061d-72b6-480c-b382-002ad1d6347a",
+      "GET /api/v1/usuarios/perfil": "0f8369fd-ebc9-4838-a4a0-55cbb8a4c46f",
+      "GET /api/v1/tipos-identificacion": "a5b50713-62a6-4a54-a323-0cc1cdbcd386",
+      "GET /api/v1/realtime/status": "ca246639-0ca8-4b72-94ef-3074de1d0712",
+      "GET /api/v1/realtime/stream": "14b9e40f-dfbf-4d39-ac81-d9fd2c7ec105",
+      "GET /api/v1/grupos/a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d/estudiantes": "9f2e8eb8-e02c-435b-9423-859624e2156e",
+      "GET /api/v1/grupos/a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d/asistencias": "ff28fd0b-0baa-420b-9b08-16f897473c88",
+      "GET /api/v1/grupos/a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d/reportes/asistencia-excel": "0c4a0734-0704-4233-9d4a-ece50c9e3cd5",
+      "GET /api/v2/sesiones/grupo/a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d": "eafc5eb3-db5c-41cd-96fc-e06677b74058",
+      "GET /api/v1/sesiones/grupo/a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d": "e962ab6b-82e7-4fdd-8673-ccdab165030a",
+      "GET /api/v1/grupos/de000005-0000-4000-8000-000000000001/estudiantes": "6a1ad3bd-2b9a-42c7-a5b3-4e6d7a655c37",
+      "GET /api/v1/grupos/de000005-0000-4000-8000-000000000002/estudiantes": "aea269ce-8323-4e81-a09a-ab146cd191f1",
+      "GET /api/v1/grupos/de000005-0000-4000-8000-000000000003/estudiantes": "6f04a3ba-6544-47ba-aa5d-c70ac9cdbb34",
+      "POST /api/v2/sesiones": "9f9d8518-76a2-4dc6-bbda-432c75838a39",
+      "POST /api/v1/asistencias/lote": "0a41d10a-adea-4802-a1a9-46d757e4dd95",
+      "POST /api/v1/asistencias/revisiones": "c8dd65c4-4623-4e40-8370-166adf6da923",
+      "POST /api/v1/archivos/subir": "7c763686-1009-408d-9ed2-4d416eef7324",
+      "DELETE /api/v1/grupos/a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d/estudiantes/f1a2b3c4-0000-0000-0000-000000000004": "130c8adb-1231-44a2-aa30-b929eac9f512"
+    },
+    "createdResources": [],
+    "pdpUserIds": {
+      "lab-e2e-administrador": "024dfc0a-0087-4db3-8e7d-c07db2ec67bf",
+      "lab-e2e-decano": "a8b63dba-a947-45de-8fe4-7c492810dc31",
+      "lab-e2e-coordinador": "fbf89783-3f62-46c3-b778-5d59d0fd51ad",
+      "lab-e2e-docente-seed": "7425bbab-7e31-476f-afc0-6359761a4557",
+      "lab-e2e-estudiante": "5f20775e-c52e-49a1-8b68-374847bf0d5a",
+      "lab-e2e-docente-fixpag1000": "17b8ea61-2454-477b-ba28-9bde225289ef",
+      "lab-e2e-docente-fixpag5000": "d212dc3c-a236-4c3a-80d4-6c8a1085eb6a",
+      "lab-e2e-revocable": "9c36851f-9ca0-4a52-8633-c8b2e7f592ba",
+      "lab-e2e-sin-rol": "947bdf5d-f2eb-40fe-8346-3dafd64904e4"
+    }
+  },
+  "claims": [
+    {
+      "user": "lab-e2e-administrador",
+      "alg": "RS256",
+      "kidInJwks": true,
+      "iss": "http://keycloak.localhost:19090/realms/security-baseline",
+      "aud": [
+        "asistencias-api",
+        "security-baseline-bff",
+        "security-baseline-pdp"
+      ],
+      "roles": [
+        "ADMINISTRADOR"
+      ],
+      "idUsuario": "e1f2a3b4-0000-0000-0000-000000000006",
+      "subIsKeycloakId": true,
+      "subDiffersFromIdUsuario": true,
+      "lifetimeSeconds": 300,
+      "verdict": "PASS"
+    },
+    {
+      "user": "lab-e2e-decano",
+      "alg": "RS256",
+      "kidInJwks": true,
+      "iss": "http://keycloak.localhost:19090/realms/security-baseline",
+      "aud": [
+        "asistencias-api",
+        "security-baseline-bff",
+        "security-baseline-pdp"
+      ],
+      "roles": [
+        "DECANO"
+      ],
+      "idUsuario": "e1f2a3b4-0000-0000-0000-000000000001",
+      "subIsKeycloakId": true,
+      "subDiffersFromIdUsuario": true,
+      "lifetimeSeconds": 300,
+      "verdict": "PASS"
+    },
+    {
+      "user": "lab-e2e-coordinador",
+      "alg": "RS256",
+      "kidInJwks": true,
+      "iss": "http://keycloak.localhost:19090/realms/security-baseline",
+      "aud": [
+        "asistencias-api",
+        "security-baseline-bff",
+        "security-baseline-pdp"
+      ],
+      "roles": [
+        "COORDINADOR"
+      ],
+      "idUsuario": "e1f2a3b4-0000-0000-0000-000000000002",
+      "subIsKeycloakId": true,
+      "subDiffersFromIdUsuario": true,
+      "lifetimeSeconds": 300,
+      "verdict": "PASS"
+    },
+    {
+      "user": "lab-e2e-docente-seed",
+      "alg": "RS256",
+      "kidInJwks": true,
+      "iss": "http://keycloak.localhost:19090/realms/security-baseline",
+      "aud": [
+        "asistencias-api",
+        "security-baseline-bff",
+        "security-baseline-pdp"
+      ],
+      "roles": [
+        "DOCENTE"
+      ],
+      "idUsuario": "e1f2a3b4-0000-0000-0000-000000000003",
+      "subIsKeycloakId": true,
+      "subDiffersFromIdUsuario": true,
+      "lifetimeSeconds": 300,
+      "verdict": "PASS"
+    },
+    {
+      "user": "lab-e2e-estudiante",
+      "alg": "RS256",
+      "kidInJwks": true,
+      "iss": "http://keycloak.localhost:19090/realms/security-baseline",
+      "aud": [
+        "asistencias-api",
+        "security-baseline-bff",
+        "security-baseline-pdp"
+      ],
+      "roles": [
+        "ESTUDIANTE"
+      ],
+      "idUsuario": "e1f2a3b4-0000-0000-0000-000000000004",
+      "subIsKeycloakId": true,
+      "subDiffersFromIdUsuario": true,
+      "lifetimeSeconds": 300,
+      "verdict": "PASS"
+    },
+    {
+      "user": "lab-e2e-docente-fixpag1000",
+      "alg": "RS256",
+      "kidInJwks": true,
+      "iss": "http://keycloak.localhost:19090/realms/security-baseline",
+      "aud": [
+        "asistencias-api",
+        "security-baseline-bff",
+        "security-baseline-pdp"
+      ],
+      "roles": [
+        "DOCENTE"
+      ],
+      "idUsuario": "de000003-0000-4000-8000-000000000002",
+      "subIsKeycloakId": true,
+      "subDiffersFromIdUsuario": true,
+      "lifetimeSeconds": 300,
+      "verdict": "PASS"
+    },
+    {
+      "user": "lab-e2e-docente-fixpag5000",
+      "alg": "RS256",
+      "kidInJwks": true,
+      "iss": "http://keycloak.localhost:19090/realms/security-baseline",
+      "aud": [
+        "asistencias-api",
+        "security-baseline-bff",
+        "security-baseline-pdp"
+      ],
+      "roles": [
+        "DOCENTE"
+      ],
+      "idUsuario": "de000003-0000-4000-8000-000000000003",
+      "subIsKeycloakId": true,
+      "subDiffersFromIdUsuario": true,
+      "lifetimeSeconds": 300,
+      "verdict": "PASS"
+    },
+    {
+      "user": "lab-e2e-revocable",
+      "alg": "RS256",
+      "kidInJwks": true,
+      "iss": "http://keycloak.localhost:19090/realms/security-baseline",
+      "aud": [
+        "asistencias-api",
+        "security-baseline-bff",
+        "security-baseline-pdp"
+      ],
+      "roles": [
+        "DOCENTE"
+      ],
+      "idUsuario": "de000003-0000-4000-8000-000000000001",
+      "subIsKeycloakId": true,
+      "subDiffersFromIdUsuario": true,
+      "lifetimeSeconds": 300,
+      "verdict": "PASS"
+    },
+    {
+      "user": "lab-e2e-sin-rol",
+      "alg": "RS256",
+      "kidInJwks": true,
+      "iss": "http://keycloak.localhost:19090/realms/security-baseline",
+      "aud": [
+        "asistencias-api",
+        "security-baseline-bff",
+        "security-baseline-pdp"
+      ],
+      "roles": null,
+      "idUsuario": "e1f2a3b4-0000-0000-0000-000000000003",
+      "subIsKeycloakId": true,
+      "subDiffersFromIdUsuario": true,
+      "lifetimeSeconds": 300,
+      "verdict": "PASS"
+    }
+  ]
+}

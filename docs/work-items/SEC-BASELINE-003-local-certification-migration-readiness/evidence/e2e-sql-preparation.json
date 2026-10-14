@@ -1,0 +1,42 @@
+{
+    "workItem":  "SEC-BASELINE-003",
+    "startedAt":  "2026-10-14T14:12:11.3229900Z",
+    "principal":  {
+                      "host":  "127.0.0.1,1433",
+                      "database":  "gestionasistenciadb",
+                      "backupFile":  "/var/opt/mssql/backup/sec_baseline_003_e2e_20261014_141211.bak",
+                      "copyOnly":  true,
+                      "checksums":  true,
+                      "compressedBytes":  3303980,
+                      "fingerprintUnchangedDuringBackup":  true
+                  },
+    "transfer":  {
+                     "localCopy":  "%USERPROFILE%\\.asistencias-security-lab\\e2e-sql-backups\\sec_baseline_003_e2e_20261014_141211.bak",
+                     "sha256":  "E779F3A30A0AB252413B93B137A195B5810A831EFC72DEFBD6958BEC11EA238B",
+                     "bytes":  3317760
+                 },
+    "e2e":  {
+                "host":  "127.0.0.1,14333",
+                "server":  "asistencias-e2e-sql",
+                "database":  "gestionasistenciadb_e2e",
+                "verifyOnly":  "OK",
+                "fingerprintEqualsPrincipal":  true,
+                "fingerprintTables":  36
+            },
+    "permissions":  [
+                        "rol_asistencias_e2e_lectura GRANT SELECT x56",
+                        "rol_asistencias_runtime DENY DELETE x4",
+                        "rol_asistencias_runtime DENY EXECUTE x4",
+                        "rol_asistencias_runtime GRANT EXECUTE x21",
+                        "rol_asistencias_runtime DENY INSERT x4",
+                        "rol_asistencias_runtime GRANT INSERT x1",
+                        "rol_asistencias_runtime GRANT SELECT x57",
+                        "rol_asistencias_runtime DENY UPDATE x4"
+                    ],
+    "logins":  {
+                   "runtime":  "asistencias_e2e_runtime -\u003e rol_asistencias_runtime (existente)",
+                   "readonly":  "asistencias_e2e_readonly -\u003e rol_asistencias_e2e_lectura (SELECT vistas)",
+                   "sa":  "solo administración del contenedor E2E"
+               },
+    "finishedAt":  "2026-10-14T14:12:15.8464576Z"
+}
