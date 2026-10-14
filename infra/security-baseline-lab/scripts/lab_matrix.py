@@ -6,6 +6,7 @@ Uso:  python -I lab_matrix.py pep                  -> decisiones reales PEP/PDP 
       python -I lab_matrix.py e2e [url]            -> SEC-BASELINE-002, backend 8083 en IdentityMode SharedLab
       python -I lab_matrix.py e2e-pep-down [url]   -> idem con el contenedor pep detenido
       python -I lab_matrix.py e2e-fault [url]      -> idem con SECURITY_BASELINE_PEP_URL hacia pep_fault_stub.py
+      python -I lab_matrix.py stable [url]         -> SEC-BASELINE-003, mismo jar con PEP OFF e identidad institucional
       python -I lab_matrix.py selftest             -> pruebas del propio arnés (sin red)
 
 Veredictos: PASS; FAIL (fallo propio); KNOWN_UPSTREAM_FAIL (defecto conocido del proveedor, nunca PASS).
@@ -232,6 +233,25 @@ def sse_open(base, path, bearer=None, read_seconds=2.0, header_seconds=35.0):
         connection.close()
 
 
+def active_subscribers(base):
+    """Gauge realtime.subscribers.active de /actuator/prometheus (ruta pública, sin PEP). None si no está."""
+    status, _, raw = L.http(L.plain_opener(), "GET", f"{base}/actuator/prometheus", headers={"Accept": "text/plain"})
+    if status != 200:
+        return None
+    for line in (raw or b"").decode("utf-8", errors="replace").splitlines():
+        if line.startswith("realtime_subscribers_active") and not line.startswith("#"):
+            return float(line.rsplit(" ", 1)[1])
+    return None
+
+
+def json_error_checks(headers, body, code, status):
+    """Cuerpo ApiErrorResponse JSON con el code/status contractual (FIX-001)."""
+    parsed = parse_body(body)
+    return [("Content-Type application/json", "application/json" in lower_headers(headers).get("content-type", "")),
+            (f"code {code}", isinstance(parsed, dict) and parsed.get("code") == code),
+            (f"status {status} en el cuerpo", isinstance(parsed, dict) and parsed.get("status") == status)]
+
+
 def items(body):
     parsed = parse_body(body)
     if isinstance(parsed, dict):
@@ -315,7 +335,7 @@ def run_backend(base, pep_down=False):
 
 # --------------------------------------------------------------------------- SEC-BASELINE-002
 
-def denial_row(case, base, path, bearer, layer, expected=403, sse=False):
+def denial_row(case, base, path, bearer, layer, expected=403, sse=False, extra_checks=()):
     """403 a través del backend; la capa se comprueba con X-Decision-Id y el log del backend."""
     status, headers, body = sse_open(base, path, bearer) if sse else backend_get(base, path, bearer)
     lower = lower_headers(headers)
@@ -333,6 +353,8 @@ def denial_row(case, base, path, bearer, layer, expected=403, sse=False):
         checks = [("X-Decision-Id: el PDP permitió", has_decision),
                   ("GlobalExceptionHandler registró la denegación de Application", app_logged)]
     checks.append(("sin datos académicos", not items(body)))
+    checks += json_error_checks(headers, body, "FORBIDDEN", 403) if expected == 403 else []
+    checks += list(extra_checks)
     return record(case, expected, status, headers, body, layer=layer, checks=checks)
 
 
@@ -426,15 +448,30 @@ def run_e2e(base):
     record("E2E-13a SSE autorizado (grupo propio)", 200, status, headers, body, layer=L_ALLOW,
            checks=[("X-Decision-Id válido", valid_decision_id(lower_headers(headers).get("x-decision-id"))),
                    ("text/event-stream", "text/event-stream" in lower_headers(headers).get("content-type", ""))])
+    # SEC-BASELINE-003: tras FIX-001 el 403 debe ser JSON y no debe abrirse ninguna suscripción. El gauge
+    # realtime.subscribers.active (actuator/prometheus, ruta pública) se mide antes y después.
+    before = active_subscribers(base)
     denial_row("E2E-13b SSE grupo ajeno (PDP permite la ruta)", base, f"{stream}?grupoId={GROUP_FOREIGN}", docente,
-               L_SCOPE, sse=True)
+               L_SCOPE, sse=True,
+               extra_checks=[("gauge de suscriptores legible", before is not None),
+                             ("ninguna suscripción abierta (gauge sin cambios)",
+                              before is not None and active_subscribers(base) == before)])
     denial_row("E2E-13c SSE sin asignación PDP", base, f"{stream}?grupoId={GROUP_OWN}", no_pdp, L_PEP, sse=True)
     status, headers, body = sse_open(base, f"{stream}?grupoId={GROUP_OWN}", None)
     record("E2E-13d SSE sin token", 401, status, headers, body, layer=L_ENTRY)
     status, headers, body = sse_open(base, stream, docente)
     record("E2E-13e SSE sin grupoId (contrato: obligatorio)", 400, status, headers, body,
            layer="Controller (validación de contrato)",
-           checks=[("X-Decision-Id: el PDP permitió la ruta", valid_decision_id(lower_headers(headers).get("x-decision-id")))])
+           checks=[("X-Decision-Id: el PDP permitió la ruta", valid_decision_id(lower_headers(headers).get("x-decision-id"))),
+                   *json_error_checks(headers, body, "VALIDATION_ERROR", 400)])
+    status, headers, body = sse_open(base, f"{stream}?grupoId=no-es-uuid", docente)
+    record("E2E-13f SSE grupoId no UUID", 400, status, headers, body, layer="Controller (validación de contrato)",
+           checks=[("X-Decision-Id: el PDP permitió la ruta", valid_decision_id(lower_headers(headers).get("x-decision-id"))),
+                   *json_error_checks(headers, body, "INVALID_REQUEST", 400)])
+    after = active_subscribers(base)
+    record("E2E-13g sin suscripciones residuales tras la matriz SSE", 200, 200, {}, b"", layer="Observabilidad",
+           extra=f"realtime_subscribers_active antes={before} después={after}",
+           checks=[("gauge legible", after is not None), ("gauge == valor inicial", after == before)])
 
     # Informativos de la limitación de rutas exactas (v0.1.6) y de rutas públicas.
     denial_row("E2E-14 UUID del grupo propio en mayúsculas (ruta no registrada)", base,
@@ -453,6 +490,46 @@ def run_e2e_pep_down(base):
     record("E2E-10b PEP inaccesible: SSE", 503, status, headers, body, layer=L_UNAVAILABLE)
     record("E2E-10c PEP inaccesible: sin token", 401, *backend_get(base, "/api/v1/docente/horarios"), layer=L_ENTRY)
     record("E2E-10d PEP inaccesible: actuator", 200, *backend_get(base, "/actuator/health"), layer=L_PUBLIC)
+
+
+def run_stable(base):
+    """SEC-BASELINE-003: el MISMO jar con el flag PEP OFF y la identidad institucional (8081) conserva el
+    comportamiento estable: sin consulta al PEP (nunca X-Decision-Id) y con los status/códigos de develop."""
+    env = L.read_env()
+    docente = institutional_token("E2E_PAGINACION_300_USERNAME", "E2E_PAGINACION_300_PASSWORD")
+    lab = lab_token(env, "lab-e2e-docente-fixpag300")
+    print("claims institucional:", json.dumps(summarize_claims(docente)))
+    layer = "Backend estable (PEP OFF)"
+
+    def no_decision(headers):
+        return ("sin X-Decision-Id (PEP no consultado)", "x-decision-id" not in lower_headers(headers))
+
+    status, headers, body = backend_get(base, "/api/v1/docente/horarios", docente)
+    record("ST-01 horarios docente institucional", 200, status, headers, body, layer=layer, count=len(items(body)),
+           checks=[no_decision(headers), ("al menos un horario", len(items(body)) >= 1)])
+    status, headers, body = backend_get(base, f"/api/v1/grupos/{GROUP_OWN}/estudiantes", docente)
+    record("ST-02 estudiantes del grupo propio", 200, status, headers, body, layer=layer, count=len(items(body)),
+           checks=[no_decision(headers)])
+    status, headers, body = backend_get(base, f"/api/v1/grupos/{GROUP_FOREIGN}/estudiantes", docente)
+    record("ST-03 estudiantes del grupo ajeno", 403, status, headers, body, layer=layer,
+           checks=[no_decision(headers), ("sin datos", not items(body)),
+                   *json_error_checks(headers, body, "FORBIDDEN", 403)])
+    stream = "/api/v1/realtime/stream"
+    status, headers, body = sse_open(base, f"{stream}?grupoId={GROUP_OWN}", docente)
+    record("ST-04 SSE grupo propio", 200, status, headers, body, layer=layer,
+           checks=[no_decision(headers),
+                   ("text/event-stream", "text/event-stream" in lower_headers(headers).get("content-type", ""))])
+    status, headers, body = sse_open(base, f"{stream}?grupoId={GROUP_FOREIGN}", docente)
+    record("ST-05 SSE grupo ajeno", 403, status, headers, body, layer=layer,
+           checks=[no_decision(headers), *json_error_checks(headers, body, "FORBIDDEN", 403)])
+    status, headers, body = sse_open(base, stream, docente)
+    record("ST-06 SSE sin grupoId", 400, status, headers, body, layer=layer,
+           checks=[*json_error_checks(headers, body, "VALIDATION_ERROR", 400)])
+    status, headers, body = backend_get(base, "/api/v1/docente/horarios", lab)
+    record("ST-07 token del laboratorio (issuer 19090) rechazado", 401, status, headers, body, layer=layer,
+           checks=[no_decision(headers)])
+    record("ST-08 sin token", 401, *backend_get(base, "/api/v1/docente/horarios"), layer=layer)
+    record("ST-09 actuator público", 200, *backend_get(base, "/actuator/health"), layer=L_PUBLIC)
 
 
 # Rutas que pep_fault_stub.py asocia a cada respuesta anómala.
@@ -524,7 +601,7 @@ if __name__ == "__main__":
     modes = {"pep": run_pep, "backend": lambda: run_backend(target),
              "backend-pep-down": lambda: run_backend(target, pep_down=True),
              "e2e": lambda: run_e2e(target), "e2e-pep-down": lambda: run_e2e_pep_down(target),
-             "e2e-fault": lambda: run_e2e_fault(target)}
+             "e2e-fault": lambda: run_e2e_fault(target), "stable": lambda: run_stable(target)}
     if mode == "selftest":
         sys.exit(selftest())
     if mode not in modes:

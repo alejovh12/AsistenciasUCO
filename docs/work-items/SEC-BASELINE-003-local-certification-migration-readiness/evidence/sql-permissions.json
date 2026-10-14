@@ -1,0 +1,154 @@
+﻿[
+    {
+        "case":  "RO-01 SELECT vista uv_grupo",
+        "login":  "asistencias_e2e_readonly",
+        "expected":  "ALLOWED",
+        "outcome":  "ALLOWED",
+        "sqlError":  null,
+        "verdict":  "PASS"
+    },
+    {
+        "case":  "RO-02 SELECT tabla base dbo.Usuario",
+        "login":  "asistencias_e2e_readonly",
+        "expected":  "DENIED",
+        "outcome":  "DENIED",
+        "sqlError":  229,
+        "verdict":  "PASS"
+    },
+    {
+        "case":  "RO-03 INSERT dbo.AuditoriaEvento",
+        "login":  "asistencias_e2e_readonly",
+        "expected":  "DENIED",
+        "outcome":  "DENIED",
+        "sqlError":  229,
+        "verdict":  "PASS"
+    },
+    {
+        "case":  "RO-04 UPDATE dbo.Usuario (WHERE 1=0)",
+        "login":  "asistencias_e2e_readonly",
+        "expected":  "DENIED",
+        "outcome":  "DENIED",
+        "sqlError":  229,
+        "verdict":  "PASS"
+    },
+    {
+        "case":  "RO-05 DELETE dbo.Asistencia (WHERE 1=0)",
+        "login":  "asistencias_e2e_readonly",
+        "expected":  "DENIED",
+        "outcome":  "DENIED",
+        "sqlError":  229,
+        "verdict":  "PASS"
+    },
+    {
+        "case":  "RO-06 EXEC usp_crear_sesion",
+        "login":  "asistencias_e2e_readonly",
+        "expected":  "DENIED",
+        "outcome":  "DENIED",
+        "sqlError":  229,
+        "verdict":  "PASS"
+    },
+    {
+        "case":  "RO-07 EXEC usp_registrar_asistencias_sesion",
+        "login":  "asistencias_e2e_readonly",
+        "expected":  "DENIED",
+        "outcome":  "DENIED",
+        "sqlError":  229,
+        "verdict":  "PASS"
+    },
+    {
+        "case":  "RO-08 CREATE TABLE",
+        "login":  "asistencias_e2e_readonly",
+        "expected":  "DENIED",
+        "outcome":  "DENIED",
+        "sqlError":  262,
+        "verdict":  "PASS"
+    },
+    {
+        "case":  "RT-01 SELECT vista uv_sesion_v2",
+        "login":  "asistencias_e2e_runtime",
+        "expected":  "ALLOWED",
+        "outcome":  "ALLOWED",
+        "sqlError":  null,
+        "verdict":  "PASS"
+    },
+    {
+        "case":  "RT-02 UPDATE dbo.Usuario (DENY explícito, WHERE 1=0)",
+        "login":  "asistencias_e2e_runtime",
+        "expected":  "DENIED",
+        "outcome":  "DENIED",
+        "sqlError":  229,
+        "verdict":  "PASS"
+    },
+    {
+        "case":  "RT-03 INSERT dbo.Sesion (DENY explícito)",
+        "login":  "asistencias_e2e_runtime",
+        "expected":  "DENIED",
+        "outcome":  "DENIED",
+        "sqlError":  229,
+        "verdict":  "PASS"
+    },
+    {
+        "case":  "RT-04 DELETE dbo.Sesion (DENY, WHERE 1=0)",
+        "login":  "asistencias_e2e_runtime",
+        "expected":  "DENIED",
+        "outcome":  "DENIED",
+        "sqlError":  229,
+        "verdict":  "PASS"
+    },
+    {
+        "case":  "RT-05 UPDATE dbo.Asistencia (sin GRANT, WHERE 1=0)",
+        "login":  "asistencias_e2e_runtime",
+        "expected":  "DENIED",
+        "outcome":  "DENIED",
+        "sqlError":  229,
+        "verdict":  "PASS"
+    },
+    {
+        "case":  "RT-06 EXEC usp_crear_sesion_interno (DENY)",
+        "login":  "asistencias_e2e_runtime",
+        "expected":  "DENIED",
+        "outcome":  "DENIED",
+        "sqlError":  229,
+        "verdict":  "PASS"
+    },
+    {
+        "case":  "RT-07 SELECT tabla base dbo.Grupo",
+        "login":  "asistencias_e2e_runtime",
+        "expected":  "DENIED",
+        "outcome":  "DENIED",
+        "sqlError":  229,
+        "verdict":  "PASS"
+    },
+    {
+        "case":  "RT-08 CREATE TABLE",
+        "login":  "asistencias_e2e_runtime",
+        "expected":  "DENIED",
+        "outcome":  "DENIED",
+        "sqlError":  262,
+        "verdict":  "PASS"
+    },
+    {
+        "case":  "ISO-01 logins E2E inexistentes en el principal",
+        "expected":  0,
+        "outcome":  0,
+        "verdict":  "PASS"
+    },
+    {
+        "case":  "FIX-01 FIX-PAG-1000 Paginacion 1000 estudiantes",
+        "expected":  1000,
+        "outcome":  1000,
+        "verdict":  "PASS"
+    },
+    {
+        "case":  "FIX-01 FIX-PAG-300 Paginacion 300 estudiantes",
+        "expected":  300,
+        "outcome":  300,
+        "verdict":  "PASS"
+    },
+    {
+        "case":  "FIX-01 FIX-PAG-5000 Paginacion 5000 estudiantes",
+        "expected":  5000,
+        "outcome":  5000,
+        "verdict":  "PASS"
+    }
+]
