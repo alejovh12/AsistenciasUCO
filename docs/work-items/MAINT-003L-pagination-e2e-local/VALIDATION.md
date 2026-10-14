@@ -29,7 +29,7 @@
 | Arquitectura | Código productivo/ArchUnit | NO APLICA | No se modificó `src/main`, Domain/Application ni wiring |
 | Contratos | HTTP/DB/security | PASS | Solo consumo de contratos vigentes; no cambió OpenAPI/RBAC |
 | Tests | Scripts/negativos | PASS | Parseo, idempotencia, cleanup, ownership cruzado y directorio DOCENTE 403 |
-| Coverage | JaCoCo | NO APLICA | No se agregó código Java productivo |
+| Coverage | JaCoCo | PASS | No se agregó código Java productivo nuevo; el `verify` completo observó LINE 90.63% / BRANCH 80.51%, por encima de los gates del proyecto |
 | Integración | SQL Server, Keycloak, backend | PASS | Proveedores reales locales; sin contenedores nuevos |
 | Build | Maven | PASS | `.\mvnw.cmd -B -ntp verify` terminó con Java 25: 1534/1534 tests, ArchUnit PASS y JaCoCo LINE 90.63% / BRANCH 80.51%. La ejecución anterior interrumpida se conserva como evidencia histórica. |
 | Seguridad | Secretos/RBAC | PASS | No se imprimieron passwords/JWT; tres cuentas solo `DOCENTE`; `docente.prueba` intacto |
