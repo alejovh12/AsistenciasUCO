@@ -2,9 +2,11 @@
 
 ## Estado
 
-`EXPERIMENTAL / PARTIAL / NO APTO PARA MERGE FUNCIONAL`
+`EXPERIMENTAL / PARTIAL_WITH_BLOCKERS / NO APTO PARA MERGE FUNCIONAL`
 
-La rama es `jose-valencia/experiment-security-baseline-mvc`, aislada desde `origin/develop` en `4082736b3607a7ee17770892764f1dcc0af381bb`. El flag permanece apagado por defecto.
+La rama es `jose-valencia/experiment-security-baseline-mvc`, aislada desde `origin/develop` en `4082736b3607a7ee17770892764f1dcc0af381bb`; código validado en `16621c7` (ver `HANDOFF.md`). El flag permanece apagado por defecto.
+
+Bloqueo vigente: `BLOCKED_BY_IDENTITY_CONTRACT` (ver `IDENTITY_MAPPING.md`).
 
 ## Objetivo
 
@@ -17,7 +19,7 @@ Probar, sin alterar el proveedor JWT institucional vigente, un enforcement PEP f
 - Flag, configuración externa sin secretos y límites de timeout.
 - Respuestas observables `401`, `403`, `503` y continuación solo ante decisión permitida.
 - Pruebas unitarias y de slice MVC del comportamiento.
-- Laboratorio local aislado bajo `.workspace/security-baseline-local` y documentación de handoff.
+- Laboratorio local aislado versionado en `infra/security-baseline-lab/` (compose y scripts sin secretos) y documentación de handoff.
 
 ## Fuera de alcance
 
@@ -30,7 +32,7 @@ Probar, sin alterar el proveedor JWT institucional vigente, un enforcement PEP f
 
 ## Definition of Ready
 
-`READY` para el adaptador aislado y sus pruebas locales. `NOT_READY` para E2E con Security Baseline: faltan la evidencia oficial de los manuales PDF solicitados, el valor operativo de la identidad institucional emitida por el laboratorio y una credencial de aplicación gestionada fuera del repositorio. El trabajo bloqueado se documenta como tal; no se sustituye por suposición.
+`READY` para el adaptador aislado, sus pruebas y el laboratorio local (credencial de aplicación emitida por el PDP y custodiada fuera del repositorio). `NOT_READY` para E2E académico: el contrato de identidad entre la plataforma y el backend no existe (`BLOCKED_BY_IDENTITY_CONTRACT`) y siguen ausentes los manuales PDF. El trabajo bloqueado se documenta como tal; no se sustituye por suposición.
 
 ## Evidencia y rollback
 
@@ -41,4 +43,11 @@ Probar, sin alterar el proveedor JWT institucional vigente, un enforcement PEP f
 
 ## Criterios de cierre del experimento
 
-El experimento solo puede proponerse para revisión cuando las pruebas focales estén `PASS`, `.\mvnw.cmd verify` termine con gates verdes, no haya secretos en diff/logs, el mapeo de identidad tenga evidencia versionada y un reviewer confirme el contrato. En este turno no se declara ese cierre.
+El experimento solo puede proponerse para revisión cuando las pruebas focales estén `PASS`, `.\mvnw.cmd verify` termine con gates verdes, no haya secretos en diff/logs, el mapeo de identidad tenga evidencia versionada y un reviewer confirme el contrato. Cumplido: focales, `verify`, higiene de secretos. Pendiente: identidad, decisión contractual D-007, revisión. No se declara cierre.
+
+## Pendientes frontend y Security UI
+
+- Frontend (Angular): hoy no cambia; envía el Bearer institucional. Con el flag ON debe tratar `503 ACCESS_DECISION_UNAVAILABLE` como error transitorio (reintento/mensaje), distinto de `403`, y no reintentar en bucle. Requiere decisión contractual D-007 y el contrato de identidad.
+- El starter oficial reenvía la cookie `SECURITY_BASELINE_SESSION` del BFF; este backend es Bearer-only y no la acepta. Un frontend que use el BFF de la plataforma necesitaría otra decisión (CSRF, cookies) que está fuera de alcance.
+- Security UI: el release v0.1.6 no incluye SPA de administración; la administración se hizo por API con sesión BFF. Para operación real hace falta la UI del PDP o un procedimiento operativo aprobado.
+- Modelado de recursos con plantillas (`/grupos/{id}/...`) bloqueado por el `500` del PDP v0.1.6.

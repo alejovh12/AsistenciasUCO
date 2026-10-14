@@ -1,27 +1,41 @@
 # Infraestructura aislada
 
-## Release inspeccionado
+## Release
 
-- Repositorio local: `.workspace/security-baseline-local`.
-- Tag: `v0.1.6` (`272c8e3168aeee6934194e2278b3537dc3c5dd78`).
-- Assets publicados descargados para lectura: `compose.yaml`, `default.env.example`, `MANUAL.md`, `README.md`.
-- No se encontró ninguno de los dos manuales PDF solicitados.
+- Repositorio local de lectura: `.workspace/security-baseline-local`, tag `v0.1.6` (`272c8e3168aeee6934194e2278b3537dc3c5dd78`).
+- Assets del release: `compose.yaml`, `default.env.example` (organización Docker como placeholder), `MANUAL.md`, `README.md`. Sin manuales PDF.
+- Imágenes y procedencia: ver `LAB_RUNBOOK.md`.
 
-## Laboratorio preparado
+## Docker (2026-10-14)
 
-- `.workspace/security-baseline-local/release-assets/compose.lab.yaml`
-- `.workspace/security-baseline-local/release-assets/lab.env.example`
-- Proyecto Compose: `asistencias-security-lab`.
-- Puertos publicados solo en `127.0.0.1`: `19090`, `18080`, `18081`.
-- Volúmenes con nombres exclusivos del laboratorio.
-- Credenciales: placeholders y variables externas; ningún valor real versionado.
+- Engine accesible: Docker Desktop 4.47.0, Engine 28.4.0, contexto `desktop-linux` (usado explícitamente con `--context`).
+- El bloqueo anterior (named pipe denegado) no se reprodujo en esta sesión; no se cambió el contexto global.
 
-## Resultado de configuración
+## Laboratorio levantado
 
-`docker compose --project-name asistencias-security-lab --env-file lab.env.example -f compose.lab.yaml config --quiet` terminó con exit code `0`.
+Proyecto `asistencias-security-lab`, archivo `infra/security-baseline-lab/compose.lab.yaml`, env-file local fuera de Git.
 
-El engine Docker no pudo inspeccionarse desde esta sesión por acceso denegado al named pipe de Docker Desktop. No se levantaron contenedores y no se declara PASS de integración. La imagen/organización real tampoco se inventa desde el repositorio.
+| Servicio | Imagen | Publicación | Salud |
+|---|---|---|---|
+| keycloak | `davidalzate/security-keycloak-local:0.1.6` | `127.0.0.1:19090` | healthy; realm `security-baseline` |
+| surrealdb | `surrealdb/surrealdb:v3.3.0` | interna | healthy |
+| redis | `redis:7.4-alpine` | interna | healthy |
+| opa | `davidalzate/security-opa:0.1.6` | interna | `/health` y `/health?bundles=true` 200 |
+| pdp | `davidalzate/security-pdp:0.1.6` | `127.0.0.1:18080` | healthy, `/actuator/health` UP |
+| pep | `davidalzate/security-pep:0.1.6` | `127.0.0.1:18081` | `/actuator/health` y readiness UP |
 
-## Finding de seguridad
+- Red: `asistencias-security-lab-net` (`172.31.240.0/24`, Keycloak `172.31.240.10`). Se eliminó la red por defecto vacía `asistencias-security-lab_default` creada por el primer arranque.
+- Volúmenes: `asistencias-security-lab-keycloak-data`, `-surrealdb-data`, `-redis-data`.
+- Logs revisados (saneados): solo avisos benignos (`sun.misc.Unsafe`, exportación OTLP sin colector, features deprecadas de Keycloak).
 
-`SECURITY_FINDING`: archivo `.workspace/security-baseline-local/distribution/compose.yaml`; tipo: credencial literal en variable de entorno de Compose. El valor no se reproduce.
+## Servicios ajenos — sin alteración
+
+`sql_server_asistencias`, `asistencias-uco-security-keycloak-1` (8081) y su DB, `minio_asistencias`, `clamav_asistencias` y los 5 servicios de observabilidad mantienen `startedAt` 2026-10-14T04:48Z (anterior a la sesión) y `restarts=0`. Backend 8080 y Angular 4200 no estaban en ejecución y no se arrancaron. No se ejecutaron escrituras SQL ni seeds académicos.
+
+## Backend experimental
+
+Puerto 8083, jar del worktree `.w/sec-mvc`, lanzado con `start-backend-pep-lab.ps1` contra la DB local (`ddl-auto=none`) y el Keycloak institucional. Solo peticiones GET; ninguna llegó a un handler de negocio. Detenido al terminar.
+
+## Findings de seguridad
+
+Ver `RISKS.md` (`SECURITY_FINDING` por archivo/tipo; valores no reproducidos).

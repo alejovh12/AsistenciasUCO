@@ -1,22 +1,22 @@
-# Guía de prueba manual (cuando se desbloquee el laboratorio)
+# Guía de prueba manual
+
+Procedimiento completo de laboratorio en `LAB_RUNBOOK.md`. Resultados de esta sesión en `VALIDATION.md` y `SECURITY_CONTRACT_MATRIX.md`.
 
 ## Preparación segura
 
-1. Obtener la imagen/organización y credenciales desde el canal operativo autorizado; no escribirlas en Git.
-2. Copiar `lab.env.example` a un archivo local ignorado y completar variables externamente.
-3. Validar `docker compose ... config --quiet`.
-4. Confirmar que los puertos del laboratorio estén libres y que el backend estable no comparta volúmenes.
+1. `new-lab-env.ps1` genera secretos aleatorios en `%USERPROFILE%\.asistencias-security-lab\lab.env`; nunca copiar el `.env` institucional al laboratorio.
+2. `docker compose ... config --quiet`, `pull`, `up -d --wait keycloak`, `rotate-lab-client-secrets.ps1`, `up -d --wait`.
+3. `provision_lab_pdp.py` (idempotente).
+4. `.\mvnw.cmd -B -ntp -DskipTests package` y `start-backend-pep-lab.ps1` (8083).
 
-## Pruebas observables
+## Pruebas observables (solo GET)
 
-1. Flag OFF + request existente: comprobar que el comportamiento coincida con el backend AS-IS.
-2. Flag ON + sin Bearer: esperar `401` del backend; no declarar éxito del PEP por esta sola prueba.
-3. JWT institucional válido + PEP permite: comprobar continuación a un endpoint autorizado.
-4. JWT válido + PEP deniega: comprobar `403` y que el handler de negocio no se ejecute.
-5. PEP detenido/timeout: comprobar `503` y que no haya bypass.
-6. JWT válido + rol insuficiente: comprobar que un `2xx` PEP no conceda el rol y Spring responda `403`.
-7. Repetir con un recurso no propio cuando exista fixture contractual: comprobar que ownership siga en Application/DB.
+| # | Prueba | Herramienta | Resultado de esta sesión |
+|---|---|---|---|
+| 1 | Decisiones reales PEP/PDP con identidades sintéticas | `lab_matrix.py pep` | 13/14; PEP-03 = hallazgo upstream |
+| 2 | Backend con PEP ON: 401/503/públicas/preflight/SSE | `lab_matrix.py backend` | 10/10 |
+| 3 | PEP detenido | `docker stop asistencias-security-lab-pep-1`; `lab_matrix.py backend-pep-down`; `docker start ...` | 4/4 |
+| 4 | Flag OFF | arrancar sin `SECURITY_BASELINE_PEP_ENABLED` | cubierto por test de contexto |
+| 5 | Allow + rol local / ownership | — | `BLOCKED_BY_IDENTITY_CONTRACT` |
 
-Registrar URL, timestamp, correlation ID, status, código de error y resultado del handler, pero nunca token, Cookie, client secret o contraseña.
-
-Estado: `NOT_RUN`; falta evidencia de identidad y acceso al runtime Docker.
+Registrar URL, timestamp, correlation ID, status, código de error y decisión. Nunca token, Cookie, client secret, credencial de aplicación ni contraseña: los scripts los mantienen en memoria y en `lab.env`.
