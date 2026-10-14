@@ -86,6 +86,8 @@ PEP/PDP caído, stub de fallos y modo estable: [VALIDATION](VALIDATION.md) y la 
   `develop` intacto; frontend intacto; organización sin cambios.
 - Backend 8083/8084 detenidos; laboratorio arriba (PEP y PDP rearrancados y sanos); `asistencias-e2e-sqlserver`
   arriba; Keycloak 8081 arriba y sin cambios; SQL principal sin cambios de datos.
+- CI remoto: el push de `c44ffdd` a la rama experimental no dispara workflows (0 check-runs, 0 runs; los workflows se
+  ejecutan en PR y en `develop`). Se ejecutará al abrir el PR en borrador; no se presume verde.
 - `CLOSURE.md` no se crea: el work item no cumple la DoD (dictamen `PARTIAL_WITH_BLOCKERS`).
 
 ## PR en borrador
