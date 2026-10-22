@@ -4,6 +4,10 @@ import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardoce
 import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.primaryports.interactor.ActualizarDocenteProgramaInteractor;
 import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.usecase.ActualizarDocenteProgramaUseCase;
 import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.usecase.impl.ActualizarDocenteProgramaUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.coordinador.cambiarestadodocenteprograma.primaryports.CambiarEstadoDocenteProgramaInputPort;
+import co.edu.uco.asistenciasuco.application.features.coordinador.cambiarestadodocenteprograma.primaryports.interactor.CambiarEstadoDocenteProgramaInteractor;
+import co.edu.uco.asistenciasuco.application.features.coordinador.cambiarestadodocenteprograma.usecase.CambiarEstadoDocenteProgramaUseCase;
+import co.edu.uco.asistenciasuco.application.features.coordinador.cambiarestadodocenteprograma.usecase.impl.CambiarEstadoDocenteProgramaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.primaryports.ConsultarCandidatosDocenteInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.primaryports.interactor.ConsultarCandidatosDocenteInteractor;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.usecase.ConsultarCandidatosDocenteUseCase;
@@ -71,5 +75,16 @@ public class DocenteProgramaWiringConfiguration {
 
     @Bean ActualizarDocenteProgramaInputPort actualizarDocenteProgramaInputPort(final ActualizarDocenteProgramaUseCase useCase) {
         return new ActualizarDocenteProgramaInteractor(useCase);
+    }
+
+    @Bean CambiarEstadoDocenteProgramaUseCase cambiarEstadoDocenteProgramaUseCase(
+            final InstitutionalScopePort scopePort,
+            final DocenteProgramaCommandPort commandPort,
+            final DocenteProgramaQueryPort queryPort) {
+        return new CambiarEstadoDocenteProgramaUseCaseImpl(scopePort, commandPort, queryPort);
+    }
+
+    @Bean CambiarEstadoDocenteProgramaInputPort cambiarEstadoDocenteProgramaInputPort(final CambiarEstadoDocenteProgramaUseCase useCase) {
+        return new CambiarEstadoDocenteProgramaInteractor(useCase);
     }
 }

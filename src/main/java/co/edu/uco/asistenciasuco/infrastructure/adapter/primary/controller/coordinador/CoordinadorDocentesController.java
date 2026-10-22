@@ -2,6 +2,8 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coor
 
 import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.primaryports.ActualizarDocenteProgramaInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.primaryports.dto.ActualizarDocenteProgramaDTO;
+import co.edu.uco.asistenciasuco.application.features.coordinador.cambiarestadodocenteprograma.primaryports.CambiarEstadoDocenteProgramaInputPort;
+import co.edu.uco.asistenciasuco.application.features.coordinador.cambiarestadodocenteprograma.primaryports.dto.CambiarEstadoDocenteProgramaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.DocenteCandidatoDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.DocenteProgramaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.DocentesProgramaPaginaDTO;
@@ -13,7 +15,9 @@ import co.edu.uco.asistenciasuco.application.features.coordinador.vinculardocent
 import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationErrorType;
 import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationResultBuilder;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador.request.ActualizarDocenteProgramaRequest;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador.request.CambiarEstadoDocenteProgramaRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador.request.VincularDocenteProgramaRequest;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador.validation.CambiarEstadoDocenteProgramaRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador.validation.ActualizarDocenteProgramaRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador.validation.VincularDocenteProgramaRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
@@ -24,6 +28,7 @@ import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -46,11 +51,13 @@ public final class CoordinadorDocentesController {
     private static final int BUSQUEDA_CANDIDATOS_MINIMA = 3;
     private static final VincularDocenteProgramaRequestValidator VINCULAR_VALIDATOR = new VincularDocenteProgramaRequestValidator();
     private static final ActualizarDocenteProgramaRequestValidator ACTUALIZAR_VALIDATOR = new ActualizarDocenteProgramaRequestValidator();
+    private static final CambiarEstadoDocenteProgramaRequestValidator CAMBIAR_ESTADO_VALIDATOR = new CambiarEstadoDocenteProgramaRequestValidator();
 
     private final ConsultarDocentesProgramaInputPort consultarDocentesProgramaInputPort;
     private final ConsultarCandidatosDocenteInputPort consultarCandidatosDocenteInputPort;
     private final VincularDocenteProgramaInputPort vincularDocenteProgramaInputPort;
     private final ActualizarDocenteProgramaInputPort actualizarDocenteProgramaInputPort;
+    private final CambiarEstadoDocenteProgramaInputPort cambiarEstadoDocenteProgramaInputPort;
     private final AuthenticatedUserResolver authenticatedUserResolver;
 
     public CoordinadorDocentesController(
@@ -58,12 +65,14 @@ public final class CoordinadorDocentesController {
             final ConsultarCandidatosDocenteInputPort consultarCandidatosDocenteInputPort,
             final VincularDocenteProgramaInputPort vincularDocenteProgramaInputPort,
             final ActualizarDocenteProgramaInputPort actualizarDocenteProgramaInputPort,
+            final CambiarEstadoDocenteProgramaInputPort cambiarEstadoDocenteProgramaInputPort,
             final AuthenticatedUserResolver authenticatedUserResolver
     ) {
         this.consultarDocentesProgramaInputPort = Objects.requireNonNull(consultarDocentesProgramaInputPort);
         this.consultarCandidatosDocenteInputPort = Objects.requireNonNull(consultarCandidatosDocenteInputPort);
         this.vincularDocenteProgramaInputPort = Objects.requireNonNull(vincularDocenteProgramaInputPort);
         this.actualizarDocenteProgramaInputPort = Objects.requireNonNull(actualizarDocenteProgramaInputPort);
+        this.cambiarEstadoDocenteProgramaInputPort = Objects.requireNonNull(cambiarEstadoDocenteProgramaInputPort);
         this.authenticatedUserResolver = Objects.requireNonNull(authenticatedUserResolver);
     }
 
@@ -146,6 +155,18 @@ public final class CoordinadorDocentesController {
                 trim(request.getSegundoNombre()),
                 trim(request.getPrimerApellido()),
                 trim(request.getSegundoApellido())));
+        return ResponseEntity.ok(new ApiDataResponse<>(true, resultado));
+    }
+
+    @PatchMapping("/{idDocente}/estado")
+    @AuditableOperation(action = "CAMBIAR_ESTADO_DOCENTE_PROGRAMA", resourceType = "DOCENTE")
+    public ResponseEntity<ApiDataResponse<DocenteProgramaDTO>> cambiarEstado(
+            @PathVariable("idDocente") final UUID idDocente,
+            @RequestBody final CambiarEstadoDocenteProgramaRequest request
+    ) {
+        RequestValidationGuard.validate(CAMBIAR_ESTADO_VALIDATOR.validate(request));
+        final DocenteProgramaDTO resultado = cambiarEstadoDocenteProgramaInputPort.execute(new CambiarEstadoDocenteProgramaDTO(
+                authenticatedUserResolver.requireAuthenticatedUserId(), idDocente, request.getEstaActivo()));
         return ResponseEntity.ok(new ApiDataResponse<>(true, resultado));
     }
 
