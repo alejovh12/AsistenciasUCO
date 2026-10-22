@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ActualizarGrupoRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.CrearGrupoRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarEstudianteRepositoryDTO;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoFacultadQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.EstudianteGrupoRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.GrupoCommandRepositoryProjection;
@@ -27,7 +28,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.support.TransactionOperations;
 
 @Repository
-public class GrupoJpaRepository implements GrupoRepositoryPort {
+public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQueryPort {
 
     static final String SQL_CREAR_GRUPO = """
             EXEC dbo.usp_crear_grupo
@@ -70,6 +71,14 @@ public class GrupoJpaRepository implements GrupoRepositoryPort {
     static final String HQL_GRUPOS = """
             select g
             from UvGrupoEntity g
+            order by g.nombreAsignatura, g.codigo, g.nombre, g.id
+            """;
+    static final String HQL_GRUPOS_POR_FACULTAD = """
+            select g
+            from UvGrupoEntity g, UvAsignaturaEntity a, UvSemestrePlanEstudioEntity sp
+            where a.id = g.idAsignatura
+              and sp.id = a.idSemestrePlanEstudio
+              and sp.idPrograma in (select pr.id from UvProgramaEntity pr where pr.idFacultad = :idFacultad)
             order by g.nombreAsignatura, g.codigo, g.nombre, g.id
             """;
     static final String HQL_ESTUDIANTES = """
@@ -132,6 +141,18 @@ public class GrupoJpaRepository implements GrupoRepositoryPort {
                 "consultarGrupos",
                 "No fue posible consultar los grupos.",
                 () -> entityManager.createQuery(HQL_GRUPOS, UvGrupoEntity.class).getResultList().stream()
+                        .map(CoreViewJpaProjectionMapper::toGrupo).toList()
+        );
+    }
+
+    @Override
+    public List<GrupoRepositoryProjection> consultarGruposPorFacultad(final UUID idFacultad) {
+        return JpaQueryExecutor.execute(
+                "consultarGruposPorFacultad",
+                "No fue posible consultar los grupos de la facultad.",
+                () -> entityManager.createQuery(HQL_GRUPOS_POR_FACULTAD, UvGrupoEntity.class)
+                        .setParameter("idFacultad", idFacultad)
+                        .getResultList().stream()
                         .map(CoreViewJpaProjectionMapper::toGrupo).toList()
         );
     }

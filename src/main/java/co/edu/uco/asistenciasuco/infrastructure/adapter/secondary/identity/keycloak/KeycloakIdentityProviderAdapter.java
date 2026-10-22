@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.identity.keycloak;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.ActualizarCuentaIdentidadDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CrearCuentaIdentidadDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CuentaIdentidadDTO;
 import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Adaptador que implementa {@link IdentityProviderPort} usando la Admin REST API de Keycloak,
@@ -166,6 +168,150 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
         final String institutionalRoleName = requireValidInstitutionalRoleName(rol);
         final String adminToken = obtenerAdminToken();
         ensureClientRole(adminToken, idExterno, institutionalRoleName);
+    }
+
+    // -------------------------------------------------------------------------
+    // Ciclo de vida de la cuenta (HU121/HU122, IAM-001): todas idempotentes
+    // -------------------------------------------------------------------------
+
+    @Override
+    public Optional<CuentaIdentidadDTO> buscarCuentaPorIdUsuario(final UUID idUsuario) {
+        Objects.requireNonNull(idUsuario, "idUsuario es obligatorio para buscar una identidad institucional");
+        final String adminToken = obtenerAdminToken();
+        final String searchUrl = adminUrl("/users?q=" + encode(userIdAttribute + ":" + idUsuario));
+        final HttpResponse<String> response = send(authorizedRequestBuilder(searchUrl, adminToken).GET().build());
+        if (response.statusCode() != 200) {
+            throw new IdentityProviderException(
+                    "No fue posible consultar usuarios existentes en Keycloak. HTTP " + response.statusCode());
+        }
+        final UserSearchResult[] candidates = readJson(response.body(), UserSearchResult[].class);
+        if (candidates == null) {
+            throw new IdentityProviderException("Keycloak devolvio una busqueda de identidad invalida.");
+        }
+        // La consulta por atributo puede devolver candidatos amplios: se exige coincidencia exacta del atributo.
+        final List<UserSearchResult> exactMatches = Arrays.stream(candidates)
+                .filter(Objects::nonNull)
+                .filter(candidate -> candidate.attributes() != null
+                        && List.of(idUsuario.toString()).equals(candidate.attributes().get(userIdAttribute)))
+                .toList();
+        if (exactMatches.isEmpty()) {
+            return Optional.empty();
+        }
+        if (exactMatches.size() > 1) {
+            throw new IdentityProviderException("La identidad institucional es ambigua ("
+                    + exactMatches.size() + " cuentas para el vinculo institucional).");
+        }
+        final String externalId = requireValidExternalUserId(
+                exactMatches.getFirst().id(), "Keycloak devolvio una cuenta existente sin externalId valido.");
+        return Optional.of(new CuentaIdentidadDTO(externalId, false));
+    }
+
+    @Override
+    public void deshabilitarCuenta(final String idExterno) {
+        final String externalId = requireValidExternalUserId(idExterno, "externalUserId es obligatorio para deshabilitar la cuenta.");
+        final String adminToken = obtenerAdminToken();
+        actualizarUsuario(adminToken, externalId, new EnabledRequest(false), "deshabilitar");
+        cerrarSesionesBestEffort(adminToken, externalId);
+        LOGGER.atInfo()
+                .addKeyValue("operation", "IDENTITY_DISABLE_ACCOUNT")
+                .addKeyValue("externalUserId", externalId)
+                .log("Cuenta deshabilitada en Keycloak.");
+    }
+
+    @Override
+    public void habilitarCuenta(final String idExterno) {
+        final String externalId = requireValidExternalUserId(idExterno, "externalUserId es obligatorio para habilitar la cuenta.");
+        final String adminToken = obtenerAdminToken();
+        actualizarUsuario(adminToken, externalId, new EnabledRequest(true), "habilitar");
+        LOGGER.atInfo()
+                .addKeyValue("operation", "IDENTITY_ENABLE_ACCOUNT")
+                .addKeyValue("externalUserId", externalId)
+                .log("Cuenta habilitada en Keycloak.");
+    }
+
+    @Override
+    public void actualizarDatosCuenta(final String idExterno, final ActualizarCuentaIdentidadDTO datos) {
+        final String externalId = requireValidExternalUserId(idExterno, "externalUserId es obligatorio para actualizar la cuenta.");
+        Objects.requireNonNull(datos, "Los datos para actualizar la cuenta son obligatorios");
+        final String adminToken = obtenerAdminToken();
+        // Sin username ni credenciales: el documento no se edita y no existen flujos de cambio de contrasena.
+        actualizarUsuario(adminToken, externalId,
+                new UserUpdateRequest(datos.correo(), datos.primerNombre(), datos.primerApellido(), true), "actualizar");
+        LOGGER.atInfo()
+                .addKeyValue("operation", "IDENTITY_UPDATE_ACCOUNT")
+                .addKeyValue("externalUserId", externalId)
+                .log("Datos de la cuenta actualizados en Keycloak.");
+    }
+
+    @Override
+    public void retirarRol(final String idExterno, final InstitutionalRole rol) {
+        final String externalId = requireValidExternalUserId(idExterno, "externalUserId es obligatorio para retirar el rol.");
+        final String institutionalRoleName = requireValidInstitutionalRoleName(rol);
+        final String adminToken = obtenerAdminToken();
+        final String clientUuid = resolverApiClientUuid(adminToken);
+        final KeycloakRoleRepresentation roleRepresentation = resolverClientRole(adminToken, clientUuid, institutionalRoleName);
+        if (!clientRoleAlreadyAssigned(adminToken, externalId, clientUuid, institutionalRoleName)) {
+            LOGGER.atInfo()
+                    .addKeyValue("operation", "IDENTITY_REMOVE_CLIENT_ROLE")
+                    .addKeyValue("stage", "NOT_ASSIGNED")
+                    .addKeyValue("externalUserId", externalId)
+                    .log("El client role institucional ya no estaba asignado en Keycloak.");
+            return;
+        }
+        final HttpRequest request = authorizedRequestBuilder(
+                adminUrl("/users/" + externalId + "/role-mappings/clients/" + clientUuid), adminToken)
+                .header("Content-Type", CONTENT_TYPE_JSON)
+                .method("DELETE", HttpRequest.BodyPublishers.ofString(writeJson(List.of(roleRepresentation))))
+                .build();
+        final HttpResponse<String> response = send(request);
+        if (response.statusCode() != 204) {
+            throw new IdentityProviderException("No se pudo retirar el client role en Keycloak. HTTP " + response.statusCode());
+        }
+        LOGGER.atInfo()
+                .addKeyValue("operation", "IDENTITY_REMOVE_CLIENT_ROLE")
+                .addKeyValue("externalUserId", externalId)
+                .log("Client role institucional retirado en Keycloak.");
+    }
+
+    private void actualizarUsuario(final String adminToken, final String externalId, final Object payload, final String accion) {
+        final HttpRequest request = authorizedRequestBuilder(adminUrl("/users/" + externalId), adminToken)
+                .header("Content-Type", CONTENT_TYPE_JSON)
+                .PUT(HttpRequest.BodyPublishers.ofString(writeJson(payload)))
+                .build();
+        final HttpResponse<String> response = send(request);
+        if (isSuccess(response.statusCode())) {
+            return;
+        }
+        if (response.statusCode() == 404) {
+            throw new IdentityProviderException("No se pudo " + accion + " la cuenta: cuenta inexistente en Keycloak.");
+        }
+        if (response.statusCode() == 409) {
+            throw new IdentityProviderException("No se pudo " + accion + " la cuenta: conflicto de correo en Keycloak.");
+        }
+        throw new IdentityProviderException("No se pudo " + accion + " la cuenta en Keycloak. HTTP " + response.statusCode());
+    }
+
+    /** La cuenta ya quedo deshabilitada: un fallo al cerrar sesiones no se propaga ni revierte. */
+    private void cerrarSesionesBestEffort(final String adminToken, final String externalId) {
+        try {
+            final HttpRequest request = authorizedRequestBuilder(adminUrl("/users/" + externalId + "/logout"), adminToken)
+                    .POST(HttpRequest.BodyPublishers.noBody())
+                    .build();
+            final HttpResponse<String> response = send(request);
+            if (!isSuccess(response.statusCode())) {
+                LOGGER.atWarn()
+                        .addKeyValue("operation", "IDENTITY_LOGOUT_SESSIONS")
+                        .addKeyValue("externalUserId", externalId)
+                        .addKeyValue("httpStatus", response.statusCode())
+                        .log("No se pudieron cerrar las sesiones de la cuenta deshabilitada.");
+            }
+        } catch (final IdentityProviderException exception) {
+            LOGGER.atWarn()
+                    .addKeyValue("operation", "IDENTITY_LOGOUT_SESSIONS")
+                    .addKeyValue("externalUserId", externalId)
+                    .setCause(exception)
+                    .log("No se pudieron cerrar las sesiones de la cuenta deshabilitada.");
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -525,7 +671,7 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
     }
 
     private static String requireValidExternalUserId(final String externalId, final String message) {
-        if (externalId == null || externalId.isBlank()) {
+        if (externalId == null || externalId.isBlank() || externalId.contains("/") || !externalId.equals(externalId.trim())) {
             throw new IdentityProviderException(message);
         }
         return externalId;
@@ -621,6 +767,12 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
     }
 
     private record CredentialRepresentation(String type, String value, boolean temporary) {
+    }
+
+    private record EnabledRequest(boolean enabled) {
+    }
+
+    private record UserUpdateRequest(String email, String firstName, String lastName, boolean emailVerified) {
     }
 
     private record UserResolution(String externalId, boolean newlyCreated) {

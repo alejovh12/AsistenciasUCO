@@ -51,15 +51,36 @@ public final class JpaProcedureExecutor {
             final Map<String, ?> parameters,
             final UUID correlationId
     ) {
-        final ProcedureResult result = runQuery(operation, sql, parameters);
+        final ProcedureResult result = runQuery(operation, sql, parameters, 0).result();
         return ProcedureResultValidator.validate(result, correlationId, operation);
     }
 
-    private ProcedureResult runQuery(final String operation, final String sql, final Map<String, ?> parameters) {
+    /**
+     * Como {@link #execute}, para SP que devuelven {@code extraColumns} columnas despues de las 4 canonicas.
+     * Un rechazo del SP (estadoResultado = 0) se traduce a la excepcion semantica antes de devolver las columnas.
+     */
+    public ProcedureRow executeWithExtras(
+            final String operation,
+            final String sql,
+            final Map<String, ?> parameters,
+            final UUID correlationId,
+            final int extraColumns
+    ) {
+        final ProcedureRow row = runQuery(operation, sql, parameters, extraColumns);
+        ProcedureResultValidator.validate(row.result(), correlationId, operation);
+        return row;
+    }
+
+    private ProcedureRow runQuery(
+            final String operation,
+            final String sql,
+            final Map<String, ?> parameters,
+            final int extraColumns
+    ) {
         try {
             final Query query = entityManager.createNativeQuery(sql);
             parameters.forEach(query::setParameter);
-            return ProcedureResultMapper.mapSingle(query.getResultList());
+            return ProcedureResultMapper.mapSingleWithExtras(query.getResultList(), extraColumns);
         } catch (PersistenceException | IllegalStateException | IllegalArgumentException exception) {
             LOGGER.error(
                     "SQL operation failed. operation={}, correlationId={}",

@@ -46,6 +46,24 @@ public class UvCoordinadorEntity {
     @Column(name = "estaActivoCoordinador")
     private Integer estaActivoCoordinador;
 
+    @Column(name = "primerNombre")
+    private String primerNombre;
+
+    @Column(name = "segundoNombre")
+    private String segundoNombre;
+
+    @Column(name = "primerApellido")
+    private String primerApellido;
+
+    @Column(name = "segundoApellido")
+    private String segundoApellido;
+
+    @Column(name = "correo")
+    private String correo;
+
+    @Column(name = "estaActivoRolCoordinador")
+    private Boolean estaActivoRolCoordinador;
+
     protected UvCoordinadorEntity() {
         // requerido por JPA
     }
@@ -80,6 +98,30 @@ public class UvCoordinadorEntity {
 
     public Integer estaActivoCoordinador() {
         return estaActivoCoordinador;
+    }
+
+    public String primerNombre() {
+        return primerNombre;
+    }
+
+    public String segundoNombre() {
+        return segundoNombre;
+    }
+
+    public String primerApellido() {
+        return primerApellido;
+    }
+
+    public String segundoApellido() {
+        return segundoApellido;
+    }
+
+    public String correo() {
+        return correo;
+    }
+
+    public Boolean estaActivoRolCoordinador() {
+        return estaActivoRolCoordinador;
     }
 }
 

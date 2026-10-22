@@ -6,6 +6,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.CoordinadorCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.CoordinadorQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.CoordinadorProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResultadoGestionCoordinadorProjection;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository.CoordinadorJpaRepository;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.mapping.JdbcBaselineValueMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -50,6 +51,23 @@ public final class CoordinadorJdbcBaseline implements CoordinadorQueryPort, Coor
     ) {
         commands.crearCoordinador(idCoordinador, numeroIdentificacion, primerNombre, segundoNombre, primerApellido,
                 segundoApellido, correo, idPrograma, idFacultad, password, usuarioEjecutor);
+    }
+
+    // HU121/HU122: los comandos nuevos tambien delegan en el command JPA (no existe baseline JDBC de ellos).
+    @Override
+    public ResultadoGestionCoordinadorProjection actualizarCoordinador(
+            final UUID idCoordinador, final String primerNombre, final String segundoNombre, final String primerApellido,
+            final String segundoApellido, final String correo, final UUID idFacultad, final UUID usuarioEjecutor
+    ) {
+        return commands.actualizarCoordinador(idCoordinador, primerNombre, segundoNombre, primerApellido,
+                segundoApellido, correo, idFacultad, usuarioEjecutor);
+    }
+
+    @Override
+    public ResultadoGestionCoordinadorProjection cambiarEstadoCoordinador(
+            final UUID idCoordinador, final boolean estaActivo, final UUID idFacultad, final UUID usuarioEjecutor
+    ) {
+        return commands.cambiarEstadoCoordinador(idCoordinador, estaActivo, idFacultad, usuarioEjecutor);
     }
 
     @Override

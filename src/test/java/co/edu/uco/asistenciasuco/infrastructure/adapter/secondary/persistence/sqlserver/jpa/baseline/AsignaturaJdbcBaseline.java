@@ -72,6 +72,20 @@ public final class AsignaturaJdbcBaseline implements AsignaturaQueryPort, Asigna
     }
 
     @Override
+    public List<AsignaturaProjection> consultarAsignaturasPorFacultad(final UUID idFacultad) {
+        return jdbcOperations.query("""
+                SELECT a.id, a.codigo, a.nombre, a.credito, a.idArea, a.nombreArea,
+                       a.idComponente, a.nombreComponente, a.idSemestrePlanEstudio,
+                       sp.idPlanEstudio, sp.idPrograma, a.nombrePrograma, a.codigoSemestre,
+                       a.estaActivaAsignatura, a.estaActivaTextoAsignatura
+                FROM dbo.uv_asignatura a
+                INNER JOIN dbo.uv_semestre_plan_estudio sp ON sp.id = a.idSemestrePlanEstudio
+                WHERE sp.idPrograma IN (SELECT id FROM dbo.uv_programa WHERE idFacultad = :idFacultad)
+                ORDER BY nombrePrograma, nombre, codigo, id
+                """, new MapSqlParameterSource("idFacultad", idFacultad), (rs, rowNum) -> mapAsignatura(rs));
+    }
+
+    @Override
     public List<AsignaturaProjection> consultarAsignaturasPorPrograma(final UUID idPrograma) {
         return jdbcOperations.query("""
                 SELECT a.id, a.codigo, a.nombre, a.credito, a.idArea, a.nombreArea,
