@@ -1,8 +1,8 @@
-param(
+﻿param(
     [string]$Api = 'http://127.0.0.1:18081/api/v1',
     [string]$Keycloak = 'http://127.0.0.1:8081',
     [string]$SqlContainer = 'sql_docentes',
-    [string]$SqlPassword = 'TuPasswordSeguro123',
+    [string]$SqlPassword = $env:MSSQL_SA_PASSWORD,
     [string]$Documento = '960091001',
     [string]$Correo = 'e2e.hu091.docente@uco.edu.co'
 )
@@ -79,3 +79,4 @@ Assert ($forb.status -eq 403) "Decano en /coordinador/docentes responde 403 (obt
 $persist = Sql "SELECT COUNT(*) FROM dbo.uv_docente_programa WHERE idDocente = '$idDocente'"
 Assert ($persist -eq '1') 'sqlcmd confirma exactamente un vinculo en uv_docente_programa'
 Write-Host 'E2E HU091 COMPLETO' -ForegroundColor Cyan
+
