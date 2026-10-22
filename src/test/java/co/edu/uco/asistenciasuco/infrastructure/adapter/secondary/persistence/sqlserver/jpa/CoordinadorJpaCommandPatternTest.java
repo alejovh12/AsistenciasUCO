@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -113,18 +114,30 @@ class CoordinadorJpaCommandPatternTest {
                 "Jorge Henao",
                 null,
                 null,
+                1,
+                "Jorge",
+                "Luis",
+                "Henao",
+                "Perez",
+                "jorge.henao@uco.edu.co",
                 1
         };
+        when(typedQuery.setParameter(anyString(), any())).thenReturn(typedQuery);
         when(typedQuery.getResultList()).thenReturn(Collections.singletonList(fila));
 
         final java.util.List<co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.CoordinadorProjection> resultado =
-                command.consultarCoordinadoresSinPrograma();
+                command.consultarCoordinadoresSinPrograma(FACULTAD);
 
+        // HU121 D2: el coordinador sin programa se filtra por la facultad del decano (antes devolvia los de todas).
+        verify(typedQuery).setParameter("idFacultad", FACULTAD);
         assertEquals(1, resultado.size());
         assertEquals(COORDINADOR, resultado.getFirst().id());
         assertEquals("1017555444", resultado.getFirst().numeroIdentificacion());
         assertEquals("Jorge Henao", resultado.getFirst().nombreCompleto());
         assertTrue(resultado.getFirst().estaActivoCoordinador());
+        assertEquals("Jorge", resultado.getFirst().primerNombre());
+        assertEquals("jorge.henao@uco.edu.co", resultado.getFirst().correo());
+        assertTrue(resultado.getFirst().estaActivoRolCoordinador());
     }
 
     @Test
@@ -139,6 +152,70 @@ class CoordinadorJpaCommandPatternTest {
                 command.consultarCoordinadoresPorFacultad(FACULTAD);
 
         assertTrue(resultado.isEmpty());
+    }
+
+    // HU121/HU122 (CONTRACT HU121-HU122 §3.1): comandos de edicion y estado.
+
+    @Test
+    void COO_PAT_006_actualizar_coordinador_usa_native_query_con_binding_nombrado_y_devuelve_el_usuario() {
+        final UUID idUsuario = UUID.fromString("70707070-7070-7070-7070-707070707070");
+        when(query.getResultList()).thenReturn(Collections.singletonList(
+                new Object[]{CORRELATION, "Coordinador actualizado.", "", true, idUsuario}));
+
+        final co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResultadoGestionCoordinadorProjection resultado =
+                command.actualizarCoordinador(COORDINADOR, "ANA", "MARIA", "PEREZ", "GOMEZ", "ana@example.test", FACULTAD, EJECUTOR);
+
+        verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_actualizar_coordinador"));
+        verify(query).setParameter("idCoordinador", COORDINADOR);
+        verify(query).setParameter("primerNombre", "ANA");
+        verify(query).setParameter("segundoNombre", "MARIA");
+        verify(query).setParameter("primerApellido", "PEREZ");
+        verify(query).setParameter("segundoApellido", "GOMEZ");
+        verify(query).setParameter("correo", "ana@example.test");
+        verify(query).setParameter("idFacultad", FACULTAD);
+        verify(query).setParameter("idCorrelacion", CORRELATION);
+        verify(query).setParameter("idUsuarioEjecutor", EJECUTOR);
+        assertEquals(idUsuario, resultado.idUsuario());
+        assertFalse(resultado.personaSinRolesActivos());
+    }
+
+    @Test
+    void COO_PAT_007_cambiar_estado_usa_native_query_y_devuelve_usuario_y_persona_sin_roles_activos() {
+        final UUID idUsuario = UUID.fromString("70707070-7070-7070-7070-707070707070");
+        when(query.getResultList()).thenReturn(Collections.singletonList(
+                new Object[]{CORRELATION, "Coordinador actualizado.", "", true, idUsuario, true}));
+
+        final co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResultadoGestionCoordinadorProjection resultado =
+                command.cambiarEstadoCoordinador(COORDINADOR, false, FACULTAD, EJECUTOR);
+
+        verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_cambiar_estado_coordinador"));
+        verify(query).setParameter("idCoordinador", COORDINADOR);
+        verify(query).setParameter("estaActivo", false);
+        verify(query).setParameter("idFacultad", FACULTAD);
+        verify(query).setParameter("idCorrelacion", CORRELATION);
+        verify(query).setParameter("idUsuarioEjecutor", EJECUTOR);
+        assertEquals(idUsuario, resultado.idUsuario());
+        assertTrue(resultado.personaSinRolesActivos());
+    }
+
+    @Test
+    void COO_PAT_008_estado_rechazado_por_la_db_se_traduce_a_conflicto_de_negocio() {
+        when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{
+                CORRELATION, "No se puede desactivar al coordinador mientras tenga un programa activo.",
+                "DBCODE=COO_001|el coordinador coordina un programa activo", false, null, false}));
+
+        assertThrows(co.edu.uco.asistenciasuco.application.exception.business.ConflictException.class,
+                () -> command.cambiarEstadoCoordinador(COORDINADOR, false, FACULTAD, EJECUTOR));
+    }
+
+    @Test
+    void COO_PAT_009_coordinador_ajeno_o_inexistente_se_traduce_a_recurso_no_encontrado() {
+        when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{
+                CORRELATION, "El Coordinador especificado no existe en el sistema.",
+                "DBCODE=GEN_001|Coordinador", false, null}));
+
+        assertThrows(co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException.class,
+                () -> command.actualizarCoordinador(COORDINADOR, "ANA", null, "PEREZ", null, "ana@example.test", FACULTAD, EJECUTOR));
     }
 }
 
