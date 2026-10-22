@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DocenteProgramaCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DocenteProgramaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.command.ActualizarDocenteProgramaCommand;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.command.CambiarEstadoDocenteProgramaCommand;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.command.VincularDocenteProgramaCommand;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.DocenteCandidatoProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.DocenteProgramaProjection;
@@ -59,6 +60,15 @@ public class DocenteProgramaJpaRepository implements DocenteProgramaCommandPort,
                  @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
 
+    static final String SQL_CAMBIAR_ESTADO = """
+            EXEC dbo.usp_cambiar_estado_docente_programa
+                 @idDocente = :idDocente,
+                 @idPrograma = :idPrograma,
+                 @estaActivo = :estaActivo,
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
+            """;
+
     static final String SQL_CONSULTAR = """
             EXEC dbo.usp_consultar_docentes_programa
                  @idUsuarioEjecutor = :idUsuarioEjecutor,
@@ -83,6 +93,7 @@ public class DocenteProgramaJpaRepository implements DocenteProgramaCommandPort,
 
     static final String OP_VINCULAR = "vincularDocentePrograma";
     static final String OP_ACTUALIZAR = "actualizarDocentePrograma";
+    static final String OP_CAMBIAR_ESTADO = "cambiarEstadoDocentePrograma";
     static final String OP_CONSULTAR = "consultarDocentesPrograma";
     static final String OP_CANDIDATOS = "consultarCandidatosDocentePrograma";
 
@@ -129,6 +140,18 @@ public class DocenteProgramaJpaRepository implements DocenteProgramaCommandPort,
         parametros.put("idCorrelacion", correlationId);
         parametros.put("idUsuarioEjecutor", command.usuarioEjecutor());
         procedureExecutor.execute(OP_ACTUALIZAR, SQL_ACTUALIZAR, parametros, correlationId);
+    }
+
+    @Override
+    public void cambiarEstado(final CambiarEstadoDocenteProgramaCommand command) {
+        final UUID correlationId = CorrelationIdContext.require();
+        final Map<String, Object> parametros = new LinkedHashMap<>();
+        parametros.put("idDocente", command.idDocente());
+        parametros.put("idPrograma", command.idPrograma());
+        parametros.put("estaActivo", command.estaActivo());
+        parametros.put("idCorrelacion", correlationId);
+        parametros.put("idUsuarioEjecutor", command.usuarioEjecutor());
+        procedureExecutor.execute(OP_CAMBIAR_ESTADO, SQL_CAMBIAR_ESTADO, parametros, correlationId);
     }
 
     @Override
