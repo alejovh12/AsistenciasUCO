@@ -56,6 +56,10 @@ final class DbFailureClassifier {
             case "USU_002" -> UsuarioErrorCode.ERR_USUARIO_INACTIVO;
             case "HOR_001" -> GrupoErrorCode.ERR_CRUCE_HORARIO_ESTUDIANTE;
             case "SES_001", "PROG_001", "PER_001" -> CommonErrorCode.RESOURCE_NOT_FOUND;
+            // HU091-HU093: vertical de docentes del programa. DOC_001/DOC_008 no encontrado; DOC_002/003/006/009 conflicto.
+            case "DOC_001", "DOC_008" -> CommonErrorCode.RESOURCE_NOT_FOUND;
+            case "DOC_002", "DOC_003", "DOC_006", "DOC_009" -> CommonErrorCode.CONFLICT;
+            case "DOC_004", "DOC_005", "DOC_007" -> CommonErrorCode.VALIDATION_ERROR;
             // USU_001: validacion de usuario inexistente por id, emitida por los SP publicos que la exigen.
             case "USU_001" -> UsuarioErrorCode.ERR_USUARIO_NO_EXISTE;
             // IDN_001: usp_registrar_estudiante_en_grupo (conflicto de identidad correo/documento).
