@@ -48,6 +48,9 @@ final class DbFailureClassifier {
             case "ATT_001", "ATT_002", "ATT_003", "GEN_002", "RC_001", "SES_004", "PLA_001",
                  "VAL_001", "VAL_002", "VAL_003", "VAL_004", "VAL_005" -> CommonErrorCode.VALIDATION_ERROR;
             case "VAL_006" -> CommonErrorCode.CONFLICT;
+            // HU076-HU078: programa academico. Duplicados y reglas 1 a 1 / grupos activos son conflictos de negocio.
+            case "PROG_002", "PROG_003", "PROG_005", "PROG_007", "PROG_008" -> CommonErrorCode.CONFLICT;
+            case "PROG_004", "PROG_006", "PAG_001" -> CommonErrorCode.VALIDATION_ERROR;
             // GEN_003: "Ya existe un {} registrado con este {}"; lo emite usp_registrar_o_actualizar_plan_estudio
             // ante un plan duplicado (programa + inp). Conflicto de negocio, no fallo tecnico.
             case "GEN_003" -> CommonErrorCode.CONFLICT;
