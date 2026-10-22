@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DocenteProgramaCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DocenteProgramaQueryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.command.ActualizarDocenteProgramaCommand;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.command.VincularDocenteProgramaCommand;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.DocenteCandidatoProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.DocenteProgramaProjection;
@@ -45,6 +46,19 @@ public class DocenteProgramaJpaRepository implements DocenteProgramaCommandPort,
                  @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
 
+    static final String SQL_ACTUALIZAR = """
+            EXEC dbo.usp_actualizar_docente_programa
+                 @idDocente = :idDocente,
+                 @idPrograma = :idPrograma,
+                 @idTipoVinculacion = :idTipoVinculacion,
+                 @primerNombre = :primerNombre,
+                 @segundoNombre = :segundoNombre,
+                 @primerApellido = :primerApellido,
+                 @segundoApellido = :segundoApellido,
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
+            """;
+
     static final String SQL_CONSULTAR = """
             EXEC dbo.usp_consultar_docentes_programa
                  @idUsuarioEjecutor = :idUsuarioEjecutor,
@@ -68,6 +82,7 @@ public class DocenteProgramaJpaRepository implements DocenteProgramaCommandPort,
             """;
 
     static final String OP_VINCULAR = "vincularDocentePrograma";
+    static final String OP_ACTUALIZAR = "actualizarDocentePrograma";
     static final String OP_CONSULTAR = "consultarDocentesPrograma";
     static final String OP_CANDIDATOS = "consultarCandidatosDocentePrograma";
 
@@ -98,6 +113,22 @@ public class DocenteProgramaJpaRepository implements DocenteProgramaCommandPort,
         parametros.put("idCorrelacion", correlationId);
         parametros.put("idUsuarioEjecutor", command.usuarioEjecutor());
         procedureExecutor.execute(OP_VINCULAR, SQL_VINCULAR, parametros, correlationId);
+    }
+
+    @Override
+    public void actualizar(final ActualizarDocenteProgramaCommand command) {
+        final UUID correlationId = CorrelationIdContext.require();
+        final Map<String, Object> parametros = new LinkedHashMap<>();
+        parametros.put("idDocente", command.idDocente());
+        parametros.put("idPrograma", command.idPrograma());
+        parametros.put("idTipoVinculacion", command.idTipoVinculacion());
+        parametros.put("primerNombre", command.primerNombre());
+        parametros.put("segundoNombre", command.segundoNombre());
+        parametros.put("primerApellido", command.primerApellido());
+        parametros.put("segundoApellido", command.segundoApellido());
+        parametros.put("idCorrelacion", correlationId);
+        parametros.put("idUsuarioEjecutor", command.usuarioEjecutor());
+        procedureExecutor.execute(OP_ACTUALIZAR, SQL_ACTUALIZAR, parametros, correlationId);
     }
 
     @Override
