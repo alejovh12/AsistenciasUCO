@@ -151,8 +151,6 @@ Extraído de annotations presentes; excluye endpoints de framework (Actuator). S
 | POST | `/api/v1/docentes/consultas/id` | [DocenteController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/docente/DocenteController.java) |
 | GET | `/api/v1/docentes/{docenteId}/asignaciones` | [DocenteController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/docente/DocenteController.java) |
 | POST | `/api/v1/docentes/consultas/asignaciones` | [DocenteController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/docente/DocenteController.java) |
-| POST | `/api/v1/docentes` | [DocenteController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/docente/DocenteController.java) |
-| POST | `/api/v1/docentes/asignaciones/grupo` | [DocenteController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/docente/DocenteController.java) |
 | GET | `/api/v1/docente/reclamos` | [DocentePortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/docente/DocentePortalController.java) |
 | PATCH | `/api/v1/docente/reclamos/{id}` | [DocentePortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/docente/DocentePortalController.java) |
 | GET | `/api/v1/docente/horarios` | [DocentePortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/docente/DocentePortalController.java) |
