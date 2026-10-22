@@ -111,9 +111,9 @@ last-reviewed: 2026-10-22
 
 | Repo | `RED_SNAPSHOT` (commit, rama, base, comando, resultado) | `GREEN` (commit, comando, exit code) | Estado |
 |---|---|---|---|
-| GestioAsistenciaDB | `f6ddb5a` en `feature/HU121-HU122-gestion-coordinador` (base `develop` `585f7f0`). Se ejecutaron los 3 archivos con `sqlcmd` contra `sql_server_asistencias`: **exit 1** en los tres (`Msg 207: Invalid column name 'estado'` / `'primerNombre'`, es decir, columnas y SPs inexistentes). Sintaxis verificada con `SET PARSEONLY ON` y fixtures verificados aparte (3 y 2 coordinadores creados y revertidos, `@@TRANCOUNT=0`, sin datos residuales) | — | RED confirmado |
-| GestioAsistenciaBackend | `002158a` en `feature/HU121-HU122-gestion-coordinador` (base `develop` `4ff37ff`). `cmd /c ".\mvnw.cmd -q test-compile"`: **exit 1**, 206 errores, **todos** `cannot find symbol` / `package … does not exist` / firma de `consultarCoordinadoresSinPrograma` / constructor de `CoordinadorProjection`, únicamente en los 5 archivos de prueba del perímetro | — | RED confirmado (por compilación) |
-| GestioAsistenciaFrontend | `959ae84` en `feature/HU121-HU122-gestion-coordinador` (base `develop` `ea1e537`). `npx tsc -p tsconfig.spec.json --noEmit`: **exit 2**, 28 errores TS (`setCoordinadorEstado`, `updateCoordinador`, `coordinadorParaCambioEstado`, `abrirEdicion`, módulos de los dos modales, tipos `ActualizarCoordinadorPayload`…) | — | RED confirmado (por compilación) |
+| GestioAsistenciaDB | `f6ddb5a` en `feature/HU121-HU122-gestion-coordinador` (base `develop` `585f7f0`). Se ejecutaron los 3 archivos con `sqlcmd` contra `sql_server_asistencias`: **exit 1** en los tres (`Msg 207: Invalid column name 'estado'` / `'primerNombre'`, es decir, columnas y SPs inexistentes). Sintaxis verificada con `SET PARSEONLY ON` y fixtures verificados aparte (3 y 2 coordinadores creados y revertidos, `@@TRANCOUNT=0`, sin datos residuales) | **GREEN 2026-10-22**: ramas `feature/HU121-HU122-gestion-coordinador`, commits `e5879e4`, `2b65e4d`, `aa53f6f`, `e8bcd69`. Los 3 archivos de HU121/122 y `test_usp_crear_coordinador.sql` pasan con **exit 0** (`sqlcmd` contra `sql_server_asistencias`, sin tocar las pruebas). Regresion: 13 pruebas T-SQL existentes que usan coordinador, perfil, RBAC o titularidad, exit 0 | **GREEN** |
+| GestioAsistenciaBackend | `002158a` en `feature/HU121-HU122-gestion-coordinador` (base `develop` `4ff37ff`). `cmd /c ".\mvnw.cmd -q test-compile"`: **exit 1**, 206 errores, **todos** `cannot find symbol` / `package … does not exist` / firma de `consultarCoordinadoresSinPrograma` / constructor de `CoordinadorProjection`, únicamente en los 5 archivos de prueba del perímetro | — | RED confirmado (por compilación). GREEN **bloqueado** hasta tener `SincronizarCuentaInstitucionalService` de IAM-001 (las pruebas de los casos de uso lo importan) |
+| GestioAsistenciaFrontend | `959ae84` en `feature/HU121-HU122-gestion-coordinador` (base `develop` `ea1e537`). `npx tsc -p tsconfig.spec.json --noEmit`: **exit 2**, 28 errores TS (`setCoordinadorEstado`, `updateCoordinador`, `coordinadorParaCambioEstado`, `abrirEdicion`, módulos de los dos modales, tipos `ActualizarCoordinadorPayload`…) | **GREEN 2026-10-22**: commits `2cedf54` y `d3b7dbd`. `npm run test:ci`: **845/845 SUCCESS** (exit 0); `npm run build -- --configuration=development`: exit 0; `tsc -p tsconfig.spec.json`: 0 errores | **GREEN** |
 
 Regla: ninguna prueba se modifica para pasar. Un cambio de prueba exige un registro `TEST_CONTRACT_CONFLICT` con la razón y la aprobación del owner.
 
@@ -171,3 +171,24 @@ Regla: ninguna prueba se modifica para pasar. Un cambio de prueba exige un regis
 | CA-07 | T-121-10, T-121-11, T-121-12, T-122-11 |
 | CA-08 | T-FRONT-02, T-FRONT-04, T-FRONT-06 |
 | CA-09 | T-120R-01 |
+
+---
+
+## 6. Notas de la fase 04 (2026-10-22)
+
+### 6.1 DB
+
+- **Despliegue selectivo.** El contenedor `sql_server_asistencias` lo comparte otro work item (gestion de facultad), asi que no se corrio `deploy_schema.ps1` completo (habria pisado SPs que esa rama modifico). Se aplicaron solo los archivos de este WI y se inserto `COO_001` con un `INSERT ... IF NOT EXISTS`.
+- **Nombres de los SP internos:** se uso la convencion real del repo, sufijo `_interno`: `usp_validar_coordinador_de_facultad_interno`, `usp_cambiar_estado_usuario_interno`, `usp_actualizar_datos_usuario_interno`. IAM-001 los llama `usp_internal_*`: **hay que alinear ese documento** (o renombrar) antes de implementarlo para no duplicar objetos. Tambien se creo `ufn_usuario_tiene_roles_activos` (el nombre coincide con IAM-001).
+- **Cambio no previsto en el contrato:** `uv_usuario_perfil` omite el perfil de un coordinador con `Coordinador.estado = 0`. Sin eso, RBAC (`usp_validar_permiso_rbac_usuario_interno`) seguia aceptando el rol desactivado mientras la persona tuviera otro rol activo (CA-03, T-122-13).
+- **Hallazgo tecnico:** SQL Server prohibe `ROLLBACK` dentro de `INSERT ... EXEC` (error 3915), que es como las pruebas consumen el SP. Los dos SP nuevos solo hacen `ROLLBACK` cuando ya hubo una escritura; un rechazo de negocio antes de escribir cierra sin rollback. `usp_crear_coordinador` tiene el mismo patron pero sus pruebas nunca ejercitan un fallo despues de abrir la transaccion.
+- **Pendiente de DB:** T-122-06 (parte DB) y la concurrencia T-122-10 (necesitan IAM-001/WI-B y un script de dos conexiones); `scripts/database/tests/`.
+
+### 6.2 Frontend
+
+- Angular 18: escribir un `signal` dentro de un `effect` exige `{ allowSignalWrites: true }`; el modal de edicion lo usa para precargar los datos.
+- Se actualizo el spec existente `mock-backend.interceptor.spec.ts` (ruta `/estado` con `estaActivo` en vez de `/toggle`) por D6; la aserción no cambio.
+
+### 6.3 Backend
+
+- Bloqueado por IAM-001. Se puede avanzar sin el: nada que compile sin `SincronizarCuentaInstitucionalService`, ya que los casos de uso lo reciben por constructor. Opciones para el owner: (a) implementar IAM-001 primero; (b) crear en este WI solo el servicio de aplicacion y sus DTOs con un puerto de identidad ampliado, y que IAM-001 aporte el adapter de Keycloak.
