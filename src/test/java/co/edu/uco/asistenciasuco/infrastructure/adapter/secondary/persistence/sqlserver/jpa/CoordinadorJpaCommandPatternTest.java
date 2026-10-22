@@ -154,6 +154,16 @@ class CoordinadorJpaCommandPatternTest {
         assertTrue(resultado.isEmpty());
     }
 
+    // Regresion hallada en el E2E de HU121/HU122: con Coordinador.facultad, uv_coordinador devuelve filas con
+    // idPrograma nulo (parte de la identidad compuesta de la entidad) y Hibernate las entrega como null. Los
+    // coordinadores sin programa se leen con la otra consulta (por columnas), asi que esta los excluye.
+    @Test
+    void COO_PAT_010_listado_por_facultad_solo_lee_coordinadores_con_programa() {
+        assertTrue(CoordinadorJpaRepository.HQL_POR_FACULTAD.contains("c.idPrograma is not null"));
+        assertTrue(CoordinadorJpaRepository.HQL_SIN_PROGRAMA.contains("c.idPrograma is null"));
+        assertTrue(CoordinadorJpaRepository.HQL_SIN_PROGRAMA.contains("c.idFacultad = :idFacultad"));
+    }
+
     // HU121/HU122 (CONTRACT HU121-HU122 §3.1): comandos de edicion y estado.
 
     @Test
@@ -196,6 +206,31 @@ class CoordinadorJpaCommandPatternTest {
         verify(query).setParameter("idUsuarioEjecutor", EJECUTOR);
         assertEquals(idUsuario, resultado.idUsuario());
         assertTrue(resultado.personaSinRolesActivos());
+    }
+
+    // Regresion hallada en el E2E: SQL Server entrega los uniqueidentifier como texto en consultas nativas.
+    @Test
+    void COO_PAT_011_el_usuario_del_coordinador_puede_llegar_como_texto() {
+        final UUID idUsuario = UUID.fromString("70707070-7070-7070-7070-707070707070");
+        when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{
+                CORRELATION.toString(), "ok", "", true, idUsuario.toString(), 1}));
+
+        final co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResultadoGestionCoordinadorProjection resultado =
+                command.cambiarEstadoCoordinador(COORDINADOR, false, FACULTAD, EJECUTOR);
+
+        assertEquals(idUsuario, resultado.idUsuario());
+        assertTrue(resultado.personaSinRolesActivos());
+    }
+
+    @Test
+    void COO_PAT_012_un_usuario_con_formato_invalido_es_violacion_de_contrato() {
+        when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{
+                CORRELATION, "ok", "", true, "no-es-un-uuid"}));
+
+        final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
+                () -> command.actualizarCoordinador(COORDINADOR, "ANA", null, "PEREZ", null, "ana@example.test", FACULTAD, EJECUTOR));
+
+        assertEquals(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT.code(), exception.getCode());
     }
 
     @Test

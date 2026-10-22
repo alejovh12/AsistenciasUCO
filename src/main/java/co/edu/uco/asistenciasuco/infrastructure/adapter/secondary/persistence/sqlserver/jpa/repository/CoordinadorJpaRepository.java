@@ -66,7 +66,7 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
     static final String HQL_POR_FACULTAD = """
             select c
             from UvCoordinadorEntity c
-            where c.idFacultad = :idFacultad
+            where c.idFacultad = :idFacultad and c.idPrograma is not null
             order by c.nombrePrograma, c.nombreCompleto, c.id
             """;
 
@@ -194,6 +194,16 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
         final Object valor = fila.extras().getFirst();
         if (valor instanceof UUID uuid) {
             return uuid;
+        }
+        // SQL Server devuelve uniqueidentifier como texto en las consultas nativas (igual que la correlacion canonica).
+        if (valor instanceof String texto) {
+            try {
+                return UUID.fromString(texto.trim());
+            } catch (IllegalArgumentException exception) {
+                throw new DatabaseOperationException(
+                        DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT,
+                        "El procedimiento " + operation + " retorno un usuario con formato invalido.", exception);
+            }
         }
         throw new DatabaseOperationException(
                 DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT,
