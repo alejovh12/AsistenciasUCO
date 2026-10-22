@@ -326,3 +326,20 @@ D9(b): sin eventos.
 |---|---|---|
 | Owner del producto | ⏳ Pendiente (D1–D9) | — |
 | Congelamiento (`CONTRACT_FROZEN`) | ⏳ | — |
+
+## 8. Enmiendas de implementación (tanda 1, 2026-10-22)
+
+Desviaciones verificadas durante RED/GREEN; reemplazan lo anterior donde discrepan:
+
+| Tema | Contrato original | Implementado |
+|---|---|---|
+| Nombre de SP internos | `usp_internal_*` | Sufijo `_interno`: `usp_vincular_docente_programa_interno` (convención vigente del repo y exclusión de `test_contract_closure`) |
+| Paginación | `PAG_001` y `PAGINACION/TAMANO_MAXIMO` | No existen en el catálogo. Se normaliza (`pagina` ≥ 1, `tamano` 1..100) como `usp_consultar_grupos_paginado`; el controller además responde 400 fuera de rango |
+| Filtros del directorio | `@busqueda`, `@estaActivo`, `@idTipoVinculacion` | Se agregan `@idDocente` e `@idUsuario` opcionales para releer el vínculo recién creado antes del aprovisionamiento IAM |
+| Consultas y `XACT_ABORT` | `SET XACT_ABORT ON` en todo SP | Los SP de **solo lectura** no lo declaran (un error no debe condenar la transacción del llamador); el comando sí |
+| Orden de validaciones | Dentro de la transacción | Las validaciones de lectura (DOC_001/003/006, institución) se hacen **antes** de abrir la transacción; el interno revalida tipo y unicidad con `UPDLOCK, HOLDLOCK` |
+| Transacción externa | Rollback al savepoint | Con `XACT_ABORT ON` un fallo condena la transacción: el SP no es propietario y propaga el error al llamador (patrón de ownership) |
+| Wiring | `CoordinadorWiringConfiguration` | `DocenteProgramaWiringConfiguration` y `TipoVinculacionWiringConfiguration` (archivos propios) |
+| Controller | `CoordinadorPortalController` | `CoordinadorDocentesController` (nuevo); se retiran los GET/POST en 501 del portal |
+| Mensajes DOC_* / IAM_001 | `04_mensaje.sql` | `schema/seed/17_mensaje_docente_programa.sql` (evita conflicto con otras pistas) |
+| Candidatos | Excluye vinculados al programa, misma institución, sin correo | Igual; el SP lee `uv_docente_programa` sin contexto porque la autorización es explícita (RBAC + titularidad) |
