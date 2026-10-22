@@ -20,6 +20,8 @@ import java.util.Locale;
  */
 final class DbFailureClassifier {
 
+    private static final String OPERATION_ACTUALIZAR_COORDINADOR = "actualizarCoordinador";
+    private static final String OPERATION_CAMBIAR_ESTADO_COORDINADOR = "cambiarEstadoCoordinador";
     private static final String OPERATION_ASIGNAR_DOCENTE = "asignarDocenteAGrupo";
     private static final String OPERATION_REGISTRAR_ESTUDIANTE = "registrarEstudianteEnGrupo";
     // Operaciones reales de los repositories JPA (OP_* en UsuarioJpaRepository / AsistenciaJpaRepository).
@@ -48,6 +50,11 @@ final class DbFailureClassifier {
             case "ATT_001", "ATT_002", "ATT_003", "GEN_002", "RC_001", "SES_004", "PLA_001",
                  "VAL_001", "VAL_002", "VAL_003", "VAL_004", "VAL_005" -> CommonErrorCode.VALIDATION_ERROR;
             case "VAL_006" -> CommonErrorCode.CONFLICT;
+            // COO_001 (HU122): el coordinador coordina un programa activo; hay que reasignarlo o desactivar el programa.
+            case "COO_001" -> CommonErrorCode.CONFLICT;
+            // GEN_001 es generico y por defecto queda tecnico; en la gestion del coordinador significa que el
+            // coordinador no existe o es de otra facultad (la DB no distingue los casos para no revelar su existencia).
+            case "GEN_001" -> classifyGen001(operation);
             // GEN_003: "Ya existe un {} registrado con este {}"; lo emite usp_registrar_o_actualizar_plan_estudio
             // ante un plan duplicado (programa + inp). Conflicto de negocio, no fallo tecnico.
             case "GEN_003" -> CommonErrorCode.CONFLICT;
@@ -89,6 +96,13 @@ final class DbFailureClassifier {
             case "SYS_001" -> DatabaseErrorCode.ERR_DB_UNCLASSIFIED;
             default -> DatabaseErrorCode.ERR_DB_UNCLASSIFIED;
         };
+    }
+
+    private static ErrorDefinition classifyGen001(final String operation) {
+        if (OPERATION_ACTUALIZAR_COORDINADOR.equals(operation) || OPERATION_CAMBIAR_ESTADO_COORDINADOR.equals(operation)) {
+            return CommonErrorCode.RESOURCE_NOT_FOUND;
+        }
+        return DatabaseErrorCode.ERR_DB_UNCLASSIFIED;
     }
 
     /**
