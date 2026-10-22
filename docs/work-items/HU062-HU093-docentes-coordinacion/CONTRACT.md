@@ -343,3 +343,14 @@ Desviaciones verificadas durante RED/GREEN; reemplazan lo anterior donde discrep
 | Controller | `CoordinadorPortalController` | `CoordinadorDocentesController` (nuevo); se retiran los GET/POST en 501 del portal |
 | Mensajes DOC_* / IAM_001 | `04_mensaje.sql` | `schema/seed/17_mensaje_docente_programa.sql` (evita conflicto con otras pistas) |
 | Candidatos | Excluye vinculados al programa, misma institución, sin correo | Igual; el SP lee `uv_docente_programa` sin contexto porque la autorización es explícita (RBAC + titularidad) |
+
+## 9. Enmiendas de implementación (tandas 2 y 3, 2026-10-22)
+
+| Tema | Contrato original | Implementado |
+|---|---|---|
+| HU092 `PUT /coordinador/docentes/{idDocente}` | Body con tipo de vinculación y nombres | Igual. `""` en segundo nombre/apellido los limpia; primer nombre/apellido no pueden quedar en blanco. Correo y documento no son editables. Nombres no se sincronizan con Keycloak (D11, deuda hasta IAM-001) |
+| HU093 `PATCH …/{idDocente}/estado` | Body `{ "estaActivo": bool }` | Igual; responde 200 con la fila releída. Idempotente. No toca `Usuario.estado`, el rol Docente, los grupos ni la cuenta de identidad (D12) |
+| Regla D12 en grupos | `usp_crear_grupo`/`usp_actualizar_grupo` rechazan titular **sin vínculo activo** (`DOC_009`) | **Acotada:** rechazan solo un vínculo **explícitamente inactivo** con el programa de la asignatura. Un docente sin ningún vínculo no se bloquea (no rompe flujos previos a la adscripción) y editar un grupo sin cambiar el titular sigue permitido. Implementado en `usp_validar_docente_vinculo_activo_programa_interno` |
+| Códigos de error | `DOC_*` con kinds genéricos | Códigos de feature en `DocenteErrorCode` (`ERR_DOCENTE_YA_VINCULADO_PROGRAMA`, `ERR_PERSONA_YA_REGISTRADA`, `ERR_TIPO_VINCULACION_INVALIDO`, `ERR_MODO_VINCULACION_INVALIDO`, `ERR_BUSQUEDA_CANDIDATOS_CORTA`, `ERR_DOCENTE_NO_VINCULADO_PROGRAMA`, `ERR_DOCENTE_SIN_VINCULO_ACTIVO`), porque el cliente solo muestra el mensaje del backend para códigos de feature; el kind HTTP no cambia (404/409/400) |
+| Nombre de savepoint | `usp_cambiar_estado_docente_programa` | `sp_cambiar_estado_docprog` (SQL Server limita los nombres de savepoint a 32 caracteres) |
+| Frontend | `UserPickerModalComponent` para el modo existente | Picker propio dentro del modal de vinculación (el genérico está atado a datos mock) |

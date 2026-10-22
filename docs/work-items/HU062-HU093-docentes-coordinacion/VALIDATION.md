@@ -54,3 +54,19 @@ Se crearon en el Keycloak compartido las cuentas `e2e.hu091.docente@uco.edu.co` 
 | E2E | `scratch/test_hu092.ps1` con JWT real: PUT 200 con releída de DB, correo/documento intactos, `sqlcmd` confirma nombres, el docente sigue iniciando sesión, `{}` 400, tipo inexistente 400 `ERR_TIPO_VINCULACION_INVALIDO`, sin vínculo 404, decano 403 | PASS (10 comprobaciones) |
 
 Notas: los nombres editados **no** se propagan a Keycloak (D11; deuda hasta IAM-001). El E2E creó la cuenta `e2e.hu092.docente@uco.edu.co` en el Keycloak compartido (retirar manualmente). La suite completa de backend, `mvnw verify`, `npm run verify` e `infra.ps1 verify` se re-ejecutan en el cierre final tras HU093.
+
+## Tanda 3 — HU093 y cierre final (2026-10-22)
+
+| Capa | Evidencia | Resultado |
+|---|---|---|
+| DB | `test_usp_cambiar_estado_docente_programa` (T-093-01..04 y regla D12 en grupos) y 36/37 archivos de `test_suite.sql` ejecutados uno a uno + concurrencia T-091-13 | PASS (el restante, `test_lb004d_support_binding`, exige fixture LB004D preexistente) |
+| Backend | `.\mvnw.cmd -o verify` completo | 1754 tests PASS, `All coverage checks have been met` |
+| Backend | JaCoCo del código nuevo (HU091–HU093) | líneas 96,7 %, ramas 82,1 % |
+| Frontend | `npm run verify` | 860 specs PASS; realtime 95,06 % / 84,52 %; build de producción OK |
+| Frontend | Cobertura del código nuevo (componente, modales, servicio) | líneas ≈ 90,8 %, ramas ≈ 74,1 % |
+| Infra | `infra.ps1 verify` y `verify-contracts.ps1` sobre los tres worktrees | PASS (18 comprobaciones) |
+| E2E | `scratch/test_hu093.ps1` (10 comprobaciones) + regresión de `test_hu091.ps1` y `test_hu092.ps1` con JWT real | PASS |
+
+Hallazgo del E2E de HU093: tras inactivar el vínculo, `Usuario.estado` sigue en 1, el docente sigue iniciando sesión en Keycloak y el filtro `estaActivo=false` lo lista.
+
+Limitación declarada: en el frontend los specs de HU092 y HU093 se escribieron junto con el código y se separaron en commits después, sin observar su fallo previo; en DB y Backend el RED se observó fallando.
