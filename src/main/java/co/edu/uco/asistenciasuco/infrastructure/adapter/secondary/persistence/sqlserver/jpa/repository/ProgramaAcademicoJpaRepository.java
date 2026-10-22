@@ -9,7 +9,9 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.JpaProcedureExecutor;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +71,7 @@ public class ProgramaAcademicoJpaRepository implements ProgramaAcademicoCommandP
                  @idTipoPrograma = :idTipoPrograma
             """;
     static final String OP_CONSULTAR = "consultarProgramasAcademicos";
+    static final String MENSAJE_PAGINACION_INVALIDA = "Los parametros de paginacion no son validos.";
 
     static final String HQL_POR_ID = """
             select p
@@ -134,7 +137,9 @@ public class ProgramaAcademicoJpaRepository implements ProgramaAcademicoCommandP
                 OP_CONSULTAR,
                 "No fue posible consultar los programas academicos desde base de datos.",
                 () -> {
-                    final List<?> filas = entityManager.createNativeQuery(SQL_CONSULTAR, SpProgramaAcademicoPaginadoEntity.class)
+                    final List<?> filas;
+                    try {
+                        filas = entityManager.createNativeQuery(SQL_CONSULTAR, SpProgramaAcademicoPaginadoEntity.class)
                             .setParameter("idUsuarioEjecutor", consulta.actorUsuarioId())
                             .setParameter("idCorrelacion", correlationId)
                             .setParameter("numeroPagina", consulta.pagina())
@@ -143,6 +148,12 @@ public class ProgramaAcademicoJpaRepository implements ProgramaAcademicoCommandP
                             .setParameter("estaActivo", consulta.estaActivo())
                             .setParameter("idTipoPrograma", consulta.idTipoPrograma())
                             .getResultList();
+                    } catch (final PersistenceException exception) {
+                        if (esPaginacionInvalida(exception)) {
+                            throw new ValidationException(MENSAJE_PAGINACION_INVALIDA);
+                        }
+                        throw exception;
+                    }
                     final List<SpProgramaAcademicoPaginadoEntity> entidades = filas.stream()
                             .map(SpProgramaAcademicoPaginadoEntity.class::cast).toList();
                     final int total = entidades.isEmpty() || entidades.getFirst().totalRegistros() == null
@@ -165,6 +176,16 @@ public class ProgramaAcademicoJpaRepository implements ProgramaAcademicoCommandP
                         .findFirst()
                         .map(ProgramaAcademicoJpaRepository::toProjection)
         );
+    }
+
+    /** El SP rechaza la paginacion fuera de rango con DBCODE=PAG_001: es una entrada invalida (400), no un fallo tecnico. */
+    private static boolean esPaginacionInvalida(final Throwable exception) {
+        for (Throwable actual = exception; actual != null; actual = actual.getCause()) {
+            if (actual.getMessage() != null && actual.getMessage().contains("DBCODE=PAG_001|")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static ProgramaAcademicoProjection toProjection(final SpProgramaAcademicoPaginadoEntity e) {

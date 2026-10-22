@@ -209,6 +209,18 @@ class ProgramaAcademicoJpaRepositoryTest {
     }
 
     @Test
+    void T_108_04_pag_001_del_sp_se_traduce_a_validacion_y_otros_fallos_siguen_siendo_tecnicos() {
+        when(query.getResultList()).thenThrow(new jakarta.persistence.PersistenceException(
+                "x", new RuntimeException("DBCODE=PAG_001|Paginacion invalida")));
+        final var consulta = new ProgramaAcademicoQueryPort.ConsultaProgramas(ACTOR, null, null, null, 1, 100000);
+        assertThrows(co.edu.uco.asistenciasuco.application.exception.validation.ValidationException.class, () -> repository.consultar(consulta));
+
+        org.mockito.Mockito.doThrow(new jakarta.persistence.PersistenceException("otro fallo")).when(query).getResultList();
+        assertThrows(co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.DatabaseOperationException.class,
+                () -> repository.consultar(consulta));
+    }
+
+    @Test
     void el_entity_manager_es_obligatorio() {
         assertThrows(NullPointerException.class, () -> new ProgramaAcademicoJpaRepository(null, null));
     }
