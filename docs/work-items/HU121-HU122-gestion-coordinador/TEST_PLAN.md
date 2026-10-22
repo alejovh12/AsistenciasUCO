@@ -109,13 +109,52 @@ last-reviewed: 2026-10-22
 
 ## 3. Registro de RED/GREEN (se completa en las fases 03–05)
 
-| Repo | `RED_SNAPSHOT` (commit, hash, comando, exit code) | `GREEN` (commit, comando, exit code) | Estado |
+| Repo | `RED_SNAPSHOT` (commit, rama, base, comando, resultado) | `GREEN` (commit, comando, exit code) | Estado |
 |---|---|---|---|
-| GestioAsistenciaDB | — | — | Pendiente |
-| GestioAsistenciaBackend | — | — | Pendiente |
-| GestioAsistenciaFrontend | — | — | Pendiente |
+| GestioAsistenciaDB | `f6ddb5a` en `feature/HU121-HU122-gestion-coordinador` (base `develop` `585f7f0`). Se ejecutaron los 3 archivos con `sqlcmd` contra `sql_server_asistencias`: **exit 1** en los tres (`Msg 207: Invalid column name 'estado'` / `'primerNombre'`, es decir, columnas y SPs inexistentes). Sintaxis verificada con `SET PARSEONLY ON` y fixtures verificados aparte (3 y 2 coordinadores creados y revertidos, `@@TRANCOUNT=0`, sin datos residuales) | — | RED confirmado |
+| GestioAsistenciaBackend | `002158a` en `feature/HU121-HU122-gestion-coordinador` (base `develop` `4ff37ff`). `cmd /c ".\mvnw.cmd -q test-compile"`: **exit 1**, 206 errores, **todos** `cannot find symbol` / `package … does not exist` / firma de `consultarCoordinadoresSinPrograma` / constructor de `CoordinadorProjection`, únicamente en los 5 archivos de prueba del perímetro | — | RED confirmado (por compilación) |
+| GestioAsistenciaFrontend | `959ae84` en `feature/HU121-HU122-gestion-coordinador` (base `develop` `ea1e537`). `npx tsc -p tsconfig.spec.json --noEmit`: **exit 2**, 28 errores TS (`setCoordinadorEstado`, `updateCoordinador`, `coordinadorParaCambioEstado`, `abrirEdicion`, módulos de los dos modales, tipos `ActualizarCoordinadorPayload`…) | — | RED confirmado (por compilación) |
 
 Regla: ninguna prueba se modifica para pasar. Un cambio de prueba exige un registro `TEST_CONTRACT_CONFLICT` con la razón y la aprobación del owner.
+
+---
+
+## 5. Notas de la fase 03 (2026-10-22)
+
+### 5.1 Pruebas existentes que se actualizaron por el cambio **formal** del contrato (no relajan aserciones)
+
+| Prueba | Cambio | Contrato que lo exige |
+|---|---|---|
+| `ConsultarCoordinadoresUseCaseImplTest` (3.er caso) | El stub pasa a `consultarCoordinadoresSinPrograma(facultad)` | CONTRACT §3.1 y D2 |
+| `CoordinadorJpaCommandPatternTest.COO_PAT_004` | Llama con `FACULTAD`, el `Object[]` trae las 6 columnas nuevas y verifica `setParameter("idFacultad", …)`. Se conservan todas las aserciones previas | CONTRACT §3.1 y D2 |
+| `CrearCoordinadorUseCaseImplTest.execute_con_idPrograma_nulo_y_puertos_iam…` | El dominio trae contraseña explícita en vez de `null` (ya no hay contraseña por defecto). Resto idéntico | D5 |
+| `dean-management.service.spec.ts` (`toggleCoordinadorStatus…`) | Se reemplaza por las pruebas de `setCoordinadorEstado` (ruta `…/estado`) | D6 y CONTRACT §4 |
+| `dean-coordinadores.component.spec.ts` (`toggleEstado envía PATCH…`) | `toggleEstado` abre confirmación; el PATCH sale al confirmar con `…/estado` | D6 y CONTRACT §4 |
+
+### 5.2 Pruebas del TEST_PLAN que **no** se escribieron todavía
+
+| ID | Motivo | Cuándo |
+|---|---|---|
+| T-122-06 (persona con dos roles, parte DB) | `ufn_usuario_tiene_roles_activos` es de IAM-001 y el estado del rol de docente es de WI-B. La parte del use case sí está cubierta (`personaSinRolesActivos` true/false) | Cuando IAM-001/WI-B estén en `develop` |
+| T-121-10 (atomicidad con falla inyectada) | El SP no expone un punto de inyección; T-121-11 (la transacción externa sobrevive al rechazo) cubre el rollback hasta el savepoint | IT de backend en la fase 04 |
+| T-121-12/T-122-11 contra Keycloak, T-122-12/13, T-DDL-01/03, T-122-10 (concurrencia), ITs `CoordinadorJpaRepositoryIT`, T-VIEW-02 | Necesitan IAM-001 (`FakeKeycloakAdminServer`) o scripts de integración; se escriben en la fase 04 junto con su implementación | Fase 04 |
+| T-SEC-01 (`RbacSecurityFilterChainTest`), T-WIRE-01, T-ARCH-01 | Archivo caliente (HU035/036) y wiring que aún no existe | Después del merge de HU035/036 |
+| Specs de `catalog`/`mock-backend.interceptor` | Se ajustan al alinear los mocks en la fase 04 | Fase 04 |
+
+### 5.3 Nombres que fijaron las pruebas (el contrato no los definía)
+
+- Dominio y DTO de resultado: `ResultadoGestionCoordinadorDomain(UUID idCoordinador, boolean sincronizacionPendiente, String mensajeUsuario)` y `ResultadoGestionCoordinadorDTO(UUID idCoordinador, String sincronizacionIdentidad, String mensajeUsuario)` en `application/features/decano/common/{domain,dto}`.
+- Casos de uso reciben `(CoordinadorCommandPort, InstitutionalScopePort, SincronizarCuentaInstitucionalService, MessageCatalogPort)`. El mensaje `IAM_002` lo resuelve el caso de uso con `MessageCatalogPort`.
+- Frontend: señales `coordinadorParaCambioEstado` y `coordinadorEnEdicion`; métodos `toggleEstado`, `confirmarCambioEstado`, `cancelarCambioEstado`, `abrirEdicion`, `cerrarEdicion`, `guardarEdicion`; componentes `app-dean-coordinador-edit-modal` y `app-dean-coordinador-estado-modal` (`input.required<CoordinadorItem>()`, `guardar`/`confirmar`/`cancelar` como `output()`; botones `type="submit"` y `data-accion="cancelar|confirmar"`).
+- De IAM-001 se **asumieron** estos nombres a partir de su CONTRACT: `application/features/identidad/sincronizarcuenta/{SincronizarCuentaInstitucionalService, ResultadoSincronizacion(OK, PENDIENTE)}` y `application/secondaryports/identity/dto/ActualizarCuentaIdentidadDTO(correo, primerNombre, primerApellido)`. Si IAM-001 usa otros paquetes, solo cambian los `import` de las pruebas (se registra como alineación, no como relajación).
+
+### 5.4 Aclaraciones al CONTRACT descubiertas al escribir las pruebas (pendientes de visto bueno del owner)
+
+1. **`ApiDataResponse<T>` no tiene `mensajeUsuario`** (`record ApiDataResponse(boolean exitoso, T datos)`). El contrato §3.3 lo suponía en el envelope. Las pruebas ubican `mensajeUsuario` **dentro de `datos`** (`ResultadoGestionCoordinadorResponse { idCoordinador, sincronizacionIdentidad, mensajeUsuario }`), con valor solo cuando la sincronización queda pendiente (`IAM_002`).
+2. **`GEN_001` no se clasifica hoy como "no encontrado"** (`DbFailureClassifier` lo deja como error técnico por ser genérico). El contrato §3.2 asumía 404. Las pruebas exigen que `GEN_001` sea `RESOURCE_NOT_FOUND` **solo** para las operaciones `actualizarCoordinador` y `cambiarEstadoCoordinador` (mismo mecanismo que ya usa `VAL_007`). No cambia el contrato de DB.
+3. **`ProcedureResult` solo expone las 4 columnas canónicas.** Las columnas extra (`idUsuario`, `personaSinRolesActivos`) exigen extender el mapeo del adapter (`COO_PAT_006/007`). Además, `CorrelationIdContext` vive en infraestructura: de dónde sale el `idCorrelacion` que el caso de uso pasa al servicio de IAM-001 queda a decidir en la fase 04 (las pruebas aceptan cualquier valor).
+4. **`uv_coordinador` real no expone nombres ni correo**, pese a lo que dice `HU120/CONTRACT.md` §2.1 (verificado con `sys.columns` en `sql_server_asistencias`). Es una discrepancia del contrato de HU120, no de este WI; este WI la corrige al ampliar la vista.
+5. **Convención de nombres de SP internos:** el repo usa el sufijo `_interno` (`usp_validar_titularidad_jerarquica_interno`), mientras IAM-001 y este contrato escriben `usp_internal_*`. Se decide al implementar; las pruebas solo invocan los SP públicos.
 
 ---
 
