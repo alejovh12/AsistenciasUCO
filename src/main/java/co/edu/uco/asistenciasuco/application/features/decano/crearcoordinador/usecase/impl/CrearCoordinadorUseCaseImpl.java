@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.u
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.usecase.CrearCoordinadorUseCase;
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.usecase.domain.CrearCoordinadorDomain;
 import co.edu.uco.asistenciasuco.application.features.usuario.domain.rules.PasswordRegistroRule;
@@ -58,6 +59,8 @@ public final class CrearCoordinadorUseCaseImpl implements CrearCoordinadorUseCas
                         ? usuarioRepositoryPort.consultarUsuarioPorCorreo(domain.getCorreo().trim())
                         : Optional.empty();
 
+        validarContrasenaObligatoria(domain, usuarioPreexistente.isPresent());
+
         final String credencialInicial = passwordEncoderPort == null
                 ? domain.getPassword()
                 : resolverCredencialInicial(domain);
@@ -99,6 +102,17 @@ public final class CrearCoordinadorUseCaseImpl implements CrearCoordinadorUseCas
         }
     }
 
+    /**
+     * HU121-HU122 D5: la contrasena se asigna siempre en la creacion; no existe una por defecto derivada del documento.
+     * Un usuario ya registrado (por correo) no necesita contrasena nueva.
+     */
+    private void validarContrasenaObligatoria(final CrearCoordinadorDomain domain, final boolean usuarioPreexistente) {
+        final boolean sinContrasena = domain.getPassword() == null || domain.getPassword().isBlank();
+        if (sinContrasena && !usuarioPreexistente && passwordEncoderPort != null) {
+            throw new ValidationException("La contrasena inicial del coordinador es obligatoria.");
+        }
+    }
+
     private static String resolverCredencialInicial(final CrearCoordinadorDomain domain) {
         Integer numeroId = null;
         if (domain.getNumeroIdentificacion() != null && !domain.getNumeroIdentificacion().isBlank()) {
@@ -108,13 +122,7 @@ public final class CrearCoordinadorUseCaseImpl implements CrearCoordinadorUseCas
                 numeroId = null;
             }
         }
-        final String rawPassword;
-        if (domain.getPassword() == null || domain.getPassword().isBlank()) {
-            final String sufijo = numeroId != null ? String.valueOf(numeroId) : "2026";
-            rawPassword = "UcoCoord_" + sufijo + "!";
-        } else {
-            rawPassword = domain.getPassword().trim();
-        }
+        final String rawPassword = domain.getPassword() == null ? "" : domain.getPassword().trim();
         return PasswordRegistroRule.resolverCredencialNueva(rawPassword, numeroId != null ? numeroId : 10000000);
     }
 }
