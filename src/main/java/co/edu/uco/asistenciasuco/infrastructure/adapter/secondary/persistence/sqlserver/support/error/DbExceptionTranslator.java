@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error;
 
 import co.edu.uco.asistenciasuco.application.features.asistencia.exception.AsistenciaErrorCode;
+import co.edu.uco.asistenciasuco.application.features.decano.exception.CoordinadorErrorCode;
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
@@ -56,6 +57,7 @@ public final class DbExceptionTranslator {
             EstudianteErrorCode.ERR_ESTUDIANTE_INACTIVO,
             DocenteErrorCode.ERR_DOCENTE_INACTIVO,
             DocenteErrorCode.ERR_DOCENTE_YA_REGISTRADO,
+            CoordinadorErrorCode.COO_001,
             CommonErrorCode.CONFLICT
     );
     private static final Set<ErrorDefinition> VALIDATION_CODES = Set.of(

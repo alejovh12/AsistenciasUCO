@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 import co.edu.uco.asistenciasuco.application.features.asistencia.exception.AsistenciaErrorCode;
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
+import co.edu.uco.asistenciasuco.application.features.decano.exception.CoordinadorErrorCode;
 import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.exception.TipoIdentificacionErrorCode;
@@ -51,7 +52,7 @@ final class DbFailureClassifier {
                  "VAL_001", "VAL_002", "VAL_003", "VAL_004", "VAL_005" -> CommonErrorCode.VALIDATION_ERROR;
             case "VAL_006" -> CommonErrorCode.CONFLICT;
             // COO_001 (HU122): el coordinador coordina un programa activo; hay que reasignarlo o desactivar el programa.
-            case "COO_001" -> CommonErrorCode.CONFLICT;
+            case "COO_001" -> CoordinadorErrorCode.COO_001;
             // GEN_001 es generico y por defecto queda tecnico; en la gestion del coordinador significa que el
             // coordinador no existe o es de otra facultad (la DB no distingue los casos para no revelar su existencia).
             case "GEN_001" -> classifyGen001(operation);

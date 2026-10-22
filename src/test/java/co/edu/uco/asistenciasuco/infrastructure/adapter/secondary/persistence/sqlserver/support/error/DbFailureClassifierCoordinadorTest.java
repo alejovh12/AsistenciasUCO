@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error;
 
+import co.edu.uco.asistenciasuco.application.features.decano.exception.CoordinadorErrorCode;
+import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorKind;
 import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.CommonErrorCode;
 import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.SecurityErrorCode;
 import org.junit.jupiter.api.Test;
@@ -33,10 +35,16 @@ class DbFailureClassifierCoordinadorTest {
                 DbFailureClassifier.classify(USER, tecnico("GEN_001"), "crearCoordinador"));
     }
 
+    // Hallazgo de la validacion en la UI: con CommonErrorCode.CONFLICT el usuario recibia el mensaje generico
+    // "La operacion genera un conflicto..." en vez del texto institucional de COO_001.
     @ParameterizedTest
     @ValueSource(strings = {"actualizarCoordinador", "cambiarEstadoCoordinador"})
-    void coo_001_programa_activo_es_conflicto(final String operacion) {
-        assertEquals(CommonErrorCode.CONFLICT, DbFailureClassifier.classify(USER, tecnico("COO_001"), operacion));
+    void coo_001_programa_activo_es_conflicto_con_su_propio_codigo_de_catalogo(final String operacion) {
+        final var definicion = DbFailureClassifier.classify(USER, tecnico("COO_001"), operacion);
+
+        assertEquals(CoordinadorErrorCode.COO_001, definicion);
+        assertEquals("COO_001", definicion.code());
+        assertEquals(ErrorKind.CONFLICT, definicion.kind());
     }
 
     @Test
