@@ -73,6 +73,11 @@ public class InstitutionalScopeJpaRepository implements InstitutionalScopePort {
             select count(d) from UvDecanoEntity d
             where d.idUsuario = :usuarioId and d.idFacultad = :facultadId and d.estaActivoDecano = 1
             """;
+    static final String HQL_DECANO_DE_PROGRAMA = """
+            select count(p) from UvProgramaEntity p, UvDecanoEntity d
+            where p.id = :programaId and p.idFacultad = d.idFacultad
+              and d.idUsuario = :usuarioId and d.estaActivoDecano = 1
+            """;
 
     private final EntityManager entityManager;
 
@@ -142,6 +147,12 @@ public class InstitutionalScopeJpaRepository implements InstitutionalScopePort {
     public boolean canDecanoAccessFacultad(final UUID usuarioId, final UUID facultadId) {
         return count(HQL_DECANO_DE_FACULTAD, "canDecanoAccessFacultad",
                 new Parameter("usuarioId", usuarioId), new Parameter("facultadId", facultadId)) > 0;
+    }
+
+    @Override
+    public boolean canDecanoAccessPrograma(final UUID usuarioId, final UUID programaId) {
+        return count(HQL_DECANO_DE_PROGRAMA, "canDecanoAccessPrograma",
+                new Parameter("usuarioId", usuarioId), new Parameter("programaId", programaId)) > 0;
     }
 
     private Optional<UUID> singleUuid(final String hql, final String parameterName, final Object value,

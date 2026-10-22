@@ -39,6 +39,13 @@ public class PlanEstudioJpaRepository implements PlanEstudioQueryPort, PlanEstud
             order by p.nombrePrograma, p.inp, p.id
             """;
 
+    static final String HQL_POR_FACULTAD = """
+            select p
+            from UvPlanEstudioEntity p
+            where p.idPrograma in (select pr.id from UvProgramaEntity pr where pr.idFacultad = :idFacultad)
+            order by p.nombrePrograma, p.inp, p.id
+            """;
+
     static final String OP_REGISTRAR_O_ACTUALIZAR_PLAN = "registrarOActualizarPlanEstudio";
 
     private final EntityManager entityManager;
@@ -70,6 +77,19 @@ public class PlanEstudioJpaRepository implements PlanEstudioQueryPort, PlanEstud
                 "No fue posible consultar los planes de estudio desde base de datos.",
                 () -> entityManager.createQuery(HQL_POR_PROGRAMA, UvPlanEstudioEntity.class)
                         .setParameter("idPrograma", idPrograma)
+                        .getResultList().stream()
+                        .map(AcademicViewJpaProjectionMapper::toPlanEstudio)
+                        .toList()
+        );
+    }
+
+    @Override
+    public List<PlanEstudioProjection> consultarPlanesPorFacultad(final UUID idFacultad) {
+        return JpaQueryExecutor.execute(
+                "consultarPlanesPorFacultad",
+                "No fue posible consultar los planes de estudio de la facultad desde base de datos.",
+                () -> entityManager.createQuery(HQL_POR_FACULTAD, UvPlanEstudioEntity.class)
+                        .setParameter("idFacultad", idFacultad)
                         .getResultList().stream()
                         .map(AcademicViewJpaProjectionMapper::toPlanEstudio)
                         .toList()
