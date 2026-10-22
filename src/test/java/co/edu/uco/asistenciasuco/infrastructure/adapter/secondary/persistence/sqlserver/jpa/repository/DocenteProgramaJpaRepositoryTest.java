@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.command.ActualizarDocenteProgramaCommand;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.command.VincularDocenteProgramaCommand;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.DocentesProgramaFiltro;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.SpDocenteProgramaPaginadoEntity;
@@ -149,6 +150,33 @@ class DocenteProgramaJpaRepositoryTest {
         when(query.getResultList()).thenThrow(new PersistenceException("timeout"));
 
         assertThrows(DatabaseOperationException.class, () -> repository.consultarCandidatos(EJECUTOR, PROGRAMA, "ros"));
+    }
+
+    @Test
+    void DP_PAT_007_actualizar_usa_native_exec_con_binding_nombrado() {
+        when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{CORRELATION, "ok", "", true}));
+        final UUID docente = UUID.randomUUID();
+
+        repository.actualizar(new ActualizarDocenteProgramaCommand(docente, PROGRAMA, TIPO, "Nuevo", null, "Apellido", "", EJECUTOR));
+
+        verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_actualizar_docente_programa"));
+        verify(query).setParameter("idDocente", docente);
+        verify(query).setParameter("idPrograma", PROGRAMA);
+        verify(query).setParameter("idTipoVinculacion", TIPO);
+        verify(query).setParameter("primerNombre", "Nuevo");
+        verify(query).setParameter("segundoNombre", null);
+        verify(query).setParameter("primerApellido", "Apellido");
+        verify(query).setParameter("segundoApellido", "");
+        verify(query).setParameter("idCorrelacion", CORRELATION);
+        verify(query).setParameter("idUsuarioEjecutor", EJECUTOR);
+    }
+
+    @Test
+    void DP_PAT_008_actualizar_fallo_tecnico_se_traduce_a_database_operation_error() {
+        when(query.getResultList()).thenThrow(new PersistenceException("deadlock"));
+
+        assertThrows(DatabaseOperationException.class,
+                () -> repository.actualizar(new ActualizarDocenteProgramaCommand(UUID.randomUUID(), PROGRAMA, null, "N", null, null, null, EJECUTOR)));
     }
 
     private static VincularDocenteProgramaCommand comando() {

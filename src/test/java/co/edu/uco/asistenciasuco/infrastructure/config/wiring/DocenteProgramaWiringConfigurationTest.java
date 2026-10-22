@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.primaryports.interactor.ActualizarDocenteProgramaInteractor;
+import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.usecase.impl.ActualizarDocenteProgramaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.primaryports.interactor.ConsultarCandidatosDocenteInteractor;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.usecase.impl.ConsultarCandidatosDocenteUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultardocentesprograma.primaryports.interactor.ConsultarDocentesProgramaInteractor;
@@ -42,6 +44,15 @@ class DocenteProgramaWiringConfigurationTest {
                 mock(UsuarioRepositoryPort.class), mock(PasswordEncoderPort.class), mock(IdentityProviderPort.class));
         assertInstanceOf(VincularDocenteProgramaUseCaseImpl.class, vincular);
         assertInstanceOf(VincularDocenteProgramaInteractor.class, config.vincularDocenteProgramaInputPort(vincular));
+    }
+
+    @Test
+    void actualizar_docente_programa_beans_se_construyen_con_los_adapters_esperados() {
+        final DocenteProgramaWiringConfiguration config = new DocenteProgramaWiringConfiguration();
+
+        final var useCase = config.actualizarDocenteProgramaUseCase(scope, mock(DocenteProgramaCommandPort.class), query);
+        assertInstanceOf(ActualizarDocenteProgramaUseCaseImpl.class, useCase);
+        assertInstanceOf(ActualizarDocenteProgramaInteractor.class, config.actualizarDocenteProgramaInputPort(useCase));
     }
 
     @Test

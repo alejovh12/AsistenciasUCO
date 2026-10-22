@@ -2,6 +2,8 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coor
 
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.primaryports.ActualizarDocenteProgramaInputPort;
+import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.primaryports.dto.ActualizarDocenteProgramaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.DocenteCandidatoDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.DocenteProgramaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.DocentesProgramaPaginaDTO;
@@ -33,6 +35,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -46,9 +49,10 @@ class CoordinadorDocentesControllerTest {
     private final ConsultarDocentesProgramaInputPort consultar = mock(ConsultarDocentesProgramaInputPort.class);
     private final ConsultarCandidatosDocenteInputPort candidatos = mock(ConsultarCandidatosDocenteInputPort.class);
     private final VincularDocenteProgramaInputPort vincular = mock(VincularDocenteProgramaInputPort.class);
+    private final ActualizarDocenteProgramaInputPort actualizar = mock(ActualizarDocenteProgramaInputPort.class);
     private final AuthenticatedUserResolver identity = () -> ACTOR;
     private final MockMvc mvc = MockMvcBuilders
-            .standaloneSetup(new CoordinadorDocentesController(consultar, candidatos, vincular, identity))
+            .standaloneSetup(new CoordinadorDocentesController(consultar, candidatos, vincular, actualizar, identity))
             .setControllerAdvice(new GlobalExceptionHandler(codigo -> Optional.empty())).build();
 
     @Test
@@ -169,6 +173,42 @@ class CoordinadorDocentesControllerTest {
         mvc.perform(post("/api/v1/coordinador/docentes").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"idDocente\":\"%s\",\"idTipoVinculacion\":\"%s\"}".formatted(DOCENTE, TIPO)))
                 .andExpect(status().isConflict());
+    }
+
+    @Test
+    void T_092_01_put_actualiza_con_el_actor_y_el_docente_de_la_ruta() throws Exception {
+        when(actualizar.execute(any())).thenReturn(dto());
+
+        mvc.perform(put("/api/v1/coordinador/docentes/{id}", DOCENTE).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idTipoVinculacion\":\"%s\",\"primerNombre\":\"Nuevo\",\"segundoApellido\":\"\"}".formatted(TIPO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exitoso").value(true))
+                .andExpect(jsonPath("$.datos.idDocente").value(DOCENTE.toString()));
+
+        final ArgumentCaptor<ActualizarDocenteProgramaDTO> captor = ArgumentCaptor.forClass(ActualizarDocenteProgramaDTO.class);
+        verify(actualizar).execute(captor.capture());
+        assertEquals(ACTOR, captor.getValue().actorUsuarioId());
+        assertEquals(DOCENTE, captor.getValue().idDocente());
+        assertEquals(TIPO, captor.getValue().idTipoVinculacion());
+        assertEquals("Nuevo", captor.getValue().primerNombre());
+        assertEquals("", captor.getValue().segundoApellido());
+        assertNull(captor.getValue().segundoNombre());
+    }
+
+    @Test
+    void T_092_03_put_sin_campos_responde_400_sin_llamar_al_caso_de_uso() throws Exception {
+        mvc.perform(put("/api/v1/coordinador/docentes/{id}", DOCENTE).contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(actualizar);
+    }
+
+    @Test
+    void T_092_04_put_de_docente_sin_vinculo_responde_404_del_backend() throws Exception {
+        when(actualizar.execute(any())).thenThrow(new co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException("no vinculado"));
+
+        mvc.perform(put("/api/v1/coordinador/docentes/{id}", DOCENTE).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"primerNombre\":\"Nuevo\"}"))
+                .andExpect(status().isNotFound());
     }
 
     private static DocenteProgramaDTO dto() {

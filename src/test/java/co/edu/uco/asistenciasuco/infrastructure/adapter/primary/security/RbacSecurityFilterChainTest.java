@@ -143,6 +143,18 @@ class RbacSecurityFilterChainTest {
     }
 
     @Test
+    void coordinador_docentes_put_exige_rol_coordinador() throws Exception {
+        final String ruta = "/api/v1/coordinador/docentes/11111111-1111-1111-1111-111111111111";
+        mockMvc.perform(put(ruta)).andExpect(status().isUnauthorized());
+        for (final String rol : new String[]{"ESTUDIANTE", "DOCENTE"}) {
+            mockMvc.perform(put(ruta).header(HttpHeaders.AUTHORIZATION, bearer(rol)).contentType("application/json").content("{}"))
+                    .andExpect(status().isForbidden());
+        }
+        mockMvc.perform(put(ruta).header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")).contentType("application/json").content("{}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void tipos_vinculacion_exige_autenticacion_y_es_visible_para_cualquier_rol_autenticado() throws Exception {
         mockMvc.perform(get("/api/v1/tipos-vinculacion")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/tipos-vinculacion").header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
@@ -489,6 +501,11 @@ class RbacSecurityFilterChainTest {
 
         @PostMapping("/api/v1/coordinador/docentes")
         String vincularDocente() {
+            return "ok";
+        }
+
+        @org.springframework.web.bind.annotation.PutMapping("/api/v1/coordinador/docentes/{id}")
+        String actualizarDocente() {
             return "ok";
         }
 
