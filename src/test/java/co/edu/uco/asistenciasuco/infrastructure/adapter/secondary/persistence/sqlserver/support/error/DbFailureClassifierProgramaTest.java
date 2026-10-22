@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error;
 
-import co.edu.uco.asistenciasuco.application.exception.ErrorDefinition;
-import co.edu.uco.asistenciasuco.application.exception.common.CommonErrorCode;
+import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorDefinition;
+import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.CommonErrorCode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 

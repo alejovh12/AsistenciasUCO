@@ -35,7 +35,7 @@ class ProgramaAcademicoRequestValidatorTest {
 
     @Test
     void rechaza_cuerpo_nulo() {
-        assertThrows(ValidationException.class, () -> ProgramaAcademicoRequestValidator.validar(null));
+        assertThrows(ValidationException.class, () -> ProgramaAcademicoRequestValidator.validar((ProgramaAcademicoRequest) null));
     }
 
     @Test
