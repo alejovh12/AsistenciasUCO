@@ -1,0 +1,134 @@
+---
+status: contract-frozen
+type: work-item
+scope: fullstack-database-backend-frontend
+owner: fullstack-team
+last-reviewed: 2026-10-22
+---
+
+# TEST_PLAN — HU121 / HU122: Gestión del Coordinador (Rol Decano)
+
+**Estado:** `RED_PLANNED` (contrato congelado el 2026-10-22). Las pruebas se escriben en la fase 03, en orden **DB → Backend → Frontend**, sobre ramas `feature/HU121-HU122-gestion-coordinador` creadas desde `develop` **después del merge de HU035/036** y con IAM-001 disponible.
+
+## Fuentes
+
+- [PLAN](PLAN.md) (criterios CA-01…CA-09, decisiones D1–D10)
+- [CONTRACT](CONTRACT.md) (`CONTRACT_FROZEN`; las pruebas se derivan de él)
+- Skills: `uco-testing`, `uco-persistencia`, `uco-contratos`, `uco-seguridad`
+- Patrones existentes:
+  - `GestioAsistenciaDB/test/test_usp_crear_coordinador.sql`, `test_titularidad_jerarquica.sql`, `test_transaction_ownership.sql`
+  - `src/test/java/.../application/features/decano/crearcoordinador/**`, `consultarcoordinadores/**`
+  - `DecanoPortalControllerTest`, `CoordinadorJpaCommandPatternTest`, `SqlStoredProcedureContractIT`, `RbacSecurityFilterChainTest`
+  - `FakeKeycloakAdminServer` (IAM-001) para el adapter de identidad
+  - `features/dean/dean-coordinadores/dean-coordinadores.component.spec.ts`
+
+> Convención de datos: facultades F1 y F2; decanos D1 (F1) y D2 (F2); coordinadores C1 (F1, con programa activo P1), C2 (F1, sin programa), C3 (F2, sin programa), C4 (F1, con programa inactivo).
+
+---
+
+## 1. Matriz de comportamiento
+
+| ID | Requisito | Precondición | Acción / entrada | Resultado esperado | Nivel |
+|---|---|---|---|---|---|
+| T-121-01 | CA-01: edición feliz | C2 en F1 | `usp_actualizar_coordinador` / `PUT /decano/coordinadores/{C2}` con nombre y correo nuevos | `GEN_005`; `uv_coordinador` refleja los valores; documento y tipo intactos; HTTP 200 con `sincronizacionIdentidad="OK"`; el IdP recibe correo y nombres nuevos | DB, UseCase, Controller, IT, E2E |
+| T-121-02 | CA-02: correo ya usado por otro usuario | Correo de otro usuario | Editar C2 con ese correo | `VAL_006`; HTTP 409; sin cambios; `@@TRANCOUNT=0` | DB, UseCase, Controller |
+| T-121-03 | El correo propio no cuenta como duplicado | C2 con correo X | Editar C2 con X (otros campos distintos) | Éxito | DB |
+| T-121-04 | CA-06: coordinador de otra facultad | C3 en F2 | D1 edita C3 | `GEN_001`; HTTP **404**; C3 intacto | DB, Controller |
+| T-121-05 | CA-06: coordinador sin programa de otra facultad ya no se lista | C2 (F1) y C3 (F2) sin programa | `GET /decano/coordinadores` como D1 y como D2 | D1 ve C2 y no C3; D2 ve C3 y no C2 (regresión de la fuga de `consultarCoordinadoresSinPrograma`) | UseCase, IT, E2E |
+| T-121-06 | RBAC en DB | Ejecutor con perfil COORDINADOR | Editar | Falla RBAC; sin cambios | DB |
+| T-121-07 | Ejecutor NULL | — | `@idUsuarioEjecutor = NULL` | `GEN_002`; no se sustituye por un GUID por defecto | DB |
+| T-121-08 | Validación de forma | — | Nombre vacío o solo espacios; > 50 caracteres; correo sin formato; `id` no UUID | DB `GEN_002`/`VAL_*`; HTTP 400 por el validator sin llamar al use case | DB, Validator, Controller |
+| T-121-09 | El administrador no opera aquí (D8) | Token de `ADMINISTRADOR` | `PUT /decano/coordinadores/{id}` | 403 (`findFacultadIdByDecanoUsuario` vacío); sin llamada al puerto de DB | UseCase, Controller, `RbacSecurityFilterChainTest` |
+| T-121-10 | CA-07: atomicidad | Falla forzada después de la validación | Editar | Rollback completo, `estadoResultado=0`, `SYS_001`, `@@TRANCOUNT=0` | DB |
+| T-121-11 | CA-07: transacción externa del llamador | `BEGIN TRAN` externo + edición con error | — | Rollback solo hasta el savepoint; la externa sigue viva | DB |
+| T-121-12 | D7: falla del IdP después del commit | `FakeKeycloakAdminServer` responde 500 | Editar C2 | DB queda actualizada; HTTP 200 con `mensajeUsuario=IAM_002` y `sincronizacionIdentidad="PENDIENTE"`; `UsuarioSincronizacionPort.registrar` invocado una vez | UseCase, IT |
+| T-121-13 | El IdP no se invoca si la DB falla | `VAL_006` o 404 | Editar | `IdentityProviderPort` y el servicio de sincronización sin interacciones (`verifyNoInteractions`) | UseCase |
+| T-122-01 | CA-03: desactivar sin programa | C2 activo, sin programa | `usp_cambiar_estado_coordinador` / `PATCH …/{C2}/estado {estaActivo:false}` | `Coordinador.estado=0`; `uv_coordinador.estaActivoCoordinador=0`; `Usuario.estado=0` (no tiene otro rol); HTTP 200; el servicio recibe `desactivar(..., personaSinRolesActivos=true)`; la cuenta del IdP queda `enabled=false` y sin el rol | DB, UseCase, Controller, IT, E2E |
+| T-122-02 | CA-05 / D3: desactivar con programa activo | C1 coordina P1 activo | Desactivar C1 | `COO_001`; HTTP 409; estado intacto; IdP sin interacciones | DB, UseCase, Controller |
+| T-122-03 | D3: desactivar con programa inactivo | C4 coordina un programa inactivo | Desactivar C4 | Éxito | DB |
+| T-122-04 | CA-04: reactivar | C2 inactivo | `{estaActivo:true}` | `estado=1`, `Usuario.estado=1`; `reactivar(...)`: `habilitarCuenta` + `asignarRol(COORDINADOR)` | DB, UseCase, IT |
+| T-122-05 | D6: idempotencia | C2 inactivo | Desactivar otra vez | Éxito sin cambios; no se llama dos veces al IdP con efecto distinto | DB, UseCase |
+| T-122-06 | R5 / D1: persona con dos roles | Persona con COORDINADOR y DOCENTE activos | Desactivar el rol de coordinador | `Coordinador.estado=0`; `Usuario.estado` sigue en 1; `personaSinRolesActivos=false`; el servicio solo hace `retirarRol(COORDINADOR)`, la cuenta sigue habilitada | DB, UseCase, IT |
+| T-122-07 | CA-06: coordinador de otra facultad | C3 en F2 | D1 desactiva C3 | `GEN_001`; HTTP 404; C3 intacto | DB, Controller |
+| T-122-08 | RBAC y ejecutor NULL | Perfil distinto de DECANO / `NULL` | Cambiar estado | Falla RBAC / `GEN_002` | DB |
+| T-122-09 | `estaActivo` ausente | Cuerpo vacío o `{}` | `PATCH …/estado` | HTTP 400 (validator); no se asume toggle | Validator, Controller |
+| T-122-10 | R6: concurrencia | C2 activo | Dos desactivaciones y una reactivación simultáneas (dos conexiones `sqlcmd`) | Estado final consistente con la última confirmada; sin interbloqueos; `@@TRANCOUNT=0` | DB (script en `scripts/database/tests/`) |
+| T-122-11 | CA-07: falla del IdP al desactivar | `FakeKeycloakAdminServer` 500 | Desactivar C2 | DB desactivada; HTTP 200 con `IAM_002`; desfase registrado; `identity_drift_total{operation}` incrementada | UseCase, IT |
+| T-122-12 | Efecto sobre el acceso | C2 desactivado | `POST` al token de Keycloak local con sus credenciales | Rechazado (`invalid_grant`); tras reactivarlo, aceptado | E2E (`scratch/test_hu122.ps1`) |
+| T-122-13 | Aislamiento de rol en la sesión | C2 desactivado con un token vigente | Llamada a `/api/v1/coordinador/**` | Rechazada por RBAC en DB (no se espera al vencimiento del token) | E2E, DB |
+| T-120R-01 | CA-09 / D5: contraseña obligatoria | — | `POST /decano/coordinadores` sin `password` o vacío | HTTP 400 con mensaje de catálogo; no se crea usuario ni cuenta; ya no existe `UcoCoord_<doc>!` | UseCase, Validator, Controller |
+| T-120R-02 | `usp_crear_coordinador` fija la facultad | Decano D1 | Crear coordinador sin programa | `Coordinador.facultad = F1`; aparece en `uv_coordinador` con `idFacultad = F1` | DB (amplía `test_usp_crear_coordinador.sql`) |
+| T-DDL-01 | Migración idempotente | DB con y sin las columnas | Ejecutar `up` dos veces | Sin error; datos conservados; `estado=1` en las filas existentes | DB |
+| T-DDL-02 | Relleno de `facultad` | Coordinadores con programa | `up` | `Coordinador.facultad = Programa.facultad`; huérfanos listados en el reporte | DB |
+| T-DDL-03 | `down` | Con columnas | Ejecutar `down` | Columnas, `DEFAULT` y FK eliminados; segundo `down` sin error | DB |
+| T-VIEW-01 | Vista ampliada | — | `SELECT` sobre `uv_coordinador` | Expone `primerNombre`, `segundoNombre`, `primerApellido`, `segundoApellido`, `correo`, `estaActivoRolCoordinador` | DB |
+| T-VIEW-02 | R4: consumidores de `idFacultad` | — | `CoordinadorJpaRepository`, `InstitutionalScopeJpaRepository` | Ningún resultado cambia salvo el esperado en T-121-05 | IT |
+| T-FRONT-01 | Servicio: ruta de edición | — | `updateCoordinador(id, payload)` | `PUT /decano/coordinadores/{id}` con el cuerpo tipado | Jasmine (`HttpTestingController`) |
+| T-FRONT-02 | Servicio: ruta de estado | — | `setCoordinadorEstado(id, false)` | `PATCH /decano/coordinadores/{id}/estado` con `{estaActivo:false}`; **no** se llama a `/toggle` | Jasmine |
+| T-FRONT-03 | Modal de edición | Coordinador con datos | Abrir, cambiar un campo y guardar | Valida al escribir; no envía documento ni tipo; emite el payload | Jasmine (componente) |
+| T-FRONT-04 | Confirmación de estado | Coordinador activo | Pulsar Desactivar y confirmar | Llama a `setCoordinadorEstado(id, false)`; en éxito muestra `mensajeUsuario` | Jasmine |
+| T-FRONT-05 | Advertencia de sincronización | Respuesta con `sincronizacionIdentidad='PENDIENTE'` | Guardar | Toast de advertencia con el `mensajeUsuario` del backend | Jasmine |
+| T-FRONT-06 | Errores 404/409 | Respuestas 404 y 409 con `message` | Guardar o cambiar estado | Muestra el `message` tal cual; sin comparar textos ni parsear errores | Jasmine |
+| T-FRONT-07 | Reglas de UI del proyecto | — | Revisión estática y `npm run build` | `OnPush`, `input()`/`output()`, sin `@Input`/`@Output`, sin `any` nuevos, sin `setInterval`, sin JWT en `localStorage` | Jasmine, lint, build |
+| T-ARCH-01 | Arquitectura | — | ArchUnit existente | `application` sin `infrastructure`; controlador sin JPA; los use cases son POJOs cableados en `CoordinadorGestionWiringConfiguration` | ArchUnit |
+| T-WIRE-01 | Wiring | — | Test de contexto / `*WiringConfigurationTest` | Los beans nuevos existen; `DecanoWiringConfiguration` no cambia | Slice |
+| T-SEC-01 | Reglas HTTP | Tokens de los 5 roles | `PUT` y `PATCH` | DECANO pasa a use case; COORDINADOR, DOCENTE y ESTUDIANTE → 403; sin token → 401; ADMINISTRADOR llega al use case y recibe 403 (T-121-09) | `RbacSecurityFilterChainTest` ⚠️ |
+| T-CONTRACT-01 | Contrato del SP | — | `SqlStoredProcedureContractIT` | Los dos SPs devuelven las columnas declaradas (`idUsuario`, `personaSinRolesActivos`) | IT |
+
+---
+
+## 2. Pruebas por repositorio y orden de ejecución
+
+### 2.1 Base de Datos (fase 03 RED → 04 GREEN)
+- Archivos nuevos: `test/test_usp_actualizar_coordinador.sql` y `test/test_usp_cambiar_estado_coordinador.sql`. Se amplía `test/test_usp_crear_coordinador.sql` (T-120R-02). **No** se edita `test_suite.sql` (archivo caliente); se agrega al final de la fase 05, después del merge de HU035/036.
+- Cada prueba corre en transacción con rollback y cierra con `@@TRANCOUNT = 0`.
+- Concurrencia: `scripts/database/tests/test_hu122_concurrencia.ps1`.
+- RED esperado: los SPs y las columnas no existen → fallan por ausencia.
+- Comando de verificación:
+  ```powershell
+  Get-Content -Path .\GestioAsistenciaDB\test\test_usp_cambiar_estado_coordinador.sql -Raw | docker exec -i sql_server_asistencias /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "TuPasswordSeguro123" -C -b
+  ```
+
+### 2.2 Backend (fase 03 RED → 04 GREEN)
+- Unit: `ActualizarCoordinadorUseCaseImplTest`, `CambiarEstadoCoordinadorUseCaseImplTest` (todas las ramas: facultad vacía, PENDIENTE, `personaSinRolesActivos` true/false), `CrearCoordinadorUseCaseImplTest` (T-120R-01), `ConsultarCoordinadoresUseCaseImplTest` (T-121-05).
+- Adapter: `CoordinadorJpaCommandPatternTest` ampliado (SQL de los dos SPs y parámetros); `CoordinadorJpaRepositoryIT` contra SQL Server.
+- Controller: `DecanoCoordinadorGestionControllerTest` (MockMvc: 200/400/401/403/404/409), validators y mapeo de excepciones (`DbFailureClassifier`).
+- Seguridad: `RbacSecurityFilterChainTest` ⚠️ (después del merge de HU035/036).
+- Identidad: con `FakeKeycloakAdminServer` (de IAM-001). Si IAM-001 no está, se usan puertos *fake* y estas pruebas quedan en `BLOCKED_BY_MISSING_EVIDENCE`, sin relajarlas.
+- Comando: `cmd /c ".\mvnw.cmd test"` y luego `.\mvnw.cmd verify` (JaCoCo LINE ≥ 80 %, BRANCH ≥ 70 %; meta 100 % en los use cases nuevos).
+
+### 2.3 Frontend (fase 03 RED → 04 GREEN)
+- Specs nuevos y ampliados: `dean-management.service.spec.ts`, `dean-coordinadores.component.spec.ts`, `dean-coordinador-edit-modal.component.spec.ts`, `dean-coordinador-estado-modal.component.spec.ts`.
+- Cobertura de ramas: éxito, `PENDIENTE`, errores 400/401/403/404/409/500, datos nulos o vacíos.
+- Comandos: `npm run test:ci`, `npm run build -- --configuration=development`, `npm run verify`.
+
+### 2.4 E2E
+- `scratch/test_hu121.ps1` y `scratch/test_hu122.ps1` (temporales, no se versionan): token del decano en Keycloak, `PUT` y `PATCH` con carga válida (200) e inválida (400/404/409), consulta directa a SQL Server y comprobación de `enabled` en el IdP. Se agregan los casos a `scripts/general/tests/test_all_hus.ps1` en la fase 06.
+
+---
+
+## 3. Registro de RED/GREEN (se completa en las fases 03–05)
+
+| Repo | `RED_SNAPSHOT` (commit, hash, comando, exit code) | `GREEN` (commit, comando, exit code) | Estado |
+|---|---|---|---|
+| GestioAsistenciaDB | — | — | Pendiente |
+| GestioAsistenciaBackend | — | — | Pendiente |
+| GestioAsistenciaFrontend | — | — | Pendiente |
+
+Regla: ninguna prueba se modifica para pasar. Un cambio de prueba exige un registro `TEST_CONTRACT_CONFLICT` con la razón y la aprobación del owner.
+
+---
+
+## 4. Cobertura de criterios
+
+| Criterio | Pruebas |
+|---|---|
+| CA-01 | T-121-01, T-121-03, T-FRONT-01, T-FRONT-03 |
+| CA-02 | T-121-02, T-FRONT-06 |
+| CA-03 | T-122-01, T-122-11, T-122-12, T-122-13 |
+| CA-04 | T-122-04, T-122-12 |
+| CA-05 | T-122-02, T-122-03 |
+| CA-06 | T-121-04, T-121-05, T-122-07 |
+| CA-07 | T-121-10, T-121-11, T-121-12, T-122-11 |
+| CA-08 | T-FRONT-02, T-FRONT-04, T-FRONT-06 |
+| CA-09 | T-120R-01 |
