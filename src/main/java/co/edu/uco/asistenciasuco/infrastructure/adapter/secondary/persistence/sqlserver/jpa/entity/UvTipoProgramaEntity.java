@@ -4,34 +4,48 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.util.UUID;
 import org.hibernate.annotations.Immutable;
 
+import java.util.UUID;
+
+/**
+ * Modelo de persistencia de SOLO LECTURA sobre la vista {@code dbo.uv_tipo_programa} (HU023 / HU154).
+ */
 @Entity
 @Immutable
 @Table(name = "uv_tipo_programa", schema = "dbo")
 public class UvTipoProgramaEntity {
-    @Id @Column(name = "id") private UUID id;
-    @Column(name = "nombre") private String nombre;
-    @Column(name = "codigo") private String codigo;
-    @Column(name = "estaActivoTipoPrograma") private Boolean estaActivoTipoPrograma;
+
+    @Id
+    @Column(name = "id")
+    private UUID id;
+
+    @Column(name = "codigo")
+    private String codigo;
+
+    @Column(name = "nombre")
+    private String nombre;
+
+    @Column(name = "estaActivoTipoPrograma")
+    private boolean estaActivoTipoPrograma;
 
     protected UvTipoProgramaEntity() {
+        // requerido por JPA
     }
 
     public UUID id() {
         return id;
     }
 
-    public String nombre() {
-        return nombre;
-    }
-
     public String codigo() {
         return codigo;
     }
 
-    public Boolean estaActivoTipoPrograma() {
+    public String nombre() {
+        return nombre;
+    }
+
+    public boolean estaActivoTipoPrograma() {
         return estaActivoTipoPrograma;
     }
 }
