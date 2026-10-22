@@ -4,10 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import java.util.UUID;
-import org.hibernate.annotations.Immutable;
 
 @Entity
-@Immutable
 public class SpProgramaAcademicoPaginadoEntity {
     @Id @Column(name = "id") private UUID id;
     @Column(name = "nombrePrograma") private String nombrePrograma;
