@@ -9,7 +9,7 @@ last-reviewed: 2026-10-22
 # PLAN — HU154 + HU023 + HU151 + HU152: Catálogos administrativos (tipos de programa y áreas)
 
 Fase 01 (Planificación y DoR) conforme a `GUIA_METODICA_IMPLEMENTACION_HU.md` y `AGENTS.md`.
-**Dictamen DoR: `NOT_READY`** hasta que el owner resuelva D1–D8 y apruebe `CONTRACT.md`.
+**Dictamen DoR: `READY`** (D1–D8 aprobadas por el owner el 2026-10-22).
 
 ## 1. Identidad y objetivo
 

@@ -1,5 +1,5 @@
 ---
-status: draft
+status: frozen
 type: test-plan
 scope: fullstack-database-backend-frontend
 last-reviewed: 2026-10-22

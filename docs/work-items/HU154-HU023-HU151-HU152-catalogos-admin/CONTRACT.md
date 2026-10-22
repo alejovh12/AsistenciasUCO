@@ -1,5 +1,5 @@
 ---
-status: draft
+status: frozen
 type: contract
 scope: fullstack-database-backend-frontend
 last-reviewed: 2026-10-22
@@ -7,7 +7,7 @@ last-reviewed: 2026-10-22
 
 # CONTRACT — HU154 + HU023 + HU151 + HU152
 
-Estado: **`DRAFT`**, a la espera de la aprobación del owner de D1–D8 (`PLAN.md` §7). Los valores asumen las **recomendaciones** del plan; si el owner decide otra cosa se ajusta antes de congelar.
+Estado: **`FROZEN`** (2026-10-22). El owner aprobó D1–D8 con las recomendaciones del plan.
 
 ## 1. Reglas comunes
 
