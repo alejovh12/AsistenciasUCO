@@ -77,14 +77,14 @@ class CambiarEstadoCoordinadorUseCaseImplTest {
     @Test
     void execute_desactivar_persona_sin_otros_roles_deshabilita_la_cuenta() {
         dbCambiaEstado(false, true);
-        when(sincronizacion.desactivar(eq(USUARIO_COORDINADOR), eq(InstitutionalRole.COORDINADOR), eq(true), any()))
+        when(sincronizacion.desactivar(eq(USUARIO_COORDINADOR), eq(InstitutionalRole.COORDINADOR), eq(true)))
                 .thenReturn(ResultadoSincronizacion.OK);
 
         final ResultadoGestionCoordinadorDomain resultado =
                 useCase.execute(new CambiarEstadoCoordinadorDomain(COORDINADOR, false, DECANO));
 
-        verify(sincronizacion).desactivar(eq(USUARIO_COORDINADOR), eq(InstitutionalRole.COORDINADOR), eq(true), any());
-        verify(sincronizacion, never()).reactivar(any(), any(), any());
+        verify(sincronizacion).desactivar(eq(USUARIO_COORDINADOR), eq(InstitutionalRole.COORDINADOR), eq(true));
+        verify(sincronizacion, never()).reactivar(any(), any());
         assertEquals(COORDINADOR, resultado.idCoordinador());
         assertFalse(resultado.sincronizacionPendiente());
     }
@@ -92,30 +92,30 @@ class CambiarEstadoCoordinadorUseCaseImplTest {
     @Test
     void execute_desactivar_persona_con_otro_rol_activo_no_deshabilita_la_cuenta() {
         dbCambiaEstado(false, false);
-        when(sincronizacion.desactivar(eq(USUARIO_COORDINADOR), eq(InstitutionalRole.COORDINADOR), eq(false), any()))
+        when(sincronizacion.desactivar(eq(USUARIO_COORDINADOR), eq(InstitutionalRole.COORDINADOR), eq(false)))
                 .thenReturn(ResultadoSincronizacion.OK);
 
         useCase.execute(new CambiarEstadoCoordinadorDomain(COORDINADOR, false, DECANO));
 
-        verify(sincronizacion).desactivar(eq(USUARIO_COORDINADOR), eq(InstitutionalRole.COORDINADOR), eq(false), any());
+        verify(sincronizacion).desactivar(eq(USUARIO_COORDINADOR), eq(InstitutionalRole.COORDINADOR), eq(false));
     }
 
     @Test
     void execute_reactivar_habilita_la_cuenta_y_reasigna_el_rol() {
         dbCambiaEstado(true, false);
-        when(sincronizacion.reactivar(eq(USUARIO_COORDINADOR), eq(InstitutionalRole.COORDINADOR), any()))
+        when(sincronizacion.reactivar(eq(USUARIO_COORDINADOR), eq(InstitutionalRole.COORDINADOR)))
                 .thenReturn(ResultadoSincronizacion.OK);
 
         useCase.execute(new CambiarEstadoCoordinadorDomain(COORDINADOR, true, DECANO));
 
-        verify(sincronizacion).reactivar(eq(USUARIO_COORDINADOR), eq(InstitutionalRole.COORDINADOR), any());
-        verify(sincronizacion, never()).desactivar(any(), any(), anyBoolean(), any());
+        verify(sincronizacion).reactivar(eq(USUARIO_COORDINADOR), eq(InstitutionalRole.COORDINADOR));
+        verify(sincronizacion, never()).desactivar(any(), any(), anyBoolean());
     }
 
     @Test
     void execute_con_identidad_pendiente_responde_exito_con_advertencia_iam_002() {
         dbCambiaEstado(false, true);
-        when(sincronizacion.desactivar(eq(USUARIO_COORDINADOR), eq(InstitutionalRole.COORDINADOR), eq(true), any()))
+        when(sincronizacion.desactivar(eq(USUARIO_COORDINADOR), eq(InstitutionalRole.COORDINADOR), eq(true)))
                 .thenReturn(ResultadoSincronizacion.PENDIENTE);
         when(messageCatalog.getUserMessage("IAM_002")).thenReturn(MENSAJE_IAM_002);
 

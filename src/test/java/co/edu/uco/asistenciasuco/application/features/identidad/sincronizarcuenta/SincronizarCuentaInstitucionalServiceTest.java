@@ -30,7 +30,6 @@ import static org.mockito.Mockito.when;
 class SincronizarCuentaInstitucionalServiceTest {
 
     private static final UUID ID_USUARIO = UUID.randomUUID();
-    private static final UUID CORRELACION = UUID.randomUUID();
     private static final String ID_EXTERNO = "kc-user-1";
     private static final InstitutionalRole ROL = InstitutionalRole.COORDINADOR;
 
@@ -50,7 +49,7 @@ class SincronizarCuentaInstitucionalServiceTest {
     void desactivar_persona_sin_otros_roles_retira_el_rol_y_deshabilita_la_cuenta() {
         cuentaExiste();
 
-        final ResultadoSincronizacion resultado = service.desactivar(ID_USUARIO, ROL, true, CORRELACION);
+        final ResultadoSincronizacion resultado = service.desactivar(ID_USUARIO, ROL, true);
 
         assertEquals(ResultadoSincronizacion.OK, resultado);
         final InOrder orden = inOrder(identityProvider);
@@ -63,7 +62,7 @@ class SincronizarCuentaInstitucionalServiceTest {
     void desactivar_persona_con_otro_rol_activo_solo_retira_el_rol() {
         cuentaExiste();
 
-        final ResultadoSincronizacion resultado = service.desactivar(ID_USUARIO, ROL, false, CORRELACION);
+        final ResultadoSincronizacion resultado = service.desactivar(ID_USUARIO, ROL, false);
 
         assertEquals(ResultadoSincronizacion.OK, resultado);
         verify(identityProvider).retirarRol(ID_EXTERNO, ROL);
@@ -76,7 +75,7 @@ class SincronizarCuentaInstitucionalServiceTest {
     void reactivar_habilita_la_cuenta_y_reasigna_el_rol() {
         cuentaExiste();
 
-        final ResultadoSincronizacion resultado = service.reactivar(ID_USUARIO, ROL, CORRELACION);
+        final ResultadoSincronizacion resultado = service.reactivar(ID_USUARIO, ROL);
 
         assertEquals(ResultadoSincronizacion.OK, resultado);
         final InOrder orden = inOrder(identityProvider);
@@ -91,7 +90,7 @@ class SincronizarCuentaInstitucionalServiceTest {
         cuentaExiste();
         final ActualizarCuentaIdentidadDTO datos = new ActualizarCuentaIdentidadDTO("ana@uco.edu.co", "Ana", "Perez");
 
-        final ResultadoSincronizacion resultado = service.actualizarDatos(ID_USUARIO, datos, CORRELACION);
+        final ResultadoSincronizacion resultado = service.actualizarDatos(ID_USUARIO, datos);
 
         assertEquals(ResultadoSincronizacion.OK, resultado);
         verify(identityProvider).actualizarDatosCuenta(ID_EXTERNO, datos);
@@ -103,10 +102,10 @@ class SincronizarCuentaInstitucionalServiceTest {
     void cuenta_inexistente_en_el_idp_registra_el_desfase_y_devuelve_pendiente_sin_mas_llamadas() {
         when(identityProvider.buscarCuentaPorIdUsuario(ID_USUARIO)).thenReturn(Optional.empty());
 
-        final ResultadoSincronizacion resultado = service.desactivar(ID_USUARIO, ROL, true, CORRELACION);
+        final ResultadoSincronizacion resultado = service.desactivar(ID_USUARIO, ROL, true);
 
         assertEquals(ResultadoSincronizacion.PENDIENTE, resultado);
-        verify(desfases).registrar(eq(ID_USUARIO), eq("DESACTIVAR"), anyString(), eq(CORRELACION));
+        verify(desfases).registrar(eq(ID_USUARIO), eq("DESACTIVAR"), anyString());
         verify(identityProvider, never()).retirarRol(anyString(), any());
         verify(identityProvider, never()).deshabilitarCuenta(anyString());
     }
@@ -116,10 +115,10 @@ class SincronizarCuentaInstitucionalServiceTest {
         when(identityProvider.buscarCuentaPorIdUsuario(ID_USUARIO))
                 .thenThrow(new IdentityProviderPort.IdentityProviderException("Keycloak no responde"));
 
-        final ResultadoSincronizacion resultado = service.reactivar(ID_USUARIO, ROL, CORRELACION);
+        final ResultadoSincronizacion resultado = service.reactivar(ID_USUARIO, ROL);
 
         assertEquals(ResultadoSincronizacion.PENDIENTE, resultado);
-        verify(desfases).registrar(ID_USUARIO, "REACTIVAR", "Keycloak no responde", CORRELACION);
+        verify(desfases).registrar(ID_USUARIO, "REACTIVAR", "Keycloak no responde");
     }
 
     @Test
@@ -127,10 +126,10 @@ class SincronizarCuentaInstitucionalServiceTest {
         cuentaExiste();
         doThrow(new IdentityProviderPort.IdentityProviderException("HTTP 500")).when(identityProvider).deshabilitarCuenta(ID_EXTERNO);
 
-        final ResultadoSincronizacion resultado = service.desactivar(ID_USUARIO, ROL, true, CORRELACION);
+        final ResultadoSincronizacion resultado = service.desactivar(ID_USUARIO, ROL, true);
 
         assertEquals(ResultadoSincronizacion.PENDIENTE, resultado);
-        verify(desfases).registrar(ID_USUARIO, "DESACTIVAR", "HTTP 500", CORRELACION);
+        verify(desfases).registrar(ID_USUARIO, "DESACTIVAR", "HTTP 500");
     }
 
     @Test
@@ -140,10 +139,10 @@ class SincronizarCuentaInstitucionalServiceTest {
         doThrow(new IdentityProviderPort.IdentityProviderException("conflicto de correo"))
                 .when(identityProvider).actualizarDatosCuenta(ID_EXTERNO, datos);
 
-        final ResultadoSincronizacion resultado = service.actualizarDatos(ID_USUARIO, datos, CORRELACION);
+        final ResultadoSincronizacion resultado = service.actualizarDatos(ID_USUARIO, datos);
 
         assertEquals(ResultadoSincronizacion.PENDIENTE, resultado);
-        verify(desfases).registrar(ID_USUARIO, "ACTUALIZAR", "conflicto de correo", CORRELACION);
+        verify(desfases).registrar(ID_USUARIO, "ACTUALIZAR", "conflicto de correo");
     }
 
     @Test
@@ -152,15 +151,15 @@ class SincronizarCuentaInstitucionalServiceTest {
         doThrow(new IdentityProviderPort.IdentityProviderException("Operacion no soportada por este proveedor."))
                 .when(identityProvider).retirarRol(ID_EXTERNO, ROL);
 
-        assertEquals(ResultadoSincronizacion.PENDIENTE, service.desactivar(ID_USUARIO, ROL, false, CORRELACION));
-        verify(desfases).registrar(eq(ID_USUARIO), eq("DESACTIVAR"), anyString(), eq(CORRELACION));
+        assertEquals(ResultadoSincronizacion.PENDIENTE, service.desactivar(ID_USUARIO, ROL, false));
+        verify(desfases).registrar(eq(ID_USUARIO), eq("DESACTIVAR"), anyString());
     }
 
     @Test
     void si_el_registro_del_desfase_falla_no_se_propaga_y_el_resultado_sigue_siendo_pendiente() {
         when(identityProvider.buscarCuentaPorIdUsuario(ID_USUARIO)).thenReturn(Optional.empty());
-        doThrow(new IllegalStateException("tabla no disponible")).when(desfases).registrar(any(), anyString(), anyString(), any());
+        doThrow(new IllegalStateException("tabla no disponible")).when(desfases).registrar(any(), anyString(), anyString());
 
-        assertEquals(ResultadoSincronizacion.PENDIENTE, service.desactivar(ID_USUARIO, ROL, true, CORRELACION));
+        assertEquals(ResultadoSincronizacion.PENDIENTE, service.desactivar(ID_USUARIO, ROL, true));
     }
 }

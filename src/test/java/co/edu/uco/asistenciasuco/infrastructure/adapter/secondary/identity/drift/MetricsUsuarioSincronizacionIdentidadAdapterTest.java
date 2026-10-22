@@ -23,9 +23,9 @@ class MetricsUsuarioSincronizacionIdentidadAdapterTest {
 
     @Test
     void registrar_incrementa_el_contador_de_la_operacion() {
-        adapter.registrar(UUID.randomUUID(), "DESACTIVAR", "HTTP 500", UUID.randomUUID());
-        adapter.registrar(UUID.randomUUID(), "DESACTIVAR", "HTTP 503", UUID.randomUUID());
-        adapter.registrar(UUID.randomUUID(), "ACTUALIZAR", "conflicto de correo", UUID.randomUUID());
+        adapter.registrar(UUID.randomUUID(), "DESACTIVAR", "HTTP 500");
+        adapter.registrar(UUID.randomUUID(), "DESACTIVAR", "HTTP 503");
+        adapter.registrar(UUID.randomUUID(), "ACTUALIZAR", "conflicto de correo");
 
         assertEquals(2.0, contador("DESACTIVAR"));
         assertEquals(1.0, contador("ACTUALIZAR"));
@@ -34,7 +34,7 @@ class MetricsUsuarioSincronizacionIdentidadAdapterTest {
 
     @Test
     void registrar_tolera_valores_nulos_sin_lanzar() {
-        assertDoesNotThrow(() -> adapter.registrar(null, "REACTIVAR", null, null));
+        assertDoesNotThrow(() -> adapter.registrar(null, "REACTIVAR", null));
         assertEquals(1.0, contador("REACTIVAR"));
     }
 }

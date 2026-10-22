@@ -19,6 +19,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -188,10 +189,18 @@ class DecanoCoordinadorGestionControllerTest {
     }
 
     @Test
-    void la_ruta_toggle_ya_no_existe() throws Exception {
-        mvc.perform(patch(RUTA + COORDINADOR + "/toggle").contentType("application/json").content("{}"))
-                .andExpect(status().isNotFound());
+    void la_ruta_toggle_ya_no_existe() {
+        final boolean existeToggle = java.util.Arrays.stream(DecanoCoordinadorGestionController.class.getDeclaredMethods())
+                .map(metodo -> metodo.getAnnotation(org.springframework.web.bind.annotation.PatchMapping.class))
+                .filter(java.util.Objects::nonNull)
+                .flatMap(anotacion -> java.util.Arrays.stream(anotacion.value()))
+                .anyMatch(ruta -> ruta.contains("toggle"));
+        final boolean portalTienePatch = java.util.Arrays.stream(DecanoPortalController.class.getDeclaredMethods())
+                .anyMatch(metodo -> metodo.isAnnotationPresent(org.springframework.web.bind.annotation.PatchMapping.class));
 
+        // El estado se cambia con PATCH .../estado y estaActivo explicito; el stub 501 del portal tambien se retiro.
+        assertFalse(existeToggle);
+        assertFalse(portalTienePatch);
         verifyNoInteractions(cambiarEstado);
     }
 }

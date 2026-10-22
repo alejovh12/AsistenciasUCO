@@ -76,13 +76,13 @@ class ActualizarCoordinadorUseCaseImplTest {
     @Test
     void execute_actualiza_en_db_con_la_facultad_del_decano_y_luego_sincroniza_la_cuenta() {
         dbActualiza();
-        when(sincronizacion.actualizarDatos(eq(USUARIO_COORDINADOR), any(ActualizarCuentaIdentidadDTO.class), any()))
+        when(sincronizacion.actualizarDatos(eq(USUARIO_COORDINADOR), any(ActualizarCuentaIdentidadDTO.class)))
                 .thenReturn(ResultadoSincronizacion.OK);
 
         final ResultadoGestionCoordinadorDomain resultado = useCase.execute(dominio());
 
         final ArgumentCaptor<ActualizarCuentaIdentidadDTO> captor = ArgumentCaptor.forClass(ActualizarCuentaIdentidadDTO.class);
-        verify(sincronizacion).actualizarDatos(eq(USUARIO_COORDINADOR), captor.capture(), any());
+        verify(sincronizacion).actualizarDatos(eq(USUARIO_COORDINADOR), captor.capture());
         assertEquals("ana@uco.edu.co", captor.getValue().correo());
         assertEquals("ANA", captor.getValue().primerNombre());
         assertEquals("PEREZ", captor.getValue().primerApellido());
@@ -94,7 +94,7 @@ class ActualizarCoordinadorUseCaseImplTest {
     @Test
     void execute_con_identidad_pendiente_responde_exito_con_advertencia_iam_002() {
         dbActualiza();
-        when(sincronizacion.actualizarDatos(eq(USUARIO_COORDINADOR), any(ActualizarCuentaIdentidadDTO.class), any()))
+        when(sincronizacion.actualizarDatos(eq(USUARIO_COORDINADOR), any(ActualizarCuentaIdentidadDTO.class)))
                 .thenReturn(ResultadoSincronizacion.PENDIENTE);
         when(messageCatalog.getUserMessage("IAM_002")).thenReturn(MENSAJE_IAM_002);
 
