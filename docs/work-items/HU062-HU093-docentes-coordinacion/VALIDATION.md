@@ -43,3 +43,14 @@ Se crearon en el Keycloak compartido las cuentas `e2e.hu091.docente@uco.edu.co` 
 - `GET /api/v1/docentes` sin ámbito institucional (TD nueva, ver PLAN §13).
 - TD-015: si Keycloak falla después del commit, el vínculo queda sin cuenta; reintento idempotente (D14). Reconciliación formal en IAM-001.
 - Cierre documental en Infra (`HU-CATALOG.md`) y `CLOSURE.md`: al terminar HU092/HU093.
+
+## Tanda 2 — HU092 (editar tipo de vinculación y nombres)
+
+| Capa | Evidencia | Resultado |
+|---|---|---|
+| DB | `test_usp_actualizar_docente_programa` (T-092-01..05); `test_contract_closure`, `test_public_objects`, `test_usp_vincular_docente_programa` tras el cambio | PASS |
+| Backend | `Actualizar*Test`, `CoordinadorDocentesControllerTest` (13), `DocenteProgramaJpaRepositoryTest`, `DocenteProgramaWiringConfigurationTest`, `RbacSecurityFilterChainTest` (44), ArchUnit | 136 tests PASS |
+| Frontend | `ng test` completo | 853 specs PASS |
+| E2E | `scratch/test_hu092.ps1` con JWT real: PUT 200 con releída de DB, correo/documento intactos, `sqlcmd` confirma nombres, el docente sigue iniciando sesión, `{}` 400, tipo inexistente 400 `ERR_TIPO_VINCULACION_INVALIDO`, sin vínculo 404, decano 403 | PASS (10 comprobaciones) |
+
+Notas: los nombres editados **no** se propagan a Keycloak (D11; deuda hasta IAM-001). El E2E creó la cuenta `e2e.hu092.docente@uco.edu.co` en el Keycloak compartido (retirar manualmente). La suite completa de backend, `mvnw verify`, `npm run verify` e `infra.ps1 verify` se re-ejecutan en el cierre final tras HU093.
