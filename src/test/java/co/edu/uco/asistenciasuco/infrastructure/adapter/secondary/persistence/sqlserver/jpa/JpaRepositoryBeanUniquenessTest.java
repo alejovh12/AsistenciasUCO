@@ -30,7 +30,7 @@ class JpaRepositoryBeanUniquenessTest {
     // 31 repositories de Port (MAINT-003F: + SesionProcedenciaJpaRepository; LB-004D: + SoporteArchivoJpaRepository,
     // SolicitudRevisionDocenteJpaRepository y AsistenciaSesionEstudianteJpaRepository) + AuditEventJpaRepository
     // (@Repository sin Port, TD-010 OPTION A).
-    private static final int EXPECTED_REPOSITORIES = 32;
+    private static final int EXPECTED_REPOSITORIES = 34;
 
     @Test
     void cada_port_tiene_exactamente_un_repository_activo_con_provider_sqlserver() {
