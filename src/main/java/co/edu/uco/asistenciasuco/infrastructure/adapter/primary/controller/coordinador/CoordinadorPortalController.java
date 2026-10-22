@@ -65,12 +65,6 @@ public final class CoordinadorPortalController {
         this.authenticatedUserResolver = authenticatedUserResolver;
     }
 
-    @GetMapping("/docentes")
-    public ResponseEntity<ApiListResponse<Void>> consultarDocentesPrograma() { throw unavailable(); }
-    @PostMapping("/docentes")
-    public ResponseEntity<ApiDataResponse<Void>> crearDocente() { throw unavailable(); }
-    @PatchMapping("/docentes/{id}/estado")
-    public ResponseEntity<ApiDataResponse<Void>> toggleEstadoDocente(@PathVariable final UUID id) { throw unavailable(); }
 
     @GetMapping("/planes-estudio")
     public ResponseEntity<ApiListResponse<PlanEstudioDTO>> consultarPlanesEstudio() {

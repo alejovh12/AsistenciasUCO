@@ -1,11 +1,8 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
-import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.AsignarDocenteAGrupoRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarAsignacionesAcademicasDocenteRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarDocentePorIdRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarSesionRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarDocenteDesdeUsuarioRepositoryDTO;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.*;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.mapper.HydratedViewRow;
@@ -76,19 +73,6 @@ class JpaQueryAdapterContractTest {
         assertEquals(Optional.empty(), repository.consultarDocentePorId(new ConsultarDocentePorIdRepositoryDTO(ID)));
         assertThrows(CrosscuttingException.class, () -> repository.consultarDocentePorId(null));
         assertThrows(CrosscuttingException.class, () -> repository.consultarAsignacionesAcademicas(null));
-    }
-
-    @Test
-    void comandos_de_docente_sin_contrato_db_publico_no_ejecutan_nada() {
-        final DocenteJpaRepository repository = new DocenteJpaRepository(manager);
-
-        assertThrows(FeatureUnavailableException.class, () -> repository.registrarDocenteDesdeUsuario(
-                new RegistrarDocenteDesdeUsuarioRepositoryDTO(ID)));
-        assertThrows(FeatureUnavailableException.class, () -> repository.asignarDocenteAGrupo(
-                new AsignarDocenteAGrupoRepositoryDTO()));
-        assertThrows(CrosscuttingException.class, () -> repository.registrarDocenteDesdeUsuario(null));
-        assertThrows(CrosscuttingException.class, () -> repository.asignarDocenteAGrupo(null));
-        verifyNoInteractions(manager);
     }
 
     @Test

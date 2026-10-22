@@ -39,6 +39,7 @@ public final class DbExceptionTranslator {
             UsuarioErrorCode.ERR_USUARIO_NO_EXISTE,
             EstudianteErrorCode.ERR_ESTUDIANTE_NO_EXISTE,
             DocenteErrorCode.ERR_DOCENTE_NO_EXISTE,
+            DocenteErrorCode.ERR_DOCENTE_NO_VINCULADO_PROGRAMA,
             GrupoErrorCode.ERR_GRUPO_NO_EXISTE,
             TipoIdentificacionErrorCode.ERR_TIPO_IDENTIFICACION_NO_EXISTE,
             SesionErrorCode.ERR_SESION_NO_EXISTE,
@@ -58,12 +59,18 @@ public final class DbExceptionTranslator {
             DocenteErrorCode.ERR_DOCENTE_INACTIVO,
             DocenteErrorCode.ERR_DOCENTE_YA_REGISTRADO,
             CoordinadorErrorCode.COO_001,
+            DocenteErrorCode.ERR_PERSONA_YA_REGISTRADA,
+            DocenteErrorCode.ERR_DOCENTE_YA_VINCULADO_PROGRAMA,
+            DocenteErrorCode.ERR_DOCENTE_SIN_VINCULO_ACTIVO,
             CommonErrorCode.CONFLICT
     );
     private static final Set<ErrorDefinition> VALIDATION_CODES = Set.of(
             UsuarioErrorCode.ERR_NOMBRE_PERSONA_INVALIDO,
             UsuarioErrorCode.ERR_PASSWORD_POLITICA_INVALIDA,
             AsistenciaErrorCode.ERR_ESTADO_ASISTENCIA_INVALIDO,
+            DocenteErrorCode.ERR_TIPO_VINCULACION_INVALIDO,
+            DocenteErrorCode.ERR_MODO_VINCULACION_INVALIDO,
+            DocenteErrorCode.ERR_BUSQUEDA_CANDIDATOS_CORTA,
             CommonErrorCode.VALIDATION_ERROR
     );
 

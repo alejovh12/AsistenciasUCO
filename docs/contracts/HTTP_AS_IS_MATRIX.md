@@ -125,9 +125,11 @@ Extraído de annotations presentes; excluye endpoints de framework (Actuator). S
 | POST | `/api/v1/estudiante/asistencia-qr` | [AsistenciaQrController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/asistencia/AsistenciaQrController.java) |
 | GET | `/api/v1/grupos/{grupoId}/asistencias` | [AsistenciaQueryController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/asistencia/AsistenciaQueryController.java) |
 | POST | `/api/v1/asistencias/consultas/grupo` | [AsistenciaQueryController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/asistencia/AsistenciaQueryController.java) |
-| GET | `/api/v1/coordinador/docentes` | [CoordinadorPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/coordinador/CoordinadorPortalController.java) |
-| POST | `/api/v1/coordinador/docentes` | [CoordinadorPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/coordinador/CoordinadorPortalController.java) |
-| PATCH | `/api/v1/coordinador/docentes/{id}/estado` | [CoordinadorPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/coordinador/CoordinadorPortalController.java) |
+| GET | `/api/v1/coordinador/docentes` | [CoordinadorDocentesController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/coordinador/CoordinadorDocentesController.java) |
+| GET | `/api/v1/coordinador/docentes/candidatos` | [CoordinadorDocentesController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/coordinador/CoordinadorDocentesController.java) |
+| POST | `/api/v1/coordinador/docentes` | [CoordinadorDocentesController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/coordinador/CoordinadorDocentesController.java) |
+| PUT | `/api/v1/coordinador/docentes/{idDocente}` | [CoordinadorDocentesController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/coordinador/CoordinadorDocentesController.java) |
+| PATCH | `/api/v1/coordinador/docentes/{idDocente}/estado` | [CoordinadorDocentesController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/coordinador/CoordinadorDocentesController.java) |
 | GET | `/api/v1/coordinador/planes-estudio` | [CoordinadorPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/coordinador/CoordinadorPortalController.java) |
 | POST | `/api/v1/coordinador/planes-estudio` | [CoordinadorPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/coordinador/CoordinadorPortalController.java) |
 | PUT | `/api/v1/coordinador/planes-estudio/{id}` | [CoordinadorPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/coordinador/CoordinadorPortalController.java) |
@@ -161,8 +163,6 @@ Extraído de annotations presentes; excluye endpoints de framework (Actuator). S
 | POST | `/api/v1/docentes/consultas/id` | [DocenteController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/docente/DocenteController.java) |
 | GET | `/api/v1/docentes/{docenteId}/asignaciones` | [DocenteController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/docente/DocenteController.java) |
 | POST | `/api/v1/docentes/consultas/asignaciones` | [DocenteController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/docente/DocenteController.java) |
-| POST | `/api/v1/docentes` | [DocenteController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/docente/DocenteController.java) |
-| POST | `/api/v1/docentes/asignaciones/grupo` | [DocenteController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/docente/DocenteController.java) |
 | GET | `/api/v1/docente/reclamos` | [DocentePortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/docente/DocentePortalController.java) |
 | GET | `/api/v1/docente/reclamos/{id}` | [DocentePortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/docente/DocentePortalController.java) |
 | PATCH | `/api/v1/docente/reclamos/{id}` | [DocentePortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/docente/DocentePortalController.java) |
@@ -198,6 +198,7 @@ Extraído de annotations presentes; excluye endpoints de framework (Actuator). S
 | GET | `/api/v1/tipos-programa` | [CatalogoProgramaController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/tipoprograma/CatalogoProgramaController.java) |
 | GET | `/api/v1/modalidades-programa` | [CatalogoProgramaController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/tipoprograma/CatalogoProgramaController.java) |
 | GET | `/api/v1/jornadas-programa` | [CatalogoProgramaController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/tipoprograma/CatalogoProgramaController.java) |
+| GET | `/api/v1/tipos-vinculacion` | [TipoVinculacionController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/tipovinculacion/TipoVinculacionController.java) |
 | GET | `/api/v1/usuarios/perfil` | [UsuarioController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/usuario/UsuarioController.java) |
 | PUT | `/api/v1/usuarios/perfil` | [UsuarioController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/usuario/UsuarioController.java) |
 | POST | `/api/v1/usuarios` | [UsuarioController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/usuario/UsuarioController.java) |

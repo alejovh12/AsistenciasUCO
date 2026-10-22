@@ -3,15 +3,11 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.doce
 
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
-import co.edu.uco.asistenciasuco.application.features.docente.asignardocenteagrupo.primaryports.AsignarDocenteAGrupoInputPort;
-import co.edu.uco.asistenciasuco.application.features.docente.asignardocenteagrupo.primaryports.dto.AsignarDocenteAGrupoResultadoDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignacionesacademicas.primaryports.ConsultarAsignacionesAcademicasDocenteInputPort;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignacionesacademicas.primaryports.dto.DocenteAsignacionAcademicaDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardocentes.primaryports.ConsultarDocentesInputPort;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardocentes.primaryports.dto.DocenteIdentidadDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardocenteporid.primaryports.ConsultarDocentePorIdInputPort;
-import co.edu.uco.asistenciasuco.application.features.docente.registrardocentedesdeusuario.primaryports.RegistrarDocenteDesdeUsuarioInputPort;
-import co.edu.uco.asistenciasuco.application.features.docente.registrardocentedesdeusuario.primaryports.dto.RegistrarDocenteDesdeUsuarioResultadoDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import org.junit.jupiter.api.AfterEach;
@@ -94,38 +90,6 @@ class DocenteControllerTest {
                 .andExpect(jsonPath("$.datos[0].idGrupo").value(GRUPO.toString()));
     }
 
-    @Test
-    void registrar_y_asignar_responden_sin_mensaje_tecnico() throws Exception {
-        CorrelationIdContext.set(CORRELACION_CONTEXTO);
-
-        mockMvc().perform(post("/api/v1/docentes")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "usuario": "%s"
-                                }
-                                """.formatted(USUARIO)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.exitoso").value(true))
-                .andExpect(jsonPath("$.mensajeUsuario").value("Docente registrado."))
-                .andExpect(jsonPath("$.idCorrelacion").doesNotExist())
-                .andExpect(jsonPath("$.mensajeTecnicoResultado").doesNotExist());
-
-        mockMvc().perform(post("/api/v1/docentes/asignaciones/grupo")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "docente": "%s",
-                                  "grupo": "%s"
-                                }
-                                """.formatted(DOCENTE, GRUPO)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exitoso").value(true))
-                .andExpect(jsonPath("$.mensajeUsuario").value("Docente asignado."))
-                .andExpect(jsonPath("$.idCorrelacion").doesNotExist())
-                .andExpect(jsonPath("$.mensajeTecnicoResultado").doesNotExist());
-    }
-
     private MockMvc mockMvc() {
         return mockMvc(dto -> identidad());
     }
@@ -133,18 +97,12 @@ class DocenteControllerTest {
     private MockMvc mockMvc(final ConsultarDocentePorIdInputPort consultarPorId) {
         final ConsultarDocentesInputPort consultarDocentes = () -> List.of(identidad());
         final ConsultarAsignacionesAcademicasDocenteInputPort consultarAsignaciones = dto -> List.of(asignacion());
-        final RegistrarDocenteDesdeUsuarioInputPort registrar =
-                dto -> new RegistrarDocenteDesdeUsuarioResultadoDTO(true, "Docente registrado.");
-        final AsignarDocenteAGrupoInputPort asignar =
-                dto -> new AsignarDocenteAGrupoResultadoDTO(true, "Docente asignado.");
 
         return MockMvcBuilders
                 .standaloneSetup(new DocenteController(
                         consultarDocentes,
                         consultarPorId,
-                        consultarAsignaciones,
-                        registrar,
-                        asignar
+                        consultarAsignaciones
                 ))
                 .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty()))
                 .build();
