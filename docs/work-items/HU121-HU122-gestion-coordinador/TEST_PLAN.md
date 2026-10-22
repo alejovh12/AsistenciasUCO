@@ -210,4 +210,17 @@ Regla: ninguna prueba se modifica para pasar. Un cambio de prueba exige un regis
 - **Nota de entorno:** el `.env` de Infra y el del backend traen valores distintos de `KEYCLOAK_ADMIN_CLIENT_SECRET`; para el backend vale el de `GestioAsistenciaBackend/.env`. Cargar primero Infra y después el del backend.
 - **No cubierto por el E2E:** coordinador de **otra facultad** (el entorno canónico tiene una sola; está cubierto en DB, T-121-04/T-122-07), falla del IdP con respuesta `IAM_002` (cubierta con el servidor falso del adapter y los unit tests), concurrencia y la UI.
 
+### 6.5 Validación de la pantalla en el navegador integrado (2026-10-22)
+
+- **Montaje:** frontend de la rama en `:4200` (Keycloak solo admite ese origen; el frontend original se detuvo y se restauró con `infra.ps1 restart-frontend`) apuntando a un backend de la rama en `:8091` (`env.js` temporal, revertido). Login real como `decano.ingenieria@uco.edu.co`.
+- **Verificado en `/app/decano/coordinadores`:**
+  - La lista muestra los botones **Editar** y **Desactivar** y, por primera vez, el coordinador **sin programa** de la facultad (tarjeta "Sin Programa Asignado").
+  - **Editar:** el modal abre precargado, muestra el documento como no editable, un correo inválido deshabilita **Guardar cambios** y muestra "Ingresa un correo electrónico válido."; con datos válidos guarda, cierra el modal y la tarjeta se actualiza (nombre y correo nuevos); DB y Keycloak coinciden.
+  - **Desactivar / Reactivar:** el modal de confirmación nombra a la persona; tras confirmar la tarjeta pasa a INACTIVO / ACTIVO; DB `0|0` y Keycloak `enabled=false` al desactivar, y al revés al reactivar.
+  - **Regla D3:** desactivar al coordinador con programa activo devuelve 409, el modal se cierra, el coordinador sigue ACTIVO y se muestra el aviso institucional *"No se puede desactivar al coordinador mientras tenga un programa activo a cargo. Reasigne o desactive el programa primero."*
+- **Bug que solo apareció en la UI** (corregido en `a5ade63`): el 409 llegaba como el mensaje genérico *"La operacion genera un conflicto con el estado actual."* porque `COO_001` se clasificaba como `CommonErrorCode.CONFLICT`. Ahora tiene su propio `CoordinadorErrorCode.COO_001` (clasificador **y** conjunto `CONFLICT_CODES` del `DbExceptionTranslator`; con solo el clasificador habría dado un 500, lo atrapó `COO_PAT_008`). Se ajustó mi prueba del clasificador, que fijaba el código genérico.
+- **Ruido preexistente, no de este WI:** la página dispara `GET /docentes` y `GET /coordinador/docentes` (selector de directorio) y ambos responden 403 para el decano.
+- **Limpieza:** el coordinador de prueba se borró de DB y Keycloak; mis procesos (`:8091` y el frontend de la rama) quedaron detenidos y el `:4200` original restaurado.
+- **No validado en UI:** el aviso de identidad pendiente (`IAM_002`) y la pantalla en móvil; el estado de carga y los errores de red se cubren con specs.
+
 - **Pendiente de backend:** `RbacSecurityFilterChainTest` (T-SEC-01, archivo caliente de HU035/036), ITs contra SQL Server (`CoordinadorJpaRepositoryIT`, T-VIEW-02), `verify -Pintegration`, JaCoCo y la prueba de wiring (T-WIRE-01).
