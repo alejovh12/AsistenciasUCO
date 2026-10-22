@@ -1,5 +1,9 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.primaryports.ActualizarDocenteProgramaInputPort;
+import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.primaryports.interactor.ActualizarDocenteProgramaInteractor;
+import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.usecase.ActualizarDocenteProgramaUseCase;
+import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.usecase.impl.ActualizarDocenteProgramaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.primaryports.ConsultarCandidatosDocenteInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.primaryports.interactor.ConsultarCandidatosDocenteInteractor;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.usecase.ConsultarCandidatosDocenteUseCase;
@@ -56,5 +60,16 @@ public class DocenteProgramaWiringConfiguration {
 
     @Bean VincularDocenteProgramaInputPort vincularDocenteProgramaInputPort(final VincularDocenteProgramaUseCase useCase) {
         return new VincularDocenteProgramaInteractor(useCase);
+    }
+
+    @Bean ActualizarDocenteProgramaUseCase actualizarDocenteProgramaUseCase(
+            final InstitutionalScopePort scopePort,
+            final DocenteProgramaCommandPort commandPort,
+            final DocenteProgramaQueryPort queryPort) {
+        return new ActualizarDocenteProgramaUseCaseImpl(scopePort, commandPort, queryPort);
+    }
+
+    @Bean ActualizarDocenteProgramaInputPort actualizarDocenteProgramaInputPort(final ActualizarDocenteProgramaUseCase useCase) {
+        return new ActualizarDocenteProgramaInteractor(useCase);
     }
 }

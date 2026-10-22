@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador;
 
+import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.primaryports.ActualizarDocenteProgramaInputPort;
+import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.primaryports.dto.ActualizarDocenteProgramaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.DocenteCandidatoDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.DocenteProgramaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.DocentesProgramaPaginaDTO;
@@ -10,7 +12,9 @@ import co.edu.uco.asistenciasuco.application.features.coordinador.vinculardocent
 import co.edu.uco.asistenciasuco.application.features.coordinador.vinculardocenteprograma.primaryports.dto.VincularDocenteProgramaDTO;
 import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationErrorType;
 import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationResultBuilder;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador.request.ActualizarDocenteProgramaRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador.request.VincularDocenteProgramaRequest;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador.validation.ActualizarDocenteProgramaRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador.validation.VincularDocenteProgramaRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
@@ -20,7 +24,9 @@ import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -39,21 +45,25 @@ public final class CoordinadorDocentesController {
     private static final int BUSQUEDA_MAXIMA = 50;
     private static final int BUSQUEDA_CANDIDATOS_MINIMA = 3;
     private static final VincularDocenteProgramaRequestValidator VINCULAR_VALIDATOR = new VincularDocenteProgramaRequestValidator();
+    private static final ActualizarDocenteProgramaRequestValidator ACTUALIZAR_VALIDATOR = new ActualizarDocenteProgramaRequestValidator();
 
     private final ConsultarDocentesProgramaInputPort consultarDocentesProgramaInputPort;
     private final ConsultarCandidatosDocenteInputPort consultarCandidatosDocenteInputPort;
     private final VincularDocenteProgramaInputPort vincularDocenteProgramaInputPort;
+    private final ActualizarDocenteProgramaInputPort actualizarDocenteProgramaInputPort;
     private final AuthenticatedUserResolver authenticatedUserResolver;
 
     public CoordinadorDocentesController(
             final ConsultarDocentesProgramaInputPort consultarDocentesProgramaInputPort,
             final ConsultarCandidatosDocenteInputPort consultarCandidatosDocenteInputPort,
             final VincularDocenteProgramaInputPort vincularDocenteProgramaInputPort,
+            final ActualizarDocenteProgramaInputPort actualizarDocenteProgramaInputPort,
             final AuthenticatedUserResolver authenticatedUserResolver
     ) {
         this.consultarDocentesProgramaInputPort = Objects.requireNonNull(consultarDocentesProgramaInputPort);
         this.consultarCandidatosDocenteInputPort = Objects.requireNonNull(consultarCandidatosDocenteInputPort);
         this.vincularDocenteProgramaInputPort = Objects.requireNonNull(vincularDocenteProgramaInputPort);
+        this.actualizarDocenteProgramaInputPort = Objects.requireNonNull(actualizarDocenteProgramaInputPort);
         this.authenticatedUserResolver = Objects.requireNonNull(authenticatedUserResolver);
     }
 
@@ -119,6 +129,24 @@ public final class CoordinadorDocentesController {
                 request.getPassword(),
                 request.getIdTipoVinculacion()));
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiDataResponse<>(true, resultado));
+    }
+
+    @PutMapping("/{idDocente}")
+    @AuditableOperation(action = "ACTUALIZAR_DOCENTE_PROGRAMA", resourceType = "DOCENTE")
+    public ResponseEntity<ApiDataResponse<DocenteProgramaDTO>> actualizar(
+            @PathVariable("idDocente") final UUID idDocente,
+            @RequestBody final ActualizarDocenteProgramaRequest request
+    ) {
+        RequestValidationGuard.validate(ACTUALIZAR_VALIDATOR.validate(request));
+        final DocenteProgramaDTO resultado = actualizarDocenteProgramaInputPort.execute(new ActualizarDocenteProgramaDTO(
+                authenticatedUserResolver.requireAuthenticatedUserId(),
+                idDocente,
+                request.getIdTipoVinculacion(),
+                trim(request.getPrimerNombre()),
+                trim(request.getSegundoNombre()),
+                trim(request.getPrimerApellido()),
+                trim(request.getSegundoApellido())));
+        return ResponseEntity.ok(new ApiDataResponse<>(true, resultado));
     }
 
     private static String trim(final String valor) {
