@@ -4,6 +4,8 @@ import co.edu.uco.asistenciasuco.application.exception.business.ConflictExceptio
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.primaryports.ActualizarDocenteProgramaInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.primaryports.dto.ActualizarDocenteProgramaDTO;
+import co.edu.uco.asistenciasuco.application.features.coordinador.cambiarestadodocenteprograma.primaryports.CambiarEstadoDocenteProgramaInputPort;
+import co.edu.uco.asistenciasuco.application.features.coordinador.cambiarestadodocenteprograma.primaryports.dto.CambiarEstadoDocenteProgramaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.DocenteCandidatoDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.DocenteProgramaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.DocentesProgramaPaginaDTO;
@@ -34,6 +36,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -50,9 +53,10 @@ class CoordinadorDocentesControllerTest {
     private final ConsultarCandidatosDocenteInputPort candidatos = mock(ConsultarCandidatosDocenteInputPort.class);
     private final VincularDocenteProgramaInputPort vincular = mock(VincularDocenteProgramaInputPort.class);
     private final ActualizarDocenteProgramaInputPort actualizar = mock(ActualizarDocenteProgramaInputPort.class);
+    private final CambiarEstadoDocenteProgramaInputPort cambiarEstado = mock(CambiarEstadoDocenteProgramaInputPort.class);
     private final AuthenticatedUserResolver identity = () -> ACTOR;
     private final MockMvc mvc = MockMvcBuilders
-            .standaloneSetup(new CoordinadorDocentesController(consultar, candidatos, vincular, actualizar, identity))
+            .standaloneSetup(new CoordinadorDocentesController(consultar, candidatos, vincular, actualizar, cambiarEstado, identity))
             .setControllerAdvice(new GlobalExceptionHandler(codigo -> Optional.empty())).build();
 
     @Test
@@ -208,6 +212,52 @@ class CoordinadorDocentesControllerTest {
 
         mvc.perform(put("/api/v1/coordinador/docentes/{id}", DOCENTE).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"primerNombre\":\"Nuevo\"}"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void T_093_01_patch_estado_inactiva_con_el_actor_y_el_docente_de_la_ruta() throws Exception {
+        when(cambiarEstado.execute(any())).thenReturn(dto());
+
+        mvc.perform(patch("/api/v1/coordinador/docentes/{id}/estado", DOCENTE).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"estaActivo\":false}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exitoso").value(true))
+                .andExpect(jsonPath("$.datos.idDocente").value(DOCENTE.toString()));
+
+        final ArgumentCaptor<CambiarEstadoDocenteProgramaDTO> captor = ArgumentCaptor.forClass(CambiarEstadoDocenteProgramaDTO.class);
+        verify(cambiarEstado).execute(captor.capture());
+        assertEquals(ACTOR, captor.getValue().actorUsuarioId());
+        assertEquals(DOCENTE, captor.getValue().idDocente());
+        assertEquals(false, captor.getValue().estaActivo());
+    }
+
+    @Test
+    void T_093_02_patch_estado_reactiva() throws Exception {
+        when(cambiarEstado.execute(any())).thenReturn(dto());
+
+        mvc.perform(patch("/api/v1/coordinador/docentes/{id}/estado", DOCENTE).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"estaActivo\":true}"))
+                .andExpect(status().isOk());
+
+        final ArgumentCaptor<CambiarEstadoDocenteProgramaDTO> captor = ArgumentCaptor.forClass(CambiarEstadoDocenteProgramaDTO.class);
+        verify(cambiarEstado).execute(captor.capture());
+        assertEquals(true, captor.getValue().estaActivo());
+    }
+
+    @Test
+    void patch_estado_sin_estaActivo_responde_400_sin_llamar_al_caso_de_uso() throws Exception {
+        mvc.perform(patch("/api/v1/coordinador/docentes/{id}/estado", DOCENTE).contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(cambiarEstado);
+    }
+
+    @Test
+    void T_093_04_patch_estado_de_docente_sin_vinculo_responde_404_del_backend() throws Exception {
+        when(cambiarEstado.execute(any())).thenThrow(new co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException("no vinculado"));
+
+        mvc.perform(patch("/api/v1/coordinador/docentes/{id}/estado", DOCENTE).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"estaActivo\":false}"))
                 .andExpect(status().isNotFound());
     }
 

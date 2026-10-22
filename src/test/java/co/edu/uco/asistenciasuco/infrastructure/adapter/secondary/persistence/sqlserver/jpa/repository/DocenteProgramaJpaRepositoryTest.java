@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.command.ActualizarDocenteProgramaCommand;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.command.CambiarEstadoDocenteProgramaCommand;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.command.VincularDocenteProgramaCommand;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.DocentesProgramaFiltro;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.SpDocenteProgramaPaginadoEntity;
@@ -177,6 +178,29 @@ class DocenteProgramaJpaRepositoryTest {
 
         assertThrows(DatabaseOperationException.class,
                 () -> repository.actualizar(new ActualizarDocenteProgramaCommand(UUID.randomUUID(), PROGRAMA, null, "N", null, null, null, EJECUTOR)));
+    }
+
+    @Test
+    void DP_PAT_009_cambiar_estado_usa_native_exec_con_binding_nombrado() {
+        when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{CORRELATION, "ok", "", true}));
+        final UUID docente = UUID.randomUUID();
+
+        repository.cambiarEstado(new CambiarEstadoDocenteProgramaCommand(docente, PROGRAMA, false, EJECUTOR));
+
+        verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_cambiar_estado_docente_programa"));
+        verify(query).setParameter("idDocente", docente);
+        verify(query).setParameter("idPrograma", PROGRAMA);
+        verify(query).setParameter("estaActivo", false);
+        verify(query).setParameter("idCorrelacion", CORRELATION);
+        verify(query).setParameter("idUsuarioEjecutor", EJECUTOR);
+    }
+
+    @Test
+    void DP_PAT_010_cambiar_estado_fallo_tecnico_se_traduce_a_database_operation_error() {
+        when(query.getResultList()).thenThrow(new PersistenceException("deadlock"));
+
+        assertThrows(DatabaseOperationException.class,
+                () -> repository.cambiarEstado(new CambiarEstadoDocenteProgramaCommand(UUID.randomUUID(), PROGRAMA, true, EJECUTOR)));
     }
 
     private static VincularDocenteProgramaCommand comando() {

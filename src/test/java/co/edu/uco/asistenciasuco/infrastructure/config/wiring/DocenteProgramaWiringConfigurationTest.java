@@ -2,6 +2,8 @@ package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
 import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.primaryports.interactor.ActualizarDocenteProgramaInteractor;
 import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.usecase.impl.ActualizarDocenteProgramaUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.coordinador.cambiarestadodocenteprograma.primaryports.interactor.CambiarEstadoDocenteProgramaInteractor;
+import co.edu.uco.asistenciasuco.application.features.coordinador.cambiarestadodocenteprograma.usecase.impl.CambiarEstadoDocenteProgramaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.primaryports.interactor.ConsultarCandidatosDocenteInteractor;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.usecase.impl.ConsultarCandidatosDocenteUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultardocentesprograma.primaryports.interactor.ConsultarDocentesProgramaInteractor;
@@ -53,6 +55,15 @@ class DocenteProgramaWiringConfigurationTest {
         final var useCase = config.actualizarDocenteProgramaUseCase(scope, mock(DocenteProgramaCommandPort.class), query);
         assertInstanceOf(ActualizarDocenteProgramaUseCaseImpl.class, useCase);
         assertInstanceOf(ActualizarDocenteProgramaInteractor.class, config.actualizarDocenteProgramaInputPort(useCase));
+    }
+
+    @Test
+    void cambiar_estado_docente_programa_beans_se_construyen_con_los_adapters_esperados() {
+        final DocenteProgramaWiringConfiguration config = new DocenteProgramaWiringConfiguration();
+
+        final var useCase = config.cambiarEstadoDocenteProgramaUseCase(scope, mock(DocenteProgramaCommandPort.class), query);
+        assertInstanceOf(CambiarEstadoDocenteProgramaUseCaseImpl.class, useCase);
+        assertInstanceOf(CambiarEstadoDocenteProgramaInteractor.class, config.cambiarEstadoDocenteProgramaInputPort(useCase));
     }
 
     @Test
