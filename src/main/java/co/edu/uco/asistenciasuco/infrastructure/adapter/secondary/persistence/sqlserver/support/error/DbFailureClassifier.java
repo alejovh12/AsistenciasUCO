@@ -56,6 +56,9 @@ final class DbFailureClassifier {
             // GEN_001 es generico y por defecto queda tecnico; en la gestion del coordinador significa que el
             // coordinador no existe o es de otra facultad (la DB no distingue los casos para no revelar su existencia).
             case "GEN_001" -> classifyGen001(operation);
+            // HU076-HU078: programa academico. Duplicados y reglas 1 a 1 / grupos activos son conflictos de negocio.
+            case "PROG_002", "PROG_003", "PROG_005", "PROG_007", "PROG_008" -> CommonErrorCode.CONFLICT;
+            case "PROG_004", "PROG_006", "PAG_001" -> CommonErrorCode.VALIDATION_ERROR;
             // GEN_003: "Ya existe un {} registrado con este {}"; lo emite usp_registrar_o_actualizar_plan_estudio
             // ante un plan duplicado (programa + inp). Conflicto de negocio, no fallo tecnico.
             case "GEN_003" -> CommonErrorCode.CONFLICT;
