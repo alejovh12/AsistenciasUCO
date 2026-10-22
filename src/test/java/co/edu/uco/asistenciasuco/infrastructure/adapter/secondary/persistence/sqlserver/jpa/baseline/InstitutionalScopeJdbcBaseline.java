@@ -202,6 +202,22 @@ public final class InstitutionalScopeJdbcBaseline implements InstitutionalScopeP
         }
     }
 
+    @Override
+    public boolean canDecanoAccessPrograma(final UUID usuarioId, final UUID programaId) {
+        return queryCount(
+                """
+                SELECT COUNT(1)
+                FROM dbo.uv_programa p
+                INNER JOIN dbo.uv_decano d ON d.idFacultad = p.idFacultad
+                WHERE p.id = :programaId
+                  AND d.idUsuario = :usuarioId
+                  AND d.estaActivoDecano = 1
+                """,
+                byUsuario(usuarioId).addValue(PARAM_PROGRAMA_ID, programaId),
+                "canDecanoAccessPrograma"
+        ) > 0;
+    }
+
     private void logFailure(final String operation) {
         LOGGER.error(
                 "SQL operation failed. operation={}, correlationId={}",

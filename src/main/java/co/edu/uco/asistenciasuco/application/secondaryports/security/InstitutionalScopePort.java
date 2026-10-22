@@ -28,4 +28,7 @@ public interface InstitutionalScopePort {
     boolean canCoordinadorAccessPrograma(UUID usuarioId, UUID programaId);
 
     boolean canDecanoAccessFacultad(UUID usuarioId, UUID facultadId);
+
+    /** El usuario es decano activo de la facultad a la que pertenece el programa. */
+    boolean canDecanoAccessPrograma(UUID usuarioId, UUID programaId);
 }

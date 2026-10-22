@@ -9,5 +9,8 @@ public interface AsignaturaQueryPort {
 
     List<AsignaturaProjection> consultarAsignaturasPorPrograma(UUID idPrograma);
 
+    /** Asignaturas de los planes de todos los programas de la facultad indicada (portal del decano). */
+    List<AsignaturaProjection> consultarAsignaturasPorFacultad(UUID idFacultad);
+
     List<AsignaturaProjection> consultarAsignaturasPorPlan(UUID idPlanEstudio);
 }

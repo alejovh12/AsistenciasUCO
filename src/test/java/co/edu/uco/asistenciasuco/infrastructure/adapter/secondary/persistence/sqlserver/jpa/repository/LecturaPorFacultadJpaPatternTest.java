@@ -91,7 +91,8 @@ class LecturaPorFacultadJpaPatternTest {
         assertFalse(repository.canDecanoAccessPrograma(DECANO, UUID.randomUUID()));
 
         verify(entityManager, org.mockito.Mockito.times(2)).createQuery(eq(InstitutionalScopeJpaRepository.HQL_DECANO_DE_PROGRAMA), eq(Long.class));
-        verify(typedQuery).setParameter("usuarioId", DECANO);
+        // El metodo se invoca dos veces con el mismo decano: el parametro usuarioId se enlaza en ambas.
+        verify(typedQuery, org.mockito.Mockito.times(2)).setParameter("usuarioId", DECANO);
         verify(typedQuery).setParameter("programaId", PROGRAMA);
         assertEquals(true, InstitutionalScopeJpaRepository.HQL_DECANO_DE_PROGRAMA.contains("estaActivoDecano = 1"));
     }
