@@ -1,8 +1,12 @@
 package co.edu.uco.asistenciasuco.application.secondaryports.identity;
 
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.ActualizarCuentaIdentidadDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CrearCuentaIdentidadDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CuentaIdentidadDTO;
 import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
+
+import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Puerto secundario para la gestión de cuentas en el Proveedor de Identidad (IdP) institucional.
@@ -56,6 +60,46 @@ public interface IdentityProviderPort {
      *                  IdP.
      */
     void asignarRol(String idExterno, InstitutionalRole rol);
+
+    // -------------------------------------------------------------------------
+    // Ciclo de vida de la cuenta (HU121/HU122, IAM-001). Capacidades OPCIONALES del proveedor: un proveedor que
+    // no las implemente falla de forma controlada con IdentityProviderException, que la sincronizacion trata como
+    // desfase pendiente (la base de datos sigue siendo la fuente de verdad y el RBAC en DB ya protege el acceso).
+    // -------------------------------------------------------------------------
+
+    /**
+     * Busca la cuenta por el vinculo institucional estable ({@code Usuario.id}), nunca por correo ni username.
+     *
+     * @return la cuenta si hay una coincidencia exacta; vacio si no existe.
+     * @throws IdentityProviderException si la identidad es ambigua (mas de una coincidencia) o el IdP falla.
+     */
+    default Optional<CuentaIdentidadDTO> buscarCuentaPorIdUsuario(final UUID idUsuario) {
+        throw operacionNoSoportada();
+    }
+
+    /** Deshabilita la cuenta (no puede iniciar sesion) y cierra sus sesiones. Idempotente. */
+    default void deshabilitarCuenta(final String idExterno) {
+        throw operacionNoSoportada();
+    }
+
+    /** Habilita la cuenta. Idempotente. */
+    default void habilitarCuenta(final String idExterno) {
+        throw operacionNoSoportada();
+    }
+
+    /** Actualiza correo y nombres de la cuenta. No cambia el nombre de usuario ni la contrasena. */
+    default void actualizarDatosCuenta(final String idExterno, final ActualizarCuentaIdentidadDTO datos) {
+        throw operacionNoSoportada();
+    }
+
+    /** Retira un rol institucional de la cuenta. Idempotente: si no lo tiene, no falla. */
+    default void retirarRol(final String idExterno, final InstitutionalRole rol) {
+        throw operacionNoSoportada();
+    }
+
+    private static IdentityProviderException operacionNoSoportada() {
+        return new IdentityProviderException("Operacion no soportada por este proveedor de identidad.");
+    }
 
     /**
      * Excepción lanzada cuando ocurre un error al comunicarse con el proveedor de identidad.
