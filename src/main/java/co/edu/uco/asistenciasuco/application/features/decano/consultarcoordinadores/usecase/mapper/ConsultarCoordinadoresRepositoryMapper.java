@@ -11,6 +11,8 @@ public final class ConsultarCoordinadoresRepositoryMapper {
     public static CoordinadorDomain toDomain(final CoordinadorProjection projection) {
         return new CoordinadorDomain(projection.id(), projection.idUsuario(), projection.numeroIdentificacion(),
                 projection.nombreCompleto(), projection.idPrograma(), projection.nombrePrograma(),
-                projection.estaActivoCoordinador());
+                projection.estaActivoCoordinador(), projection.primerNombre(), projection.segundoNombre(),
+                projection.primerApellido(), projection.segundoApellido(), projection.correo(),
+                projection.estaActivoRolCoordinador());
     }
 }

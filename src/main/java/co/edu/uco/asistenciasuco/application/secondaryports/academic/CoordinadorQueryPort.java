@@ -9,7 +9,8 @@ public interface CoordinadorQueryPort {
 
     List<CoordinadorProjection> consultarCoordinadoresPorFacultad(UUID idFacultad);
 
-    default List<CoordinadorProjection> consultarCoordinadoresSinPrograma() {
+    /** Coordinadores aun sin programa de la facultad indicada (HU121 D2: ya no se mezclan las de otras facultades). */
+    default List<CoordinadorProjection> consultarCoordinadoresSinPrograma(final UUID idFacultad) {
         return List.of();
     }
 }

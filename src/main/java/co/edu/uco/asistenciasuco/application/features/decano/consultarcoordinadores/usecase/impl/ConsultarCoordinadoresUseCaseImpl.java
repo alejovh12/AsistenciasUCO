@@ -30,7 +30,7 @@ public final class ConsultarCoordinadoresUseCaseImpl implements ConsultarCoordin
                 consolidado.putIfAbsent(item.id(), item);
             }
         }
-        for (final CoordinadorProjection item : coordinadorQueryPort.consultarCoordinadoresSinPrograma()) {
+        for (final CoordinadorProjection item : coordinadorQueryPort.consultarCoordinadoresSinPrograma(idFacultad)) {
             if (item != null && item.id() != null) {
                 consolidado.putIfAbsent(item.id(), item);
             }
