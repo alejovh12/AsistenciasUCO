@@ -17,7 +17,7 @@ public final class VincularDocenteProgramaRequestValidator implements Validator<
     private static final int MAX_NOMBRE = 50;
     private static final int MAX_CORREO = 100;
     private static final Pattern DIGITOS = Pattern.compile("\\d+");
-    private static final Pattern CORREO = Pattern.compile("^[^@\\s]+@[^@\\s.]+(?:\\.[^@\\s.]+)+$");
+    private static final Pattern CORREO = Pattern.compile("^[^@\\s]+@[^@\\s]+$");
 
     @Override
     public ValidationResult validate(final VincularDocenteProgramaRequest request) {
@@ -41,6 +41,12 @@ public final class VincularDocenteProgramaRequestValidator implements Validator<
             validarPersonaNueva(builder, request);
         }
         return builder.build();
+    }
+
+    /** Dominio con al menos un punto y sin etiquetas vacias; se valida en codigo para mantener el patron lineal. */
+    private static boolean dominioValido(final String correo) {
+        final String dominio = correo.substring(correo.indexOf('@') + 1);
+        return dominio.indexOf('.') > 0 && !dominio.endsWith(".") && !dominio.contains("..");
     }
 
     private static void validarPersonaNueva(final ValidationResultBuilder builder, final VincularDocenteProgramaRequest request) {
@@ -68,7 +74,7 @@ public final class VincularDocenteProgramaRequestValidator implements Validator<
             builder.add("correo", ValidationErrorType.REQUIRED, "El correo es obligatorio.");
         } else if (correo.length() > MAX_CORREO) {
             builder.add("correo", ValidationErrorType.INVALID_LENGTH, "El correo excede la longitud permitida.");
-        } else if (!CORREO.matcher(correo).matches()) {
+        } else if (!CORREO.matcher(correo).matches() || !dominioValido(correo)) {
             builder.add("correo", ValidationErrorType.INVALID_FORMAT, "El correo no tiene un formato valido.");
         }
 

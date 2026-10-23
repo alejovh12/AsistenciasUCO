@@ -164,9 +164,10 @@ public final class CoordinadorDocentesController {
             @PathVariable("idDocente") final UUID idDocente,
             @RequestBody final CambiarEstadoDocenteProgramaRequest request
     ) {
+        Objects.requireNonNull(request, "request");
         RequestValidationGuard.validate(CAMBIAR_ESTADO_VALIDATOR.validate(request));
         final DocenteProgramaDTO resultado = cambiarEstadoDocenteProgramaInputPort.execute(new CambiarEstadoDocenteProgramaDTO(
-                authenticatedUserResolver.requireAuthenticatedUserId(), idDocente, request.getEstaActivo()));
+                authenticatedUserResolver.requireAuthenticatedUserId(), idDocente, Boolean.TRUE.equals(request.getEstaActivo())));
         return ResponseEntity.ok(new ApiDataResponse<>(true, resultado));
     }
 

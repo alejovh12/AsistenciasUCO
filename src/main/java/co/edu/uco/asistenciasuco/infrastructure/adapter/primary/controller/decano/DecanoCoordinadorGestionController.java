@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -72,6 +73,7 @@ public final class DecanoCoordinadorGestionController {
             @PathVariable final UUID id,
             @RequestBody final CambiarEstadoCoordinadorRequest request
     ) {
+        Objects.requireNonNull(request, "request");
         RequestValidationGuard.validate(CAMBIAR_ESTADO_VALIDATOR.validate(request));
         final ResultadoGestionCoordinadorDTO resultado = cambiarEstadoCoordinadorInputPort.execute(new CambiarEstadoCoordinadorDTO(
                 id,
