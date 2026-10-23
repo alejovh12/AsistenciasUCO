@@ -61,6 +61,22 @@ class VincularDocenteProgramaRequestValidatorTest {
     }
 
     @Test
+    void correo_no_es_vulnerable_a_backtracking_y_valida_dominios_con_subdominios() {
+        final VincularDocenteProgramaRequest subdominio = nuevo();
+        subdominio.setCorreo("docente@mail.uco.edu.co");
+        assertTrue(validator.validate(subdominio).isValid());
+
+        final VincularDocenteProgramaRequest etiquetaVacia = nuevo();
+        etiquetaVacia.setCorreo("docente@uco..edu");
+        assertIssue(validator.validate(etiquetaVacia), "correo", ValidationErrorType.INVALID_FORMAT);
+
+        final VincularDocenteProgramaRequest hostil = nuevo();
+        hostil.setCorreo("!@!." + "!.".repeat(48));
+        final long inicio = System.nanoTime();
+        assertIssue(validator.validate(hostil), "correo", ValidationErrorType.INVALID_FORMAT);
+        assertTrue(System.nanoTime() - inicio < 500_000_000L, "la validacion de correo debe ser de tiempo lineal");
+    }
+    @Test
     void modo_nuevo_exige_campos_obligatorios_correo_valido_y_longitudes() {
         final VincularDocenteProgramaRequest vacio = nuevo();
         vacio.setPrimerNombre(" ");

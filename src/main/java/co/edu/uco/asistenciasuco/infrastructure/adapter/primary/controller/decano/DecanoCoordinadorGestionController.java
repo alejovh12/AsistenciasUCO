@@ -75,7 +75,7 @@ public final class DecanoCoordinadorGestionController {
         RequestValidationGuard.validate(CAMBIAR_ESTADO_VALIDATOR.validate(request));
         final ResultadoGestionCoordinadorDTO resultado = cambiarEstadoCoordinadorInputPort.execute(new CambiarEstadoCoordinadorDTO(
                 id,
-                request.getEstaActivo(),
+                Boolean.TRUE.equals(request.getEstaActivo()),
                 authenticatedUserResolver.requireAuthenticatedUserId()
         ));
         return ResponseEntity.ok(new ApiDataResponse<>(true, toResponse(resultado)));

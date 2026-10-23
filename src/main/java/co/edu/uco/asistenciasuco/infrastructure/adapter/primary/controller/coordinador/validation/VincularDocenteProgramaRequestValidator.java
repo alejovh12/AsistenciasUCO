@@ -17,7 +17,7 @@ public final class VincularDocenteProgramaRequestValidator implements Validator<
     private static final int MAX_NOMBRE = 50;
     private static final int MAX_CORREO = 100;
     private static final Pattern DIGITOS = Pattern.compile("\\d+");
-    private static final Pattern CORREO = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
+    private static final Pattern CORREO = Pattern.compile("^[^@\\s]+@[^@\\s.]+(?:\\.[^@\\s.]+)+$");
 
     @Override
     public ValidationResult validate(final VincularDocenteProgramaRequest request) {
