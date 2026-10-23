@@ -1,12 +1,8 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.DocenteRepositoryPort;
-import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.AsignarDocenteAGrupoRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarAsignacionesAcademicasDocenteRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarDocentePorIdRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarDocenteDesdeUsuarioRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.DocenteOperacionRepositoryProjection;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 import org.springframework.stereotype.Repository;
@@ -87,21 +83,6 @@ public class DocenteJpaRepository implements DocenteRepositoryPort {
             final ConsultarAsignacionesAcademicasDocenteRepositoryDTO dto) {
         require(dto, "El DTO para consultar asignaciones academicas del docente es obligatorio.");
         return consultarAsignaciones(dto.getDocente());
-    }
-
-    @Override
-    public DocenteOperacionRepositoryProjection registrarDocenteDesdeUsuario(
-            final RegistrarDocenteDesdeUsuarioRepositoryDTO dto) {
-        require(dto, "El DTO para registrar docente desde usuario es obligatorio.");
-        throw new FeatureUnavailableException(
-                "El registro de docente desde usuario requiere un command publico de DB; los procedimientos internos no estan permitidos.");
-    }
-
-    @Override
-    public DocenteOperacionRepositoryProjection asignarDocenteAGrupo(final AsignarDocenteAGrupoRepositoryDTO dto) {
-        require(dto, "El DTO para asignar docente a grupo es obligatorio.");
-        throw new FeatureUnavailableException(
-                "La asignacion de docente a grupo requiere un command publico de DB; los procedimientos internos no estan permitidos.");
     }
 
     private static void require(final Object value, final String message) {

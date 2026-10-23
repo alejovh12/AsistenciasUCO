@@ -1,9 +1,5 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
-import co.edu.uco.asistenciasuco.application.features.docente.asignardocenteagrupo.primaryports.AsignarDocenteAGrupoInputPort;
-import co.edu.uco.asistenciasuco.application.features.docente.asignardocenteagrupo.primaryports.interactor.AsignarDocenteAGrupoInteractor;
-import co.edu.uco.asistenciasuco.application.features.docente.asignardocenteagrupo.usecase.AsignarDocenteAGrupoUseCase;
-import co.edu.uco.asistenciasuco.application.features.docente.asignardocenteagrupo.usecase.impl.AsignarDocenteAGrupoUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignacionesacademicas.primaryports.ConsultarAsignacionesAcademicasDocenteInputPort;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignacionesacademicas.primaryports.interactor.ConsultarAsignacionesAcademicasDocenteInteractor;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignacionesacademicas.usecase.ConsultarAsignacionesAcademicasDocenteUseCase;
@@ -33,10 +29,6 @@ import co.edu.uco.asistenciasuco.application.features.docente.consultarhorarios.
 import co.edu.uco.asistenciasuco.application.features.docente.consultarhorarios.primaryports.interactor.ConsultarHorariosDocenteInteractor;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarhorarios.usecase.ConsultarHorariosDocenteUseCase;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarhorarios.usecase.impl.ConsultarHorariosDocenteUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.features.docente.registrardocentedesdeusuario.primaryports.RegistrarDocenteDesdeUsuarioInputPort;
-import co.edu.uco.asistenciasuco.application.features.docente.registrardocentedesdeusuario.primaryports.interactor.RegistrarDocenteDesdeUsuarioInteractor;
-import co.edu.uco.asistenciasuco.application.features.docente.registrardocentedesdeusuario.usecase.RegistrarDocenteDesdeUsuarioUseCase;
-import co.edu.uco.asistenciasuco.application.features.docente.registrardocentedesdeusuario.usecase.impl.RegistrarDocenteDesdeUsuarioUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsignaturaDocenteQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.HorarioDocenteQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.DocenteRepositoryPort;
@@ -93,32 +85,6 @@ public class DocenteWiringConfiguration {
             final ConsultarAsignacionesAcademicasDocenteUseCase consultarAsignacionesAcademicasDocenteUseCase
     ) {
         return new ConsultarAsignacionesAcademicasDocenteInteractor(consultarAsignacionesAcademicasDocenteUseCase);
-    }
-
-    @Bean
-    public RegistrarDocenteDesdeUsuarioUseCase registrarDocenteDesdeUsuarioUseCase(
-            final DocenteRepositoryPort docenteRepositoryPort
-    ) {
-        return new RegistrarDocenteDesdeUsuarioUseCaseImpl(docenteRepositoryPort);
-    }
-
-    @Bean
-    public RegistrarDocenteDesdeUsuarioInputPort registrarDocenteDesdeUsuarioInputPort(
-            final RegistrarDocenteDesdeUsuarioUseCase registrarDocenteDesdeUsuarioUseCase
-    ) {
-        return new RegistrarDocenteDesdeUsuarioInteractor(registrarDocenteDesdeUsuarioUseCase);
-    }
-
-    @Bean
-    public AsignarDocenteAGrupoUseCase asignarDocenteAGrupoUseCase(final DocenteRepositoryPort docenteRepositoryPort) {
-        return new AsignarDocenteAGrupoUseCaseImpl(docenteRepositoryPort);
-    }
-
-    @Bean
-    public AsignarDocenteAGrupoInputPort asignarDocenteAGrupoInputPort(
-            final AsignarDocenteAGrupoUseCase asignarDocenteAGrupoUseCase
-    ) {
-        return new AsignarDocenteAGrupoInteractor(asignarDocenteAGrupoUseCase);
     }
 
     @Bean

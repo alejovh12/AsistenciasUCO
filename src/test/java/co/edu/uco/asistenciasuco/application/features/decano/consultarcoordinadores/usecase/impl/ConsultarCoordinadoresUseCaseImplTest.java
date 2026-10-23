@@ -57,7 +57,7 @@ class ConsultarCoordinadoresUseCaseImplTest {
         when(coordinadorQueryPort.consultarCoordinadoresPorFacultad(facultad)).thenReturn(List.of(
                 new CoordinadorProjection(coordConPrograma, UUID.randomUUID(), "123456", "Ana Perez",
                         UUID.randomUUID(), "Ingenieria de Sistemas", true)));
-        when(coordinadorQueryPort.consultarCoordinadoresSinPrograma()).thenReturn(List.of(
+        when(coordinadorQueryPort.consultarCoordinadoresSinPrograma(facultad)).thenReturn(List.of(
                 new CoordinadorProjection(coordSinPrograma, UUID.randomUUID(), "789012", "Jorge Henao",
                         null, null, true)));
 
@@ -66,5 +66,45 @@ class ConsultarCoordinadoresUseCaseImplTest {
         assertEquals(2, result.size());
         assertEquals(coordConPrograma, result.get(0).id());
         assertEquals(coordSinPrograma, result.get(1).id());
+    }
+
+    // HU121 T-121-05 / D2: el decano solo ve coordinadores sin programa de SU facultad.
+    @Test
+    void execute_consulta_los_coordinadores_sin_programa_solo_de_la_facultad_del_decano() {
+        final UUID actor = UUID.randomUUID();
+        final UUID facultad = UUID.randomUUID();
+        final UUID otraFacultad = UUID.randomUUID();
+        when(scopePort.findFacultadIdByDecanoUsuario(actor)).thenReturn(Optional.of(facultad));
+        when(coordinadorQueryPort.consultarCoordinadoresSinPrograma(facultad)).thenReturn(List.of());
+
+        final List<CoordinadorDomain> result = useCase.execute(actor);
+
+        assertEquals(0, result.size());
+        org.mockito.Mockito.verify(coordinadorQueryPort).consultarCoordinadoresSinPrograma(facultad);
+        org.mockito.Mockito.verify(coordinadorQueryPort, org.mockito.Mockito.never())
+                .consultarCoordinadoresSinPrograma(otraFacultad);
+    }
+
+    // HU121 CA-01: el listado entrega los datos editables para precargar el formulario de edicion.
+    @Test
+    void execute_expone_los_datos_editables_del_coordinador() {
+        final UUID actor = UUID.randomUUID();
+        final UUID facultad = UUID.randomUUID();
+        final UUID coordinadorId = UUID.randomUUID();
+        when(scopePort.findFacultadIdByDecanoUsuario(actor)).thenReturn(Optional.of(facultad));
+        when(coordinadorQueryPort.consultarCoordinadoresPorFacultad(facultad)).thenReturn(List.of(
+                new CoordinadorProjection(coordinadorId, UUID.randomUUID(), "123456", "Ana Maria Perez Gomez",
+                        UUID.randomUUID(), "Ingenieria", true,
+                        "Ana", "Maria", "Perez", "Gomez", "ana@uco.edu.co", true)));
+        when(coordinadorQueryPort.consultarCoordinadoresSinPrograma(facultad)).thenReturn(List.of());
+
+        final CoordinadorDomain result = useCase.execute(actor).getFirst();
+
+        assertEquals("Ana", result.primerNombre());
+        assertEquals("Maria", result.segundoNombre());
+        assertEquals("Perez", result.primerApellido());
+        assertEquals("Gomez", result.segundoApellido());
+        assertEquals("ana@uco.edu.co", result.correo());
+        assertEquals(true, result.estaActivoRolCoordinador());
     }
 }

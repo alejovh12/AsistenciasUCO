@@ -45,6 +45,25 @@ public final class PlanEstudioJdbcBaseline implements PlanEstudioQueryPort, Plan
     }
 
     @Override
+    public List<PlanEstudioProjection> consultarPlanesPorFacultad(final UUID idFacultad) {
+        return jdbcOperations.query("""
+                SELECT id, idPrograma, nombrePrograma, inp, estaActivoPlanEstudio,
+                       estaActivoTextoPlanEstudio, justificacionEstado
+                FROM dbo.uv_plan_estudio
+                WHERE idPrograma IN (SELECT id FROM dbo.uv_programa WHERE idFacultad = :idFacultad)
+                ORDER BY nombrePrograma, inp, id
+                """, new MapSqlParameterSource("idFacultad", idFacultad), (rs, rowNum) -> new PlanEstudioProjection(
+                JdbcBaselineValueMapper.toUuid(rs.getObject("id")),
+                JdbcBaselineValueMapper.toUuid(rs.getObject("idPrograma")),
+                JdbcBaselineValueMapper.toString(rs.getObject("nombrePrograma")),
+                JdbcBaselineValueMapper.toString(rs.getObject("inp")),
+                JdbcBaselineValueMapper.toBoolean(rs.getObject("estaActivoPlanEstudio")),
+                JdbcBaselineValueMapper.toString(rs.getObject("estaActivoTextoPlanEstudio")),
+                JdbcBaselineValueMapper.toString(rs.getObject("justificacionEstado"))
+        ));
+    }
+
+    @Override
     public List<PlanEstudioProjection> consultarPlanesPorPrograma(final UUID idPrograma) {
         return jdbcOperations.query("""
                 SELECT id, idPrograma, nombrePrograma, inp, estaActivoPlanEstudio,

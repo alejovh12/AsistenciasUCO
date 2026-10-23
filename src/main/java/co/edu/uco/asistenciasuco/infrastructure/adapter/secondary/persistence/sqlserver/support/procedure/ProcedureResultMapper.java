@@ -29,19 +29,30 @@ public final class ProcedureResultMapper {
      * @throws DatabaseOperationException {@code ERR_DB_CANONICAL_CONTRACT} si la forma no cumple el contrato
      */
     public static ProcedureResult mapSingle(final List<?> rows) {
+        return mapSingleWithExtras(rows, 0).result();
+    }
+
+    /**
+     * Igual que {@link #mapSingle(List)} pero para SP cuyo resultset agrega {@code extraColumns} columnas despues de
+     * las 4 canonicas (p. ej. {@code idUsuario}). Las columnas extra se devuelven tal cual (pueden ser nulas cuando
+     * el SP rechaza la operacion); la forma exacta sigue siendo un contrato: 1 fila y 4 + extraColumns columnas.
+     */
+    public static ProcedureRow mapSingleWithExtras(final List<?> rows, final int extraColumns) {
         if (rows == null || rows.size() != 1) {
             throw contractViolation();
         }
         final Object row = rows.getFirst();
-        if (!(row instanceof Object[] columns) || columns.length != CANONICAL_COLUMNS) {
+        if (!(row instanceof Object[] columns) || columns.length != CANONICAL_COLUMNS + extraColumns) {
             throw contractViolation();
         }
-        return new CanonicalProcedureResult(
+        final ProcedureResult result = new CanonicalProcedureResult(
                 toUuid(columns[0]),
                 toText(columns[1]),
                 toText(columns[2]),
                 toBit(columns[3])
         );
+        return new ProcedureRow(result, java.util.Collections.unmodifiableList(
+                java.util.Arrays.asList(java.util.Arrays.copyOfRange(columns, CANONICAL_COLUMNS, columns.length))));
     }
 
     private static UUID toUuid(final Object value) {

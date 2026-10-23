@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error;
 
 import co.edu.uco.asistenciasuco.application.features.asistencia.exception.AsistenciaErrorCode;
+import co.edu.uco.asistenciasuco.application.features.decano.exception.CoordinadorErrorCode;
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
@@ -38,6 +39,7 @@ public final class DbExceptionTranslator {
             UsuarioErrorCode.ERR_USUARIO_NO_EXISTE,
             EstudianteErrorCode.ERR_ESTUDIANTE_NO_EXISTE,
             DocenteErrorCode.ERR_DOCENTE_NO_EXISTE,
+            DocenteErrorCode.ERR_DOCENTE_NO_VINCULADO_PROGRAMA,
             GrupoErrorCode.ERR_GRUPO_NO_EXISTE,
             TipoIdentificacionErrorCode.ERR_TIPO_IDENTIFICACION_NO_EXISTE,
             SesionErrorCode.ERR_SESION_NO_EXISTE,
@@ -56,12 +58,19 @@ public final class DbExceptionTranslator {
             EstudianteErrorCode.ERR_ESTUDIANTE_INACTIVO,
             DocenteErrorCode.ERR_DOCENTE_INACTIVO,
             DocenteErrorCode.ERR_DOCENTE_YA_REGISTRADO,
+            CoordinadorErrorCode.COO_001,
+            DocenteErrorCode.ERR_PERSONA_YA_REGISTRADA,
+            DocenteErrorCode.ERR_DOCENTE_YA_VINCULADO_PROGRAMA,
+            DocenteErrorCode.ERR_DOCENTE_SIN_VINCULO_ACTIVO,
             CommonErrorCode.CONFLICT
     );
     private static final Set<ErrorDefinition> VALIDATION_CODES = Set.of(
             UsuarioErrorCode.ERR_NOMBRE_PERSONA_INVALIDO,
             UsuarioErrorCode.ERR_PASSWORD_POLITICA_INVALIDA,
             AsistenciaErrorCode.ERR_ESTADO_ASISTENCIA_INVALIDO,
+            DocenteErrorCode.ERR_TIPO_VINCULACION_INVALIDO,
+            DocenteErrorCode.ERR_MODO_VINCULACION_INVALIDO,
+            DocenteErrorCode.ERR_BUSQUEDA_CANDIDATOS_CORTA,
             CommonErrorCode.VALIDATION_ERROR
     );
 

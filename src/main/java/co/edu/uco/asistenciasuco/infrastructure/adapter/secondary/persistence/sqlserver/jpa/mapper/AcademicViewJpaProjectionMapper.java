@@ -101,7 +101,9 @@ public final class AcademicViewJpaProjectionMapper {
 
     public static CoordinadorProjection toCoordinador(final UvCoordinadorEntity row) {
         return new CoordinadorProjection(row.id(), row.idUsuario(), text(row.numeroIdentificacion()),
-                row.nombreCompleto(), row.idPrograma(), row.nombrePrograma(), flag(row.estaActivoCoordinador()));
+                row.nombreCompleto(), row.idPrograma(), row.nombrePrograma(), flag(row.estaActivoCoordinador()),
+                row.primerNombre(), row.segundoNombre(), row.primerApellido(), row.segundoApellido(), row.correo(),
+                !Boolean.FALSE.equals(row.estaActivoRolCoordinador()));
     }
 
     public static FacultadProjection toFacultad(final UvFacultadEntity row) {

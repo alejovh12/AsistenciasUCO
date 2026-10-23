@@ -120,6 +120,59 @@ class RbacSecurityFilterChainTest {
                 .andExpect(status().isOk());
     }
 
+    // --- /api/v1/coordinador/docentes/** : directorio y vinculacion del programa (HU062/HU091) ---
+
+    @Test
+    void coordinador_docentes_sin_token_recibe_401() throws Exception {
+        mockMvc.perform(get("/api/v1/coordinador/docentes")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/coordinador/docentes/candidatos?busqueda=abc")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void coordinador_docentes_estudiante_y_docente_reciben_403() throws Exception {
+        for (final String rol : new String[]{"ESTUDIANTE", "DOCENTE"}) {
+            mockMvc.perform(get("/api/v1/coordinador/docentes").header(HttpHeaders.AUTHORIZATION, bearer(rol)))
+                    .andExpect(status().isForbidden());
+            mockMvc.perform(get("/api/v1/coordinador/docentes/candidatos?busqueda=abc")
+                            .header(HttpHeaders.AUTHORIZATION, bearer(rol)))
+                    .andExpect(status().isForbidden());
+            mockMvc.perform(post("/api/v1/coordinador/docentes").header(HttpHeaders.AUTHORIZATION, bearer(rol))
+                            .contentType("application/json").content("{}"))
+                    .andExpect(status().isForbidden());
+        }
+    }
+
+    @Test
+    void coordinador_docentes_put_exige_rol_coordinador() throws Exception {
+        final String ruta = "/api/v1/coordinador/docentes/11111111-1111-1111-1111-111111111111";
+        mockMvc.perform(put(ruta)).andExpect(status().isUnauthorized());
+        for (final String rol : new String[]{"ESTUDIANTE", "DOCENTE"}) {
+            mockMvc.perform(put(ruta).header(HttpHeaders.AUTHORIZATION, bearer(rol)).contentType("application/json").content("{}"))
+                    .andExpect(status().isForbidden());
+        }
+        mockMvc.perform(put(ruta).header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")).contentType("application/json").content("{}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void coordinador_docentes_patch_estado_exige_rol_coordinador() throws Exception {
+        final String ruta = "/api/v1/coordinador/docentes/11111111-1111-1111-1111-111111111111/estado";
+        mockMvc.perform(patch(ruta)).andExpect(status().isUnauthorized());
+        for (final String rol : new String[]{"ESTUDIANTE", "DOCENTE"}) {
+            mockMvc.perform(patch(ruta).header(HttpHeaders.AUTHORIZATION, bearer(rol)).contentType("application/json").content("{}"))
+                    .andExpect(status().isForbidden());
+        }
+        mockMvc.perform(patch(ruta).header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")).contentType("application/json").content("{}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void tipos_vinculacion_exige_autenticacion_y_es_visible_para_cualquier_rol_autenticado() throws Exception {
+        mockMvc.perform(get("/api/v1/tipos-vinculacion")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/tipos-vinculacion").header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
+                .andExpect(status().isOk());
+    }
+
     // --- GET /api/v1/grupos : listado institucional completo (NO es "mis grupos" del docente) ---
 
     @Test
@@ -479,6 +532,26 @@ class RbacSecurityFilterChainTest {
 
         @GetMapping("/api/v1/docentes")
         String docentes() {
+            return "ok";
+        }
+
+        @GetMapping({"/api/v1/coordinador/docentes", "/api/v1/coordinador/docentes/candidatos", "/api/v1/tipos-vinculacion"})
+        String docentesPrograma() {
+            return "ok";
+        }
+
+        @PostMapping("/api/v1/coordinador/docentes")
+        String vincularDocente() {
+            return "ok";
+        }
+
+        @org.springframework.web.bind.annotation.PatchMapping("/api/v1/coordinador/docentes/{id}/estado")
+        String estadoDocente() {
+            return "ok";
+        }
+
+        @org.springframework.web.bind.annotation.PutMapping("/api/v1/coordinador/docentes/{id}")
+        String actualizarDocente() {
             return "ok";
         }
 

@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 import co.edu.uco.asistenciasuco.application.features.asistencia.exception.AsistenciaErrorCode;
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
+import co.edu.uco.asistenciasuco.application.features.decano.exception.CoordinadorErrorCode;
 import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.exception.TipoIdentificacionErrorCode;
@@ -20,6 +21,8 @@ import java.util.Locale;
  */
 final class DbFailureClassifier {
 
+    private static final String OPERATION_ACTUALIZAR_COORDINADOR = "actualizarCoordinador";
+    private static final String OPERATION_CAMBIAR_ESTADO_COORDINADOR = "cambiarEstadoCoordinador";
     private static final String OPERATION_ASIGNAR_DOCENTE = "asignarDocenteAGrupo";
     private static final String OPERATION_REGISTRAR_ESTUDIANTE = "registrarEstudianteEnGrupo";
     // Operaciones reales de los repositories JPA (OP_* en UsuarioJpaRepository / AsistenciaJpaRepository).
@@ -48,6 +51,14 @@ final class DbFailureClassifier {
             case "ATT_001", "ATT_002", "ATT_003", "GEN_002", "RC_001", "SES_004", "PLA_001",
                  "VAL_001", "VAL_002", "VAL_003", "VAL_004", "VAL_005" -> CommonErrorCode.VALIDATION_ERROR;
             case "VAL_006" -> CommonErrorCode.CONFLICT;
+            // COO_001 (HU122): el coordinador coordina un programa activo; hay que reasignarlo o desactivar el programa.
+            case "COO_001" -> CoordinadorErrorCode.COO_001;
+            // GEN_001 es generico y por defecto queda tecnico; en la gestion del coordinador significa que el
+            // coordinador no existe o es de otra facultad (la DB no distingue los casos para no revelar su existencia).
+            case "GEN_001" -> classifyGen001(operation);
+            // HU076-HU078: programa academico. Duplicados y reglas 1 a 1 / grupos activos son conflictos de negocio.
+            case "PROG_002", "PROG_003", "PROG_005", "PROG_007", "PROG_008" -> CommonErrorCode.CONFLICT;
+            case "PROG_004", "PROG_006", "PAG_001" -> CommonErrorCode.VALIDATION_ERROR;
             // GEN_003: "Ya existe un {} registrado con este {}"; lo emite usp_registrar_o_actualizar_plan_estudio
             // ante un plan duplicado (programa + inp). Conflicto de negocio, no fallo tecnico.
             case "GEN_003" -> CommonErrorCode.CONFLICT;
@@ -58,6 +69,16 @@ final class DbFailureClassifier {
             case "USU_002" -> UsuarioErrorCode.ERR_USUARIO_INACTIVO;
             case "HOR_001" -> GrupoErrorCode.ERR_CRUCE_HORARIO_ESTUDIANTE;
             case "SES_001", "PROG_001", "PER_001", "FAC_001", "DEC_001" -> CommonErrorCode.RESOURCE_NOT_FOUND;
+            // HU091-HU093: vertical de docentes del programa. DOC_001/DOC_008 no encontrado; DOC_002/003/006/009 conflicto.
+            case "DOC_001" -> DocenteErrorCode.ERR_DOCENTE_NO_EXISTE;
+            case "DOC_002" -> DocenteErrorCode.ERR_DOCENTE_YA_REGISTRADO;
+            case "DOC_003" -> DocenteErrorCode.ERR_PERSONA_YA_REGISTRADA;
+            case "DOC_004" -> DocenteErrorCode.ERR_TIPO_VINCULACION_INVALIDO;
+            case "DOC_005" -> DocenteErrorCode.ERR_MODO_VINCULACION_INVALIDO;
+            case "DOC_006" -> DocenteErrorCode.ERR_DOCENTE_YA_VINCULADO_PROGRAMA;
+            case "DOC_007" -> DocenteErrorCode.ERR_BUSQUEDA_CANDIDATOS_CORTA;
+            case "DOC_008" -> DocenteErrorCode.ERR_DOCENTE_NO_VINCULADO_PROGRAMA;
+            case "DOC_009" -> DocenteErrorCode.ERR_DOCENTE_SIN_VINCULO_ACTIVO;
             // USU_001: validacion de usuario inexistente por id, emitida por los SP publicos que la exigen.
             case "USU_001" -> UsuarioErrorCode.ERR_USUARIO_NO_EXISTE;
             // IDN_001: usp_registrar_estudiante_en_grupo (conflicto de identidad correo/documento).
@@ -91,6 +112,13 @@ final class DbFailureClassifier {
             case "SYS_001" -> DatabaseErrorCode.ERR_DB_UNCLASSIFIED;
             default -> DatabaseErrorCode.ERR_DB_UNCLASSIFIED;
         };
+    }
+
+    private static ErrorDefinition classifyGen001(final String operation) {
+        if (OPERATION_ACTUALIZAR_COORDINADOR.equals(operation) || OPERATION_CAMBIAR_ESTADO_COORDINADOR.equals(operation)) {
+            return CommonErrorCode.RESOURCE_NOT_FOUND;
+        }
+        return DatabaseErrorCode.ERR_DB_UNCLASSIFIED;
     }
 
     /**

@@ -1,6 +1,5 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.decano;
 
-import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.primaryports.ConsultarCoordinadoresInputPort;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.primaryports.dto.CoordinadorDTO;
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.primaryports.CrearCoordinadorInputPort;
@@ -17,7 +16,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -49,12 +47,6 @@ class DecanoPortalControllerTest {
                 .andExpect(jsonPath("$.datos[0].nombreCompleto").value("Ana Perez"));
 
         verify(consultarCoordinadores).execute(ACTOR);
-    }
-
-    @Test
-    void toggleCoordinador_no_implementado_lanza_featureUnavailable() {
-        assertEquals("FEATURE_UNAVAILABLE",
-                assertThrows(FeatureUnavailableException.class, () -> controller.toggleCoordinador(PROGRAMA)).getCode());
     }
 
     @Test

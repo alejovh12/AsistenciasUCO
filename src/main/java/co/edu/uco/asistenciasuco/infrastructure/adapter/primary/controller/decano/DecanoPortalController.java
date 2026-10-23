@@ -1,6 +1,5 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.decano;
 
-import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.primaryports.ConsultarCoordinadoresInputPort;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.primaryports.dto.CoordinadorDTO;
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.primaryports.CrearCoordinadorInputPort;
@@ -11,14 +10,11 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.respo
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/decano")
@@ -44,11 +40,6 @@ public final class DecanoPortalController {
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
     }
 
-    @PatchMapping("/coordinadores/{id}/estado")
-    public ResponseEntity<ApiDataResponse<Void>> toggleCoordinador(@PathVariable final UUID id) {
-        throw unavailable("cambiar estado de coordinador");
-    }
-
     @PostMapping("/coordinadores")
     public ResponseEntity<ApiDataResponse<Void>> crearCoordinador(@RequestBody final CrearCoordinadorRequest request) {
         crearCoordinadorInputPort.execute(new CrearCoordinadorDTO(
@@ -63,9 +54,5 @@ public final class DecanoPortalController {
                 authenticatedUserResolver.requireAuthenticatedUserId()
         ));
         return ResponseEntity.ok(new ApiDataResponse<>(true, null));
-    }
-
-    private FeatureUnavailableException unavailable(final String operation) {
-        return new FeatureUnavailableException("La operacion de decano no esta disponible: " + operation + ".");
     }
 }

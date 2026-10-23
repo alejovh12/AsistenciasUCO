@@ -8,4 +8,7 @@ import java.util.UUID;
 public interface PlanEstudioQueryPort {
 
     List<PlanEstudioProjection> consultarPlanesPorPrograma(UUID idPrograma);
+
+    /** Planes de todos los programas que pertenecen a la facultad indicada (portal del decano). */
+    List<PlanEstudioProjection> consultarPlanesPorFacultad(UUID idFacultad);
 }

@@ -64,6 +64,9 @@ public class AsignaturaJpaRepository implements AsignaturaQueryPort, AsignaturaC
             """;
     static final String HQL_POR_PROGRAMA = HQL_SELECT
             + "  and sp.idPrograma = :idPrograma\norder by a.nombre, a.codigo, a.id";
+    static final String HQL_POR_FACULTAD = HQL_SELECT
+            + "  and sp.idPrograma in (select pr.id from UvProgramaEntity pr where pr.idFacultad = :idFacultad)\n"
+            + "order by a.nombrePrograma, a.nombre, a.codigo, a.id";
     static final String HQL_POR_PLAN = HQL_SELECT
             + "  and sp.idPlanEstudio = :idPlanEstudio\norder by a.codigoSemestre, a.nombre, a.codigo, a.id";
 
@@ -111,6 +114,19 @@ public class AsignaturaJpaRepository implements AsignaturaQueryPort, AsignaturaC
                 "No fue posible consultar las asignaturas desde base de datos.",
                 () -> entityManager.createQuery(HQL_POR_PROGRAMA, AsignaturaQueryRow.class)
                         .setParameter("idPrograma", idPrograma)
+                        .getResultList().stream()
+                        .map(AcademicViewJpaProjectionMapper::toAsignatura)
+                        .toList()
+        );
+    }
+
+    @Override
+    public List<AsignaturaProjection> consultarAsignaturasPorFacultad(final UUID idFacultad) {
+        return JpaQueryExecutor.execute(
+                "consultarAsignaturasPorFacultad",
+                "No fue posible consultar las asignaturas de la facultad desde base de datos.",
+                () -> entityManager.createQuery(HQL_POR_FACULTAD, AsignaturaQueryRow.class)
+                        .setParameter("idFacultad", idFacultad)
                         .getResultList().stream()
                         .map(AcademicViewJpaProjectionMapper::toAsignatura)
                         .toList()

@@ -10,6 +10,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 /**
  * Composition Root para el catálogo de mensajes en Azure App Configuration.
@@ -27,6 +28,7 @@ import org.springframework.context.annotation.Configuration;
 public class AzureAppConfigMessageCatalogAdapterConfiguration {
 
     @Bean
+    @Primary
     public MessageCatalogPort azureMessageCatalogPort(final AzureAppConfigProviderProperties properties) {
         final ConfigurationClient client = new ConfigurationClientBuilder()
                 .endpoint(properties.endpoint())

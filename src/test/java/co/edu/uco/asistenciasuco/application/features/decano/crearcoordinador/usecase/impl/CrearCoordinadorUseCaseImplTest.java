@@ -80,8 +80,10 @@ class CrearCoordinadorUseCaseImplTest {
         final UUID actorDecano = UUID.randomUUID();
         final UUID facultad = UUID.randomUUID();
         final UUID usuarioCreadoId = UUID.randomUUID();
+        // HU121-HU122 D5 (CONTRACT congelado 2026-10-22): la contrasena ya no tiene valor por defecto, asi que el
+        // dominio la trae explicita. Antes este caso enviaba null y dependia de "UcoCoord_<doc>!". Resto sin cambios.
         final CrearCoordinadorDomain domain = new CrearCoordinadorDomain(
-                "1017555444", "JORGE", "LUIS", "HENAO", "PEREZ", "jorge.henao@uco.edu.co", null, null, actorDecano);
+                "1017555444", "JORGE", "LUIS", "HENAO", "PEREZ", "jorge.henao@uco.edu.co", null, "Clave12345678!", actorDecano);
 
         when(scopePort.findFacultadIdByDecanoUsuario(actorDecano)).thenReturn(Optional.of(facultad));
         when(passwordEncoderPort.encode(anyString())).thenReturn("HASH_GENERADO");
@@ -173,5 +175,26 @@ class CrearCoordinadorUseCaseImplTest {
 
         assertThrows(co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException.class,
                 () -> useCaseConIam.execute(domain));
+    }
+
+    // HU121-HU122 T-120R-01 / CA-09 / D5: la contrasena se exige siempre; no existe una por defecto derivada del documento.
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.NullAndEmptySource
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"   "})
+    void execute_rechaza_una_contrasena_ausente_o_en_blanco_sin_tocar_db_ni_identidad(final String password) {
+        final UsuarioRepositoryPort usuarioRepositoryPort = mock(UsuarioRepositoryPort.class);
+        final PasswordEncoderPort passwordEncoderPort = mock(PasswordEncoderPort.class);
+        final IdentityProviderPort identityProviderPort = mock(IdentityProviderPort.class);
+        final CrearCoordinadorUseCaseImpl useCaseConIam = new CrearCoordinadorUseCaseImpl(
+                commandPort, scopePort, usuarioRepositoryPort, passwordEncoderPort, identityProviderPort);
+        final UUID actorDecano = UUID.randomUUID();
+        when(scopePort.findFacultadIdByDecanoUsuario(actorDecano)).thenReturn(Optional.of(UUID.randomUUID()));
+        when(usuarioRepositoryPort.consultarUsuarioPorCorreo("jorge.henao@uco.edu.co")).thenReturn(Optional.empty());
+
+        assertThrows(co.edu.uco.asistenciasuco.application.exception.validation.ValidationException.class,
+                () -> useCaseConIam.execute(new CrearCoordinadorDomain(
+                        "1017555444", "JORGE", null, "HENAO", null, "jorge.henao@uco.edu.co", null, password, actorDecano)));
+
+        org.mockito.Mockito.verifyNoInteractions(commandPort, identityProviderPort, passwordEncoderPort);
     }
 }
