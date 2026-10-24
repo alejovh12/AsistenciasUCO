@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
-import co.edu.uco.asistenciasuco.application.features.coordinador.common.domain.DocenteCandidatoDomain;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.usecase.domain.DocenteCandidatoDomain;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DocenteProgramaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.DocenteCandidatoProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;

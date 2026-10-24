@@ -2,7 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.coordinador.consultardoce
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.domain.DocenteProgramaDomain;
-import co.edu.uco.asistenciasuco.application.features.coordinador.common.domain.DocentesProgramaPaginaDomain;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultardocentesprograma.usecase.domain.DocentesProgramaPaginaDomain;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultardocentesprograma.usecase.domain.ConsultarDocentesProgramaDomain;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DocenteProgramaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.DocenteProgramaProjection;
