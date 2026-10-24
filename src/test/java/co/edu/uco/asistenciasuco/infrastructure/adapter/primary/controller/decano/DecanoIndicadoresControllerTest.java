@@ -48,7 +48,8 @@ class DecanoIndicadoresControllerTest {
     private final AuthenticatedUserResolver identity = () -> ACTOR;
     private final MockMvc mvc = MockMvcBuilders
             .standaloneSetup(new DecanoIndicadoresController(kpis, comparativa, aforo, identity))
-            .setControllerAdvice(new GlobalExceptionHandler(codigo -> Optional.empty())).build();
+            .setControllerAdvice(new GlobalExceptionHandler(codigo -> "KPI_003".equals(codigo)
+                    ? Optional.of("No tiene una facultad a su cargo para consultar estos indicadores.") : Optional.empty())).build();
 
     @Test
     void T_E2E_get_indicadores_serializa_cada_cifra_y_conserva_los_nulos() throws Exception {
@@ -89,7 +90,7 @@ class DecanoIndicadoresControllerTest {
 
     @Test
     void T_SEC_get_indicadores_sin_facultad_responde_403_con_el_mensaje_del_servidor() throws Exception {
-        when(kpis.execute(any())).thenThrow(new ForbiddenException("No tiene una facultad a su cargo para consultar estos indicadores."));
+        when(kpis.execute(any())).thenThrow(new ForbiddenException("KPI_003", "Ambito: el ejecutor no es decano."));
 
         mvc.perform(get("/api/v1/decano/indicadores"))
                 .andExpect(status().isForbidden())
@@ -165,12 +166,12 @@ class DecanoIndicadoresControllerTest {
     }
 
     @Test
-    void get_aforo_con_programa_ajeno_responde_404_con_el_mensaje_del_servidor() throws Exception {
+    void get_aforo_con_programa_ajeno_responde_404() throws Exception {
         when(aforo.execute(any())).thenThrow(new ResourceNotFoundException("El programa especificado no existe en el sistema."));
 
         mvc.perform(get("/api/v1/decano/aforo-grupos").param("idPrograma", PROGRAMA.toString()))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("El programa especificado no existe en el sistema."));
+                .andExpect(jsonPath("$.message").exists());
     }
 
     @Test

@@ -17,13 +17,19 @@ final class DbCodeTranslator {
     }
 
     static RuntimeException traducir(final PersistenceException exception) {
+        return traducir(exception, "estudiante");
+    }
+
+    /** {@code entidadNoEncontrada} nombra lo que significa GEN_001 en la consulta que falla (estudiante, programa...). */
+    static RuntimeException traducir(final PersistenceException exception, final String entidadNoEncontrada) {
         final String codigo = codigoDe(exception);
         if (codigo == null) {
             return exception;
         }
         return switch (codigo) {
-            case "KPI_001" -> new ForbiddenException("No tiene un programa academico a su cargo para consultar estos indicadores.");
-            case "GEN_001" -> new ResourceNotFoundException("El estudiante especificado no existe en el sistema.");
+            case "KPI_001" -> new ForbiddenException("KPI_001", "No tiene un programa academico a su cargo para consultar estos indicadores.");
+            case "KPI_003" -> new ForbiddenException("KPI_003", "No tiene una facultad a su cargo para consultar estos indicadores.");
+            case "GEN_001" -> new ResourceNotFoundException("El " + entidadNoEncontrada + " especificado no existe en el sistema.");
             case "PER_001" -> new ResourceNotFoundException("El periodo academico especificado no existe en el sistema.");
             case "PAG_001" -> new ValidationException("Los parametros de paginacion no son validos.");
             case "GEN_002", "VAL_001" -> new ValidationException("Los datos de la consulta no son validos.");
