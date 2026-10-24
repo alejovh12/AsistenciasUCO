@@ -123,6 +123,31 @@ class RbacSecurityFilterChainTest {
     // --- /api/v1/coordinador/docentes/** : directorio y vinculacion del programa (HU062/HU091) ---
 
     @Test
+    void coordinador_indicadores_sin_token_recibe_401() throws Exception {
+        for (final String ruta : INDICADORES_COORDINADOR) {
+            mockMvc.perform(get(ruta)).andExpect(status().isUnauthorized());
+        }
+    }
+
+    @Test
+    void coordinador_indicadores_solo_coordinador_y_administrador_pasan_el_filtro() throws Exception {
+        for (final String ruta : INDICADORES_COORDINADOR) {
+            for (final String rol : new String[]{"DOCENTE", "ESTUDIANTE"}) {
+                mockMvc.perform(get(ruta).header(HttpHeaders.AUTHORIZATION, bearer(rol))).andExpect(status().isForbidden());
+            }
+            for (final String rol : new String[]{"COORDINADOR", "ADMINISTRADOR"}) {
+                mockMvc.perform(get(ruta).header(HttpHeaders.AUTHORIZATION, bearer(rol))).andExpect(status().isOk());
+            }
+        }
+    }
+
+    private static final String[] INDICADORES_COORDINADOR = {
+            "/api/v1/coordinador/indicadores",
+            "/api/v1/coordinador/alertas-tempranas",
+            "/api/v1/coordinador/estudiantes/00000000-0000-0000-0000-000000000001/bitacora",
+            "/api/v1/coordinador/estudiantes/00000000-0000-0000-0000-000000000001/ficha"};
+
+    @Test
     void coordinador_docentes_sin_token_recibe_401() throws Exception {
         mockMvc.perform(get("/api/v1/coordinador/docentes")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/coordinador/docentes/candidatos?busqueda=abc")).andExpect(status().isUnauthorized());
@@ -532,6 +557,12 @@ class RbacSecurityFilterChainTest {
 
         @GetMapping("/api/v1/docentes")
         String docentes() {
+            return "ok";
+        }
+
+        @GetMapping({"/api/v1/coordinador/indicadores", "/api/v1/coordinador/alertas-tempranas",
+                "/api/v1/coordinador/estudiantes/{id}/bitacora", "/api/v1/coordinador/estudiantes/{id}/ficha"})
+        String indicadoresCoordinador() {
             return "ok";
         }
 
