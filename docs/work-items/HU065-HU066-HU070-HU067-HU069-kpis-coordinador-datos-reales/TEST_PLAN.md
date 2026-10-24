@@ -1,5 +1,5 @@
 ---
-status: draft
+status: frozen-implemented
 type: work-item
 scope: fullstack-database-backend-frontend
 owner: fullstack-team
@@ -12,7 +12,7 @@ last-reviewed: 2026-10-24
 
 ## Fuentes
 
-- [PLAN](PLAN.md) (CA-01…CA-09, D1–D10) y [CONTRACT](CONTRACT.md) (`DRAFT`; las pruebas se derivan de él y se congelan con él).
+- [PLAN](PLAN.md) (CA-01…CA-09, D1–D10) y [CONTRACT](CONTRACT.md) (`frozen-implemented`; las pruebas se derivan de él y se congelan con él).
 - Skills: `uco-testing`, `uco-persistencia`, `uco-contratos`, `uco-seguridad`, `uco-backend-pagination-utc`.
 - Patrones: `test/test_usp_consultar_programas_academicos.sql` (consulta paginada, contexto restaurado), `test_usp_consultar_grupos_paginado.sql`, `ProgramaAcademicoJpaRepositoryTest`, `DecanoProgramaControllerTest`, `scratch/test_hu076_hu077_hu078.ps1` (E2E).
 

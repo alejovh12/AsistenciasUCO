@@ -1,5 +1,5 @@
 ---
-status: draft
+status: frozen-implemented
 type: work-item
 scope: fullstack-database-backend-frontend
 owner: fullstack-team
@@ -9,7 +9,7 @@ last-reviewed: 2026-10-24
 # CONTRACT — HU065 / HU066 / HU070 / HU067 / HU069: KPIs y alertas del Coordinador con datos reales
 
 > **Work Item:** `HU065-HU066-HU070-HU067-HU069-kpis-coordinador-datos-reales`
-> **Estado:** `DRAFT`: no está congelado ni tiene `.sha256`. Pasa a `CONTRACT_FROZEN` cuando el owner apruebe y resuelva D1–D10 del [PLAN](PLAN.md).
+> **Estado:** `FROZEN-IMPLEMENTED`: aprobado por el owner con D1–D10 del [PLAN](PLAN.md); evidencia en [VALIDATION](VALIDATION.md).
 > **Supuestos del borrador:** se toman las recomendaciones del PLAN: D1(a) denominador = sesiones vencidas con registro, D2(a) falta = `SJC`, D3(a) cierre masivo fuera de alcance, D4(a) sesión ejecutada = vencida con registro, D5(a) sin teléfono, D6(a) peor clasificación entre matrículas activas, D7(a) `uv_sesion_v2`, D8(b) período opcional, D9(a) sin SSE, D10(a) ramas desde `develop`.
 > **Conformidad:** `constitution.md`, `AGENTS.md` §3.3, `GUIA_METODICA_IMPLEMENTACION_HU.md`.
 

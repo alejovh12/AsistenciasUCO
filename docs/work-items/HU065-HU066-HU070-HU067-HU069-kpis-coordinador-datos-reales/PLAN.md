@@ -1,5 +1,5 @@
 ---
-status: draft
+status: frozen-implemented
 type: work-item
 scope: fullstack-database-backend-frontend
 owner: fullstack-team
