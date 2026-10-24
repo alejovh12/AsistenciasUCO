@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 import co.edu.uco.asistenciasuco.application.features.asistencia.exception.AsistenciaErrorCode;
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
+import co.edu.uco.asistenciasuco.application.features.admin.exception.CatalogoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.decano.exception.CoordinadorErrorCode;
 import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
@@ -68,7 +69,12 @@ final class DbFailureClassifier {
             case "ERR_UNICIDAD_DOCUMENTO" -> UsuarioErrorCode.ERR_UNICIDAD_DOCUMENTO;
             case "USU_002" -> UsuarioErrorCode.ERR_USUARIO_INACTIVO;
             case "HOR_001" -> GrupoErrorCode.ERR_CRUCE_HORARIO_ESTUDIANTE;
-            case "SES_001", "PROG_001", "PER_001", "FAC_001", "DEC_001", "TPR_001", "ARE_001" -> CommonErrorCode.RESOURCE_NOT_FOUND;
+            case "SES_001", "PROG_001", "PER_001", "FAC_001", "DEC_001" -> CommonErrorCode.RESOURCE_NOT_FOUND;
+            // Catalogos administrativos (HU154/HU151): codigos propios con mensaje institucional.
+            case "TPR_001" -> CatalogoErrorCode.TPR_001;
+            case "TPR_002" -> CatalogoErrorCode.TPR_002;
+            case "ARE_001" -> CatalogoErrorCode.ARE_001;
+            case "ARE_002" -> CatalogoErrorCode.ARE_002;
             // HU091-HU093: vertical de docentes del programa. DOC_001/DOC_008 no encontrado; DOC_002/003/006/009 conflicto.
             case "DOC_001" -> DocenteErrorCode.ERR_DOCENTE_NO_EXISTE;
             case "DOC_002" -> DocenteErrorCode.ERR_DOCENTE_YA_REGISTRADO;

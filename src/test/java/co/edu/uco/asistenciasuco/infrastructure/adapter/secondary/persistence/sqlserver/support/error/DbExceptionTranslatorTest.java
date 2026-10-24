@@ -596,14 +596,35 @@ class DbExceptionTranslatorTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"TPR_001", "ARE_001"})
-    void dbcode_de_tipo_programa_o_area_inexistente_lanza_resource_not_found(final String dbCode) {
+    @CsvSource({
+            "TPR_001, El tipo de programa especificado no existe en el sistema.",
+            "ARE_001, El area de conocimiento especificada no existe en el sistema."
+    })
+    void dbcode_de_tipo_programa_o_area_inexistente_lanza_resource_not_found_con_mensaje_propio(
+            final String dbCode, final String mensaje) {
         final ResourceNotFoundException exception = assertThrows(
                 ResourceNotFoundException.class,
                 () -> translateFailure("irrelevante", "DBCODE=" + dbCode + "|detalle", OPERATION)
         );
 
-        assertEquals("RESOURCE_NOT_FOUND", exception.getCode());
+        assertEquals(dbCode, exception.getCode());
+        assertEquals(mensaje, exception.getMessage());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "TPR_002, Ya existe un tipo de programa con el mismo codigo o nombre.",
+            "ARE_002, Ya existe un area de conocimiento con el mismo codigo o nombre."
+    })
+    void dbcode_de_tipo_programa_o_area_duplicado_lanza_conflict_con_mensaje_propio(
+            final String dbCode, final String mensaje) {
+        final ConflictException exception = assertThrows(
+                ConflictException.class,
+                () -> translateFailure("irrelevante", "DBCODE=" + dbCode + "|detalle", OPERATION)
+        );
+
+        assertEquals(dbCode, exception.getCode());
+        assertEquals(mensaje, exception.getMessage());
     }
 
     @Test
