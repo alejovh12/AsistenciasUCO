@@ -1,5 +1,5 @@
 ---
-status: draft
+status: frozen-approved
 type: work-item
 scope: fullstack-database-backend-frontend
 owner: fullstack-team
@@ -9,7 +9,7 @@ last-reviewed: 2026-10-24
 # CONTRACT — HU102 / HU103 / HU106 / HU144: KPIs de facultad del Decano con datos reales
 
 > **Work Item:** `HU102-HU103-HU106-HU144-kpis-decano-datos-reales`
-> **Estado:** `DRAFT`: no está congelado ni tiene `.sha256`. Pasa a `CONTRACT_FROZEN` cuando el owner apruebe y resuelva D1–D10 del [PLAN](PLAN.md).
+> **Estado:** `FROZEN-APPROVED`: aprobado por el owner con las recomendaciones D1–D10 del [PLAN](PLAN.md).
 > Hereda las definiciones de la [ola 1](../HU065-HU066-HU070-HU067-HU069-kpis-coordinador-datos-reales/CONTRACT.md) (falta, sesión ejecutada, clasificación, semáforo `VERDE/AMBAR/ROJO`, nulos).
 
 ---
