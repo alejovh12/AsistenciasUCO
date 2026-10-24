@@ -8,7 +8,7 @@ last-reviewed: 2026-10-24
 
 # TEST_PLAN — HU065 / HU066 / HU070 / HU067 / HU069: KPIs y alertas del Coordinador con datos reales
 
-**Estado:** `RED_PLANNED` (borrador). Las pruebas se escriben en la fase 03, en orden **DB → Backend → Frontend**, sobre ramas `feature/HU065-HU066-HU070-HU067-HU069-kpis-coordinador` creadas desde `develop` en worktrees propios.
+**Estado:** `FROZEN-IMPLEMENTED`. Las pruebas se escriben en la fase 03, en orden **DB → Backend → Frontend**, sobre ramas `feature/HU065-HU066-HU070-HU067-HU069-kpis-coordinador` creadas desde `develop` en worktrees propios.
 
 ## Fuentes
 
