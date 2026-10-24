@@ -132,3 +132,12 @@ Validación de borde (Bean Validation) espejo de la DB: `codigo` 3 caracteres `[
 - `POST/PUT/PATCH /admin/areas` hoy responden 501: sin consumidores válidos.
 - Los endpoints de tipos de programa son nuevos.
 - Se verifica en la fase CONTRACT si `openapi-golden-path.yaml` cubre estos paths (hoy no menciona áreas ni tipos de programa); de no cubrirlos, no se toca el contrato WORM ni su `.sha256`.
+
+## 6. Enmiendas (2026-10-24)
+
+1. **HU023 (lectura pública).** `GET /api/v1/tipos-programa` lo sirve `CatalogoProgramaController` (pista A, HU076-HU078, solo activos, `CatalogoProgramaDTO`). El `TipoProgramaController` de este work item se retiró en `develop` (commit 6729d71) por mapping ambiguo. `ConsultarTiposPrograma` queda para el listado administrativo (`GET /api/v1/admin/tipos-programa`).
+2. **Parámetros anchos en los SP públicos.** `@codigo` es `NVARCHAR(20)` y `@nombre` `NVARCHAR(150)` en las fachadas para validar y normalizar (`UPPER(TRIM)`) sin truncar silenciosamente; los `*_interno` conservan `NVARCHAR(3)` y `NVARCHAR(50)`.
+3. **Validación de borde.** El 400 lo produce `ValidationException` del caso de uso (igual que facultades), no Bean Validation.
+4. **Listado de áreas.** `GET /api/v1/admin/areas` permanece en `AdminPortalController`; `POST/PUT/PATCH` están en `AdminAreaController`.
+5. **D6.** `usp_validar_programa_academico_interno` (pista A) ya rechaza tipos inexistentes o inactivos con `PROG_004`; no se tocó `usp_crear_programa_academico`.
+6. **Frontend de áreas.** Se retiraron `facultadId`, `facultadNombre`, `coordinadorArea` y `totalAsignaturas` del modelo (D3); `dean-infraestructura` y los mocks se alinearon.
