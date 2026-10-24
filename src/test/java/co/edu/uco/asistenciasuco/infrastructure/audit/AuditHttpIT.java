@@ -4,6 +4,7 @@ import co.edu.uco.asistenciasuco.application.exception.business.ConflictExceptio
 import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
 import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoFacultadQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
@@ -74,7 +75,7 @@ class AuditHttpIT {
     @MockitoBean
     private AsistenciaRepositoryPort asistenciaRepositoryPort;
 
-    @MockitoBean
+    @MockitoBean(extraInterfaces = GrupoFacultadQueryPort.class)
     private GrupoRepositoryPort grupoRepositoryPort;
 
     @MockitoBean
