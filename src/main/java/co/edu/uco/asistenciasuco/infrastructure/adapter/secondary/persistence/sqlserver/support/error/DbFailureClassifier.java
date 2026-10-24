@@ -68,7 +68,7 @@ final class DbFailureClassifier {
             case "ERR_UNICIDAD_DOCUMENTO" -> UsuarioErrorCode.ERR_UNICIDAD_DOCUMENTO;
             case "USU_002" -> UsuarioErrorCode.ERR_USUARIO_INACTIVO;
             case "HOR_001" -> GrupoErrorCode.ERR_CRUCE_HORARIO_ESTUDIANTE;
-            case "SES_001", "PROG_001", "PER_001", "FAC_001", "DEC_001" -> CommonErrorCode.RESOURCE_NOT_FOUND;
+            case "SES_001", "PROG_001", "PER_001", "FAC_001", "DEC_001", "TPR_001", "ARE_001" -> CommonErrorCode.RESOURCE_NOT_FOUND;
             // HU091-HU093: vertical de docentes del programa. DOC_001/DOC_008 no encontrado; DOC_002/003/006/009 conflicto.
             case "DOC_001" -> DocenteErrorCode.ERR_DOCENTE_NO_EXISTE;
             case "DOC_002" -> DocenteErrorCode.ERR_DOCENTE_YA_REGISTRADO;
