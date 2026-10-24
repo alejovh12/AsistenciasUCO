@@ -595,6 +595,17 @@ class DbExceptionTranslatorTest {
         assertEquals("RESOURCE_NOT_FOUND", exception.getCode());
     }
 
+    @ParameterizedTest
+    @CsvSource({"TPR_001", "ARE_001"})
+    void dbcode_de_tipo_programa_o_area_inexistente_lanza_resource_not_found(final String dbCode) {
+        final ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class,
+                () -> translateFailure("irrelevante", "DBCODE=" + dbCode + "|detalle", OPERATION)
+        );
+
+        assertEquals("RESOURCE_NOT_FOUND", exception.getCode());
+    }
+
     @Test
     void dbcode_decano_ya_titular_de_otra_facultad_activa_lanza_conflict() {
         final ConflictException exception = assertThrows(
