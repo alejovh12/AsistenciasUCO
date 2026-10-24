@@ -47,7 +47,7 @@ public final class AcademicViewJpaProjectionMapper {
     }
 
     public static AreaProjection toArea(final UvAreaEntity row) {
-        return new AreaProjection(row.id(), row.nombre());
+        return new AreaProjection(row.id(), row.codigo(), row.nombre(), row.estaActivaArea());
     }
 
     public static InstitucionProjection toInstitucion(final UvInstitucionEntity row) {
