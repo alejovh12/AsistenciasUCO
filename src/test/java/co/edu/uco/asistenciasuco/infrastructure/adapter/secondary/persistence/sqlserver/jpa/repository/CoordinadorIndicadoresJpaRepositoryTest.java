@@ -182,6 +182,7 @@ class CoordinadorIndicadoresJpaRepositoryTest {
         when(fila.codigoGrupo()).thenReturn(931001);
         when(fila.idAsignatura()).thenReturn(ASIGNATURA);
         when(fila.nombreAsignatura()).thenReturn("Estructuras");
+        when(fila.asistio()).thenReturn(null);   // sesion vencida sin registro del estudiante (Mockito devolveria false por defecto)
         when(fila.totalRegistros()).thenReturn(25);
         when(query.getResultList()).thenReturn(List.of(fila));
 
