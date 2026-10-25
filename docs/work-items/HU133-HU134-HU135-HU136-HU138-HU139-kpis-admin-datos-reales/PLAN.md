@@ -1,5 +1,5 @@
 ---
-status: draft
+status: frozen-approved
 type: work-item
 scope: fullstack-database-backend-frontend
 owner: fullstack-team
@@ -179,8 +179,8 @@ Ver [TEST_PLAN.md](TEST_PLAN.md). Orden RED → GREEN → VALIDATE por repo, DB 
 | 3. Contratos identificados | ✅ (borrador) | [CONTRACT.md](CONTRACT.md) |
 | 4. Matriz TDD inicial | ✅ | [TEST_PLAN.md](TEST_PLAN.md) |
 | 5. Sin conflicto con contratos WORM | ✅ | Solo objetos y rutas nuevos |
-| 6. Decisiones del owner | ❌ | D1–D10 (recomendaciones en §6) |
+| 6. Decisiones del owner | ✅ | D1–D10 aprobadas con las recomendaciones de §6 |
 | 7. Archivos calientes | ✅ (con regla) | §5 |
 | 8. Rollback viable | ✅ | §5 |
 
-**Dictamen DoR:** `NOT_READY`: pendiente solo de la aprobación del owner sobre D1–D10.
+**Dictamen DoR:** `READY`: D1–D10 aprobadas por el owner con las recomendaciones.

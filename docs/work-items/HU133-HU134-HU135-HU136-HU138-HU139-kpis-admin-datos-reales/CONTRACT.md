@@ -1,5 +1,5 @@
 ---
-status: draft
+status: frozen-approved
 type: work-item
 scope: fullstack-database-backend-frontend
 owner: fullstack-team
@@ -9,7 +9,7 @@ last-reviewed: 2026-10-24
 # CONTRACT — HU133 / HU134 / HU135 / HU136 / HU138 / HU139: KPIs institucionales del Administrador con datos reales
 
 > **Work Item:** `HU133-HU134-HU135-HU136-HU138-HU139-kpis-admin-datos-reales`
-> **Estado:** `DRAFT`: no está congelado ni tiene `.sha256`. Pasa a `CONTRACT_FROZEN` cuando el owner apruebe y resuelva D1–D10 del [PLAN](PLAN.md).
+> **Estado:** `FROZEN-APPROVED`: aprobado por el owner con las recomendaciones D1–D10 del [PLAN](PLAN.md).
 > Hereda las definiciones de las olas [1](../HU065-HU066-HU070-HU067-HU069-kpis-coordinador-datos-reales/CONTRACT.md) y [2](../HU102-HU103-HU106-HU144-kpis-decano-datos-reales/CONTRACT.md) (falta, sesión ejecutada, clasificación, retención, ausentismo ponderado, nulos) y sus aclaraciones: `sesionesEjecutadas` agregado es la **suma por matrícula activa**; período inexistente → 404; listados con `ApiListResponse`.
 
 ---

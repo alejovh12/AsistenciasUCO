@@ -1,5 +1,5 @@
 ---
-status: draft
+status: frozen-approved
 type: work-item
 scope: fullstack-database-backend-frontend
 owner: fullstack-team
@@ -8,7 +8,7 @@ last-reviewed: 2026-10-24
 
 # TEST_PLAN — HU133 / HU134 / HU135 / HU136 / HU138 / HU139: KPIs institucionales del Administrador
 
-**Estado:** `RED_PLANNED` (borrador). Orden **DB → Backend → Frontend**; RED → GREEN → VALIDATE por repo. Referencias: [PLAN](PLAN.md) (CA-01…CA-09, D1–D10) y [CONTRACT](CONTRACT.md) (`DRAFT`; las pruebas se derivan de él y se congelan con él).
+**Estado:** `RED_PLANNED` (borrador). Orden **DB → Backend → Frontend**; RED → GREEN → VALIDATE por repo. Referencias: [PLAN](PLAN.md) (CA-01…CA-09, D1–D10) y [CONTRACT](CONTRACT.md) (`frozen-approved`; las pruebas se derivan de él y se congelan con él).
 
 Regla: ninguna prueba se relaja para pasar; solo se modifica con `TEST_CONTRACT_CONFLICT` documentado.
 
