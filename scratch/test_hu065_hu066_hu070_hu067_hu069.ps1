@@ -80,6 +80,11 @@ $aBad = Invoke-Api '/coordinador/alertas-tempranas?pagina=0&tamano=5' $tc
 Check 'pagina invalida => 400' ($aBad.Status -eq 400) "status=$($aBad.Status)"
 $aRojo = Invoke-Api '/coordinador/alertas-tempranas?pagina=1&tamano=50&semaforo=ROJO' $tc
 Check 'filtro ROJO solo devuelve ROJO' ((@($aRojo.Json.datos) | Where-Object { $_.semaforo -ne 'ROJO' }).Count -eq 0)
+foreach ($v in @('VERDE', 'AMBAR', 'ROJO')) {
+    $rv = Invoke-Api "/coordinador/alertas-tempranas?pagina=1&tamano=50&semaforo=$v" $tc
+    Check "filtro semaforo=$v => 200 y solo devuelve $v" ($rv.Status -eq 200 -and (@($rv.Json.datos) | Where-Object { $_.semaforo -ne $v }).Count -eq 0) "status=$($rv.Status)"
+}
+Check 'semaforo invalido (AMARILLO) => 400' ((Invoke-Api '/coordinador/alertas-tempranas?pagina=1&tamano=5&semaforo=AMARILLO' $tc).Status -eq 400)
 
 # --- HU067/HU069: ficha y bitacora ---
 $primero = @($a.Json.datos)[0]

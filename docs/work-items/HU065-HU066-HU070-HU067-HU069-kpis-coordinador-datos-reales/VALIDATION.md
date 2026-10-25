@@ -45,3 +45,7 @@ Ninguno sobre pruebas existentes. Un fallo en una prueba nueva propia: `coordina
 - `HU-CATALOG` se actualiza en el worktree de Infra (ver commit correspondiente).
 - Olas 2 (Decano) y 3 (Admin) según el PLAN; HU140/141/129 siguen `BLOCKED_BY_MISSING_DATA`.
 - Sin push ni PR hasta orden explícita.
+
+## 6. Corrección posterior (2026-10-24)
+
+El filtro de semáforo del frontend enviaba `AMARILLO` y el contrato define `AMBAR` (el backend respondía 400); el E2E original no probaba ese filtro y no lo detectó. Corregido en el frontend (`fix(frontend/coordinador)`, con un spec que fija las opciones) y el E2E ahora recorre `VERDE`, `AMBAR`, `ROJO` y verifica que `AMARILLO` responde 400. El resultado «21/21» de la sección 1 corresponde al script anterior a esta corrección.
