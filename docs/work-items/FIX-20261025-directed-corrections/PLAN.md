@@ -61,3 +61,14 @@ declara la propiedad de activación.
 READY para las dos correcciones focales: rutas, contratos, tests y evidencia
 localizados. NOT_READY para cambiar DB o cerrar funcionalmente la activación
 global UTC V2, por decisión y evidencia de integración pendientes.
+
+## Decisión técnica: UTC V2 como flujo predeterminado (2026-10-25)
+
+El responsable del proyecto (José Alejandro Valencia Henao) autoriza técnicamente,
+para este PR, que UTC V2 sea el único flujo normal de sesiones: propiedad
+`app.sesiones.v2.enabled` ausente o `true` habilita V2 con contrato SQL verificado;
+`false` conserva solo el bloqueo contractual de compatibilidad (404); un valor
+inválido detiene el arranque. Esta decisión es del responsable del proyecto y **no
+sustituye** la aprobación formal de otros owners (DB, frontend, contratos): esas
+aprobaciones siguen pendientes y se tramitan en la revisión del PR antes del merge.
+No se autoriza despliegue ni cambios de esquema SQL.
