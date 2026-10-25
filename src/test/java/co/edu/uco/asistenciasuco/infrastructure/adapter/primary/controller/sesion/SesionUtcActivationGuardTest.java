@@ -38,6 +38,7 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -189,7 +190,7 @@ class SesionUtcActivationGuardTest {
                         .withBean(EntityManager.class, () -> mock(EntityManager.class))
                         .withUserConfiguration(controlled)
                         .run(context -> {
-                            assertTrue(context.getStartupFailure() != null,
+                            assertNotNull(context.getStartupFailure(),
                                     "El valor '" + invalid + "' debe impedir el arranque con " + controlled.getSimpleName());
                             assertTrue(String.valueOf(rootMessage(context.getStartupFailure())).contains("app.sesiones.v2.enabled"),
                                     "El error debe nombrar la propiedad invalida");
