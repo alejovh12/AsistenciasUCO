@@ -1,5 +1,5 @@
 ---
-status: frozen-approved
+status: frozen-implemented
 type: work-item
 scope: fullstack-database-backend-frontend
 owner: fullstack-team
@@ -9,7 +9,7 @@ last-reviewed: 2026-10-24
 # CONTRACT — HU133 / HU134 / HU135 / HU136 / HU138 / HU139: KPIs institucionales del Administrador con datos reales
 
 > **Work Item:** `HU133-HU134-HU135-HU136-HU138-HU139-kpis-admin-datos-reales`
-> **Estado:** `FROZEN-APPROVED`: aprobado por el owner con las recomendaciones D1–D10 del [PLAN](PLAN.md).
+> **Estado:** `FROZEN-IMPLEMENTED`: aprobado por el owner con las recomendaciones D1–D10 del [PLAN](PLAN.md); evidencia y desvíos en [VALIDATION](VALIDATION.md).
 > Hereda las definiciones de las olas [1](../HU065-HU066-HU070-HU067-HU069-kpis-coordinador-datos-reales/CONTRACT.md) y [2](../HU102-HU103-HU106-HU144-kpis-decano-datos-reales/CONTRACT.md) (falta, sesión ejecutada, clasificación, retención, ausentismo ponderado, nulos) y sus aclaraciones: `sesionesEjecutadas` agregado es la **suma por matrícula activa**; período inexistente → 404; listados con `ApiListResponse`.
 
 ---
@@ -36,6 +36,15 @@ Se implementan **una sola vez, en DB**, sobre `uv_resumen_asistencia_estudiante_
 | **Docentes registrados** | Docentes con usuario activo y vínculo activo (`DocentePrograma.estado`) a un programa del ámbito. |
 
 Todo valor que no pueda calcularse se devuelve `NULL`/ausente (los conteos sin datos son `0`, los porcentajes `NULL`). **Nunca** un valor por defecto «creíble».
+
+### Aclaraciones surgidas en la implementación (desvíos documentados respecto a lo aprobado)
+
+- **Docentes registrados:** `DocentePrograma` no existe en el esquema desplegado en `develop` (pertenece a otra pista), así que se define como **docentes con usuario activo que son titulares de ≥ 1 grupo (de cualquier período) de un programa de la institución**. Un docente sin ningún grupo no tiene hoy relación con la institución en el modelo base y no se cuenta.
+- **Estudiantes registrados:** estudiantes con usuario activo vinculados por `EstudiantePrograma` a un programa de la institución; no dependen del período.
+- **Ámbito sin doble verificación en Java:** `InstitutionalScopePort` no tiene método para resolver la institución del administrador; los casos de uso solo validan forma y **la DB fuerza el ámbito** (`KPI_004`, traducido a 403 con su código para que el catálogo resuelva el mensaje).
+- **Sesiones consideradas:** solo las vencidas con procedencia temporal determinada (las de procedencia indeterminada se excluyen, igual que en las olas 1 y 2). En la semilla local eso excluye 8 de las 10 faltas SJC registradas.
+- **SSE (D7) no implementable como se aprobó:** `GET /api/v1/realtime/stream` exige `grupoId` y verifica la titularidad docente sobre ese grupo; no existe un canal institucional. La página **no se suscribe** al SSE: ofrece el botón «Actualizar» (acción del usuario, no sondeo). El push de los KPIs de asistencia y del censo queda como follow-up (canal SSE institucional y eventos de alta/matrícula).
+- **Período inexistente → 404** (igual que en las olas 1 y 2); `granularidad` en minúsculas se acepta (se normaliza a mayúsculas).
 
 ---
 
