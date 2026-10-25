@@ -6,15 +6,41 @@ param(
     [switch]$NoBackend,
     [switch]$NoFrontend,
     [ValidateRange(10, 600)][int]$WaitSeconds = 60,
-    [string]$FilesEnvFile
+    [string]$FilesEnvFile,
+    [string]$FrontendRoot,
+    [string]$DbRoot
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+# Prioridad: parametro, variable de entorno, primera carpeta existente entre las candidatas
+# (repositorio hermano del backend o ruta historica). Si ninguna existe se reporta la primera como MISSING.
+function Resolve-WorkspaceRoot {
+    param(
+        [string]$Explicit,
+        [Parameter(Mandatory = $true)][string]$EnvironmentVariable,
+        [Parameter(Mandatory = $true)][string[]]$Candidates
+    )
+    if (-not [string]::IsNullOrWhiteSpace($Explicit)) { return $Explicit }
+    $fromEnvironment = [Environment]::GetEnvironmentVariable($EnvironmentVariable)
+    if (-not [string]::IsNullOrWhiteSpace($fromEnvironment)) { return $fromEnvironment }
+    foreach ($candidate in $Candidates) {
+        if (Test-Path -LiteralPath $candidate -PathType Container) { return $candidate }
+    }
+    return $Candidates[0]
+}
+
 $backendRoot = Split-Path -Parent $PSScriptRoot
-$frontendRoot = 'C:\Users\josev\OneDrive\Documentos\Front_Asistecias\AsistenciasUCO-Frontend'
-$dbRoot = 'C:\Users\josev\OneDrive\Documentos\AsisteciaUco_db\git\gestion-asistencia-db'
+$workspaceRoot = Split-Path -Parent $backendRoot
+$frontendRoot = Resolve-WorkspaceRoot -Explicit $FrontendRoot -EnvironmentVariable 'ASISTENCIAS_FRONTEND_ROOT' -Candidates @(
+    (Join-Path $workspaceRoot 'Repositorio_GestionAsistenciaFrontend'),
+    'C:\Users\josev\OneDrive\Documentos\Front_Asistecias\AsistenciasUCO-Frontend'
+)
+$dbRoot = Resolve-WorkspaceRoot -Explicit $DbRoot -EnvironmentVariable 'ASISTENCIAS_DB_ROOT' -Candidates @(
+    (Join-Path $workspaceRoot 'Repositorio_GestionAsistenciadb'),
+    'C:\Users\josev\OneDrive\Documentos\AsisteciaUco_db\git\gestion-asistencia-db'
+)
 $keycloakRoot = Join-Path $backendRoot 'infra\keycloak'
 $filesRoot = Join-Path $backendRoot 'infra\files'
 $statePath = Join-Path ([System.IO.Path]::GetTempPath()) 'asistencias-uco-local-stack.json'
