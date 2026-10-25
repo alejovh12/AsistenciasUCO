@@ -97,3 +97,47 @@ gate completo.
   elige entre esas fuentes ni cambia DB/Infra: es `BLOCKED_BY_MISSING_EVIDENCE`
   para el cierre global UTC hasta que el owner contractual aporte la decisión
   versionada y la evidencia de despliegue correspondiente.
+
+## Remediación del PR #40 y validación integrada (2026-10-25)
+
+**SonarCloud (PR #40).** El gate falló por `new_reliability_rating = C`: un Bug
+`javabugs:S2259` (BLOCKER) en `DecanoCoordinadorGestionController` línea 78, que
+introdujo el retiro de `Objects.requireNonNull` en el commit de cuerpo `null`, y un
+smell `java:S5785` en `SesionUtcActivationGuardTest` línea 192. Corrección en
+`af220309`: `request != null && Boolean.TRUE.equals(request.getEstaActivo())` tras la
+validación 400 (sin cambio de comportamiento) y `assertNotNull`. Pruebas afectadas
+(`SesionUtcActivationGuardTest`, `DecanoCoordinadorGestionControllerTest`): exit 0.
+Resultado sobre `af220309`: gate `OK`, 0 issues abiertos, CI backend en success
+(Backend Quality Gate, ArchUnit, CodeQL, Dependency Review, Trivy fs/image).
+
+**Trivy.** Ningún hallazgo es introducido por el PR: no cambia `pom.xml` ni `Dockerfile`.
+`brotli-libs` CVE-2026-111497 (imagen base Alpine) y el aviso LOW de HEALTHCHECK son
+deuda previa. CVE-2025-59250 / `mssql-jdbc`: la dependencia real es `13.2.1.jre11`
+(gestionada por Spring Boot 4.0.8); OSV/GHSA-m494-w24q-6f7w da `13.2.1.jre11` como
+versión corregida, pero el jar declara internamente `13.2.1` en `pom.properties` y
+`Bundle-Version`, lo que explica el aviso: falso positivo probable por metadatos, no
+confirmado con una nueva versión del driver. No se actualizó ninguna dependencia.
+
+**Integración dirigida (backend local con UTC V2 por defecto, SQL Server y Keycloak
+locales, usuarios Keycloak temporales y sesiones `E2E-UTCV2-*` eliminadas al final):
+33/33 PASS.** El arranque registra la verificación del contrato `UTC-D06-POST-FREEZE`.
+Cubre: 401 sin JWT; Bogotá con 7 decimales y UTC con `Z` (instantes exactos);
+primavera y otoño DST (America/New_York 2042) con offsets explícitos; cruce de
+medianoche aceptado; horas iguales, fin anterior y falta de offset rechazados (400);
+PATCH Berlín y recarga sin alterar el instante, y PATCH idempotente con los instantes
+recargados; ownership (otro docente 403 en GET/PATCH/POST; estudiante 403; PUT 405);
+Coordinador (docentes, candidatos, estudiantes, planes, períodos 200; docente y
+estudiante 403; coordinador 403 y decano 400 en `PATCH .../estado` con cuerpo `null` o
+sin `estaActivo`); V1 sigue servido por compatibilidad; sin sesiones residuales.
+Limitación observada: `GET /api/v1/estudiante/materias/{id}/sesiones` (V1 del portal)
+sigue emitiendo `LocalDateTime` sin zona con el valor almacenado en UTC; el frontend lo
+muestra sin reinterpretar y lo marca `SIN_ZONA`. No es regresión de este PR.
+
+**Conflicto preexistente `SJC/asistio/NO_DISPONIBLE` (reclamos).** No se tocó ni se
+agrava: `usp_resolver_solicitud_revision_asistencia` conserva `asistio=1` con `SJC`
+mientras el proyector clasifica razones distintas de `AN` como `NO_DISPONIBLE`. Sigue
+`CONTRACT_CONFLICT` pendiente del owner de HU035/HU036. Reclamos no se revalidaron en
+esta ronda (`NOT_RUN`).
+
+**No ejecutado:** workflow `Backend Integration` (solo `workflow_dispatch` con secretos
+de CI; requiere GitHub con sesión).
