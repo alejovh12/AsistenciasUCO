@@ -1,5 +1,5 @@
 ---
-status: frozen-approved
+status: frozen-implemented
 type: work-item
 scope: fullstack-database-backend-frontend
 owner: fullstack-team
@@ -9,7 +9,7 @@ last-reviewed: 2026-10-24
 # CONTRACT — HU102 / HU103 / HU106 / HU144: KPIs de facultad del Decano con datos reales
 
 > **Work Item:** `HU102-HU103-HU106-HU144-kpis-decano-datos-reales`
-> **Estado:** `FROZEN-APPROVED`: aprobado por el owner con las recomendaciones D1–D10 del [PLAN](PLAN.md).
+> **Estado:** `FROZEN-IMPLEMENTED`: aprobado por el owner con las recomendaciones D1–D10 del [PLAN](PLAN.md); evidencia en [VALIDATION](VALIDATION.md).
 > Hereda las definiciones de la [ola 1](../HU065-HU066-HU070-HU067-HU069-kpis-coordinador-datos-reales/CONTRACT.md) (falta, sesión ejecutada, clasificación, semáforo `VERDE/AMBAR/ROJO`, nulos).
 
 ---
@@ -33,6 +33,16 @@ Se implementan **una sola vez, en DB**, sobre `uv_resumen_asistencia_estudiante_
 | **Tasa de aforo** | `matriculadosActivos / cupoMaximo × 100`, 2 decimales; `null` si `cupoMaximo` es nulo o 0 (D4). En el KPI: `Σ matriculadosActivos / Σ cupoMaximo` de los grupos considerados. |
 
 Todo valor que no pueda calcularse se devuelve `NULL`/ausente. **Nunca** un valor por defecto «creíble».
+
+### Aclaraciones surgidas en la implementación (no cambian el contrato aprobado)
+
+- **`sesionesEjecutadas`** (KPI y comparativa) es la **suma por matrícula activa** de las sesiones ejecutadas (denominador de D1, «sesiones-estudiante»), no el número de sesiones distintas. Por eso `porcentajeAusentismo = faltasSinJustaCausa / sesionesEjecutadas`.
+- **`totalProgramas`** cuenta todos los programas de la facultad (activos e inactivos, coherente con D5).
+- **Sin período con grupos habilitados** (o facultad sin grupos): una fila con conteos en `0`, `cupoTotal = 0` y porcentajes `NULL` (no es error). `idPeriodoAcademico = NULL`.
+- **Período inexistente** responde **404** (no 400), igual que en la ola 1, porque el traductor de errores compartido clasifica `PER_001` como recurso inexistente.
+- **`GET /aforo-grupos`** responde con `ApiListResponse` (`datos` + `total`), igual que `alertas-tempranas` de la ola 1, en lugar de `ApiPageResponse`.
+- **Mensajes:** `KPI_001` y `KPI_003` viajan en la excepción con su código para que el catálogo resuelva el texto de usuario; `GEN_001`/`PER_001`/`PAG_001` llevan placeholders que el resolvedor genérico no sustituye, por lo que su mensaje al cliente es el genérico del backend (el texto específico queda en el log técnico).
+- **UI:** la comparativa se rotula «Ausentismo por programa»; la retención, «Retención por asistencia (período vigente)» (D2).
 
 ---
 
