@@ -1,11 +1,11 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.vinculardocenteprograma.primaryports.interactor;
 
-import co.edu.uco.asistenciasuco.application.features.coordinador.common.domain.DocenteCandidatoDomain;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.usecase.domain.DocenteCandidatoDomain;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.domain.DocenteProgramaDomain;
-import co.edu.uco.asistenciasuco.application.features.coordinador.common.domain.DocentesProgramaPaginaDomain;
-import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.DocenteCandidatoDTO;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultardocentesprograma.usecase.domain.DocentesProgramaPaginaDomain;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.primaryports.dto.DocenteCandidatoDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.DocenteProgramaDTO;
-import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.DocentesProgramaPaginaDTO;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultardocentesprograma.primaryports.dto.DocentesProgramaPaginaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.primaryports.interactor.ConsultarCandidatosDocenteInteractor;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.usecase.ConsultarCandidatosDocenteUseCase;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultardocentesprograma.primaryports.dto.ConsultarDocentesProgramaDTO;

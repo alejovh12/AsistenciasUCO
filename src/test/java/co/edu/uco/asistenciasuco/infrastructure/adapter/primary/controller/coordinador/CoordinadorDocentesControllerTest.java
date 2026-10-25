@@ -6,9 +6,9 @@ import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardoce
 import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.primaryports.dto.ActualizarDocenteProgramaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.cambiarestadodocenteprograma.primaryports.CambiarEstadoDocenteProgramaInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.cambiarestadodocenteprograma.primaryports.dto.CambiarEstadoDocenteProgramaDTO;
-import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.DocenteCandidatoDTO;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.primaryports.dto.DocenteCandidatoDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.DocenteProgramaDTO;
-import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.DocentesProgramaPaginaDTO;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultardocentesprograma.primaryports.dto.DocentesProgramaPaginaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.primaryports.ConsultarCandidatosDocenteInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultardocentesprograma.primaryports.ConsultarDocentesProgramaInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultardocentesprograma.primaryports.dto.ConsultarDocentesProgramaDTO;

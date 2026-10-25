@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.application.features.coordinador.common.dto;
+package co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.primaryports.dto;
 
 import java.util.UUID;
 

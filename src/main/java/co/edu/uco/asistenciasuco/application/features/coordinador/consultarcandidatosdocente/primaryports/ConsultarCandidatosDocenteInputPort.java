@@ -1,6 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.primaryports;
 
-import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.DocenteCandidatoDTO;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.primaryports.dto.DocenteCandidatoDTO;
 
 import java.util.List;
 import java.util.UUID;

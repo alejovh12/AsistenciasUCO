@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.consultardocentesprograma.primaryports.interactor;
 
-import co.edu.uco.asistenciasuco.application.features.coordinador.common.domain.DocentesProgramaPaginaDomain;
-import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.DocentesProgramaPaginaDTO;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultardocentesprograma.usecase.domain.DocentesProgramaPaginaDomain;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultardocentesprograma.primaryports.dto.DocentesProgramaPaginaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.mapper.DocenteProgramaMapper;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultardocentesprograma.primaryports.ConsultarDocentesProgramaInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultardocentesprograma.primaryports.dto.ConsultarDocentesProgramaDTO;

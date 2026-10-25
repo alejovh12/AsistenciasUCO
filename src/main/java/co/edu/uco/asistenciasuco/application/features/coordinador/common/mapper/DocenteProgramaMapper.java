@@ -1,10 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.common.mapper;
 
-import co.edu.uco.asistenciasuco.application.features.coordinador.common.domain.DocenteCandidatoDomain;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.domain.DocenteProgramaDomain;
-import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.DocenteCandidatoDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.DocenteProgramaDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.DocenteCandidatoProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.DocenteProgramaProjection;
 
 /** Conversiones proyeccion -> dominio -> DTO de la vertical de docentes del programa. */
@@ -28,13 +25,4 @@ public final class DocenteProgramaMapper {
                 d.fechaVinculacionUtc(), d.totalGruposPrograma(), d.estaActivo());
     }
 
-    public static DocenteCandidatoDomain toDomain(final DocenteCandidatoProjection p) {
-        return new DocenteCandidatoDomain(p.idDocente(), p.idUsuario(), p.codigoTipoIdentificacion(),
-                p.numeroIdentificacion(), p.nombreCompleto());
-    }
-
-    public static DocenteCandidatoDTO toDTO(final DocenteCandidatoDomain d) {
-        return new DocenteCandidatoDTO(d.idDocente(), d.idUsuario(), d.codigoTipoIdentificacion(),
-                d.numeroIdentificacion(), d.nombreCompleto());
-    }
 }

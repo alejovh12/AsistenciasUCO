@@ -73,7 +73,9 @@ public final class CoordinadorJdbcBaseline implements CoordinadorQueryPort, Coor
     @Override
     public List<CoordinadorProjection> consultarCoordinadoresPorFacultad(final UUID idFacultad) {
         return jdbcOperations.query("""
-                SELECT id, idUsuario, numeroIdentificacion, nombreCompleto, idPrograma, nombrePrograma, estaActivoCoordinador
+                SELECT id, idUsuario, numeroIdentificacion, nombreCompleto, idPrograma, nombrePrograma,
+                       estaActivoCoordinador, primerNombre, segundoNombre, primerApellido, segundoApellido,
+                       correo, estaActivoRolCoordinador
                 FROM dbo.uv_coordinador
                 WHERE idFacultad = :idFacultad
                 ORDER BY nombrePrograma, nombreCompleto, id
@@ -84,7 +86,13 @@ public final class CoordinadorJdbcBaseline implements CoordinadorQueryPort, Coor
                 JdbcBaselineValueMapper.toString(rs.getObject("nombreCompleto")),
                 JdbcBaselineValueMapper.toUuid(rs.getObject("idPrograma")),
                 JdbcBaselineValueMapper.toString(rs.getObject("nombrePrograma")),
-                JdbcBaselineValueMapper.toBoolean(rs.getObject("estaActivoCoordinador"))
+                JdbcBaselineValueMapper.toBoolean(rs.getObject("estaActivoCoordinador")),
+                JdbcBaselineValueMapper.toString(rs.getObject("primerNombre")),
+                JdbcBaselineValueMapper.toString(rs.getObject("segundoNombre")),
+                JdbcBaselineValueMapper.toString(rs.getObject("primerApellido")),
+                JdbcBaselineValueMapper.toString(rs.getObject("segundoApellido")),
+                JdbcBaselineValueMapper.toString(rs.getObject("correo")),
+                JdbcBaselineValueMapper.toBoolean(rs.getObject("estaActivoRolCoordinador"))
         ));
     }
 }

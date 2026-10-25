@@ -14,6 +14,6 @@
 | `usp_registrar_archivo_soporte` | W1 mutation | 4 columnas | metadata/archivo | compatible con baseline de mutación; aprobación pendiente |
 | `usp_radicar_solicitud_revision_asistencia_v2` | W2 mutation | 4 columnas | reclamo/soporte | compatible con baseline de mutación; aprobación pendiente |
 | `usp_consultar_archivo_soporte_autorizado` | R1 read query | 10 columnas | descarga autorizada | requiere confirmación como query pública |
-| `usp_consultar_solicitudes_revision_docente` | R2 read query | 25 columnas | listado docente paginado | requiere confirmación como query pública |
+| `usp_consultar_solicitudes_revision_docente` | R2 read query | 27 columnas | listado docente paginado | requiere confirmación como query pública |
 
 No se fuerza R1/R2 a cuatro columnas. Esta matriz no sustituye el contrato aprobado ni autoriza producción.
