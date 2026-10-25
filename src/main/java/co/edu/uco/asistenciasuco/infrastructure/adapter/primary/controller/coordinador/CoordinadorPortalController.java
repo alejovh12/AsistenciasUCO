@@ -152,10 +152,8 @@ public final class CoordinadorPortalController {
         final var data = consultarPeriodosAcademicosInputPort.execute();
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
     }
-    @PostMapping("/periodos-academicos")
-    public ResponseEntity<ApiDataResponse<Void>> crearPeriodoAcademico() { throw unavailable(); }
-    @PutMapping("/periodos-academicos/{id}")
-    public ResponseEntity<ApiDataResponse<Void>> actualizarPeriodoAcademico(@PathVariable final UUID id) { throw unavailable(); }
+    // HU096/HU097/HU098: el periodo es unico por institucion; crearlo, modificarlo y eliminarlo es del ADMINISTRADOR
+    // (AdminPeriodoAcademicoController, /api/v1/admin/periodos-academicos). Aqui solo se consulta.
     @PatchMapping("/periodos-academicos/{id}/estado")
     public ResponseEntity<ApiDataResponse<Void>> toggleEstadoPeriodoAcademico(@PathVariable final UUID id) { throw unavailable(); }
 

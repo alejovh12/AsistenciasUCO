@@ -168,7 +168,6 @@ class CoordinadorPortalControllerTest {
     void unavailableEndpointsRemainExplicitlyUnavailable() throws Exception {
         final List<org.junit.jupiter.api.function.Executable> operations = List.of(
                 () -> controller.eliminarAsignaturaPlan(PLAN, SUBJECT),
-                controller::crearPeriodoAcademico, () -> controller.actualizarPeriodoAcademico(PLAN),
                 () -> controller.toggleEstadoPeriodoAcademico(PLAN),
                 controller::consultarSolicitudesMatricula, () -> controller.resolverSolicitudMatricula(PLAN),
                 () -> controller.matricularEstudianteEnGrupo(PLAN),
