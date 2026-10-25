@@ -158,6 +158,28 @@ class RbacSecurityFilterChainTest {
         }
     }
 
+    @Test
+    void admin_indicadores_sin_token_recibe_401() throws Exception {
+        for (final String ruta : INDICADORES_ADMIN) {
+            mockMvc.perform(get(ruta)).andExpect(status().isUnauthorized());
+        }
+    }
+
+    @Test
+    void admin_indicadores_docente_estudiante_y_coordinador_reciben_403_y_administrador_pasa_el_filtro() throws Exception {
+        for (final String ruta : INDICADORES_ADMIN) {
+            for (final String rol : new String[]{"COORDINADOR", "DOCENTE", "ESTUDIANTE"}) {
+                mockMvc.perform(get(ruta).header(HttpHeaders.AUTHORIZATION, bearer(rol))).andExpect(status().isForbidden());
+            }
+            mockMvc.perform(get(ruta).header(HttpHeaders.AUTHORIZATION, bearer("ADMINISTRADOR"))).andExpect(status().isOk());
+        }
+    }
+
+    private static final String[] INDICADORES_ADMIN = {
+            "/api/v1/admin/indicadores",
+            "/api/v1/admin/comparativa-facultades",
+            "/api/v1/admin/tendencia-ausentismo"};
+
     private static final String[] INDICADORES_DECANO = {
             "/api/v1/decano/indicadores",
             "/api/v1/decano/comparativa-programas",
@@ -585,6 +607,11 @@ class RbacSecurityFilterChainTest {
         @GetMapping({"/api/v1/coordinador/indicadores", "/api/v1/coordinador/alertas-tempranas",
                 "/api/v1/coordinador/estudiantes/{id}/bitacora", "/api/v1/coordinador/estudiantes/{id}/ficha"})
         String indicadoresCoordinador() {
+            return "ok";
+        }
+
+        @GetMapping({"/api/v1/admin/indicadores", "/api/v1/admin/comparativa-facultades", "/api/v1/admin/tendencia-ausentismo"})
+        String indicadoresAdmin() {
             return "ok";
         }
 
