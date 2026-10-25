@@ -12,6 +12,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import jakarta.persistence.EntityManager;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,29 @@ public class PlanEstudioJpaRepository implements PlanEstudioQueryPort, PlanEstud
                  @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
 
+    static final String SQL_CAMBIAR_ESTADO_PLAN = """
+            EXEC dbo.usp_cambiar_estado_plan_estudio
+                 @idPlanEstudio = :idPlanEstudio,
+                 @estaActivo = :estaActivo,
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
+            """;
+
+    static final String SQL_AGREGAR_SEMESTRE_PLAN = """
+            EXEC dbo.usp_agregar_semestre_plan_estudio
+                 @idPlanEstudio = :idPlanEstudio,
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
+            """;
+
+    static final String SQL_QUITAR_SEMESTRE_PLAN = """
+            EXEC dbo.usp_quitar_semestre_plan_estudio
+                 @idPlanEstudio = :idPlanEstudio,
+                 @numeroSemestre = :numeroSemestre,
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
+            """;
+
     static final String HQL_POR_PROGRAMA = """
             select p
             from UvPlanEstudioEntity p
@@ -46,7 +70,18 @@ public class PlanEstudioJpaRepository implements PlanEstudioQueryPort, PlanEstud
             order by p.nombrePrograma, p.inp, p.id
             """;
 
+    /** HU082/HU083: mayor numero de semestre de cada plan (la malla va del semestre 1 a ese numero). */
+    static final String HQL_TOTAL_SEMESTRES = """
+            select sp.idPlanEstudio, max(sp.numeroSemestre)
+            from UvSemestrePlanEstudioEntity sp
+            where sp.idPlanEstudio in :idsPlan
+            group by sp.idPlanEstudio
+            """;
+
     static final String OP_REGISTRAR_O_ACTUALIZAR_PLAN = "registrarOActualizarPlanEstudio";
+    static final String OP_CAMBIAR_ESTADO_PLAN = "cambiarEstadoPlanEstudio";
+    static final String OP_AGREGAR_SEMESTRE_PLAN = "agregarSemestrePlanEstudio";
+    static final String OP_QUITAR_SEMESTRE_PLAN = "quitarSemestrePlanEstudio";
 
     private final EntityManager entityManager;
     private final JpaProcedureExecutor procedureExecutor;
@@ -68,6 +103,29 @@ public class PlanEstudioJpaRepository implements PlanEstudioQueryPort, PlanEstud
         ejecutarRegistrarOActualizarPlanEstudio(idPlanEstudio, idPrograma, inp, idUsuarioEjecutor);
     }
 
+    @Override
+    public void cambiarEstadoPlanEstudio(final UUID idPlanEstudio, final boolean estaActivo, final UUID idUsuarioEjecutor) {
+        final Map<String, Object> parametros = new LinkedHashMap<>();
+        parametros.put("idPlanEstudio", idPlanEstudio);
+        parametros.put("estaActivo", estaActivo);
+        ejecutarComandoPlan(OP_CAMBIAR_ESTADO_PLAN, SQL_CAMBIAR_ESTADO_PLAN, parametros, idUsuarioEjecutor);
+    }
+
+    @Override
+    public void agregarSemestrePlanEstudio(final UUID idPlanEstudio, final UUID idUsuarioEjecutor) {
+        final Map<String, Object> parametros = new LinkedHashMap<>();
+        parametros.put("idPlanEstudio", idPlanEstudio);
+        ejecutarComandoPlan(OP_AGREGAR_SEMESTRE_PLAN, SQL_AGREGAR_SEMESTRE_PLAN, parametros, idUsuarioEjecutor);
+    }
+
+    @Override
+    public void quitarSemestrePlanEstudio(final UUID idPlanEstudio, final Integer numeroSemestre, final UUID idUsuarioEjecutor) {
+        final Map<String, Object> parametros = new LinkedHashMap<>();
+        parametros.put("idPlanEstudio", idPlanEstudio);
+        parametros.put("numeroSemestre", numeroSemestre);
+        ejecutarComandoPlan(OP_QUITAR_SEMESTRE_PLAN, SQL_QUITAR_SEMESTRE_PLAN, parametros, idUsuarioEjecutor);
+    }
+
     // QUERIES
 
     @Override
@@ -75,11 +133,9 @@ public class PlanEstudioJpaRepository implements PlanEstudioQueryPort, PlanEstud
         return JpaQueryExecutor.execute(
                 "consultarPlanesPorPrograma",
                 "No fue posible consultar los planes de estudio desde base de datos.",
-                () -> entityManager.createQuery(HQL_POR_PROGRAMA, UvPlanEstudioEntity.class)
+                () -> conTotalSemestres(entityManager.createQuery(HQL_POR_PROGRAMA, UvPlanEstudioEntity.class)
                         .setParameter("idPrograma", idPrograma)
-                        .getResultList().stream()
-                        .map(AcademicViewJpaProjectionMapper::toPlanEstudio)
-                        .toList()
+                        .getResultList())
         );
     }
 
@@ -88,15 +144,47 @@ public class PlanEstudioJpaRepository implements PlanEstudioQueryPort, PlanEstud
         return JpaQueryExecutor.execute(
                 "consultarPlanesPorFacultad",
                 "No fue posible consultar los planes de estudio de la facultad desde base de datos.",
-                () -> entityManager.createQuery(HQL_POR_FACULTAD, UvPlanEstudioEntity.class)
+                () -> conTotalSemestres(entityManager.createQuery(HQL_POR_FACULTAD, UvPlanEstudioEntity.class)
                         .setParameter("idFacultad", idFacultad)
-                        .getResultList().stream()
-                        .map(AcademicViewJpaProjectionMapper::toPlanEstudio)
-                        .toList()
+                        .getResultList())
         );
     }
 
     // PRIVATE HELPERS
+
+    private List<PlanEstudioProjection> conTotalSemestres(final List<UvPlanEstudioEntity> planes) {
+        final Map<UUID, Integer> totales = consultarTotalSemestres(planes.stream().map(UvPlanEstudioEntity::id).toList());
+        return planes.stream()
+                .map(plan -> AcademicViewJpaProjectionMapper.toPlanEstudio(plan, totales.getOrDefault(plan.id(), 0)))
+                .toList();
+    }
+
+    private Map<UUID, Integer> consultarTotalSemestres(final Collection<UUID> idsPlan) {
+        final Map<UUID, Integer> totales = new LinkedHashMap<>();
+        if (idsPlan.isEmpty()) {
+            return totales;
+        }
+        entityManager.createQuery(HQL_TOTAL_SEMESTRES, Object[].class)
+                .setParameter("idsPlan", idsPlan)
+                .getResultList()
+                .forEach(fila -> totales.put((UUID) fila[0], fila[1] == null ? 0 : ((Number) fila[1]).intValue()));
+        return totales;
+    }
+
+    private void ejecutarComandoPlan(
+            final String operacion,
+            final String sql,
+            final Map<String, Object> parametros,
+            final UUID idUsuarioEjecutor
+    ) {
+        if (ObjectHelper.isNull(idUsuarioEjecutor)) {
+            throw new CrosscuttingException("El usuario ejecutor del plan de estudio es obligatorio.");
+        }
+        final UUID correlationId = CorrelationIdContext.require();
+        parametros.put("idCorrelacion", correlationId);
+        parametros.put("idUsuarioEjecutor", idUsuarioEjecutor);
+        procedureExecutor.execute(operacion, sql, parametros, correlationId);
+    }
 
     private ProcedureResult ejecutarRegistrarOActualizarPlanEstudio(
             final UUID idPlanEstudio,

@@ -93,11 +93,20 @@ public final class CoordinadorPortalController {
         return ResponseEntity.ok(new ApiDataResponse<>(true, null));
     }
     @PatchMapping("/planes-estudio/{id}/toggle-estado")
-    public ResponseEntity<ApiDataResponse<Void>> toggleEstadoPlanEstudio(@PathVariable final UUID id) { throw unavailable(); }
+    public ResponseEntity<ApiDataResponse<Void>> toggleEstadoPlanEstudio(@PathVariable final UUID id) {
+        gestionarPlanEstudioInputPort.cambiarEstado(id, authenticatedUserResolver.requireAuthenticatedUserId());
+        return ResponseEntity.ok(new ApiDataResponse<>(true, null));
+    }
     @PostMapping("/planes-estudio/{id}/semestres")
-    public ResponseEntity<ApiDataResponse<Void>> agregarSemestrePlan(@PathVariable final UUID id) { throw unavailable(); }
+    public ResponseEntity<ApiDataResponse<Void>> agregarSemestrePlan(@PathVariable final UUID id) {
+        gestionarPlanEstudioInputPort.agregarSemestre(id, authenticatedUserResolver.requireAuthenticatedUserId());
+        return ResponseEntity.ok(new ApiDataResponse<>(true, null));
+    }
     @DeleteMapping("/planes-estudio/{id}/semestres/{numero}")
-    public ResponseEntity<ApiDataResponse<Void>> eliminarSemestrePlan(@PathVariable final UUID id, @PathVariable final Integer numero) { throw unavailable(); }
+    public ResponseEntity<ApiDataResponse<Void>> eliminarSemestrePlan(@PathVariable final UUID id, @PathVariable final Integer numero) {
+        gestionarPlanEstudioInputPort.quitarSemestre(id, numero, authenticatedUserResolver.requireAuthenticatedUserId());
+        return ResponseEntity.ok(new ApiDataResponse<>(true, null));
+    }
 
     @GetMapping("/planes-estudio/{id}/asignaturas")
     public ResponseEntity<ApiListResponse<AsignaturaDTO>> consultarAsignaturasPlan(@PathVariable final UUID id) {
