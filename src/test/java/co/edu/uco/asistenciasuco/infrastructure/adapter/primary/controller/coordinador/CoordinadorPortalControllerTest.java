@@ -1,6 +1,8 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador;
 
+import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
+import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.AsignaturaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.primaryports.dto.EstudianteProgramaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarperiodosacademicos.primaryports.dto.PeriodoAcademicoDTO;
@@ -33,6 +35,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -135,13 +138,36 @@ class CoordinadorPortalControllerTest {
     }
 
     @Test
+    void planStateAndSemesterCommandsDelegateToInputPortWithAuthenticatedActor() throws Exception {
+        mvc.perform(patch("/api/v1/coordinador/planes-estudio/{id}/toggle-estado", PLAN))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.exitoso").value(true));
+        mvc.perform(post("/api/v1/coordinador/planes-estudio/{id}/semestres", PLAN))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.exitoso").value(true));
+        mvc.perform(delete("/api/v1/coordinador/planes-estudio/{id}/semestres/{numero}", PLAN, 8))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.exitoso").value(true));
+
+        verify(managePlans).cambiarEstado(PLAN, ACTOR);
+        verify(managePlans).agregarSemestre(PLAN, ACTOR);
+        verify(managePlans).quitarSemestre(PLAN, 8, ACTOR);
+    }
+
+    @Test
+    void planSemesterBusinessRejectionsKeepHttpErrorContract() throws Exception {
+        doThrow(new ConflictException("El semestre tiene asignaturas asociadas."))
+                .when(managePlans).quitarSemestre(PLAN, 3, ACTOR);
+        doThrow(new ResourceNotFoundException("El plan de estudio indicado no existe."))
+                .when(managePlans).cambiarEstado(PLAN, ACTOR);
+
+        mvc.perform(delete("/api/v1/coordinador/planes-estudio/{id}/semestres/{numero}", PLAN, 3))
+                .andExpect(status().isConflict());
+        mvc.perform(patch("/api/v1/coordinador/planes-estudio/{id}/toggle-estado", PLAN))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void unavailableEndpointsRemainExplicitlyUnavailable() throws Exception {
         final List<org.junit.jupiter.api.function.Executable> operations = List.of(
-                () -> controller.toggleEstadoPlanEstudio(PLAN),
-                () -> controller.agregarSemestrePlan(PLAN),
-                () -> controller.eliminarSemestrePlan(PLAN, 1),
                 () -> controller.eliminarAsignaturaPlan(PLAN, SUBJECT),
-                controller::crearPeriodoAcademico, () -> controller.actualizarPeriodoAcademico(PLAN),
                 () -> controller.toggleEstadoPeriodoAcademico(PLAN),
                 controller::consultarSolicitudesMatricula, () -> controller.resolverSolicitudMatricula(PLAN),
                 () -> controller.matricularEstudianteEnGrupo(PLAN),
