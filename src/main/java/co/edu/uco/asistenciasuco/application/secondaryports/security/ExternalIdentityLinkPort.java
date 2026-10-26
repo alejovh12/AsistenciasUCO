@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.secondaryports.security;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,6 +23,14 @@ public interface ExternalIdentityLinkPort {
      *                                           ya tiene otra identidad vigente del mismo emisor.
      */
     boolean link(String issuer, String subject, UUID usuarioId, String verifiedEmail);
+
+    /**
+     * Sujetos con vínculo vigente para el usuario (uno por emisor). Es la forma autoritativa de ubicar su cuenta en el
+     * proveedor de identidad: no depende de atributos ni del correo, que pueden repetirse o cambiar.
+     */
+    default List<String> findSujetosVigentes(UUID usuarioId) {
+        return List.of();
+    }
 
     /** Revoca el vínculo conservando la fila; idempotente. Una identidad revocada no se reutiliza. */
     void revoke(String issuer, String subject);

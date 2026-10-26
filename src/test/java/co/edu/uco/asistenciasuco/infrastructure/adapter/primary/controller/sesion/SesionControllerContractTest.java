@@ -194,7 +194,11 @@ class SesionControllerContractTest {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.datos.sesion").value(SESSION.toString()));
         final var captor = ArgumentCaptor.forClass(ConsultarSesionDTO.class);
         verify(query, org.mockito.Mockito.times(2)).execute(captor.capture());
-        captor.getAllValues().forEach(dto -> assertEquals(SESSION, dto.getSesion()));
+        captor.getAllValues().forEach(dto -> {
+            assertEquals(SESSION, dto.getSesion());
+            // El ownership se decide en Application: ambas rutas (path y legacy) deben trasladar al solicitante autenticado.
+            assertEquals(ACTOR, dto.getUsuarioEjecutor());
+        });
     }
 
     /**

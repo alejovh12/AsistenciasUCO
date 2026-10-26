@@ -20,7 +20,7 @@ public final class ConsultarSesionMapper {
             throw new CrosscuttingException("El DTO para consultar sesion es obligatorio.");
         }
 
-        return new ConsultarSesionDomain(dto.getSesion());
+        return new ConsultarSesionDomain(dto.getSesion(), dto.getUsuarioEjecutor());
     }
 
     public static SesionConsultadaDTO toDTO(final SesionConsultadaEntity entity) {

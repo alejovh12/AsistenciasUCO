@@ -30,6 +30,12 @@ public class ExternalIdentityLinkJpaRepository implements ExternalIdentityLinkPo
             from UvIdentidadExternaEntity i
             where i.emisor = :emisor and i.sujeto = :sujeto
             """;
+    static final String HQL_SUJETOS_VIGENTES = """
+            select i.sujeto
+            from UvIdentidadExternaEntity i
+            where i.idUsuario = :idUsuario and i.estaVigenteIdentidad = true
+            order by i.emisor
+            """;
     static final String SQL_VINCULAR = """
             EXEC dbo.usp_vincular_identidad_externa
                  @emisor = :emisor,
@@ -49,6 +55,7 @@ public class ExternalIdentityLinkJpaRepository implements ExternalIdentityLinkPo
     private static final String PARAM_SUJETO = "sujeto";
 
     static final String OP_BUSCAR = "buscarIdentidadExterna";
+    static final String OP_BUSCAR_POR_USUARIO = "buscarIdentidadesExternasPorUsuario";
     static final String OP_VINCULAR = "vincularIdentidadExterna";
     static final String OP_REVOCAR = "revocarIdentidadExterna";
 
@@ -84,6 +91,16 @@ public class ExternalIdentityLinkJpaRepository implements ExternalIdentityLinkPo
                     final Object[] row = rows.getFirst();
                     return Optional.of(new ExternalIdentityLink((UUID) row[0], Boolean.TRUE.equals(row[1])));
                 });
+    }
+
+    @Override
+    public List<String> findSujetosVigentes(final UUID usuarioId) {
+        return JpaQueryExecutor.execute(
+                OP_BUSCAR_POR_USUARIO,
+                "No fue posible consultar los vínculos de identidad externa del usuario.",
+                () -> entityManager.createQuery(HQL_SUJETOS_VIGENTES, String.class)
+                        .setParameter("idUsuario", usuarioId)
+                        .getResultList());
     }
 
     @Override

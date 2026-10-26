@@ -55,8 +55,11 @@ public class SesionWiringConfiguration {
     }
 
     @Bean
-    public ConsultarSesionUseCase consultarSesionUseCase(final SesionRepositoryPort sesionRepositoryPort) {
-        return new ConsultarSesionUseCaseImpl(sesionRepositoryPort);
+    public ConsultarSesionUseCase consultarSesionUseCase(
+            final SesionRepositoryPort sesionRepositoryPort,
+            final InstitutionalScopePort institutionalScopePort
+    ) {
+        return new ConsultarSesionUseCaseImpl(sesionRepositoryPort, institutionalScopePort);
     }
 
     @Bean

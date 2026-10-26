@@ -163,6 +163,41 @@ public final class InstitutionalScopeJdbcBaseline implements InstitutionalScopeP
     }
 
     @Override
+    public boolean isAdministradorActivo(final UUID usuarioId) {
+        return queryCount("SELECT COUNT(1) FROM dbo.uv_administrador WHERE idUsuario = :usuarioId AND estaActivoUsuario = 1",
+                byUsuario(usuarioId), "isAdministradorActivo") > 0;
+    }
+
+    @Override
+    public java.util.Set<co.edu.uco.asistenciasuco.application.security.InstitutionalRole> findRolesActivosByUsuario(final UUID usuarioId) {
+        throw new UnsupportedOperationException("Sin equivalente en la linea base JDBC original.");
+    }
+
+    @Override
+    public boolean canGestionarCuenta(final UUID actorUsuarioId, final UUID destinoUsuarioId) {
+        throw new UnsupportedOperationException("Sin equivalente en la linea base JDBC original.");
+    }
+
+    @Override
+    public boolean canCoordinadorAccessGrupo(final UUID usuarioId, final UUID grupoId) {
+        return queryCount("""
+                SELECT COUNT(1) FROM dbo.uv_grupo_programa gp WHERE gp.idGrupo = :grupoId AND EXISTS (
+                    SELECT 1 FROM dbo.uv_coordinador c
+                    WHERE c.idUsuario = :usuarioId AND c.idPrograma = gp.idPrograma AND c.estaActivoCoordinador = 1)
+                """, byUsuario(usuarioId).addValue(PARAM_GRUPO_ID, grupoId), "canCoordinadorAccessGrupo") > 0;
+    }
+
+    @Override
+    public boolean canDecanoAccessGrupo(final UUID usuarioId, final UUID grupoId) {
+        return queryCount("""
+                SELECT COUNT(1) FROM dbo.uv_grupo_programa gp JOIN dbo.uv_programa p ON p.id = gp.idPrograma
+                WHERE gp.idGrupo = :grupoId AND EXISTS (
+                    SELECT 1 FROM dbo.uv_decano d
+                    WHERE d.idUsuario = :usuarioId AND d.idFacultad = p.idFacultad AND d.estaActivoDecano = 1)
+                """, byUsuario(usuarioId).addValue(PARAM_GRUPO_ID, grupoId), "canDecanoAccessGrupo") > 0;
+    }
+
+    @Override
     public boolean canCoordinadorAccessPrograma(final UUID usuarioId, final UUID programaId) {
         return queryCount(
                 SQL_COORDINADOR_ACCEDE_PROGRAMA,
