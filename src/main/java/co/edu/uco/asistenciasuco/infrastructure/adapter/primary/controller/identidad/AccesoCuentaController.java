@@ -42,7 +42,7 @@ public final class AccesoCuentaController {
     public ResponseEntity<ApiDataResponse<AccesoCuentaDTO>> consultar(@RequestBody final AccesoCuentaRequest request) {
         RequestValidationGuard.validate(VALIDATOR.validate(request));
         return ResponseEntity.ok(new ApiDataResponse<>(true,
-                accesoCuentaInputPort.consultar(authenticatedUserResolver.requireAuthenticatedUserId(), request.getCorreo())));
+                accesoCuentaInputPort.consultar(authenticatedUserResolver.requireAuthenticatedUserId(), correoValidado(request))));
     }
 
     @PostMapping("/reconciliaciones")
@@ -50,6 +50,11 @@ public final class AccesoCuentaController {
     public ResponseEntity<ApiDataResponse<AccesoCuentaDTO>> reconciliar(@RequestBody final AccesoCuentaRequest request) {
         RequestValidationGuard.validate(VALIDATOR.validate(request));
         return ResponseEntity.ok(new ApiDataResponse<>(true,
-                accesoCuentaInputPort.reconciliar(authenticatedUserResolver.requireAuthenticatedUserId(), request.getCorreo())));
+                accesoCuentaInputPort.reconciliar(authenticatedUserResolver.requireAuthenticatedUserId(), correoValidado(request))));
+    }
+
+    /** La validacion previa rechaza una solicitud nula; esta guarda lo hace explicito antes de leer el correo. */
+    private static String correoValidado(final AccesoCuentaRequest request) {
+        return Objects.requireNonNull(request, "La informacion de la cuenta es obligatoria.").getCorreo();
     }
 }
