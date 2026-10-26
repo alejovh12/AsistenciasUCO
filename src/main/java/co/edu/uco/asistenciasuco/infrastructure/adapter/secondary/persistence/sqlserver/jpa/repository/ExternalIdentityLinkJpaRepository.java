@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
+import co.edu.uco.asistenciasuco.application.secondaryports.security.ExternalIdentityConflictException;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.ExternalIdentityLinkPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.JpaProcedureExecutor;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
@@ -44,6 +45,9 @@ public class ExternalIdentityLinkJpaRepository implements ExternalIdentityLinkPo
                  @idCorrelacion = :idCorrelacion
             """;
 
+    private static final String PARAM_EMISOR = "emisor";
+    private static final String PARAM_SUJETO = "sujeto";
+
     static final String OP_BUSCAR = "buscarIdentidadExterna";
     static final String OP_VINCULAR = "vincularIdentidadExterna";
     static final String OP_REVOCAR = "revocarIdentidadExterna";
@@ -66,8 +70,8 @@ public class ExternalIdentityLinkJpaRepository implements ExternalIdentityLinkPo
                 "No fue posible consultar el vínculo de identidad externa.",
                 () -> {
                     final List<Object[]> rows = entityManager.createQuery(HQL_VINCULO, Object[].class)
-                            .setParameter("emisor", issuer)
-                            .setParameter("sujeto", subject)
+                            .setParameter(PARAM_EMISOR, issuer)
+                            .setParameter(PARAM_SUJETO, subject)
                             .setMaxResults(2)
                             .getResultList();
                     if (rows.isEmpty()) {
@@ -89,14 +93,14 @@ public class ExternalIdentityLinkJpaRepository implements ExternalIdentityLinkPo
                 .isPresent();
         final UUID correlationId = correlationId();
         final Map<String, Object> parameters = new LinkedHashMap<>();
-        parameters.put("emisor", issuer);
-        parameters.put("sujeto", subject);
+        parameters.put(PARAM_EMISOR, issuer);
+        parameters.put(PARAM_SUJETO, subject);
         parameters.put("idUsuario", usuarioId);
         parameters.put("correoVinculacion", verifiedEmail);
         parameters.put("idCorrelacion", correlationId);
         try {
             procedureExecutor.execute(OP_VINCULAR, SQL_VINCULAR, parameters, correlationId);
-        } catch (ConflictException exception) {
+        } catch (ConflictException _) {
             throw new ExternalIdentityConflictException("La identidad externa entra en conflicto con otro vínculo.");
         }
         return !alreadyLinked;
@@ -106,8 +110,8 @@ public class ExternalIdentityLinkJpaRepository implements ExternalIdentityLinkPo
     public void revoke(final String issuer, final String subject) {
         final UUID correlationId = correlationId();
         final Map<String, Object> parameters = new LinkedHashMap<>();
-        parameters.put("emisor", issuer);
-        parameters.put("sujeto", subject);
+        parameters.put(PARAM_EMISOR, issuer);
+        parameters.put(PARAM_SUJETO, subject);
         parameters.put("idCorrelacion", correlationId);
         procedureExecutor.execute(OP_REVOCAR, SQL_REVOCAR, parameters, correlationId);
     }

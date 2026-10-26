@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.baseline;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.security.ExternalIdentityLinkPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.ExternalIdentityLinkPort.ExternalIdentityConflictException;
+import co.edu.uco.asistenciasuco.application.secondaryports.security.ExternalIdentityConflictException;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.ExternalIdentityLinkPort.ExternalIdentityLink;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.baseline.ExternalIdentityRejectedException.Reason;

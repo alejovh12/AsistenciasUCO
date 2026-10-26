@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.baseline;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.security.ExternalIdentityLinkPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.ExternalIdentityLinkPort.ExternalIdentityConflictException;
+import co.edu.uco.asistenciasuco.application.secondaryports.security.ExternalIdentityConflictException;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.baseline.ExternalIdentityRejectedException.Reason;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.InstitutionalIdentityAmbiguityException;
@@ -84,7 +84,7 @@ public final class ExternalIdentityResolver {
         try {
             usuarioId = institutionalScope.findUsuarioIdByEmail(email)
                     .orElseThrow(() -> new ExternalIdentityRejectedException(Reason.USER_UNKNOWN));
-        } catch (InstitutionalIdentityAmbiguityException exception) {
+        } catch (InstitutionalIdentityAmbiguityException _) {
             throw new ExternalIdentityRejectedException(Reason.USER_AMBIGUOUS);
         }
         if (!institutionalScope.isUsuarioActivo(usuarioId)) {
@@ -92,7 +92,7 @@ public final class ExternalIdentityResolver {
         }
         try {
             return new Resolution(usuarioId, links.link(issuer, subject, usuarioId, email));
-        } catch (ExternalIdentityConflictException exception) {
+        } catch (ExternalIdentityConflictException _) {
             throw new ExternalIdentityRejectedException(Reason.LINK_CONFLICT);
         }
     }

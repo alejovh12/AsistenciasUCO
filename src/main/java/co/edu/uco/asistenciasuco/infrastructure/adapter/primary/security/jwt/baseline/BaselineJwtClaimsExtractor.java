@@ -95,7 +95,7 @@ public final class BaselineJwtClaimsExtractor implements JwtClaimsExtractor {
     private static java.util.Optional<java.util.UUID> parseUuid(final String text) {
         try {
             return java.util.Optional.of(java.util.UUID.fromString(text.trim()));
-        } catch (IllegalArgumentException exception) {
+        } catch (IllegalArgumentException _) {
             return java.util.Optional.empty();
         }
     }
