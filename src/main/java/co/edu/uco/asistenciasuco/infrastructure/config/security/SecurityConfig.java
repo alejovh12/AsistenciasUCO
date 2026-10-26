@@ -77,7 +77,9 @@ public class SecurityConfig {
             // no protege nada. Además, una petición insegura sin Bearer debe llegar al mecanismo de
             // autenticación y responder 401, no 403 de CSRF.
             // REVISAR ESTA DECISIÓN antes de introducir autenticación por cookie, BFF con cookie
-            // HttpOnly o sesión de navegador: CSRF deberá volver a habilitarse para ese flujo.
+            // HttpOnly o sesión de navegador hacia ESTA API: CSRF deberá volver a habilitarse para ese flujo.
+            // El modo baseline no lo hace: la SPA obtiene el Bearer del realm central con PKCE y la cookie BFF
+            // solo existe entre el navegador y el PDP.
             // Fuera de /api/v1/** la protección CSRF de Spring Security sigue activa.
             // /api/v2/sesiones/** (MAINT-003F) es la misma API REST stateless Bearer-only: aplica
             // exactamente la misma justificación y se excluye con el mismo alcance acotado.
@@ -221,9 +223,7 @@ public class SecurityConfig {
                 HttpHeaders.ACCEPT
         ));
         configuration.setExposedHeaders(List.of("X-Correlation-Id", "X-Decision-Id"));
-        // El modo baseline puede coexistir con navegación OIDC central basada en cookie HttpOnly.
-        // El backend no convierte esa cookie en identidad institucional por sí mismo: sin un
-        // principal JWT vinculado y verificado, el PEP permanece fail-closed.
+        // Bearer-only en ambos modos: ninguna cookie (ni la del BFF del baseline) es credencial de esta API.
         configuration.setAllowCredentials(false);
         configuration.setMaxAge(3600L);
 

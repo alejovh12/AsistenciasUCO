@@ -86,6 +86,11 @@ services:
       PDP_KEYCLOAK_CLIENT_SECRET: ${SECURITY_PDP_KEYCLOAK_CLIENT_SECRET:?Configure SECURITY_PDP_KEYCLOAK_CLIENT_SECRET}
       PDP_KEYCLOAK_BEARER_AUDIENCE: security-baseline-pdp
       PDP_SECURITY_SESSION_SECURE_COOKIES: "false"
+      # Origenes de la SPA de AsistenciasUCO autorizados a recuperar su URL tras el login BFF del PDP (allow-list,
+      # nunca un reflejo libre de return_to). El login del PDP aprovisiona la identidad del usuario en el catalogo.
+      PDP_SECURITY_LOGIN_ALLOWED_RETURN_ORIGINS: ${PDP_SECURITY_LOGIN_ALLOWED_RETURN_ORIGINS:-http://localhost:4200,http://127.0.0.1:4200}
+      # Destino del logout BFF del PDP (cierra la sesion BFF y la sesion SSO de Keycloak y vuelve a la SPA).
+      PDP_FRONTEND_ORIGIN: ${PDP_FRONTEND_ORIGIN:-http://localhost:4200}
       PDP_SECURITY_MFA_ENABLED: ${PDP_SECURITY_MFA_ENABLED:-false}
     ports:
       - "127.0.0.1:${PDP_PORT:-18080}:8080"

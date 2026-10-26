@@ -266,12 +266,13 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 - **Resolución esperada:** Política aprobada y pruebas de verificación acordes.
 - **Bloquea línea base:** no para LB-000; sí release de identidad.
 - **Estado:** ABIERTA.
-- **Actualización Security Baseline 0.1.7 (2026-10-26):** el JWT baseline exige
-  `email_verified=true`, correo normalizado y coincidencia única de usuario institucional activo.
-  El contrato BFF oficial de `/api/v1/session` no expone `email_verified` ni un binding persistente
-  `issuer+subject`; por eso la sesión cookie no se promueve a principal institucional y la ruta
-  queda bloqueada/fail-closed hasta decisión del owner de identidad. No se cambia SQL ni se crea
-  usuario automáticamente.
+- **Actualización Security Baseline 0.1.7 (2026-10-26, cierre):** resuelto el binding `issuer+subject → Usuario.id`
+  con persistencia propia (migración SEC-BASELINE-017 en la DB) y la API queda Bearer-only (PKCE en la SPA; la cookie BFF
+  no es credencial del backend). Pendiente: (a) renovación del access token por re-autenticación silenciosa (redirección)
+  porque no hay refresh token en JavaScript; (b) el PEP 0.1.7 no soporta SSE en modo proxy (el backend lo autoriza por
+  embedded decision); (c) `GET /api/v1/usuarios/perfil` sigue 501 y la UI toma id/roles del token; (d) revocación
+  inmediata solo por vínculo/usuario (el JWT conserva validez hasta su exp); (e) permisos EXECUTE del rol runtime SQL
+  para SP de consulta (p. ej. `usp_consultar_programas_academicos`) deben verificarse en cada despliegue DB.
 
 ## TD-015
 

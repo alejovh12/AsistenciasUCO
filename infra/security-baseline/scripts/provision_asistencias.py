@@ -193,6 +193,19 @@ def provision_keycloak(env):
     kc.call("POST", f"/clients/{spa_id}/scope-mappings/clients/{api['id']}", api_role_reps)
     evidence["spa_client"] = {"created": created, "pkce": "S256", "origins": SPA_ORIGINS}
 
+    # El logout BFF del PDP (/api/v1/session/logout) vuelve al origen de la SPA: debe estar entre los post-logout
+    # del cliente BFF del PDP. Se AÑADEN los de la SPA conservando los existentes.
+    bff = kc.client("security-baseline-bff")
+    current = bff.get("attributes", {}).get("post.logout.redirect.uris", "")
+    entries = [e for e in current.split("##") if e]
+    for origin in SPA_ORIGINS:
+        for entry in (origin, origin + "/*"):
+            if entry not in entries:
+                entries.append(entry)
+    bff["attributes"]["post.logout.redirect.uris"] = "##".join(entries)
+    kc.call("PUT", f"/clients/{bff['id']}", bff)
+    evidence["bff_post_logout"] = "SPA origins added"
+
     # 3. Cliente de servicio para el aprovisionamiento del backend (Admin REST mínimo).
     prov = {"clientId": PROVISIONER, "name": "AsistenciasUCO provisioner", "protocol": "openid-connect", "enabled": True,
             "publicClient": False, "serviceAccountsEnabled": True, "standardFlowEnabled": False,
@@ -203,6 +216,8 @@ def provision_keycloak(env):
     _, _, rm_roles = kc.call("GET", f"/clients/{rm['id']}/roles")
     wanted = [r for r in rm_roles if r["name"] in ("manage-users", "view-users", "query-users", "view-clients", "query-clients")]
     kc.call("POST", f"/users/{svc_user['id']}/role-mappings/clients/{rm['id']}", wanted)
+    # Con fullScopeAllowed=false el token solo incluye los roles que están en el scope del cliente.
+    kc.call("POST", f"/clients/{prov_id}/scope-mappings/clients/{rm['id']}", wanted)
     _, _, secret = kc.call("GET", f"/clients/{prov_id}/client-secret")
     L.write_env_value("SECURITY_BASELINE_IDENTITY_ADMIN_CLIENT_SECRET", secret["value"])
     evidence["provisioner"] = {"created": created, "realm_management_roles": [r["name"] for r in wanted],

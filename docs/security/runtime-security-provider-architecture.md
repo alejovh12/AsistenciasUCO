@@ -39,20 +39,27 @@ Application ni contratos académicos. Esta autorización permite modificar únic
 de Infrastructure, los adaptadores de seguridad, las pruebas observables y el frontend oficial
 necesario para OIDC/BFF.
 
-La evidencia AS-IS consultada es el checkout oficial del baseline con tag `v0.1.7`, el frontend
-oficial y este backend. El tag confirma `POST /internal/v1/embedded-access-decisions`, el contrato
-`204 + X-Decision-Id` y `GET /api/v1/me/applications`. La respuesta oficial de
-`GET /api/v1/session` no incluye `email_verified`; por ello no se auto-vincula una sesión BFF a
-un usuario institucional ni se usa `sub` como UUID. Ese camino permanece fail-closed hasta que
-el owner apruebe un mecanismo de binding persistente `issuer+subject` y evidencia de correo
-verificado compatible, sin mutar SQL ni el contrato baseline por inferencia.
+La evidencia AS-IS consultada es el checkout oficial del baseline con tag `v0.1.6` (fuente) y las imágenes
+`davidalzate/*:0.1.7` en ejecución, el frontend oficial y este backend. Hallazgos contrastados contra la instalación real:
 
-`SECURITY_FINDING`: `C:\Users\josev\AsistenciasUCO\AsistenciasUCO\.workspace\security-baseline-local\distribution\compose.yaml`
-contiene una credencial estática de cliente en la configuración del contenedor PDP. El valor no
-se copia a código, logs ni evidencia. Antes de compartir o promover el Compose, el owner debe
-rotarla en el IdP y suministrarla mediante un canal de secretos (`PDP_KEYCLOAK_CLIENT_SECRET` o
-secret manager), con una modificación controlada del Compose; esta ejecución no realiza la
-rotación porque no existe aprobación para cambiar esa credencial externa.
+- `POST /internal/v1/embedded-access-decisions` responde `204 + X-Decision-Id` (allow), `403` (deny) o `401`; **no entrega
+  identidad**. La cookie BFF `SECURITY_BASELINE_SESSION` solo la resuelve el PEP→PDP por el canal técnico
+  `/internal/v1/bff-session-token`, reservado a la identidad técnica del PEP; el PEP proxy no inyecta el Bearer
+  resuelto al backend y no soporta SSE. Por tanto **no existe un mecanismo oficial para que un backend consumidor
+  obtenga una identidad verificable desde la cookie BFF**, y una cookie de otro origen tampoco llegaría al backend.
+- Decisión: la API es **Bearer-only** en ambos modos. La SPA obtiene el access token del realm central con un cliente
+  público (Authorization Code + PKCE S256, token solo en memoria, sin refresh token) y el login interactivo lo hace el
+  BFF del PDP (aprovisiona la identidad). No se aceptan cookies, `X-User-Id` ni un `204` del PEP como identidad.
+- El ambiente del PEP debe ser `dev|lab|prod` en 0.1.7 (`local` falla la validación de credencial de aplicación).
+- Las rutas con variables (`/api/v1/grupos/{grupoId}/estudiantes`) se registran como recurso con la plantilla y el PEP
+  las hace coincidir con rutas concretas (verificado con PEP/PDP reales).
+- El binding `issuer+subject → Usuario.id` queda **resuelto** con persistencia propia (ver §5.4): migración
+  SEC-BASELINE-017 en `gestion-asistencia-db` (tabla `IdentidadExterna`, vista y dos SP canónicos).
+
+`SECURITY_FINDING` (resuelto en el entorno local): el Compose del baseline del repositorio de Seguridad trae credenciales
+estáticas en la configuración de PDP/PEP. La instalación local única (`infra/security-baseline/compose.yaml`) no contiene
+ningún secreto literal: todos llegan de `%USERPROFILE%\.asistencias-security-lab\lab.env` (fuera de Git) y los secretos de
+los clientes técnicos del realm se rotaron fuera del repositorio. Una instalación compartida debe usar su gestor de secretos.
 
 ---
 
@@ -109,7 +116,7 @@ SessionCreationPolicy.STATELESS
 | Capability | Contrato | Provider actual | Selector |
 |---|---|---|---|
 | Runtime authentication | `JwtClaimsExtractor`, `JwtDecoder` | Keycloak legacy / Security Baseline 0.1.7 | `app.adapters.security.provider=legacy|baseline` (`keycloak` es alias legacy) |
-| Identity provisioning | `IdentityProviderPort` | Keycloak Admin API | `app.adapters.identity.provider=keycloak` |
+| Identity provisioning | `IdentityProviderPort` | Keycloak Admin API (realm legacy o realm central) | `app.adapters.identity.provider=legacy|baseline` (`keycloak` es alias legacy); **debe coincidir con el selector de seguridad** o el arranque falla |
 
 `SecurityConfig` es neutral respecto a Keycloak. Depende de:
 
@@ -150,6 +157,11 @@ infrastructure.config.adapters.security.keycloak
 
 El provider se selecciona con `@ConditionalOnProperty`; nunca con `@Profile`, service locator o
 un `if` dentro de Application.
+
+`app.adapters.identity.provider` toma por defecto el valor de `APP_ADAPTERS_SECURITY_PROVIDER`; si se define explícitamente
+y no coincide, el contexto no arranca (`SecurityProviderCoherence`). Un valor desconocido de cualquiera de los dos selectores
+falla el binding del enum: no se convierte en `legacy`. En IntelliJ basta con definir
+`APP_ADAPTERS_SECURITY_PROVIDER=baseline` (variables del modo baseline: ver `infra/security-baseline/README.md`).
 
 No existe una segunda bandera operativa para seleccionar seguridad. `APP_ADAPTERS_SECURITY_PROVIDER`
 es la única fuente del modo; `legacy` conserva el issuer y roles históricos, mientras `baseline`
@@ -214,19 +226,30 @@ email
 preferred_username
 ```
 
-### 5.4 Modo baseline: binding institucional obligatorio
+### 5.4 Modo baseline: vínculo persistente `issuer + subject → Usuario.id`
 
-El extractor baseline exige `sub`, `email_verified=true`, correo normalizado y una coincidencia
-única de usuario institucional activo mediante `InstitutionalScopePort`. Cero coincidencias,
-duplicados o usuarios inactivos rechazan el token; no se crea usuario automáticamente y el
-`sub` no se convierte en UUID interno. La consulta JPA de correo no limita el resultado a una
-fila para no ocultar duplicados.
+`ExternalIdentityResolver` resuelve la identidad ya validada por el `JwtDecoder` (firma, issuer exacto, audiencia
+`asistencias-api`, exp/nbf):
 
-La sesión BFF HttpOnly del baseline se reenvía al PEP por el adaptador, pero no se convierte en
-principal de Application: el contrato v0.1.7 de `/api/v1/session` no aporta `email_verified` ni
-un binding persistente `issuer+subject`. Hasta aprobación del owner, las peticiones de negocio
-solo pueden continuar con un principal JWT ya validado; cookie sin principal institucional es
-401/deny-by-default.
+1. Si `issuer + subject` ya está vinculado y **vigente**, se devuelve ese `Usuario.id` (siempre que el usuario siga
+   activo) **sin mirar el correo**: un cambio de correo en el IdP no reasigna ni apropia cuentas.
+2. Si no hay vínculo, se exige `email_verified=true`, se normaliza el correo, debe haber exactamente **un** usuario
+   institucional activo y se registra el vínculo de forma atómica con `usp_vincular_identidad_externa`.
+3. Se rechazan (401) vínculo revocado, usuario inactivo, correo ambiguo/no verificado y conflictos: identidad ya
+   ocupada por otra cuenta, cuenta con otra identidad vigente del mismo emisor, identidad revocada. Nunca se elige una
+   fila al azar ni se crea usuario automáticamente.
+4. El claim `idUsuario` (atributo del IdP usado por la UI) es solo coherencia: si viene y difiere del usuario vinculado
+   se rechaza. El `sub` nunca se convierte en UUID interno.
+
+Persistencia (DB personal de John, rama `feat/security-baseline-017-identidad-externa`): `IdentidadExterna`
+(`UNIQUE(emisor, sujeto)`, único filtrado `(usuario, emisor) WHERE estado=1`), vista `uv_identidad_externa`,
+`usp_vincular_identidad_externa` y `usp_revocar_identidad_externa`. Al arrancar en modo baseline,
+`ExternalIdentitySchemaCompatibilityVerifier` comprueba que existan; si falta algo el arranque falla (sin degradar a
+resolución por correo). Trazabilidad: el alta y cada rechazo se registran con motivo, `subject` e `issuer`, nunca con
+tokens ni correos; la DB conserva `idCorrelacion`, fecha de vinculación y de revocación.
+
+La cookie de sesión BFF no es una credencial de este backend: `SecurityBaselinePepClient` solo evalúa con un Bearer
+único y bien formado ya autenticado por Spring Security; sin Bearer responde 401 sin consultar al PEP.
 
 ---
 
@@ -374,7 +397,7 @@ Justificación:
 
 Si en el futuro la API adopta autenticación mediante cookies, BFF con cookie `HttpOnly` o sesión
 de navegador, esta exclusión **debe revisarse** y CSRF **deberá volver a habilitarse** para ese
-flujo. Migrar a PKCE/BFF es deuda futura documentada y queda fuera de este cambio.
+flujo. El modo baseline NO introduce cookie hacia la API: la SPA usa PKCE y envía Bearer; la cookie BFF solo existe entre el navegador y el PDP, por lo que CSRF sigue sin aplicar a `/api/v1/**`.
 
 ---
 
@@ -403,9 +426,9 @@ Header expuesto:
 X-Correlation-Id
 ```
 
-`allowCredentials=false` permanece en este backend mientras la cookie BFF no sea una credencial
-de identidad aceptada por él; el frontend envía `credentials: include` al PDP central. Nunca debe
-combinarse `allowedOrigins("*")` con credenciales.
+`allowCredentials=false` es definitivo en ambos modos: la cookie BFF no es una credencial de este backend y el
+frontend envía `credentials: omit` a la API (Bearer solo hacia el origen de la API). Nunca debe combinarse
+`allowedOrigins("*")` con credenciales.
 
 Si se cambian los clientes frontend permitidos, debe hacerse por configuración de entorno y no
 hardcodeando nuevos origins en lógica de negocio.
@@ -549,6 +572,12 @@ La lista única de endpoints pendientes y condición de cierre vive en [TD-016](
 La regla AS-IS de `/api/v1/archivos/**` es `authenticated()`. La abstracción y autorización funcional pendiente se registran en [TD-004](../baseline/TECHNICAL_DEBT.md#td-004); un matcher de roles no resuelve por sí solo ownership.
 
 ## 15. Provisioning security
+
+En modo baseline `IdentityProviderPort` opera sobre el realm central (`app.providers.security-baseline-identity`) con el
+cliente de servicio `asistencias-provisioner` (roles mínimos de `realm-management`; secreto solo por entorno) y asigna
+los cinco roles como client roles de `asistencias-api`; nunca contacta el Keycloak legacy (8081). El PDP mantiene sus
+propias asignaciones por aplicación (`provision_asistencias.py`); ambas fuentes se aprovisionan con la misma matriz que
+`SecurityConfig`. Verificado: `POST /api/v1/usuarios` crea la cuenta en `security-baseline` con `idUsuario`.
 
 `POST /api/v1/usuarios` permanece bajo `authenticated()`. Política funcional/roles pendientes: [TD-013](../baseline/TECHNICAL_DEBT.md#td-013). Contrato y semántica DB-first: [keycloak-identity-provider](keycloak-identity-provider.md).
 
