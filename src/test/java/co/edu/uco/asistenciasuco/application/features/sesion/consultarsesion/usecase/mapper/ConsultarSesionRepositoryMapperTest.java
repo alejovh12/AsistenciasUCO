@@ -25,7 +25,7 @@ class ConsultarSesionRepositoryMapperTest {
         final UUID sesion = UUID.randomUUID();
 
         final ConsultarSesionRepositoryDTO dto =
-                ConsultarSesionRepositoryMapper.toRepositoryDTO(new ConsultarSesionDomain(sesion));
+                ConsultarSesionRepositoryMapper.toRepositoryDTO(new ConsultarSesionDomain(sesion, UUID.randomUUID()));
 
         assertEquals(sesion, dto.getSesion());
     }

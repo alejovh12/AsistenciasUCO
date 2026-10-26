@@ -4,11 +4,16 @@ import co.edu.uco.asistenciasuco.application.secondaryports.security.Institution
 import org.springframework.stereotype.Repository;
 
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.InstitutionalIdentityAmbiguityException;
 import jakarta.persistence.EntityManager;
 
+import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
+
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -28,6 +33,9 @@ public class InstitutionalScopeJpaRepository implements InstitutionalScopePort {
             """;
     static final String HQL_USUARIO_POR_EMAIL = """
             select u.id from UvUsuarioEntity u where lower(u.correo) = lower(:email)
+            """;
+    static final String HQL_USUARIO_ACTIVO = """
+            select u.estaActivoUsuario from UvUsuarioEntity u where u.id = :usuarioId
             """;
     static final String HQL_DOCENTE_POR_USUARIO = """
             select d.id from UvDocenteIdentidadEntity d where d.idUsuario = :usuarioId
@@ -65,6 +73,63 @@ public class InstitutionalScopeJpaRepository implements InstitutionalScopePort {
                   SELECT TOP 1 id FROM dbo.uv_estudiante_identidad WHERE idUsuario = :usuarioId
               )
             """;
+    static final String SQL_COORDINADOR_ACCEDE_GRUPO = """
+            SELECT COUNT(1)
+            FROM dbo.uv_grupo_programa gp
+            WHERE gp.idGrupo = :grupoId
+              AND EXISTS (
+                  SELECT 1 FROM dbo.uv_coordinador c
+                  WHERE c.idUsuario = :usuarioId AND c.idPrograma = gp.idPrograma AND c.estaActivoCoordinador = 1
+              )
+            """;
+    static final String SQL_DECANO_ACCEDE_GRUPO = """
+            SELECT COUNT(1)
+            FROM dbo.uv_grupo_programa gp
+            JOIN dbo.uv_programa p ON p.id = gp.idPrograma
+            WHERE gp.idGrupo = :grupoId
+              AND EXISTS (
+                  SELECT 1 FROM dbo.uv_decano d
+                  WHERE d.idUsuario = :usuarioId AND d.idFacultad = p.idFacultad AND d.estaActivoDecano = 1
+              )
+            """;
+    static final String SQL_ROLES_ACTIVOS = """
+            SELECT rol FROM (
+                SELECT 'ADMINISTRADOR' AS rol FROM dbo.uv_administrador WHERE idUsuario = :usuarioId AND estaActivoUsuario = 1
+                UNION ALL
+                SELECT 'DECANO' FROM dbo.uv_decano WHERE idUsuario = :usuarioId AND estaActivoUsuario = 1 AND estaActivoDecano = 1
+                UNION ALL
+                SELECT 'COORDINADOR' FROM dbo.uv_coordinador WHERE idUsuario = :usuarioId AND estaActivoUsuario = 1 AND estaActivoCoordinador = 1
+                UNION ALL
+                SELECT 'DOCENTE' FROM dbo.uv_docente_identidad WHERE idUsuario = :usuarioId AND estaActivoUsuario = 1
+                UNION ALL
+                SELECT 'ESTUDIANTE' FROM dbo.uv_estudiante_identidad WHERE idUsuario = :usuarioId AND estaActivoUsuario = 1
+            ) AS roles
+            """;
+    static final String SQL_ADMINISTRADOR_ACTIVO = """
+            SELECT COUNT(1) FROM dbo.uv_administrador WHERE idUsuario = :usuarioId AND estaActivoUsuario = 1
+            """;
+    static final String SQL_GESTIONA_CUENTA = """
+            SELECT COUNT(1) WHERE
+                EXISTS (SELECT 1 FROM dbo.uv_administrador a WHERE a.idUsuario = :actorId AND a.estaActivoUsuario = 1)
+                OR EXISTS (
+                    SELECT 1 FROM dbo.uv_decano d
+                    WHERE d.idUsuario = :actorId AND d.estaActivoDecano = 1 AND (
+                        EXISTS (SELECT 1 FROM dbo.uv_coordinador c WHERE c.idUsuario = :destinoId AND c.idFacultad = d.idFacultad)
+                        OR EXISTS (SELECT 1 FROM dbo.uv_docente_programa dp WHERE dp.idUsuario = :destinoId AND dp.idFacultad = d.idFacultad)
+                        OR EXISTS (
+                            SELECT 1 FROM dbo.uv_estudiante_programa ep
+                            JOIN dbo.uv_estudiante_identidad ei ON ei.id = ep.idEstudiante
+                            JOIN dbo.uv_programa p ON p.id = ep.idPrograma
+                            WHERE ei.idUsuario = :destinoId AND p.idFacultad = d.idFacultad)))
+                OR EXISTS (
+                    SELECT 1 FROM dbo.uv_coordinador cc
+                    WHERE cc.idUsuario = :actorId AND cc.estaActivoCoordinador = 1 AND (
+                        EXISTS (SELECT 1 FROM dbo.uv_docente_programa dp WHERE dp.idUsuario = :destinoId AND dp.idPrograma = cc.idPrograma)
+                        OR EXISTS (
+                            SELECT 1 FROM dbo.uv_estudiante_programa ep
+                            JOIN dbo.uv_estudiante_identidad ei ON ei.id = ep.idEstudiante
+                            WHERE ei.idUsuario = :destinoId AND ep.idPrograma = cc.idPrograma)))
+            """;
     static final String HQL_COORDINADOR_DE_PROGRAMA = """
             select count(c) from UvCoordinadorEntity c
             where c.idUsuario = :usuarioId and c.idPrograma = :programaId and c.estaActivoCoordinador = 1
@@ -92,7 +157,22 @@ public class InstitutionalScopeJpaRepository implements InstitutionalScopePort {
 
     @Override
     public Optional<UUID> findUsuarioIdByEmail(final String email) {
-        return singleUuid(HQL_USUARIO_POR_EMAIL, "email", email, "findUsuarioIdByEmail");
+        return uniqueUuidByEmail(email);
+    }
+
+    @Override
+    public boolean isUsuarioActivo(final UUID usuarioId) {
+        return JpaQueryExecutor.execute(
+                "isUsuarioActivo",
+                "No fue posible validar el estado del usuario institucional.",
+                () -> {
+                    final List<Boolean> rows = entityManager.createQuery(HQL_USUARIO_ACTIVO, Boolean.class)
+                            .setParameter("usuarioId", usuarioId)
+                            .setMaxResults(1)
+                            .getResultList();
+                    return !rows.isEmpty() && Boolean.TRUE.equals(rows.getFirst());
+                }
+        );
     }
 
     @Override
@@ -138,6 +218,45 @@ public class InstitutionalScopeJpaRepository implements InstitutionalScopePort {
     }
 
     @Override
+    public boolean isAdministradorActivo(final UUID usuarioId) {
+        return nativeCount(SQL_ADMINISTRADOR_ACTIVO, "isAdministradorActivo", new Parameter("usuarioId", usuarioId)) > 0;
+    }
+
+    @Override
+    public Set<InstitutionalRole> findRolesActivosByUsuario(final UUID usuarioId) {
+        return JpaQueryExecutor.execute(
+                "findRolesActivosByUsuario",
+                "No fue posible resolver los roles institucionales activos.",
+                () -> {
+                    final Set<InstitutionalRole> roles = EnumSet.noneOf(InstitutionalRole.class);
+                    for (final Object fila : entityManager.createNativeQuery(SQL_ROLES_ACTIVOS)
+                            .setParameter("usuarioId", usuarioId).getResultList()) {
+                        roles.add(InstitutionalRole.valueOf(String.valueOf(fila)));
+                    }
+                    return roles;
+                }
+        );
+    }
+
+    @Override
+    public boolean canGestionarCuenta(final UUID actorUsuarioId, final UUID destinoUsuarioId) {
+        return nativeCount(SQL_GESTIONA_CUENTA, "canGestionarCuenta",
+                new Parameter("actorId", actorUsuarioId), new Parameter("destinoId", destinoUsuarioId)) > 0;
+    }
+
+    @Override
+    public boolean canCoordinadorAccessGrupo(final UUID usuarioId, final UUID grupoId) {
+        return nativeCount(SQL_COORDINADOR_ACCEDE_GRUPO, "canCoordinadorAccessGrupo",
+                new Parameter("grupoId", grupoId), new Parameter("usuarioId", usuarioId)) > 0;
+    }
+
+    @Override
+    public boolean canDecanoAccessGrupo(final UUID usuarioId, final UUID grupoId) {
+        return nativeCount(SQL_DECANO_ACCEDE_GRUPO, "canDecanoAccessGrupo",
+                new Parameter("grupoId", grupoId), new Parameter("usuarioId", usuarioId)) > 0;
+    }
+
+    @Override
     public boolean canCoordinadorAccessPrograma(final UUID usuarioId, final UUID programaId) {
         return count(HQL_COORDINADOR_DE_PROGRAMA, "canCoordinadorAccessPrograma",
                 new Parameter("usuarioId", usuarioId), new Parameter("programaId", programaId)) > 0;
@@ -165,6 +284,22 @@ public class InstitutionalScopeJpaRepository implements InstitutionalScopePort {
                             .setParameter(parameterName, value)
                             .setMaxResults(1)
                             .getResultList();
+                    return rows.isEmpty() ? Optional.<UUID>empty() : Optional.ofNullable(rows.getFirst());
+                }
+        );
+    }
+
+    private Optional<UUID> uniqueUuidByEmail(final String email) {
+        return JpaQueryExecutor.execute(
+                "findUsuarioIdByEmail",
+                "No fue posible resolver la identidad institucional por correo.",
+                () -> {
+                    final List<UUID> rows = entityManager.createQuery(HQL_USUARIO_POR_EMAIL, UUID.class)
+                            .setParameter("email", email)
+                            .getResultList();
+                    if (rows.size() > 1) {
+                        throw new InstitutionalIdentityAmbiguityException();
+                    }
                     return rows.isEmpty() ? Optional.<UUID>empty() : Optional.ofNullable(rows.getFirst());
                 }
         );

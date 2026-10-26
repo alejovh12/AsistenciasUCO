@@ -52,6 +52,9 @@ Los SP/views de las filas son contratos consumidos/reportados por Java; las firm
 | `GET /api/v1/estudiante/materias` | ESTUDIANTE | Consultar materias | `MateriaEstudianteQueryPort` | `uv_estudiante_grupo`, `uv_grupo`, `uv_asignatura` | IMPLEMENTATION_AVAILABLE_PENDING_E2E | Scope por estudiante autenticado | `ApiListResponse<MateriaEstudianteDTO>` |
 | `GET /api/v1/estudiante/materias/{materiaId}/sesiones` | ESTUDIANTE | Consultar sesiones materia | `SesionMateriaEstudianteQueryPort` | `uv_sesion`, `uv_estudiante_grupo`, `uv_grupo` | IMPLEMENTATION_AVAILABLE_PENDING_E2E | Scope por estudiante autenticado | `ApiListResponse<SesionMateriaEstudianteDTO>` |
 | `GET /api/v1/estudiante/materias/{materiaId}/prerrequisitos` | ESTUDIANTE | Prerrequisitos |  |  | BLOCKED_BY_DB | PrerrequisitoAsignatura no esta modelado | `FeatureUnavailableException` |
+| `GET /api/v1/auth/me` | AUTENTICADO (los 5 roles) | Identidad institucional del token (`issuer + subject` -> `Usuario.id`) y roles efectivos | `AuthenticatedPrincipalResolver`, `ExternalIdentityLinkPort` | `usp_vincular_identidad_externa` (primera vinculacion por correo verificado), vinculos `issuer + subject` | IMPLEMENTATION_AVAILABLE_PENDING_E2E | Sin parametros: ni UUID ni correo del cliente participan; sin vinculo unico responde 401/403 | `ApiDataResponse<AuthMeResponse>` |
+| `POST /api/v1/identidad/cuentas/acceso/consultas` | ADMINISTRADOR / DECANO / COORDINADOR | Estado de acceso de una cuenta registrada: `ACTIVA`, `PENDIENTE_SINCRONIZACION`, `INACTIVA` o `PROBLEMA` | `AccesoCuentaInputPort`, `IdentityProviderPort`, `AccessProfilePort` | `uv_usuario`, proveedor de identidad, PDP (solo lectura) | IMPLEMENTATION_AVAILABLE_PENDING_E2E | Alcance en Application (administrador cualquiera; decano su facultad; coordinador su programa). Correo en el cuerpo, nunca en la URL. Con `SECURITY_BASELINE_PDP_PROFILE_SYNC_ENABLED=false` nunca informa `ACTIVA` sin perfil confirmado | `AccesoCuentaRequest` / `ApiDataResponse<AccesoCuentaDTO>` |
+| `POST /api/v1/identidad/cuentas/acceso/reconciliaciones` | ADMINISTRADOR / DECANO / COORDINADOR | Reconciliacion idempotente de roles/perfiles de una cuenta | `AccesoCuentaInputPort`, `AccessProfilePort` | proveedor de identidad, PDP (escritura solo con sync habilitada y aprobada) | IMPLEMENTATION_AVAILABLE_PENDING_E2E | Nunca asigna DECANO ni ADMINISTRADOR; sin sync PDP aprobada la cuenta queda `PENDIENTE_SINCRONIZACION` (TD-062) | `AccesoCuentaRequest` / `ApiDataResponse<AccesoCuentaDTO>` |
 | `POST /api/v1/usuarios` | AUTENTICADO | Provisionar usuario | `UsuarioRepositoryPort`, `IdentityProviderPort` | `usp_sincronizar_usuario`, Keycloak Admin API | IMPLEMENTATION_AVAILABLE_PENDING_E2E | No crea perfil estudiante directo | `CrearUsuarioRequest` |
 | `GET /api/v1/usuarios/perfil` | AUTENTICADO | Consultar perfil |  | `uv_usuario` | BLOCKED_BY_DB | Pendiente crear vertical query typed | `FeatureUnavailableException` |
 | `PUT /api/v1/usuarios/perfil` | AUTENTICADO | Actualizar perfil |  |  | BLOCKED_BY_DB | No hay command publico confirmado para update parcial seguro | `FeatureUnavailableException` |
@@ -79,11 +82,17 @@ Los SP/views de las filas son contratos consumidos/reportados por Java; las firm
 | `GET /api/v1/realtime/status` | AUTENTICADO | Estado local | gateway interno | no aplica | IMPLEMENTATION_AVAILABLE_PENDING_E2E | Contador por JVM | `ApiDataResponse`, activeSubscribers/status |
 | `POST /api/v1/realtime/emit` | ADMINISTRADOR | Diagnóstico | gateway interno | no aplica | IMPLEMENTATION_AVAILABLE_PENDING_E2E | TD-018, no caso de uso productivo | `ApiDataResponse` |
 
+> **OpenAPI:** estas rutas de identidad no pertenecen al Golden Path congelado (`openapi-golden-path.yaml`, SHA-256 fijo); incorporarlas exige una decision contractual y re-congelar el hash. Hasta entonces esta matriz es su fuente AS-IS, verificada por `AccessCatalogConsistencyTest`.
+
 ## Evidencia del Golden Path
 
 El [Golden Path](../baseline/GOLDEN_PATH_ASISTENCIA.md) enlaza controllers, DTO, use cases, puertos, adapter, gateway e IT. [REALTIME_EVENT_STANDARD](REALTIME_EVENT_STANDARD.md) contiene el evento. No se agrega paginación, sort ni formato temporal a partir de un objetivo futuro.
 
 ## Inventario exacto de mappings de controllers
+
+> Vigente y verificado por prueba: `infra/security-baseline/access-catalog.json` (un registro por endpoint con roles y ownership,
+> contrastado con `RequestMappingHandlerMapping` por `AccessCatalogConsistencyTest`). Esta tabla es evidencia histórica de la
+> revisión 2026-09-20 y no incluye las HU posteriores.
 
 Extraído de annotations presentes; excluye endpoints de framework (Actuator). Sirve como evidencia de rutas, no como contrato de éxito/seguridad. El símbolo enlazado permite inspeccionar request/response e Input Ports, y seguir sus casos de uso/adapters. Los handlers con `FeatureUnavailableException` continúan siendo rutas existentes no operativas; no se eliminan del inventario.
 
@@ -199,8 +208,12 @@ Extraído de annotations presentes; excluye endpoints de framework (Actuator). S
 | GET | `/api/v1/modalidades-programa` | [CatalogoProgramaController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/tipoprograma/CatalogoProgramaController.java) |
 | GET | `/api/v1/jornadas-programa` | [CatalogoProgramaController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/tipoprograma/CatalogoProgramaController.java) |
 | GET | `/api/v1/tipos-vinculacion` | [TipoVinculacionController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/tipovinculacion/TipoVinculacionController.java) |
+| GET | `/api/v1/auth/me` | [AuthController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/auth/AuthController.java) |
 | GET | `/api/v1/usuarios/perfil` | [UsuarioController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/usuario/UsuarioController.java) |
 | PUT | `/api/v1/usuarios/perfil` | [UsuarioController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/usuario/UsuarioController.java) |
+| GET | `/api/v1/auth/me` | [AuthController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/auth/AuthController.java) |
+| POST | `/api/v1/identidad/cuentas/acceso/consultas` | [AccesoCuentaController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/identidad/AccesoCuentaController.java) |
+| POST | `/api/v1/identidad/cuentas/acceso/reconciliaciones` | [AccesoCuentaController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/identidad/AccesoCuentaController.java) |
 | POST | `/api/v1/usuarios` | [UsuarioController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/usuario/UsuarioController.java) |
 | GET | `/api/v1/realtime/stream` | [RealtimeEventsController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/realtime/sse/controller/RealtimeEventsController.java) |
 | GET | `/api/v1/realtime/status` | [RealtimeEventsController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/realtime/sse/controller/RealtimeEventsController.java) |

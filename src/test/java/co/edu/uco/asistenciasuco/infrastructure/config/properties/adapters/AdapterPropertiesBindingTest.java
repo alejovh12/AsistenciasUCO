@@ -69,6 +69,53 @@ class AdapterPropertiesBindingTest {
     }
 
     @Test
+    void seguridad_e_identidad_baseline_coinciden_y_arrancan() {
+        contextRunner
+                .withPropertyValues(
+                        "app.adapters.security.provider=baseline",
+                        "app.adapters.identity.provider=baseline")
+                .run(context -> {
+                    assertEquals(null, context.getStartupFailure());
+                    assertEquals(SecurityProviderCoherence.Mode.BASELINE,
+                            context.getBean(SecurityProviderCoherence.Mode.class));
+                });
+    }
+
+    @Test
+    void alias_historico_keycloak_equivale_a_legacy_en_ambos_selectores() {
+        contextRunner
+                .withPropertyValues(
+                        "app.adapters.security.provider=legacy",
+                        "app.adapters.identity.provider=keycloak")
+                .run(context -> assertEquals(SecurityProviderCoherence.Mode.LEGACY,
+                        context.getBean(SecurityProviderCoherence.Mode.class)));
+    }
+
+    @Test
+    void combinacion_mixta_de_proveedores_falla_el_arranque_sin_degradar() {
+        contextRunner
+                .withPropertyValues(
+                        "app.adapters.security.provider=baseline",
+                        "app.adapters.identity.provider=keycloak")
+                .run(context -> assertNotNull(context.getStartupFailure()));
+        contextRunner
+                .withPropertyValues(
+                        "app.adapters.security.provider=legacy",
+                        "app.adapters.identity.provider=baseline")
+                .run(context -> assertNotNull(context.getStartupFailure()));
+    }
+
+    @Test
+    void valor_desconocido_del_selector_de_seguridad_no_se_convierte_en_legacy() {
+        contextRunner
+                .withPropertyValues("app.adapters.security.provider=basline")
+                .run(context -> assertNotNull(context.getStartupFailure()));
+        contextRunner
+                .withPropertyValues("app.adapters.identity.provider=basline")
+                .run(context -> assertNotNull(context.getStartupFailure()));
+    }
+
+    @Test
     void invalid_provider_value_falla_binding_sin_fallback() {
         new ApplicationContextRunner()
                 .withUserConfiguration(AdapterPropertiesConfiguration.class)

@@ -7,6 +7,12 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedPrincipalResolver.AuthenticatedPrincipal;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -56,6 +62,38 @@ class JwtAuthenticatedUserProviderTest {
         setAuthentication(authenticated("no-es-un-uuid"));
 
         assertThrows(ForbiddenException.class, provider::requireAuthenticatedUserId);
+    }
+
+    @Test
+    void principal_incluye_uuid_y_solo_los_roles_institucionales_con_prefijo_role() {
+        final TestingAuthenticationToken token = new TestingAuthenticationToken(
+                USER_ID.toString(), null,
+                List.of(new SimpleGrantedAuthority("ROLE_DOCENTE"), new SimpleGrantedAuthority("ROLE_COORDINADOR"),
+                        new SimpleGrantedAuthority("ROLE_SUPERUSUARIO"), new SimpleGrantedAuthority("DOCENTE"),
+                        new SimpleGrantedAuthority("SCOPE_email")));
+        token.setAuthenticated(true);
+        setAuthentication(token);
+
+        final AuthenticatedPrincipal principal = provider.requireAuthenticatedPrincipal();
+
+        assertEquals(USER_ID, principal.idUsuario());
+        assertEquals(Set.of(InstitutionalRole.DOCENTE, InstitutionalRole.COORDINADOR), principal.roles());
+    }
+
+    @Test
+    void principal_sin_roles_institucionales_devuelve_conjunto_vacio() {
+        setAuthentication(authenticated(USER_ID.toString()));
+
+        assertEquals(Set.of(), provider.requireAuthenticatedPrincipal().roles());
+    }
+
+    @Test
+    void principal_sin_authentication_o_con_nombre_invalido_lanza_forbidden() {
+        SecurityContextHolder.getContext().setAuthentication(null);
+        assertThrows(ForbiddenException.class, provider::requireAuthenticatedPrincipal);
+
+        setAuthentication(authenticated("no-es-un-uuid"));
+        assertThrows(ForbiddenException.class, provider::requireAuthenticatedPrincipal);
     }
 
     private static Authentication authenticated(final String principal) {

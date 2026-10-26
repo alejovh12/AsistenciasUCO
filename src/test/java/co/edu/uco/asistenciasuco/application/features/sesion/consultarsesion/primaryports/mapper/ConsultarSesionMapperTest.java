@@ -23,10 +23,12 @@ class ConsultarSesionMapperTest {
     @Test
     void toDomain_con_dto_valido_crea_dominio() {
         final UUID sesion = UUID.randomUUID();
+        final UUID usuario = UUID.randomUUID();
 
-        final ConsultarSesionDomain domain = ConsultarSesionMapper.toDomain(new ConsultarSesionDTO(sesion));
+        final ConsultarSesionDomain domain = ConsultarSesionMapper.toDomain(new ConsultarSesionDTO(sesion, usuario));
 
         assertEquals(sesion, domain.getSesion());
+        assertEquals(usuario, domain.getUsuarioEjecutor());
     }
 
     @Test

@@ -33,6 +33,11 @@ public final class InstitutionalScopeJdbcBaseline implements InstitutionalScopeP
             FROM dbo.uv_usuario
             WHERE LOWER(correo) = LOWER(:email)
             """;
+    private static final String SQL_USUARIO_ACTIVO = """
+            SELECT TOP 1 estaActivoUsuario
+            FROM dbo.uv_usuario
+            WHERE id = :usuarioId
+            """;
     private static final String SQL_DOCENTE_POR_USUARIO = """
             SELECT TOP 1 id
             FROM dbo.uv_docente_identidad
@@ -113,6 +118,11 @@ public final class InstitutionalScopeJdbcBaseline implements InstitutionalScopeP
     }
 
     @Override
+    public boolean isUsuarioActivo(final UUID usuarioId) {
+        return querySingleBoolean(SQL_USUARIO_ACTIVO, byUsuario(usuarioId), "isUsuarioActivo");
+    }
+
+    @Override
     public Optional<UUID> findDocenteIdByUsuario(final UUID usuarioId) {
         return querySingleUuid(SQL_DOCENTE_POR_USUARIO, byUsuario(usuarioId), "findDocenteIdByUsuario");
     }
@@ -153,6 +163,41 @@ public final class InstitutionalScopeJdbcBaseline implements InstitutionalScopeP
     }
 
     @Override
+    public boolean isAdministradorActivo(final UUID usuarioId) {
+        return queryCount("SELECT COUNT(1) FROM dbo.uv_administrador WHERE idUsuario = :usuarioId AND estaActivoUsuario = 1",
+                byUsuario(usuarioId), "isAdministradorActivo") > 0;
+    }
+
+    @Override
+    public java.util.Set<co.edu.uco.asistenciasuco.application.security.InstitutionalRole> findRolesActivosByUsuario(final UUID usuarioId) {
+        throw new UnsupportedOperationException("Sin equivalente en la linea base JDBC original.");
+    }
+
+    @Override
+    public boolean canGestionarCuenta(final UUID actorUsuarioId, final UUID destinoUsuarioId) {
+        throw new UnsupportedOperationException("Sin equivalente en la linea base JDBC original.");
+    }
+
+    @Override
+    public boolean canCoordinadorAccessGrupo(final UUID usuarioId, final UUID grupoId) {
+        return queryCount("""
+                SELECT COUNT(1) FROM dbo.uv_grupo_programa gp WHERE gp.idGrupo = :grupoId AND EXISTS (
+                    SELECT 1 FROM dbo.uv_coordinador c
+                    WHERE c.idUsuario = :usuarioId AND c.idPrograma = gp.idPrograma AND c.estaActivoCoordinador = 1)
+                """, byUsuario(usuarioId).addValue(PARAM_GRUPO_ID, grupoId), "canCoordinadorAccessGrupo") > 0;
+    }
+
+    @Override
+    public boolean canDecanoAccessGrupo(final UUID usuarioId, final UUID grupoId) {
+        return queryCount("""
+                SELECT COUNT(1) FROM dbo.uv_grupo_programa gp JOIN dbo.uv_programa p ON p.id = gp.idPrograma
+                WHERE gp.idGrupo = :grupoId AND EXISTS (
+                    SELECT 1 FROM dbo.uv_decano d
+                    WHERE d.idUsuario = :usuarioId AND d.idFacultad = p.idFacultad AND d.estaActivoDecano = 1)
+                """, byUsuario(usuarioId).addValue(PARAM_GRUPO_ID, grupoId), "canDecanoAccessGrupo") > 0;
+    }
+
+    @Override
     public boolean canCoordinadorAccessPrograma(final UUID usuarioId, final UUID programaId) {
         return queryCount(
                 SQL_COORDINADOR_ACCEDE_PROGRAMA,
@@ -189,6 +234,19 @@ public final class InstitutionalScopeJdbcBaseline implements InstitutionalScopeP
         } catch (DataAccessException exception) {
             logFailure(operation);
             throw new DatabaseOperationException("No fue posible resolver el alcance institucional.", exception);
+        }
+    }
+
+    private boolean querySingleBoolean(final String sql, final MapSqlParameterSource parameters,
+                                       final String operation) {
+        try {
+            final Boolean value = jdbcOperations.query(sql, parameters, resultSet ->
+                    resultSet.next() && resultSet.getBoolean(1));
+            return Boolean.TRUE.equals(value);
+        } catch (DataAccessException exception) {
+            LOGGER.error("SQL operation failed. operation={}, correlationId={}", operation,
+                    CorrelationIdContext.getAsString());
+            throw new DatabaseOperationException("No fue posible resolver el estado institucional.", exception);
         }
     }
 

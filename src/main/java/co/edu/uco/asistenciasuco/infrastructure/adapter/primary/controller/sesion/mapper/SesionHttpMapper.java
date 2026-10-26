@@ -29,9 +29,9 @@ public final class SesionHttpMapper {
         );
     }
 
-    public static ConsultarSesionDTO toApplicationDTO(final ConsultarSesionRequest request) {
+    public static ConsultarSesionDTO toApplicationDTO(final ConsultarSesionRequest request, final UUID usuarioEjecutor) {
         Objects.requireNonNull(request, "El request HTTP para consultar sesion es obligatorio.");
-        return new ConsultarSesionDTO(request.getSesion());
+        return new ConsultarSesionDTO(request.getSesion(), usuarioEjecutor);
     }
 
     public static CerrarSesionDTO toApplicationDTO(final CerrarSesionRequest request, final UUID usuarioEjecutor) {

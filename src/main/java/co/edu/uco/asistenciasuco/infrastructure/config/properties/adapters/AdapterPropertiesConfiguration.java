@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.properties.adapters;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration(proxyBeanMethods = false)
@@ -12,4 +13,13 @@ import org.springframework.context.annotation.Configuration;
         AuditAdapterProperties.class
 })
 public class AdapterPropertiesConfiguration {
+
+    /** Falla el arranque si seguridad e identidad apuntan a proveedores distintos. */
+    @Bean
+    public SecurityProviderCoherence.Mode securityProviderMode(
+            final SecurityAdapterProperties security,
+            final IdentityAdapterProperties identity
+    ) {
+        return SecurityProviderCoherence.require(security, identity);
+    }
 }

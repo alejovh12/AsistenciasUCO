@@ -13,11 +13,16 @@ import java.util.UUID;
 public final class ConsultarSesionDomain {
 
     private final UUID sesion;
+    private final UUID usuarioEjecutor;
 
-    public ConsultarSesionDomain(final UUID sesion) {
+    public ConsultarSesionDomain(final UUID sesion, final UUID usuarioEjecutor) {
         validarSesion(sesion);
+        if (ObjectHelper.isNull(usuarioEjecutor)) {
+            throw new ValidationException(SesionErrorCode.ERR_DOCENTE_REQUERIDO);
+        }
 
         this.sesion = sesion;
+        this.usuarioEjecutor = usuarioEjecutor;
     }
 
     private void validarSesion(final UUID sesion) {
@@ -28,6 +33,10 @@ public final class ConsultarSesionDomain {
 
     public UUID getSesion() {
         return sesion;
+    }
+
+    public UUID getUsuarioEjecutor() {
+        return usuarioEjecutor;
     }
 
 }

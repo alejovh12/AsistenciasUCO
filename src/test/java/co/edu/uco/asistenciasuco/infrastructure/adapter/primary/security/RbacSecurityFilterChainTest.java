@@ -3,9 +3,11 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.ClientIpResolver;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.CorrelationIdFilter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.RequestActorResolver;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.auth.AuthController;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.handler.ApiAccessDeniedHandler;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.handler.ApiAuthenticationEntryPoint;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.handler.SecurityErrorResponseWriter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.SecurityContextAuthenticatedUserResolver;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.keycloak.KeycloakJwtClaimsExtractor;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.contract.JwtClaimsExtractor;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.validation.AudienceValidator;
@@ -43,6 +45,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -63,7 +66,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *   <li>{@code /api/v1/estudiante/**} (portal del propio estudiante): {@code ESTUDIANTE}.</li>
  * </ul>
  */
-@WebMvcTest(controllers = RbacSecurityFilterChainTest.RbacProbeController.class)
+@WebMvcTest(controllers = {RbacSecurityFilterChainTest.RbacProbeController.class, AuthController.class})
 @Import({
         SecurityConfig.class,
         ApiAuthenticationEntryPoint.class,
@@ -73,6 +76,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         ClientIpResolver.class,
         RequestActorResolver.class,
         RbacSecurityFilterChainTest.RbacProbeController.class,
+        AuthController.class,
+        SecurityContextAuthenticatedUserResolver.class,
         RbacSecurityFilterChainTest.RbacTestSupportConfig.class
 })
 @TestPropertySource(properties = {
@@ -194,6 +199,38 @@ class RbacSecurityFilterChainTest {
         mockMvc.perform(get("/api/v1/tipos-vinculacion")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/tipos-vinculacion").header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
                 .andExpect(status().isOk());
+    }
+
+    // --- GET /api/v1/auth/me : identidad institucional resuelta por el backend ---
+
+    @Test
+    void auth_me_sin_token_o_con_token_invalido_recibe_401() throws Exception {
+        mockMvc.perform(get("/api/v1/auth/me")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/auth/me").header(HttpHeaders.AUTHORIZATION, "Bearer token-no-valido"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void auth_me_devuelve_solo_uuid_institucional_y_roles_efectivos_para_cada_rol() throws Exception {
+        for (final String role : List.of("ADMINISTRADOR", "DECANO", "COORDINADOR", "DOCENTE", "ESTUDIANTE")) {
+            mockMvc.perform(get("/api/v1/auth/me").header(HttpHeaders.AUTHORIZATION, bearer(role)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.exitoso").value(true))
+                    .andExpect(jsonPath("$.datos.idUsuario").value(USER_ID))
+                    .andExpect(jsonPath("$.datos.roles[0]").value(role))
+                    .andExpect(jsonPath("$.datos.roles.length()").value(1))
+                    .andExpect(jsonPath("$.datos.length()").value(2));
+        }
+    }
+
+    @Test
+    void auth_me_no_acepta_identidad_suministrada_por_el_cliente() throws Exception {
+        mockMvc.perform(get("/api/v1/auth/me")
+                        .param("idUsuario", "99999999-9999-9999-9999-999999999999")
+                        .param("email", "otro@uco.edu.co")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.datos.idUsuario").value(USER_ID));
     }
 
     // --- GET /api/v1/grupos : listado institucional completo (NO es "mis grupos" del docente) ---

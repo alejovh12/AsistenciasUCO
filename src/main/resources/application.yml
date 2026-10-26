@@ -104,9 +104,13 @@ app:
       enabled: ${APP_SESIONES_V2_ENABLED:true}
   adapters:
     identity:
-      provider: ${APP_ADAPTERS_IDENTITY_PROVIDER:keycloak}
+      # Un solo selector (APP_ADAPTERS_SECURITY_PROVIDER) gobierna seguridad e identidad; si se define este
+      # valor explicitamente debe coincidir (el arranque falla ante una combinacion mixta).
+      provider: ${APP_ADAPTERS_IDENTITY_PROVIDER:${APP_ADAPTERS_SECURITY_PROVIDER:baseline}}
     security:
-      provider: ${APP_ADAPTERS_SECURITY_PROVIDER:keycloak}
+      # Security Baseline es el proveedor predeterminado. `legacy` (Keycloak 8081) solo se activa de forma explicita
+      # y una configuracion incompleta del baseline hace fallar el arranque: nunca degrada a legacy.
+      provider: ${APP_ADAPTERS_SECURITY_PROVIDER:baseline}
     vault:
       provider: ${APP_ADAPTERS_VAULT_PROVIDER:azure_keyvault}
     parameter-catalog:
@@ -140,13 +144,59 @@ app:
       admin-client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:}
       api-client-id: ${KEYCLOAK_API_CLIENT_ID:asistencias-api}
       user-id-attribute: ${KEYCLOAK_USER_ID_ATTRIBUTE:idUsuario}
-    # Runtime security (validacion de JWT). Ver
+    # Aprovisionamiento de identidades del modo baseline (realm central). El secreto no tiene valor por defecto.
+    security-baseline-identity:
+      server-url: ${SECURITY_BASELINE_IDENTITY_SERVER_URL:http://localhost:19090}
+      realm: ${SECURITY_BASELINE_IDENTITY_REALM:security-baseline}
+      admin-client-id: ${SECURITY_BASELINE_IDENTITY_ADMIN_CLIENT_ID:asistencias-provisioner}
+      admin-client-secret: ${SECURITY_BASELINE_IDENTITY_ADMIN_CLIENT_SECRET:}
+      api-client-id: ${SECURITY_BASELINE_API_CLIENT_ID:asistencias-api}
+      user-id-attribute: ${SECURITY_BASELINE_USER_ID_CLAIM:idUsuario}
+    # Runtime security legacy (validacion de JWT). Ver
     # docs/security/runtime-security-provider-architecture.md.
     keycloak-security:
       issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8081/realms/asistencias-uco}
       api-client-id: ${KEYCLOAK_API_CLIENT_ID:asistencias-api}
       expected-audience: ${KEYCLOAK_EXPECTED_AUDIENCE:asistencias-api}
       user-id-claim: ${KEYCLOAK_USER_ID_CLAIM:idUsuario}
+    security-baseline:
+      issuer-uri: ${SECURITY_BASELINE_ISSUER_URI:http://keycloak.localhost:19090/realms/security-baseline}
+      # Cliente de recurso propio de AsistenciasUCO en el realm central: aporta los cinco roles institucionales
+      # (resource_access) y la audiencia del backend. No se usa security-baseline-pdp: ese cliente es del PDP.
+      api-client-id: ${SECURITY_BASELINE_API_CLIENT_ID:asistencias-api}
+      expected-audience: ${SECURITY_BASELINE_EXPECTED_AUDIENCE:asistencias-api}
+      email-claim: ${SECURITY_BASELINE_EMAIL_CLAIM:email}
+      email-verified-claim: ${SECURITY_BASELINE_EMAIL_VERIFIED_CLAIM:email_verified}
+      # Atributo del IdP con Usuario.id (solo coherencia/UI; la autoridad es el vínculo issuer+subject en SQL Server).
+      user-id-claim: ${SECURITY_BASELINE_USER_ID_CLAIM:idUsuario}
+      # Opcional: solo transporte de las claves publicas (el `iss` se valida siempre contra issuer-uri). Vacio = descubrimiento OIDC.
+      jwk-set-uri: ${SECURITY_BASELINE_JWK_SET_URI:}
+    # Perfiles de acceso en el PDP: el backend asegura (idempotente) el perfil equivalente a cada rol que asigna.
+    # La sincronizacion privilegiada permanece deshabilitada hasta validar la autorizacion administrativa del PDP.
+    security-baseline-pdp-admin:
+      enabled: ${SECURITY_BASELINE_PDP_PROFILE_SYNC_ENABLED:false}
+      pdp-url: ${SECURITY_BASELINE_PDP_URL:http://localhost:18080}
+      token-url: ${SECURITY_BASELINE_IDENTITY_SERVER_URL:http://localhost:19090}/realms/${SECURITY_BASELINE_IDENTITY_REALM:security-baseline}/protocol/openid-connect/token
+      client-id: ${SECURITY_BASELINE_PDP_ADMIN_CLIENT_ID:asistencias-provisioner}
+      # Secreto dedicado del PDP; no reutilizar SECURITY_BASELINE_IDENTITY_ADMIN_CLIENT_SECRET.
+      client-secret: ${SECURITY_BASELINE_PDP_ADMIN_CLIENT_SECRET:}
+      application-name: ${SECURITY_BASELINE_PEP_APPLICATION_NAME:asistencias-uco}
+      # Perfil individual del PDP por rol (fuente unica: infra/security-baseline/access-catalog.json).
+      profiles:
+        ADMINISTRADOR: Administración institucional
+        DECANO: Decanatura
+        COORDINADOR: Coordinación de programa
+        DOCENTE: Docencia
+        ESTUDIANTE: Estudiantes
+    # El modo baseline exige esta configuración; no existe una bandera adicional para apagarlo.
+    security-baseline-pep:
+      pep-url: ${SECURITY_BASELINE_PEP_URL:http://localhost:18081}
+      application-name: ${SECURITY_BASELINE_PEP_APPLICATION_NAME:asistencias-uco}
+      # Contrato 0.1.7: dev | lab | prod (el PDP rechaza cualquier otro valor al validar la credencial).
+      environment: ${SECURITY_BASELINE_PEP_ENVIRONMENT:dev}
+      application-credential: ${SECURITY_BASELINE_PEP_APPLICATION_CREDENTIAL:}
+      connect-timeout: ${SECURITY_BASELINE_PEP_CONNECT_TIMEOUT:2s}
+      request-timeout: ${SECURITY_BASELINE_PEP_REQUEST_TIMEOUT:5s}
     # LB-004B.2: MinIO privado (bucket provisionado por docker-compose/minio-init). Credenciales
     # SOLO por variables de entorno, sin valor por defecto funcional (fail-fast si faltan).
     minio:
@@ -173,19 +223,3 @@ app:
     azure-events:
       # Sin valor por defecto funcional: vacio = webhook Event Grid rechaza todo (401, fail-closed).
       webhook-token: ${AZURE_EVENTGRID_WEBHOOK_TOKEN:}
-
-# ──────────────────────────────────────────────────────────────
-# Security Baseline: PEP integration properties (starter v0.1.3)
-# ──────────────────────────────────────────────────────────────
-security:
-  enabled: ${SECURITY_ENABLED:true}
-  pep:
-    enforcement:
-      enabled: ${SECURITY_PEP_ENFORCEMENT_ENABLED:false}
-      pep-url: ${PEP_URL:http://localhost:18081}
-      application-name: ${SECURITY_PEP_APPLICATION_NAME:asistencias-uco}
-      environment: ${SECURITY_PEP_ENVIRONMENT:local}
-      application-credential: ${PEP_REGISTRATION_TOKEN:}
-      allow-insecure-http: ${SECURITY_PEP_ALLOW_INSECURE_HTTP:true}
-      public-paths: ${SECURITY_PEP_PUBLIC_PATHS:/actuator/health,/swagger-ui/**,/v3/api-docs/**}
-

@@ -22,7 +22,7 @@ public final class SecurityErrorResponseWriter {
 
     private static final JsonMapper JSON_MAPPER = JsonMapper.builder().build();
 
-    void write(
+    public void write(
             final HttpServletRequest request,
             final HttpServletResponse response,
             final HttpStatus status,

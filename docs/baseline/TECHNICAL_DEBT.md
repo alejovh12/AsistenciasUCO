@@ -266,6 +266,13 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 - **Resolución esperada:** Política aprobada y pruebas de verificación acordes.
 - **Bloquea línea base:** no para LB-000; sí release de identidad.
 - **Estado:** ABIERTA.
+- **Actualización Security Baseline 0.1.7 (2026-10-26, cierre):** resuelto el binding `issuer+subject → Usuario.id`
+  con persistencia propia (migración SEC-BASELINE-017 en la DB) y la API queda Bearer-only (PKCE en la SPA; la cookie BFF
+  no es credencial del backend). Pendiente: (a) renovación del access token por re-autenticación silenciosa (redirección)
+  porque no hay refresh token en JavaScript; (b) el PEP 0.1.7 no soporta SSE en modo proxy (el backend lo autoriza por
+  embedded decision); (c) `GET /api/v1/usuarios/perfil` sigue 501 (la UI toma id y roles de `GET /api/v1/auth/me`, no del token); (d) revocación
+  inmediata solo por vínculo/usuario (el JWT conserva validez hasta su exp); (e) permisos EXECUTE del rol runtime SQL
+  para SP de consulta (p. ej. `usp_consultar_programas_academicos`) deben verificarse en cada despliegue DB.
 
 ## TD-015
 
@@ -895,3 +902,13 @@ GOLDEN PATH EFFECT:         NONE
 - **Descripción:** `usp_consultar_solicitudes_revision_docente` (R2), `usp_consultar_archivo_soporte_autorizado` y `usp_radicar_solicitud_revision_asistencia_v2` comparan contra los literales `'ATTACHED'` y `'DRAFT'`, lo que contradice la regla "Cero Datos Quemados". HU035/HU036 creó el parámetro `ARCHIVO.ESTADO_ADJUNTO` y lo usa en el SP nuevo.
 - **Resolución esperada:** que los SP de LB-004D lean los estados desde parámetros o catálogo, con alineación del manifiesto LB-004D.
 - **Bloquea línea base:** no. **Estado:** **OPEN / LOW / DB_OWNER**. **Work item:** [HU035-HU036](../work-items/HU035-HU036-bandeja-detalle-reclamos-docente/CONTRACT.md).
+
+## TD-062
+
+- **Fecha / responsable:** 2026-10-26 / backend-team (cierre Security Baseline 0.1.7). **Clasificación:** `PDP_GRANT_DRIFT`. **Prioridad:** MEDIA.
+- **Descripción:** el catálogo de acceso (`infra/security-baseline/access-catalog.json`, verificado contra `SecurityConfig` y Spring MVC) y el PDP real divergen en 16 concesiones heredadas de una matriz anterior del aprovisionamiento (que solo agregaba): p. ej. `ESTUDIANTE`/`DOCENTE`/`DECANO` tienen `GET /api/v1/docentes` y `POST /api/v1/grupos`; `ESTUDIANTE`, `DECANO`, `COORDINADOR` y `ADMINISTRADOR` tienen `POST /api/v1/sesiones`; `COORDINADOR` y `ADMINISTRADOR` conservan `POST/PUT /api/v1/coordinador/periodos-academicos` (ruta ya inexistente). `verify-decisions` confirma que el PEP responde ALLOW en 12 de ellas donde el catálogo exige DENY.
+- **Impacto:** sin explotación hoy: `SecurityConfig` (`AuthorizationFilter`) rechaza esas llamadas con 403 después del PEP, así que el PDP está más abierto que Spring pero no abre acceso por sí solo. Rompe la defensa en profundidad si una ruta futura reutiliza el path.
+- **Evidencia:** `provision_asistencias.py verify` / `verify-decisions` (2026-10-26); flujo y matriz en [la arquitectura de seguridad §11](../security/runtime-security-provider-architecture.md#11-matriz-rbac-relevante).
+- **Motivo para no resolver ahora:** revocar concesiones existentes del PDP es una acción sobre un recurso compartido que el cierre no autorizó explícitamente (solo registro incremental); el aprovisionamiento ya las detecta y no las revoca sin `--prune`.
+- **Resolución esperada:** el responsable ejecuta `python -X utf8 -I infra\security-baseline\scripts\provision_asistencias.py pdp --prune`, luego `verify` y `verify-decisions` en verde. Cierra también: migrar los usuarios de prueba a su perfil (`users --migrate-direct`), hoy con asignación directa del rol.
+- **Bloquea línea base:** no. **Estado:** **RESOLVED (2026-10-26)**: el responsable autorizó `pdp --prune`; se revocaron las 16 concesiones y `verify`/`verify-decisions` quedaron en verde (847/847). Persiste, sin impacto de acceso, la migración de los usuarios de prueba a perfiles (`users --migrate-direct`) y dos recursos huérfanos sin concesiones.

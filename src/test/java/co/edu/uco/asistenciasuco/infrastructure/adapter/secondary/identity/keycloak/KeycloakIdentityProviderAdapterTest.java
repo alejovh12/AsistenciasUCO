@@ -500,14 +500,14 @@ class KeycloakIdentityProviderAdapterTest {
     class PasswordTests {
 
         @Test
-        void usuario_nuevo_establece_password_con_temporary_false() {
+        void usuario_nuevo_establece_password_temporal_con_cambio_obligatorio() {
             stubCreacionExitosaCompleta();
 
             adapter.crearCuenta(nuevoUsuarioDto());
 
             final String body = server.lastRequestBody("PUT", RESET_PASSWORD_PATH);
             assertNotNull(body);
-            assertTrue(body.contains("\"temporary\":false"));
+            assertTrue(body.contains("\"temporary\":true"));
         }
 
         @Test
