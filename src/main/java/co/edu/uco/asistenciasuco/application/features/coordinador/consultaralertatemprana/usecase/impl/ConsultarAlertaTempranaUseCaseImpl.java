@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.consultaralertatemprana.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
-import co.edu.uco.asistenciasuco.application.features.coordinador.common.rule.IndicadoresRules;
+import co.edu.uco.asistenciasuco.application.features.coordinador.indicadores.rule.IndicadoresRules;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultaralertatemprana.primaryports.dto.AlertaTempranaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultaralertatemprana.usecase.ConsultarAlertaTempranaUseCase;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultaralertatemprana.usecase.domain.AlertaTempranaDomain;

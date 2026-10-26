@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.consultarfichaestudiante.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
-import co.edu.uco.asistenciasuco.application.features.coordinador.common.rule.IndicadoresRules;
+import co.edu.uco.asistenciasuco.application.features.coordinador.indicadores.rule.IndicadoresRules;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarfichaestudiante.primaryports.dto.ResumenAsignaturaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarfichaestudiante.usecase.ConsultarFichaEstudianteUseCase;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarfichaestudiante.usecase.domain.ConsultarFichaEstudianteDomain;

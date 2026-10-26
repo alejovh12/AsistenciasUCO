@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.application.features.coordinador.common.rule;
+package co.edu.uco.asistenciasuco.application.features.coordinador.indicadores.rule;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
