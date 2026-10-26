@@ -85,6 +85,10 @@ El [Golden Path](../baseline/GOLDEN_PATH_ASISTENCIA.md) enlaza controllers, DTO,
 
 ## Inventario exacto de mappings de controllers
 
+> Vigente y verificado por prueba: `infra/security-baseline/access-catalog.json` (un registro por endpoint con roles y ownership,
+> contrastado con `RequestMappingHandlerMapping` por `AccessCatalogConsistencyTest`). Esta tabla es evidencia histórica de la
+> revisión 2026-09-20 y no incluye las HU posteriores.
+
 Extraído de annotations presentes; excluye endpoints de framework (Actuator). Sirve como evidencia de rutas, no como contrato de éxito/seguridad. El símbolo enlazado permite inspeccionar request/response e Input Ports, y seguir sus casos de uso/adapters. Los handlers con `FeatureUnavailableException` continúan siendo rutas existentes no operativas; no se eliminan del inventario.
 
 | Método | Path observado | Controller fuente |
@@ -199,6 +203,7 @@ Extraído de annotations presentes; excluye endpoints de framework (Actuator). S
 | GET | `/api/v1/modalidades-programa` | [CatalogoProgramaController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/tipoprograma/CatalogoProgramaController.java) |
 | GET | `/api/v1/jornadas-programa` | [CatalogoProgramaController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/tipoprograma/CatalogoProgramaController.java) |
 | GET | `/api/v1/tipos-vinculacion` | [TipoVinculacionController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/tipovinculacion/TipoVinculacionController.java) |
+| GET | `/api/v1/auth/me` | [AuthController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/auth/AuthController.java) |
 | GET | `/api/v1/usuarios/perfil` | [UsuarioController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/usuario/UsuarioController.java) |
 | PUT | `/api/v1/usuarios/perfil` | [UsuarioController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/usuario/UsuarioController.java) |
 | POST | `/api/v1/usuarios` | [UsuarioController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/usuario/UsuarioController.java) |

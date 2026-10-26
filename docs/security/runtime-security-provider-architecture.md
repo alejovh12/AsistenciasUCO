@@ -251,6 +251,49 @@ tokens ni correos; la DB conserva `idCorrelacion`, fecha de vinculación y de re
 La cookie de sesión BFF no es una credencial de este backend: `SecurityBaselinePepClient` solo evalúa con un Bearer
 único y bien formado ya autenticado por Spring Security; sin Bearer responde 401 sin consultar al PEP.
 
+### 5.5 Identidad institucional para la SPA: `GET /api/v1/auth/me`
+
+La primera vinculación por correo ocurre en el backend, al autenticar el Bearer (§5.4), así que la SPA **no** puede
+exigir el claim `idUsuario` en el JWT: una persona con el mismo correo institucional verificado en el realm central y en
+SQL Server todavía no tiene ese atributo. Tras el intercambio PKCE, Angular llama a `GET /api/v1/auth/me`
+(`AuthController`, solo Bearer; `credentials: 'omit'`) y establece la sesión con la respuesta:
+
+```json
+{ "exitoso": true, "datos": { "idUsuario": "<UUID de Usuario.id>", "roles": ["DOCENTE"] } }
+```
+
+- Sin parámetros: ni UUID ni correo del cliente participan; el UUID es el principal ya resuelto por
+  `InstitutionalJwtAuthenticationConverter` (vínculo persistente) y los roles son las authorities `ROLE_*` del mismo token
+  (`resource_access["asistencias-api"].roles`). Se publican solo estos dos campos (sin tokens, correo ni datos personales).
+- Sin Bearer válido responde 401; un token rechazado por el vínculo (revocado, inactivo, ambiguo, conflicto, `idUsuario`
+  contradictorio) responde 401 antes de llegar al controlador. Un 5xx o un fallo de red no concede sesión.
+- Es `authenticated()` en `SecurityConfig` y recurso con los cinco roles en el PDP (`access: AUTHENTICATED`): cualquier rol
+  institucional puede conocer su propia identidad; una cuenta sin rol institucional queda denegada por el PEP.
+- La SPA toma de `datos.roles` el rol principal por jerarquía (`ADMINISTRADOR > DECANO > COORDINADOR > DOCENTE >
+  ESTUDIANTE`) y conserva todos en `User.roles`; guards, directiva y menú aceptan cualquier rol efectivo. El claim
+  `idUsuario` del token ya no es obligatorio en modo baseline y, si viene, nunca sustituye al UUID del backend
+  (el backend lo rechaza si contradice el vínculo). Modo `legacy` sin cambios: exige el claim.
+- Todo lo que la SPA muestre por rol es ergonomía: la autoridad sigue siendo PEP/PDP, `SecurityConfig` y Application/DB.
+
+### 5.6 Starter oficial `security-pep-integration-spring-boot-starter` 0.1.3: no se incorpora
+
+Seguridad UCO comunicó la dependencia `co.edu.uco:security-pep-integration-spring-boot-starter:0.1.3`. Evaluada el
+2026-10-26 contra el tag `v0.1.3` del repositorio `Seguridad-UCO/securityBaseline` (idéntico en `v0.1.7`: solo cambia su
+README):
+
+| Criterio | Hallazgo |
+|---|---|
+| Disponibilidad | No está en Maven Central (404); se publica en GitHub Packages (`maven.pkg.github.com/Seguridad-UCO/securityBaseline`), que exige credencial. No se resolvió el POM publicado: el análisis es del código fuente del tag. |
+| Plataforma | Padre `spring-boot-starter-parent` 4.1.0, Java 25; dependencias `spring-boot-starter-webflux` y `spring-boot-starter-webclient`. Este backend es Spring Boot 4.0.8 + Spring MVC (Servlet) con JPA bloqueante. |
+| Enforcement | `PepEnforcementWebFilter` implementa `org.springframework.web.server.WebFilter` (reactivo); no existe un `Filter`/`OncePerRequestFilter` Servlet. Su README lo define como "starter Spring Boot WebFlux". |
+| Autoconfiguración | `PepEnforcementAutoConfiguration` se activa por defecto (`security.enabled` y `security.pep.enforcement.enabled` con `matchIfMissing=true`) y no condiciona por tipo de aplicación; añadiría WebFlux/WebClient al classpath MVC y registraría un filtro que el contenedor Servlet nunca ejecuta, dejando la ilusión de un segundo control. |
+| Contrato | Idéntico al de `SecurityPepEnforcementFilter` + `SecurityBaselinePepClient`: `POST /internal/v1/embedded-access-decisions` con `applicationName`, `environment`, `path`, `method`; cabeceras `Authorization`, `X-Application-Credential`, `X-Request-Id`, `X-Correlation-Id` (`[A-Za-z0-9_.:-]{1,128}`); 2xx = ALLOW (`X-Decision-Id`), 401/403 tal cual, cualquier otro estado o error = 503 fail-closed. Diferencias deliberadas: el adaptador MVC exige un único Bearer (el starter también acepta la cookie `SECURITY_BASELINE_SESSION`, que este backend no acepta, ver §1.1) y solo acepta `204` como ALLOW. |
+
+Decisión: **no agregar la dependencia** ni migrar a WebFlux. Se conserva el adaptador MVC, que es el único punto de
+enforcement (registrado dentro de la `SecurityFilterChain`, `FilterRegistrationBean` servlet deshabilitado), de modo que no
+hay doble filtro. Reabrir si Seguridad UCO publica una variante Servlet/MVC compatible con Boot 4.0.x o este backend sube a
+Boot 4.1; en ese caso habría que verificar que no instale un segundo filtro.
+
 ---
 
 ## 6. Roles
@@ -465,6 +508,24 @@ Se implementa mediante casos de uso y `InstitutionalScopePort` cuando el flujo l
 
 ## 11. Matriz RBAC relevante
 
+La definición compartida y exacta, **un registro por endpoint**, es `infra/security-baseline/access-catalog.json`
+(método, ruta con `{variables}`, roles, `access`, ownership contextual, perfiles del PDP y exenciones). La usan
+`provision_asistencias.py` para el PDP y `AccessCatalogConsistencyTest` para comprobarla contra Spring MVC
+(`RequestMappingHandlerMapping`: qué endpoints existen) y contra el `SecurityFilterChain` real (qué rol llega a cada uno).
+La tabla siguiente resume las familias; ante cualquier diferencia manda `SecurityConfig` y el catálogo debe corregirse.
+
+Flujo para una HU nueva (sin workflows ni sistemas adicionales):
+
+1. Implementar el controlador y su regla en `SecurityConfig` (sin `/**` ni acceso a todos los roles por comodidad).
+2. `python -X utf8 -I infra/security-baseline/scripts/provision_asistencias.py catalog` (offline) lista los endpoints sin
+   regla y el esqueleto a completar; `AccessCatalogConsistencyTest` falla igual, así que un endpoint sin regla bloquea la
+   validación y nunca recibe acceso por defecto.
+3. Completar la fila (`roles`, `access`, `ownership`) en `access-catalog.json`; la prueba exige que coincida con `SecurityConfig`.
+4. `provision_asistencias.py pdp` registra solo lo que falta (recursos, concesiones, perfiles); `verify` compara el PDP con el
+   catálogo y `verify-decisions` pide la decisión real al PEP (ALLOW/DENY) para cada endpoint y rol. Las concesiones que el
+   catálogo no autoriza se informan como deriva y solo se revocan con `pdp --prune`.
+5. Documentar la HU en su work item y, si cambia una familia, actualizar esta tabla.
+
 Estado vigente de las familias revisadas:
 
 | Ruta | Regla |
@@ -475,7 +536,7 @@ Estado vigente de las familias revisadas:
 | `/api/v1/docente/**` | `DOCENTE` |
 | `/api/v1/docentes/**` | `COORDINADOR` o `ADMINISTRADOR` |
 | `/api/v1/estudiante/**` | `ESTUDIANTE` |
-| `/api/v1/estudiantes/**` | `COORDINADOR` o `ADMINISTRADOR` |
+| `/api/v1/estudiantes/**` | `DOCENTE`, `COORDINADOR` o `ADMINISTRADOR` |
 | `GET /api/v1/grupos/**` | `DOCENTE`, `COORDINADOR` o `ADMINISTRADOR` |
 | `POST/PUT/DELETE /api/v1/grupos/**` | `COORDINADOR` o `ADMINISTRADOR` |
 | `POST/PUT/PATCH /api/v1/sesiones/**` | `DOCENTE` |
@@ -484,6 +545,7 @@ Estado vigente de las familias revisadas:
 | `POST /api/v1/asistencias/lote` | `DOCENTE` |
 | `POST /api/v1/asistencias/revisiones` | `ESTUDIANTE` |
 | `POST /api/v1/asistencias/consultas/grupo` | `DOCENTE`, `COORDINADOR` o `ADMINISTRADOR` |
+| `GET /api/v1/auth/me` | cualquier usuario autenticado (identidad institucional propia, §5.5) |
 | `POST /api/v1/usuarios` | cualquier usuario autenticado; deuda funcional pendiente |
 | `/api/v1/archivos/**` | cualquier usuario autenticado; deuda Storage/ownership pendiente |
 | `GET /api/v1/realtime/stream` | cualquier usuario autenticado |
@@ -648,7 +710,8 @@ Antes de integrar un cambio:
 ```text
 [ ] issuer validado exactamente
 [ ] audience validada
-[ ] idUsuario UUID requerido
+[ ] idUsuario UUID requerido (legacy) / vínculo issuer+subject resuelto (baseline) y GET /api/v1/auth/me
+[ ] endpoint nuevo con fila en infra/security-baseline/access-catalog.json (AccessCatalogConsistencyTest en verde)
 [ ] roles solo desde el client de API
 [ ] principal = idUsuario
 [ ] Bearer inválido -> 401

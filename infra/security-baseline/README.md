@@ -23,19 +23,54 @@ docker compose --env-file "$env:USERPROFILE\.asistencias-security-lab\lab.env" -
 `lab.env.example`. **Prohibido:** `docker compose down -v`, `docker volume prune`, `docker system prune -a`.
 Antes de actualizar versión respalde los volúmenes (`tar` desde un contenedor efímero con el volumen en solo lectura).
 
-## Aprovisionar AsistenciasUCO (idempotente)
+## Catálogo de acceso: una definición, tres verificaciones
+
+`access-catalog.json` es la **única** definición de qué roles llaman a cada endpoint (método, ruta con `{variables}`,
+roles, `access`, ownership contextual), de los perfiles del PDP y de las exenciones. Nada más la replica a mano.
+
+| Qué comprueba | Dónde |
+|---|---|
+| Endpoints que existen (Spring MVC real, `RequestMappingHandlerMapping`) = catálogo; sin fila ⇒ falla | `AccessCatalogConsistencyTest` (Maven) |
+| Roles de cada endpoint = `SecurityFilterChain` real, por rol, sin Bearer y sin rol institucional | `AccessCatalogConsistencyTest` (Maven) |
+| Descubrimiento sin JVM (`extract_endpoints.py`) y validación estricta del catálogo | `python -X utf8 -I -m unittest discover -s infra/security-baseline/scripts -p "test_*.py"` |
+| El código = catálogo, y esqueleto de lo que falte | `provision_asistencias.py catalog` |
+| PDP = catálogo (recursos, concesiones, perfiles) | `provision_asistencias.py verify` |
+| Decisión real PEP→PDP ALLOW/DENY por endpoint y rol, rutas no registradas y sin Bearer | `provision_asistencias.py verify-decisions` |
+
+**Una HU nueva**: (1) controlador + regla en `SecurityConfig`; (2) `catalog` o la prueba Maven fallan hasta que exista su
+fila; (3) completar `roles`/`access`/`ownership`; (4) `pdp` registra solo lo que falta; (5) `verify` + `verify-decisions`;
+(6) documentar en el work item. Un endpoint sin regla bloquea la validación: nunca recibe acceso por defecto, no se
+registra `/**` y no se asigna a todos los roles por comodidad (`access=AUTHENTICATED` exige los cinco roles a propósito).
+
+## Aprovisionar AsistenciasUCO (idempotente, incremental)
 
 ```powershell
-python -X utf8 -I infra\security-baseline\scripts\provision_asistencias.py keycloak   # clientes del realm
-python -X utf8 -I infra\security-baseline\scripts\provision_asistencias.py pdp        # app, recursos, roles
-python -X utf8 -I infra\security-baseline\scripts\provision_asistencias.py users       # usuarios de prueba por rol
+python -X utf8 -I infra\security-baseline\scripts\provision_asistencias.py catalog      # offline: código vs catálogo
+python -X utf8 -I infra\security-baseline\scripts\provision_asistencias.py keycloak     # clientes del realm
+python -X utf8 -I infra\security-baseline\scripts\provision_asistencias.py pdp          # app, recursos, roles, concesiones, perfiles
+python -X utf8 -I infra\security-baseline\scripts\provision_asistencias.py users        # usuarios de prueba por rol + perfil
+python -X utf8 -I infra\security-baseline\scripts\provision_asistencias.py verify       # solo lectura
+python -X utf8 -I infra\security-baseline\scripts\provision_asistencias.py verify-decisions
 ```
 
 - Realm: cliente de recurso `asistencias-api` (cinco roles), cliente público `asistencias-uco-spa` (PKCE S256), cliente
   de servicio `asistencias-provisioner`.
-- PDP: aplicación `asistencias-uco` (ambientes `dev|lab|prod`), un recurso por endpoint de los controladores
-  (`extract_endpoints.py`), los cinco roles y sus concesiones con la misma matriz que `SecurityConfig`.
+- PDP: aplicación `asistencias-uco` (ambientes `dev|lab|prod`), un recurso por endpoint del catálogo, los cinco roles, sus
+  concesiones y cinco perfiles. `pdp` **solo agrega** lo que falta; nunca borra recursos ni roles. Las concesiones que el
+  catálogo no autoriza (deriva de matrices antiguas) se listan en `verify` y solo se revocan con `pdp --prune`, decisión
+  explícita del responsable. Los recursos huérfanos (sin endpoint) quedan sin concesiones, o sea denegados.
+- Roles vs. perfiles: el **rol** (`ADMINISTRADOR`, `DECANO`, `COORDINADOR`, `DOCENTE`, `ESTUDIANTE`) concede recursos; el
+  **perfil** agrupa roles y es lo que se asigna a una persona (`Administración institucional`, `Decanatura`,
+  `Coordinación de programa`, `Docencia`, `Estudiantes`; cada uno contiene su rol, y un perfil compuesto futuro, p. ej.
+  coordinador que también dicta clase, se agrega al catálogo con ambos roles). El PDP rechaza (409) asignar un perfil a quien
+  ya tiene directamente uno de sus roles: `users --migrate-direct` retira primero la directa y reasigna el perfil, con
+  reversión si falla; sin esa bandera no toca asignaciones existentes. `GET /api/v1/me/applications` devuelve
+  `applicationRoles` (directos) y `profiles`; la SPA no lo usa para autorizar (su identidad y roles salen de
+  `GET /api/v1/auth/me`) y el servidor sigue siendo la autoridad.
 - La credencial de la aplicación y el secreto del provisioner se guardan en `lab.env`; nunca se imprimen.
+- Starter oficial `security-pep-integration-spring-boot-starter` 0.1.3: **no se incorpora** (WebFlux/Boot 4.1; este backend es
+  MVC/Boot 4.0.8). Justificación y paridad de contrato en
+  [la arquitectura de seguridad](../../docs/security/runtime-security-provider-architecture.md#56-starter-oficial-security-pep-integration-spring-boot-starter-013-no-se-incorpora).
 
 ## Selector en IntelliJ (un solo valor gobierna seguridad e identidad)
 
