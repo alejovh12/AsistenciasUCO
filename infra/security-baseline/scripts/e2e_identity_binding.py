@@ -47,7 +47,12 @@ def main():
     base = f"{L.KEYCLOAK}/admin/realms/{L.REALM}"
 
     def kc_call(method, path, body=None):
-        status, _, raw = L.http(L.plain_opener(), method, base + path, body, headers=headers)
+        # El token de admin-cli dura ~60 s y este E2E dura más: se renueva en cada llamada y un estado inesperado
+        # detiene la prueba (409 = correo duplicado, que Keycloak rechaza a propósito) en vez de ignorarse.
+        fresh = {"Authorization": "Bearer " + L.kc_admin_token(env)}
+        status, _, raw = L.http(L.plain_opener(), method, base + path, body, headers=fresh)
+        if status not in (200, 201, 204, 404, 409):
+            raise SystemExit(f"Keycloak {method} {path}: HTTP {status}")
         return status, (json.loads(raw) if raw else None)
 
     _, users = kc_call("GET", "/users?username=uco-docente&exact=true")
@@ -95,14 +100,19 @@ def main():
         check("usuario SQL reactivado -> 200", E.request(BASE, "GET", PATH, token=token)[0] == 200)
 
         # Claim idUsuario divergente (cuenta mal aprovisionada): se rechaza.
-        kc_call("PUT", f"/users/{uid}", dict(original, attributes={"idUsuario": ["E1F2A3B4-0000-0000-0000-000000000004"]}))
+        # Se parte del estado actual (no de `original`): el correo de `original` lo ocupa aún la identidad de prueba.
+        _, current = kc_call("GET", f"/users/{uid}")
+        kc_call("PUT", f"/users/{uid}", dict(current, attributes={"idUsuario": ["E1F2A3B4-0000-0000-0000-000000000004"]}))
         claim_status = status_for(env, "uco-docente")
         check("claim idUsuario distinto del usuario vinculado -> 401", claim_status == 401, claim_status)
     finally:
-        kc_call("PUT", f"/users/{uid}", original)
+        # Primero se retira la identidad de prueba (puede ocupar el correo del docente) y después se restaura el original.
         _, extra = kc_call("GET", "/users?username=uco-nuevo-noverif&exact=true")
         for user in extra or []:
             kc_call("DELETE", f"/users/{user['id']}")
+        restore_status, _ = kc_call("PUT", f"/users/{uid}", original)
+        if restore_status != 204:
+            raise SystemExit(f"No se pudo restaurar uco-docente (HTTP {restore_status}); revisar Keycloak")
         sql(container, password, "UPDATE dbo.Usuario SET estado=1 WHERE id='E1F2A3B4-0000-0000-0000-000000000003'; "
                                  "UPDATE dbo.IdentidadExterna SET estado=1, fechaRevocacion=NULL WHERE usuario='E1F2A3B4-0000-0000-0000-000000000003'")
 
