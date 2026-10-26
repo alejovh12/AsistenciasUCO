@@ -92,7 +92,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.main.allow-bean-definition-overriding=true",
         "app.adapters.security.provider=baseline",
         "app.providers.security-baseline-pep.application-name=asistencias-uco-lab",
-        "app.providers.security-baseline-pep.environment=local",
+        "app.providers.security-baseline-pep.environment=dev",
         "app.providers.security-baseline-pep.application-credential=wiring-test-credential",
         "app.providers.security-baseline-pep.connect-timeout=1s",
         "app.providers.security-baseline-pep.request-timeout=700ms"

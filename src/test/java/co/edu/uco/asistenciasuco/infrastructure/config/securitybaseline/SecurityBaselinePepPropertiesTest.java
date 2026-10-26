@@ -55,11 +55,23 @@ class SecurityBaselinePepPropertiesTest {
     @Test
     void nombre_y_ambiente_deben_ser_identificadores_validos() {
         assertThrows(IllegalStateException.class, () -> new SecurityBaselinePepProperties(
-                URI.create("https://pep.example.org"), "nombre con espacios", "local", CREDENTIAL, null, null));
+                URI.create("https://pep.example.org"), "nombre con espacios", "dev", CREDENTIAL, null, null));
         assertThrows(IllegalStateException.class, () -> new SecurityBaselinePepProperties(
                 URI.create("https://pep.example.org"), "asistencias-uco", " ", CREDENTIAL, null, null));
         assertThrows(IllegalStateException.class, () -> new SecurityBaselinePepProperties(
-                URI.create("https://pep.example.org"), "asistencias-uco", "local", " ", null, null));
+                URI.create("https://pep.example.org"), "asistencias-uco", "dev", " ", null, null));
+    }
+
+    @Test
+    void ambiente_debe_ser_dev_lab_o_prod_como_exige_el_pdp_017() {
+        for (final String environment : new String[] {"dev", "lab", "prod"}) {
+            assertDoesNotThrow(() -> new SecurityBaselinePepProperties(
+                    URI.create("https://pep.example.org"), "asistencias-uco", environment, CREDENTIAL, null, null));
+        }
+        for (final String environment : new String[] {"local", "DEV", "staging"}) {
+            assertThrows(IllegalStateException.class, () -> new SecurityBaselinePepProperties(
+                    URI.create("https://pep.example.org"), "asistencias-uco", environment, CREDENTIAL, null, null));
+        }
     }
 
     @Test
@@ -93,7 +105,7 @@ class SecurityBaselinePepPropertiesTest {
                         "app.adapters.security.provider=baseline",
                         "app.providers.security-baseline-pep.pep-url=http://127.0.0.1:18081",
                         "app.providers.security-baseline-pep.application-name=asistencias-uco-lab",
-                        "app.providers.security-baseline-pep.environment=local",
+                        "app.providers.security-baseline-pep.environment=dev",
                         "app.providers.security-baseline-pep.application-credential=" + CREDENTIAL)
                 .run(context -> {
                     assertEquals(1, context.getBeansOfType(SecurityPepEnforcementFilter.class).size());
@@ -110,7 +122,7 @@ class SecurityBaselinePepPropertiesTest {
                         "app.adapters.security.provider=baseline",
                         "app.providers.security-baseline-pep.pep-url=http://pep.example.org",
                         "app.providers.security-baseline-pep.application-name=asistencias-uco-lab",
-                        "app.providers.security-baseline-pep.environment=local",
+                        "app.providers.security-baseline-pep.environment=dev",
                         "app.providers.security-baseline-pep.application-credential=" + CREDENTIAL)
                 .run(context -> assertTrue(context.getStartupFailure() != null));
     }
@@ -122,7 +134,7 @@ class SecurityBaselinePepPropertiesTest {
     }
 
     private static SecurityBaselinePepProperties enabled(final String url, final Duration timeout) {
-        return new SecurityBaselinePepProperties(URI.create(url), "asistencias-uco-lab", "local",
+        return new SecurityBaselinePepProperties(URI.create(url), "asistencias-uco-lab", "dev",
                 CREDENTIAL, timeout, timeout);
     }
 }

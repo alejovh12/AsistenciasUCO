@@ -171,7 +171,8 @@ app:
     security-baseline-pep:
       pep-url: ${SECURITY_BASELINE_PEP_URL:http://localhost:18081}
       application-name: ${SECURITY_BASELINE_PEP_APPLICATION_NAME:asistencias-uco}
-      environment: ${SECURITY_BASELINE_PEP_ENVIRONMENT:local}
+      # Contrato 0.1.7: dev | lab | prod (el PDP rechaza cualquier otro valor al validar la credencial).
+      environment: ${SECURITY_BASELINE_PEP_ENVIRONMENT:dev}
       application-credential: ${SECURITY_BASELINE_PEP_APPLICATION_CREDENTIAL:}
       connect-timeout: ${SECURITY_BASELINE_PEP_CONNECT_TIMEOUT:2s}
       request-timeout: ${SECURITY_BASELINE_PEP_REQUEST_TIMEOUT:5s}

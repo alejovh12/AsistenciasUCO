@@ -28,6 +28,8 @@ public record SecurityBaselinePepProperties(
     private static final Duration MAX_TIMEOUT = Duration.ofSeconds(30);
     private static final Set<String> LOOPBACK_HOSTS = Set.of("localhost", "127.0.0.1", "[::1]", "::1");
     private static final String IDENTIFIER = "[A-Za-z0-9_.:-]{1,128}";
+    /** Ambientes que el PDP 0.1.7 acepta al validar la credencial de aplicación (otro valor responde 400). */
+    private static final Set<String> ENVIRONMENTS = Set.of("dev", "lab", "prod");
 
     public SecurityBaselinePepProperties {
         connectTimeout = connectTimeout == null ? Duration.ofSeconds(2) : connectTimeout;
@@ -35,6 +37,10 @@ public record SecurityBaselinePepProperties(
         requireTrustedOrigin(pepUrl);
         requireIdentifier(applicationName, PREFIX + "application-name");
         requireIdentifier(environment, PREFIX + "environment");
+        if (!ENVIRONMENTS.contains(environment)) {
+            throw new IllegalStateException(PREFIX + "environment debe ser uno de " + new java.util.TreeSet<>(ENVIRONMENTS)
+                    + " (contrato Security Baseline 0.1.7).");
+        }
         requireNonBlank(applicationCredential, PREFIX + "application-credential");
         requireBounded(connectTimeout, PREFIX + "connect-timeout");
         requireBounded(requestTimeout, PREFIX + "request-timeout");
