@@ -174,7 +174,7 @@ class Keycloak:
         return self.client(representation["clientId"])["id"], True
 
 
-def provision_keycloak(env):
+def provision_keycloak(env, enable_pdp_profile_sync=False):
     kc = Keycloak(env)
     evidence = {}
 
@@ -249,6 +249,15 @@ def provision_keycloak(env):
     L.write_env_value("SECURITY_BASELINE_IDENTITY_ADMIN_CLIENT_SECRET", secret["value"])
     evidence["provisioner"] = {"created": created, "realm_management_roles": [r["name"] for r in wanted],
                                "secret": "stored in lab.env"}
+    if enable_pdp_profile_sync:
+        # OPT-IN explícito del responsable: con la audiencia del PDP, el token de servicio del backend puede invocar la API
+        # de administración del PDP (asignar/revocar perfiles de las cuentas que el propio backend registra). La API 0.1.7
+        # del PDP no distingue administradores entre los Bearer con esa audiencia, por eso no se concede por defecto.
+        names = [m["name"] for m in kc.client(PROVISIONER).get("protocolMappers", [])]
+        if "audience-pdp" not in names:
+            kc.call("POST", f"/clients/{prov_id}/protocol-mappers/models",
+                    _mapper("audience-pdp", "oidc-audience-mapper", {"included.client.audience": "security-baseline-pdp"}))
+        evidence["provisioner"]["pdp_audience"] = "security-baseline-pdp (sincronización de perfiles del backend)"
     return evidence
 
 
@@ -630,7 +639,7 @@ def main():
     elif args[0] == "verify-decisions":
         result = verify_decisions(env)
     else:
-        result = provision_keycloak(env)
+        result = provision_keycloak(env, enable_pdp_profile_sync="--enable-pdp-profile-sync" in args)
     print(json.dumps(result, indent=1, default=list))
     if args[0] in ("verify", "verify-decisions") and not result.get("clean"):
         raise SystemExit(1)

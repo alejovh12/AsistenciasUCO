@@ -138,7 +138,7 @@ Configuración:
 app:
   adapters:
     security:
-      provider: ${APP_ADAPTERS_SECURITY_PROVIDER:legacy}
+      provider: ${APP_ADAPTERS_SECURITY_PROVIDER:baseline}
 
   providers:
     keycloak-security:

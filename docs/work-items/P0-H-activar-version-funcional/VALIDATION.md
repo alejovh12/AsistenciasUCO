@@ -399,3 +399,34 @@ El controlador actual mantiene como `501 FEATURE_UNAVAILABLE` las rutas legacy:
 Estas rutas no participan en la radicación actual. `DELETE /api/v1/estudiante/reclamos/{id}` sí corresponde a la capacidad adicional de retirar/eliminar una solicitud que la UI intenta ofrecer; esa capacidad queda pendiente y no debe confundirse con crear, adjuntar, listar, descargar, aprobar o rechazar.
 
 **Dictamen corregido:** `PARTIALLY_READY`. Se retira la conclusión incorrecta de que falte desarrollar nuevamente el flujo de reclamos. El flujo vigente llega hasta la resolución y demuestra soporte real; queda abierta una regresión comprobada en la lectura de asistencia del estudiante después de aprobar, la validación visual actual y la capacidad independiente de retiro/eliminación. D1/R2 sigue siendo un asunto contractual separado.
+
+## Addendum de continuidad — 2026-10-26
+
+### Backend y guard de sincronización privilegiada
+
+Se continuó sobre el checkout existente, sin resetear, limpiar ni sobrescribir cambios previos. El `HEAD` al inicio de esta validación fue `5d591d19dd8c0285027e5f70e04e8094f977e2ab`; no se creó commit ni se hizo push en esta continuación.
+
+La configuración del cliente administrativo del PDP quedó protegida con una bandera independiente:
+
+- `SECURITY_BASELINE_PDP_PROFILE_SYNC_ENABLED` tiene fallback `false`.
+- El secreto del PDP se lee únicamente desde `SECURITY_BASELINE_PDP_ADMIN_CLIENT_SECRET`.
+- No se reutiliza `SECURITY_BASELINE_IDENTITY_ADMIN_CLIENT_SECRET`.
+- No se modificaron audiencias, permisos ni credenciales externas.
+
+Esto deja la sincronización privilegiada deshabilitada hasta contar con evidencia de autorización efectiva en el PDP. Los tests del cliente simulado certifican únicamente el comportamiento local del adapter; no certifican el proveedor externo.
+
+### Comandos ejecutados
+
+| Fecha/hora local | Comando | Resultado | Evidencia |
+|---|---|---|---|
+| 2026-10-26 16:59:15 -05 | `$env:JAVA_HOME='C:\Program Files\Java\jdk-25'; $env:Path="$env:JAVA_HOME\bin;$env:Path"; .\mvnw.cmd -B -ntp -Dtest='SecurityBaselinePdpAdminPropertiesTest,SecurityBaselinePdpProfileClientTest,ProfileSyncingIdentityProviderTest,IdentityAdapterSelectionTest' test` | `PASS`, 38/38, 0 fallos, 0 errores, 0 omitidas, exit 0 | Surefire |
+| 2026-10-26 16:55:00 -05 | `$env:JAVA_HOME='C:\Program Files\Java\jdk-25'; $env:Path="$env:JAVA_HOME\bin;$env:Path"; .\mvnw.cmd -B -ntp clean verify` sobre el estado previo al guard | `PASS`, 2301/2301, 0 fallos, 0 errores, 0 omitidas, exit 0 | Surefire, ArchUnit, JaCoCo |
+| 2026-10-26 17:04:47 -05 | `$env:JAVA_HOME='C:\Program Files\Java\jdk-25'; $env:Path="$env:JAVA_HOME\bin;$env:Path"; .\mvnw.cmd -B -ntp clean verify` sobre el estado actual | `PASS`, 2302/2302, 0 fallos, 0 errores, 0 omitidas, exit 0 | Surefire, ArchUnit, JaCoCo |
+
+La corrida completa previa al guard obtuvo JaCoCo: LINE `91,21 %`, BRANCH `81,74 %`, CLASS `90,55 %`, METHOD `88,58 %`, INSTRUCTION `91,67 %`; los gates configurados se cumplieron. La corrida actual posterior al guard obtuvo LINE `91,21 %`, BRANCH `81,78 %`, CLASS `90,55 %`, METHOD `88,58 %`, INSTRUCTION `91,67 %`; los gates configurados también se cumplieron.
+
+### Estado remoto y límites
+
+La consulta remota de solo lectura confirmó que los PR personales DB #49, Backend #43 y Frontend #12 están `OPEN`, `merged=false`, `mergeable=true`; no se fusionaron en esta continuación. Sus checks visibles terminaron en éxito, pero la evidencia remota no sustituye las validaciones faltantes: no hay estados HTTP reales contra el PDP/Keycloak, SQL Server habitual, frontend oficial ni navegador en este checkout.
+
+Se mantienen como `NOT_RUN` o `BLOCKED_BY_MISSING_EVIDENCE` la base habitual, el proveedor PDP real, la validación de autorización administrativa, el frontend oficial, la prueba visual y la integración E2E cross-repository. El backend local queda técnicamente verde en la suite ejecutada; el cierre funcional y la preparación productiva no se elevan a `READY`.

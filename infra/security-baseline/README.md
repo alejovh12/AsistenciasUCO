@@ -76,8 +76,8 @@ python -X utf8 -I infra\security-baseline\scripts\provision_asistencias.py verif
 
 | Modo | Variables |
 |---|---|
-| `legacy` (por defecto) | `APP_ADAPTERS_SECURITY_PROVIDER=legacy` + las `KEYCLOAK_*` actuales (8081) |
-| `baseline` | `APP_ADAPTERS_SECURITY_PROVIDER=baseline`, `SECURITY_BASELINE_PEP_URL=http://localhost:18081`, `SECURITY_BASELINE_PEP_APPLICATION_NAME=asistencias-uco`, `SECURITY_BASELINE_PEP_ENVIRONMENT=dev`, `SECURITY_BASELINE_PEP_APPLICATION_CREDENTIAL=<lab.env: SECURITY_BASELINE_PEP_APPLICATION_CREDENTIAL_ASISTENCIAS>`, `SECURITY_BASELINE_IDENTITY_ADMIN_CLIENT_SECRET=<lab.env>` |
+| `baseline` (por defecto en `application.yml`) | `APP_ADAPTERS_SECURITY_PROVIDER=baseline`, `SECURITY_BASELINE_PEP_URL=http://localhost:18081`, `SECURITY_BASELINE_PEP_APPLICATION_NAME=asistencias-uco`, `SECURITY_BASELINE_PEP_ENVIRONMENT=dev`, `SECURITY_BASELINE_PEP_APPLICATION_CREDENTIAL=<lab.env: SECURITY_BASELINE_PEP_APPLICATION_CREDENTIAL_ASISTENCIAS>`, `SECURITY_BASELINE_IDENTITY_ADMIN_CLIENT_SECRET=<lab.env>` |
+| `legacy` | `APP_ADAPTERS_SECURITY_PROVIDER=legacy` + las `KEYCLOAK_*` actuales (8081) |
 
 Un valor desconocido, o `APP_ADAPTERS_IDENTITY_PROVIDER` distinto del de seguridad, impide arrancar. En modo baseline la DB
 debe tener la migración SEC-BASELINE-017 (el arranque lo comprueba). `scripts/start-backend-baseline.ps1 -Provider baseline|legacy`
@@ -85,6 +85,11 @@ arranca el jar con esas variables sin imprimirlas.
 
 Frontend (`SECURITY_PROVIDER=legacy|baseline`, `SECURITY_BASELINE_URL`, `SECURITY_BASELINE_ISSUER_URL`,
 `SECURITY_BASELINE_CLIENT_ID`): un valor desconocido deja la SPA sin autenticación y el contenedor no arranca.
+
+La sincronización privilegiada de perfiles del PDP permanece deshabilitada por defecto. No establecer
+`SECURITY_BASELINE_PDP_PROFILE_SYNC_ENABLED=true` ni conceder audiencia o permisos administrativos adicionales hasta
+comprobar autorización efectiva por privilegio, rol o scope en el PDP. Su secreto dedicado, si se autoriza posteriormente,
+es `SECURITY_BASELINE_PDP_ADMIN_CLIENT_SECRET`; no se reutiliza el secreto administrativo de identidad.
 
 ## Verificación E2E (sin UI)
 
