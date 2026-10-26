@@ -9,6 +9,9 @@ public interface InstitutionalScopePort {
 
     Optional<UUID> findUsuarioIdByEmail(String email);
 
+    /** Identidad vigente; se usa antes de vincular una identidad externa al usuario institucional. */
+    boolean isUsuarioActivo(UUID usuarioId);
+
     Optional<UUID> findDocenteIdByUsuario(UUID usuarioId);
 
     Optional<UUID> findEstudianteIdByUsuario(UUID usuarioId);

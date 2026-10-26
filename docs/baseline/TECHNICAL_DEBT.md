@@ -266,6 +266,12 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 - **Resolución esperada:** Política aprobada y pruebas de verificación acordes.
 - **Bloquea línea base:** no para LB-000; sí release de identidad.
 - **Estado:** ABIERTA.
+- **Actualización Security Baseline 0.1.7 (2026-10-26):** el JWT baseline exige
+  `email_verified=true`, correo normalizado y coincidencia única de usuario institucional activo.
+  El contrato BFF oficial de `/api/v1/session` no expone `email_verified` ni un binding persistente
+  `issuer+subject`; por eso la sesión cookie no se promueve a principal institucional y la ruta
+  queda bloqueada/fail-closed hasta decisión del owner de identidad. No se cambia SQL ni se crea
+  usuario automáticamente.
 
 ## TD-015
 

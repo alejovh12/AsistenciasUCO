@@ -3,7 +3,7 @@ status: active
 type: normative
 scope: backend
 owner: backend-team
-last-reviewed: 2026-09-26
+last-reviewed: 2026-10-26
 ---
 
 # Arquitectura de Runtime Security (independiente del proveedor)
@@ -29,6 +29,30 @@ docs/security/keycloak-identity-provider.md
 
 Runtime Security e Identity Provisioning son capabilities distintas aunque hoy compartan
 Keycloak.
+
+## 1.1 Autorización explícita de la migración Security Baseline 0.1.7
+
+El responsable del proyecto autorizó el 2026-10-26 la implementación directa del switch de
+runtime `legacy|baseline` y de la integración con Security Baseline 0.1.7 en los checkouts
+oficiales existentes, sin crear work item, worktree ni clon nuevo, y sin cambiar Domain,
+Application ni contratos académicos. Esta autorización permite modificar únicamente el wiring
+de Infrastructure, los adaptadores de seguridad, las pruebas observables y el frontend oficial
+necesario para OIDC/BFF.
+
+La evidencia AS-IS consultada es el checkout oficial del baseline con tag `v0.1.7`, el frontend
+oficial y este backend. El tag confirma `POST /internal/v1/embedded-access-decisions`, el contrato
+`204 + X-Decision-Id` y `GET /api/v1/me/applications`. La respuesta oficial de
+`GET /api/v1/session` no incluye `email_verified`; por ello no se auto-vincula una sesión BFF a
+un usuario institucional ni se usa `sub` como UUID. Ese camino permanece fail-closed hasta que
+el owner apruebe un mecanismo de binding persistente `issuer+subject` y evidencia de correo
+verificado compatible, sin mutar SQL ni el contrato baseline por inferencia.
+
+`SECURITY_FINDING`: `C:\Users\josev\AsistenciasUCO\AsistenciasUCO\.workspace\security-baseline-local\distribution\compose.yaml`
+contiene una credencial estática de cliente en la configuración del contenedor PDP. El valor no
+se copia a código, logs ni evidencia. Antes de compartir o promover el Compose, el owner debe
+rotarla en el IdP y suministrarla mediante un canal de secretos (`PDP_KEYCLOAK_CLIENT_SECRET` o
+secret manager), con una modificación controlada del Compose; esta ejecución no realiza la
+rotación porque no existe aprobación para cambiar esa credencial externa.
 
 ---
 
@@ -84,7 +108,7 @@ SessionCreationPolicy.STATELESS
 
 | Capability | Contrato | Provider actual | Selector |
 |---|---|---|---|
-| Runtime authentication | `JwtClaimsExtractor`, `JwtDecoder` | Keycloak | `app.adapters.security.provider=keycloak` |
+| Runtime authentication | `JwtClaimsExtractor`, `JwtDecoder` | Keycloak legacy / Security Baseline 0.1.7 | `app.adapters.security.provider=legacy|baseline` (`keycloak` es alias legacy) |
 | Identity provisioning | `IdentityProviderPort` | Keycloak Admin API | `app.adapters.identity.provider=keycloak` |
 
 `SecurityConfig` es neutral respecto a Keycloak. Depende de:
@@ -107,7 +131,7 @@ Configuración:
 app:
   adapters:
     security:
-      provider: ${APP_ADAPTERS_SECURITY_PROVIDER:keycloak}
+      provider: ${APP_ADAPTERS_SECURITY_PROVIDER:legacy}
 
   providers:
     keycloak-security:
@@ -126,6 +150,10 @@ infrastructure.config.adapters.security.keycloak
 
 El provider se selecciona con `@ConditionalOnProperty`; nunca con `@Profile`, service locator o
 un `if` dentro de Application.
+
+No existe una segunda bandera operativa para seleccionar seguridad. `APP_ADAPTERS_SECURITY_PROVIDER`
+es la única fuente del modo; `legacy` conserva el issuer y roles históricos, mientras `baseline`
+usa el issuer central, el PEP 0.1.7 y su autorización por decisión. No hay fallback entre ambos.
 
 ---
 
@@ -185,6 +213,20 @@ sub
 email
 preferred_username
 ```
+
+### 5.4 Modo baseline: binding institucional obligatorio
+
+El extractor baseline exige `sub`, `email_verified=true`, correo normalizado y una coincidencia
+única de usuario institucional activo mediante `InstitutionalScopePort`. Cero coincidencias,
+duplicados o usuarios inactivos rechazan el token; no se crea usuario automáticamente y el
+`sub` no se convierte en UUID interno. La consulta JPA de correo no limita el resultado a una
+fila para no ocultar duplicados.
+
+La sesión BFF HttpOnly del baseline se reenvía al PEP por el adaptador, pero no se convierte en
+principal de Application: el contrato v0.1.7 de `/api/v1/session` no aporta `email_verified` ni
+un binding persistente `issuer+subject`. Hasta aprobación del owner, las peticiones de negocio
+solo pueden continuar con un principal JWT ya validado; cookie sin principal institucional es
+401/deny-by-default.
 
 ---
 
@@ -247,8 +289,8 @@ institucional.
 
 ### 8.1 Modelo
 
-`/api/v1/**` es una API REST **stateless** (`SessionCreationPolicy.STATELESS`). La API de negocio
-se autentica exclusivamente con una credencial explícita:
+`/api/v1/**` es una API REST **stateless** (`SessionCreationPolicy.STATELESS`). En legacy la API
+de negocio se autentica exclusivamente con una credencial explícita:
 
 ```http
 Authorization: Bearer <jwt>
@@ -258,7 +300,9 @@ El webhook `/api/v1/internal/azure-events` se autentica con el header `aeg-sas-t
 por `AzureEventGridAuthFilter` (fail-closed). Su `permitAll` en `authorizeHttpRequests` solo
 significa que no exige JWT de negocio; no es un endpoint sin autenticación.
 
-Ninguna ruta `/api/v1/**` autentica usuarios mediante cookies ni `HttpSession`. Un navegador no
+En baseline el frontend consulta el PDP central con `credentials: include`, pero este backend no
+acepta una cookie BFF como identidad institucional hasta cerrar el binding descrito en §5.4. Un
+navegador no
 adjunta automáticamente un bearer token elegido por la aplicación a un request cross-site, a
 diferencia de credenciales basadas en cookies; por tanto no existe una credencial ambiente que
 un sitio ajeno pueda hacer valer y el token CSRF no protege nada en este modelo.
@@ -359,8 +403,9 @@ Header expuesto:
 X-Correlation-Id
 ```
 
-`allowCredentials=false`: la API es Bearer-only y `Authorization` es un header explícito que no
-requiere credenciales de navegador. Nunca debe combinarse `allowedOrigins("*")` con credenciales.
+`allowCredentials=false` permanece en este backend mientras la cookie BFF no sea una credencial
+de identidad aceptada por él; el frontend envía `credentials: include` al PDP central. Nunca debe
+combinarse `allowedOrigins("*")` con credenciales.
 
 Si se cambian los clientes frontend permitidos, debe hacerse por configuración de entorno y no
 hardcodeando nuevos origins en lógica de negocio.

@@ -5,7 +5,11 @@ import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorKind;
 
 public enum SecurityErrorCode implements ErrorDefinition {
     UNAUTHORIZED("UNAUTHORIZED", "Debe autenticarse para realizar esta operacion.", ErrorKind.UNAUTHORIZED),
-    FORBIDDEN("FORBIDDEN", "No tiene permisos para realizar esta operacion.", ErrorKind.FORBIDDEN);
+    FORBIDDEN("FORBIDDEN", "No tiene permisos para realizar esta operacion.", ErrorKind.FORBIDDEN),
+    // SEC-BASELINE-001: solo se emite cuando el PEP baseline no puede confirmar una decisión;
+    // nunca se emite en el provider legacy.
+    ACCESS_DECISION_UNAVAILABLE("ACCESS_DECISION_UNAVAILABLE",
+            "No fue posible verificar la autorizacion en este momento. Intente nuevamente.", ErrorKind.TECHNICAL);
 
     private final String code;
     private final String defaultMessage;

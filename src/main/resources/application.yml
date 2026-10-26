@@ -106,7 +106,7 @@ app:
     identity:
       provider: ${APP_ADAPTERS_IDENTITY_PROVIDER:keycloak}
     security:
-      provider: ${APP_ADAPTERS_SECURITY_PROVIDER:keycloak}
+      provider: ${APP_ADAPTERS_SECURITY_PROVIDER:legacy}
     vault:
       provider: ${APP_ADAPTERS_VAULT_PROVIDER:azure_keyvault}
     parameter-catalog:
@@ -140,13 +140,27 @@ app:
       admin-client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:}
       api-client-id: ${KEYCLOAK_API_CLIENT_ID:asistencias-api}
       user-id-attribute: ${KEYCLOAK_USER_ID_ATTRIBUTE:idUsuario}
-    # Runtime security (validacion de JWT). Ver
+    # Runtime security legacy (validacion de JWT). Ver
     # docs/security/runtime-security-provider-architecture.md.
     keycloak-security:
       issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8081/realms/asistencias-uco}
       api-client-id: ${KEYCLOAK_API_CLIENT_ID:asistencias-api}
       expected-audience: ${KEYCLOAK_EXPECTED_AUDIENCE:asistencias-api}
       user-id-claim: ${KEYCLOAK_USER_ID_CLAIM:idUsuario}
+    security-baseline:
+      issuer-uri: ${SECURITY_BASELINE_ISSUER_URI:http://keycloak.localhost:19090/realms/security-baseline}
+      api-client-id: ${SECURITY_BASELINE_API_CLIENT_ID:security-baseline-pdp}
+      expected-audience: ${SECURITY_BASELINE_EXPECTED_AUDIENCE:security-baseline-pdp}
+      email-claim: ${SECURITY_BASELINE_EMAIL_CLAIM:email}
+      email-verified-claim: ${SECURITY_BASELINE_EMAIL_VERIFIED_CLAIM:email_verified}
+    # El modo baseline exige esta configuración; no existe una bandera adicional para apagarlo.
+    security-baseline-pep:
+      pep-url: ${SECURITY_BASELINE_PEP_URL:http://localhost:18081}
+      application-name: ${SECURITY_BASELINE_PEP_APPLICATION_NAME:asistencias-uco}
+      environment: ${SECURITY_BASELINE_PEP_ENVIRONMENT:local}
+      application-credential: ${SECURITY_BASELINE_PEP_APPLICATION_CREDENTIAL:}
+      connect-timeout: ${SECURITY_BASELINE_PEP_CONNECT_TIMEOUT:2s}
+      request-timeout: ${SECURITY_BASELINE_PEP_REQUEST_TIMEOUT:5s}
     # LB-004B.2: MinIO privado (bucket provisionado por docker-compose/minio-init). Credenciales
     # SOLO por variables de entorno, sin valor por defecto funcional (fail-fast si faltan).
     minio:
@@ -173,19 +187,3 @@ app:
     azure-events:
       # Sin valor por defecto funcional: vacio = webhook Event Grid rechaza todo (401, fail-closed).
       webhook-token: ${AZURE_EVENTGRID_WEBHOOK_TOKEN:}
-
-# ──────────────────────────────────────────────────────────────
-# Security Baseline: PEP integration properties (starter v0.1.3)
-# ──────────────────────────────────────────────────────────────
-security:
-  enabled: ${SECURITY_ENABLED:true}
-  pep:
-    enforcement:
-      enabled: ${SECURITY_PEP_ENFORCEMENT_ENABLED:false}
-      pep-url: ${PEP_URL:http://localhost:18081}
-      application-name: ${SECURITY_PEP_APPLICATION_NAME:asistencias-uco}
-      environment: ${SECURITY_PEP_ENVIRONMENT:local}
-      application-credential: ${PEP_REGISTRATION_TOKEN:}
-      allow-insecure-http: ${SECURITY_PEP_ALLOW_INSECURE_HTTP:true}
-      public-paths: ${SECURITY_PEP_PUBLIC_PATHS:/actuator/health,/swagger-ui/**,/v3/api-docs/**}
-

@@ -4,6 +4,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.security.Institution
 import org.springframework.stereotype.Repository;
 
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.InstitutionalIdentityAmbiguityException;
 import jakarta.persistence.EntityManager;
 
 import java.util.List;
@@ -28,6 +29,9 @@ public class InstitutionalScopeJpaRepository implements InstitutionalScopePort {
             """;
     static final String HQL_USUARIO_POR_EMAIL = """
             select u.id from UvUsuarioEntity u where lower(u.correo) = lower(:email)
+            """;
+    static final String HQL_USUARIO_ACTIVO = """
+            select u.estaActivoUsuario from UvUsuarioEntity u where u.id = :usuarioId
             """;
     static final String HQL_DOCENTE_POR_USUARIO = """
             select d.id from UvDocenteIdentidadEntity d where d.idUsuario = :usuarioId
@@ -92,7 +96,22 @@ public class InstitutionalScopeJpaRepository implements InstitutionalScopePort {
 
     @Override
     public Optional<UUID> findUsuarioIdByEmail(final String email) {
-        return singleUuid(HQL_USUARIO_POR_EMAIL, "email", email, "findUsuarioIdByEmail");
+        return uniqueUuidByEmail(email);
+    }
+
+    @Override
+    public boolean isUsuarioActivo(final UUID usuarioId) {
+        return JpaQueryExecutor.execute(
+                "isUsuarioActivo",
+                "No fue posible validar el estado del usuario institucional.",
+                () -> {
+                    final List<Boolean> rows = entityManager.createQuery(HQL_USUARIO_ACTIVO, Boolean.class)
+                            .setParameter("usuarioId", usuarioId)
+                            .setMaxResults(1)
+                            .getResultList();
+                    return !rows.isEmpty() && Boolean.TRUE.equals(rows.getFirst());
+                }
+        );
     }
 
     @Override
@@ -165,6 +184,22 @@ public class InstitutionalScopeJpaRepository implements InstitutionalScopePort {
                             .setParameter(parameterName, value)
                             .setMaxResults(1)
                             .getResultList();
+                    return rows.isEmpty() ? Optional.<UUID>empty() : Optional.ofNullable(rows.getFirst());
+                }
+        );
+    }
+
+    private Optional<UUID> uniqueUuidByEmail(final String email) {
+        return JpaQueryExecutor.execute(
+                "findUsuarioIdByEmail",
+                "No fue posible resolver la identidad institucional por correo.",
+                () -> {
+                    final List<UUID> rows = entityManager.createQuery(HQL_USUARIO_POR_EMAIL, UUID.class)
+                            .setParameter("email", email)
+                            .getResultList();
+                    if (rows.size() > 1) {
+                        throw new InstitutionalIdentityAmbiguityException();
+                    }
                     return rows.isEmpty() ? Optional.<UUID>empty() : Optional.ofNullable(rows.getFirst());
                 }
         );

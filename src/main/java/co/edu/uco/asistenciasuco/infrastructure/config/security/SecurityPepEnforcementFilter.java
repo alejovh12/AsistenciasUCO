@@ -1,5 +1,10 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.security;
 
+import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.SecurityErrorCode;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.handler.SecurityErrorResponseWriter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.securitybaseline.PepDecision;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.securitybaseline.SecurityBaselinePepClient;
+import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.SecurityBaselinePepProperties;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -36,6 +41,8 @@ public class SecurityPepEnforcementFilter extends OncePerRequestFilter {
     private final List<String> publicPaths;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
     private final HttpClient httpClient;
+    private final SecurityBaselinePepClient baselineClient;
+    private final SecurityErrorResponseWriter responseWriter;
 
     public SecurityPepEnforcementFilter(
             final boolean enabled,
@@ -62,6 +69,25 @@ public class SecurityPepEnforcementFilter extends OncePerRequestFilter {
                         .connectTimeout(Duration.ofSeconds(3))
                         .build()
                 : null;
+        this.baselineClient = null;
+        this.responseWriter = null;
+    }
+
+    /** Constructor del modo baseline; conserva este filtro como único punto de enforcement MVC. */
+    public SecurityPepEnforcementFilter(
+            final SecurityBaselinePepClient baselineClient,
+            final SecurityBaselinePepProperties properties,
+            final SecurityErrorResponseWriter responseWriter
+    ) {
+        this.enabled = true;
+        this.pepUrl = null;
+        this.applicationName = properties.applicationName();
+        this.environment = properties.environment();
+        this.applicationCredential = properties.applicationCredential();
+        this.publicPaths = List.of();
+        this.httpClient = null;
+        this.baselineClient = baselineClient;
+        this.responseWriter = responseWriter;
     }
 
     @Override
@@ -81,7 +107,16 @@ public class SecurityPepEnforcementFilter extends OncePerRequestFilter {
                 ? requestUri.substring(contextPath.length())
                 : requestUri;
 
-        // Solo filtrar endpoints de la API (/api/v1/**, /api/v2/**)
+        // Baseline protege todo lo que no sea una ruta pública explícita: no depende de
+        // prefijos de negocio para evitar que una ruta nueva quede fuera del PEP por olvido.
+        if (baselineClient != null) {
+            if (SecurityPublicEndpoints.pepExempt().matches(request)) {
+                return true;
+            }
+            return false;
+        }
+
+        // El modo legacy conserva el alcance histórico: solo endpoints de la API.
         if (!path.startsWith("/api/")) {
             return true;
         }
@@ -107,6 +142,29 @@ public class SecurityPepEnforcementFilter extends OncePerRequestFilter {
             final HttpServletResponse response,
             final FilterChain filterChain
     ) throws ServletException, IOException {
+        if (baselineClient != null) {
+            if (!isAuthenticated()) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+            final PepDecision decision = baselineClient.evaluate(request, getCorrelationId(request));
+            switch (decision.outcome()) {
+                case ALLOW -> {
+                    response.setHeader("X-Decision-Id", decision.decisionId());
+                    filterChain.doFilter(request, response);
+                }
+                case UNAUTHORIZED -> responseWriter.write(
+                        request, response, org.springframework.http.HttpStatus.UNAUTHORIZED,
+                        SecurityErrorCode.UNAUTHORIZED);
+                case FORBIDDEN -> responseWriter.write(
+                        request, response, org.springframework.http.HttpStatus.FORBIDDEN,
+                        SecurityErrorCode.FORBIDDEN);
+                case UNAVAILABLE -> responseWriter.write(
+                        request, response, org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE,
+                        SecurityErrorCode.ACCESS_DECISION_UNAVAILABLE);
+            }
+            return;
+        }
         final String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.regionMatches(true, 0, "Bearer ", 0, 7)) {
             // Si no hay token Bearer, dejar que la cadena de Spring Security maneje la autenticacion (401)
@@ -179,6 +237,13 @@ public class SecurityPepEnforcementFilter extends OncePerRequestFilter {
             log.error("Error al consultar el PEP en {}: {}. Bloqueando por seguridad (fail-closed).", endpoint, e.getMessage());
             writeServiceUnavailableResponse(response);
         }
+    }
+
+    private boolean isAuthenticated() {
+        final org.springframework.security.core.Authentication authentication =
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null && authentication.isAuthenticated()
+                && !(authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken);
     }
 
     private String getCorrelationId(final HttpServletRequest request) {

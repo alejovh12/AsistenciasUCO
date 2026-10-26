@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.DatabaseOperationException;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.InstitutionalIdentityAmbiguityException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Query;
@@ -15,6 +16,7 @@ import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -59,6 +61,27 @@ class InstitutionalScopeJpaBehaviorTest {
 
         uuidQuery(InstitutionalScopeJpaRepository.HQL_DECANO_POR_USUARIO, Arrays.asList((UUID) null));
         assertEquals(Optional.empty(), scope.findDecanoIdByUsuario(USUARIO));
+    }
+
+    @Test
+    void correo_duplicado_no_elige_la_primera_coincidencia() {
+        final TypedQuery<UUID> query = uuidQuery(InstitutionalScopeJpaRepository.HQL_USUARIO_POR_EMAIL,
+                Arrays.asList(RECURSO, USUARIO));
+
+        assertThrows(InstitutionalIdentityAmbiguityException.class,
+                () -> scope.findUsuarioIdByEmail("duplicado@uco.edu.co"));
+        verify(query, never()).setMaxResults(anyInt());
+    }
+
+    @Test
+    void usuario_inactivo_no_se_considera_vinculable() {
+        final TypedQuery<Boolean> query = mock(TypedQuery.class, RETURNS_SELF);
+        when(query.getResultList()).thenReturn(List.of(Boolean.FALSE));
+        when(manager.createQuery(eq(InstitutionalScopeJpaRepository.HQL_USUARIO_ACTIVO), eq(Boolean.class)))
+                .thenReturn(query);
+
+        assertFalse(scope.isUsuarioActivo(USUARIO));
+        verify(query).setMaxResults(1);
     }
 
     @Test
@@ -108,7 +131,9 @@ class InstitutionalScopeJpaBehaviorTest {
         final TypedQuery<UUID> query = uuidQuery(hql, List.of(RECURSO));
         assertEquals(Optional.of(RECURSO), call.apply(scope));
         verify(query).setParameter(parameter, value);
-        verify(query).setMaxResults(1);
+        if (!hql.equals(InstitutionalScopeJpaRepository.HQL_USUARIO_POR_EMAIL)) {
+            verify(query).setMaxResults(1);
+        }
     }
 
     @SuppressWarnings("unchecked")

@@ -33,6 +33,11 @@ public final class InstitutionalScopeJdbcBaseline implements InstitutionalScopeP
             FROM dbo.uv_usuario
             WHERE LOWER(correo) = LOWER(:email)
             """;
+    private static final String SQL_USUARIO_ACTIVO = """
+            SELECT TOP 1 estaActivoUsuario
+            FROM dbo.uv_usuario
+            WHERE id = :usuarioId
+            """;
     private static final String SQL_DOCENTE_POR_USUARIO = """
             SELECT TOP 1 id
             FROM dbo.uv_docente_identidad
@@ -113,6 +118,11 @@ public final class InstitutionalScopeJdbcBaseline implements InstitutionalScopeP
     }
 
     @Override
+    public boolean isUsuarioActivo(final UUID usuarioId) {
+        return querySingleBoolean(SQL_USUARIO_ACTIVO, byUsuario(usuarioId), "isUsuarioActivo");
+    }
+
+    @Override
     public Optional<UUID> findDocenteIdByUsuario(final UUID usuarioId) {
         return querySingleUuid(SQL_DOCENTE_POR_USUARIO, byUsuario(usuarioId), "findDocenteIdByUsuario");
     }
@@ -189,6 +199,19 @@ public final class InstitutionalScopeJdbcBaseline implements InstitutionalScopeP
         } catch (DataAccessException exception) {
             logFailure(operation);
             throw new DatabaseOperationException("No fue posible resolver el alcance institucional.", exception);
+        }
+    }
+
+    private boolean querySingleBoolean(final String sql, final MapSqlParameterSource parameters,
+                                       final String operation) {
+        try {
+            final Boolean value = jdbcOperations.query(sql, parameters, resultSet ->
+                    resultSet.next() && resultSet.getBoolean(1));
+            return Boolean.TRUE.equals(value);
+        } catch (DataAccessException exception) {
+            LOGGER.error("SQL operation failed. operation={}, correlationId={}", operation,
+                    CorrelationIdContext.getAsString());
+            throw new DatabaseOperationException("No fue posible resolver el estado institucional.", exception);
         }
     }
 
