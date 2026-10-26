@@ -97,6 +97,16 @@ public interface IdentityProviderPort {
         throw operacionNoSoportada();
     }
 
+    /** Correo con el que la cuenta existe en el proveedor (identifica a la persona frente al motor de autorización). */
+    default Optional<String> correoDeCuenta(final String idExterno) {
+        throw operacionNoSoportada();
+    }
+
+    /** Roles institucionales que la cuenta tiene asignados en el proveedor. */
+    default java.util.Set<InstitutionalRole> rolesDeCuenta(final String idExterno) {
+        throw operacionNoSoportada();
+    }
+
     private static IdentityProviderException operacionNoSoportada() {
         return new IdentityProviderException("Operacion no soportada por este proveedor de identidad.");
     }

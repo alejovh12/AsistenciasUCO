@@ -127,6 +127,10 @@ public class SecurityConfig {
                 // la existencia del estudiante a matricular en su grupo (junto con COORDINADOR y ADMINISTRADOR).
                 .requestMatchers("/api/v1/estudiantes/**").hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
                 .requestMatchers(HttpMethod.POST, "/api/v1/usuarios").authenticated()
+                // Estado de acceso y reconciliacion de cuentas: administrador, decano y coordinador; el alcance (facultad /
+                // programa) y los roles gestionables se validan en Application (AccesoCuentaService).
+                .requestMatchers(HttpMethod.POST, "/api/v1/identidad/cuentas/acceso/*")
+                    .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_DECANO, ROLE_COORDINADOR)
                 .requestMatchers(HttpMethod.POST, "/api/v1/sesiones/**").hasRole(ROLE_DOCENTE)
                 .requestMatchers(HttpMethod.PUT, "/api/v1/sesiones/**").hasRole(ROLE_DOCENTE)
                 .requestMatchers(HttpMethod.PATCH, "/api/v1/sesiones/**").hasRole(ROLE_DOCENTE)

@@ -1,6 +1,9 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.adapters.identity.baseline;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.UsuarioSincronizacionIdentidadPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.security.AccessProfilePort;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.identity.profilesync.ProfileSyncingIdentityProvider;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.identity.keycloak.KeycloakIdentityProviderAdapter;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.SecurityBaselineIdentityProviderProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -22,14 +25,19 @@ import org.springframework.context.annotation.Configuration;
 public class BaselineIdentityAdapterConfiguration {
 
     @Bean
-    public IdentityProviderPort identityProviderPort(final SecurityBaselineIdentityProviderProperties properties) {
-        return new KeycloakIdentityProviderAdapter(
+    public IdentityProviderPort identityProviderPort(
+            final SecurityBaselineIdentityProviderProperties properties,
+            final AccessProfilePort accessProfilePort,
+            final UsuarioSincronizacionIdentidadPort desfases
+    ) {
+        // Asignar un client role no concede acceso: el decorador asegura tambien el perfil equivalente en el PDP.
+        return new ProfileSyncingIdentityProvider(new KeycloakIdentityProviderAdapter(
                 properties.serverUrl(),
                 properties.realm(),
                 properties.adminClientId(),
                 properties.adminClientSecret(),
                 properties.apiClientId(),
                 properties.userIdAttribute()
-        );
+        ), accessProfilePort, desfases);
     }
 }

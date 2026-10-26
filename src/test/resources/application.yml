@@ -4,6 +4,12 @@ spring:
       - org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
 
 app:
+  adapters:
+    # Suite normal: contrato legacy explicito y reproducible. El default de runtime (baseline) vive en application.yml.
+    security:
+      provider: legacy
+    identity:
+      provider: legacy
   providers:
     keycloak-identity:
       admin-client-secret: test-only-not-used

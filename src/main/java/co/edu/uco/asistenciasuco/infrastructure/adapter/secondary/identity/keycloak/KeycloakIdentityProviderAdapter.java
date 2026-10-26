@@ -21,10 +21,12 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -241,6 +243,51 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
                 .addKeyValue("operation", "IDENTITY_UPDATE_ACCOUNT")
                 .addKeyValue("externalUserId", externalId)
                 .log("Datos de la cuenta actualizados en Keycloak.");
+    }
+
+    @Override
+    public Optional<String> correoDeCuenta(final String idExterno) {
+        final String externalId = requireValidExternalUserId(idExterno, "externalUserId es obligatorio para consultar el correo.");
+        final HttpResponse<String> response = send(authorizedRequestBuilder(
+                adminUrl("/users/" + externalId), obtenerAdminToken()).GET().build());
+        if (response.statusCode() == 404) {
+            return Optional.empty();
+        }
+        if (response.statusCode() != 200) {
+            throw new IdentityProviderException("No fue posible consultar la cuenta en Keycloak. HTTP " + response.statusCode());
+        }
+        final UserSearchResult cuenta = readJson(response.body(), UserSearchResult.class);
+        return cuenta == null || cuenta.email() == null || cuenta.email().isBlank()
+                ? Optional.empty()
+                : Optional.of(cuenta.email().trim());
+    }
+
+    @Override
+    public Set<InstitutionalRole> rolesDeCuenta(final String idExterno) {
+        final String externalId = requireValidExternalUserId(idExterno, "externalUserId es obligatorio para consultar roles.");
+        final String adminToken = obtenerAdminToken();
+        final String clientUuid = resolverApiClientUuid(adminToken);
+        final HttpResponse<String> response = send(authorizedRequestBuilder(
+                adminUrl("/users/" + externalId + "/role-mappings/clients/" + clientUuid), adminToken).GET().build());
+        if (response.statusCode() != 200) {
+            throw new IdentityProviderException(
+                    "No fue posible consultar client roles existentes en Keycloak. HTTP " + response.statusCode());
+        }
+        final KeycloakRoleRepresentation[] assigned = readJson(response.body(), KeycloakRoleRepresentation[].class);
+        final Set<InstitutionalRole> roles = EnumSet.noneOf(InstitutionalRole.class);
+        if (assigned != null) {
+            for (final KeycloakRoleRepresentation role : assigned) {
+                if (role == null || role.name() == null) {
+                    continue;
+                }
+                for (final InstitutionalRole institutional : InstitutionalRole.values()) {
+                    if (institutional.name().equals(role.name())) {
+                        roles.add(institutional);
+                    }
+                }
+            }
+        }
+        return roles;
     }
 
     @Override
@@ -492,7 +539,7 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
                 externalId,
                 "externalUserId es obligatorio para establecer password en Keycloak."
         );
-        final CredentialRepresentation credential = new CredentialRepresentation("password", password, false);
+        final CredentialRepresentation credential = new CredentialRepresentation("password", password, true);
         final HttpRequest request = authorizedRequestBuilder(
                 adminUrl("/users/" + validatedExternalId + "/reset-password"), adminToken)
                 .header("Content-Type", CONTENT_TYPE_JSON)

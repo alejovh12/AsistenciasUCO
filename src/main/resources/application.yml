@@ -106,9 +106,11 @@ app:
     identity:
       # Un solo selector (APP_ADAPTERS_SECURITY_PROVIDER) gobierna seguridad e identidad; si se define este
       # valor explicitamente debe coincidir (el arranque falla ante una combinacion mixta).
-      provider: ${APP_ADAPTERS_IDENTITY_PROVIDER:${APP_ADAPTERS_SECURITY_PROVIDER:legacy}}
+      provider: ${APP_ADAPTERS_IDENTITY_PROVIDER:${APP_ADAPTERS_SECURITY_PROVIDER:baseline}}
     security:
-      provider: ${APP_ADAPTERS_SECURITY_PROVIDER:legacy}
+      # Security Baseline es el proveedor predeterminado. `legacy` (Keycloak 8081) solo se activa de forma explicita
+      # y una configuracion incompleta del baseline hace fallar el arranque: nunca degrada a legacy.
+      provider: ${APP_ADAPTERS_SECURITY_PROVIDER:baseline}
     vault:
       provider: ${APP_ADAPTERS_VAULT_PROVIDER:azure_keyvault}
     parameter-catalog:
@@ -167,6 +169,25 @@ app:
       email-verified-claim: ${SECURITY_BASELINE_EMAIL_VERIFIED_CLAIM:email_verified}
       # Atributo del IdP con Usuario.id (solo coherencia/UI; la autoridad es el vínculo issuer+subject en SQL Server).
       user-id-claim: ${SECURITY_BASELINE_USER_ID_CLAIM:idUsuario}
+      # Opcional: solo transporte de las claves publicas (el `iss` se valida siempre contra issuer-uri). Vacio = descubrimiento OIDC.
+      jwk-set-uri: ${SECURITY_BASELINE_JWK_SET_URI:}
+    # Perfiles de acceso en el PDP: el backend asegura (idempotente) el perfil equivalente a cada rol que asigna.
+    # La sincronizacion privilegiada permanece deshabilitada hasta validar la autorizacion administrativa del PDP.
+    security-baseline-pdp-admin:
+      enabled: ${SECURITY_BASELINE_PDP_PROFILE_SYNC_ENABLED:false}
+      pdp-url: ${SECURITY_BASELINE_PDP_URL:http://localhost:18080}
+      token-url: ${SECURITY_BASELINE_IDENTITY_SERVER_URL:http://localhost:19090}/realms/${SECURITY_BASELINE_IDENTITY_REALM:security-baseline}/protocol/openid-connect/token
+      client-id: ${SECURITY_BASELINE_PDP_ADMIN_CLIENT_ID:asistencias-provisioner}
+      # Secreto dedicado del PDP; no reutilizar SECURITY_BASELINE_IDENTITY_ADMIN_CLIENT_SECRET.
+      client-secret: ${SECURITY_BASELINE_PDP_ADMIN_CLIENT_SECRET:}
+      application-name: ${SECURITY_BASELINE_PEP_APPLICATION_NAME:asistencias-uco}
+      # Perfil individual del PDP por rol (fuente unica: infra/security-baseline/access-catalog.json).
+      profiles:
+        ADMINISTRADOR: Administración institucional
+        DECANO: Decanatura
+        COORDINADOR: Coordinación de programa
+        DOCENTE: Docencia
+        ESTUDIANTE: Estudiantes
     # El modo baseline exige esta configuración; no existe una bandera adicional para apagarlo.
     security-baseline-pep:
       pep-url: ${SECURITY_BASELINE_PEP_URL:http://localhost:18081}

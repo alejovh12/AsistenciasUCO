@@ -46,7 +46,9 @@ public class BaselineSecurityAdapterConfiguration {
 
     @Bean
     public JwtDecoder jwtDecoder(final SecurityBaselineProviderProperties properties) {
-        final NimbusJwtDecoder decoder = JwtDecoders.fromIssuerLocation(properties.issuerUri());
+        final NimbusJwtDecoder decoder = properties.jwkSetUri() == null || properties.jwkSetUri().isBlank()
+                ? JwtDecoders.fromIssuerLocation(properties.issuerUri())
+                : NimbusJwtDecoder.withJwkSetUri(properties.jwkSetUri().trim()).build();
         final OAuth2TokenValidator<Jwt> timestampValidator = new JwtTimestampValidator();
         final OAuth2TokenValidator<Jwt> issuerValidator = new InstitutionalIssuerValidator(properties.issuerUri());
         final OAuth2TokenValidator<Jwt> audienceValidator = new AudienceValidator(properties.expectedAudience());

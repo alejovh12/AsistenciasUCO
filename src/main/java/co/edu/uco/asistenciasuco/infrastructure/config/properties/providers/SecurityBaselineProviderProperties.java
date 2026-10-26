@@ -2,7 +2,13 @@ package co.edu.uco.asistenciasuco.infrastructure.config.properties.providers;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/** Configuración verificable del emisor OIDC central del modo baseline. */
+/**
+ * Configuración verificable del emisor OIDC central del modo baseline.
+ *
+ * <p>{@code jwkSetUri} es opcional y solo cambia el TRANSPORTE de las claves públicas (p. ej. {@code 127.0.0.1} cuando el
+ * resolvedor del sistema no resuelve {@code *.localhost}); el {@code iss} del token se sigue validando contra
+ * {@code issuerUri}. Vacío: descubrimiento OIDC estándar.</p>
+ */
 @ConfigurationProperties(prefix = "app.providers.security-baseline")
 public record SecurityBaselineProviderProperties(
         String issuerUri,
@@ -10,7 +16,8 @@ public record SecurityBaselineProviderProperties(
         String expectedAudience,
         String emailClaim,
         String emailVerifiedClaim,
-        String userIdClaim
+        String userIdClaim,
+        String jwkSetUri
 ) {
 
     public SecurityBaselineProviderProperties {

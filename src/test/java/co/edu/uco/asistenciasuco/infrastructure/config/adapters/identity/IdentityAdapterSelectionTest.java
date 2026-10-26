@@ -1,6 +1,8 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.adapters.identity;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.UsuarioSincronizacionIdentidadPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.security.AccessProfilePort;
 import co.edu.uco.asistenciasuco.infrastructure.config.adapters.identity.baseline.BaselineIdentityAdapterConfiguration;
 import co.edu.uco.asistenciasuco.infrastructure.config.adapters.identity.keycloak.KeycloakIdentityAdapterConfiguration;
 import org.junit.jupiter.api.Test;
@@ -9,6 +11,7 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 /** El aprovisionamiento sigue al selector: baseline nunca contacta el Keycloak legacy y viceversa. */
 class IdentityAdapterSelectionTest {
@@ -33,6 +36,8 @@ class IdentityAdapterSelectionTest {
     private ApplicationContextRunner runner() {
         return new ApplicationContextRunner()
                 .withUserConfiguration(KeycloakIdentityAdapterConfiguration.class, BaselineIdentityAdapterConfiguration.class)
+                .withBean(AccessProfilePort.class, () -> mock(AccessProfilePort.class))
+                .withBean(UsuarioSincronizacionIdentidadPort.class, () -> mock(UsuarioSincronizacionIdentidadPort.class))
                 .withPropertyValues(LEGACY_PROPERTIES)
                 .withPropertyValues(BASELINE_PROPERTIES);
     }
@@ -55,8 +60,9 @@ class IdentityAdapterSelectionTest {
     }
 
     @Test
-    void valor_ausente_equivale_a_legacy() {
-        runner().run(context -> assertEquals(1, context.getBeansOfType(IdentityProviderPort.class).size()));
+    void valor_ausente_no_degrada_a_legacy() {
+        // El default de runtime (baseline) vive en application.yml; sin selector el adaptador legacy nunca se activa.
+        runner().run(context -> assertTrue(context.getBeansOfType(IdentityProviderPort.class).isEmpty()));
     }
 
     @Test
