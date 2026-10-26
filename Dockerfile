@@ -14,6 +14,8 @@ RUN chmod +x mvnw && ./mvnw -B -ntp dependency:go-offline
 COPY src/ src/
 COPY docs/contracts/openapi/openapi-golden-path.yaml docs/contracts/openapi/openapi-golden-path.yaml
 COPY docs/contracts/openapi/openapi-golden-path.sha256 docs/contracts/openapi/openapi-golden-path.sha256
+# AccessCatalogConsistencyTest contrasta Spring MVC y SecurityConfig con el catalogo de acceso compartido.
+COPY infra/security-baseline/access-catalog.json infra/security-baseline/access-catalog.json
 RUN ./mvnw -B -ntp clean verify
 
 FROM eclipse-temurin:25-jre-alpine
