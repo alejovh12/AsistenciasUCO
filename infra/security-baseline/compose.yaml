@@ -1,0 +1,132 @@
+# Security Baseline 0.1.7 — instalación local ÚNICA de AsistenciasUCO.
+#
+# Origen: distribution/compose.yaml del release oficial de Seguridad-UCO (imágenes
+# davidalzate/security-{keycloak-local,opa,pdp,pep}:${SECURITY_VERSION}), endurecido para este repositorio:
+#   - proyecto Compose `asistencias-security-lab` CONSERVADO a propósito: sus volúmenes
+#     (asistencias-security-lab_*-data) contienen el realm, el catálogo del PDP y las asignaciones.
+#     Renombrar el proyecto dejaría esos datos huérfanos.
+#   - puertos solo en 127.0.0.1 y endpoints oficiales de integración: Keycloak 19090, PDP 18080, PEP 18081.
+#   - ningún secreto literal: todos llegan del env-file local %USERPROFILE%\.asistencias-security-lab\lab.env
+#     (fuera de Git). Plantilla: lab.env.example.
+#   - Keycloak escucha en ${KEYCLOAK_PORT} dentro de una red propia con IP fija; PDP/PEP resuelven
+#     keycloak.localhost por extra_hosts hacia esa IP (el resolver de Netty trata *.localhost como loopback).
+#   - NO sustituye al Keycloak legacy (infra/keycloak, puerto 8081), que es otro proyecto.
+#
+# Uso:  docker compose --env-file %USERPROFILE%\.asistencias-security-lab\lab.env -f infra/security-baseline/compose.yaml up -d
+# Prohibido: `docker compose down -v`, `docker volume prune`, `docker system prune -a`.
+name: asistencias-security-lab
+
+services:
+  keycloak:
+    image: ${SECURITY_DOCKER_ORG:?Configure SECURITY_DOCKER_ORG}/security-keycloak-local:${SECURITY_VERSION:?Configure SECURITY_VERSION}
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${SECURITY_KC_ADMIN_USERNAME:?Configure SECURITY_KC_ADMIN_USERNAME}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${SECURITY_KC_ADMIN_PASSWORD:?Configure SECURITY_KC_ADMIN_PASSWORD}
+      KC_HOSTNAME: http://keycloak.localhost:${KEYCLOAK_PORT:-19090}
+      KC_HOSTNAME_STRICT: "true"
+      KC_HTTP_PORT: ${KEYCLOAK_PORT:-19090}
+    networks:
+      lab:
+        ipv4_address: 172.31.240.10
+    volumes:
+      - asistencias-security-lab-keycloak-data:/opt/keycloak/data
+    ports:
+      - "127.0.0.1:${KEYCLOAK_PORT:-19090}:${KEYCLOAK_PORT:-19090}"
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/${KEYCLOAK_PORT:-19090}'"]
+      interval: 5s
+      timeout: 3s
+      retries: 24
+
+  surrealdb:
+    networks: [lab]
+    image: surrealdb/surrealdb:v3.3.0
+    user: root
+    command: ["start", "--user", "${SECURITY_SURREALDB_USERNAME:-root}", "--pass", "${SECURITY_SURREALDB_PASSWORD:?Configure SECURITY_SURREALDB_PASSWORD}", "rocksdb:/data/database"]
+    volumes:
+      - asistencias-security-lab-surrealdb-data:/data
+    healthcheck:
+      test: ["CMD", "/surreal", "is-ready", "--endpoint", "http://localhost:8000"]
+      interval: 5s
+      timeout: 3s
+      retries: 24
+
+  redis:
+    networks: [lab]
+    image: redis:7.4-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - asistencias-security-lab-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 24
+
+  opa:
+    networks: [lab]
+    image: ${SECURITY_DOCKER_ORG:?Configure SECURITY_DOCKER_ORG}/security-opa:${SECURITY_VERSION:?Configure SECURITY_VERSION}
+
+  pdp:
+    networks: [lab]
+    extra_hosts:
+      - "keycloak.localhost:172.31.240.10"
+    image: ${SECURITY_DOCKER_ORG:?Configure SECURITY_DOCKER_ORG}/security-pdp:${SECURITY_VERSION:?Configure SECURITY_VERSION}
+    environment:
+      SPRING_PROFILES_ACTIVE: prod,keycloak
+      PDP_DATASOURCE_URL: http://surrealdb:8000
+      PDP_DATASOURCE_USERNAME: ${SECURITY_SURREALDB_USERNAME:-root}
+      PDP_DATASOURCE_PASSWORD: ${SECURITY_SURREALDB_PASSWORD:?Configure SECURITY_SURREALDB_PASSWORD}
+      PDP_REDIS_HOST: redis
+      PDP_OPA_BASE_URL: http://opa:8181
+      PDP_INTERNAL_MTLS_ENABLED: "false"
+      PDP_KEYCLOAK_ISSUER: http://keycloak.localhost:${KEYCLOAK_PORT:-19090}/realms/security-baseline
+      PDP_KEYCLOAK_CLIENT_ID: security-baseline-bff
+      PDP_KEYCLOAK_CLIENT_SECRET: ${SECURITY_PDP_KEYCLOAK_CLIENT_SECRET:?Configure SECURITY_PDP_KEYCLOAK_CLIENT_SECRET}
+      PDP_KEYCLOAK_BEARER_AUDIENCE: security-baseline-pdp
+      PDP_SECURITY_SESSION_SECURE_COOKIES: "false"
+      PDP_SECURITY_MFA_ENABLED: ${PDP_SECURITY_MFA_ENABLED:-false}
+    ports:
+      - "127.0.0.1:${PDP_PORT:-18080}:8080"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      surrealdb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  pep:
+    networks: [lab]
+    extra_hosts:
+      - "keycloak.localhost:172.31.240.10"
+    image: ${SECURITY_DOCKER_ORG:?Configure SECURITY_DOCKER_ORG}/security-pep:${SECURITY_VERSION:?Configure SECURITY_VERSION}
+    environment:
+      PEP_INGRESS_ALLOWINSECUREHTTP: "true"
+      PEP_INGRESS_ISSUER: http://keycloak.localhost:${KEYCLOAK_PORT:-19090}/realms/security-baseline
+      PEP_INGRESS_JWKSURI: http://keycloak.localhost:${KEYCLOAK_PORT:-19090}/realms/security-baseline/protocol/openid-connect/certs
+      PEP_PDP_ALLOWINSECUREHTTP: "true"
+      PEP_PDP_BASE_URL: http://pdp:8080
+      PEP_KEYCLOAK_TOKEN_URI: http://keycloak.localhost:${KEYCLOAK_PORT:-19090}/realms/security-baseline/protocol/openid-connect/token
+      # Relaxed binding de pep.pdp.service-identity.client-secret (literal en la imagen upstream).
+      PEP_PDP_SERVICEIDENTITY_CLIENTSECRET: ${SECURITY_PEP_INTERNAL_CLIENT_SECRET:?Configure SECURITY_PEP_INTERNAL_CLIENT_SECRET}
+    ports:
+      - "127.0.0.1:${PEP_PORT:-18081}:8081"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      pdp:
+        condition: service_started
+
+networks:
+  lab:
+    name: asistencias-security-lab-net
+    ipam:
+      config:
+        - subnet: 172.31.240.0/24
+
+volumes:
+  asistencias-security-lab-keycloak-data:
+  asistencias-security-lab-surrealdb-data:
+  asistencias-security-lab-redis-data:

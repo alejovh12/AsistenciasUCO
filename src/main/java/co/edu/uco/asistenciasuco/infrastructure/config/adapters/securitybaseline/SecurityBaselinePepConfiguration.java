@@ -37,10 +37,9 @@ public class SecurityBaselinePepConfiguration {
     @Bean
     public SecurityPepEnforcementFilter securityBaselinePepFilter(
             final SecurityBaselinePepClient client,
-            final SecurityBaselinePepProperties properties,
             final SecurityErrorResponseWriter responseWriter
     ) {
-        return new SecurityPepEnforcementFilter(client, properties, responseWriter);
+        return new SecurityPepEnforcementFilter(client, responseWriter);
     }
 
     /**

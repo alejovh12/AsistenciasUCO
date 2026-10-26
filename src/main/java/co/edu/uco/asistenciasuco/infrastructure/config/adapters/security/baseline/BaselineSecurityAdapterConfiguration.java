@@ -1,7 +1,9 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.adapters.security.baseline;
 
+import co.edu.uco.asistenciasuco.application.secondaryports.security.ExternalIdentityLinkPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.baseline.BaselineJwtClaimsExtractor;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.baseline.ExternalIdentityResolver;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.contract.JwtClaimsExtractor;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.validation.AudienceValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.validation.InstitutionalIssuerValidator;
@@ -25,12 +27,21 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 public class BaselineSecurityAdapterConfiguration {
 
     @Bean
+    public ExternalIdentityResolver externalIdentityResolver(
+            final InstitutionalScopePort institutionalScope,
+            final ExternalIdentityLinkPort externalIdentityLinks
+    ) {
+        return new ExternalIdentityResolver(institutionalScope, externalIdentityLinks);
+    }
+
+    @Bean
     public JwtClaimsExtractor jwtClaimsExtractor(
             final SecurityBaselineProviderProperties properties,
-            final InstitutionalScopePort institutionalScope
+            final ExternalIdentityResolver identityResolver
     ) {
         return new BaselineJwtClaimsExtractor(
-                properties.apiClientId(), properties.emailClaim(), properties.emailVerifiedClaim(), institutionalScope);
+                properties.apiClientId(), properties.emailClaim(), properties.emailVerifiedClaim(),
+                properties.userIdClaim(), identityResolver);
     }
 
     @Bean

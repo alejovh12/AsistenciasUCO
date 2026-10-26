@@ -1,9 +1,9 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.baseline;
 
 import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.contract.JwtClaimsExtractor;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.InstitutionalIdentityAmbiguityException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
@@ -11,20 +11,20 @@ import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Traduce la identidad central verificada del baseline a la UUID institucional. No usa el
- * {@code sub} como UUID ni concede acceso cuando el correo no está verificado, no existe, está
- * inactivo o es ambiguo.
+ * Traduce la identidad central verificada del baseline a la UUID institucional mediante el vínculo persistente
+ * {@code issuer + subject → Usuario.id} (ver {@link ExternalIdentityResolver}). No usa el {@code sub} como UUID, no
+ * trata el correo como identificador inmutable y no concede acceso cuando la identidad no existe, está revocada, el
+ * usuario está inactivo, hay conflicto o ambigüedad.
  */
 public final class BaselineJwtClaimsExtractor implements JwtClaimsExtractor {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(BaselineJwtClaimsExtractor.class);
     private static final String RESOURCE_ACCESS_CLAIM = "resource_access";
     private static final String ROLES_CLAIM = "roles";
     private static final Set<String> VALID_ROLES = Arrays.stream(InstitutionalRole.values())
@@ -34,37 +34,69 @@ public final class BaselineJwtClaimsExtractor implements JwtClaimsExtractor {
     private final String apiClientId;
     private final String emailClaim;
     private final String emailVerifiedClaim;
-    private final InstitutionalScopePort institutionalScope;
+    private final String userIdClaim;
+    private final ExternalIdentityResolver identityResolver;
 
     public BaselineJwtClaimsExtractor(
             final String apiClientId,
             final String emailClaim,
             final String emailVerifiedClaim,
-            final InstitutionalScopePort institutionalScope
+            final String userIdClaim,
+            final ExternalIdentityResolver identityResolver
     ) {
         this.apiClientId = Objects.requireNonNull(apiClientId, "apiClientId es obligatorio.");
         this.emailClaim = Objects.requireNonNull(emailClaim, "emailClaim es obligatorio.");
         this.emailVerifiedClaim = Objects.requireNonNull(emailVerifiedClaim, "emailVerifiedClaim es obligatorio.");
-        this.institutionalScope = Objects.requireNonNull(institutionalScope, "InstitutionalScopePort es obligatorio.");
+        this.userIdClaim = Objects.requireNonNull(userIdClaim, "userIdClaim es obligatorio.");
+        this.identityResolver = Objects.requireNonNull(identityResolver, "ExternalIdentityResolver es obligatorio.");
     }
 
     @Override
     public java.util.UUID requireUserId(final Jwt jwt) {
-        requireSubject(jwt);
-        final Object verified = jwt.getClaim(emailVerifiedClaim);
-        if (!Boolean.TRUE.equals(verified)) {
-            throw invalidToken("El token baseline no contiene evidencia de correo verificado.");
-        }
         final Object rawEmail = jwt.getClaim(emailClaim);
-        if (!(rawEmail instanceof String email) || email.isBlank()) {
-            throw invalidToken("El token baseline no contiene un correo institucional.");
-        }
+        final String email = rawEmail instanceof String text ? text : null;
+        final boolean emailVerified = Boolean.TRUE.equals(jwt.getClaim(emailVerifiedClaim));
+        final String issuer = jwt.getIssuer() == null ? null : jwt.getIssuer().toString();
         try {
-            return institutionalScope.findUsuarioIdByEmail(normalizeEmail(email))
-                    .filter(institutionalScope::isUsuarioActivo)
-                    .orElseThrow(() -> invalidToken("La identidad institucional no existe o está inactiva."));
-        } catch (InstitutionalIdentityAmbiguityException exception) {
-            throw invalidToken("La identidad institucional es ambigua.");
+            final ExternalIdentityResolver.Resolution resolution =
+                    identityResolver.resolve(issuer, jwt.getSubject(), email, emailVerified);
+            requireConsistentUserIdClaim(jwt, resolution.usuarioId(), issuer);
+            if (resolution.newlyLinked()) {
+                // Trazabilidad del alta del vínculo: identificadores opacos, nunca tokens ni correos.
+                LOGGER.info("Identidad externa vinculada. usuarioId={}, subject={}, issuer={}",
+                        resolution.usuarioId(), jwt.getSubject(), issuer);
+            }
+            return resolution.usuarioId();
+        } catch (ExternalIdentityRejectedException exception) {
+            LOGGER.warn("Identidad externa rechazada. reason={}, subject={}, issuer={}",
+                    exception.reason(), jwt.getSubject(), issuer);
+            throw invalidToken("La identidad central no está autorizada para AsistenciasUCO.");
+        }
+    }
+
+    /**
+     * El claim {@code idUsuario} (atributo de la cuenta en el IdP, usado por la UI) nunca es autoridad: si viene en
+     * el token debe coincidir con el usuario resuelto por el vínculo persistente; una divergencia indica una cuenta
+     * mal aprovisionada o un intento de suplantación y se rechaza.
+     */
+    private void requireConsistentUserIdClaim(final Jwt jwt, final java.util.UUID resolved, final String issuer) {
+        final Object claim = jwt.getClaim(userIdClaim);
+        if (claim == null) {
+            return;
+        }
+        final boolean consistent = claim instanceof String text && parseUuid(text).filter(resolved::equals).isPresent();
+        if (!consistent) {
+            LOGGER.warn("Identidad externa rechazada. reason=USER_ID_CLAIM_MISMATCH, subject={}, issuer={}",
+                    jwt.getSubject(), issuer);
+            throw invalidToken("La identidad central no está autorizada para AsistenciasUCO.");
+        }
+    }
+
+    private static java.util.Optional<java.util.UUID> parseUuid(final String text) {
+        try {
+            return java.util.Optional.of(java.util.UUID.fromString(text.trim()));
+        } catch (IllegalArgumentException exception) {
+            return java.util.Optional.empty();
         }
     }
 
@@ -88,16 +120,6 @@ public final class BaselineJwtClaimsExtractor implements JwtClaimsExtractor {
                 .filter(VALID_ROLES::contains)
                 .map(InstitutionalRole::valueOf)
                 .collect(Collectors.toUnmodifiableSet());
-    }
-
-    private static String normalizeEmail(final String email) {
-        return email.trim().toLowerCase(Locale.ROOT);
-    }
-
-    private static void requireSubject(final Jwt jwt) {
-        if (jwt.getSubject() == null || jwt.getSubject().isBlank()) {
-            throw invalidToken("El token baseline no contiene subject.");
-        }
     }
 
     private static OAuth2AuthenticationException invalidToken(final String description) {

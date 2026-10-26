@@ -104,7 +104,9 @@ app:
       enabled: ${APP_SESIONES_V2_ENABLED:true}
   adapters:
     identity:
-      provider: ${APP_ADAPTERS_IDENTITY_PROVIDER:keycloak}
+      # Un solo selector (APP_ADAPTERS_SECURITY_PROVIDER) gobierna seguridad e identidad; si se define este
+      # valor explicitamente debe coincidir (el arranque falla ante una combinacion mixta).
+      provider: ${APP_ADAPTERS_IDENTITY_PROVIDER:${APP_ADAPTERS_SECURITY_PROVIDER:legacy}}
     security:
       provider: ${APP_ADAPTERS_SECURITY_PROVIDER:legacy}
     vault:
@@ -140,6 +142,14 @@ app:
       admin-client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:}
       api-client-id: ${KEYCLOAK_API_CLIENT_ID:asistencias-api}
       user-id-attribute: ${KEYCLOAK_USER_ID_ATTRIBUTE:idUsuario}
+    # Aprovisionamiento de identidades del modo baseline (realm central). El secreto no tiene valor por defecto.
+    security-baseline-identity:
+      server-url: ${SECURITY_BASELINE_IDENTITY_SERVER_URL:http://localhost:19090}
+      realm: ${SECURITY_BASELINE_IDENTITY_REALM:security-baseline}
+      admin-client-id: ${SECURITY_BASELINE_IDENTITY_ADMIN_CLIENT_ID:asistencias-provisioner}
+      admin-client-secret: ${SECURITY_BASELINE_IDENTITY_ADMIN_CLIENT_SECRET:}
+      api-client-id: ${SECURITY_BASELINE_API_CLIENT_ID:asistencias-api}
+      user-id-attribute: ${SECURITY_BASELINE_USER_ID_CLAIM:idUsuario}
     # Runtime security legacy (validacion de JWT). Ver
     # docs/security/runtime-security-provider-architecture.md.
     keycloak-security:
@@ -149,10 +159,14 @@ app:
       user-id-claim: ${KEYCLOAK_USER_ID_CLAIM:idUsuario}
     security-baseline:
       issuer-uri: ${SECURITY_BASELINE_ISSUER_URI:http://keycloak.localhost:19090/realms/security-baseline}
-      api-client-id: ${SECURITY_BASELINE_API_CLIENT_ID:security-baseline-pdp}
-      expected-audience: ${SECURITY_BASELINE_EXPECTED_AUDIENCE:security-baseline-pdp}
+      # Cliente de recurso propio de AsistenciasUCO en el realm central: aporta los cinco roles institucionales
+      # (resource_access) y la audiencia del backend. No se usa security-baseline-pdp: ese cliente es del PDP.
+      api-client-id: ${SECURITY_BASELINE_API_CLIENT_ID:asistencias-api}
+      expected-audience: ${SECURITY_BASELINE_EXPECTED_AUDIENCE:asistencias-api}
       email-claim: ${SECURITY_BASELINE_EMAIL_CLAIM:email}
       email-verified-claim: ${SECURITY_BASELINE_EMAIL_VERIFIED_CLAIM:email_verified}
+      # Atributo del IdP con Usuario.id (solo coherencia/UI; la autoridad es el vínculo issuer+subject en SQL Server).
+      user-id-claim: ${SECURITY_BASELINE_USER_ID_CLAIM:idUsuario}
     # El modo baseline exige esta configuración; no existe una bandera adicional para apagarlo.
     security-baseline-pep:
       pep-url: ${SECURITY_BASELINE_PEP_URL:http://localhost:18081}

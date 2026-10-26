@@ -12,6 +12,11 @@ public record IdentityAdapterProperties(Provider provider) {
     }
 
     public enum Provider {
-        KEYCLOAK
+        /** Compatibilidad con el valor histórico; equivale a {@link #LEGACY}. */
+        KEYCLOAK,
+        /** Keycloak legacy (puerto 8081, realm asistencias-uco). */
+        LEGACY,
+        /** Identidad central de Security Baseline (realm security-baseline). */
+        BASELINE
     }
 }

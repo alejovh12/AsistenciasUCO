@@ -9,7 +9,8 @@ public record SecurityBaselineProviderProperties(
         String apiClientId,
         String expectedAudience,
         String emailClaim,
-        String emailVerifiedClaim
+        String emailVerifiedClaim,
+        String userIdClaim
 ) {
 
     public SecurityBaselineProviderProperties {
@@ -18,6 +19,7 @@ public record SecurityBaselineProviderProperties(
         requireNonBlank(expectedAudience, "app.providers.security-baseline.expected-audience es obligatorio.");
         requireNonBlank(emailClaim, "app.providers.security-baseline.email-claim es obligatorio.");
         requireNonBlank(emailVerifiedClaim, "app.providers.security-baseline.email-verified-claim es obligatorio.");
+        requireNonBlank(userIdClaim, "app.providers.security-baseline.user-id-claim es obligatorio.");
         if (issuerUri.contains(":8081/") || issuerUri.contains("asistencias-uco")) {
             throw new IllegalStateException("El modo baseline no puede usar el issuer legacy de Keycloak.");
         }

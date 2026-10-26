@@ -81,12 +81,10 @@ class SecurityBaselinePepClientTest {
     }
 
     @Test
-    void reenvia_cookie_de_sesion_baseline_sin_inventar_authorization() throws Exception {
-        final AtomicReference<String> authorization = new AtomicReference<>();
-        final AtomicReference<String> cookie = new AtomicReference<>();
+    void cookie_de_sesion_baseline_sin_bearer_no_se_consulta_ni_se_reenvia() throws Exception {
+        final AtomicReference<Boolean> called = new AtomicReference<>(false);
         server = server(exchange -> {
-            authorization.set(exchange.getRequestHeaders().getFirst("Authorization"));
-            cookie.set(exchange.getRequestHeaders().getFirst("Cookie"));
+            called.set(true);
             exchange.getResponseHeaders().add("X-Decision-Id", "decision-cookie");
             exchange.sendResponseHeaders(204, -1);
         });
@@ -98,10 +96,8 @@ class SecurityBaselinePepClientTest {
 
         final PepDecision decision = client.evaluate(request, "corr-cookie");
 
-        assertEquals(PepDecision.Outcome.ALLOW, decision.outcome());
-        assertEquals("decision-cookie", decision.decisionId());
-        assertNull(authorization.get());
-        assertEquals("SECURITY_BASELINE_SESSION=session-value; otro=1", cookie.get());
+        assertEquals(PepDecision.Outcome.UNAUTHORIZED, decision.outcome());
+        assertFalse(called.get(), "sin Bearer no debe haber consulta al PEP");
     }
 
     @Test

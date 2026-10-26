@@ -21,7 +21,12 @@ import java.util.regex.Pattern;
  * <p>Contrato v0.1.7 ({@code EmbeddedAccessDecisionController}): una decisión permitida es
  * {@code 204 No Content} con {@code X-Decision-Id}. Cualquier otro 2xx se trata como respuesta
  * anómala (fail-closed): una respuesta {@code 200} vacía, sin decisión, cuando no recibe
- * un Bearer ni una sesión BFF, y eso no puede interpretarse como permiso.
+ * un Bearer, y eso no puede interpretarse como permiso.
+ *
+ * <p>Solo se acepta el Bearer ya validado por Spring Security como credencial. La cookie de sesión BFF del
+ * baseline no se reenvía: el PEP puede resolverla por su canal técnico PEP→PDP, pero el contrato 0.1.7 no entrega
+ * al backend una identidad verificable derivada de ella (solo {@code 204 + X-Decision-Id}), así que aceptarla aquí
+ * daría una decisión sin identidad autenticada en el backend.</p>
  */
 public class SecurityBaselinePepClient {
 
@@ -51,13 +56,8 @@ public class SecurityBaselinePepClient {
 
     public PepDecision evaluate(final HttpServletRequest request, final String correlationId) {
         final String authorization = singleBearer(request);
-        final String cookie = request.getHeader("Cookie");
-        final boolean hasBaselineCookie = cookie != null && cookie.contains("SECURITY_BASELINE_SESSION=");
-        final boolean hasAuthorization = request.getHeader(AUTHORIZATION) != null;
-        if (authorization == null && (hasAuthorization || !hasBaselineCookie)) {
-            // Un Authorization presente pero inválido no puede degradar silenciosamente a cookie.
-            // Si no hay Bearer, solo se acepta la cookie HttpOnly que el PEP resuelve por su canal
-            // técnico PEP→PDP.
+        if (authorization == null) {
+            // Sin un único Bearer bien formado no hay credencial que evaluar: nunca se degrada a cookie.
             return new PepDecision(PepDecision.Outcome.UNAUTHORIZED, null);
         }
         try {
@@ -68,20 +68,16 @@ public class SecurityBaselinePepClient {
                     request.getRequestURI(),
                     request.getMethod()
             ));
-            HttpRequest pepRequest = HttpRequest.newBuilder()
+            final HttpRequest pepRequest = HttpRequest.newBuilder()
                     .uri(properties.embeddedDecisionEndpoint())
                     .timeout(properties.requestTimeout())
                     .header("Content-Type", "application/json")
+                    .header(AUTHORIZATION, authorization)
                     .header(APPLICATION_CREDENTIAL, properties.applicationCredential())
                     .header(REQUEST_ID, requestId)
                     .header(CORRELATION_ID, isIdentifier(correlationId) ? correlationId : requestId)
                     .POST(HttpRequest.BodyPublishers.ofString(body))
                     .build();
-            if (authorization != null) {
-                pepRequest = withHeader(pepRequest, AUTHORIZATION, authorization);
-            } else {
-                pepRequest = withHeader(pepRequest, "Cookie", cookie);
-            }
             return mapResponse(httpClient.send(pepRequest, HttpResponse.BodyHandlers.discarding()));
         } catch (final InterruptedException exception) {
             Thread.currentThread().interrupt();
@@ -89,12 +85,6 @@ public class SecurityBaselinePepClient {
         } catch (final IOException | RuntimeException exception) {
             return unavailable();
         }
-    }
-
-    private static HttpRequest withHeader(final HttpRequest request, final String name, final String value) {
-        return HttpRequest.newBuilder(request, (key, values) -> true)
-                .header(name, value)
-                .build();
     }
 
     private static String singleBearer(final HttpServletRequest request) {

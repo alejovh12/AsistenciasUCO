@@ -4,136 +4,52 @@ import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.SecurityErrorCod
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.handler.SecurityErrorResponseWriter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.securitybaseline.PepDecision;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.securitybaseline.SecurityBaselinePepClient;
-import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.SecurityBaselinePepProperties;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.util.AntPathMatcher;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Filtro interceptor de seguridad para delegar decisiones de autorizacion
- * al Policy Enforcement Point (PEP) del Security Baseline UCO.
+ * Único punto de enforcement MVC del Security Baseline 0.1.7 (PEP embebido). Se registra solo cuando
+ * {@code app.adapters.security.provider=baseline}, dentro de la {@code SecurityFilterChain}, después de autenticar
+ * el Bearer y antes de {@code AuthorizationFilter}.
+ *
+ * <p>No existe bandera para apagarlo: en modo baseline toda ruta que no sea pública explícita
+ * ({@link SecurityPublicEndpoints#pepExempt()}) exige una decisión {@code ALLOW}. Un PEP/PDP caído responde 503
+ * (fail-closed); nunca se permite el acceso por defecto.</p>
  */
 public class SecurityPepEnforcementFilter extends OncePerRequestFilter {
 
-    private static final Logger log = LoggerFactory.getLogger(SecurityPepEnforcementFilter.class);
-
-    private final boolean enabled;
-    private final String pepUrl;
-    private final String applicationName;
-    private final String environment;
-    private final String applicationCredential;
-    private final List<String> publicPaths;
-    private final AntPathMatcher pathMatcher = new AntPathMatcher();
-    private final HttpClient httpClient;
     private final SecurityBaselinePepClient baselineClient;
     private final SecurityErrorResponseWriter responseWriter;
 
     public SecurityPepEnforcementFilter(
-            final boolean enabled,
-            final String pepUrl,
-            final String applicationName,
-            final String environment,
-            final String applicationCredential,
-            final String publicPathsConfig
-    ) {
-        this.enabled = enabled;
-        this.pepUrl = (pepUrl != null && pepUrl.endsWith("/")) ? pepUrl.substring(0, pepUrl.length() - 1) : pepUrl;
-        this.applicationName = (applicationName != null && !applicationName.isBlank()) ? applicationName : "asistencias-backend";
-        this.environment = (environment != null && !environment.isBlank()) ? environment : "local";
-        this.applicationCredential = applicationCredential;
-        this.publicPaths = publicPathsConfig != null
-                ? Arrays.stream(publicPathsConfig.split(","))
-                        .map(String::trim)
-                        .filter(p -> !p.isBlank())
-                        .toList()
-                : List.of();
-        this.httpClient = enabled
-                ? HttpClient.newBuilder()
-                        .version(HttpClient.Version.HTTP_1_1)
-                        .connectTimeout(Duration.ofSeconds(3))
-                        .build()
-                : null;
-        this.baselineClient = null;
-        this.responseWriter = null;
-    }
-
-    /** Constructor del modo baseline; conserva este filtro como único punto de enforcement MVC. */
-    public SecurityPepEnforcementFilter(
             final SecurityBaselinePepClient baselineClient,
-            final SecurityBaselinePepProperties properties,
             final SecurityErrorResponseWriter responseWriter
     ) {
-        this.enabled = true;
-        this.pepUrl = null;
-        this.applicationName = properties.applicationName();
-        this.environment = properties.environment();
-        this.applicationCredential = properties.applicationCredential();
-        this.publicPaths = List.of();
-        this.httpClient = null;
-        this.baselineClient = baselineClient;
-        this.responseWriter = responseWriter;
+        this.baselineClient = Objects.requireNonNull(baselineClient, "SecurityBaselinePepClient es obligatorio.");
+        this.responseWriter = Objects.requireNonNull(responseWriter, "SecurityErrorResponseWriter es obligatorio.");
     }
 
     @Override
     protected boolean shouldNotFilter(final HttpServletRequest request) {
-        if (!enabled) {
-            return true;
-        }
-
-        // Permitir preflight CORS sin inspeccion PEP
+        // El preflight CORS no lleva credenciales y no representa una operación de negocio.
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             return true;
         }
-
-        final String requestUri = request.getRequestURI();
-        final String contextPath = request.getContextPath();
-        final String path = (contextPath != null && !contextPath.isEmpty() && requestUri.startsWith(contextPath))
-                ? requestUri.substring(contextPath.length())
-                : requestUri;
-
-        // Baseline protege todo lo que no sea una ruta pública explícita: no depende de
-        // prefijos de negocio para evitar que una ruta nueva quede fuera del PEP por olvido.
-        if (baselineClient != null) {
-            if (SecurityPublicEndpoints.pepExempt().matches(request)) {
-                return true;
-            }
-            return false;
-        }
-
-        // El modo legacy conserva el alcance histórico: solo endpoints de la API.
-        if (!path.startsWith("/api/")) {
-            return true;
-        }
-
-        // Webhook interno de Azure Event Grid
-        if (AzureEventGridAuthFilter.isWebhookRequest(request)) {
-            return true;
-        }
-
-        // Rutas publicas explicitas
-        for (final String pattern : publicPaths) {
-            if (pathMatcher.match(pattern, path)) {
-                return true;
-            }
-        }
-
-        return false;
+        // Baseline protege todo lo que no sea una ruta pública explícita: no depende de prefijos de negocio
+        // para evitar que una ruta nueva quede fuera del PEP por olvido.
+        return SecurityPublicEndpoints.pepExempt().matches(request);
     }
 
     @Override
@@ -142,158 +58,38 @@ public class SecurityPepEnforcementFilter extends OncePerRequestFilter {
             final HttpServletResponse response,
             final FilterChain filterChain
     ) throws ServletException, IOException {
-        if (baselineClient != null) {
-            if (!isAuthenticated()) {
-                filterChain.doFilter(request, response);
-                return;
-            }
-            final PepDecision decision = baselineClient.evaluate(request, getCorrelationId(request));
-            switch (decision.outcome()) {
-                case ALLOW -> {
-                    response.setHeader("X-Decision-Id", decision.decisionId());
-                    filterChain.doFilter(request, response);
-                }
-                case UNAUTHORIZED -> responseWriter.write(
-                        request, response, org.springframework.http.HttpStatus.UNAUTHORIZED,
-                        SecurityErrorCode.UNAUTHORIZED);
-                case FORBIDDEN -> responseWriter.write(
-                        request, response, org.springframework.http.HttpStatus.FORBIDDEN,
-                        SecurityErrorCode.FORBIDDEN);
-                case UNAVAILABLE -> responseWriter.write(
-                        request, response, org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE,
-                        SecurityErrorCode.ACCESS_DECISION_UNAVAILABLE);
-            }
-            return;
-        }
-        final String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.regionMatches(true, 0, "Bearer ", 0, 7)) {
-            // Si no hay token Bearer, dejar que la cadena de Spring Security maneje la autenticacion (401)
+        if (!isAuthenticated()) {
+            // Sin identidad autenticada la cadena de Spring Security responde 401; el PEP no decide por anónimos.
             filterChain.doFilter(request, response);
             return;
         }
-
-        final String requestUri = request.getRequestURI();
-        final String method = request.getMethod();
-        final String correlationId = getCorrelationId(request);
-        final String requestId = UUID.randomUUID().toString();
-        final String normalizedPath = normalizePath(requestUri);
-
-        final String requestBody = """
-                {"applicationName":"%s","environment":"%s","path":"%s","method":"%s"}
-                """.formatted(
-                escapeJson(applicationName),
-                escapeJson(environment),
-                escapeJson(normalizedPath),
-                escapeJson(method)
-        );
-
-        final String endpoint = pepUrl + "/internal/v1/embedded-access-decisions";
-
-        try {
-            final HttpRequest.Builder reqBuilder = HttpRequest.newBuilder()
-                    .uri(URI.create(endpoint))
-                    .timeout(Duration.ofSeconds(4))
-                    .header("Content-Type", "application/json")
-                    .header("Authorization", authHeader)
-                    .header("X-Correlation-Id", correlationId)
-                    .header("X-Request-Id", requestId)
-                    .POST(HttpRequest.BodyPublishers.ofString(requestBody));
-
-            if (applicationCredential != null && !applicationCredential.isBlank()) {
-                reqBuilder.header("X-Application-Credential", applicationCredential);
-            }
-
-            log.info("Consultando PEP: endpoint={}, requestBody={}", endpoint, requestBody);
-            final HttpResponse<String> pepResponse = httpClient.send(reqBuilder.build(), HttpResponse.BodyHandlers.ofString());
-            final int status = pepResponse.statusCode();
-
-            if (status >= 200 && status < 300) {
-                // Decision favorable: PEP autoriza el consumo
-                log.info("PEP autorizo acceso a {} {} (HTTP {})", method, requestUri, status);
+        final PepDecision decision = baselineClient.evaluate(request, correlationId(request));
+        switch (decision.outcome()) {
+            case ALLOW -> {
+                response.setHeader("X-Decision-Id", decision.decisionId());
                 filterChain.doFilter(request, response);
-                return;
             }
-
-            if (status == HttpServletResponse.SC_FORBIDDEN) {
-                log.warn("PEP denego el acceso a la ruta {} {} (HTTP 403 Forbidden). Response: {}", method, requestUri, pepResponse.body());
-                writeForbiddenResponse(response);
-                return;
-            }
-
-            if (status == HttpServletResponse.SC_UNAUTHORIZED) {
-                log.warn("PEP rechazo el token para {} {} (HTTP 401 Unauthorized). Response: {}", method, requestUri, pepResponse.body());
-                writeUnauthorizedResponse(response);
-                return;
-            }
-
-            log.error("PEP retorno codigo inesperado {} para {} {}. Body: {}. Bloqueando por seguridad (fail-closed).", status, method, requestUri, pepResponse.body());
-            writeForbiddenResponse(response);
-
-        } catch (final InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.error("Llamada al PEP interrumpida para {} {}: {}", method, requestUri, e.getMessage());
-            writeServiceUnavailableResponse(response);
-        } catch (final Exception e) {
-            log.error("Error al consultar el PEP en {}: {}. Bloqueando por seguridad (fail-closed).", endpoint, e.getMessage());
-            writeServiceUnavailableResponse(response);
+            case UNAUTHORIZED -> responseWriter.write(
+                    request, response, HttpStatus.UNAUTHORIZED, SecurityErrorCode.UNAUTHORIZED);
+            case FORBIDDEN -> responseWriter.write(
+                    request, response, HttpStatus.FORBIDDEN, SecurityErrorCode.FORBIDDEN);
+            case UNAVAILABLE -> responseWriter.write(
+                    request, response, HttpStatus.SERVICE_UNAVAILABLE, SecurityErrorCode.ACCESS_DECISION_UNAVAILABLE);
         }
     }
 
-    private boolean isAuthenticated() {
-        final org.springframework.security.core.Authentication authentication =
-                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+    private static boolean isAuthenticated() {
+        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication != null && authentication.isAuthenticated()
-                && !(authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken);
+                && !(authentication instanceof AnonymousAuthenticationToken);
     }
 
-    private String getCorrelationId(final HttpServletRequest request) {
-        final String contextCorrelation = CorrelationIdContext.getAsString();
-        if (contextCorrelation != null && !contextCorrelation.isBlank()) {
-            return contextCorrelation;
+    private static String correlationId(final HttpServletRequest request) {
+        final String current = CorrelationIdContext.getAsString();
+        if (current != null && !current.isBlank()) {
+            return current;
         }
-        final String headerCorrelation = request.getHeader("X-Correlation-Id");
-        if (headerCorrelation != null && !headerCorrelation.isBlank()) {
-            return headerCorrelation;
-        }
-        return UUID.randomUUID().toString();
-    }
-
-    private void writeForbiddenResponse(final HttpServletResponse response) throws IOException {
-        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-        response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write("""
-            {"exitoso":false,"codigo":"ACCESO_DENEGADO_POR_SEGURIDAD","mensajeUsuario":"No tienes permisos para acceder a este recurso segun la politica institucional de seguridad.","mensajeTecnico":"Acceso denegado por el Policy Enforcement Point (PEP)."}
-        """.trim());
-    }
-
-    private void writeUnauthorizedResponse(final HttpServletResponse response) throws IOException {
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write("""
-            {"exitoso":false,"codigo":"TOKEN_INVALIDO_O_REVOCADO","mensajeUsuario":"Sesion invalida o revocada en el sistema de seguridad institucional.","mensajeTecnico":"Token rechazado por PEP/PDP."}
-        """.trim());
-    }
-
-    private void writeServiceUnavailableResponse(final HttpServletResponse response) throws IOException {
-        response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-        response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write("""
-            {"exitoso":false,"codigo":"SERVICIO_SEGURIDAD_NO_DISPONIBLE","mensajeUsuario":"El servicio de seguridad institucional no esta disponible temporalmente.","mensajeTecnico":"No fue posible comunicarse con el PEP/PDP."}
-        """.trim());
-    }
-
-    private static final java.util.regex.Pattern UUID_PATTERN =
-            java.util.regex.Pattern.compile("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}");
-
-    private static String normalizePath(final String uri) {
-        if (uri == null) {
-            return "";
-        }
-        return UUID_PATTERN.matcher(uri).replaceAll("{id}");
-    }
-
-    private static String escapeJson(final String s) {
-        if (s == null) return "";
-        return s.replace("\\", "\\\\").replace("\"", "\\\"");
+        final String header = request.getHeader("X-Correlation-Id");
+        return header != null && !header.isBlank() ? header : UUID.randomUUID().toString();
     }
 }
