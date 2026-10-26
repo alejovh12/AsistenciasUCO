@@ -43,3 +43,10 @@ Ejemplo de work item técnico cerrado: [TECH-001](TECH-001-restaurar-gate-arquit
 - [Consolidación funcional](P0-E-consolidacion-funcional/PLAN.md): checkouts oficiales y proveedores locales validados; la integración cross-repo permanece abierta por autoridad divergente y las tres SQL de paginación quedan preservadas sin integrar.
 
 - [P0-B](P0-B-unificacion-repositorios/PLAN.md): remotos canónicos de organización, sincronización Git segura y auditoría diferencial multirrepositorio; cierre funcional bloqueado por Infra/gates externos no ejecutados.
+
+## HU de coordinación y decanatura — paquetes 1 a 5 — 2026-10-25/26
+- [HU081-HU083](HU081-HU082-HU083-plan-estudio-estado-semestres/CLOSURE.md): estado y semestres del plan de estudio. DONE (MV-007 PASS).
+- [HU096-HU098](HU096-HU097-HU098-periodos-academicos/CLOSURE.md): períodos académicos solo por el Administrador. En `develop`; PENDIENTE de MV-008.
+- [HU064/HU060/HU061](HU064-HU060-HU061-consultas-coordinador/CLOSURE.md): consultas del coordinador sobre su programa. En `develop`; PENDIENTE de MV-008.
+- [HU104/HU105/HU109/HU119/HU145](HU104-HU105-HU109-HU119-HU145-lecturas-decano/CLOSURE.md): consultas del decano sobre su facultad. En `develop`; PENDIENTE de MV-008.
+- [HU108 (planes y malla)](HU108-malla-plan-decano/CLOSURE.md): malla del plan para el decano. PR por integrar; PENDIENTE de MV-008.
