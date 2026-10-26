@@ -62,6 +62,15 @@ final class DbFailureClassifier {
             // GEN_003: "Ya existe un {} registrado con este {}"; lo emite usp_registrar_o_actualizar_plan_estudio
             // ante un plan duplicado (programa + inp). Conflicto de negocio, no fallo tecnico.
             case "GEN_003" -> CommonErrorCode.CONFLICT;
+            // HU081-HU083: estado y semestres del plan. PLA_002/PLA_004 no encontrado; maximo de semestres, quitar un
+            // semestre que no es el ultimo o con asignaturas son conflictos de negocio.
+            case "PLA_002", "PLA_004" -> CommonErrorCode.RESOURCE_NOT_FOUND;
+            case "PLA_003", "PLA_005", "PLA_006" -> CommonErrorCode.CONFLICT;
+            // HU096-HU098: periodos academicos. PER_001 (no encontrado) se clasifica abajo; fechas invalidas, nombre
+            // duplicado o periodo con grupos son errores de negocio; PER_005 es ejecutor sin ambito para gestionarlos.
+            case "PER_002" -> CommonErrorCode.VALIDATION_ERROR;
+            case "PER_003", "PER_004" -> CommonErrorCode.CONFLICT;
+            case "PER_005" -> SecurityErrorCode.FORBIDDEN;
             // FAC_002: el decano ya es titular de otra facultad activa (HU117/HU111).
             case "FAC_002" -> CommonErrorCode.CONFLICT;
             case "VAL_007" -> classifyVal007(operation);

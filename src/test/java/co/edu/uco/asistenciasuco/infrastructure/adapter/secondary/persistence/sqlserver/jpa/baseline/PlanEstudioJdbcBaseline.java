@@ -45,10 +45,27 @@ public final class PlanEstudioJdbcBaseline implements PlanEstudioQueryPort, Plan
     }
 
     @Override
+    public void cambiarEstadoPlanEstudio(final UUID idPlanEstudio, final boolean estaActivo, final UUID idUsuarioEjecutor) {
+        commands.cambiarEstadoPlanEstudio(idPlanEstudio, estaActivo, idUsuarioEjecutor);
+    }
+
+    @Override
+    public void agregarSemestrePlanEstudio(final UUID idPlanEstudio, final UUID idUsuarioEjecutor) {
+        commands.agregarSemestrePlanEstudio(idPlanEstudio, idUsuarioEjecutor);
+    }
+
+    @Override
+    public void quitarSemestrePlanEstudio(final UUID idPlanEstudio, final Integer numeroSemestre, final UUID idUsuarioEjecutor) {
+        commands.quitarSemestrePlanEstudio(idPlanEstudio, numeroSemestre, idUsuarioEjecutor);
+    }
+
+    @Override
     public List<PlanEstudioProjection> consultarPlanesPorFacultad(final UUID idFacultad) {
         return jdbcOperations.query("""
                 SELECT id, idPrograma, nombrePrograma, inp, estaActivoPlanEstudio,
-                       estaActivoTextoPlanEstudio, justificacionEstado
+                       estaActivoTextoPlanEstudio, justificacionEstado,
+                       totalSemestres = COALESCE((SELECT MAX(sp.numeroSemestre) FROM dbo.uv_semestre_plan_estudio sp
+                                                  WHERE sp.idPlanEstudio = uv_plan_estudio.id), 0)
                 FROM dbo.uv_plan_estudio
                 WHERE idPrograma IN (SELECT id FROM dbo.uv_programa WHERE idFacultad = :idFacultad)
                 ORDER BY nombrePrograma, inp, id
@@ -59,7 +76,8 @@ public final class PlanEstudioJdbcBaseline implements PlanEstudioQueryPort, Plan
                 JdbcBaselineValueMapper.toString(rs.getObject("inp")),
                 JdbcBaselineValueMapper.toBoolean(rs.getObject("estaActivoPlanEstudio")),
                 JdbcBaselineValueMapper.toString(rs.getObject("estaActivoTextoPlanEstudio")),
-                JdbcBaselineValueMapper.toString(rs.getObject("justificacionEstado"))
+                JdbcBaselineValueMapper.toString(rs.getObject("justificacionEstado")),
+                rs.getInt("totalSemestres")
         ));
     }
 
@@ -67,7 +85,9 @@ public final class PlanEstudioJdbcBaseline implements PlanEstudioQueryPort, Plan
     public List<PlanEstudioProjection> consultarPlanesPorPrograma(final UUID idPrograma) {
         return jdbcOperations.query("""
                 SELECT id, idPrograma, nombrePrograma, inp, estaActivoPlanEstudio,
-                       estaActivoTextoPlanEstudio, justificacionEstado
+                       estaActivoTextoPlanEstudio, justificacionEstado,
+                       totalSemestres = COALESCE((SELECT MAX(sp.numeroSemestre) FROM dbo.uv_semestre_plan_estudio sp
+                                                  WHERE sp.idPlanEstudio = uv_plan_estudio.id), 0)
                 FROM dbo.uv_plan_estudio
                 WHERE idPrograma = :idPrograma
                 ORDER BY nombrePrograma, inp, id
@@ -78,7 +98,8 @@ public final class PlanEstudioJdbcBaseline implements PlanEstudioQueryPort, Plan
                 JdbcBaselineValueMapper.toString(rs.getObject("inp")),
                 JdbcBaselineValueMapper.toBoolean(rs.getObject("estaActivoPlanEstudio")),
                 JdbcBaselineValueMapper.toString(rs.getObject("estaActivoTextoPlanEstudio")),
-                JdbcBaselineValueMapper.toString(rs.getObject("justificacionEstado"))
+                JdbcBaselineValueMapper.toString(rs.getObject("justificacionEstado")),
+                rs.getInt("totalSemestres")
         ));
     }
 }

@@ -52,6 +52,11 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.PeriodoAcad
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
+import co.edu.uco.asistenciasuco.application.features.admin.gestionarperiodoacademico.primaryports.GestionarPeriodoAcademicoInputPort;
+import co.edu.uco.asistenciasuco.application.features.admin.gestionarperiodoacademico.primaryports.interactor.GestionarPeriodoAcademicoInteractor;
+import co.edu.uco.asistenciasuco.application.features.admin.gestionarperiodoacademico.usecase.GestionarPeriodoAcademicoUseCase;
+import co.edu.uco.asistenciasuco.application.features.admin.gestionarperiodoacademico.usecase.impl.GestionarPeriodoAcademicoUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.PeriodoAcademicoCommandPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -87,4 +92,7 @@ public class AdminWiringConfiguration {
     @Bean ConsultarAreasInputPort consultarAreasInputPort(final ConsultarAreasUseCase useCase) { return new ConsultarAreasInteractor(useCase); }
     @Bean EjecutarCierreMasivoUseCase ejecutarCierreMasivoUseCase(final PeriodoAcademicoQueryPort periodoPort, final CierrePeriodoCommandPort cierrePort) { return new EjecutarCierreMasivoUseCaseImpl(periodoPort, cierrePort); }
     @Bean EjecutarCierreMasivoInputPort ejecutarCierreMasivoInputPort(final EjecutarCierreMasivoUseCase useCase) { return new EjecutarCierreMasivoInteractor(useCase); }
+    // HU096-HU098: el periodo es unico por institucion; solo lo gestiona el ADMINISTRADOR.
+    @Bean GestionarPeriodoAcademicoUseCase gestionarPeriodoAcademicoUseCase(final PeriodoAcademicoCommandPort commandPort) { return new GestionarPeriodoAcademicoUseCaseImpl(commandPort); }
+    @Bean GestionarPeriodoAcademicoInputPort gestionarPeriodoAcademicoInputPort(final GestionarPeriodoAcademicoUseCase useCase) { return new GestionarPeriodoAcademicoInteractor(useCase); }
 }

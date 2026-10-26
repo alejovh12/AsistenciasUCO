@@ -6,6 +6,7 @@ import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarplane
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarplanestudio.usecase.GestionarPlanEstudioUseCase;
 
 import java.util.Objects;
+import java.util.UUID;
 
 public final class GestionarPlanEstudioInteractor implements GestionarPlanEstudioInputPort {
 
@@ -18,5 +19,20 @@ public final class GestionarPlanEstudioInteractor implements GestionarPlanEstudi
     @Override
     public void guardar(final GuardarPlanEstudioDTO dto) {
         useCase.guardar(GestionarPlanEstudioMapper.toDomain(dto));
+    }
+
+    @Override
+    public void cambiarEstado(final UUID idPlanEstudio, final UUID usuario) {
+        useCase.cambiarEstado(idPlanEstudio, usuario);
+    }
+
+    @Override
+    public void agregarSemestre(final UUID idPlanEstudio, final UUID usuario) {
+        useCase.agregarSemestre(idPlanEstudio, usuario);
+    }
+
+    @Override
+    public void quitarSemestre(final UUID idPlanEstudio, final Integer numeroSemestre, final UUID usuario) {
+        useCase.quitarSemestre(idPlanEstudio, numeroSemestre, usuario);
     }
 }
