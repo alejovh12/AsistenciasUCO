@@ -442,8 +442,18 @@ Se mantienen como `NOT_RUN` o `BLOCKED_BY_MISSING_EVIDENCE` la base habitual, el
 | `e2e_baseline.py` (5 roles reales, PKCE, PEP/PDP, SQL habitual) antes y después de reiniciar el backend | `PASS` 18/18 y 18/18 |
 | `e2e_baseline.py --pep-down` (fail-closed) | `PASS` 20/20: PEP caído -> 503 sin bypass; recuperado -> 200 |
 | Sonda de solo lectura a la API administrativa del PDP | `FAIL` de seguridad en el PDP externo: ver [PDP_ADMIN_API_AUTHORIZATION_FINDING](../../security/PDP_ADMIN_API_AUTHORIZATION_FINDING.md); sync sigue `false` |
-| Verificación directa de SPs, grants y conteos en SQL habitual | `NOT_RUN`: el clasificador del agente denegó cargar credenciales del `.env` en un script ad hoc; el backend arrancó y sirvió 18/18 con el login restringido (indicio, no inventario) |
+| Inventario SQL **de solo lectura** con `uco_dev_runtime` (autorizado en chat; ninguna escritura, sin ampliar privilegios) | `PASS` parcial: los 57 procedimientos `usp_*` identificados en el código existen y el runtime tiene `EXECUTE`; las 63 vistas `uv_*` son legibles; el login solo pertenece a `rol_asistencias_runtime`, sin sysadmin, `db_owner`, `CREATE TABLE`, `CONTROL` ni `DELETE`/`ALTER` sobre `Usuario`; SELECT directo a tablas denegado (mínimo privilegio). Conteos conservados: `uv_usuario` 5012, `uv_facultad` 1, `uv_sesion` 16, `uv_asistencia` 6354, `uv_grupo` 5, `uv_estudiante_grupo` 6302, `uv_decano` 1, `uv_coordinador` 1 |
 | E2E que mutan estado (identidad, aprovisionamiento, perfiles) | `NOT_RUN` en esta sesión (requieren base desechable `asistencias-e2e-sqlserver`; ver MV-011 para su última corrida) |
 | Sonar PR #43 / #12 | Quality Gate `OK`; #43: 28 code smells (tests de PEP, 0 bugs/vulnerabilidades); #12: 5 issues corregidos en el commit de frontend, pendientes de reanálisis |
 
 `READY_FOR_HU_DEVELOPMENT` solo si se cumple además la verificación directa de la base (NOT_RUN); `FULL_PDP_SYNC_READY` y `PRODUCTION_READY` no se declaran.
+
+### Límites del inventario SQL (2026-10-26)
+
+El inventario es **parcial**. Los 57 objetos salen de buscar nombres `usp_*`/`fn_*`/`vw_*` en el código fuente; no cubre las vistas que se leen solo desde entidades JPA ni certifica todavía todas las entidades JPA, FK, índices ni la ausencia de drift de esquema. La identidad externa usa los objetos reales `dbo.IdentidadExterna` y `dbo.uv_identidad_externa`; **no se comprobó su definición contra el esquema real** (un primer intento con un nombre de tabla inexistente falló) y por tanto no se marcan como verificados. No se amplían privilegios para obtener esa evidencia; queda `NOT_RUN` hasta que el owner DB aporte la definición o un login con `VIEW DEFINITION` autorizado.
+
+### Estados
+
+- `READY_FOR_HU_DEVELOPMENT`: condicionado a lo realmente cumplido (suite backend/frontend, E2E de 5 roles, fail-closed, inventario SQL parcial); no se declara `READY_FOR_MERGE_REVIEW` mientras los checks obligatorios del PR #43 no estén en verde.
+- `FULL_PDP_SYNC_READY`: **NO** (la API administrativa del PDP no aplica autorización segura).
+- `PRODUCTION_READY`: **NO**.
