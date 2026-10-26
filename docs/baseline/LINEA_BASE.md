@@ -307,3 +307,11 @@ Los bloques anteriores que mencionan TD-043 abierto o `NOT_GREEN_TD043` son hist
 - Identidad de matrícula alineada con la DB (solo correo, solo documento o usuarios distintos → `ERR_IDENTIDAD_USUARIO_CONFLICTO`); `GEN_001` ya no se clasifica como tipo de identificación inexistente (→ `ERR_DB_UNCLASSIFIED`); DBCODE formales completados y `VAL_007` resuelto por operación.
 - Validación: `clean verify` BUILD SUCCESS (1308 tests / 0 fallos) y `-Pintegration clean verify` BUILD SUCCESS (188 ITs / 0 fallos / 1 skip TD-044). Detalle en [VALIDATION](../work-items/LB-008-jpa-only-persistence-migration/VALIDATION.md).
 - Observación DB: el catálogo `dbo.Estado` ya contiene `P`/`A`/`R` y la DB final cerró TD-057 (junto con TD-039/046/056/058); el Backend consume ese contrato final.
+
+### Addendum HU de coordinación y decanatura (2026-10-26)
+
+Work items funcionales fuera de la secuencia LB, integrados en `develop` con CI remoto en verde (sin cambios en `SecurityConfig` ni en providers existentes):
+
+- [HU081-HU083](../work-items/HU081-HU082-HU083-plan-estudio-estado-semestres/CLOSURE.md) — DONE.
+- [HU096-HU098](../work-items/HU096-HU097-HU098-periodos-academicos/CLOSURE.md), [HU064/HU060/HU061](../work-items/HU064-HU060-HU061-consultas-coordinador/CLOSURE.md) y [HU104/HU105/HU109/HU119/HU145](../work-items/HU104-HU105-HU109-HU119-HU145-lecturas-decano/CLOSURE.md) — PENDIENTE de la validación manual [MV-008](MANUAL_VALIDATION_LEDGER.md).
+- [HU108 (planes y malla)](../work-items/HU108-malla-plan-decano/CLOSURE.md) — PR por integrar.
