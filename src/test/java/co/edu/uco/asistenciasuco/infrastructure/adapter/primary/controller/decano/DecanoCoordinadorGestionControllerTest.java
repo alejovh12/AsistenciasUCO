@@ -180,6 +180,16 @@ class DecanoCoordinadorGestionControllerTest {
     }
 
     @Test
+    void cambiarEstado_rechaza_con_400_un_cuerpo_json_null() throws Exception {
+        mvc.perform(patch(RUTA + COORDINADOR + "/estado")
+                        .contentType("application/json")
+                        .content("null"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(cambiarEstado);
+    }
+
+    @Test
     void cambiarEstado_responde_409_cuando_el_coordinador_tiene_programa_activo() throws Exception {
         when(cambiarEstado.execute(any(CambiarEstadoCoordinadorDTO.class)))
                 .thenThrow(new ConflictException("COO_001"));

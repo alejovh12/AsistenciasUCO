@@ -38,6 +38,7 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -56,8 +57,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * <p>MAINT-003 bloqueaba cualquier /api/v2/** mientras UTC-D06 estuviera sin decidir. Con D06 decidido
  * y el contrato DB UTC-D06-POST-FREEZE implementado (gestion-asistencia-db feat/utc-d06-post-freeze), ese
  * bloqueo se SUSTITUYE por un guard de activacion verificable: la superficie v2 es exactamente el
- * contrato de sesiones sin PUT, esta OFF por defecto (404, sin tocar puertos) y su activacion exige que
- * la DB exponga el contrato v2. El wire v1 sigue rechazando offsets: el codec nunca llega a v1.
+ * contrato de sesiones sin PUT, esta ON por defecto local y su activacion exige que la DB exponga el
+ * contrato v2. El wire v1 sigue rechazando offsets: el codec nunca llega a v1.
  */
 class SesionUtcActivationGuardTest {
 
@@ -112,16 +113,21 @@ class SesionUtcActivationGuardTest {
     }
 
     @Test
-    void apiV2IsOffByDefaultAndAnswersNotFoundWithoutReachingThePorts() throws Exception {
-        assertEquals("${APP_SESIONES_V2_ENABLED:false}", applicationYmlProperty("app.sesiones.v2.enabled"),
-                "app.sesiones.v2.enabled debe valer false por defecto");
-        new ApplicationContextRunner()
-                .withUserConfiguration(SesionesV2ActivationConfiguration.class)
-                .run(context -> assertEquals(1, context.getBeansOfType(SesionesV2ActivationConfiguration.class).size()));
+    void apiV2IsOnByDefaultAndExplicitOptOutAnswersNotFoundWithoutReachingThePorts() throws Exception {
+        assertEquals("${APP_SESIONES_V2_ENABLED:true}", applicationYmlProperty("app.sesiones.v2.enabled"),
+                "app.sesiones.v2.enabled debe valer true por defecto local");
         new ApplicationContextRunner()
                 .withPropertyValues("app.sesiones.v2.enabled=true")
                 .withUserConfiguration(SesionesV2ActivationConfiguration.class)
                 .run(context -> assertTrue(context.getBeansOfType(SesionesV2ActivationConfiguration.class).isEmpty()));
+        new ApplicationContextRunner()
+                .withUserConfiguration(SesionesV2ActivationConfiguration.class)
+                .run(context -> assertTrue(context.getBeansOfType(SesionesV2ActivationConfiguration.class).isEmpty(),
+                        "Sin propiedad explícita, UTC V2 no debe instalar el bloqueo de compatibilidad"));
+        new ApplicationContextRunner()
+                .withPropertyValues("app.sesiones.v2.enabled=false")
+                .withUserConfiguration(SesionesV2ActivationConfiguration.class)
+                .run(context -> assertEquals(1, context.getBeansOfType(SesionesV2ActivationConfiguration.class).size()));
 
         final MockMvc disabled = MockMvcBuilders.standaloneSetup(new SesionV2Controller(create, update, UUID::randomUUID))
                 .addMappedInterceptors(new String[] {"/api/v2/sesiones", "/api/v2/sesiones/**"}, new SesionesV2DisabledInterceptor())
@@ -137,7 +143,19 @@ class SesionUtcActivationGuardTest {
 
     @Test
     void apiV2ActivationRequiresTheDbProvenanceContract() {
+        final EntityManager sinContratoPorDefecto = entityManagerReturning(0);
         new ApplicationContextRunner()
+                .withBean(EntityManager.class, () -> sinContratoPorDefecto)
+                .withUserConfiguration(SesionV2SchemaCompatibilityVerifier.class)
+                .run(context -> {
+                    final SesionV2SchemaCompatibilityVerifier verifier = context.getBean(SesionV2SchemaCompatibilityVerifier.class);
+                    final IllegalStateException error = assertThrows(IllegalStateException.class, () -> verifier.run(null));
+                    assertTrue(error.getMessage().contains("UTC-D06-POST-FREEZE"),
+                            "Sin propiedad explícita también debe verificarse el contrato SQL");
+                });
+
+        new ApplicationContextRunner()
+                .withPropertyValues("app.sesiones.v2.enabled=false")
                 .withBean(EntityManager.class, () -> mock(EntityManager.class))
                 .withUserConfiguration(SesionV2SchemaCompatibilityVerifier.class)
                 .run(context -> assertTrue(context.getBeansOfType(SesionV2SchemaCompatibilityVerifier.class).isEmpty(),
@@ -160,6 +178,49 @@ class SesionUtcActivationGuardTest {
                 .withBean(EntityManager.class, () -> conContrato)
                 .withUserConfiguration(SesionV2SchemaCompatibilityVerifier.class)
                 .run(context -> context.getBean(SesionV2SchemaCompatibilityVerifier.class).run(null));
+    }
+
+    @Test
+    void invalidOrEmptyActivationValueFailsStartupInsteadOfLeavingV2UnverifiedOrSilentlyBlocked() {
+        for (final String invalid : new String[] {"", "tru", "yes", "1", " "}) {
+            for (final Class<?> controlled : new Class<?>[] {
+                    SesionesV2ActivationConfiguration.class, SesionV2SchemaCompatibilityVerifier.class}) {
+                new ApplicationContextRunner()
+                        .withPropertyValues("app.sesiones.v2.enabled=" + invalid)
+                        .withBean(EntityManager.class, () -> mock(EntityManager.class))
+                        .withUserConfiguration(controlled)
+                        .run(context -> {
+                            assertNotNull(context.getStartupFailure(),
+                                    "El valor '" + invalid + "' debe impedir el arranque con " + controlled.getSimpleName());
+                            assertTrue(String.valueOf(rootMessage(context.getStartupFailure())).contains("app.sesiones.v2.enabled"),
+                                    "El error debe nombrar la propiedad invalida");
+                        });
+            }
+        }
+    }
+
+    @Test
+    void exactlyOneOfCompatibilityBlockOrSqlVerifierIsInstalledForEveryValidValue() {
+        for (final String[] caso : new String[][] {{null, "verifier"}, {"true", "verifier"}, {"TRUE", "verifier"}, {"false", "block"}}) {
+            final ApplicationContextRunner runner = new ApplicationContextRunner()
+                    .withBean(EntityManager.class, () -> mock(EntityManager.class))
+                    .withUserConfiguration(SesionesV2ActivationConfiguration.class, SesionV2SchemaCompatibilityVerifier.class);
+            (caso[0] == null ? runner : runner.withPropertyValues("app.sesiones.v2.enabled=" + caso[0]))
+                    .run(context -> {
+                        final boolean bloqueo = !context.getBeansOfType(SesionesV2ActivationConfiguration.class).isEmpty();
+                        final boolean verificador = !context.getBeansOfType(SesionV2SchemaCompatibilityVerifier.class).isEmpty();
+                        assertEquals("block".equals(caso[1]), bloqueo, "bloqueo 404 para " + caso[0]);
+                        assertEquals("verifier".equals(caso[1]), verificador, "verificador SQL para " + caso[0]);
+                    });
+        }
+    }
+
+    private static String rootMessage(final Throwable error) {
+        Throwable current = error;
+        while (current.getCause() != null && current.getCause() != current) {
+            current = current.getCause();
+        }
+        return current.getMessage();
     }
 
     @Test

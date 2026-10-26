@@ -223,6 +223,29 @@ class RbacSecurityFilterChainTest {
                 .andExpect(status().isOk());
     }
 
+    // --- HU096/HU097/HU098: el periodo es unico por institucion; solo el ADMINISTRADOR lo gestiona ---
+
+    @Test
+    void periodos_academicos_comandos_solo_para_administrador() throws Exception {
+        final String coleccion = "/api/v1/admin/periodos-academicos";
+        final String recurso = coleccion + "/11111111-1111-1111-1111-111111111111";
+        mockMvc.perform(post(coleccion)).andExpect(status().isUnauthorized());
+        mockMvc.perform(post(coleccion).header(HttpHeaders.AUTHORIZATION, bearer("ADMINISTRADOR")).contentType("application/json").content("{}"))
+                .andExpect(status().isOk());
+        mockMvc.perform(put(recurso).header(HttpHeaders.AUTHORIZATION, bearer("ADMINISTRADOR")).contentType("application/json").content("{}"))
+                .andExpect(status().isOk());
+        mockMvc.perform(delete(recurso).header(HttpHeaders.AUTHORIZATION, bearer("ADMINISTRADOR")))
+                .andExpect(status().isOk());
+        for (final String rol : new String[]{"DECANO", "COORDINADOR", "DOCENTE", "ESTUDIANTE"}) {
+            mockMvc.perform(post(coleccion).header(HttpHeaders.AUTHORIZATION, bearer(rol)).contentType("application/json").content("{}"))
+                    .andExpect(status().isForbidden());
+            mockMvc.perform(put(recurso).header(HttpHeaders.AUTHORIZATION, bearer(rol)).contentType("application/json").content("{}"))
+                    .andExpect(status().isForbidden());
+            mockMvc.perform(delete(recurso).header(HttpHeaders.AUTHORIZATION, bearer(rol)))
+                    .andExpect(status().isForbidden());
+        }
+    }
+
     @Test
     void coordinador_docentes_patch_estado_exige_rol_coordinador() throws Exception {
         final String ruta = "/api/v1/coordinador/docentes/11111111-1111-1111-1111-111111111111/estado";
@@ -640,6 +663,15 @@ class RbacSecurityFilterChainTest {
             return "ok";
         }
 
+        @org.springframework.web.bind.annotation.RequestMapping(
+                path = {"/api/v1/admin/periodos-academicos", "/api/v1/admin/periodos-academicos/{id}"},
+                method = {org.springframework.web.bind.annotation.RequestMethod.POST,
+                        org.springframework.web.bind.annotation.RequestMethod.PUT,
+                        org.springframework.web.bind.annotation.RequestMethod.DELETE})
+        String gestionarPeriodoAcademico() {
+            return "ok";
+        }
+
         @GetMapping("/api/v1/estudiantes")
         String estudiantes() {
             return "ok";
@@ -728,7 +760,7 @@ class RbacSecurityFilterChainTest {
         JwtDecoder jwtDecoder() {
             final OAuth2TokenValidator<Jwt> audienceValidator = new AudienceValidator(AUDIENCE);
             return token -> {
-                if (!List.of("COORDINADOR", "ADMINISTRADOR", "DOCENTE", "ESTUDIANTE").contains(token)) {
+                if (!List.of("COORDINADOR", "ADMINISTRADOR", "DOCENTE", "ESTUDIANTE", "DECANO").contains(token)) {
                     throw new BadJwtException("Invalid test token.");
                 }
                 final Jwt jwt = jwtFor(token);

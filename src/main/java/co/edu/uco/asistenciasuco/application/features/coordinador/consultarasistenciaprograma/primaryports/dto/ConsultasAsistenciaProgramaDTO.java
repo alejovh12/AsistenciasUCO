@@ -1,0 +1,33 @@
+package co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.primaryports.dto;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+/** DTO de salida de las consultas HU064/HU060/HU061 del coordinador. */
+public final class ConsultasAsistenciaProgramaDTO {
+
+    private ConsultasAsistenciaProgramaDTO() {
+    }
+
+    public record PaginaDTO<T>(List<T> elementos, int total, int pagina, int tamano) {
+    }
+
+    public record GrupoProgramaDTO(UUID id, Integer codigo, String nombre, UUID idAsignatura, String nombreAsignatura,
+                                   UUID idDocente, Integer capacidadMaxima, Integer estudiantesActivos,
+                                   Integer cuposDisponibles, boolean habilitado, LocalDate inicioPeriodo,
+                                   LocalDate finPeriodo) {
+    }
+
+    public record SesionGrupoDTO(UUID id, UUID idGrupo, Integer codigoGrupo, String nombreGrupo, String nombre,
+                                 Integer numero, String codigo, Integer numeroSemana, LocalDateTime fechaHoraInicio,
+                                 LocalDateTime fechaHoraFin) {
+    }
+
+    public record AsistenciaSesionDTO(UUID idDetalleAsistencia, UUID idSesion, String nombreSesion, UUID idEstudiante,
+                                      String numeroIdentificacion, String nombreCompleto, boolean asistio,
+                                      String codigoRazonCausa, String nombreRazonCausa, LocalDateTime fechaHoraInicio,
+                                      LocalDateTime fechaHoraFin) {
+    }
+}

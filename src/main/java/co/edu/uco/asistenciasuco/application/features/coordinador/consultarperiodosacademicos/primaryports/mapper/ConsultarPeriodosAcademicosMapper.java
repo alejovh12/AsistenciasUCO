@@ -1,6 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.consultarperiodosacademicos.primaryports.mapper;
 
-import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.PeriodoAcademicoDTO;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultarperiodosacademicos.primaryports.dto.PeriodoAcademicoDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarperiodosacademicos.usecase.domain.PeriodoAcademicoDomain;
 
 public final class ConsultarPeriodosAcademicosMapper {

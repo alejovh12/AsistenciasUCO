@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.application.features.coordinador.common.dto;
+package co.edu.uco.asistenciasuco.application.features.coordinador.consultarperiodosacademicos.primaryports.dto;
 
 import java.time.LocalDate;
 import java.util.UUID;

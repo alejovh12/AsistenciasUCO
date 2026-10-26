@@ -12,6 +12,14 @@ public record PlanEstudioDomain(
         String inp,
         boolean estaActivoPlanEstudio,
         String estaActivoTextoPlanEstudio,
-        String justificacionEstado
+        String justificacionEstado,
+        int totalSemestres
 ) {
+
+    public PlanEstudioDomain(final UUID id, final UUID idPrograma, final String nombrePrograma, final String inp,
+                             final boolean estaActivoPlanEstudio, final String estaActivoTextoPlanEstudio,
+                             final String justificacionEstado) {
+        this(id, idPrograma, nombrePrograma, inp, estaActivoPlanEstudio, estaActivoTextoPlanEstudio,
+                justificacionEstado, 0);
+    }
 }

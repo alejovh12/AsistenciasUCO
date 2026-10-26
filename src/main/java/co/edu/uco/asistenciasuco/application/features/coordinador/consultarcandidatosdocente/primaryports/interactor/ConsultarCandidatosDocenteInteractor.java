@@ -1,8 +1,8 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.primaryports.interactor;
 
-import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.DocenteCandidatoDTO;
-import co.edu.uco.asistenciasuco.application.features.coordinador.common.mapper.DocenteProgramaMapper;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.primaryports.dto.DocenteCandidatoDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.primaryports.ConsultarCandidatosDocenteInputPort;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.primaryports.mapper.ConsultarCandidatosDocenteMapper;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.usecase.ConsultarCandidatosDocenteUseCase;
 
 import java.util.List;
@@ -19,6 +19,6 @@ public final class ConsultarCandidatosDocenteInteractor implements ConsultarCand
 
     @Override
     public List<DocenteCandidatoDTO> execute(final UUID actorUsuarioId, final String busqueda) {
-        return useCase.execute(actorUsuarioId, busqueda).stream().map(DocenteProgramaMapper::toDTO).toList();
+        return useCase.execute(actorUsuarioId, busqueda).stream().map(ConsultarCandidatosDocenteMapper::toDTO).toList();
     }
 }

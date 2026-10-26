@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.application.features.coordinador.common.domain;
+package co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.usecase.domain;
 
 import java.util.UUID;
 

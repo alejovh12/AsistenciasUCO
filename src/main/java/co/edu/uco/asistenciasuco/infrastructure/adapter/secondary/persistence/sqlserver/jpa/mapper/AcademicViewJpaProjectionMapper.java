@@ -113,8 +113,13 @@ public final class AcademicViewJpaProjectionMapper {
     }
 
     public static PlanEstudioProjection toPlanEstudio(final UvPlanEstudioEntity row) {
+        return toPlanEstudio(row, 0);
+    }
+
+    public static PlanEstudioProjection toPlanEstudio(final UvPlanEstudioEntity row, final int totalSemestres) {
         return new PlanEstudioProjection(row.id(), row.idPrograma(), row.nombrePrograma(), text(row.inp()),
-                flag(row.estaActivoPlanEstudio()), row.estaActivoTextoPlanEstudio(), row.justificacionEstado());
+                flag(row.estaActivoPlanEstudio()), row.estaActivoTextoPlanEstudio(), row.justificacionEstado(),
+                totalSemestres);
     }
 
     public static AsignaturaProjection toAsignatura(final AsignaturaQueryRow row) {

@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
@@ -15,14 +15,15 @@ import java.util.Objects;
  * Guard de activacion de {@code /api/v2/sesiones} (MAINT-003F, sustituye el bloqueo
  * "ningun v2 mientras UTC-D06 no este decidido" de MAINT-003).
  *
- * <p>Solo existe con {@code app.sesiones.v2.enabled=true}. Al arrancar comprueba, con el mismo
- * principal SQL del runtime, que la base del ambiente expone el contrato UTC-D06-POST-FREEZE que v2
- * necesita: la vista {@code dbo.uv_sesion_v2} con {@code procedenciaTemporal} y los dos SP v2. Si
- * falta algo, el arranque falla: nunca se sirve v2 contra una base que no puede registrar ni leer la
- * procedencia (respuestas con {@code Z} no verificadas serian informacion falsamente confirmada).</p>
+ * <p>Existe con {@code app.sesiones.v2.enabled=true} o cuando la propiedad está ausente, porque V2
+ * es el comportamiento predeterminado. Al arrancar comprueba, con el mismo principal SQL del
+ * runtime, que la base del ambiente expone el contrato UTC-D06-POST-FREEZE que v2 necesita: la vista
+ * {@code dbo.uv_sesion_v2} con {@code procedenciaTemporal} y los dos SP v2. Si falta algo, el arranque
+ * falla: nunca se sirve v2 contra una base que no puede registrar ni leer la procedencia (respuestas
+ * con {@code Z} no verificadas serian informacion falsamente confirmada).</p>
  */
 @Component
-@ConditionalOnProperty(prefix = SesionesV2Activation.PREFIX, name = SesionesV2Activation.NAME, havingValue = "true")
+@Conditional(SesionesV2Activation.Enabled.class)
 public class SesionV2SchemaCompatibilityVerifier implements ApplicationRunner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SesionV2SchemaCompatibilityVerifier.class);
@@ -51,9 +52,10 @@ public class SesionV2SchemaCompatibilityVerifier implements ApplicationRunner {
         final Object result = entityManager.createNativeQuery(SQL_CONTRATO_V2).getSingleResult();
         if (!(result instanceof Number number) || number.intValue() != 1) {
             throw new IllegalStateException(
-                    "app.sesiones.v2.enabled=true pero la base de datos no expone el contrato UTC-D06-POST-FREEZE "
-                            + "(dbo.uv_sesion_v2.procedenciaTemporal, dbo.usp_crear_sesion_v2, dbo.usp_actualizar_sesion_v2). "
-                            + "Despliegue primero la DB o desactive v2.");
+                    "UTC V2 esta activo (app.sesiones.v2.enabled ausente o true) pero la base de datos no expone el "
+                            + "contrato UTC-D06-POST-FREEZE (dbo.uv_sesion_v2.procedenciaTemporal, dbo.usp_crear_sesion_v2, "
+                            + "dbo.usp_actualizar_sesion_v2). Despliegue primero la DB o desactive v2 explicitamente con "
+                            + "app.sesiones.v2.enabled=false.");
         }
         LOGGER.info("Contrato DB UTC-D06-POST-FREEZE verificado; /api/v2/sesiones habilitado.");
     }

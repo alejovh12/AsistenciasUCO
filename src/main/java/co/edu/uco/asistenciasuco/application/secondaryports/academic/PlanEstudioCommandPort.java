@@ -9,4 +9,13 @@ public interface PlanEstudioCommandPort {
      * provider DB lo revalida (perfil COORDINADOR y titularidad del programa) y no confia solo en Application.
      */
     void registrarOActualizarPlanEstudio(UUID idPlanEstudio, UUID idPrograma, Integer inp, UUID idUsuarioEjecutor);
+
+    /** HU081: activa o inactiva el plan. El provider DB revalida perfil COORDINADOR y titularidad del programa del plan. */
+    void cambiarEstadoPlanEstudio(UUID idPlanEstudio, boolean estaActivo, UUID idUsuarioEjecutor);
+
+    /** HU082: agrega al plan el siguiente semestre consecutivo. */
+    void agregarSemestrePlanEstudio(UUID idPlanEstudio, UUID idUsuarioEjecutor);
+
+    /** HU083: quita el ultimo semestre del plan si no tiene asignaturas. */
+    void quitarSemestrePlanEstudio(UUID idPlanEstudio, Integer numeroSemestre, UUID idUsuarioEjecutor);
 }

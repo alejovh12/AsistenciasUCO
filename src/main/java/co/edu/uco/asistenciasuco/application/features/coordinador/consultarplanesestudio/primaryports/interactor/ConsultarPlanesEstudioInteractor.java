@@ -1,6 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.consultarplanesestudio.primaryports.interactor;
 
-import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.PlanEstudioDTO;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultarplanesestudio.primaryports.dto.PlanEstudioDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarplanesestudio.primaryports.ConsultarPlanesEstudioInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarplanesestudio.primaryports.mapper.ConsultarPlanesEstudioMapper;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarplanesestudio.usecase.ConsultarPlanesEstudioUseCase;
