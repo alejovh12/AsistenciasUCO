@@ -92,9 +92,10 @@ Frontend (`SECURITY_PROVIDER=legacy|baseline`, `SECURITY_BASELINE_URL`, `SECURIT
 python -X utf8 -I infra\security-baseline\scripts\e2e_baseline.py --pep-down
 python -X utf8 -I infra\security-baseline\scripts\e2e_identity_binding.py --sql-container <db> --sql-password-file <archivo> [--database <nombre>]
 python -X utf8 -I infra\security-baseline\scripts\e2e_provisioning.py     --sql-container <db> --sql-password-file <archivo> [--database <nombre>]
+python -X utf8 -I infra\security-baseline\scripts\e2e_profile_assignment.py --sql-container <db> --sql-password-file <archivo> [--database <nombre>]
 ```
 
-Los dos últimos crean/alteran usuarios y vínculos, así que **solo** corren contra una base desechable identificada
+Los tres últimos crean/alteran usuarios y vínculos, así que **solo** corren contra una base desechable identificada
 explícitamente (`scripts/e2e_safety.py`); cualquier otro destino se rechaza con código 2 antes de tocar nada. Las tres
 señales deben coincidir: (1) el contenedor SQL lleva la etiqueta `asistencias.e2e.disposable=true`
 (`docker run --label ...`); (2) la base lleva la propiedad extendida `uco.e2e.disposable='true'`, que se fija una sola vez con
@@ -104,6 +105,6 @@ señales deben coincidir: (1) el contenedor SQL lleva la etiqueta `asistencias.e
 desechable por defecto se llama `gestionasistenciadb_e2e` y se obtiene restaurando un `BACKUP ... COPY_ONLY` de la de desarrollo
 en otro contenedor (loopback, login de runtime sin `sa`). Los E2E capturan el estado inicial (usuarios, vínculos, conteo de
 filas por tabla, cuenta de Keycloak), lo restauran sin valores fijos, eliminan la identidad sintética con sus vínculos y
-verifican que no queden residuos, incluso si abortan; el crecimiento de `dbo.AuditoriaEvento` (append-only) se informa como `INFO`.
+verifican que no queden residuos, incluso si abortan (`e2e_profile_assignment.py` usa una identidad sintética nueva y compara las asignaciones VIGENTES del PDP: el PDP no borra usuarios ni historial, solo cierra `validUntil`); el crecimiento de `dbo.AuditoriaEvento` (append-only) se informa como `INFO`.
 La contraseña de `sa` se lee de un archivo fuera de Git y viaja por variable de entorno, no por la línea de comandos.
 Pruebas offline de estas guardas: `python -X utf8 -I -m unittest discover -s infra/security-baseline/scripts -p "test_*.py"`.

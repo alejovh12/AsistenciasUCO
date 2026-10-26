@@ -21,6 +21,7 @@ sys.path.insert(0, HERE)
 os.environ.setdefault("USERPROFILE", tempfile.gettempdir())  # lab_pdp calcula rutas al importarse; no lee archivos
 import e2e_identity_binding as IDENTITY  # noqa: E402
 import e2e_provisioning as PROVISIONING  # noqa: E402
+import e2e_profile_assignment as PROFILES  # noqa: E402
 import e2e_safety as S  # noqa: E402
 
 DOCENTE = "e1f2a3b4-0000-0000-0000-000000000003"
@@ -344,6 +345,46 @@ class ScriptsRefuseUnsafeTargetsTest(unittest.TestCase):
             with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as caught:
                 module.main([])
             self.assertNotEqual(caught.exception.code, 0)
+
+
+class ProfileAssignmentTest(unittest.TestCase):
+    def test_revoked_assignments_are_history_not_grants(self):
+        now = "2026-10-26T18:57:07"
+        self.assertTrue(PROFILES.effective({"validUntil": None}, now))
+        self.assertTrue(PROFILES.effective({}, now))
+        self.assertTrue(PROFILES.effective({"validUntil": "2026-10-26T18:58:00.123456789Z"}, now))
+        self.assertFalse(PROFILES.effective({"validUntil": "2026-10-26T18:57:06.356939792Z"}, now))
+
+    def test_assignment_state_ignores_revoked_rows_and_diff_reports_new_grants(self):
+        rows = {"/api/v1/profiles/p1/assignments": [{"id": "a1", "userId": "u1", "validUntil": None},
+                                                    {"id": "a2", "userId": "u2", "validUntil": "2020-01-01T00:00:00Z"}],
+                "/api/v1/roles/r1/assignments": []}
+        before = PROFILES.assignment_state({"Docencia": "p1"}, {"DOCENTE": "r1"}, lambda path: rows[path])
+        self.assertEqual(before[("profile", "Docencia")], {("a1", "u1")})
+        rows["/api/v1/roles/r1/assignments"] = [{"id": "g1", "userId": "u9"}]
+        after = PROFILES.assignment_state({"Docencia": "p1"}, {"DOCENTE": "r1"}, lambda path: rows[path])
+        self.assertEqual(PROFILES.assignment_diff(before, before), [])
+        self.assertEqual(len(PROFILES.assignment_diff(before, after)), 1)
+
+    def test_expectations_come_from_the_access_catalog_not_from_a_hardcoded_matrix(self):
+        everything_denied = lambda path: "DENY"  # noqa: E731
+        self.assertEqual(PROFILES.mismatches(set(), everything_denied), [])
+        # COORDINADOR también ve /admin/sedes según el catálogo: negarlo es una discrepancia, y permitirlo a DOCENTE también.
+        self.assertTrue(any("/api/v1/admin/sedes" in m for m in PROFILES.mismatches({"COORDINADOR"}, everything_denied)))
+        allow_docente_only = lambda path: "ALLOW" if path == PROFILES.ROUTES["DOCENTE"] else "DENY"  # noqa: E731
+        self.assertEqual(PROFILES.mismatches({"DOCENTE"}, allow_docente_only), [])
+        self.assertTrue(PROFILES.mismatches(set(), allow_docente_only))
+        self.assertTrue(PROFILES.mismatches({"DOCENTE"}, lambda path: "OTHER"))
+
+    def test_pep_outcomes_distinguish_security_denial_from_business_denial(self):
+        self.assertTrue(PROFILES.pep_denied(403, {}))
+        self.assertFalse(PROFILES.pep_denied(403, {"X-Decision-Id": "d"}))  # 403 de negocio tras un ALLOW
+        self.assertTrue(PROFILES.pep_allowed(403, {"X-Decision-Id": "d"}))
+        self.assertFalse(PROFILES.pep_allowed(401, {"X-Decision-Id": "d"}))
+        self.assertFalse(PROFILES.pep_allowed(200, {}))
+
+    def test_script_refuses_the_development_database_before_touching_anything(self):
+        self.assertEqual(ScriptsRefuseUnsafeTargetsTest().run_script(PROFILES), 2)
 
 
 class KeycloakViewTest(unittest.TestCase):

@@ -275,12 +275,12 @@ def residue_report(before, after, tolerated_growth=()):
     return found
 
 
-def restore_and_verify(target, before):
+def restore_and_verify(target, before, tolerated_growth=()):
     """Restaura al estado inicial y devuelve los residuos que persistan (vacío = limpio)."""
     after = capture_state(target)
     for statement in restore_statements(before, after):
         target.sql(statement)
-    return residue_report(before, capture_state(target))
+    return residue_report(before, capture_state(target), tolerated_growth)
 
 
 def referencing_columns(target):
