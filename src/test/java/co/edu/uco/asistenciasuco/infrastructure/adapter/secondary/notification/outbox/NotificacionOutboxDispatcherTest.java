@@ -424,4 +424,54 @@ class NotificacionOutboxDispatcherTest {
 
         verify(repository, atLeastOnce()).depurar(anyInt(), anyInt());
     }
+
+    @Test
+    @DisplayName("BE-D27: start llamado dos veces no recrea hilo")
+    void BE_D27_start_llamado_dos_veces() {
+        dispatcher = new NotificacionOutboxDispatcher(repository, sender, properties, meterRegistry, Clock.systemUTC());
+        dispatcher.start();
+        dispatcher.start();
+        assertTrue(dispatcher.isRunning());
+        dispatcher.stop();
+    }
+
+    @Test
+    @DisplayName("BE-D28: stop llamado dos veces es idempotente")
+    void BE_D28_stop_llamado_dos_veces() {
+        dispatcher = new NotificacionOutboxDispatcher(repository, sender, properties, meterRegistry, Clock.systemUTC());
+        dispatcher.start();
+        dispatcher.stop();
+        dispatcher.stop();
+        assertFalse(dispatcher.isRunning());
+    }
+
+    @Test
+    @DisplayName("BE-D29: lote nulo no lanza excepcion ni procesa")
+    void BE_D29_lote_nulo_no_falla() {
+        when(repository.reservar(anyInt(), any(Duration.class), any())).thenReturn(null);
+        dispatcher = new NotificacionOutboxDispatcher(repository, sender, properties, meterRegistry, Clock.systemUTC());
+        assertDoesNotThrow(() -> dispatcher.ejecutarCiclo());
+    }
+
+    @Test
+    @DisplayName("BE-D30: deserializacion de destinatarios y datos con nulo y blanco")
+    void BE_D30_deserializacion_nulo_y_blanco() throws Exception {
+        final UUID id1 = UUID.randomUUID();
+        final NotificacionReservada res1 = new NotificacionReservada(
+                id1, "TIPO", "Asunto", "Mensaje", null, null, 1, 5, Instant.now(), null, null
+        );
+        final UUID id2 = UUID.randomUUID();
+        final NotificacionReservada res2 = new NotificacionReservada(
+                id2, "TIPO", "Asunto", "Mensaje", "   ", "   ", 1, 5, Instant.now(), null, null
+        );
+
+        when(repository.reservar(anyInt(), any(Duration.class), any()))
+                .thenReturn(List.of(res1, res2))
+                .thenReturn(List.of());
+
+        dispatcher = new NotificacionOutboxDispatcher(repository, sender, properties, meterRegistry, Clock.systemUTC());
+        dispatcher.ejecutarCiclo();
+
+        verify(sender, times(2)).enviar(any(NotificacionPersistida.class));
+    }
 }
