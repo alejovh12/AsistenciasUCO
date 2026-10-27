@@ -62,7 +62,7 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 | [TD-046](#td-046) | Vistas `uv_estudiante_grupo`, `uv_estudiante_identidad`, `uv_usuario` sin documentar en `DB_BASELINE_CONTRACT.md` | **CLOSED (2026-10-07)** — cerrada por la alineación final de la DB; el backend consume el contrato final | no |
 | [TD-047](#td-047) | `USU_001` sin mapeo formal DBCODE (cae en `ERR_DB_UNCLASSIFIED`) | **CLOSED (2026-10-07)** — `USU_001` mapeado y probado | no |
 | [TD-048](#td-048) | `Sesion.nombre` es `nvarchar(50)` en DB pero el backend valida 1..150 (nombres de 51..150 fallarían en persistencia como error técnico) | CLOSED (LB-001B.4B) | no |
-| [TD-049](#td-049) | `/usuarios/perfil` responde 501 | ABIERTA / OUT_OF_GOLDEN_PATH / NON_BLOCKING | no |
+| [TD-049](#td-049) | `PUT /usuarios/perfil` responde 501 (el GET se resolvio en HU006) | PARCIAL / OUT_OF_GOLDEN_PATH / NON_BLOCKING | no |
 | [TD-050](#td-050) | Latencia de reconciliación realtime observada en MV-001 | ABIERTA / NON_BLOCKING | no |
 | [TD-051](#td-051) | Webhook Azure con credencial default funcional insegura | RESUELTA (LB-001D.2) | no |
 | [TD-052](#td-052) | Webhook Azure acepta credencial por URL/query | RESUELTA (LB-001D.2) | no |
@@ -746,7 +746,9 @@ GOLDEN PATH EFFECT:         NONE
   `UsuarioController` dentro de `mvn verify`.
 - **Resolución esperada:** contrato/consumer/DB propios antes de implementar o publicar en OpenAPI.
 - **Bloquea línea base:** no para Golden Path.
-- **Estado:** ABIERTA / OUT_OF_GOLDEN_PATH / NON_BLOCKING.
+- **Estado:** PARCIAL / OUT_OF_GOLDEN_PATH / NON_BLOCKING. El GET quedo resuelto el 2026-10-27 por
+  [HU006](../work-items/HU006-perfil-usuario/CLOSURE.md) (`usp_consultar_perfil_usuario`); el PUT sigue en 501 porque
+  toca la identidad y se coordina con el equipo de identidad (Sergio).
 
 ## TD-050
 

@@ -99,7 +99,7 @@ Ver [LB-003 CLOSURE](../work-items/LB-003-quality-gate-golden-path/CLOSURE.md) y
 | TD-027 | OPEN | bloquea LB-006 segÃºn capacidad modificada |
 | TD-043 | **CLOSED (2026-10-07)** | providers de matrícula, sincronización de usuario y PlanEstudio presentes en la DB final; integración global GREEN |
 | TD-044 | **OPEN / NON_BLOCKING** | 2 skips conocidos fuera de Asistencia; no invalida JPA-01 ni bloquea JPA-02A |
-| TD-049 | OPEN / OUT_OF_GOLDEN_PATH | no bloquea Golden Path |
+| TD-049 | PARCIAL / OUT_OF_GOLDEN_PATH (GET resuelto por HU006; PUT 501) | no bloquea Golden Path |
 | TD-050 | OPEN / NON_BLOCKING | latencia de reconciliaciÃ³n realtime |
 | TD-055 | ABIERTA â LB-008 | JDBC residual en `src/main` (6 archivos tras JPA-06: auditoria TD-010 y soporte de procedimientos JPA-07); bloquea cerrar LB-008 |
 | TD-056 | **CLOSED (2026-10-07)** | cerrada por la alineación final de la DB: garantiza atomicidad de Asistencia + DetalleAsistencia; el Backend consume ese contrato final |
@@ -317,4 +317,5 @@ Work items funcionales fuera de la secuencia LB, integrados en `develop` con CI 
 - [HU108 (planes y malla)](../work-items/HU108-malla-plan-decano/CLOSURE.md) — en `develop`; PENDIENTE de [MV-008](MANUAL_VALIDATION_LEDGER.md).
 - [HU010/HU011 (consulta de reclamos del estudiante)](../work-items/HU010-HU011-consulta-reclamos-estudiante/CLOSURE.md) — en `develop`; PENDIENTE de [MV-008](MANUAL_VALIDATION_LEDGER.md). `DELETE /estudiante/reclamos/{id}` espera TD-059 y HU014 espera TD-060.
 - [HU051 (retiro de estudiante por el docente titular)](../work-items/HU051-retirar-estudiante-grupo/CLOSURE.md) — PR por integrar; PENDIENTE de [MV-008](MANUAL_VALIDATION_LEDGER.md) y de reaprovisionar el PDP con la ruta nueva; aviso real pendiente (TD-066).
+- [HU006 (perfil propio, solo GET)](../work-items/HU006-perfil-usuario/CLOSURE.md) — commits locales en `feature/HU006-perfil-usuario`, sin subir; PENDIENTE de [MV-008](MANUAL_VALIDATION_LEDGER.md). El PUT sigue en 501 (TD-049 parcial).
 - [HU053/HU054/HU055 (solicitudes de ingreso a grupo)](../work-items/HU053-HU054-HU055-solicitudes-ingreso-grupo/CLOSURE.md) — PR por integrar (tabla nueva `SolicitudIngresoGrupo` aprobada por John); PENDIENTE de reaprovisionar el PDP con 4 rutas y de [MV-008](MANUAL_VALIDATION_LEDGER.md).
