@@ -10,7 +10,7 @@ last-reviewed: 2026-10-27
 
 ## Dictamen
 
-PASS (local). Auditor: el mismo agente que implementó (sin independencia); la revisión independiente queda para el PR. Sin push hasta la confirmación de John.
+PASS (local). Auditor: el mismo agente que implementó (sin independencia); la revisión independiente queda para el PR. Rama subida con autorización de John el 2026-10-27; CI remoto en los PR.
 
 ## Comandos ejecutados
 
