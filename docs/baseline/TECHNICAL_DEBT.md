@@ -936,3 +936,11 @@ GOLDEN PATH EFFECT:         NONE
 - **Impacto:** HU129 y HU141 quedan bloqueadas por falta de datos, y HU140 bloqueada en HTTP 501.
 - **Resolución esperada:** Creación formal en base de datos de las tablas físicas `cat_escalafon_docente`, dedicación contractual de docentes y catálogo de sedes universitarias, con sus respectivas claves foráneas.
 - **Bloquea línea base:** No. **Estado:** **OPEN / MEDIUM / DB_OWNER**. **Work item:** [HU133-HU139](../work-items/HU133-HU134-HU135-HU136-HU138-HU139-kpis-admin-datos-reales/VALIDATION.md).
+
+## TD-066
+
+- **Fecha / responsable:** 2026-10-27 / backend-team (HU051). **Clasificación:** INTEGRATION_PENDING_EXTERNAL_COMPONENT. **Prioridad:** MEDIA.
+- **Descripción:** `NotificacionPort` (avisos institucionales por correo, WhatsApp, SMS…) existe en Application, pero el componente de notificaciones del equipo aún no está lanzado. El provider por defecto (`LogNotificacionAdapter`, `@ConditionalOnMissingBean`) solo registra en el log el tipo de aviso, los roles e ids de los destinatarios y los ids de trazabilidad, sin correos, nombres ni texto del mensaje.
+- **Impacto:** El retiro de HU051 se realiza y se audita, pero el estudiante, el docente y el coordinador no reciben el aviso real. Afectará también a HU053-HU055 y HU038 cuando usen el mismo puerto.
+- **Resolución esperada:** Implementar el adaptador del componente institucional de notificaciones (su configuración aporta otro `NotificacionPort` y el de log deja de crearse) y validar la entrega en MV.
+- **Bloquea línea base:** No. **Estado:** **OPEN / MEDIUM / BACKEND**. **Work item:** [HU051](../work-items/HU051-retirar-estudiante-grupo/CLOSURE.md).

@@ -72,6 +72,11 @@ final class DbFailureClassifier {
             case "PER_002" -> CommonErrorCode.VALIDATION_ERROR;
             case "PER_003", "PER_004" -> CommonErrorCode.CONFLICT;
             case "PER_005" -> SecurityErrorCode.FORBIDDEN;
+            // HU051: retiro de un estudiante por el docente titular. RET_001 (grupo inexistente o ajeno) y RET_002
+            // (sin matricula activa) son no encontrado; periodo terminado es conflicto; motivo invalido es validacion.
+            case "RET_001", "RET_002" -> CommonErrorCode.RESOURCE_NOT_FOUND;
+            case "RET_003" -> CommonErrorCode.CONFLICT;
+            case "RET_004" -> CommonErrorCode.VALIDATION_ERROR;
             // FAC_002: el decano ya es titular de otra facultad activa (HU117/HU111).
             case "FAC_002" -> CommonErrorCode.CONFLICT;
             case "VAL_007" -> classifyVal007(operation);
