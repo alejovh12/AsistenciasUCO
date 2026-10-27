@@ -1,0 +1,9 @@
+package co.edu.uco.asistenciasuco.application.features.estudiante.consultarsolicitudesingreso.usecase;
+
+import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsolicitudesingreso.usecase.domain.ConsultarSolicitudesIngresoEstudianteDomain;
+import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsolicitudesingreso.usecase.domain.SolicitudesIngresoEstudiantePaginaDomain;
+
+public interface ConsultarSolicitudesIngresoEstudianteUseCase {
+
+    SolicitudesIngresoEstudiantePaginaDomain execute(ConsultarSolicitudesIngresoEstudianteDomain domain);
+}

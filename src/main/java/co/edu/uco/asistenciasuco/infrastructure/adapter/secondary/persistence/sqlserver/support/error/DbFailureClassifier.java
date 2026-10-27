@@ -77,6 +77,12 @@ final class DbFailureClassifier {
             case "RET_001", "RET_002" -> CommonErrorCode.RESOURCE_NOT_FOUND;
             case "RET_003" -> CommonErrorCode.CONFLICT;
             case "RET_004" -> CommonErrorCode.VALIDATION_ERROR;
+            // HU053-HU055: solicitudes de ingreso a grupo. SIG_001 no es estudiante; SIG_002/SIG_007 no encontrado (las
+            // solicitudes ajenas son indistinguibles); periodo, duplicados, ya resuelta o sin cupo son conflicto.
+            case "SIG_001" -> SecurityErrorCode.FORBIDDEN;
+            case "SIG_002", "SIG_007" -> CommonErrorCode.RESOURCE_NOT_FOUND;
+            case "SIG_003", "SIG_004", "SIG_005", "SIG_008", "SIG_013" -> CommonErrorCode.CONFLICT;
+            case "SIG_009", "SIG_010" -> CommonErrorCode.VALIDATION_ERROR;
             // FAC_002: el decano ya es titular de otra facultad activa (HU117/HU111).
             case "FAC_002" -> CommonErrorCode.CONFLICT;
             case "VAL_007" -> classifyVal007(operation);

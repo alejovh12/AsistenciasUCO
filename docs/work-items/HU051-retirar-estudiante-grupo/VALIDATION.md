@@ -20,7 +20,7 @@ PASS (local). Auditor: el mismo agente que implementó (sin independencia); la r
 | 2026-10-27, DB, SQL Server 2022 desechable (réplica del job `DB Quality Gate CI/CD`) | freeze Verify + `deploy_schema.ps1` + `prepare_lb004d_fixture.ps1` + `test_summary.ps1` | 0 | `FREEZE_EXIT=0`; `TEST_PASS:R-01..R-09`; `FAILED=0`; `DB GATE PASS` | log local |
 | 2026-10-27, backend | pruebas focales (UC, RP, CT, CL, NT, `AccessCatalogConsistencyTest`, `JpaRepositoryBeanUniquenessTest`) | 0 | 32 pruebas OK | log local |
 | 2026-10-27, backend | `./mvnw -B -ntp clean verify` | 0 | `Tests run: 2543, Failures: 0, Errors: 0`; `All coverage checks have been met` (JaCoCo + ArchUnit) | log local |
-| 2026-10-27, frontend | `npm run test:ci` | 0 | `TOTAL: 1234 SUCCESS` (antes 1227; +7 = RT-01..RT-07) | log local |
+| 2026-10-27, frontend | `npm run test:ci` | 0 | `TOTAL: 1234 SUCCESS` (antes 1227; +7 = RT-01..RT-07); tras la revisión de SonarCloud del PR #17: `TOTAL: 1241 SUCCESS` (+RT-08..RT-14) y 100 % de cobertura en código nuevo; RT-10 detectó que el hub no propagaba "Retirar" (corregido en el frontend, commit `df925f2`) | log local |
 | idem | `npm run coverage:realtime:check` / `ng build --configuration=production` | 0 / 0 | `PASSED` / bundle OK | log local |
 
 ## Checks

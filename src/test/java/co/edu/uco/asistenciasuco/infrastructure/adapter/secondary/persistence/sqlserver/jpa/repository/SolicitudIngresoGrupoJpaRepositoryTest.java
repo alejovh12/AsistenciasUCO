@@ -94,7 +94,7 @@ class SolicitudIngresoGrupoJpaRepositoryTest {
 
     @Test
     void RG04_bandeja_del_docente_mapea_fechas_utc_y_cupo() {
-        when(query.getResultList()).thenReturn(List.<Object>of(new Object[]{SOLICITUD, UUID.randomUUID(), "Beto Qa", 970005302, "E",
+        when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{SOLICITUD, UUID.randomUUID(), "Beto Qa", 970005302, "E",
                 "en espera", Timestamp.valueOf(LocalDateTime.of(2026, 10, 27, 13, 0)), null, null, 1, 30, 0, 4}));
 
         final var filas = repository.consultarSolicitudesGrupo(GRUPO, "E", 1, 10, ACTOR);
@@ -113,14 +113,14 @@ class SolicitudIngresoGrupoJpaRepositoryTest {
 
     @Test
     void RG05_mis_solicitudes_y_destinatarios() {
-        when(query.getResultList()).thenReturn(List.<Object>of(new Object[]{SOLICITUD, GRUPO, 1, "Grupo 1", UUID.randomUUID(),
+        when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{SOLICITUD, GRUPO, 1, "Grupo 1", UUID.randomUUID(),
                 "Calculo", "Doc", "R", "rechazada", LocalDateTime.of(2026, 10, 27, 13, 0),
                 LocalDateTime.of(2026, 10, 27, 14, 0), "Motivo", 1}));
         final var mias = repository.consultarSolicitudesEstudiante(null, 1, 10, ACTOR);
         assertEquals("Motivo", mias.getFirst().motivoRechazo());
         assertEquals(Instant.parse("2026-10-27T14:00:00Z"), mias.getFirst().fechaResolucionUtc());
 
-        when(query.getResultList()).thenReturn(List.<Object>of(new Object[]{"DOCENTE", ACTOR, "Doc", "d@uco.edu.co", GRUPO, 1, "Grupo 1", "Calculo"}));
+        when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{"DOCENTE", ACTOR, "Doc", "d@uco.edu.co", GRUPO, 1, "Grupo 1", "Calculo"}));
         final var destinatarios = repository.consultarDestinatarios(SOLICITUD, ACTOR);
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_consultar_destinatarios_solicitud_ingreso_grupo"));
         assertEquals("DOCENTE", destinatarios.getFirst().rol());

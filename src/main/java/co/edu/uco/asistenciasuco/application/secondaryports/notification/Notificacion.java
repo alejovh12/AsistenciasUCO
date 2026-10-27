@@ -19,6 +19,12 @@ public record Notificacion(
 
     /** HU051: el docente titular retira a un estudiante del grupo. */
     public static final String TIPO_RETIRO_ESTUDIANTE_GRUPO = "RETIRO_ESTUDIANTE_GRUPO";
+    /** HU053: un estudiante solicito el ingreso a un grupo (aviso al docente titular). */
+    public static final String TIPO_SOLICITUD_INGRESO_REGISTRADA = "SOLICITUD_INGRESO_REGISTRADA";
+    /** HU053/HU054/HU055: el docente acepto, dejo en espera o rechazo la solicitud (aviso al estudiante). */
+    public static final String TIPO_SOLICITUD_INGRESO_RESUELTA = "SOLICITUD_INGRESO_RESUELTA";
+    /** HU055: el estudiante retiro su solicitud (aviso al docente titular). */
+    public static final String TIPO_SOLICITUD_INGRESO_RETIRADA = "SOLICITUD_INGRESO_RETIRADA";
 
     public Notificacion {
         Objects.requireNonNull(tipo, "El tipo de notificacion es obligatorio.");

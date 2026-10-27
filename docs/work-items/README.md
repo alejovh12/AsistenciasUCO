@@ -52,3 +52,4 @@ Ejemplo de work item técnico cerrado: [TECH-001](TECH-001-restaurar-gate-arquit
 - [HU108 (planes y malla)](HU108-malla-plan-decano/CLOSURE.md): malla del plan para el decano. En `develop`; PENDIENTE de MV-008.
 - [HU010/HU011 (consulta)](HU010-HU011-consulta-reclamos-estudiante/CLOSURE.md): "Mis Reclamos" del estudiante (`GET /api/v1/estudiante/reclamos`). En `develop`; PENDIENTE de MV-008.
 - [HU051 (retiro)](HU051-retirar-estudiante-grupo/CLOSURE.md): el docente titular retira a un estudiante de su grupo con motivo y aviso. PR por integrar; PENDIENTE de MV-008.
+- [HU053/HU054/HU055 (solicitudes de ingreso)](HU053-HU054-HU055-solicitudes-ingreso-grupo/CLOSURE.md): el estudiante solicita, el docente acepta (con cupo) o deja en espera / rechaza con motivo, el estudiante retira. Local, apilado sobre HU051; PENDIENTE de MV-008.
