@@ -49,4 +49,5 @@ Ejemplo de work item técnico cerrado: [TECH-001](TECH-001-restaurar-gate-arquit
 - [HU096-HU098](HU096-HU097-HU098-periodos-academicos/CLOSURE.md): períodos académicos solo por el Administrador. En `develop`; PENDIENTE de MV-008.
 - [HU064/HU060/HU061](HU064-HU060-HU061-consultas-coordinador/CLOSURE.md): consultas del coordinador sobre su programa. En `develop`; PENDIENTE de MV-008.
 - [HU104/HU105/HU109/HU119/HU145](HU104-HU105-HU109-HU119-HU145-lecturas-decano/CLOSURE.md): consultas del decano sobre su facultad. En `develop`; PENDIENTE de MV-008.
-- [HU108 (planes y malla)](HU108-malla-plan-decano/CLOSURE.md): malla del plan para el decano. PR por integrar; PENDIENTE de MV-008.
+- [HU108 (planes y malla)](HU108-malla-plan-decano/CLOSURE.md): malla del plan para el decano. En `develop`; PENDIENTE de MV-008.
+- [HU010/HU011 (consulta)](HU010-HU011-consulta-reclamos-estudiante/CLOSURE.md): "Mis Reclamos" del estudiante (`GET /api/v1/estudiante/reclamos`). PR por integrar; PENDIENTE de MV-008.

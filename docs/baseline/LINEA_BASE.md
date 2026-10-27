@@ -314,4 +314,5 @@ Work items funcionales fuera de la secuencia LB, integrados en `develop` con CI 
 
 - [HU081-HU083](../work-items/HU081-HU082-HU083-plan-estudio-estado-semestres/CLOSURE.md) — DONE.
 - [HU096-HU098](../work-items/HU096-HU097-HU098-periodos-academicos/CLOSURE.md), [HU064/HU060/HU061](../work-items/HU064-HU060-HU061-consultas-coordinador/CLOSURE.md) y [HU104/HU105/HU109/HU119/HU145](../work-items/HU104-HU105-HU109-HU119-HU145-lecturas-decano/CLOSURE.md) — PENDIENTE de la validación manual [MV-008](MANUAL_VALIDATION_LEDGER.md).
-- [HU108 (planes y malla)](../work-items/HU108-malla-plan-decano/CLOSURE.md) — PR por integrar.
+- [HU108 (planes y malla)](../work-items/HU108-malla-plan-decano/CLOSURE.md) — en `develop`; PENDIENTE de [MV-008](MANUAL_VALIDATION_LEDGER.md).
+- [HU010/HU011 (consulta de reclamos del estudiante)](../work-items/HU010-HU011-consulta-reclamos-estudiante/CLOSURE.md) — PR por integrar; PENDIENTE de [MV-008](MANUAL_VALIDATION_LEDGER.md). `DELETE /estudiante/reclamos/{id}` espera TD-059 y HU014 espera TD-060.

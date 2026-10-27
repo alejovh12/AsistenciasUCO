@@ -10,7 +10,7 @@ last-reviewed: 2026-10-26
 
 ## Dictamen
 
-PASS (local). Auditor: el mismo agente que implementó (sin independencia); la revisión independiente queda para el PR. CI remoto pendiente hasta que John autorice el push.
+PASS (local, revalidado tras integrar `develop` el 2026-10-27). Auditor: el mismo agente que implementó (sin independencia); la revisión independiente queda para el PR. Ramas subidas con autorización de John; CI remoto en los PR.
 
 ## Comandos ejecutados
 
@@ -23,6 +23,10 @@ PASS (local). Auditor: el mismo agente que implementó (sin independencia); la r
 | 2026-10-26, frontend | `npm run test:ci` | 0 | `TOTAL: 1093 SUCCESS` (antes 1085; +8 = SC-01..SC-08) | log local |
 | idem | `npm run coverage:realtime:check` | 0 | líneas 95.06 %, ramas 84.52 %, `PASSED` | log local |
 | idem | `npx ng build --configuration=production` | 0 | `Application bundle generation complete` | log local |
+| 2026-10-27, tras rebase sobre `develop` con Security Baseline 0.1.7 | backend `clean verify` / DB gate / frontend `test:ci` + coverage + build | 0 | backend 2318 tests; DB `FAILED=0`; frontend 1148 tests | conteo JPA 41→42; `GET /estudiante/reclamos` ya estaba en `infra/security-baseline/access-catalog.json` |
+| 2026-10-27, tras `git merge origin/develop` (indicadores: DB #50, backend #46, frontend #13) | backend `./mvnw -B -ntp clean verify` | 0 | `Tests run: 2517, Failures: 0, Errors: 0`; `All coverage checks have been met` (JaCoCo + ArchUnit) | conteo JPA 44 (develop) → 45 |
+| idem | DB: freeze Verify + deploy + fixture + `test_summary.ps1` | 0 | `FREEZE_EXIT=0`, `TEST_PASS:TEST_CONSULTAS_RECLAMOS_ESTUDIANTE`, `FAILED=0`, `DB GATE PASS` | exclusiones READ_QUERY_RESULTSET de ambos lados en `test_contract_closure.sql` |
+| idem | frontend `npm run test:ci` + `coverage:realtime:check` + `ng build --configuration=production` | 0 | `TOTAL: 1227 SUCCESS`, coverage `PASSED`, build OK | sin conflictos |
 
 ## Checks
 
@@ -51,5 +55,5 @@ Commits RED: backend `c16cb54`, DB `e40edcf`, frontend `f01f953`. Ninguna prueba
 
 ## Evidencias remotas/manuales pendientes
 
-- GitHub Actions de los 3 repos tras el push (pendiente de autorización de John).
+- GitHub Actions de los 3 PR hacia `develop`.
 - MV-008: estudiante real ve sus solicitudes y descarga su soporte; otro estudiante no las ve.

@@ -10,7 +10,7 @@ last-reviewed: 2026-10-26
 
 ## Resultado
 
-DONE localmente (gates locales verdes, ver [VALIDATION.md](VALIDATION.md)). Pendiente: push/PR (requiere autorización de John), CI remoto y MV-008.
+DONE (gates locales verdes y revalidados tras integrar `develop`, ver [VALIDATION.md](VALIDATION.md)). Ramas subidas; pendiente: merge de los PR (DB primero), CI remoto y MV-008.
 
 ## Alcance entregado y decisiones
 
@@ -35,7 +35,7 @@ ADR-LB004D-001 (soportes y bandeja docente): no modificado; este trabajo lo cons
 
 ## Elementos pendientes y bloqueos
 
-Push y PR de los 3 repos (DB, backend, frontend) cuando John confirme. Infra no se tocó.
+PR de los 3 repos hacia `develop` (orden: DB → backend → frontend). Infra no se tocó.
 
 ## Cambios fuera de alcance
 

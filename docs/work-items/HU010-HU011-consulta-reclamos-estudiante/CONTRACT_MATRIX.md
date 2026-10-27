@@ -14,9 +14,9 @@ Formulario del [protocolo de alineación contractual](../../integration/CONTRACT
 
 | Sistema | Repo/versión | Archivo/objeto | Hash/commit | Autoridad |
 |---|---|---|---|---|
-| DB | gestion-asistencia-db `feature/HU010-HU011-consulta-reclamos-estudiante` | `usp_consultar_solicitudes_revision_estudiante` | commit local (sin push) | OWNER |
-| Backend | AsistenciasUCO `feature/HU010-HU011-consulta-reclamos-estudiante` | `SolicitudRevisionEstudianteJpaRepository`, `EstudiantePortalController#consultarReclamos` | commit local (sin push) | CONSUMER / PROVIDER HTTP |
-| Frontend | AsistenciasUCO-Frontend `feature/HU010-HU011-consulta-reclamos-estudiante` | `AttendanceClaimService#getReclamosEstudiante`, `StudentClaimsComponent` | commit local (sin push) | CONSUMER |
+| DB | gestion-asistencia-db `feature/HU010-HU011-consulta-reclamos-estudiante` | `usp_consultar_solicitudes_revision_estudiante` | rama `feature/HU010-HU011-consulta-reclamos-estudiante` (PR a `develop`) | OWNER |
+| Backend | AsistenciasUCO `feature/HU010-HU011-consulta-reclamos-estudiante` | `SolicitudRevisionEstudianteJpaRepository`, `EstudiantePortalController#consultarReclamos` | rama `feature/HU010-HU011-consulta-reclamos-estudiante` (PR a `develop`) | CONSUMER / PROVIDER HTTP |
+| Frontend | AsistenciasUCO-Frontend `feature/HU010-HU011-consulta-reclamos-estudiante` | `AttendanceClaimService#getReclamosEstudiante`, `StudentClaimsComponent` | rama `feature/HU010-HU011-consulta-reclamos-estudiante` (PR a `develop`) | CONSUMER |
 
 ## Matriz
 
