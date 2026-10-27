@@ -128,6 +128,75 @@ class RbacSecurityFilterChainTest {
     // --- /api/v1/coordinador/docentes/** : directorio y vinculacion del programa (HU062/HU091) ---
 
     @Test
+    void coordinador_indicadores_sin_token_recibe_401() throws Exception {
+        for (final String ruta : INDICADORES_COORDINADOR) {
+            mockMvc.perform(get(ruta)).andExpect(status().isUnauthorized());
+        }
+    }
+
+    @Test
+    void coordinador_indicadores_solo_coordinador_y_administrador_pasan_el_filtro() throws Exception {
+        for (final String ruta : INDICADORES_COORDINADOR) {
+            for (final String rol : new String[]{"DOCENTE", "ESTUDIANTE"}) {
+                mockMvc.perform(get(ruta).header(HttpHeaders.AUTHORIZATION, bearer(rol))).andExpect(status().isForbidden());
+            }
+            for (final String rol : new String[]{"COORDINADOR", "ADMINISTRADOR"}) {
+                mockMvc.perform(get(ruta).header(HttpHeaders.AUTHORIZATION, bearer(rol))).andExpect(status().isOk());
+            }
+        }
+    }
+
+    @Test
+    void decano_indicadores_sin_token_recibe_401() throws Exception {
+        for (final String ruta : INDICADORES_DECANO) {
+            mockMvc.perform(get(ruta)).andExpect(status().isUnauthorized());
+        }
+    }
+
+    @Test
+    void decano_indicadores_coordinador_docente_y_estudiante_reciben_403_y_administrador_pasa_el_filtro() throws Exception {
+        for (final String ruta : INDICADORES_DECANO) {
+            for (final String rol : new String[]{"COORDINADOR", "DOCENTE", "ESTUDIANTE"}) {
+                mockMvc.perform(get(ruta).header(HttpHeaders.AUTHORIZATION, bearer(rol))).andExpect(status().isForbidden());
+            }
+            mockMvc.perform(get(ruta).header(HttpHeaders.AUTHORIZATION, bearer("ADMINISTRADOR"))).andExpect(status().isOk());
+        }
+    }
+
+    @Test
+    void admin_indicadores_sin_token_recibe_401() throws Exception {
+        for (final String ruta : INDICADORES_ADMIN) {
+            mockMvc.perform(get(ruta)).andExpect(status().isUnauthorized());
+        }
+    }
+
+    @Test
+    void admin_indicadores_docente_estudiante_y_coordinador_reciben_403_y_administrador_pasa_el_filtro() throws Exception {
+        for (final String ruta : INDICADORES_ADMIN) {
+            for (final String rol : new String[]{"COORDINADOR", "DOCENTE", "ESTUDIANTE"}) {
+                mockMvc.perform(get(ruta).header(HttpHeaders.AUTHORIZATION, bearer(rol))).andExpect(status().isForbidden());
+            }
+            mockMvc.perform(get(ruta).header(HttpHeaders.AUTHORIZATION, bearer("ADMINISTRADOR"))).andExpect(status().isOk());
+        }
+    }
+
+    private static final String[] INDICADORES_ADMIN = {
+            "/api/v1/admin/indicadores",
+            "/api/v1/admin/comparativa-facultades",
+            "/api/v1/admin/tendencia-ausentismo"};
+
+    private static final String[] INDICADORES_DECANO = {
+            "/api/v1/decano/indicadores",
+            "/api/v1/decano/comparativa-programas",
+            "/api/v1/decano/aforo-grupos"};
+
+    private static final String[] INDICADORES_COORDINADOR = {
+            "/api/v1/coordinador/indicadores",
+            "/api/v1/coordinador/alertas-tempranas",
+            "/api/v1/coordinador/estudiantes/00000000-0000-0000-0000-000000000001/bitacora",
+            "/api/v1/coordinador/estudiantes/00000000-0000-0000-0000-000000000001/ficha"};
+
+    @Test
     void coordinador_docentes_sin_token_recibe_401() throws Exception {
         mockMvc.perform(get("/api/v1/coordinador/docentes")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/coordinador/docentes/candidatos?busqueda=abc")).andExpect(status().isUnauthorized());
@@ -592,6 +661,22 @@ class RbacSecurityFilterChainTest {
 
         @GetMapping("/api/v1/docentes")
         String docentes() {
+            return "ok";
+        }
+
+        @GetMapping({"/api/v1/coordinador/indicadores", "/api/v1/coordinador/alertas-tempranas",
+                "/api/v1/coordinador/estudiantes/{id}/bitacora", "/api/v1/coordinador/estudiantes/{id}/ficha"})
+        String indicadoresCoordinador() {
+            return "ok";
+        }
+
+        @GetMapping({"/api/v1/admin/indicadores", "/api/v1/admin/comparativa-facultades", "/api/v1/admin/tendencia-ausentismo"})
+        String indicadoresAdmin() {
+            return "ok";
+        }
+
+        @GetMapping({"/api/v1/decano/indicadores", "/api/v1/decano/comparativa-programas", "/api/v1/decano/aforo-grupos"})
+        String indicadoresDecano() {
             return "ok";
         }
 

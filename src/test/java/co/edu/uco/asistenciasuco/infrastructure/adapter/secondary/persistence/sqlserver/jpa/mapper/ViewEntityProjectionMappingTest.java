@@ -29,8 +29,8 @@ class ViewEntityProjectionMappingTest {
 
     @Test
     void area_e_institucion() {
-        assertEquals(new AreaProjection(A, "Ciencias Basicas"), AcademicViewJpaProjectionMapper.toArea(
-                HydratedViewRow.of(UvAreaEntity.class, cols("id", A, "nombre", "Ciencias Basicas"))));
+        assertEquals(new AreaProjection(A, "CBA", "Ciencias Basicas", true), AcademicViewJpaProjectionMapper.toArea(
+                HydratedViewRow.of(UvAreaEntity.class, cols("id", A, "codigo", "CBA", "nombre", "Ciencias Basicas", "estaActivaArea", true))));
 
         assertEquals(new InstitucionProjection(A, "UCO", true, "Activa"),
                 AcademicViewJpaProjectionMapper.toInstitucion(HydratedViewRow.of(UvInstitucionEntity.class,

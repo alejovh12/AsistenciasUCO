@@ -50,15 +50,18 @@ function Invoke-Sql([string]$query) {
 }
 
 $sufijo = ([guid]::NewGuid().ToString('N')).Substring(0, 8)
-$u1 = [guid]::NewGuid(); $u2 = [guid]::NewGuid(); $c1 = [guid]::NewGuid(); $c2 = [guid]::NewGuid()
+$u1 = [guid]::NewGuid(); $u2 = [guid]::NewGuid(); $u3 = [guid]::NewGuid(); $c1 = [guid]::NewGuid(); $c2 = [guid]::NewGuid(); $c3 = [guid]::NewGuid()
 $programaId = $null
 try {
     Invoke-Sql @"
 DECLARE @tid UNIQUEIDENTIFIER = (SELECT TOP 1 id FROM dbo.TipoIdentificacion);
+DECLARE @fac UNIQUEIDENTIFIER = (SELECT TOP 1 f.id FROM dbo.Facultad f INNER JOIN dbo.Decano d ON d.id = f.decano INNER JOIN dbo.Usuario u ON u.id = d.usuario WHERE u.correo = N'$Decano');
 INSERT INTO dbo.Usuario (id, tipoIdIdentificacion, numeroIdentificacion, primerApellido, segundoApellido, primerNombre, segundoNombre, correo, correoConfirmado, estado, password)
 VALUES ('$u1', @tid, 400000000 + ABS(CHECKSUM(NEWID()) % 9999999), N'E2E', N'Uno', N'Coord', N'X', N'e2e.$sufijo.1@qa.test', 1, 1, N'x'),
-       ('$u2', @tid, 410000000 + ABS(CHECKSUM(NEWID()) % 9999999), N'E2E', N'Dos', N'Coord', N'X', N'e2e.$sufijo.2@qa.test', 1, 1, N'x');
-INSERT INTO dbo.Coordinador (id, usuario) VALUES ('$c1', '$u1'), ('$c2', '$u2');
+       ('$u2', @tid, 410000000 + ABS(CHECKSUM(NEWID()) % 9999999), N'E2E', N'Dos', N'Coord', N'X', N'e2e.$sufijo.2@qa.test', 1, 1, N'x'),
+       ('$u3', @tid, 420000000 + ABS(CHECKSUM(NEWID()) % 9999999), N'E2E', N'Tres', N'Coord', N'X', N'e2e.$sufijo.3@qa.test', 1, 1, N'x');
+INSERT INTO dbo.Coordinador (id, usuario, facultad) VALUES ('$c1', '$u1', @fac), ('$c2', '$u2', @fac);
+INSERT INTO dbo.Coordinador (id, usuario, facultad) SELECT '$c3', '$u3', (SELECT TOP 1 id FROM dbo.Facultad WHERE id <> @fac);   -- HU121/HU122: coordinador libre de la facultad del decano
 "@ | Out-Null
 
     $tokenDecano = Get-Token $Decano
@@ -90,6 +93,8 @@ INSERT INTO dbo.Coordinador (id, usuario) VALUES ('$c1', '$u1'), ('$c2', '$u2');
     Expect 'HU076-coordinador-ocupado-409' ($ocupado.Status -eq 409) "status=$($ocupado.Status)"
     $tipoMalo = Invoke-Api POST '/decano/programas' $tokenDecano @{ nombre = "Tipo $sufijo"; idTipoPrograma = [guid]::NewGuid().ToString(); idCoordinador = $c2.ToString() }
     Expect 'HU076-tipo-invalido-400' ($tipoMalo.Status -eq 400) "status=$($tipoMalo.Status)"
+    $otraFac = Invoke-Api POST '/decano/programas' $tokenDecano @{ nombre = "Otra facultad $sufijo"; idTipoPrograma = $tipoId; idCoordinador = $c3.ToString() }
+    Expect 'HU076-coordinador-de-otra-facultad-409' ($otraFac.Status -eq 409) "status=$($otraFac.Status)"
     $sinNombre = Invoke-Api POST '/decano/programas' $tokenDecano @{ nombre = ' '; idTipoPrograma = $tipoId; idCoordinador = $c2.ToString() }
     Expect 'HU076-cuerpo-invalido-400' ($sinNombre.Status -eq 400) "status=$($sinNombre.Status)"
 
@@ -131,9 +136,9 @@ INSERT INTO dbo.Coordinador (id, usuario) VALUES ('$c1', '$u1'), ('$c2', '$u2');
 }
 finally {
     Invoke-Sql @"
-DELETE FROM dbo.Programa WHERE coordinador IN ('$c1', '$c2');
-DELETE FROM dbo.Coordinador WHERE id IN ('$c1', '$c2');
-DELETE FROM dbo.Usuario WHERE id IN ('$u1', '$u2');
+DELETE FROM dbo.Programa WHERE coordinador IN ('$c1', '$c2', '$c3');
+DELETE FROM dbo.Coordinador WHERE id IN ('$c1', '$c2', '$c3');
+DELETE FROM dbo.Usuario WHERE id IN ('$u1', '$u2', '$u3');
 "@ | Out-Null
     Write-Host 'Fixtures E2E eliminados.'
 }

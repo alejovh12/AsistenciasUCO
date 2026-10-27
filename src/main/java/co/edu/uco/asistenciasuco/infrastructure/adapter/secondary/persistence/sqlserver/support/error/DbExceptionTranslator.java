@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error;
 
 import co.edu.uco.asistenciasuco.application.features.asistencia.exception.AsistenciaErrorCode;
+import co.edu.uco.asistenciasuco.application.features.admin.exception.CatalogoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.decano.exception.CoordinadorErrorCode;
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
@@ -43,6 +44,8 @@ public final class DbExceptionTranslator {
             GrupoErrorCode.ERR_GRUPO_NO_EXISTE,
             TipoIdentificacionErrorCode.ERR_TIPO_IDENTIFICACION_NO_EXISTE,
             SesionErrorCode.ERR_SESION_NO_EXISTE,
+            CatalogoErrorCode.TPR_001,
+            CatalogoErrorCode.ARE_001,
             CommonErrorCode.RESOURCE_NOT_FOUND
     );
     private static final Set<ErrorDefinition> CONFLICT_CODES = Set.of(
@@ -59,6 +62,8 @@ public final class DbExceptionTranslator {
             DocenteErrorCode.ERR_DOCENTE_INACTIVO,
             DocenteErrorCode.ERR_DOCENTE_YA_REGISTRADO,
             CoordinadorErrorCode.COO_001,
+            CatalogoErrorCode.TPR_002,
+            CatalogoErrorCode.ARE_002,
             DocenteErrorCode.ERR_PERSONA_YA_REGISTRADA,
             DocenteErrorCode.ERR_DOCENTE_YA_VINCULADO_PROGRAMA,
             DocenteErrorCode.ERR_DOCENTE_SIN_VINCULO_ACTIVO,
