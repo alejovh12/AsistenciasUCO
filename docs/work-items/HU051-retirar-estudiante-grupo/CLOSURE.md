@@ -10,7 +10,7 @@ last-reviewed: 2026-10-27
 
 ## Resultado
 
-DONE localmente (gates locales verdes, ver [VALIDATION.md](VALIDATION.md)). Pendiente: push/PR (requiere confirmación de John), CI remoto, reaprovisionar el PDP con la ruta nueva y MV-008.
+DONE (gates locales verdes, ver [VALIDATION.md](VALIDATION.md)). Rama subida; pendiente: merge de los PR (DB → backend → frontend), CI remoto, reaprovisionar el PDP con la ruta nueva y MV-008.
 
 ## Alcance entregado y decisiones
 
@@ -34,7 +34,7 @@ Ninguno nuevo.
 ## Elementos pendientes y bloqueos
 
 - Reaprovisionar el PDP del Security Baseline con la fila nueva del catálogo (Alejo).
-- Push y PR de DB, backend y frontend cuando John confirme (orden: DB → backend → frontend).
+- PR de DB, backend y frontend hacia `develop` (orden: DB → backend → frontend).
 
 ## Cambios fuera de alcance
 

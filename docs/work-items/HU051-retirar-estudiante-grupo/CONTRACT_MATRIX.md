@@ -14,9 +14,9 @@ Formulario del [protocolo de alineación contractual](../../integration/CONTRACT
 
 | Sistema | Repo/versión | Archivo/objeto | Hash/commit | Autoridad |
 |---|---|---|---|---|
-| DB | gestion-asistencia-db `feature/HU051-retirar-estudiante-grupo` | `usp_retirar_estudiante_grupo`, `usp_consultar_destinatarios_retiro_estudiante_grupo` | commit local (sin push) | OWNER |
-| Backend | AsistenciasUCO `feature/HU051-retirar-estudiante-grupo` | `RetiroEstudianteGrupoJpaRepository`, `DocenteGrupoEstudianteController`, `access-catalog.json` | commit local (sin push) | CONSUMER / PROVIDER HTTP |
-| Frontend | AsistenciasUCO-Frontend `feature/HU051-retirar-estudiante-grupo` | `GroupService.retirarEstudiante`, `TeacherRetiroEstudianteModalComponent` | commit local (sin push) | CONSUMER |
+| DB | gestion-asistencia-db `feature/HU051-retirar-estudiante-grupo` | `usp_retirar_estudiante_grupo`, `usp_consultar_destinatarios_retiro_estudiante_grupo` | rama `feature/HU051-retirar-estudiante-grupo` (PR a `develop`) | OWNER |
+| Backend | AsistenciasUCO `feature/HU051-retirar-estudiante-grupo` | `RetiroEstudianteGrupoJpaRepository`, `DocenteGrupoEstudianteController`, `access-catalog.json` | rama `feature/HU051-retirar-estudiante-grupo` (PR a `develop`) | CONSUMER / PROVIDER HTTP |
+| Frontend | AsistenciasUCO-Frontend `feature/HU051-retirar-estudiante-grupo` | `GroupService.retirarEstudiante`, `TeacherRetiroEstudianteModalComponent` | rama `feature/HU051-retirar-estudiante-grupo` (PR a `develop`) | CONSUMER |
 
 ## Matriz
 
