@@ -1,6 +1,10 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.identidad.accesocuenta.AccesoCuentaService;
 import co.edu.uco.asistenciasuco.application.features.identidad.sincronizarcuenta.SincronizarCuentaInstitucionalService;
+import co.edu.uco.asistenciasuco.application.secondaryports.security.AccessProfilePort;
+import co.edu.uco.asistenciasuco.application.secondaryports.security.ExternalIdentityLinkPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.UsuarioSincronizacionIdentidadPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.identity.drift.MetricsUsuarioSincronizacionIdentidadAdapter;
@@ -26,5 +30,17 @@ public class IdentidadWiringConfiguration {
             final UsuarioSincronizacionIdentidadPort usuarioSincronizacionIdentidadPort
     ) {
         return new SincronizarCuentaInstitucionalService(identityProviderPort, usuarioSincronizacionIdentidadPort);
+    }
+
+    @Bean
+    AccesoCuentaService accesoCuentaService(
+            final InstitutionalScopePort institutionalScopePort,
+            final IdentityProviderPort identityProviderPort,
+            final AccessProfilePort accessProfilePort,
+            final UsuarioSincronizacionIdentidadPort usuarioSincronizacionIdentidadPort,
+            final ExternalIdentityLinkPort externalIdentityLinkPort
+    ) {
+        return new AccesoCuentaService(institutionalScopePort, identityProviderPort, accessProfilePort,
+                usuarioSincronizacionIdentidadPort, externalIdentityLinkPort);
     }
 }

@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.infrastructure.config.security;
 
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.InstitutionalJwtAuthenticationConverter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.contract.JwtClaimsExtractor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,7 +29,7 @@ import java.util.List;
  * no importa nada de {@code keycloak} ni conoce cómo un proveedor concreto estructura sus
  * claims. Depende únicamente de {@link JwtDecoder} y {@link JwtClaimsExtractor}, ambos
  * registrados por el Composition Root de seguridad según
- * {@code app.adapters.security.provider} (hoy {@code KeycloakSecurityAdapterConfiguration}).
+ * {@code app.adapters.security.provider} (legacy o Security Baseline).
  */
 @Configuration
 @EnableWebSecurity
@@ -47,24 +48,6 @@ public class SecurityConfig {
     @Value("${app.security.azure-events.webhook-token:}")
     private String azureWebhookToken;
 
-    @Value("${security.pep.enforcement.enabled:false}")
-    private boolean pepEnforcementEnabled;
-
-    @Value("${security.pep.enforcement.pep-url:http://localhost:18081}")
-    private String pepUrl;
-
-    @Value("${security.pep.enforcement.application-name:asistencias-backend}")
-    private String pepApplicationName;
-
-    @Value("${security.pep.enforcement.environment:local}")
-    private String pepEnvironment;
-
-    @Value("${security.pep.enforcement.application-credential:}")
-    private String pepApplicationCredential;
-
-    @Value("${security.pep.enforcement.public-paths:/actuator/health,/swagger-ui/**,/v3/api-docs/**}")
-    private String pepPublicPaths;
-
     @Bean
     public InstitutionalJwtAuthenticationConverter institutionalJwtAuthenticationConverter(
             final JwtClaimsExtractor jwtClaimsExtractor
@@ -79,7 +62,8 @@ public class SecurityConfig {
             final JwtDecoder jwtDecoder,
             final InstitutionalJwtAuthenticationConverter institutionalJwtAuthenticationConverter,
             final AuthenticationEntryPoint authenticationEntryPoint,
-            final AccessDeniedHandler accessDeniedHandler
+            final AccessDeniedHandler accessDeniedHandler,
+            final ObjectProvider<SecurityPepEnforcementFilter> securityPepEnforcementFilter
     ) throws Exception {
         http
             .cors(Customizer.withDefaults())
@@ -93,7 +77,9 @@ public class SecurityConfig {
             // no protege nada. Además, una petición insegura sin Bearer debe llegar al mecanismo de
             // autenticación y responder 401, no 403 de CSRF.
             // REVISAR ESTA DECISIÓN antes de introducir autenticación por cookie, BFF con cookie
-            // HttpOnly o sesión de navegador: CSRF deberá volver a habilitarse para ese flujo.
+            // HttpOnly o sesión de navegador hacia ESTA API: CSRF deberá volver a habilitarse para ese flujo.
+            // El modo baseline no lo hace: la SPA obtiene el Bearer del realm central con PKCE y la cookie BFF
+            // solo existe entre el navegador y el PDP.
             // Fuera de /api/v1/** la protección CSRF de Spring Security sigue activa.
             // /api/v2/sesiones/** (MAINT-003F) es la misma API REST stateless Bearer-only: aplica
             // exactamente la misma justificación y se excluye con el mismo alcance acotado.
@@ -104,27 +90,13 @@ public class SecurityConfig {
                     org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class
             );
 
-        if (pepEnforcementEnabled) {
-            http.addFilterAfter(
-                    new SecurityPepEnforcementFilter(
-                            pepEnforcementEnabled,
-                            pepUrl,
-                            pepApplicationName,
-                            pepEnvironment,
-                            pepApplicationCredential,
-                            pepPublicPaths
-                    ),
-                    org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class
-            );
-        }
-
         http
             .exceptionHandling(exceptionHandling -> exceptionHandling
                 .authenticationEntryPoint(authenticationEntryPoint)
                 .accessDeniedHandler(accessDeniedHandler)
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/actuator/**").permitAll()
+                .requestMatchers(SecurityPublicEndpoints.ACTUATOR).permitAll()
                 // permitAll de AUTORIZACION: la autenticacion la exige AzureEventGridAuthFilter (header
                 // aeg-sas-token, fail-closed). No equivale a un endpoint sin autenticacion.
                 .requestMatchers(AzureEventGridAuthFilter.WEBHOOK_PATH).permitAll()
@@ -155,6 +127,10 @@ public class SecurityConfig {
                 // la existencia del estudiante a matricular en su grupo (junto con COORDINADOR y ADMINISTRADOR).
                 .requestMatchers("/api/v1/estudiantes/**").hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
                 .requestMatchers(HttpMethod.POST, "/api/v1/usuarios").authenticated()
+                // Estado de acceso y reconciliacion de cuentas: administrador, decano y coordinador; el alcance (facultad /
+                // programa) y los roles gestionables se validan en Application (AccesoCuentaService).
+                .requestMatchers(HttpMethod.POST, "/api/v1/identidad/cuentas/acceso/*")
+                    .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_DECANO, ROLE_COORDINADOR)
                 .requestMatchers(HttpMethod.POST, "/api/v1/sesiones/**").hasRole(ROLE_DOCENTE)
                 .requestMatchers(HttpMethod.PUT, "/api/v1/sesiones/**").hasRole(ROLE_DOCENTE)
                 .requestMatchers(HttpMethod.PATCH, "/api/v1/sesiones/**").hasRole(ROLE_DOCENTE)
@@ -218,6 +194,14 @@ public class SecurityConfig {
                 )
             );
 
+        // SEC-BASELINE-001: unico punto de registro del filtro PEP (su FilterRegistrationBean servlet
+        // esta deshabilitado). Despues de autenticar el Bearer y antes de AuthorizationFilter.
+        securityPepEnforcementFilter.ifAvailable(filter ->
+                http.addFilterAfter(
+                        filter,
+                        org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class
+                ));
+
         return http.build();
     }
 
@@ -242,9 +226,8 @@ public class SecurityConfig {
                 "X-Correlation-Id",
                 HttpHeaders.ACCEPT
         ));
-        configuration.setExposedHeaders(List.of("X-Correlation-Id"));
-        // La API es Bearer-only: Authorization es un header explícito y no requiere credenciales
-        // de navegador (cookies, auth HTTP, certificados TLS de cliente).
+        configuration.setExposedHeaders(List.of("X-Correlation-Id", "X-Decision-Id"));
+        // Bearer-only en ambos modos: ninguna cookie (ni la del BFF del baseline) es credencial de esta API.
         configuration.setAllowCredentials(false);
         configuration.setMaxAge(3600L);
 
@@ -252,4 +235,5 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 }

@@ -12,6 +12,9 @@ public record SecurityAdapterProperties(Provider provider) {
     }
 
     public enum Provider {
-        KEYCLOAK
+        /** Compatibilidad con el valor histórico; equivale a {@link #LEGACY}. */
+        KEYCLOAK,
+        LEGACY,
+        BASELINE
     }
 }

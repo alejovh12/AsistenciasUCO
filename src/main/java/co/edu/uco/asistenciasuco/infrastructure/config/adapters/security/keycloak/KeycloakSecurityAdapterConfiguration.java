@@ -6,7 +6,8 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.val
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.validation.InstitutionalIssuerValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.validation.RequiredUuidClaimValidator;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.KeycloakSecurityProviderProperties;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import co.edu.uco.asistenciasuco.infrastructure.config.adapters.security.LegacySecurityProviderCondition;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,12 +38,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
  * {@code spring.main.allow-bean-definition-overriding=true} en su propio contexto.</p>
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(
-        prefix = "app.adapters.security",
-        name = "provider",
-        havingValue = "keycloak",
-        matchIfMissing = true
-)
+@Conditional(LegacySecurityProviderCondition.class)
 @EnableConfigurationProperties(KeycloakSecurityProviderProperties.class)
 public class KeycloakSecurityAdapterConfiguration {
 

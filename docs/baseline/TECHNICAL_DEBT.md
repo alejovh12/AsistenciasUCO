@@ -266,6 +266,13 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 - **Resolución esperada:** Política aprobada y pruebas de verificación acordes.
 - **Bloquea línea base:** no para LB-000; sí release de identidad.
 - **Estado:** ABIERTA.
+- **Actualización Security Baseline 0.1.7 (2026-10-26, cierre):** resuelto el binding `issuer+subject → Usuario.id`
+  con persistencia propia (migración SEC-BASELINE-017 en la DB) y la API queda Bearer-only (PKCE en la SPA; la cookie BFF
+  no es credencial del backend). Pendiente: (a) renovación del access token por re-autenticación silenciosa (redirección)
+  porque no hay refresh token en JavaScript; (b) el PEP 0.1.7 no soporta SSE en modo proxy (el backend lo autoriza por
+  embedded decision); (c) `GET /api/v1/usuarios/perfil` sigue 501 (la UI toma id y roles de `GET /api/v1/auth/me`, no del token); (d) revocación
+  inmediata solo por vínculo/usuario (el JWT conserva validez hasta su exp); (e) permisos EXECUTE del rol runtime SQL
+  para SP de consulta (p. ej. `usp_consultar_programas_academicos`) deben verificarse en cada despliegue DB.
 
 ## TD-015
 
@@ -898,13 +905,23 @@ GOLDEN PATH EFFECT:         NONE
 
 ## TD-062
 
+- **Fecha / responsable:** 2026-10-26 / backend-team (cierre Security Baseline 0.1.7). **Clasificación:** `PDP_GRANT_DRIFT`. **Prioridad:** MEDIA.
+- **Descripción:** el catálogo de acceso (`infra/security-baseline/access-catalog.json`, verificado contra `SecurityConfig` y Spring MVC) y el PDP real divergen en 16 concesiones heredadas de una matriz anterior del aprovisionamiento (que solo agregaba): p. ej. `ESTUDIANTE`/`DOCENTE`/`DECANO` tienen `GET /api/v1/docentes` y `POST /api/v1/grupos`; `ESTUDIANTE`, `DECANO`, `COORDINADOR` y `ADMINISTRADOR` tienen `POST /api/v1/sesiones`; `COORDINADOR` y `ADMINISTRADOR` conservan `POST/PUT /api/v1/coordinador/periodos-academicos` (ruta ya inexistente). `verify-decisions` confirma que el PEP responde ALLOW en 12 de ellas donde el catálogo exige DENY.
+- **Impacto:** sin explotación hoy: `SecurityConfig` (`AuthorizationFilter`) rechaza esas llamadas con 403 después del PEP, así que el PDP está más abierto que Spring pero no abre acceso por sí solo. Rompe la defensa en profundidad si una ruta futura reutiliza el path.
+- **Evidencia:** `provision_asistencias.py verify` / `verify-decisions` (2026-10-26); flujo y matriz en [la arquitectura de seguridad §11](../security/runtime-security-provider-architecture.md#11-matriz-rbac-relevante).
+- **Motivo para no resolver ahora:** revocar concesiones existentes del PDP es una acción sobre un recurso compartido que el cierre no autorizó explícitamente (solo registro incremental); el aprovisionamiento ya las detecta y no las revoca sin `--prune`.
+- **Resolución esperada:** el responsable ejecuta `python -X utf8 -I infra\security-baseline\scripts\provision_asistencias.py pdp --prune`, luego `verify` y `verify-decisions` en verde. Cierra también: migrar los usuarios de prueba a su perfil (`users --migrate-direct`), hoy con asignación directa del rol.
+- **Bloquea línea base:** no. **Estado:** **RESOLVED (2026-10-26)**: el responsable autorizó `pdp --prune`; se revocaron las 16 concesiones y `verify`/`verify-decisions` quedaron en verde (847/847). Persiste, sin impacto de acceso, la migración de los usuarios de prueba a perfiles (`users --migrate-direct`) y dos recursos huérfanos sin concesiones.
+
+## TD-063
+
 - **Fecha / responsable:** 2026-10-24 / fullstack-team (Ola 3: HU133-HU139). **Clasificación:** REALTIME_SSE_SCOPE_GAP. **Prioridad:** MEDIA.
 - **Descripción:** El endpoint reactivo `/api/v1/realtime/stream` exige `grupoId` y valida titularidad docente. No existe canal SSE para el rol `ADMINISTRADOR` a nivel de ámbito institucional, ni se publican eventos de dominio cuando se matricula un estudiante o se registra un docente. Por esta razón, HU135 y HU136 quedan en estado `[PARCIAL]`: contadores reales calculados en DB pero refrescados mediante acción manual del usuario (botón «Actualizar», sin sondeo ni polling).
 - **Impacto:** Los censos estudiantil y docente no se actualizan por push en tiempo real.
 - **Resolución esperada:** Extender la infraestructura SSE para soportar suscripciones por ámbito institucional y publicar eventos de ciclo de vida de matrícula y vinculación docente.
 - **Bloquea línea base:** No. **Estado:** **OPEN / MEDIUM / FULLSTACK**. **Work item:** [HU133-HU139](../work-items/HU133-HU134-HU135-HU136-HU138-HU139-kpis-admin-datos-reales/VALIDATION.md).
 
-## TD-063
+## TD-064
 
 - **Fecha / responsable:** 2026-10-24 / backend-team (Ola 3: HU133-HU139). **Clasificación:** SECURITY_SCOPE_DEFENSE_IN_DEPTH. **Prioridad:** BAJA.
 - **Descripción:** En la arquitectura de defensa en profundidad, el Backend valida el ámbito en la capa de aplicación antes de delegar a la DB. Para los endpoints de indicadores institucionales del Administrador, el backend no dispone de un método en `InstitutionalScopePort` / `UserScopeService` para verificar la institución del administrador. La validación se delega íntegramente a SQL Server vía `usp_resolver_institucion_administrador_interno`, que emite `KPI_004` (403 Forbidden fail-closed) si el usuario no tiene institución asignada.
@@ -912,7 +929,7 @@ GOLDEN PATH EFFECT:         NONE
 - **Resolución esperada:** Agregar `resolveInstitucionId(usuarioEjecutor)` en `InstitutionalScopePort` para validación previa en los interactores de aplicación.
 - **Bloquea línea base:** No. **Estado:** **OPEN / LOW / BACKEND**. **Work item:** [HU133-HU139](../work-items/HU133-HU134-HU135-HU136-HU138-HU139-kpis-admin-datos-reales/VALIDATION.md).
 
-## TD-064
+## TD-065
 
 - **Fecha / responsable:** 2026-10-24 / database-team & backend-team (Ola 3: HU133-HU141). **Clasificación:** DOMAIN_MODEL_DATA_GAP. **Prioridad:** MEDIA.
 - **Descripción:** La entidad `Docente` en la base de datos únicamente modela `idUsuario`. No existen entidades ni columnas relacionales para escalafón docente (HU141), dedicación horaria contratada (HU129) ni sedes físicas (HU140). Para HU136, los docentes registrados se calcularon estrictamente como usuarios activos con rol docente que son titulares de al menos un grupo de la institución.

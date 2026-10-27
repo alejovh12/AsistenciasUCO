@@ -44,9 +44,9 @@ Los perfiles (`local`, `test`, `staging`, `prod`) no seleccionan tecnologías. L
 app:
   adapters:
     identity:
-      provider: ${APP_ADAPTERS_IDENTITY_PROVIDER:keycloak}
+      provider: ${APP_ADAPTERS_IDENTITY_PROVIDER:baseline}
     security:
-      provider: ${APP_ADAPTERS_SECURITY_PROVIDER:keycloak}
+      provider: ${APP_ADAPTERS_SECURITY_PROVIDER:baseline}
     storage:
       provider: ${APP_ADAPTERS_STORAGE_PROVIDER:local}
     realtime:

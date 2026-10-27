@@ -37,7 +37,7 @@ class SesionWiringConfigurationTest {
         assertInstanceOf(CrearSesionUseCaseImpl.class, crearSesionUseCase);
         assertInstanceOf(CrearSesionInteractor.class, config.crearSesionInputPort(crearSesionUseCase));
 
-        final var consultarSesionUseCase = config.consultarSesionUseCase(sesionRepositoryPort);
+        final var consultarSesionUseCase = config.consultarSesionUseCase(sesionRepositoryPort, scopePort);
         assertInstanceOf(ConsultarSesionUseCaseImpl.class, consultarSesionUseCase);
         assertInstanceOf(ConsultarSesionInteractor.class, config.consultarSesionInputPort(consultarSesionUseCase));
 

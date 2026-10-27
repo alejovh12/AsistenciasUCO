@@ -3,7 +3,8 @@ package co.edu.uco.asistenciasuco.infrastructure.config.adapters.identity.keyclo
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.identity.keycloak.KeycloakIdentityProviderAdapter;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.KeycloakIdentityProviderProperties;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import co.edu.uco.asistenciasuco.infrastructure.config.adapters.identity.LegacyIdentityProviderCondition;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,12 +31,7 @@ import org.springframework.context.annotation.Configuration;
  * </ol>
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(
-        prefix = "app.adapters.identity",
-        name = "provider",
-        havingValue = "keycloak",
-        matchIfMissing = true
-)
+@Conditional(LegacyIdentityProviderCondition.class)
 @EnableConfigurationProperties(KeycloakIdentityProviderProperties.class)
 public class KeycloakIdentityAdapterConfiguration {
 

@@ -173,7 +173,7 @@ public final class SesionController {
             final ConsultarSesionRequest request
     ) {
         RequestValidationGuard.validate(CONSULT_SESSION_VALIDATOR.validate(request));
-        final ConsultarSesionDTO dto = SesionHttpMapper.toApplicationDTO(request);
+        final ConsultarSesionDTO dto = SesionHttpMapper.toApplicationDTO(request, authenticatedUserResolver.requireAuthenticatedUserId());
         final SesionConsultadaDTO sesion = consultarSesionInputPort.execute(dto);
         return ResponseEntity.ok(new ApiDataResponse<>(true, sesion));
     }
