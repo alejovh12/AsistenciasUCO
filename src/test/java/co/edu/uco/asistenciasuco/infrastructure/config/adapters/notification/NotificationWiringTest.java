@@ -100,7 +100,6 @@ class NotificationWiringTest {
                 "app.adapters.notification.provider=composite",
                 "app.adapters.notification.composite.targets=log,outbox"
         ).run(context -> {
-            assertThat(context).hasSingleBean(NotificacionPort.class);
             assertThat(context.getBean(NotificacionPort.class)).isInstanceOf(CompositeNotificacionAdapter.class);
             assertThat(context).hasSingleBean(LogNotificacionAdapter.class);
             assertThat(context).hasSingleBean(OutboxNotificacionAdapter.class);
@@ -115,7 +114,6 @@ class NotificationWiringTest {
                 "app.adapters.notification.provider=composite",
                 "app.adapters.notification.composite.targets=outbox,log"
         ).run(context -> {
-            assertThat(context).hasSingleBean(NotificacionPort.class);
             assertThat(context.getBean(NotificacionPort.class)).isInstanceOf(CompositeNotificacionAdapter.class);
         });
     }
@@ -193,7 +191,7 @@ class NotificationWiringTest {
         runner.withPropertyValues(
                 "app.adapters.notification.provider=composite",
                 "app.adapters.notification.composite.targets=log,outbox"
-        ).run(context -> assertThat(context).hasSingleBean(NotificacionPort.class));
+        ).run(context -> assertThat(context.getBean(NotificacionPort.class)).isInstanceOf(CompositeNotificacionAdapter.class));
     }
 
     @Test

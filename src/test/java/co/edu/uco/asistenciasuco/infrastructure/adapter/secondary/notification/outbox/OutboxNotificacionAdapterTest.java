@@ -28,6 +28,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class OutboxNotificacionAdapterTest {
 
@@ -203,5 +204,63 @@ class OutboxNotificacionAdapterTest {
                 .tag("outcome", "failed")
                 .counter().count();
         assertEquals(1.0, failed);
+    }
+
+    @Test
+    @DisplayName("BE-O08: Fallo de serializacion JSON incrementa failed sin propagar")
+    void BE_O08_fallo_serializacion_json_incrementa_failed() throws Exception {
+        final com.fasterxml.jackson.databind.ObjectMapper mockMapper = mock(com.fasterxml.jackson.databind.ObjectMapper.class);
+        doThrow(new com.fasterxml.jackson.core.JsonParseException(null, "Error JSON"))
+                .when(mockMapper).writeValueAsString(any());
+
+        final OutboxNotificacionAdapter customAdapter = new OutboxNotificacionAdapter(
+                repository, dispatcher, meterRegistry, mockMapper
+        );
+
+        final Notificacion notificacion = new Notificacion(
+                "TIPO_TEST",
+                "Asunto",
+                "Mensaje",
+                List.of(new Notificacion.Destinatario("ESTUDIANTE", UUID.randomUUID(), "Nombre", "correo@uco.edu.co")),
+                Map.of("clave", "valor")
+        );
+
+        assertDoesNotThrow(() -> customAdapter.notificar(notificacion));
+        verify(repository, never()).registrar(any());
+
+        final double failed = meterRegistry.get("notification.publish.total")
+                .tag("provider", "outbox")
+                .tag("outcome", "failed")
+                .counter().count();
+        assertEquals(1.0, failed);
+    }
+
+    @Test
+    @DisplayName("BE-O09: Con span activo registra traceId y spanId")
+    void BE_O09_con_span_activo_registra_trazabilidad() {
+        final io.opentelemetry.api.trace.SpanContext spanContext = io.opentelemetry.api.trace.SpanContext.create(
+                "4bf92f3577b34da6a3ce929d0e0e4736",
+                "00f067aa0ba902b7",
+                io.opentelemetry.api.trace.TraceFlags.getSampled(),
+                io.opentelemetry.api.trace.TraceState.getDefault()
+        );
+        final io.opentelemetry.api.trace.Span span = io.opentelemetry.api.trace.Span.wrap(spanContext);
+
+        try (io.opentelemetry.context.Scope scope = span.makeCurrent()) {
+            final Notificacion notificacion = new Notificacion(
+                    "TIPO_TEST",
+                    "Asunto",
+                    "Mensaje",
+                    List.of(new Notificacion.Destinatario("ESTUDIANTE", UUID.randomUUID(), "Nombre", "correo@uco.edu.co")),
+                    Map.of()
+            );
+
+            adapter.notificar(notificacion);
+
+            final ArgumentCaptor<RegistroNotificacion> captor = ArgumentCaptor.forClass(RegistroNotificacion.class);
+            verify(repository).registrar(captor.capture());
+            assertEquals("4bf92f3577b34da6a3ce929d0e0e4736", captor.getValue().traceId());
+            assertEquals("00f067aa0ba902b7", captor.getValue().spanId());
+        }
     }
 }

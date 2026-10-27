@@ -8,6 +8,8 @@ import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -112,5 +114,87 @@ class OutboxNotificationPropertiesTest {
                 )
         );
         assertTrue(exMax.getMessage().contains("retention-days"));
+    }
+
+    @Test
+    @DisplayName("BE-P02: sweeperInterval fuera de rango (1s..1h) lanza excepcion")
+    void BE_P02_sweeper_interval_fuera_de_rango() {
+        assertThrows(IllegalArgumentException.class, () -> new OutboxNotificationProperties(
+                Sender.LOG, true, 50, Duration.ofSeconds(60), Duration.ofMillis(500), 5,
+                Duration.ofSeconds(30), Duration.ofMinutes(15), 30, Duration.ofHours(6), ""
+        ));
+        assertThrows(IllegalArgumentException.class, () -> new OutboxNotificationProperties(
+                Sender.LOG, true, 50, Duration.ofSeconds(60), Duration.ofHours(2), 5,
+                Duration.ofSeconds(30), Duration.ofMinutes(15), 30, Duration.ofHours(6), ""
+        ));
+    }
+
+    @Test
+    @DisplayName("BE-P02: maxAttempts fuera de rango (1..20) lanza excepcion")
+    void BE_P02_max_attempts_fuera_de_rango() {
+        assertThrows(IllegalArgumentException.class, () -> new OutboxNotificationProperties(
+                Sender.LOG, true, 50, Duration.ofSeconds(60), Duration.ofSeconds(30), 0,
+                Duration.ofSeconds(30), Duration.ofMinutes(15), 30, Duration.ofHours(6), ""
+        ));
+        assertThrows(IllegalArgumentException.class, () -> new OutboxNotificationProperties(
+                Sender.LOG, true, 50, Duration.ofSeconds(60), Duration.ofSeconds(30), 21,
+                Duration.ofSeconds(30), Duration.ofMinutes(15), 30, Duration.ofHours(6), ""
+        ));
+    }
+
+    @Test
+    @DisplayName("BE-P02: backoffBase fuera de rango (1s..1h) lanza excepcion")
+    void BE_P02_backoff_base_fuera_de_rango() {
+        assertThrows(IllegalArgumentException.class, () -> new OutboxNotificationProperties(
+                Sender.LOG, true, 50, Duration.ofSeconds(60), Duration.ofSeconds(30), 5,
+                Duration.ofMillis(500), Duration.ofMinutes(15), 30, Duration.ofHours(6), ""
+        ));
+        assertThrows(IllegalArgumentException.class, () -> new OutboxNotificationProperties(
+                Sender.LOG, true, 50, Duration.ofSeconds(60), Duration.ofSeconds(30), 5,
+                Duration.ofHours(2), Duration.ofHours(5), 30, Duration.ofHours(6), ""
+        ));
+    }
+
+    @Test
+    @DisplayName("BE-P02: backoffMax mayor a 24h lanza excepcion")
+    void BE_P02_backoff_max_mayor_a_24h() {
+        assertThrows(IllegalArgumentException.class, () -> new OutboxNotificationProperties(
+                Sender.LOG, true, 50, Duration.ofSeconds(60), Duration.ofSeconds(30), 5,
+                Duration.ofSeconds(30), Duration.ofHours(25), 30, Duration.ofHours(6), ""
+        ));
+    }
+
+    @Test
+    @DisplayName("BE-P02: duraciones nulas lanzan excepcion")
+    void BE_P02_duraciones_nulas() {
+        assertThrows(IllegalArgumentException.class, () -> new OutboxNotificationProperties(
+                Sender.LOG, true, 50, null, Duration.ofSeconds(30), 5,
+                Duration.ofSeconds(30), Duration.ofMinutes(15), 30, Duration.ofHours(6), ""
+        ));
+        assertThrows(IllegalArgumentException.class, () -> new OutboxNotificationProperties(
+                Sender.LOG, true, 50, Duration.ofSeconds(60), null, 5,
+                Duration.ofSeconds(30), Duration.ofMinutes(15), 30, Duration.ofHours(6), ""
+        ));
+        assertThrows(IllegalArgumentException.class, () -> new OutboxNotificationProperties(
+                Sender.LOG, true, 50, Duration.ofSeconds(60), Duration.ofSeconds(30), 5,
+                null, Duration.ofMinutes(15), 30, Duration.ofHours(6), ""
+        ));
+        assertThrows(IllegalArgumentException.class, () -> new OutboxNotificationProperties(
+                Sender.LOG, true, 50, Duration.ofSeconds(60), Duration.ofSeconds(30), 5,
+                Duration.ofSeconds(30), null, 30, Duration.ofHours(6), ""
+        ));
+    }
+
+    @Test
+    @DisplayName("BE-P02: valores nulos en sender e instanceId se resuelven a defaults seguros")
+    void BE_P02_defaults_seguros() {
+        final OutboxNotificationProperties props = new OutboxNotificationProperties(
+                null, true, 50, Duration.ofSeconds(60), Duration.ofSeconds(30), 5,
+                Duration.ofSeconds(30), Duration.ofMinutes(15), 30, null, null
+        );
+        assertEquals(Sender.LOG, props.sender());
+        assertEquals(Duration.ofHours(6), props.retentionInterval());
+        assertNotNull(props.instanceId());
+        assertFalse(props.instanceId().isBlank());
     }
 }

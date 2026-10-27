@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.outbox;
 
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.OutboxNotificationProperties;
+import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.OutboxNotificationProperties.Sender;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.AfterEach;
@@ -17,9 +18,11 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -52,7 +55,7 @@ class NotificacionOutboxDispatcherTest {
                 true,
                 50,
                 Duration.ofSeconds(60),
-                Duration.ofMillis(100),
+                Duration.ofSeconds(1),
                 5,
                 Duration.ofSeconds(30),
                 Duration.ofMinutes(15),
@@ -232,5 +235,193 @@ class NotificacionOutboxDispatcherTest {
         assertNotNull(disp1.instanceId());
         assertFalse(disp1.instanceId().isBlank());
         assertEquals(disp1.instanceId(), disp1.instanceId());
+    }
+
+    @Test
+    @DisplayName("BE-D13: getPhase y signal funcionan correctamente")
+    void BE_D13_get_phase_y_signal() {
+        dispatcher = new NotificacionOutboxDispatcher(repository, sender, properties, meterRegistry, Clock.systemUTC());
+        assertTrue(dispatcher.getPhase() > 0);
+        assertDoesNotThrow(() -> dispatcher.signal());
+    }
+
+    @Test
+    @DisplayName("BE-D14: NotificacionNoEntregableException con causa")
+    void BE_D14_excepcion_con_causa() {
+        final RuntimeException causa = new RuntimeException("Error raiz");
+        final NotificacionNoEntregableException ex = new NotificacionNoEntregableException("Mensaje", causa);
+        assertEquals("Mensaje", ex.getMessage());
+        assertEquals(causa, ex.getCause());
+    }
+
+    @Test
+    @DisplayName("BE-D15: hilo en segundo plano arranca y se detiene")
+    void BE_D15_hilo_arranca_y_se_detiene() throws InterruptedException {
+        dispatcher = new NotificacionOutboxDispatcher(repository, sender, properties, meterRegistry, Clock.systemUTC());
+        dispatcher.start();
+        assertTrue(dispatcher.isRunning());
+        Thread.sleep(50);
+        dispatcher.stop();
+        assertFalse(dispatcher.isRunning());
+    }
+
+    @Test
+    @DisplayName("BE-D16: depuracion tolera excepcion en repositorio")
+    void BE_D16_depuracion_tolera_excepcion() {
+        when(repository.depurar(anyInt(), anyInt())).thenThrow(new RuntimeException("Fallo DB depurar"));
+        dispatcher = new NotificacionOutboxDispatcher(repository, sender, properties, meterRegistry, Clock.systemUTC());
+        assertDoesNotThrow(() -> dispatcher.ejecutarDepuracion());
+    }
+
+    @Test
+    @DisplayName("BE-D17: lote vacio no procesa notificaciones")
+    void BE_D17_lote_vacio_no_procesa() {
+        when(repository.reservar(anyInt(), any(Duration.class), any())).thenReturn(List.of());
+        dispatcher = new NotificacionOutboxDispatcher(repository, sender, properties, meterRegistry, Clock.systemUTC());
+        dispatcher.ejecutarCiclo();
+        verify(repository).reservar(anyInt(), any(Duration.class), any());
+    }
+
+    @Test
+    @DisplayName("BE-D18: deserializacion maneja json nulo, vacio o invalido")
+    void BE_D18_deserializacion_json_casos_borde() throws Exception {
+        final UUID id = UUID.randomUUID();
+        final NotificacionReservada reservada = new NotificacionReservada(
+                id, "TIPO", "Asunto", "Mensaje", "{no es array}", "{no es json valido}", 1, 5, Instant.now(), null, null
+        );
+
+        when(repository.reservar(anyInt(), any(Duration.class), any()))
+                .thenReturn(List.of(reservada))
+                .thenReturn(List.of());
+
+        dispatcher = new NotificacionOutboxDispatcher(repository, sender, properties, meterRegistry, Clock.systemUTC());
+        dispatcher.ejecutarCiclo();
+
+        verify(sender).enviar(any(NotificacionPersistida.class));
+        verify(repository).marcarEntregada(eq(id), any());
+    }
+
+    @Test
+    @DisplayName("BE-D19: depuracion con eliminadas mayor a cero incrementa metricas")
+    void BE_D19_depuracion_con_filas_eliminadas() {
+        when(repository.depurar(anyInt(), anyInt())).thenReturn(25);
+        dispatcher = new NotificacionOutboxDispatcher(repository, sender, properties, meterRegistry, Clock.systemUTC());
+        dispatcher.ejecutarDepuracion();
+
+        final double purged = meterRegistry.get("notification.outbox.purged.total").counter().count();
+        assertEquals(25.0, purged);
+    }
+
+    @Test
+    @DisplayName("BE-D20: fallo al marcar entregada incrementa lost-lease")
+    void BE_D20_fallo_marcar_entregada_lost_lease() {
+        final UUID id = UUID.randomUUID();
+        final NotificacionReservada reservada = new NotificacionReservada(
+                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, 5, Instant.now(), null, null
+        );
+        when(repository.reservar(anyInt(), any(Duration.class), any()))
+                .thenReturn(List.of(reservada))
+                .thenReturn(List.of());
+        doThrow(new RuntimeException("Lease expirado")).when(repository).marcarEntregada(eq(id), any());
+
+        dispatcher = new NotificacionOutboxDispatcher(repository, sender, properties, meterRegistry, Clock.systemUTC());
+        dispatcher.ejecutarCiclo();
+
+        final double lostLease = meterRegistry.get("notification.dispatch.total")
+                .tag("outcome", "lost_lease")
+                .counter().count();
+        assertEquals(1.0, lostLease);
+    }
+
+    @Test
+    @DisplayName("BE-D21: fallo al registrar fallo definitivo incrementa lost-lease")
+    void BE_D21_fallo_registrar_fallo_definitivo_lost_lease() throws Exception {
+        final UUID id = UUID.randomUUID();
+        final NotificacionReservada reservada = new NotificacionReservada(
+                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, 5, Instant.now(), null, null
+        );
+        when(repository.reservar(anyInt(), any(Duration.class), any()))
+                .thenReturn(List.of(reservada))
+                .thenReturn(List.of());
+        doThrow(new NotificacionNoEntregableException("Correo invalido")).when(sender).enviar(any());
+        doThrow(new RuntimeException("DB down")).when(repository).registrarFallo(eq(id), any(), eq("FALLO_DEFINITIVO"), any(), eq(false), anyInt(), any(), any());
+
+        dispatcher = new NotificacionOutboxDispatcher(repository, sender, properties, meterRegistry, Clock.systemUTC());
+        dispatcher.ejecutarCiclo();
+
+        final double lostLease = meterRegistry.get("notification.dispatch.total")
+                .tag("outcome", "lost_lease")
+                .counter().count();
+        assertEquals(1.0, lostLease);
+    }
+
+    @Test
+    @DisplayName("BE-D22: fallo al registrar fallo reintentable incrementa lost-lease")
+    void BE_D22_fallo_registrar_fallo_reintentable_lost_lease() throws Exception {
+        final UUID id = UUID.randomUUID();
+        final NotificacionReservada reservada = new NotificacionReservada(
+                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, 5, Instant.now(), null, null
+        );
+        when(repository.reservar(anyInt(), any(Duration.class), any()))
+                .thenReturn(List.of(reservada))
+                .thenReturn(List.of());
+        doThrow(new RuntimeException("Timeout temporal")).when(sender).enviar(any());
+        doThrow(new RuntimeException("DB down")).when(repository).registrarFallo(eq(id), any(), eq("FALLO_REINTENTABLE"), any(), eq(true), anyInt(), any(), any());
+
+        dispatcher = new NotificacionOutboxDispatcher(repository, sender, properties, meterRegistry, Clock.systemUTC());
+        dispatcher.ejecutarCiclo();
+
+        final double lostLease = meterRegistry.get("notification.dispatch.total")
+                .tag("outcome", "lost_lease")
+                .counter().count();
+        assertEquals(1.0, lostLease);
+    }
+
+    @Test
+    @DisplayName("BE-D23: start con dispatcherEnabled=false no arranca")
+    void BE_D23_start_deshabilitado() {
+        final OutboxNotificationProperties propsDisabled = new OutboxNotificationProperties(
+                Sender.LOG, false, 50, Duration.ofSeconds(60), Duration.ofSeconds(30), 5,
+                Duration.ofSeconds(30), Duration.ofMinutes(15), 30, Duration.ofHours(6), "inst-disabled"
+        );
+        dispatcher = new NotificacionOutboxDispatcher(repository, sender, propsDisabled, meterRegistry, Clock.systemUTC());
+        dispatcher.start();
+        assertFalse(dispatcher.isRunning());
+    }
+
+    @Test
+    @DisplayName("BE-D24: stop sin start no falla")
+    void BE_D24_stop_sin_start() {
+        dispatcher = new NotificacionOutboxDispatcher(repository, sender, properties, meterRegistry, Clock.systemUTC());
+        assertDoesNotThrow(() -> dispatcher.stop());
+    }
+
+    @Test
+    @DisplayName("BE-D25: depuracion con cero eliminadas no incrementa purgedCounter")
+    void BE_D25_depuracion_cero_filas() {
+        when(repository.depurar(anyInt(), anyInt())).thenReturn(0);
+        dispatcher = new NotificacionOutboxDispatcher(repository, sender, properties, meterRegistry, Clock.systemUTC());
+        dispatcher.ejecutarDepuracion();
+
+        final double purged = meterRegistry.get("notification.outbox.purged.total").counter().count();
+        assertEquals(0.0, purged);
+    }
+
+    @Test
+    @DisplayName("BE-D26: depuracion periodica se ejecuta cuando transcurre retentionInterval")
+    void BE_D26_depuracion_periodica_se_ejecuta() {
+        final Instant t0 = Instant.parse("2026-10-27T10:00:00Z");
+        final Clock mockClock = mock(Clock.class);
+        when(mockClock.instant())
+                .thenReturn(t0)
+                .thenReturn(t0.plus(Duration.ofHours(7)));
+        when(mockClock.millis()).thenReturn(t0.toEpochMilli());
+
+        when(repository.depurar(anyInt(), anyInt())).thenReturn(10);
+
+        dispatcher = new NotificacionOutboxDispatcher(repository, sender, properties, meterRegistry, mockClock);
+        dispatcher.verificarDepuracionPeriodica();
+
+        verify(repository, atLeastOnce()).depurar(anyInt(), anyInt());
     }
 }
