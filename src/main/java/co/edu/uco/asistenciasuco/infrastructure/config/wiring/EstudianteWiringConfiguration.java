@@ -24,6 +24,11 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsistenciaS
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.HorarioEstudianteQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.MateriaEstudianteQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.SesionMateriaEstudianteQueryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.SolicitudRevisionEstudianteQueryPort;
+import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.primaryports.ConsultarReclamosEstudianteInputPort;
+import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.primaryports.interactor.ConsultarReclamosEstudianteInteractor;
+import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.usecase.ConsultarReclamosEstudianteUseCase;
+import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.usecase.impl.ConsultarReclamosEstudianteUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.EstudianteRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import org.springframework.context.annotation.Bean;
@@ -96,5 +101,15 @@ public class EstudianteWiringConfiguration {
     @Bean
     ConsultarSesionesMateriaEstudianteInputPort consultarSesionesMateriaEstudianteInputPort(final ConsultarSesionesMateriaEstudianteUseCase useCase) {
         return new ConsultarSesionesMateriaEstudianteInteractor(useCase);
+    }
+
+    @Bean
+    ConsultarReclamosEstudianteUseCase consultarReclamosEstudianteUseCase(final InstitutionalScopePort scopePort, final SolicitudRevisionEstudianteQueryPort queryPort) {
+        return new ConsultarReclamosEstudianteUseCaseImpl(scopePort, queryPort);
+    }
+
+    @Bean
+    ConsultarReclamosEstudianteInputPort consultarReclamosEstudianteInputPort(final ConsultarReclamosEstudianteUseCase useCase) {
+        return new ConsultarReclamosEstudianteInteractor(useCase);
     }
 }
