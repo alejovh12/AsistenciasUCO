@@ -10,7 +10,7 @@ last-reviewed: 2026-10-27
 
 ## Dictamen
 
-PASS (local). Auditor: el mismo agente que implementó (sin independencia); la revisión independiente queda para el PR. Sin push hasta la confirmación de John.
+PASS (local). Auditor: el mismo agente que implementó (sin independencia); la revisión independiente queda para el PR. Rama subida con autorización de John el 2026-10-27; CI remoto en los PR.
 
 ## Comandos ejecutados
 
@@ -46,4 +46,4 @@ Commits RED: DB `c9c6b9a`, backend `9e357dc`, frontend `1fa63b0`. Ajuste técnic
 - Sin prueba automática de dos sesiones concurrentes (protección por `UPDLOCK, HOLDLOCK`); se valida en MV-008.
 - El PDP del Security Baseline debe reaprovisionarse con las 4 rutas nuevas (Alejo).
 - Avisos solo en el log hasta integrar el componente de notificaciones (TD-066).
-- La rama está apilada sobre HU051 (ya mergeado en `develop`): antes del push se integra `origin/develop` y se revalida.
+- La rama integró `origin/develop` (HU051 ya mergeado) sin conflictos; el código validado no cambió.

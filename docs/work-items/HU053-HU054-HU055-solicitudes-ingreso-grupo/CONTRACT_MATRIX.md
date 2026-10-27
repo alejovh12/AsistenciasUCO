@@ -14,9 +14,9 @@ Formulario del [protocolo de alineación contractual](../../integration/CONTRACT
 
 | Sistema | Repo/versión | Archivo/objeto | Hash/commit | Autoridad |
 |---|---|---|---|---|
-| DB | gestion-asistencia-db `feature/HU053-HU054-HU055-solicitudes-ingreso-grupo` | tabla `SolicitudIngresoGrupo` + 6 SP | commit local (sin push) | OWNER |
-| Backend | AsistenciasUCO, misma rama | `SolicitudIngresoGrupoJpaRepository`, `EstudianteSolicitudIngresoController`, `DocenteSolicitudIngresoController`, `access-catalog.json` | commit local (sin push) | CONSUMER / PROVIDER HTTP |
-| Frontend | AsistenciasUCO-Frontend, misma rama | `SolicitudIngresoService`, `StudentEnrollmentRequestsComponent`, `TeacherGrupoSolicitudesComponent` | commit local (sin push) | CONSUMER |
+| DB | gestion-asistencia-db `feature/HU053-HU054-HU055-solicitudes-ingreso-grupo` | tabla `SolicitudIngresoGrupo` + 6 SP | rama `feature/HU053-HU054-HU055-solicitudes-ingreso-grupo` (PR a `develop`) | OWNER |
+| Backend | AsistenciasUCO, misma rama | `SolicitudIngresoGrupoJpaRepository`, `EstudianteSolicitudIngresoController`, `DocenteSolicitudIngresoController`, `access-catalog.json` | rama `feature/HU053-HU054-HU055-solicitudes-ingreso-grupo` (PR a `develop`) | CONSUMER / PROVIDER HTTP |
+| Frontend | AsistenciasUCO-Frontend, misma rama | `SolicitudIngresoService`, `StudentEnrollmentRequestsComponent`, `TeacherGrupoSolicitudesComponent` | rama `feature/HU053-HU054-HU055-solicitudes-ingreso-grupo` (PR a `develop`) | CONSUMER |
 
 ## Matriz
 

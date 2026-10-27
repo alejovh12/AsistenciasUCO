@@ -10,7 +10,7 @@ last-reviewed: 2026-10-27
 
 ## Resultado
 
-DONE localmente (gates locales verdes, ver [VALIDATION.md](VALIDATION.md)). Pendiente: integrar `origin/develop`, push/PR (con confirmación de John), CI remoto, reaprovisionar el PDP y MV-008.
+DONE localmente (gates locales verdes, ver [VALIDATION.md](VALIDATION.md)). Rama subida (con `origin/develop` integrado); pendiente: merge de los PR (DB → backend → frontend), CI remoto, reaprovisionar el PDP y MV-008.
 
 ## Alcance entregado y decisiones
 
