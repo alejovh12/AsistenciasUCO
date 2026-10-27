@@ -1,5 +1,5 @@
 ---
-status: draft-pending-approval
+status: frozen-approved
 type: test-plan
 scope: database-backend
 last-reviewed: 2026-10-27

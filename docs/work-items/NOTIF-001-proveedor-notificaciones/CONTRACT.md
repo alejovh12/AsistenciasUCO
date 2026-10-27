@@ -1,5 +1,5 @@
 ---
-status: draft-pending-approval
+status: frozen-approved
 type: contract
 scope: database-backend
 last-reviewed: 2026-10-27
@@ -7,7 +7,7 @@ last-reviewed: 2026-10-27
 
 # CONTRACT — NOTIF-001
 
-Estado: **`DRAFT`**; pasa a `FROZEN` con la aprobación de D1–D12 del [PLAN](PLAN.md). Cualquier desvío durante la implementación se documenta en §9 (Enmiendas) y en `VALIDATION.md`; las pruebas no se relajan.
+Estado: **`FROZEN`** (aprobado por el owner con decisiones D1–D12 del [PLAN](PLAN.md)). Cualquier desvío durante la implementación se documenta en §9 (Enmiendas) y en `VALIDATION.md`; las pruebas no se relajan.
 
 ## 1. Reglas comunes
 

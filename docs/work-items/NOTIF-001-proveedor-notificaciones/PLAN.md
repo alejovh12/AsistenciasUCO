@@ -1,5 +1,5 @@
 ---
-status: draft-pending-approval
+status: frozen-approved
 type: plan
 scope: database-backend
 last-reviewed: 2026-10-27
@@ -7,7 +7,7 @@ last-reviewed: 2026-10-27
 
 # PLAN — NOTIF-001: Capacidad de notificaciones con proveedor intercambiable
 
-Estado: **`DRAFT`**. Pasa a `FROZEN` cuando el owner apruebe las decisiones D1–D12 (con las recomendaciones indicadas). Este work item **diseña**; no se implementa hasta esa aprobación.
+Estado: **`FROZEN`** (aprobado por el owner con decisiones D1–D12). Este work item se implementa según este plan y su CONTRACT.
 
 ## 1. Objetivo
 
