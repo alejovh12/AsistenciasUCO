@@ -14,7 +14,7 @@ ROL: eres el implementador de NOTIF-001 (capacidad de notificaciones con proveed
 
 LEE PRIMERO (en este orden, completos):
 1. AGENTS.md de cada repositorio donde vayas a tocar (DB y Backend) y .specify/memory/constitution.md.
-2. Backend: docs/work-items/NOTIF-001-proveedor-notificaciones/{PLAN,CONTRACT,TEST_PLAN}.md  (fuente de verdad; contienen cifras, nombres, parámetros y códigos exactos). Hoy viven SOLO en el commit local cda12ea de la rama docs/mensajeria-plan (worktree C:\Proyectos\GestioAsistencia\.worktreesackend-mensajeria, sin push); léelos de ahí.
+2. Backend: docs/work-items/NOTIF-001-proveedor-notificaciones/{PLAN,CONTRACT,TEST_PLAN}.md  (fuente de verdad; contienen cifras, nombres, parámetros y códigos exactos). Hoy viven SOLO en el commit local cda12ea de la rama docs/mensajeria-plan (worktree C:\Proyectos\GestioAsistencia\.worktrees\backend-mensajeria, sin push); léelos de ahí.
 3. Backend: docs/architecture/adapter-composition-standard.md (§2 reglas, §16 checklist).
 4. Código de referencia a imitar (no a modificar): realtime (RealtimeAdapterProperties, LocalSseRealtimeAdapterConfiguration), auditoría (AuditAdapterConfiguration), HU154 tipos de programa (SP de DB, pruebas T-SQL, repositorio JPA con JpaProcedureExecutor), adaptadores de KPIs (SP que devuelve filas con entidades Sp*), y el puerto actual application/secondaryports/notification/{Notificacion,NotificacionPort}.java + infrastructure/adapter/secondary/notification/LogNotificacionAdapter.java + su consumidor RetirarEstudianteGrupoUseCaseImpl (HU051).
 
