@@ -20,9 +20,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.FilteredClassLoader;
+import org.springframework.boot.test.context.assertj.AssertableApplicationContext;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -93,6 +97,21 @@ class NotificationWiringTest {
                 });
     }
 
+    private void assertCompositeNotificacionPort(final AssertableApplicationContext context) {
+        assertDoesNotThrow(() -> {
+            final NotificacionPort port = context.getBeanProvider(NotificacionPort.class).getObject();
+            assertThat(port).isInstanceOf(CompositeNotificacionAdapter.class);
+        });
+        final String[] portBeanNames = context.getBeanNamesForType(NotificacionPort.class);
+        final List<String> primaryBeans = new ArrayList<>();
+        for (final String beanName : portBeanNames) {
+            if (context.getBeanFactory().getBeanDefinition(beanName).isPrimary()) {
+                primaryBeans.add(beanName);
+            }
+        }
+        assertThat(primaryBeans).hasSize(1);
+    }
+
     @Test
     @DisplayName("WI-04: provider=composite targets=log,outbox crea Composite con 2 destinos en orden")
     void WI04_provider_composite_log_outbox() {
@@ -100,7 +119,7 @@ class NotificationWiringTest {
                 "app.adapters.notification.provider=composite",
                 "app.adapters.notification.composite.targets=log,outbox"
         ).run(context -> {
-            assertThat(context.getBean(NotificacionPort.class)).isInstanceOf(CompositeNotificacionAdapter.class);
+            assertCompositeNotificacionPort(context);
             assertThat(context).hasSingleBean(LogNotificacionAdapter.class);
             assertThat(context).hasSingleBean(OutboxNotificacionAdapter.class);
             assertThat(context).hasSingleBean(NotificacionOutboxDispatcher.class);
@@ -114,7 +133,9 @@ class NotificationWiringTest {
                 "app.adapters.notification.provider=composite",
                 "app.adapters.notification.composite.targets=outbox,log"
         ).run(context -> {
-            assertThat(context.getBean(NotificacionPort.class)).isInstanceOf(CompositeNotificacionAdapter.class);
+            assertCompositeNotificacionPort(context);
+            assertThat(context).hasSingleBean(LogNotificacionAdapter.class);
+            assertThat(context).hasSingleBean(OutboxNotificacionAdapter.class);
         });
     }
 
@@ -191,7 +212,7 @@ class NotificationWiringTest {
         runner.withPropertyValues(
                 "app.adapters.notification.provider=composite",
                 "app.adapters.notification.composite.targets=log,outbox"
-        ).run(context -> assertThat(context.getBean(NotificacionPort.class)).isInstanceOf(CompositeNotificacionAdapter.class));
+        ).run(this::assertCompositeNotificacionPort);
     }
 
     @Test
