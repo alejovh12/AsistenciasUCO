@@ -100,8 +100,6 @@ public final class EstudiantePortalController {
     public ResponseEntity<ApiDataResponse<Void>> crearReclamo() { throw unavailable("crear reclamo"); }
     @DeleteMapping("/reclamos/{id}")
     public ResponseEntity<ApiDataResponse<Void>> eliminarReclamo(@PathVariable final UUID id) { throw unavailable("eliminar reclamo"); }
-    @PostMapping("/solicitudes-matricula")
-    public ResponseEntity<ApiDataResponse<Void>> crearSolicitudMatricula() { throw unavailable("crear solicitud de matricula"); }
     @PostMapping("/matricular-grupo")
     public ResponseEntity<ApiDataResponse<Void>> matricularGrupo() { throw unavailable("matricular grupo"); }
 
