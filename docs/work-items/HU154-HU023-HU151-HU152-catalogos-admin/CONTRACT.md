@@ -132,3 +132,14 @@ Validación de borde (Bean Validation) espejo de la DB: `codigo` 3 caracteres `[
 - `POST/PUT/PATCH /admin/areas` hoy responden 501: sin consumidores válidos.
 - Los endpoints de tipos de programa son nuevos.
 - Se verifica en la fase CONTRACT si `openapi-golden-path.yaml` cubre estos paths (hoy no menciona áreas ni tipos de programa); de no cubrirlos, no se toca el contrato WORM ni su `.sha256`.
+
+## 6. Enmiendas (2026-10-24)
+
+1. **HU023 (lectura pública).** `GET /api/v1/tipos-programa` lo sirve `CatalogoProgramaController` (pista A, HU076-HU078, solo activos, `CatalogoProgramaDTO`). El `TipoProgramaController` de este work item se retiró en `develop` (commit 6729d71) por mapping ambiguo. `ConsultarTiposPrograma` queda para el listado administrativo (`GET /api/v1/admin/tipos-programa`).
+2. **Parámetros anchos en los SP públicos.** `@codigo` es `NVARCHAR(20)` y `@nombre` `NVARCHAR(150)` en las fachadas para validar y normalizar (`UPPER(TRIM)`) sin truncar silenciosamente; los `*_interno` conservan `NVARCHAR(3)` y `NVARCHAR(50)`.
+3. **Validación de borde.** El 400 lo produce `ValidationException` del caso de uso (igual que facultades), no Bean Validation.
+4. **Listado de áreas.** `GET /api/v1/admin/areas` permanece en `AdminPortalController`; `POST/PUT/PATCH` están en `AdminAreaController`.
+5. **D6.** `usp_validar_programa_academico_interno` (pista A) ya rechaza tipos inexistentes o inactivos con `PROG_004`; no se tocó `usp_crear_programa_academico`.
+6. **Frontend de áreas.** Se retiraron `facultadId`, `facultadNombre`, `coordinadorArea` y `totalAsignaturas` del modelo (D3); `dean-infraestructura` y los mocks se alinearon.
+7. **Corrección de D8 (verificada en E2E, 2026-10-24).** `DbExceptionTranslator` no propaga el `mensajeUsuario` del SP: crea la excepción con el mensaje por defecto del código, por lo que `GEN_003`/`TPR_001` llegaban como «La operacion genera un conflicto…» / «El recurso solicitado no existe.». Se agregó `CatalogoErrorCode` (`TPR_001`, `TPR_002`, `ARE_001`, `ARE_002`, mismo patrón que `CoordinadorErrorCode`/`COO_001`). Los SP de tipos de programa y áreas emiten `TPR_002`/`ARE_002` (duplicado de código o nombre) en lugar de `GEN_003`; el texto institucional viene del catálogo de mensajes con el default de `CatalogoErrorCode` como respaldo. Tabla de códigos 2.3: `GEN_003` → `TPR_002`/`ARE_002`.
+8. **Lectura de áreas.** `GET /api/v1/admin/areas` está permitido también a `DECANO` y `COORDINADOR` (regla existente del PR de seguridad de catálogos); la escritura sigue siendo solo `ADMINISTRADOR`.

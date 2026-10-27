@@ -145,7 +145,7 @@ class AdminPortalControllerTest {
 
     @Test
     void consultarAreas_serializa_lista_del_puerto() throws Exception {
-        when(consultarAreas.execute()).thenReturn(List.of(new AreaDTO(UUID.randomUUID(), "Matematicas")));
+        when(consultarAreas.execute()).thenReturn(List.of(new AreaDTO(UUID.randomUUID(), "MAT", "Matematicas", true)));
 
         mvc.perform(get("/api/v1/admin/areas"))
                 .andExpect(status().isOk())
@@ -293,8 +293,7 @@ class AdminPortalControllerTest {
                 () -> controller.actualizarEspacioFisico(FACULTAD), () -> controller.cambiarEstadoEspacioFisico(FACULTAD),
                 () -> controller.actualizarParametro(FACULTAD), controller::consultarAuditoria,
                 controller::crearInstitucion, () -> controller.actualizarInstitucion(FACULTAD),
-                () -> controller.cambiarEstadoInstitucion(FACULTAD),
-                controller::crearArea, () -> controller.actualizarArea(FACULTAD), () -> controller.cambiarEstadoArea(FACULTAD)
+                () -> controller.cambiarEstadoInstitucion(FACULTAD)
         );
 
         for (final var operation : operations) {

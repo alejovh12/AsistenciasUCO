@@ -218,12 +218,6 @@ public final class AdminPortalController {
         final var data = consultarAreasInputPort.execute();
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
     }
-    @PostMapping("/areas")
-    public ResponseEntity<ApiDataResponse<Void>> crearArea() { throw unavailable("crear area"); }
-    @PutMapping("/areas/{id}")
-    public ResponseEntity<ApiDataResponse<Void>> actualizarArea(@PathVariable final UUID id) { throw unavailable("actualizar area"); }
-    @PatchMapping("/areas/{id}/estado")
-    public ResponseEntity<ApiDataResponse<Void>> cambiarEstadoArea(@PathVariable final UUID id) { throw unavailable("cambiar estado de area"); }
 
     private FacultadDTO releerFacultad(final UUID id) {
         return consultarFacultadesInputPort.execute().stream()
