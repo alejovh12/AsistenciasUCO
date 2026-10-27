@@ -33,6 +33,12 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsignaturaD
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.HorarioDocenteQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.DocenteRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.RetiroEstudianteGrupoPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
+import co.edu.uco.asistenciasuco.application.features.docente.retirarestudiantegrupo.primaryports.RetirarEstudianteGrupoInputPort;
+import co.edu.uco.asistenciasuco.application.features.docente.retirarestudiantegrupo.primaryports.interactor.RetirarEstudianteGrupoInteractor;
+import co.edu.uco.asistenciasuco.application.features.docente.retirarestudiantegrupo.usecase.RetirarEstudianteGrupoUseCase;
+import co.edu.uco.asistenciasuco.application.features.docente.retirarestudiantegrupo.usecase.impl.RetirarEstudianteGrupoUseCaseImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -133,5 +139,15 @@ public class DocenteWiringConfiguration {
     @Bean
     ConsultarAsignaturasDocenteInputPort consultarAsignaturasDocenteInputPort(final ConsultarAsignaturasDocenteUseCase useCase) {
         return new ConsultarAsignaturasDocenteInteractor(useCase);
+    }
+
+    @Bean
+    RetirarEstudianteGrupoUseCase retirarEstudianteGrupoUseCase(final InstitutionalScopePort scopePort, final RetiroEstudianteGrupoPort retiroPort, final NotificacionPort notificacionPort) {
+        return new RetirarEstudianteGrupoUseCaseImpl(scopePort, retiroPort, notificacionPort);
+    }
+
+    @Bean
+    RetirarEstudianteGrupoInputPort retirarEstudianteGrupoInputPort(final RetirarEstudianteGrupoUseCase useCase) {
+        return new RetirarEstudianteGrupoInteractor(useCase);
     }
 }
