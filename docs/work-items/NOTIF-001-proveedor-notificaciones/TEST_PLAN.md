@@ -105,14 +105,14 @@ CT-01 acepta una notificación completa sin lanzar; CT-02 `null` → `NullPointe
 | WI-01 | sin propiedades | 1 bean `NotificacionPort` de tipo `LogNotificacionAdapter`; sin despachador ni repositorio outbox |
 | WI-02 | `provider=log` | igual a WI-01 |
 | WI-03 | `provider=outbox` | 1 `NotificacionPort` de tipo `OutboxNotificacionAdapter`; despachador y sender presentes |
-| WI-04 | `provider=composite`, `targets=log,outbox` | 1 `NotificacionPort` de tipo `CompositeNotificacionAdapter` con 2 destinos en orden; los hojas existen como tipo concreto y **no** como `NotificacionPort` |
-| WI-05 | `provider=composite`, `targets=outbox,log` | orden invertido respetado |
+| WI-04 | `provider=composite`, `targets=log,outbox` | Composite con 2 destinos en orden; `getBeanProvider(NotificacionPort.class).getObject()` resuelve `CompositeNotificacionAdapter` sin `NoUniqueBeanDefinitionException`; exactamente 1 bean `NotificacionPort` con `@Primary`; adaptadores hoja existen como tipo concreto (`hasSingleBean(LogNotificacionAdapter)`, `hasSingleBean(OutboxNotificacionAdapter)`) |
+| WI-05 | `provider=composite`, `targets=outbox,log` | orden invertido respetado; `getBeanProvider` resuelve `CompositeNotificacionAdapter` con `@Primary` |
 | WI-06 | `provider=composite` con 1 destino / repetidos / `composite` dentro / lista vacía | el contexto **falla** al arrancar con mensaje claro |
 | WI-07 | `provider=kafka` | el contexto falla |
 | WI-08 | `provider=outbox`, `sender=smtp` | el contexto falla |
 | WI-09 | `provider=outbox`, `dispatcher-enabled=false` | adaptador presente, despachador sin hilo |
 | WI-10 | `provider=log` | no se crea ningún bean del paquete `outbox` |
-| WI-11 | Ningún caso crea dos beans `NotificacionPort` | |
+| WI-11 | Resolución unívoca de `NotificacionPort` | En modo log y outbox: exactamente 1 bean `NotificacionPort` (`hasSingleBean`). En modo composite: `getBeanProvider(NotificacionPort.class).getObject()` resuelve unívocamente el composite y exactamente 1 bean `NotificacionPort` está marcado con `@Primary` |
 | WI-12 | `RetirarEstudianteGrupoUseCaseImpl` sigue construible con el `NotificacionPort` resultante en cada modo | |
 
 ### 3.3 ArchUnit (`MessagingIsolation…Test`, nuevo)

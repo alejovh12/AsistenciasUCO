@@ -246,4 +246,16 @@ Logs estructurados con `idNotificacion`, `tipo`, `intentos`, `estado`, `correlat
 Ver PLAN §3 y §7.
 
 ## 9. Enmiendas
-(vacío; se llena durante la implementación)
+
+### 9.1 TEST_CONTRACT_CONFLICT: Resolución unívoca de NotificacionPort en modo Composite (WI-04, WI-05, WI-11)
+- **Fecha:** 2026-10-27
+- **Ámbito:** Backend — Tests de Wiring (`NotificationWiringTest`) y Composition Root (`CompositeNotificacionAdapterConfiguration`).
+- **Descripción del Conflicto:** Conflicto formal entre el requisito de registrar los adaptadores hoja en el contexto de Spring (`hasSingleBean(LogNotificacionAdapter.class)`, `hasSingleBean(OutboxNotificacionAdapter.class)`) para ser inyectados en `CompositeNotificacionAdapterConfiguration` vía `ObjectProvider`, y el requisito del TEST_PLAN de que en modo composite exista exactamente un único bean de tipo `NotificacionPort` evaluado con `assertThat(context).hasSingleBean(NotificacionPort.class)`.
+- **Causa Raíz:** En Java, `LogNotificacionAdapter` (clase final inmutable de HU051) y `OutboxNotificacionAdapter` implementan formalmente `NotificacionPort`. La aserción `hasSingleBean(NotificacionPort.class)` de AssertJ invoca internamente `context.getBeansOfType(NotificacionPort.class)`, que evalúa `NotificacionPort.class.isInstance(bean)` sobre cada singleton del contenedor. Al existir los dos adaptadores hoja en el contexto, Spring encuentra obligatoriamente 3 beans asignables a `NotificacionPort` (`logNotificacionAdapter`, `outboxNotificacionAdapter`, `compositeNotificacionPort`), provocando que `hasSingleBean` falle por conteo total.
+- **Resolución Aprobada (Opción A):**
+  1. En tiempo de ejecución (`RetirarEstudianteGrupoUseCaseImpl`), `@Primary` en `compositeNotificacionPort` garantiza la resolución e inyección unívocas de `CompositeNotificacionAdapter` sin `NoUniqueBeanDefinitionException`.
+  2. En las pruebas de wiring (`NotificationWiringTest` para WI-04, WI-05 y WI-11), la verificación en modo composite se alinea con la semántica de inyección efectiva:
+     - `context.getBeanProvider(NotificacionPort.class).getObject()` resuelve exitosamente una instancia de `CompositeNotificacionAdapter`.
+     - Exactamente un bean de tipo `NotificacionPort` tiene `isPrimary() == true` en su definición (`beanFactory.getBeanDefinition(beanName).isPrimary()`).
+     - Se mantiene la existencia unívoca de los adaptadores hoja concretos (`hasSingleBean(LogNotificacionAdapter.class)`, `hasSingleBean(OutboxNotificacionAdapter.class)`).
+  3. En modos individuales (`log` y `outbox`), se mantiene la aserción estricta `hasSingleBean(NotificacionPort.class)`.
