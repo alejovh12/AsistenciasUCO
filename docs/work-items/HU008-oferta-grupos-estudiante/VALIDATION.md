@@ -26,4 +26,4 @@ last-reviewed: 2026-10-27
 - GitHub Actions y SonarCloud: la rama está en commits locales, sin subir, hasta que John confirme.
 - MV-008: oferta en pantalla y aceptar una transversal sin inscripción en el otro programa.
 - Reaprovisionar el PDP con la ruta nueva (Alejo).
-- Decisión opcional de John: depurar las filas `EstudiantePrograma` antiguas creadas por transversales.
+- Depuración de `EstudiantePrograma` antiguos: script manual listo. En la BD local de John el dry run dio 0 candidatas y no hubo borrado. En otros ambientes, dry run → respaldo → borrado.

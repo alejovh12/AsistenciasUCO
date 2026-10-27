@@ -50,7 +50,7 @@ last-reviewed: 2026-10-27
 | `usp_consultar_kpis_institucion` (estudiantes activos de la institución) | Sin doble conteo por transversales | Neutro o mejora |
 | `usp_consultar_oferta_grupos_estudiante` (HU008) | Las ESP visibles son solo las de sus programas reales | Coherente con J3 |
 
-- **Datos existentes:** las filas `EstudiantePrograma` creadas antes por transversales **no se borran** (no se migra data). Si John lo pide, se depuran con un script controlado aparte.
+- **Datos existentes:** John pidió depurar las filas `EstudiantePrograma` creadas antes por transversales. Se hace con el script manual y opcional `scripts/maintenance/hu008_depurar_estudiante_programa_transversales.sql` del repo de DB (dry run + borrado transaccional con verificación; fuera del despliegue automático). En la BD local de John el dry run dio 0 candidatas. Detalle en el PLAN del work item de DB.
 - **Asistencia:** el docente titular y el coordinador del programa del grupo siguen viendo al estudiante en el grupo, porque la asistencia se rige por la matrícula (`EstudianteGrupo`), no por `EstudiantePrograma`.
 
 ## 3. Alcance

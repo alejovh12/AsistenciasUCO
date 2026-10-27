@@ -45,7 +45,7 @@ Completa y actualizada:
 ## Riesgos residuales
 
 - La ruta nueva requiere reaprovisionar el PDP (Alejo).
-- Las filas `EstudiantePrograma` creadas antes por transversales siguen en la base. La depuración queda a decisión de John.
+- Las filas `EstudiantePrograma` antiguas creadas por transversales se depuran con el script manual `scripts/maintenance/hu008_depurar_estudiante_programa_transversales.sql` (repo de DB). En la BD local de John: 0 candidatas, sin borrado. En otros ambientes hay que ejecutarlo a mano (dry run → respaldo → borrado).
 - Clasificar asignaturas como obligatorias o electivas, o hacer que una asignatura pertenezca a varios programas, requeriría tablas nuevas. Fuera de alcance.
 - No hay commit RED separado.
 
