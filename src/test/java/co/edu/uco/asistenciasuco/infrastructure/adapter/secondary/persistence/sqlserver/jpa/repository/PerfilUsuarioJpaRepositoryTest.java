@@ -106,6 +106,20 @@ class PerfilUsuarioJpaRepositoryTest {
     }
 
     @Test
+    void PR06_uniqueidentifier_como_texto_del_driver_sqlserver() {
+        final UUID programa = UUID.randomUUID();
+        final Object[] fila = fila("ESTUDIANTE", null, true);
+        fila[0] = ACTOR.toString().toUpperCase();
+        fila[13] = " " + programa + " ";
+        when(query.getResultList()).thenReturn(Collections.singletonList(fila));
+
+        final var perfil = repository.consultarPerfil(ACTOR).orElseThrow();
+
+        assertEquals(ACTOR, perfil.idUsuario());
+        assertEquals(programa, perfil.vinculos().getFirst().idEntidad());
+    }
+
+    @Test
     void PR05_fallo_tecnico_se_traduce() {
         when(query.getResultList()).thenThrow(new PersistenceException("timeout"));
 

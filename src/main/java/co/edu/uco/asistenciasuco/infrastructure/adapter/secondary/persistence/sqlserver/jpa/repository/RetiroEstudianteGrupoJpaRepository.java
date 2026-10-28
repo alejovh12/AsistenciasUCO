@@ -5,6 +5,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.JpaProcedureExecutor;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.NativeRowValues;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import jakarta.persistence.EntityManager;
@@ -98,10 +99,10 @@ public class RetiroEstudianteGrupoJpaRepository implements RetiroEstudianteGrupo
     private static DestinatarioRetiroProjection toProjection(final Object[] fila) {
         return new DestinatarioRetiroProjection(
                 (String) fila[0],
-                (UUID) fila[1],
+                NativeRowValues.uuid(fila[1]),
                 (String) fila[2],
                 (String) fila[3],
-                (UUID) fila[4],
+                NativeRowValues.uuid(fila[4]),
                 fila[5] == null ? null : ((Number) fila[5]).intValue(),
                 (String) fila[6],
                 (String) fila[7]

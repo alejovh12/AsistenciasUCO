@@ -6,6 +6,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.identity.projection.
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.NativeRowValues;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Repository;
@@ -17,7 +18,8 @@ import java.util.UUID;
 
 /**
  * Adaptador JPA del perfil del usuario autenticado (HU006). El SP devuelve una fila por vinculo con los datos personales
- * repetidos (o una sola fila con el vinculo en NULL); aqui se agrupan en un perfil.
+ * repetidos (o una sola fila con el vinculo en NULL); aqui se agrupan en un perfil. Los UNIQUEIDENTIFIER llegan como texto
+ * desde SQL Server en consultas nativas: se convierten con {@link NativeRowValues#uuid}.
  */
 @Repository
 public class PerfilUsuarioJpaRepository implements PerfilUsuarioQueryPort {
@@ -58,10 +60,10 @@ public class PerfilUsuarioJpaRepository implements PerfilUsuarioQueryPort {
                     final Object[] f = filas.getFirst();
                     final List<VinculoUsuarioProjection> vinculos = filas.stream()
                             .filter(fila -> fila[12] != null)
-                            .map(fila -> new VinculoUsuarioProjection(texto(fila[12]), (UUID) fila[13], texto(fila[14]),
+                            .map(fila -> new VinculoUsuarioProjection(texto(fila[12]), NativeRowValues.uuid(fila[13]), texto(fila[14]),
                                     texto(fila[15]), Boolean.TRUE.equals(fila[16])))
                             .toList();
-                    return Optional.of(new PerfilUsuarioProjection((UUID) f[0], texto(f[1]), texto(f[2]), entero(f[3]),
+                    return Optional.of(new PerfilUsuarioProjection(NativeRowValues.uuid(f[0]), texto(f[1]), texto(f[2]), entero(f[3]),
                             texto(f[4]), texto(f[5]), texto(f[6]), texto(f[7]), texto(f[8]), texto(f[9]),
                             Boolean.TRUE.equals(f[10]), Boolean.TRUE.equals(f[11]), vinculos));
                 }

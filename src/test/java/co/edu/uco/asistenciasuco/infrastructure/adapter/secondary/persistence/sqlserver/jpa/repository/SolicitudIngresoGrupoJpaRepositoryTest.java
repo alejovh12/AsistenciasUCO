@@ -131,4 +131,34 @@ class SolicitudIngresoGrupoJpaRepositoryTest {
         when(query.getResultList()).thenThrow(new PersistenceException("timeout"));
         assertThrows(DatabaseOperationException.class, () -> repository.consultarSolicitudesEstudiante(null, 1, 10, ACTOR));
     }
+
+    // Contra SQL Server real el driver entrega UNIQUEIDENTIFIER como String en un Object[] de consulta nativa: un cast a
+    // UUID lanzaba ClassCastException (500 en GET de solicitudes y aviso de destinatarios que nunca salia).
+    @Test
+    void RG07_bandeja_del_docente_acepta_identificadores_como_texto_del_driver() {
+        when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{SOLICITUD.toString().toUpperCase(),
+                ACTOR.toString().toUpperCase(), "Beto Qa", 970005302, "E", "en espera",
+                Timestamp.valueOf(LocalDateTime.of(2026, 10, 27, 13, 0)), null, null, 1, 30, 0, 4}));
+
+        final var fila = repository.consultarSolicitudesGrupo(GRUPO, "E", 1, 10, ACTOR).getFirst();
+
+        assertEquals(SOLICITUD, fila.idSolicitud());
+        assertEquals(ACTOR, fila.idEstudiante());
+    }
+
+    @Test
+    void RG08_mis_solicitudes_y_destinatarios_aceptan_identificadores_como_texto_del_driver() {
+        when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{SOLICITUD.toString(), GRUPO.toString(), 1, "Grupo 1",
+                ACTOR.toString(), "Calculo", "Doc", "R", "rechazada", Timestamp.valueOf(LocalDateTime.of(2026, 10, 27, 13, 0)), null,
+                "Motivo", 1}));
+        final var mia = repository.consultarSolicitudesEstudiante(null, 1, 10, ACTOR).getFirst();
+        assertEquals(SOLICITUD, mia.idSolicitud());
+        assertEquals(GRUPO, mia.idGrupo());
+
+        when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{"DOCENTE", ACTOR.toString(), "Doc", "d@uco.edu.co",
+                GRUPO.toString(), 1, "Grupo 1", "Calculo"}));
+        final var destinatario = repository.consultarDestinatarios(SOLICITUD, ACTOR).getFirst();
+        assertEquals(ACTOR, destinatario.idUsuario());
+        assertEquals(GRUPO, destinatario.idGrupo());
+    }
 }
