@@ -32,6 +32,11 @@ import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclam
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.EstudianteRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.SolicitudIngresoGrupoPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.OfertaGruposEstudianteQueryPort;
+import co.edu.uco.asistenciasuco.application.features.estudiante.consultarofertagrupos.primaryports.ConsultarOfertaGruposInputPort;
+import co.edu.uco.asistenciasuco.application.features.estudiante.consultarofertagrupos.primaryports.interactor.ConsultarOfertaGruposInteractor;
+import co.edu.uco.asistenciasuco.application.features.estudiante.consultarofertagrupos.usecase.ConsultarOfertaGruposUseCase;
+import co.edu.uco.asistenciasuco.application.features.estudiante.consultarofertagrupos.usecase.impl.ConsultarOfertaGruposUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
 import co.edu.uco.asistenciasuco.application.features.estudiante.solicitaringresogrupo.primaryports.SolicitarIngresoGrupoInputPort;
 import co.edu.uco.asistenciasuco.application.features.estudiante.solicitaringresogrupo.primaryports.interactor.SolicitarIngresoGrupoInteractor;
@@ -155,5 +160,16 @@ public class EstudianteWiringConfiguration {
     @Bean
     ConsultarSolicitudesIngresoEstudianteInputPort consultarSolicitudesIngresoEstudianteInputPort(final ConsultarSolicitudesIngresoEstudianteUseCase useCase) {
         return new ConsultarSolicitudesIngresoEstudianteInteractor(useCase);
+    }
+
+    /** HU008: oferta de grupos (con cupos) de los programas del estudiante. */
+    @Bean
+    ConsultarOfertaGruposUseCase consultarOfertaGruposUseCase(final InstitutionalScopePort scopePort, final OfertaGruposEstudianteQueryPort port) {
+        return new ConsultarOfertaGruposUseCaseImpl(scopePort, port);
+    }
+
+    @Bean
+    ConsultarOfertaGruposInputPort consultarOfertaGruposInputPort(final ConsultarOfertaGruposUseCase useCase) {
+        return new ConsultarOfertaGruposInteractor(useCase);
     }
 }

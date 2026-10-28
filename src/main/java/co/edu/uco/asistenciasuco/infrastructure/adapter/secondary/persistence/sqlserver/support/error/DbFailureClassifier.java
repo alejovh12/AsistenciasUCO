@@ -24,6 +24,7 @@ final class DbFailureClassifier {
 
     private static final String OPERATION_ACTUALIZAR_COORDINADOR = "actualizarCoordinador";
     private static final String OPERATION_CAMBIAR_ESTADO_COORDINADOR = "cambiarEstadoCoordinador";
+    private static final String OPERATION_CONSULTAR_HISTORIAL_GRUPOS_DOCENTE = "consultarHistorialGruposDocente";
     private static final String OPERATION_ASIGNAR_DOCENTE = "asignarDocenteAGrupo";
     private static final String OPERATION_REGISTRAR_ESTUDIANTE = "registrarEstudianteEnGrupo";
     // Operaciones reales de los repositories JPA (OP_* en UsuarioJpaRepository / AsistenciaJpaRepository).
@@ -141,7 +142,8 @@ final class DbFailureClassifier {
     }
 
     private static ErrorDefinition classifyGen001(final String operation) {
-        if (OPERATION_ACTUALIZAR_COORDINADOR.equals(operation) || OPERATION_CAMBIAR_ESTADO_COORDINADOR.equals(operation)) {
+        if (OPERATION_ACTUALIZAR_COORDINADOR.equals(operation) || OPERATION_CAMBIAR_ESTADO_COORDINADOR.equals(operation)
+                || OPERATION_CONSULTAR_HISTORIAL_GRUPOS_DOCENTE.equals(operation)) {
             return CommonErrorCode.RESOURCE_NOT_FOUND;
         }
         return DatabaseErrorCode.ERR_DB_UNCLASSIFIED;
