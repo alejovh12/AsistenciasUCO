@@ -43,3 +43,7 @@ No iniciar HU014/HU038 en esta rama.
 ## Cambio posterior por HU008 (2026-10-27)
 
 Regla de John: el estudiante solo queda inscrito en un programa (`EstudiantePrograma`) cuando ingresa a un grupo de asignatura **específica (ESP)**; al aceptar una solicitud en una asignatura transversal (**BAS** o **INS**) se matricula en el grupo pero **no** se inscribe en el programa. Cambio de 1 línea en `usp_registrar_estudiante_en_grupo_interno` (y `_autonomo`), con regresión RI-01..RI-03 en `test/test_hu008_regla_inscripcion_programa.sql`; S-01..S-12 siguen en verde. Detalle e impacto: work item `HU008-oferta-grupos-estudiante`.
+
+## Cambio posterior: INT-HU-01 cerrado (2026-10-28)
+
+Hallazgo `INT-HU-01` de [INTEGRACION-DEVELOP-20261027](../INTEGRACION-DEVELOP-20261027/README.md): tras el retiro (HU051, matrícula `I`) el estudiante podía volver a solicitar (HU053) pero `ACEPTAR` (HU055) fallaba con **409 `ERR_MATRICULA_DUPLICADA`** y la solicitud quedaba pendiente. Decisión de John (opción a): `usp_resolver_solicitud_ingreso_grupo` **reactiva** la matrícula retirada (`I` → `A`) y responde `SIG_011`/`ACEPTADA`. Cambio solo en DB (rama `fix/INT-HU-01-reactivar-matricula-retirada` del repo de DB, pruebas RM-01..RM-03); el backend no cambia (mismo código y mismo mapeo HTTP).

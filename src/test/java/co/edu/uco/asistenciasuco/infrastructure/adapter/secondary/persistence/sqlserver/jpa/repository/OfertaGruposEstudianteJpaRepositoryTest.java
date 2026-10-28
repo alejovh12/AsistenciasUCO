@@ -148,6 +148,23 @@ class OfertaGruposEstudianteJpaRepositoryTest {
     }
 
     @Test
+    void OR07_uniqueidentifier_como_texto_del_driver_sqlserver() {
+        final UUID grupo = UUID.randomUUID();
+        final UUID solicitud = UUID.randomUUID();
+        final Object[] fila = fila(null, LocalDate.of(2026, 7, 20), false, null, "P");
+        fila[0] = grupo.toString().toUpperCase();
+        fila[3] = UUID.randomUUID().toString();
+        fila[7] = UUID.randomUUID().toString();
+        fila[17] = solicitud.toString();
+        when(query.getResultList()).thenReturn(Collections.singletonList(fila));
+
+        final var g = repository.consultarOferta(ACTOR, null, 1, 10).grupos().getFirst();
+
+        assertEquals(grupo, g.idGrupo());
+        assertEquals(solicitud, g.idSolicitudAbierta());
+    }
+
+    @Test
     void constructor_rechaza_entity_manager_nulo() {
         assertThrows(NullPointerException.class, () -> new OfertaGruposEstudianteJpaRepository(null));
     }
