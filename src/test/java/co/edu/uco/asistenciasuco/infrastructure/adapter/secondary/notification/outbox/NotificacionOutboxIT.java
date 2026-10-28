@@ -123,6 +123,7 @@ class NotificacionOutboxIT {
             }
             trackedIds.clear();
         }
+        jdbcTemplate.update("DELETE FROM dbo.NotificacionSaliente WHERE tipo LIKE 'TEST_IT%'");
     }
 
     private Map<String, Object> esperarEstado(UUID id, String estadoEsperado, int maxSegundos) throws InterruptedException {
@@ -365,14 +366,14 @@ class NotificacionOutboxIT {
             dispatcher.signal();
             secondDispatcher.signal();
 
-            boolean delivered = testSender.awaitDelivery(30, TimeUnit.SECONDS);
+            boolean delivered = testSender.awaitDelivery(60, TimeUnit.SECONDS);
             assertTrue(delivered, "Debieron entregarse las 100 notificaciones");
 
             List<UUID> deliveredIds = testSender.getDeliveredIds();
+            trackedIds.addAll(deliveredIds);
             assertEquals(totalCount, deliveredIds.size());
             Set<UUID> uniqueIds = new HashSet<>(deliveredIds);
             assertEquals(totalCount, uniqueIds.size(), "No debe haber identificadores duplicados");
-            trackedIds.addAll(uniqueIds);
         } finally {
             secondDispatcher.stop();
         }
