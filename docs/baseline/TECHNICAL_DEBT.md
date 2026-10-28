@@ -943,4 +943,36 @@ GOLDEN PATH EFFECT:         NONE
 - **Descripción:** `NotificacionPort` (avisos institucionales por correo, WhatsApp, SMS…) existe en Application, pero el componente de notificaciones del equipo aún no está lanzado. El provider por defecto (`LogNotificacionAdapter`, `@ConditionalOnMissingBean`) solo registra en el log el tipo de aviso, los roles e ids de los destinatarios y los ids de trazabilidad, sin correos, nombres ni texto del mensaje.
 - **Impacto:** El retiro de HU051 se realiza y se audita, pero el estudiante, el docente y el coordinador no reciben el aviso real. También afecta a HU053-HU055 (avisos de solicitud registrada, resuelta y retirada) y afectará a HU038.
 - **Resolución esperada:** Implementar el adaptador del componente institucional de notificaciones (su configuración aporta otro `NotificacionPort` y el de log deja de crearse) y validar la entrega en MV.
-- **Bloquea línea base:** No. **Estado:** **OPEN / MEDIUM / BACKEND**. **Work item:** [HU051](../work-items/HU051-retirar-estudiante-grupo/CLOSURE.md).
+- **Bloquea línea base:** No. **Estado:** **RESOLVED (2026-10-28)**: Implementada la capacidad intercambiable de notificaciones mediante `app.adapters.notification.provider` (`log`, `outbox`, `composite`) bajo NOTIF-001, con persistencia durable en `dbo.NotificacionSaliente`, procedimientos almacenados transaccionales (`usp_registrar_notificacion_saliente`, `usp_reservar_notificaciones_pendientes`, `usp_marcar_notificacion_saliente`, `usp_depurar_notificaciones_salientes`), despachador en segundo plano (`NotificacionOutboxDispatcher`), reintentos exponenciales deterministas y dead-letter (`FALLIDA_DEFINITIVA`). **Work item:** [NOTIF-001](../work-items/NOTIF-001-proveedor-notificaciones/PLAN.md).
+
+## TD-067
+
+- **Fecha / responsable:** 2026-10-28 / backend-team (NOTIF-001 / PLAN §7). **Clasificación:** INTEGRATION_EXTERNAL_SENDER. **Prioridad:** MEDIA.
+- **Descripción:** La implementación de NOTIF-001 incorpora el SPI `NotificacionChannelSender` con un remitente por defecto `LogNotificacionChannelSender` (`app.providers.outbox-notification.sender=log`). Falta implementar el remitente del componente institucional de notificaciones (`app.providers.outbox-notification.sender=institucional` o proveedor `institucional` directo para correo SMTP, WhatsApp o SMS institucional).
+- **Impacto:** Las notificaciones procesadas por el outbox se despachan y registran como `ENTREGADA` simulando el envío mediante log estructurado, pero aún no envían el mensaje a los canales telemáticos externos reales.
+- **Resolución esperada:** Implementar `InstitucionalNotificacionChannelSender` integrando el servicio telemático institucional de la UCO y configurarlo vía selector de propiedades.
+- **Bloquea línea base:** No. **Estado:** **OPEN / MEDIUM / BACKEND**. **Work item:** [NOTIF-001](../work-items/NOTIF-001-proveedor-notificaciones/PLAN.md).
+
+## TD-068
+
+- **Fecha / responsable:** 2026-10-28 / backend-team (NOTIF-001 / PLAN §7). **Clasificación:** PRIVACY_DATA_MINIMIZATION. **Prioridad:** BAJA.
+- **Descripción:** En cumplimiento de la minimización de datos (D5), `dbo.NotificacionSaliente` no persiste `nombre` ni `correo` de los destinatarios (solo `rol` e `idUsuario`). Al realizar la entrega física externa (TD-067), se requerirá resolver los datos de contacto (correo/teléfono) de los destinatarios en el momento de entrega sin persistirlos en el outbox.
+- **Impacto:** Sin impacto funcional en v1 (el sender actual solo registra rol e idUsuario). Necesario para el sender telemático real.
+- **Resolución esperada:** Incorporar resolución de datos de contacto vía `UsuarioQueryPort` o cliente de identidad en tiempo de despacho antes de invocar `NotificacionChannelSender`.
+- **Bloquea línea base:** No. **Estado:** **OPEN / LOW / BACKEND**. **Work item:** [NOTIF-001](../work-items/NOTIF-001-proveedor-notificaciones/PLAN.md).
+
+## TD-069
+
+- **Fecha / responsable:** 2026-10-28 / fullstack-team (NOTIF-001 / PLAN §7). **Clasificación:** OPERABILITY_MONITORING_GAP. **Prioridad:** BAJA.
+- **Descripción:** NOTIF-001 implementa el motor de persistencia, despacho, reintentos y dead-letter en base de datos y backend, pero no expone endpoints HTTP administrativos ni interfaz gráfica para consultar el histórico de notificaciones o reencolar registros en estado `FALLIDA_DEFINITIVA`.
+- **Impacto:** La inspección y remediación de dead-letter requiere acceso a base de datos mediante queries técnicas.
+- **Resolución esperada:** Implementar endpoint REST `GET /api/v1/admin/notificaciones` paginado vía SP `usp_consultar_notificaciones_salientes` sobre vista autorizada y acción de reintento manual `POST /api/v1/admin/notificaciones/{id}/reintentar`.
+- **Bloquea línea base:** No. **Estado:** **OPEN / LOW / FULLSTACK**. **Work item:** [NOTIF-001](../work-items/NOTIF-001-proveedor-notificaciones/PLAN.md).
+
+## TD-070
+
+- **Fecha / responsable:** 2026-10-28 / architecture-team (NOTIF-001 / PLAN §7). **Clasificación:** TRANSACTIONAL_OUTBOX_DUAL_WRITE. **Prioridad:** BAJA.
+- **Descripción:** La arquitectura de la aplicación delega la atomicidad de negocio exclusivamente a los procedimientos almacenados de SQL Server sin transacciones Java (`@Transactional`) globales que abarquen el caso de uso y el outbox. Por diseño de mejor esfuerzo (D4), el outbox registra la notificación una vez el caso de uso ha ejecutado con éxito su SP de negocio. Existe una ventana teórica de pérdida si el proceso backend colapsa exactamente entre la respuesta del SP y la inserción del outbox.
+- **Impacto:** Coherente con la semántica institucional vigente de mejor esfuerzo para avisos informativos.
+- **Resolución esperada:** Si un caso de negocio futuro requiere garantía transaccional fuerte (two-phase commit o atomic outbox estricto), se deberá instrumentar el registro del evento outbox directamente dentro del SP transaccional del negocio en DB.
+- **Bloquea línea base:** No. **Estado:** **OPEN / LOW / ARCHITECTURE**. **Work item:** [NOTIF-001](../work-items/NOTIF-001-proveedor-notificaciones/PLAN.md).
