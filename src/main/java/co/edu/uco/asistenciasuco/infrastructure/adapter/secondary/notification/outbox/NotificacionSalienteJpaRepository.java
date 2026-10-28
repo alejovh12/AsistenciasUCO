@@ -36,7 +36,7 @@ public class NotificacionSalienteJpaRepository implements NotificacionOutboxRepo
     @Override
     public void registrar(final RegistroNotificacion registro) {
         Objects.requireNonNull(registro, "El registro de notificacion es obligatorio.");
-        final UUID corrId = registro.idCorrelacion() != null ? registro.idCorrelacion() : CorrelationIdContext.get();
+        final UUID corrId = registro.idCorrelacion() != null ? registro.idCorrelacion() : resolveCorrelationId();
 
         final Map<String, Object> params = new HashMap<>();
         params.put("tipo", registro.tipo());
@@ -61,20 +61,33 @@ public class NotificacionSalienteJpaRepository implements NotificacionOutboxRepo
     public List<NotificacionReservada> reservar(final int lote, final Duration lease, final String instancia) {
         Objects.requireNonNull(lease, "El lease es obligatorio.");
         Objects.requireNonNull(instancia, "La instancia es obligatoria.");
+        final UUID corrId = resolveCorrelationId();
 
         final String sql = "EXEC dbo.usp_reservar_notificaciones_salientes "
-                + "@lote = :lote, @leaseSegundos = :leaseSegundos, @instancia = :instancia";
+                + "@lote = :lote, @leaseSegundos = :leaseSegundos, @instancia = :instancia, @idCorrelacion = :idCorrelacion";
 
         final Query query = entityManager.createNativeQuery(sql)
                 .setParameter("lote", lote)
                 .setParameter("leaseSegundos", (int) lease.toSeconds())
-                .setParameter("instancia", instancia);
+                .setParameter("instancia", instancia)
+                .setParameter("idCorrelacion", corrId);
 
         final List<Object> filas = query.getResultList();
         final List<NotificacionReservada> resultado = new ArrayList<>();
 
         for (final Object filaObj : filas) {
             final Object[] fila = (Object[]) filaObj;
+            final int intentos = toInt(fila[6]);
+            final int maxIntentos;
+            final Instant creadoEn;
+            if (fila[7] instanceof Number || (fila[7] instanceof String s && s.matches("^\\d{1,3}$"))) {
+                maxIntentos = toInt(fila[7]);
+                creadoEn = toInstant(fila[8]);
+            } else {
+                maxIntentos = 5;
+                creadoEn = toInstant(fila[7]);
+            }
+
             resultado.add(new NotificacionReservada(
                     toUuid(fila[0]),
                     (String) fila[1],
@@ -82,9 +95,9 @@ public class NotificacionSalienteJpaRepository implements NotificacionOutboxRepo
                     (String) fila[3],
                     (String) fila[4],
                     (String) fila[5],
-                    toInt(fila[6]),
-                    toInt(fila[7]),
-                    toInstant(fila[8]),
+                    intentos,
+                    maxIntentos,
+                    creadoEn,
                     (String) fila[9],
                     (String) fila[10]
             ));
@@ -97,7 +110,7 @@ public class NotificacionSalienteJpaRepository implements NotificacionOutboxRepo
     public void marcarEntregada(final UUID id, final String instancia) {
         Objects.requireNonNull(id, "El id de notificacion es obligatorio.");
         Objects.requireNonNull(instancia, "La instancia es obligatoria.");
-        final UUID corrId = CorrelationIdContext.get();
+        final UUID corrId = resolveCorrelationId();
 
         final Map<String, Object> params = new HashMap<>();
         params.put("id", id);
@@ -123,7 +136,7 @@ public class NotificacionSalienteJpaRepository implements NotificacionOutboxRepo
     ) {
         Objects.requireNonNull(id, "El id de notificacion es obligatorio.");
         Objects.requireNonNull(instancia, "La instancia es obligatoria.");
-        final UUID corrId = CorrelationIdContext.get();
+        final UUID corrId = resolveCorrelationId();
 
         final Map<String, Object> params = new HashMap<>();
         params.put("id", id);
@@ -147,7 +160,7 @@ public class NotificacionSalienteJpaRepository implements NotificacionOutboxRepo
 
     @Override
     public int depurar(final int retencionDias, final int lote) {
-        final UUID corrId = CorrelationIdContext.get();
+        final UUID corrId = resolveCorrelationId();
 
         final Map<String, Object> params = new HashMap<>();
         params.put("retencionDias", retencionDias);
@@ -159,6 +172,11 @@ public class NotificacionSalienteJpaRepository implements NotificacionOutboxRepo
 
         final ProcedureRow row = procedureExecutor.executeWithExtras("depurar_notificaciones_salientes", sql, params, corrId, 1);
         return toInt(row.extras().get(0));
+    }
+
+    private UUID resolveCorrelationId() {
+        final UUID corrId = CorrelationIdContext.get();
+        return corrId != null ? corrId : UUID.randomUUID();
     }
 
     private static UUID toUuid(final Object value) {
@@ -173,7 +191,13 @@ public class NotificacionSalienteJpaRepository implements NotificacionOutboxRepo
         if (value instanceof java.sql.Timestamp ts) return ts.toInstant();
         if (value instanceof java.time.OffsetDateTime odt) return odt.toInstant();
         if (value instanceof java.time.ZonedDateTime zdt) return zdt.toInstant();
-        return Instant.parse(value.toString());
+        String str = value.toString().trim();
+        str = str.replaceFirst(" ", "T").replace(" +", "+").replace(" -", "-");
+        try {
+            return java.time.OffsetDateTime.parse(str).toInstant();
+        } catch (final Exception e) {
+            return Instant.parse(str);
+        }
     }
 
     private static int toInt(final Object value) {

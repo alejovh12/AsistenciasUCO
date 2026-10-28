@@ -157,23 +157,33 @@ public class NotificacionOutboxDispatcher implements SmartLifecycle {
     }
 
     public void ejecutarCiclo() {
-        List<NotificacionReservada> lote;
+        final boolean establishedCorrelation = CorrelationIdContext.get() == null;
+        if (establishedCorrelation) {
+            CorrelationIdContext.set(UUID.randomUUID());
+        }
         try {
-            lote = repository.reservar(properties.batchSize(), properties.lease(), instanceId());
-        } catch (final Exception e) {
-            LOGGER.warn("Fallo al reservar lote de notificaciones outbox: {}", e.getMessage());
-            return;
-        }
-
-        if (lote == null || lote.isEmpty()) {
-            return;
-        }
-
-        for (final NotificacionReservada reservada : lote) {
-            if (!running.get() && workerThread != null && Thread.currentThread() == workerThread) {
-                break;
+            List<NotificacionReservada> lote;
+            try {
+                lote = repository.reservar(properties.batchSize(), properties.lease(), instanceId());
+            } catch (final Exception e) {
+                LOGGER.warn("Fallo al reservar lote de notificaciones outbox: {}", e.getMessage());
+                return;
             }
-            procesarNotificacion(reservada);
+
+            if (lote == null || lote.isEmpty()) {
+                return;
+            }
+
+            for (final NotificacionReservada reservada : lote) {
+                if (!running.get() && workerThread != null && Thread.currentThread() == workerThread) {
+                    break;
+                }
+                procesarNotificacion(reservada);
+            }
+        } finally {
+            if (establishedCorrelation) {
+                CorrelationIdContext.clear();
+            }
         }
     }
 
@@ -222,8 +232,12 @@ public class NotificacionOutboxDispatcher implements SmartLifecycle {
                 lostLeaseCounter.increment();
             }
         } catch (final Exception ex) {
-            LOGGER.warn("Fallo reintentable al despachar notificacion id={}: {}", reservada.id(), ex.getMessage());
-            retryCounter.increment();
+            LOGGER.warn("Fallo al despachar notificacion id={}: {}", reservada.id(), ex.getMessage());
+            if (reservada.intentos() >= properties.maxAttempts()) {
+                deadCounter.increment();
+            } else {
+                retryCounter.increment();
+            }
             try {
                 repository.registrarFallo(
                         reservada.id(),
@@ -250,6 +264,10 @@ public class NotificacionOutboxDispatcher implements SmartLifecycle {
     }
 
     public void ejecutarDepuracion() {
+        final boolean establishedCorrelation = CorrelationIdContext.get() == null;
+        if (establishedCorrelation) {
+            CorrelationIdContext.set(UUID.randomUUID());
+        }
         try {
             final int eliminadas = repository.depurar(properties.retentionDays(), properties.batchSize() * 10);
             if (eliminadas > 0) {
@@ -259,6 +277,10 @@ public class NotificacionOutboxDispatcher implements SmartLifecycle {
             ultimaDepuracion = clock.instant();
         } catch (final Exception e) {
             LOGGER.warn("Fallo durante depuracion de outbox: {}", e.getMessage());
+        } finally {
+            if (establishedCorrelation) {
+                CorrelationIdContext.clear();
+            }
         }
     }
 
