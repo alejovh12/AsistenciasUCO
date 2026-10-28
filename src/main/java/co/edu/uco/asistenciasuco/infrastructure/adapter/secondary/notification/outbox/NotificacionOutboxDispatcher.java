@@ -223,7 +223,7 @@ public class NotificacionOutboxDispatcher implements SmartLifecycle {
                         "FALLO_DEFINITIVO",
                         ex.getMessage(),
                         false,
-                        reservada.maxIntentos(),
+                        properties.maxAttempts(),
                         properties.backoffBase(),
                         properties.backoffMax()
                 );

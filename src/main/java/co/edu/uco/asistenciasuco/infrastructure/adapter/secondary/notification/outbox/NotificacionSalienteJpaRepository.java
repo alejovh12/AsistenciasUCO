@@ -77,29 +77,30 @@ public class NotificacionSalienteJpaRepository implements NotificacionOutboxRepo
 
         for (final Object filaObj : filas) {
             final Object[] fila = (Object[]) filaObj;
+            final UUID id = toUuid(fila[0]);
+            final String tipo = (String) fila[1];
+            final String asunto = (String) fila[2];
+            final String mensaje = (String) fila[3];
+            final String destinatarios = (String) fila[4];
+            final String datos = (String) fila[5];
             final int intentos = toInt(fila[6]);
-            final int maxIntentos;
-            final Instant creadoEn;
-            if (isDateLike(fila[7])) {
-                maxIntentos = 5;
-                creadoEn = toInstant(fila[7]);
-            } else {
-                maxIntentos = toInt(fila[7]);
-                creadoEn = toInstant(fila[8]);
-            }
+            final Instant creadoEn = toInstant(fila[7]);
+            final UUID idCorrelacion = toUuid(fila[8]);
+            final String traceId = (String) fila[9];
+            final String spanId = (String) fila[10];
 
             resultado.add(new NotificacionReservada(
-                    toUuid(fila[0]),
-                    (String) fila[1],
-                    (String) fila[2],
-                    (String) fila[3],
-                    (String) fila[4],
-                    (String) fila[5],
+                    id,
+                    tipo,
+                    asunto,
+                    mensaje,
+                    destinatarios,
+                    datos,
                     intentos,
-                    maxIntentos,
                     creadoEn,
-                    (String) fila[9],
-                    (String) fila[10]
+                    idCorrelacion,
+                    traceId,
+                    spanId
             ));
         }
 
@@ -198,13 +199,6 @@ public class NotificacionSalienteJpaRepository implements NotificacionOutboxRepo
         } catch (final Exception e) {
             return Instant.parse(str);
         }
-    }
-
-    private static boolean isDateLike(final Object val) {
-        if (val == null) return false;
-        if (val instanceof java.time.temporal.Temporal || val instanceof java.util.Date) return true;
-        final String s = val.toString().trim();
-        return s.length() >= 19 && s.contains("-") && s.contains(":") && !s.contains("uuid");
     }
 
     private static int toInt(final Object value) {
