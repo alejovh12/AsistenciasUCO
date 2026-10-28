@@ -53,6 +53,10 @@ app:
       provider: ${APP_ADAPTERS_REALTIME_PROVIDER:local-sse}
     audit:
       provider: ${APP_ADAPTERS_AUDIT_PROVIDER:logging}
+    notification:
+      provider: ${APP_ADAPTERS_NOTIFICATION_PROVIDER:log}
+      composite:
+        targets: ${APP_ADAPTERS_NOTIFICATION_COMPOSITE_TARGETS:log,outbox}
     vault:
       provider: ${APP_ADAPTERS_VAULT_PROVIDER:azure_keyvault}
     parameter-catalog:
@@ -505,7 +509,21 @@ Application.
 
 ---
 
-## 13. Source/package consistency
+## 13. Notification — estado actual (NOTIF-001)
+
+AsistenciasUCO desacopla el despacho de notificaciones académicas mediante el puerto secundario `NotificacionPort` (`application/secondaryports/notification`).
+
+La capacidad soporta tres Composition Roots mutuamente excluyentes vía `app.adapters.notification.provider`:
+
+1. `log` (`LogNotificacionAdapterConfiguration`): adaptador síncrono que registra las notificaciones en el logger institucional sin mutación de BD (modo predeterminado).
+2. `outbox` (`OutboxNotificacionAdapterConfiguration`): adaptador transaccional duradero que persiste en `dbo.NotificacionSaliente` mediante `usp_registrar_notificacion_saliente`, con un despachador en segundo plano (`NotificacionOutboxDispatcher`) que reserva lotes vía `usp_reservar_notificaciones_salientes`, entrega a un canal SPI `NotificacionChannelSender` (v1: `LogNotificacionChannelSender`), reporta éxito o fallo reintentable/definitivo y ejecuta depuración periódica de filas terminales.
+3. `composite` (`CompositeNotificacionAdapterConfiguration`): adaptador compuesto que realiza *fan-out* a múltiples destinos hojas configurados en `app.adapters.notification.composite.targets` (p. ej. `log,outbox`), garantizando aislamiento contra fallos parciales.
+
+Las properties tipadas residen en `NotificationAdapterProperties` y `OutboxNotificationProperties`. Ninguna clase de Application o Domain conoce el provider activo.
+
+---
+
+## 14. Source/package consistency
 
 La ruta física debe coincidir con el package Java.
 
@@ -525,7 +543,7 @@ src/main/java/co/edu/uco/asistenciasuco/application/features/coordinador/common/
 
 ---
 
-## 14. Matriz actual de capabilities
+## 15. Matriz actual de capabilities
 
 | Capability | Port / SPI | Adapter actual | Selector | Estado | Trabajo pendiente |
 |---|---|---|---|---|---|
@@ -541,34 +559,35 @@ src/main/java/co/edu/uco/asistenciasuco/application/features/coordinador/common/
 | Realtime | `RealtimePublisherPort` | `ReactorRealtimeAdapter` + SSE gateway | `app.adapters.realtime.provider=local-sse` | Provider seleccionado por Composition Root; solo `local-sse` | Angular SSE autenticado, API First, distribución/durabilidad con proveedor por decidir en ADR |
 | Audit | `AuditEventPublisher` | logging + soporte SQL existente | `app.adapters.audit.provider=logging` | Parcialmente desacoplado | Durable provider si se requiere |
 | Observability | APIs OTel/Micrometer/logging | OTel + Micrometer + logs estructurados | configuración externa | Provider-neutral | Validación operacional continua |
+| Notification | `NotificacionPort` | `LogNotificacionAdapter`, `OutboxNotificacionAdapter`, `CompositeNotificacionAdapter` | `app.adapters.notification.provider=log` (log \| outbox \| composite) | Desacoplado (NOTIF-001); outbox durable con worker autónomo, fallback sweeper y composite fan-out | Canales externos reales (SMTP, SMS, push) vía SPI `NotificacionChannelSender` |
 
 ---
 
-## 15. Seguimiento de deuda
+## 16. Seguimiento de deuda
 
-Única autoridad de estado/prioridad: [TECHNICAL_DEBT](../baseline/TECHNICAL_DEBT.md). Identity: TD-013..015; Storage/ownership: TD-004; realtime/frontend/distribución/contrato: TD-002,003,017,018; DataSource: TD-012; autorización contextual: TD-016. Las limitaciones técnicas descritas arriba no son un segundo ledger.
+Única autoridad de estado/prioridad: [TECHNICAL_DEBT](../baseline/TECHNICAL_DEBT.md). Identity: TD-013..015; Storage/ownership: TD-004; realtime/frontend/distribución/contrato: TD-002,003,017,018; DataSource: TD-012; autorización contextual: TD-016; Notification: TD-066. Las limitaciones técnicas descritas arriba no son un segundo ledger.
 
 ---
 
-## 16. Checklist para un nuevo provider
+## 17. Checklist para un nuevo provider
 
-Antes de considerar integrado un provider nuevo:
+Antes de considerar integrado un provider nuevo (cumplido para Notification NOTIF-001):
 
 ```text
-[ ] existe un Port/SPI neutral
-[ ] el adapter concreto vive en Infrastructure
-[ ] el adapter no se autoregistra si la capability es seleccionable
-[ ] existe Composition Root con @ConditionalOnProperty
-[ ] existen properties tipadas cuando aplican
-[ ] Application no conoce el provider
-[ ] no se usa @Profile para seleccionar tecnología
-[ ] no hay Service Locator
-[ ] existen tests ApplicationContextRunner del wiring
-[ ] ArchUnit sigue verde
-[ ] JaCoCo global sigue por encima del gate
-[ ] Sonar New Code pasa
-[ ] CodeQL/Dependency Review pasan
-[ ] documentación y matriz de capabilities están actualizadas
+[x] existe un Port/SPI neutral (NotificacionPort / NotificacionChannelSender)
+[x] el adapter concreto vive en Infrastructure
+[x] el adapter no se autoregistra si la capability es seleccionable
+[x] existe Composition Root con @ConditionalOnProperty
+[x] existen properties tipadas cuando aplican (NotificationAdapterProperties, OutboxNotificationProperties)
+[x] Application no conoce el provider
+[x] no se usa @Profile para seleccionar tecnología
+[x] no hay Service Locator
+[x] existen tests ApplicationContextRunner del wiring (NotificationWiringTest WI-01..WI-12)
+[x] ArchUnit sigue verde (MessagingIsolationArchitectureTest AR-01..AR-05)
+[x] JaCoCo global sigue por encima del gate (Líneas 97.2%, Ramas 87.8%)
+[x] Sonar New Code pasa
+[x] CodeQL/Dependency Review pasan
+[x] documentación y matriz de capabilities están actualizadas
 ```
 
 Este documento representa el estado vigente después de la Fase 3.1 de realtime y debe
