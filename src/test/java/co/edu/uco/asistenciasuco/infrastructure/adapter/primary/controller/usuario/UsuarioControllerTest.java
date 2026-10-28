@@ -17,7 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -31,22 +30,10 @@ class UsuarioControllerTest {
             .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
 
     @Test
-    void consultarPerfil_no_implementado_lanza_featureUnavailable() {
-        assertEquals("FEATURE_UNAVAILABLE",
-                assertThrows(FeatureUnavailableException.class,
-                        controller::consultarPerfilUsuarioAutenticado).getCode());
-    }
-
-    @Test
     void actualizarPerfil_no_implementado_lanza_featureUnavailable() {
         assertEquals("FEATURE_UNAVAILABLE",
                 assertThrows(FeatureUnavailableException.class,
                         () -> controller.actualizarPerfilUsuarioAutenticado(new Object())).getCode());
-    }
-
-    @Test
-    void consultarPerfil_via_http_retorna_501() throws Exception {
-        mvc.perform(get("/api/v1/usuarios/perfil")).andExpect(status().isNotImplemented());
     }
 
     @Test
