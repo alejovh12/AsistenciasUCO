@@ -264,4 +264,25 @@ class NotificacionSalienteJpaRepositoryTest {
                 () -> repository.reservar(10, Duration.ofSeconds(60), "instancia-1")
         );
     }
+
+    @Test
+    @DisplayName("BE-J10: reservar parsea id y idCorrelacion recibidos como String")
+    void BE_J10_reservar_parsea_id_string() {
+        final Query query = mock(Query.class);
+        when(entityManager.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter(anyString(), any())).thenReturn(query);
+
+        final UUID id = UUID.randomUUID();
+        final UUID corrId = UUID.randomUUID();
+        final Instant now = Instant.now();
+        final Object[] fila = new Object[]{
+                id.toString(), "TIPO_STR", "Asunto", "Mensaje", "[]", "{}", 1, now, corrId.toString(), "tr", "sp"
+        };
+        when(query.getResultList()).thenReturn(List.of((Object) fila));
+
+        final List<NotificacionReservada> res = repository.reservar(1, Duration.ofSeconds(30), "instancia");
+        assertEquals(1, res.size());
+        assertEquals(id, res.get(0).id());
+        assertEquals(corrId, res.get(0).idCorrelacion());
+    }
 }
