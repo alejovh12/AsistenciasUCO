@@ -91,6 +91,8 @@ verificar) lo ejecuta **el usuario**. No usa `deploy_schema.ps1` (re-sembraría 
 | E2E HTTP HU051/HU053–055 (backend develop+fix → BD desechable, 5 usuarios reales Keycloak/PEP) | `e2e_hu_flows.py` | PASS 62/62 (antes del fix: 4 FAIL = 2 por 500 de BUG-HU-02, 1 por INT-HU-01 y 1 criterio de bandeja ajena que resultó ser lista vacía, no fuga). Ver §7 |
 | Matriz GET por rol (355 sondas) | develop+fix, BD desechable | DECANO 26/26, COORDINADOR 35/35, ESTUDIANTE 15/15 alcanzan la lógica; 403 esperado 100 % |
 | Preservación del laboratorio vivo | `preserve_check_live.py` | PASS: Ingeniería sigue con `PRUEBA INTEGRACION DECANO UCO` (`c512fb20…`) |
+| KPIs de decano/coordinador/administrador con login de mínimo privilegio | 10 rutas, antes de los grants → 500 `EXECUTE permission was denied`; con `rol_asistencias_runtime_inventario_backend.sql` → 200 | PASS (BD desechable) |
+| Estado del PDP tras reinicio de Docker (≈22:20) | `pdp_after_reboot.json` vs `pdp_after.json` | PASS: idéntico (el PDP salió con error por arrancar antes que Keycloak; se reinició con `docker start`) |
 | SonarCloud / CI remoto / navegador | — | `NOT_RUN` (no hay push) |
 
 ## 7. Evidencia E2E de HU051 y HU053–HU055 (BD desechable)
