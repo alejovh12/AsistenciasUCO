@@ -78,7 +78,8 @@ function Invoke-Inventario([string]$Etiqueta) {
     return $archivo
 }
 
-switch ($Fase) {
+try {
+    switch ($Fase) {
     'Inventario' { Invoke-Inventario 'previo' | Out-Null }
 
     'Respaldo' {
@@ -122,5 +123,8 @@ switch ($Fase) {
             Write-Host "Compare manualmente las secciones '3. Conteo' y '4. Preservacion' entre:`n  $($previo.FullName)`n  $post" -ForegroundColor Yellow
         }
     }
+    }
+} finally {
+    # Limpieza garantizada incluso si Inventario/Respaldo/Aplicar/Verificar falla.
+    Remove-Item Env:SQLCMDPASSWORD -ErrorAction SilentlyContinue
 }
-Remove-Item Env:SQLCMDPASSWORD -ErrorAction SilentlyContinue
