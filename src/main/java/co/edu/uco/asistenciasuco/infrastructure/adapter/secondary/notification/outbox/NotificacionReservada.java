@@ -19,22 +19,4 @@ public record NotificacionReservada(
         String traceId,
         String spanId
 ) {
-    /**
-     * Constructor de compatibilidad para fixtures que pasaban maxIntentos.
-     */
-    public NotificacionReservada(
-            final UUID id,
-            final String tipo,
-            final String asunto,
-            final String mensaje,
-            final String destinatariosJson,
-            final String datosJson,
-            final int intentos,
-            final int maxIntentos,
-            final Instant creadoEn,
-            final String traceId,
-            final String spanId
-    ) {
-        this(id, tipo, asunto, mensaje, destinatariosJson, datosJson, intentos, creadoEn, null, traceId, spanId);
-    }
 }
