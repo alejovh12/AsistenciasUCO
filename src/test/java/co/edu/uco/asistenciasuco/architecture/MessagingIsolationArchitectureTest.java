@@ -1,6 +1,8 @@
 package co.edu.uco.asistenciasuco.architecture;
 
+import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.domain.JavaConstructorCall;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
 import org.junit.jupiter.api.BeforeAll;
@@ -52,6 +54,21 @@ class MessagingIsolationArchitectureTest {
                 .should().notBeAnnotatedWith(Component.class)
                 .andShould().notBeAnnotatedWith(Service.class)
                 .andShould().notBeAnnotatedWith(Repository.class)
+                .check(importedClasses);
+    }
+
+    @Test
+    @DisplayName("AR-04: solo clases *Configuration instancian adaptadores")
+    void AR04_solo_clases_configuration_instancian_adaptadores() {
+        noClasses()
+                .that().haveSimpleNameNotEndingWith("Configuration")
+                .should().callConstructorWhere(new DescribedPredicate<>("constructor de adaptador de notificacion") {
+                    @Override
+                    public boolean test(final JavaConstructorCall input) {
+                        final String name = input.getTargetOwner().getSimpleName();
+                        return name.endsWith("NotificacionAdapter") && !name.endsWith("Configuration");
+                    }
+                })
                 .check(importedClasses);
     }
 
