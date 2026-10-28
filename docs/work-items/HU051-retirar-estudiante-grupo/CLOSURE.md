@@ -43,3 +43,7 @@ Ninguno: sin tablas nuevas ni modificadas, sin objetos congelados, sin `Security
 ## Condición de parada
 
 No iniciar HU053-055 en esta rama.
+
+## Cambio posterior: INT-HU-01 cerrado (2026-10-28)
+
+Hallazgo `INT-HU-01` de [INTEGRACION-DEVELOP-20261027](../INTEGRACION-DEVELOP-20261027/README.md): tras el retiro (HU051, matrícula `I`) el estudiante podía volver a solicitar (HU053) pero `ACEPTAR` (HU055) fallaba con **409 `ERR_MATRICULA_DUPLICADA`** y la solicitud quedaba pendiente. Decisión de John (opción a): `usp_resolver_solicitud_ingreso_grupo` **reactiva** la matrícula retirada (`I` → `A`) y responde `SIG_011`/`ACEPTADA`. Cambio solo en DB (rama `fix/INT-HU-01-reactivar-matricula-retirada` del repo de DB, pruebas RM-01..RM-03); el backend no cambia (mismo código y mismo mapeo HTTP).
