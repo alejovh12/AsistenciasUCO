@@ -474,4 +474,105 @@ class NotificacionOutboxDispatcherTest {
 
         verify(sender, times(2)).enviar(any(NotificacionPersistida.class));
     }
+
+    @Test
+    @DisplayName("BE-D31: dispatcherEnabled=false no arranca workerThread")
+    void BE_D31_dispatcher_deshabilitado_no_inicia() {
+        final OutboxNotificationProperties propsDisabled = new OutboxNotificationProperties(
+                Sender.LOG, false, 50, Duration.ofSeconds(60), Duration.ofSeconds(1),
+                5, Duration.ofSeconds(30), Duration.ofMinutes(15), 30, Duration.ofHours(6), "inst-disabled"
+        );
+        final NotificacionOutboxDispatcher dis = new NotificacionOutboxDispatcher(repository, sender, propsDisabled, meterRegistry, Clock.systemUTC());
+        dis.start();
+        assertFalse(dis.isRunning());
+    }
+
+    @Test
+    @DisplayName("BE-D32: fallo al marcar entregada incrementa lostLeaseCounter")
+    void BE_D32_fallo_marcar_entregada_incrementa_lost_lease() throws Exception {
+        final UUID id = UUID.randomUUID();
+        final NotificacionReservada res = new NotificacionReservada(
+                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, 5, Instant.now(), null, null
+        );
+        when(repository.reservar(anyInt(), any(Duration.class), any())).thenReturn(List.of(res)).thenReturn(List.of());
+        doThrow(new RuntimeException("DB down")).when(repository).marcarEntregada(eq(id), any());
+
+        dispatcher = new NotificacionOutboxDispatcher(repository, sender, properties, meterRegistry, Clock.systemUTC());
+        dispatcher.ejecutarCiclo();
+
+        final double lostLease = meterRegistry.find("notification.dispatch.total")
+                .tag("outcome", "lost_lease").counter().count();
+        assertEquals(1.0, lostLease);
+    }
+
+    @Test
+    @DisplayName("BE-D33: fallo al registrar fallo no entregable incrementa lostLeaseCounter")
+    void BE_D33_fallo_registrar_fallo_definitivo_incrementa_lost_lease() throws Exception {
+        final UUID id = UUID.randomUUID();
+        final NotificacionReservada res = new NotificacionReservada(
+                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, 5, Instant.now(), null, null
+        );
+        when(repository.reservar(anyInt(), any(Duration.class), any())).thenReturn(List.of(res)).thenReturn(List.of());
+        doThrow(new NotificacionNoEntregableException("Buzon inexistente")).when(sender).enviar(any());
+        doThrow(new RuntimeException("DB down")).when(repository).registrarFallo(any(), any(), any(), any(), anyBoolean(), anyInt(), any(), any());
+
+        dispatcher = new NotificacionOutboxDispatcher(repository, sender, properties, meterRegistry, Clock.systemUTC());
+        dispatcher.ejecutarCiclo();
+
+        final double lostLease = meterRegistry.find("notification.dispatch.total")
+                .tag("outcome", "lost_lease").counter().count();
+        assertEquals(1.0, lostLease);
+    }
+
+    @Test
+    @DisplayName("BE-D34: fallo transitorio con intentos >= maxAttempts incrementa deadCounter")
+    void BE_D34_fallo_transitorio_max_intentos_incrementa_dead() throws Exception {
+        final UUID id = UUID.randomUUID();
+        // intentos = 5, igual a properties.maxAttempts (5)
+        final NotificacionReservada res = new NotificacionReservada(
+                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 5, 5, Instant.now(), null, null
+        );
+        when(repository.reservar(anyInt(), any(Duration.class), any())).thenReturn(List.of(res)).thenReturn(List.of());
+        doThrow(new RuntimeException("Network timeout")).when(sender).enviar(any());
+
+        dispatcher = new NotificacionOutboxDispatcher(repository, sender, properties, meterRegistry, Clock.systemUTC());
+        dispatcher.ejecutarCiclo();
+
+        final double dead = meterRegistry.find("notification.dispatch.total")
+                .tag("outcome", "dead").counter().count();
+        assertEquals(1.0, dead);
+    }
+
+    @Test
+    @DisplayName("BE-D35: fallo al registrar fallo reintentable incrementa lostLeaseCounter")
+    void BE_D35_fallo_registrar_fallo_reintentable_incrementa_lost_lease() throws Exception {
+        final UUID id = UUID.randomUUID();
+        final NotificacionReservada res = new NotificacionReservada(
+                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, 5, Instant.now(), null, null
+        );
+        when(repository.reservar(anyInt(), any(Duration.class), any())).thenReturn(List.of(res)).thenReturn(List.of());
+        doThrow(new RuntimeException("Network timeout")).when(sender).enviar(any());
+        doThrow(new RuntimeException("DB down")).when(repository).registrarFallo(any(), any(), any(), any(), anyBoolean(), anyInt(), any(), any());
+
+        dispatcher = new NotificacionOutboxDispatcher(repository, sender, properties, meterRegistry, Clock.systemUTC());
+        dispatcher.ejecutarCiclo();
+
+        final double lostLease = meterRegistry.find("notification.dispatch.total")
+                .tag("outcome", "lost_lease").counter().count();
+        assertEquals(1.0, lostLease);
+    }
+
+    @Test
+    @DisplayName("BE-D36: ejecutarCiclo y ejecutarDepuracion con correlationId preexistente")
+    void BE_D36_ciclo_y_depuracion_con_correlation_preexistente() {
+        co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext.set(UUID.randomUUID().toString());
+        try {
+            when(repository.reservar(anyInt(), any(Duration.class), any())).thenReturn(List.of());
+            dispatcher = new NotificacionOutboxDispatcher(repository, sender, properties, meterRegistry, Clock.systemUTC());
+            assertDoesNotThrow(() -> dispatcher.ejecutarCiclo());
+            assertDoesNotThrow(() -> dispatcher.ejecutarDepuracion());
+        } finally {
+            co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext.clear();
+        }
+    }
 }

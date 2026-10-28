@@ -80,12 +80,12 @@ public class NotificacionSalienteJpaRepository implements NotificacionOutboxRepo
             final int intentos = toInt(fila[6]);
             final int maxIntentos;
             final Instant creadoEn;
-            if (fila[7] instanceof Number || (fila[7] instanceof String s && s.matches("^\\d{1,3}$"))) {
-                maxIntentos = toInt(fila[7]);
-                creadoEn = toInstant(fila[8]);
-            } else {
+            if (isDateLike(fila[7])) {
                 maxIntentos = 5;
                 creadoEn = toInstant(fila[7]);
+            } else {
+                maxIntentos = toInt(fila[7]);
+                creadoEn = toInstant(fila[8]);
             }
 
             resultado.add(new NotificacionReservada(
@@ -198,6 +198,13 @@ public class NotificacionSalienteJpaRepository implements NotificacionOutboxRepo
         } catch (final Exception e) {
             return Instant.parse(str);
         }
+    }
+
+    private static boolean isDateLike(final Object val) {
+        if (val == null) return false;
+        if (val instanceof java.time.temporal.Temporal || val instanceof java.util.Date) return true;
+        final String s = val.toString().trim();
+        return s.length() >= 19 && s.contains("-") && s.contains(":") && !s.contains("uuid");
     }
 
     private static int toInt(final Object value) {
