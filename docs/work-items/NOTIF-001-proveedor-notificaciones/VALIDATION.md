@@ -22,8 +22,11 @@ IN PROGRESS (Fases 1, 2 y 3 completadas; Fase 3 pendiente de aprobación formal 
 ## Tests existentes modificados (para PR)
 
 1. `NotificationWiringTest` (WI-04, WI-05, WI-11): En modo composite, resolución de bean primario `CompositeNotificacionAdapter` y preservación de hojas (`hasSingleBean(LogNotificacionAdapter)` y `hasSingleBean(OutboxNotificacionAdapter)`).
-2. Intervalo del sweeper en fixture de `NotificacionOutboxDispatcherTest` (100 ms a 1 s).
+2. Intervalo del sweeper en fixture de `NotificacionOutboxDispatcherTest` (100 ms a 1 s) y uso del constructor canónico de 11 columnas tras retirar el constructor de compatibilidad en `NotificacionReservada`.
 3. `NotificacionSalienteJpaRepositoryTest` (BE-J02, BE-J06, BE-J08): Corrección de fixture de fila simulada para respetar el orden canónico de 11 columnas de CONTRACT §2.2 ([7]=creadoEn, [8]=idCorrelacion), eliminando `maxIntentos` del arreglo devuelto por la consulta nativa.
+
+> [!NOTE]
+> `JpaRepositoryBeanUniquenessTest` **NO se modificó** porque `NotificacionSalienteJpaRepository` reside en el paquete `co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.outbox`, el cual está fuera del paquete `...persistence.sqlserver.jpa.repository` que escanea dicha prueba de gobernanza (en estricto cumplimiento de Clean Architecture y las reglas de aislamiento de mensajería AR-01..AR-05).
 2. **Binding de Parámetros de Correlación:**
    - *Hallazgo:* Los procedimientos `usp_marcar_notificacion_entregada` y `usp_registrar_fallo_notificacion` esperan `@idCorrelacion` como parámetro de auditoría. Inicialmente se pasaba como parámetro no tipado o nulo en ciertos flujos.
    - *Fix:* Se aseguró el binding de `idCorrelacion` en todas las ejecuciones transaccionales y de fallback de `NotificacionSalienteJpaRepository`.
