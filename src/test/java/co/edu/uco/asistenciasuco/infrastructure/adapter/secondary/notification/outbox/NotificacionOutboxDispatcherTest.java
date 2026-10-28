@@ -77,7 +77,7 @@ class NotificacionOutboxDispatcherTest {
     void BE_D01_exito_marca_entregada() throws Exception {
         final UUID id = UUID.randomUUID();
         final NotificacionReservada reservada = new NotificacionReservada(
-                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, 5, Instant.now(), null, null
+                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, Instant.now(), null, null, null
         );
 
         when(repository.reservar(anyInt(), any(Duration.class), any()))
@@ -101,7 +101,7 @@ class NotificacionOutboxDispatcherTest {
     void BE_D02_fallo_no_reintentable() throws Exception {
         final UUID id = UUID.randomUUID();
         final NotificacionReservada reservada = new NotificacionReservada(
-                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, 5, Instant.now(), null, null
+                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, Instant.now(), null, null, null
         );
 
         when(repository.reservar(anyInt(), any(Duration.class), any()))
@@ -127,7 +127,7 @@ class NotificacionOutboxDispatcherTest {
     void BE_D03_fallo_reintentable() throws Exception {
         final UUID id = UUID.randomUUID();
         final NotificacionReservada reservada = new NotificacionReservada(
-                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, 5, Instant.now(), null, null
+                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, Instant.now(), null, null, null
         );
 
         when(repository.reservar(anyInt(), any(Duration.class), any()))
@@ -153,7 +153,7 @@ class NotificacionOutboxDispatcherTest {
     void BE_D04_reserva_perdida_al_marcar_entregada() throws Exception {
         final UUID id = UUID.randomUUID();
         final NotificacionReservada reservada = new NotificacionReservada(
-                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, 5, Instant.now(), null, null
+                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, Instant.now(), null, null, null
         );
 
         when(repository.reservar(anyInt(), any(Duration.class), any()))
@@ -287,7 +287,7 @@ class NotificacionOutboxDispatcherTest {
     void BE_D18_deserializacion_json_casos_borde() throws Exception {
         final UUID id = UUID.randomUUID();
         final NotificacionReservada reservada = new NotificacionReservada(
-                id, "TIPO", "Asunto", "Mensaje", "{no es array}", "{no es json valido}", 1, 5, Instant.now(), null, null
+                id, "TIPO", "Asunto", "Mensaje", "{no es array}", "{no es json valido}", 1, Instant.now(), null, null, null
         );
 
         when(repository.reservar(anyInt(), any(Duration.class), any()))
@@ -317,7 +317,7 @@ class NotificacionOutboxDispatcherTest {
     void BE_D20_fallo_marcar_entregada_lost_lease() {
         final UUID id = UUID.randomUUID();
         final NotificacionReservada reservada = new NotificacionReservada(
-                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, 5, Instant.now(), null, null
+                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, Instant.now(), null, null, null
         );
         when(repository.reservar(anyInt(), any(Duration.class), any()))
                 .thenReturn(List.of(reservada))
@@ -338,7 +338,7 @@ class NotificacionOutboxDispatcherTest {
     void BE_D21_fallo_registrar_fallo_definitivo_lost_lease() throws Exception {
         final UUID id = UUID.randomUUID();
         final NotificacionReservada reservada = new NotificacionReservada(
-                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, 5, Instant.now(), null, null
+                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, Instant.now(), null, null, null
         );
         when(repository.reservar(anyInt(), any(Duration.class), any()))
                 .thenReturn(List.of(reservada))
@@ -360,7 +360,7 @@ class NotificacionOutboxDispatcherTest {
     void BE_D22_fallo_registrar_fallo_reintentable_lost_lease() throws Exception {
         final UUID id = UUID.randomUUID();
         final NotificacionReservada reservada = new NotificacionReservada(
-                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, 5, Instant.now(), null, null
+                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, Instant.now(), null, null, null
         );
         when(repository.reservar(anyInt(), any(Duration.class), any()))
                 .thenReturn(List.of(reservada))
@@ -458,11 +458,11 @@ class NotificacionOutboxDispatcherTest {
     void BE_D30_deserializacion_nulo_y_blanco() throws Exception {
         final UUID id1 = UUID.randomUUID();
         final NotificacionReservada res1 = new NotificacionReservada(
-                id1, "TIPO", "Asunto", "Mensaje", null, null, 1, 5, Instant.now(), null, null
+                id1, "TIPO", "Asunto", "Mensaje", null, null, 1, Instant.now(), null, null, null
         );
         final UUID id2 = UUID.randomUUID();
         final NotificacionReservada res2 = new NotificacionReservada(
-                id2, "TIPO", "Asunto", "Mensaje", "   ", "   ", 1, 5, Instant.now(), null, null
+                id2, "TIPO", "Asunto", "Mensaje", "   ", "   ", 1, Instant.now(), null, null, null
         );
 
         when(repository.reservar(anyInt(), any(Duration.class), any()))
@@ -492,7 +492,7 @@ class NotificacionOutboxDispatcherTest {
     void BE_D32_fallo_marcar_entregada_incrementa_lost_lease() throws Exception {
         final UUID id = UUID.randomUUID();
         final NotificacionReservada res = new NotificacionReservada(
-                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, 5, Instant.now(), null, null
+                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, Instant.now(), null, null, null
         );
         when(repository.reservar(anyInt(), any(Duration.class), any())).thenReturn(List.of(res)).thenReturn(List.of());
         doThrow(new RuntimeException("DB down")).when(repository).marcarEntregada(eq(id), any());
@@ -510,7 +510,7 @@ class NotificacionOutboxDispatcherTest {
     void BE_D33_fallo_registrar_fallo_definitivo_incrementa_lost_lease() throws Exception {
         final UUID id = UUID.randomUUID();
         final NotificacionReservada res = new NotificacionReservada(
-                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, 5, Instant.now(), null, null
+                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, Instant.now(), null, null, null
         );
         when(repository.reservar(anyInt(), any(Duration.class), any())).thenReturn(List.of(res)).thenReturn(List.of());
         doThrow(new NotificacionNoEntregableException("Buzon inexistente")).when(sender).enviar(any());
@@ -530,7 +530,7 @@ class NotificacionOutboxDispatcherTest {
         final UUID id = UUID.randomUUID();
         // intentos = 5, igual a properties.maxAttempts (5)
         final NotificacionReservada res = new NotificacionReservada(
-                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 5, 5, Instant.now(), null, null
+                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 5, Instant.now(), null, null, null
         );
         when(repository.reservar(anyInt(), any(Duration.class), any())).thenReturn(List.of(res)).thenReturn(List.of());
         doThrow(new RuntimeException("Network timeout")).when(sender).enviar(any());
@@ -548,7 +548,7 @@ class NotificacionOutboxDispatcherTest {
     void BE_D35_fallo_registrar_fallo_reintentable_incrementa_lost_lease() throws Exception {
         final UUID id = UUID.randomUUID();
         final NotificacionReservada res = new NotificacionReservada(
-                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, 5, Instant.now(), null, null
+                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, Instant.now(), null, null, null
         );
         when(repository.reservar(anyInt(), any(Duration.class), any())).thenReturn(List.of(res)).thenReturn(List.of());
         doThrow(new RuntimeException("Network timeout")).when(sender).enviar(any());
