@@ -87,4 +87,31 @@ Las cinco ramas de corrección siguen conservadas; no hay autorización para eli
 3. Resolver las decisiones abiertas `INT-HU-01`, `DAT-07`, `DAT-08`, `ADM-17` y `DEC-ADM-01` según sus owners.
 4. Aplicar el paquete A a la base viva únicamente mediante `live-db/aplicar-paquete-a.ps1`, con respaldo verificable y
    autorización del usuario; el agente no lo ejecutó.
-5. No se prepararon ni publicaron PRs: CI remoto, SonarCloud, CodeQL y revisión de ramas siguen `NOT_RUN`.
+5. En la primera consolidación no se habían preparado PRs; el estado posterior de publicación y checks está en el
+   addendum de esta misma evidencia.
+
+## Addendum de publicación y PRs
+
+Actualizado después de publicar las ramas con `git push` normal, sin `--force`:
+
+| Repositorio | Rama publicada / SHA | PR | Estado observado |
+|---|---|---|---|
+| Backend | `codex/fix-hu-guid-mapping-20261027` / `f8e2c042` | [#53](https://github.com/alejovh12/AsistenciasUCO/pull/53) | Draft, abierto, mergeable; checks en ejecución |
+| Backend | `codex/docs-integracion-develop-20261027` / `a378a8e7` | [#54](https://github.com/alejovh12/AsistenciasUCO/pull/54) | Draft, abierto, mergeable; checks en ejecución |
+| Frontend | `codex/fix-hallazgos-frontend-20261027` / `7cad85d3` | Pendiente | Push realizado; creación bloqueada por `403 Resource not accessible by integration` |
+| Frontend | `codex/integracion-develop-20261027` / `f6753c84` | Pendiente | Push realizado; creación bloqueada por `403 Resource not accessible by integration` |
+| DB | `codex/fix-grants-runtime-20261027` / `1098d800` | Pendiente | Push realizado; creación bloqueada por `403 Resource not accessible by integration` |
+
+El conector pudo actualizar los PR Backend, pero no tiene permiso para abrir PRs en `shesho22/AsistenciasUCO-Frontend`
+ni `johnjduque/gestion-asistencia-db`. La sesión web tampoco pudo determinar la URL con seguridad y se detuvo; no se
+intentó introducir credenciales ni sortear ese control. Esos tres PRs requieren apertura desde una cuenta/CLI con permisos
+de los respectivos repositorios.
+
+Checks observados en Backend al momento del corte: `Dependency Review` y `Trivy Repository Vulnerability and
+Misconfiguration Scan` en `success`; `CodeQL Java Analysis`, `Backend Quality Gate`, `ArchUnit Architectural Guardrails`
+y `Trivy Production Docker Image Scan` en `in_progress`. El check agregado `Trivy` quedó `neutral` porque el workflow
+`security-deep-scan.yml`/`trivy-production-image` no está presente en `develop`; no se interpretó como PASS.
+
+No se repitieron las suites completas locales porque no cambió código después de la validación anterior; el nuevo commit
+de este addendum es documental. El archivo local previo
+`docs/work-items/LOCAL-STABILIZATION-LB004D-2026-10-20/VALIDATION.md` permanece sin incluir en el commit.
