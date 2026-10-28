@@ -7,6 +7,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.JpaProcedureExecutor;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.NativeRowValues;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.ProcedureRow;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
@@ -139,7 +140,7 @@ public class SolicitudIngresoGrupoJpaRepository implements SolicitudIngresoGrupo
                         .setParameter("numeroPagina", numeroPagina)
                         .setParameter("tamanoPagina", tamanoPagina),
                 fila -> new SolicitudIngresoDocenteProjection(
-                        (UUID) fila[0], (UUID) fila[1], (String) fila[2], entero(fila[3]), texto(fila[4]), (String) fila[5],
+                        NativeRowValues.uuid(fila[0]), NativeRowValues.uuid(fila[1]), (String) fila[2], entero(fila[3]), texto(fila[4]), (String) fila[5],
                         instante(fila[6]), instante(fila[7]), (String) fila[8], entero(fila[9]),
                         valor(fila[10]), valor(fila[11]), valor(fila[12])));
     }
@@ -154,7 +155,7 @@ public class SolicitudIngresoGrupoJpaRepository implements SolicitudIngresoGrupo
                         .setParameter("numeroPagina", numeroPagina)
                         .setParameter("tamanoPagina", tamanoPagina),
                 fila -> new SolicitudIngresoEstudianteProjection(
-                        (UUID) fila[0], (UUID) fila[1], entero(fila[2]), (String) fila[3], (UUID) fila[4], (String) fila[5],
+                        NativeRowValues.uuid(fila[0]), NativeRowValues.uuid(fila[1]), entero(fila[2]), (String) fila[3], NativeRowValues.uuid(fila[4]), (String) fila[5],
                         (String) fila[6], texto(fila[7]), (String) fila[8], instante(fila[9]), instante(fila[10]),
                         (String) fila[11], valor(fila[12])));
     }
@@ -164,7 +165,7 @@ public class SolicitudIngresoGrupoJpaRepository implements SolicitudIngresoGrupo
         return consultar(OP_DESTINATARIOS, "No fue posible consultar los destinatarios de la solicitud de ingreso desde base de datos.",
                 SQL_DESTINATARIOS, idUsuarioEjecutor, query -> query.setParameter("idSolicitud", idSolicitud),
                 fila -> new DestinatarioSolicitudIngresoProjection(
-                        texto(fila[0]), (UUID) fila[1], (String) fila[2], (String) fila[3], (UUID) fila[4], entero(fila[5]),
+                        texto(fila[0]), NativeRowValues.uuid(fila[1]), (String) fila[2], (String) fila[3], NativeRowValues.uuid(fila[4]), entero(fila[5]),
                         (String) fila[6], (String) fila[7]));
     }
 

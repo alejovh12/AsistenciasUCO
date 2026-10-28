@@ -114,4 +114,17 @@ class RetiroEstudianteGrupoJpaRepositoryTest {
 
         assertThrows(DatabaseOperationException.class, () -> repository.consultarDestinatarios(GRUPO, ESTUDIANTE, ACTOR));
     }
+
+    // Contra SQL Server real UNIQUEIDENTIFIER llega como String en Object[]: el cast a UUID fallaba y el aviso de retiro
+    // se perdia en silencio (el use case lo trata como mejor esfuerzo).
+    @Test
+    void RP05_destinatarios_acepta_identificadores_como_texto_del_driver() {
+        when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{"ESTUDIANTE", ESTUDIANTE.toString().toUpperCase(),
+                "Est Prueba", "e@uco.edu.co", GRUPO.toString().toUpperCase(), 1, "Grupo 1", "Calculo"}));
+
+        final var destinatario = repository.consultarDestinatarios(GRUPO, ESTUDIANTE, ACTOR).getFirst();
+
+        assertEquals(ESTUDIANTE, destinatario.idUsuario());
+        assertEquals(GRUPO, destinatario.idGrupo());
+    }
 }
