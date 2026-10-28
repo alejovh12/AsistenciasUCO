@@ -11,6 +11,10 @@ last-reviewed: 2026-10-27
 Estados usados: `PASS`, `FAIL`, `BLOCKED`, `NOT_RUN`. Nada se marca `PASS` sin la evidencia citada. La evidencia cruda
 (logs, JSON, bundles) vive fuera de Git en `C:\Users\josev\AsistenciasUCO-backups-20261027`.
 
+La consolidación local y la sincronización posterior al `develop` actualizado están documentadas en
+[`CONSOLIDACION-LOCAL-2026-10-27.md`](CONSOLIDACION-LOCAL-2026-10-27.md). Ese informe supersede los SHA y conteos
+históricos de este README donde difieran; los pendientes funcionales y de cierre permanecen vigentes.
+
 ## 1. Estado inicial y final de los repositorios
 
 | Repo (remoto personal) | Rama inicial / HEAD | Cambios locales | `develop` descargado | Integración |

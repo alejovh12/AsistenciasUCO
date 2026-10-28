@@ -27,7 +27,7 @@ param(
     [Parameter(Mandatory = $true)][ValidateSet('Inventario', 'Respaldo', 'Aplicar', 'Verificar')][string]$Fase,
     [string]$Container = 'sql_server_asistencias',
     [string]$Database = 'gestionasistenciadb',
-    [string]$DbRepo = 'C:\Users\josev\AsistenciasUCO-P0D-quarantine-2026-10-20\gestion-asistencia-db-workspace',
+    [string]$DbRepo = 'C:\Users\josev\OneDrive\Documentos\AsisteciaUco_db\git\gestion-asistencia-db',
     [string]$Salida = 'C:\Users\josev\AsistenciasUCO-backups-20261027\sql'
 )
 Set-StrictMode -Version Latest
@@ -106,7 +106,7 @@ switch ($Fase) {
         Invoke-Sql @('-Q', 'IF NOT EXISTS (SELECT 1 FROM sys.databases WHERE name = N''' + $Database + ''') THROW 50000, ''Base inexistente'', 1;') | Out-Null
         foreach ($rel in $paqueteA) {
             $ruta = if ($rel.StartsWith('LOCAL:')) { Join-Path $PSScriptRoot $rel.Substring(6) } else { Join-Path $DbRepo $rel }
-            if (-not (Test-Path $ruta)) { throw "No existe $ruta (verifique que el repo DB este en develop fec4503c)." }
+            if (-not (Test-Path $ruta)) { throw "No existe $ruta (verifique que el repo DB este actualizado frente a develop 48aafef1)." }
             $nombre = Split-Path $ruta -Leaf
             docker cp $ruta "${Container}:/tmp/$nombre" | Out-Null
             Write-Host "Aplicando $rel" -ForegroundColor Cyan
