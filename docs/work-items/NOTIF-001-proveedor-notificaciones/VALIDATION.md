@@ -15,9 +15,15 @@ IN PROGRESS (Fases 1, 2 y 3 completadas; Fase 3 pendiente de aprobación formal 
 
 ## Hallazgos de Producción e Integración (Fase 3)
 
-1. **Mapeo de Columnas de `usp_reservar_notificaciones_salientes` (CONTRACT §2.2):**
-   - *Hallazgo:* En SQL Server real, el SP devuelve 11 columnas (`id, tipo, asunto, mensaje, destinatarios, datos, intentos, creadoEn, idCorrelacion, traceId, spanId`), donde `creadoEn` es la columna 7 (índice 7) y `idCorrelacion` es la 8. En cambio, el mock unitario de `NotificacionSalienteJpaRepositoryTest` retornaba un entero literal `5` (`maxIntentos`) en el índice 7 y `creadoEn` en el índice 8. Al ejecutar contra base de datos real en Fase 3, `toInstant(fila[8])` fallaba con `DateTimeParseException` al recibir un UUID.
-   - *Fix:* Se ajustó `NotificacionSalienteJpaRepository` mediante `isDateLike(fila[7])` para resolver `creadoEn` directamente desde el índice 7 según el contrato canónico DB, manteniendo tolerancia si un mock envía `maxIntentos` en dicho índice.
+1. **Mapeo Estricto de Columnas de `usp_reservar_notificaciones_salientes` (CONTRACT §2.2):**
+   - *Hallazgo:* En SQL Server real, el SP devuelve 11 columnas (`id, tipo, asunto, mensaje, destinatarios, datos, intentos, creadoEn, idCorrelacion, traceId, spanId`), donde `creadoEn` es la columna 7 (índice 7) y `idCorrelacion` es la 8. En cambio, el mock unitario de `NotificacionSalienteJpaRepositoryTest` retornaba un entero literal `5` (`maxIntentos`) en el índice 7 desplazando `creadoEn` al índice 8.
+   - *Resolución:* Siguiendo la aprobación formal de TEST_CONTRACT_CONFLICT, se estableció un mapeo estricto por posición de las 11 columnas en `NotificacionSalienteJpaRepository` (sin `isDateLike` ni defaults inventados, obteniendo `maxIntentos` únicamente de la configuración `OutboxNotificationProperties`), se corrigió el fixture simulado en `NotificacionSalienteJpaRepositoryTest` (`BE-J02`, `BE-J06`, `BE-J08`) y se agregó la prueba `BE-J09` que valida que el repositorio falla si el orden de las columnas viene desplazado.
+
+## Tests existentes modificados (para PR)
+
+1. `NotificationWiringTest` (WI-04, WI-05, WI-11): En modo composite, resolución de bean primario `CompositeNotificacionAdapter` y preservación de hojas (`hasSingleBean(LogNotificacionAdapter)` y `hasSingleBean(OutboxNotificacionAdapter)`).
+2. Intervalo del sweeper en fixture de `NotificacionOutboxDispatcherTest` (100 ms a 1 s).
+3. `NotificacionSalienteJpaRepositoryTest` (BE-J02, BE-J06, BE-J08): Corrección de fixture de fila simulada para respetar el orden canónico de 11 columnas de CONTRACT §2.2 ([7]=creadoEn, [8]=idCorrelacion), eliminando `maxIntentos` del arreglo devuelto por la consulta nativa.
 2. **Binding de Parámetros de Correlación:**
    - *Hallazgo:* Los procedimientos `usp_marcar_notificacion_entregada` y `usp_registrar_fallo_notificacion` esperan `@idCorrelacion` como parámetro de auditoría. Inicialmente se pasaba como parámetro no tipado o nulo en ciertos flujos.
    - *Fix:* Se aseguró el binding de `idCorrelacion` en todas las ejecuciones transaccionales y de fallback de `NotificacionSalienteJpaRepository`.
