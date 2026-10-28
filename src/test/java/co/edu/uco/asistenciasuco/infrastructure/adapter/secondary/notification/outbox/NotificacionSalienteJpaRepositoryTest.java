@@ -97,6 +97,8 @@ class NotificacionSalienteJpaRepositoryTest {
         when(query.setParameter(anyString(), any())).thenReturn(query);
 
         final UUID id = UUID.randomUUID();
+        final UUID corrId = UUID.randomUUID();
+        final Instant creadoEn = Instant.now();
         final Object[] fila = new Object[]{
                 id,
                 "TIPO_A",
@@ -105,8 +107,8 @@ class NotificacionSalienteJpaRepositoryTest {
                 "[{\"rol\":\"DOCENTE\",\"idUsuario\":\"" + UUID.randomUUID() + "\"}]",
                 "{\"clave\":\"valor\"}",
                 1,
-                5,
-                Instant.now(),
+                creadoEn,
+                corrId,
                 "traceId123",
                 "spanId123"
         };
@@ -174,10 +176,11 @@ class NotificacionSalienteJpaRepositoryTest {
         when(query.setParameter(anyString(), any())).thenReturn(query);
 
         final UUID id = UUID.randomUUID();
+        final UUID corrId = UUID.randomUUID();
         final java.sql.Timestamp ts = java.sql.Timestamp.from(Instant.now());
         final Object[] fila = new Object[]{
                 id.toString(), "TIPO_B", "Asunto", "Mensaje", "[]", "{}",
-                Integer.valueOf(2), Integer.valueOf(5), ts, null, null
+                Integer.valueOf(2), ts, corrId, null, null
         };
         when(query.getResultList()).thenReturn(List.of((Object) fila));
 
@@ -212,20 +215,21 @@ class NotificacionSalienteJpaRepositoryTest {
         final java.time.OffsetDateTime odt = java.time.OffsetDateTime.now();
         final java.time.ZonedDateTime zdt = java.time.ZonedDateTime.now();
 
+        final UUID corrId = UUID.randomUUID();
         final Object[] fila1 = new Object[]{
-                id, "TIPO_1", "A1", "M1", "[]", "{}", "1", "5", now, "tr1", "sp1"
+                id, "TIPO_1", "A1", "M1", "[]", "{}", "1", now, corrId, "tr1", "sp1"
         };
         final Object[] fila2 = new Object[]{
-                null, "TIPO_2", "A2", "M2", "[]", "{}", null, null, odt, null, null
+                null, "TIPO_2", "A2", "M2", "[]", "{}", null, odt, null, null, null
         };
         final Object[] fila3 = new Object[]{
-                id.toString(), "TIPO_3", "A3", "M3", "[]", "{}", 3, 5, zdt, null, null
+                id.toString(), "TIPO_3", "A3", "M3", "[]", "{}", 3, zdt, corrId.toString(), null, null
         };
         final Object[] fila4 = new Object[]{
-                id, "TIPO_4", "A4", "M4", "[]", "{}", 4, 5, now.toString(), null, null
+                id, "TIPO_4", "A4", "M4", "[]", "{}", 4, now.toString(), corrId, null, null
         };
         final Object[] fila5 = new Object[]{
-                id, "TIPO_5", "A5", "M5", "[]", "{}", 5, 5, null, null, null
+                id, "TIPO_5", "A5", "M5", "[]", "{}", 5, null, null, null, null
         };
 
         when(query.getResultList()).thenReturn(List.of(
@@ -241,5 +245,23 @@ class NotificacionSalienteJpaRepositoryTest {
         assertEquals(zdt.toInstant(), res.get(2).creadoEn());
         assertEquals(now, res.get(3).creadoEn());
         assertNull(res.get(4).creadoEn());
+    }
+
+    @Test
+    @DisplayName("BE-J09: reservar falla si orden de columnas esta desplazado con maxIntentos en indice 7")
+    void BE_J09_reservar_falla_si_orden_columnas_desplazado() {
+        final Query query = mock(Query.class);
+        when(entityManager.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter(anyString(), any())).thenReturn(query);
+
+        final Object[] filaDesplazada = new Object[]{
+                UUID.randomUUID(), "TIPO_A", "Asunto", "Mensaje", "[]", "{}", 1, 5, Instant.now(), "trace", "span"
+        };
+        when(query.getResultList()).thenReturn(List.of((Object) filaDesplazada));
+
+        org.junit.jupiter.api.Assertions.assertThrows(
+                Exception.class,
+                () -> repository.reservar(10, Duration.ofSeconds(60), "instancia-1")
+        );
     }
 }
