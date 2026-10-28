@@ -126,6 +126,10 @@ app:
       provider: ${APP_ADAPTERS_REALTIME_PROVIDER:local-sse}
     audit:
       provider: ${APP_ADAPTERS_AUDIT_PROVIDER:logging}
+    notification:
+      provider: ${APP_ADAPTERS_NOTIFICATION_PROVIDER:log}     # log | outbox | composite
+      composite:
+        targets: ${APP_ADAPTERS_NOTIFICATION_COMPOSITE_TARGETS:log,outbox}   # solo aplica con provider=composite
 
   providers:
     # Azure Key Vault y App Configuration (autenticacion por DefaultAzureCredential con Azure CLI)
@@ -214,6 +218,18 @@ app:
       port: ${CLAMAV_PORT:3310}
       connect-timeout-millis: ${CLAMAV_CONNECT_TIMEOUT_MILLIS:5000}
       read-timeout-millis: ${CLAMAV_READ_TIMEOUT_MILLIS:15000}
+    outbox-notification:
+      sender: ${OUTBOX_NOTIFICATION_SENDER:log}               # log (v1)
+      dispatcher-enabled: ${OUTBOX_NOTIFICATION_DISPATCHER_ENABLED:true}
+      batch-size: ${OUTBOX_NOTIFICATION_BATCH_SIZE:50}        # 1..500
+      lease: ${OUTBOX_NOTIFICATION_LEASE:60s}                 # 5s..1h
+      sweeper-interval: ${OUTBOX_NOTIFICATION_SWEEPER_INTERVAL:30s}   # 1s..1h
+      max-attempts: ${OUTBOX_NOTIFICATION_MAX_ATTEMPTS:5}     # 1..20
+      backoff-base: ${OUTBOX_NOTIFICATION_BACKOFF_BASE:30s}   # 1s..1h
+      backoff-max: ${OUTBOX_NOTIFICATION_BACKOFF_MAX:15m}     # >= base, <= 24h
+      retention-days: ${OUTBOX_NOTIFICATION_RETENTION_DAYS:30}   # 1..3650
+      retention-interval: ${OUTBOX_NOTIFICATION_RETENTION_INTERVAL:6h}
+      instance-id: ${OUTBOX_NOTIFICATION_INSTANCE_ID:}        # vacío => <hostname>-<8 hex aleatorios>
 
   # CORS es neutral (no conoce ningun proveedor de identidad); SecurityConfig lo lee
   # directamente via @Value.
