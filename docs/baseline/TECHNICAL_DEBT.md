@@ -941,6 +941,6 @@ GOLDEN PATH EFFECT:         NONE
 
 - **Fecha / responsable:** 2026-10-27 / backend-team (HU051). **Clasificación:** INTEGRATION_PENDING_EXTERNAL_COMPONENT. **Prioridad:** MEDIA.
 - **Descripción:** `NotificacionPort` (avisos institucionales por correo, WhatsApp, SMS…) existe en Application, pero el componente de notificaciones del equipo aún no está lanzado. El provider por defecto (`LogNotificacionAdapter`, `@ConditionalOnMissingBean`) solo registra en el log el tipo de aviso, los roles e ids de los destinatarios y los ids de trazabilidad, sin correos, nombres ni texto del mensaje.
-- **Impacto:** El retiro de HU051 se realiza y se audita, pero el estudiante, el docente y el coordinador no reciben el aviso real. Afectará también a HU053-HU055 y HU038 cuando usen el mismo puerto.
+- **Impacto:** El retiro de HU051 se realiza y se audita, pero el estudiante, el docente y el coordinador no reciben el aviso real. También afecta a HU053-HU055 (avisos de solicitud registrada, resuelta y retirada) y afectará a HU038.
 - **Resolución esperada:** Implementar el adaptador del componente institucional de notificaciones (su configuración aporta otro `NotificacionPort` y el de log deja de crearse) y validar la entrega en MV.
 - **Bloquea línea base:** No. **Estado:** **OPEN / MEDIUM / BACKEND**. **Work item:** [HU051](../work-items/HU051-retirar-estudiante-grupo/CLOSURE.md).

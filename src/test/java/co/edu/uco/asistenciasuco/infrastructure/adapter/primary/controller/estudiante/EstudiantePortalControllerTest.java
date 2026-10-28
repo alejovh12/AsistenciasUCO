@@ -137,7 +137,7 @@ class EstudiantePortalControllerTest {
         final List<Executable> operations = List.of(
                 () -> controller.consultarPrerrequisitos(MATERIA),
                 controller::crearReclamo,
-                () -> controller.eliminarReclamo(MATERIA), controller::crearSolicitudMatricula,
+                () -> controller.eliminarReclamo(MATERIA),
                 controller::matricularGrupo
         );
 

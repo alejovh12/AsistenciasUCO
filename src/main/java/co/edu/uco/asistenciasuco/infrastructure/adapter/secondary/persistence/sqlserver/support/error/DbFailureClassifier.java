@@ -24,6 +24,7 @@ final class DbFailureClassifier {
 
     private static final String OPERATION_ACTUALIZAR_COORDINADOR = "actualizarCoordinador";
     private static final String OPERATION_CAMBIAR_ESTADO_COORDINADOR = "cambiarEstadoCoordinador";
+    private static final String OPERATION_CONSULTAR_HISTORIAL_GRUPOS_DOCENTE = "consultarHistorialGruposDocente";
     private static final String OPERATION_ASIGNAR_DOCENTE = "asignarDocenteAGrupo";
     private static final String OPERATION_REGISTRAR_ESTUDIANTE = "registrarEstudianteEnGrupo";
     // Operaciones reales de los repositories JPA (OP_* en UsuarioJpaRepository / AsistenciaJpaRepository).
@@ -77,6 +78,12 @@ final class DbFailureClassifier {
             case "RET_001", "RET_002" -> CommonErrorCode.RESOURCE_NOT_FOUND;
             case "RET_003" -> CommonErrorCode.CONFLICT;
             case "RET_004" -> CommonErrorCode.VALIDATION_ERROR;
+            // HU053-HU055: solicitudes de ingreso a grupo. SIG_001 no es estudiante; SIG_002/SIG_007 no encontrado (las
+            // solicitudes ajenas son indistinguibles); periodo, duplicados, ya resuelta o sin cupo son conflicto.
+            case "SIG_001" -> SecurityErrorCode.FORBIDDEN;
+            case "SIG_002", "SIG_007" -> CommonErrorCode.RESOURCE_NOT_FOUND;
+            case "SIG_003", "SIG_004", "SIG_005", "SIG_008", "SIG_013" -> CommonErrorCode.CONFLICT;
+            case "SIG_009", "SIG_010" -> CommonErrorCode.VALIDATION_ERROR;
             // FAC_002: el decano ya es titular de otra facultad activa (HU117/HU111).
             case "FAC_002" -> CommonErrorCode.CONFLICT;
             case "VAL_007" -> classifyVal007(operation);
@@ -135,7 +142,8 @@ final class DbFailureClassifier {
     }
 
     private static ErrorDefinition classifyGen001(final String operation) {
-        if (OPERATION_ACTUALIZAR_COORDINADOR.equals(operation) || OPERATION_CAMBIAR_ESTADO_COORDINADOR.equals(operation)) {
+        if (OPERATION_ACTUALIZAR_COORDINADOR.equals(operation) || OPERATION_CAMBIAR_ESTADO_COORDINADOR.equals(operation)
+                || OPERATION_CONSULTAR_HISTORIAL_GRUPOS_DOCENTE.equals(operation)) {
             return CommonErrorCode.RESOURCE_NOT_FOUND;
         }
         return DatabaseErrorCode.ERR_DB_UNCLASSIFIED;
