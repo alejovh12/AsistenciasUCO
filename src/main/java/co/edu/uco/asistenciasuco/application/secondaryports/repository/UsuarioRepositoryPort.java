@@ -22,4 +22,15 @@ public interface UsuarioRepositoryPort {
             UUID tipoIdentificacionId,
             Integer numeroIdentificacion
     );
+
+    /**
+     * Consulta por el documento sin forzar un tipo de identificación. Los flujos de
+     * administración de coordinadores reciben el documento, pero no reciben el UUID
+     * del catálogo de tipos; la implementación debe conservar la unicidad institucional.
+     */
+    default Optional<UsuarioIdentidadRepositoryProjection> consultarUsuarioPorNumeroIdentificacion(
+            final Integer numeroIdentificacion
+    ) {
+        return Optional.empty();
+    }
 }

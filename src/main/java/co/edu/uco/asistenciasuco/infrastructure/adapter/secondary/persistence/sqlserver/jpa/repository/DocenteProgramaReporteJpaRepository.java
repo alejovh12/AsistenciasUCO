@@ -130,6 +130,7 @@ public class DocenteProgramaReporteJpaRepository implements HistorialGruposDocen
         return valor == null ? null : ((Number) valor).intValue();
     }
 
+
     private static int valor(final Object valor) {
         return valor == null ? 0 : ((Number) valor).intValue();
     }

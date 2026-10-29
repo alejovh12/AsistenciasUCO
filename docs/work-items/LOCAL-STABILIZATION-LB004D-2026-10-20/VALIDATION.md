@@ -32,6 +32,17 @@ Este archivo se completa con comandos, fecha/hora local, exit code, alcance, cob
 
 No se guardaron credenciales, tokens ni logs crudos.
 
+### 2026-10-28 — reinicio sobre ramas `develop`
+
+- Backend: checkout `develop` en `fcc0e7db`, actualizado con `origin/develop`; runner `scripts/start-local-stack.ps1 -NoDependencies -NoFrontend -WaitSeconds 120`; puerto 8080 y `/actuator/health` HTTP 200.
+- Frontend principal: checkout `develop` en `992e3ff`, actualizado desde `legacy-frontend/develop`; runner local; puerto 4200 y `/app/admin/seguridad` HTTP 200.
+- Frontends de seguridad: sus repositorios no publican rama `develop`; se preservaron sus cambios locales y se ejecutaron desde `main` (`securityBaseline-vue` `5a3c51e`, `security-ui` `6e6ed9b`); puertos 5173 y 5175 HTTP 200.
+- Dependencias existentes: `sql_server_asistencias` en 1433, Keycloak legacy en 8081, Keycloak baseline en 19090, PDP/PEP en 18080/18081, MinIO en 9000 y ClamAV en 3310; probes HTTP aplicables HTTP 200 y contenedores activos/saludables. `minio-init` finalizó con exit 0 como servicio one-shot.
+- Docker Server 28.4.0. No se ejecutaron migraciones, cambios de esquema, recreaciones, limpieza de volúmenes, cambios de permisos ni rotación de secretos.
+- Verificador oficial de frontends: `PASS` para dependencias, puertos, Vue, Security UI, Angular, PDP, PEP y discovery de Keycloak.
+
+Resultado: entorno local levantado sobre `develop` para backend y frontend principal, con los módulos de seguridad preservados en sus únicas ramas disponibles. Las certificaciones E2E/autorización contractual siguen fuera de alcance de este reinicio.
+
 ## Gate y dictamen
 
 No cerrar mientras haya un gate aplicable `NOT_RUN`, `FAIL`, `REVIEW_REQUIRED` o mientras el contrato DB de binding permanezca bloqueado para el E2E docente. El cierre funcional requiere además `CLOSURE.md`, deuda y ledger manual conforme a la DoD única.

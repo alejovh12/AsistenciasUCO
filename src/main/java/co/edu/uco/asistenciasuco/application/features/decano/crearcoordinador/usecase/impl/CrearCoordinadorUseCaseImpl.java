@@ -1,10 +1,12 @@
 package co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.usecase.CrearCoordinadorUseCase;
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.usecase.domain.CrearCoordinadorDomain;
+import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.usuario.domain.rules.PasswordRegistroRule;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.CoordinadorCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
@@ -55,9 +57,7 @@ public final class CrearCoordinadorUseCaseImpl implements CrearCoordinadorUseCas
                 .orElseThrow(() -> new ForbiddenException("No fue posible resolver la facultad del decano autenticado."));
 
         final Optional<UsuarioIdentidadRepositoryProjection> usuarioPreexistente =
-                (usuarioRepositoryPort != null && domain.getCorreo() != null)
-                        ? usuarioRepositoryPort.consultarUsuarioPorCorreo(domain.getCorreo().trim())
-                        : Optional.empty();
+                resolverUsuarioPreexistente(domain);
 
         validarContrasenaObligatoria(domain, usuarioPreexistente.isPresent());
 
@@ -77,29 +77,109 @@ public final class CrearCoordinadorUseCaseImpl implements CrearCoordinadorUseCas
                 domain.getSegundoNombre(), domain.getPrimerApellido(), domain.getSegundoApellido(), domain.getCorreo(),
                 domain.getIdPrograma(), facultad, passwordParaPersistir, domain.getUsuario());
 
-        if (identityProviderPort != null && usuarioRepositoryPort != null && domain.getCorreo() != null) {
-            final Optional<UsuarioIdentidadRepositoryProjection> usuarioCanonico =
-                    usuarioRepositoryPort.consultarUsuarioPorCorreo(domain.getCorreo().trim())
-                            .or(() -> usuarioPreexistente);
-            if (usuarioCanonico.isPresent()) {
-                final UsuarioIdentidadRepositoryProjection u = usuarioCanonico.get();
-                try {
-                    identityProviderPort.crearCuenta(new CrearCuentaIdentidadDTO(
-                            String.valueOf(u.numeroIdentificacion()),
-                            u.id(),
-                            u.correo(),
-                            u.primerNombre(),
-                            u.primerApellido(),
-                            credencialInicial,
-                            InstitutionalRole.COORDINADOR
-                    ));
-                } catch (final IdentityProviderPort.IdentityProviderException exception) {
-                    throw new InternalApplicationException(
-                            "No fue posible completar el aprovisionamiento de identidad del coordinador registrado.", exception
-                    );
-                }
+        if (identityProviderPort != null && usuarioRepositoryPort != null) {
+            final UsuarioIdentidadRepositoryProjection u = resolverUsuarioPostCommand(domain, usuarioPreexistente);
+            try {
+                identityProviderPort.crearCuenta(new CrearCuentaIdentidadDTO(
+                        String.valueOf(u.numeroIdentificacion()),
+                        u.id(),
+                        u.correo(),
+                        u.primerNombre(),
+                        u.primerApellido(),
+                        credencialInicial,
+                        InstitutionalRole.COORDINADOR
+                ));
+            } catch (final IdentityProviderPort.IdentityProviderException exception) {
+                throw new InternalApplicationException(
+                        "No fue posible completar el aprovisionamiento de identidad del coordinador registrado.", exception
+                );
             }
         }
+    }
+
+    /**
+     * Resuelve la identidad por las dos claves institucionales antes de invocar el SP.
+     * Un reintento con la misma persona debe reutilizar el usuario; si correo y documento
+     * apuntan a personas distintas, no se permite que el SP elija una de ellas.
+     */
+    private Optional<UsuarioIdentidadRepositoryProjection> resolverUsuarioPreexistente(
+            final CrearCoordinadorDomain domain) {
+        if (usuarioRepositoryPort == null) {
+            return Optional.empty();
+        }
+        final Optional<UsuarioIdentidadRepositoryProjection> porCorreo = consultarPorCorreo(domain);
+        final Optional<UsuarioIdentidadRepositoryProjection> porDocumento = consultarPorDocumento(domain);
+        if (porCorreo.isEmpty() && porDocumento.isEmpty()) {
+            return Optional.empty();
+        }
+        if (porCorreo.isPresent() && porDocumento.isEmpty()) {
+            throw new ConflictException(UsuarioErrorCode.ERR_UNICIDAD_CORREO);
+        }
+        if (porCorreo.isEmpty()) {
+            throw new ConflictException(UsuarioErrorCode.ERR_UNICIDAD_DOCUMENTO);
+        }
+        validarIdentidad(proyeccionValida(porCorreo), proyeccionValida(porDocumento));
+        return porCorreo;
+    }
+
+    private UsuarioIdentidadRepositoryProjection resolverUsuarioPostCommand(
+            final CrearCoordinadorDomain domain,
+            final Optional<UsuarioIdentidadRepositoryProjection> usuarioPreexistente) {
+        final Optional<UsuarioIdentidadRepositoryProjection> usuario = usuarioPreexistente.isPresent()
+                ? usuarioRepositoryPort.consultarUsuarioPorId(usuarioPreexistente.get().id())
+                : consultarPorDocumento(domain).or(() -> consultarPorCorreo(domain));
+        return usuario.filter(this::esIdentidadCanonica)
+                .orElseThrow(() -> new InternalApplicationException(
+                        "No fue posible resolver la identidad institucional canonica del coordinador despues del registro."
+                ));
+    }
+
+    private Optional<UsuarioIdentidadRepositoryProjection> consultarPorCorreo(final CrearCoordinadorDomain domain) {
+        if (domain.getCorreo() == null) {
+            return Optional.empty();
+        }
+        return usuarioRepositoryPort.consultarUsuarioPorCorreo(domain.getCorreo().trim());
+    }
+
+    private Optional<UsuarioIdentidadRepositoryProjection> consultarPorDocumento(final CrearCoordinadorDomain domain) {
+        if (domain.getNumeroIdentificacion() == null || domain.getNumeroIdentificacion().isBlank()) {
+            return Optional.empty();
+        }
+        try {
+            return usuarioRepositoryPort.consultarUsuarioPorNumeroIdentificacion(
+                    Integer.valueOf(domain.getNumeroIdentificacion().trim()));
+        } catch (final NumberFormatException _) {
+            return Optional.empty();
+        }
+    }
+
+    private void validarIdentidad(
+            final UsuarioIdentidadRepositoryProjection porCorreo,
+            final UsuarioIdentidadRepositoryProjection porDocumento) {
+        if (!porCorreo.id().equals(porDocumento.id())) {
+            throw new ConflictException(UsuarioErrorCode.ERR_IDENTIDAD_USUARIO_CONFLICTO);
+        }
+    }
+
+    private boolean esIdentidadCanonica(final UsuarioIdentidadRepositoryProjection usuario) {
+        return usuario != null
+                && usuario.id() != null
+                && usuario.numeroIdentificacion() != null
+                && hasText(usuario.primerNombre())
+                && hasText(usuario.primerApellido())
+                && hasText(usuario.correo());
+    }
+
+    private UsuarioIdentidadRepositoryProjection proyeccionValida(
+            final Optional<UsuarioIdentidadRepositoryProjection> usuario) {
+        return usuario.filter(this::esIdentidadCanonica)
+                .orElseThrow(() -> new InternalApplicationException(
+                        "No fue posible validar la identidad institucional del coordinador."
+                ));
+    }
+
+    private static boolean hasText(final String value) {
+        return value != null && !value.isBlank();
     }
 
     /**
