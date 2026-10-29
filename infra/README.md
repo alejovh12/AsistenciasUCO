@@ -3,7 +3,7 @@ status: active
 type: operational
 scope: backend
 owner: backend-team
-last-reviewed: 2026-10-26
+last-reviewed: 2026-10-29
 ---
 
 # Infraestructura local cotidiana
@@ -21,6 +21,23 @@ no se usa para publicar. Los secretos viven fuera de Git (`.env` por carpeta y `
 | `files/` | `asistencias-files` | MinIO 9000, ClamAV 3310 |
 | `observability/` | `asistencias-uco-observability` | Grafana 3000, Loki 3100, Tempo 3200, Prometheus 9090, Alloy 4318 |
 | `keycloak/` | `asistencias-uco-security` | Keycloak **legacy** (alternativa explicita; no arranca por defecto) |
+
+## Rutas oficiales
+
+Solo existen tres copias de trabajo: Backend (`%USERPROFILE%\AsistenciasUCO\AsistenciasUCO`), Frontend
+(`%USERPROFILE%\OneDrive\Documentos\Front_Asistecias\AsistenciasUCO-Frontend`) y DB
+(`%USERPROFILE%\OneDrive\Documentos\AsisteciaUco_db\git\gestion-asistencia-db`). No se crean clones, worktrees,
+carpetas de cuarentena/laboratorio ni bases duplicadas; `scripts\start-local-stack.ps1` rechaza rutas que lo parezcan.
+
+## Seguridad: Security Baseline (predeterminado) y legacy (alternativa explicita)
+
+| Modo | Servicios | Backend | Frontend |
+|---|---|---|---|
+| `baseline` (predeterminado) | Keycloak 19090, PDP 18080, PEP 18081 (`infra/security-baseline`) | `APP_ADAPTERS_SECURITY_PROVIDER=baseline` (valor por defecto de `application.yml`) | `SECURITY_PROVIDER=baseline` |
+| `legacy` | Keycloak 8081 (`infra/keycloak`) | `-Provider legacy` | `SECURITY_PROVIDER=legacy` |
+
+Legacy nunca es un fallback automatico: se elige explicitamente con `-Provider legacy`. El stack integrado se arranca con
+`.\scripts\start-local-stack.ps1 [-Provider baseline|legacy]` (`-Check` solo diagnostica; `-Stop` detiene los procesos que inicio).
 
 ## Arrancar (orden: datos -> seguridad -> archivos -> backend -> frontend)
 
