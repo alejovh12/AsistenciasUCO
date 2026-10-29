@@ -171,6 +171,16 @@ class DocenteProgramaReporteJpaRepositoryTest {
     }
 
     @Test
+    void RR01b_resumen_acepta_uuid_entregado_como_string_por_sql_server() {
+        final UUID tipo = UUID.randomUUID();
+        when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{tipo.toString(), "CAT ", "Catedra", 2, 1}));
+
+        final var resumen = repository.consultarResumen(ACTOR);
+
+        assertEquals(tipo, resumen.getFirst().idTipoVinculacion());
+    }
+
+    @Test
     void RR02_resumen_con_ejecutor_nulo_no_llega_a_la_db() {
         assertThrows(CrosscuttingException.class, () -> repository.consultarResumen(null));
         verify(entityManager, never()).createNativeQuery(anyString());

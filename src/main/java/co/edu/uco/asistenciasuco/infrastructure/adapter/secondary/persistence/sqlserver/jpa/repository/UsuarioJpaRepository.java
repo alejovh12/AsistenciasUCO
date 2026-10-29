@@ -46,6 +46,8 @@ public class UsuarioJpaRepository implements UsuarioRepositoryPort {
     static final String HQL_POR_IDENTIFICACION = SELECT_ROW
             + " where u.idTipoIdentificacion = :tipoIdentificacionId"
             + " and u.numeroIdentificacion = :numeroIdentificacion order by u.id";
+    static final String HQL_POR_NUMERO_IDENTIFICACION = SELECT_ROW
+            + " where u.numeroIdentificacion = :numeroIdentificacion order by u.id";
 
     static final String OP_SINCRONIZAR_USUARIO = "crearUsuario";
 
@@ -84,6 +86,15 @@ public class UsuarioJpaRepository implements UsuarioRepositoryPort {
     public Optional<UsuarioIdentidadRepositoryProjection> consultarUsuarioPorIdentificacion(
             final UUID tipoIdentificacionId, final Integer numeroIdentificacion) {
         return consultarPorIdentificacion(tipoIdentificacionId, numeroIdentificacion);
+    }
+
+    @Override
+    public Optional<UsuarioIdentidadRepositoryProjection> consultarUsuarioPorNumeroIdentificacion(
+            final Integer numeroIdentificacion) {
+        return first(HQL_POR_NUMERO_IDENTIFICACION,
+                query -> query.setParameter("numeroIdentificacion", numeroIdentificacion),
+                "consultarUsuarioPorNumeroIdentificacion",
+                "No fue posible consultar el usuario por numero de identificacion.");
     }
 
     private Optional<UsuarioIdentidadRepositoryProjection> consultarPorCorreo(final String correo) {

@@ -1,6 +1,8 @@
 package co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
+import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.usecase.domain.CrearCoordinadorDomain;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.CoordinadorCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
@@ -132,6 +134,12 @@ class CrearCoordinadorUseCaseImplTest {
         when(usuarioRepositoryPort.consultarUsuarioPorCorreo("jorge.henao@uco.edu.co"))
                 .thenReturn(Optional.of(new UsuarioIdentidadRepositoryProjection(
                         preexistenteId, UUID.randomUUID(), 1017555444, "JORGE", "HENAO", "jorge.henao@uco.edu.co")));
+        when(usuarioRepositoryPort.consultarUsuarioPorNumeroIdentificacion(1017555444))
+                .thenReturn(Optional.of(new UsuarioIdentidadRepositoryProjection(
+                        preexistenteId, UUID.randomUUID(), 1017555444, "JORGE", "HENAO", "jorge.henao@uco.edu.co")));
+        when(usuarioRepositoryPort.consultarUsuarioPorId(preexistenteId)).thenReturn(Optional.of(
+                new UsuarioIdentidadRepositoryProjection(
+                        preexistenteId, UUID.randomUUID(), 1017555444, "JORGE", "HENAO", "jorge.henao@uco.edu.co")));
         when(identityProviderPort.crearCuenta(any())).thenReturn(new CuentaIdentidadDTO("kc-coord-1", false));
 
         useCaseConIam.execute(domain);
@@ -148,6 +156,89 @@ class CrearCoordinadorUseCaseImplTest {
         final ArgumentCaptor<CrearCuentaIdentidadDTO> cuentaCaptor = ArgumentCaptor.forClass(CrearCuentaIdentidadDTO.class);
         verify(identityProviderPort).crearCuenta(cuentaCaptor.capture());
         assertEquals(preexistenteId, cuentaCaptor.getValue().idUsuario());
+    }
+
+    @Test
+    void execute_reintento_por_documento_reutiliza_usuario_canonico_y_no_omite_identity() {
+        final UsuarioRepositoryPort usuarioRepositoryPort = mock(UsuarioRepositoryPort.class);
+        final PasswordEncoderPort passwordEncoderPort = mock(PasswordEncoderPort.class);
+        final IdentityProviderPort identityProviderPort = mock(IdentityProviderPort.class);
+        final CrearCoordinadorUseCaseImpl useCaseConIam = new CrearCoordinadorUseCaseImpl(
+                commandPort, scopePort, usuarioRepositoryPort, passwordEncoderPort, identityProviderPort);
+        final UUID actorDecano = UUID.randomUUID();
+        final UUID usuarioId = UUID.randomUUID();
+        final UsuarioIdentidadRepositoryProjection usuario = new UsuarioIdentidadRepositoryProjection(
+                usuarioId, UUID.randomUUID(), 1023465765, "JORGE", "VALENCIA", "coordinador231@uco.edu.co");
+        final UUID programa = UUID.randomUUID();
+        final CrearCoordinadorDomain domain = new CrearCoordinadorDomain(
+                "1023465765", "JORGE", null, "VALENCIA", null,
+                "coordinador231@uco.edu.co", programa, "Clave12345678!", actorDecano);
+
+        when(scopePort.findFacultadIdByDecanoUsuario(actorDecano)).thenReturn(Optional.of(UUID.randomUUID()));
+        when(usuarioRepositoryPort.consultarUsuarioPorCorreo("coordinador231@uco.edu.co"))
+                .thenReturn(Optional.of(usuario));
+        when(usuarioRepositoryPort.consultarUsuarioPorNumeroIdentificacion(1023465765))
+                .thenReturn(Optional.of(usuario));
+        when(usuarioRepositoryPort.consultarUsuarioPorId(usuarioId)).thenReturn(Optional.of(usuario));
+        when(identityProviderPort.crearCuenta(any())).thenReturn(new CuentaIdentidadDTO("kc-jorge", false));
+
+        useCaseConIam.execute(domain);
+
+        verify(commandPort).crearCoordinador(any(UUID.class), org.mockito.ArgumentMatchers.eq("1023465765"),
+                org.mockito.ArgumentMatchers.eq("JORGE"), org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.eq("VALENCIA"), org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.eq("coordinador231@uco.edu.co"),
+                org.mockito.ArgumentMatchers.eq(programa), any(UUID.class),
+                org.mockito.ArgumentMatchers.isNull(), org.mockito.ArgumentMatchers.eq(actorDecano));
+        final ArgumentCaptor<CrearCuentaIdentidadDTO> cuentaCaptor = ArgumentCaptor.forClass(CrearCuentaIdentidadDTO.class);
+        verify(identityProviderPort).crearCuenta(cuentaCaptor.capture());
+        assertEquals(usuarioId, cuentaCaptor.getValue().idUsuario());
+        assertEquals("coordinador231@uco.edu.co", cuentaCaptor.getValue().correo());
+    }
+
+    @Test
+    void execute_rechaza_correo_y_documento_de_personas_distintas_sin_command() {
+        final UsuarioRepositoryPort usuarioRepositoryPort = mock(UsuarioRepositoryPort.class);
+        final PasswordEncoderPort passwordEncoderPort = mock(PasswordEncoderPort.class);
+        final IdentityProviderPort identityProviderPort = mock(IdentityProviderPort.class);
+        final CrearCoordinadorUseCaseImpl useCaseConIam = new CrearCoordinadorUseCaseImpl(
+                commandPort, scopePort, usuarioRepositoryPort, passwordEncoderPort, identityProviderPort);
+        final UUID actorDecano = UUID.randomUUID();
+        when(scopePort.findFacultadIdByDecanoUsuario(actorDecano)).thenReturn(Optional.of(UUID.randomUUID()));
+        when(usuarioRepositoryPort.consultarUsuarioPorCorreo("correo@uco.edu.co"))
+                .thenReturn(Optional.of(new UsuarioIdentidadRepositoryProjection(
+                        UUID.randomUUID(), UUID.randomUUID(), 111111111, "ANA", "PEREZ", "correo@uco.edu.co")));
+        when(usuarioRepositoryPort.consultarUsuarioPorNumeroIdentificacion(1023465765))
+                .thenReturn(Optional.of(new UsuarioIdentidadRepositoryProjection(
+                        UUID.randomUUID(), UUID.randomUUID(), 1023465765, "JORGE", "VALENCIA", "otro@uco.edu.co")));
+
+        assertThrows(ConflictException.class, () -> useCaseConIam.execute(new CrearCoordinadorDomain(
+                "1023465765", "JORGE", null, "VALENCIA", null, "correo@uco.edu.co",
+                UUID.randomUUID(), "Clave12345678!", actorDecano)));
+
+        org.mockito.Mockito.verifyNoInteractions(commandPort, passwordEncoderPort, identityProviderPort);
+    }
+
+    @Test
+    void execute_no_declara_aprovisionamiento_completo_si_no_relee_usuario_despues_del_command() {
+        final UsuarioRepositoryPort usuarioRepositoryPort = mock(UsuarioRepositoryPort.class);
+        final PasswordEncoderPort passwordEncoderPort = mock(PasswordEncoderPort.class);
+        final IdentityProviderPort identityProviderPort = mock(IdentityProviderPort.class);
+        final CrearCoordinadorUseCaseImpl useCaseConIam = new CrearCoordinadorUseCaseImpl(
+                commandPort, scopePort, usuarioRepositoryPort, passwordEncoderPort, identityProviderPort);
+        final UUID actorDecano = UUID.randomUUID();
+        when(scopePort.findFacultadIdByDecanoUsuario(actorDecano)).thenReturn(Optional.of(UUID.randomUUID()));
+        when(passwordEncoderPort.encode(anyString())).thenReturn("HASH");
+        when(usuarioRepositoryPort.consultarUsuarioPorCorreo("nuevo@uco.edu.co"))
+                .thenReturn(Optional.empty());
+        when(usuarioRepositoryPort.consultarUsuarioPorNumeroIdentificacion(1023465765))
+                .thenReturn(Optional.empty());
+
+        assertThrows(InternalApplicationException.class, () -> useCaseConIam.execute(new CrearCoordinadorDomain(
+                "1023465765", "JORGE", null, "VALENCIA", null, "nuevo@uco.edu.co",
+                UUID.randomUUID(), "Clave12345678!", actorDecano)));
+
+        org.mockito.Mockito.verifyNoInteractions(identityProviderPort);
     }
 
     @Test

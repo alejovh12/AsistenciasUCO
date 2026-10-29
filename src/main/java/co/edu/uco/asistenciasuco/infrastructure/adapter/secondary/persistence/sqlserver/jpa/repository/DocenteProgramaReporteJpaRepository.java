@@ -97,7 +97,7 @@ public class DocenteProgramaReporteJpaRepository implements HistorialGruposDocen
                         .setParameter("idCorrelacion", correlationId)
                         .getResultList()).stream()
                         .map(Object[].class::cast)
-                        .map(f -> new ResumenTipoVinculacionProjection((UUID) f[0], texto(f[1]), texto(f[2]), valor(f[3]), valor(f[4])))
+                        .map(f -> new ResumenTipoVinculacionProjection(uuid(f[0]), texto(f[1]), texto(f[2]), valor(f[3]), valor(f[4])))
                         .toList()
         );
     }
@@ -127,6 +127,13 @@ public class DocenteProgramaReporteJpaRepository implements HistorialGruposDocen
 
     private static Integer entero(final Object valor) {
         return valor == null ? null : ((Number) valor).intValue();
+    }
+
+    private static UUID uuid(final Object valor) {
+        if (valor == null || valor instanceof UUID) {
+            return (UUID) valor;
+        }
+        return UUID.fromString(valor.toString().strip());
     }
 
     private static int valor(final Object valor) {
