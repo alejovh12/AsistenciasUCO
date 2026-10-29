@@ -107,9 +107,7 @@ public final class CrearCoordinadorUseCaseImpl implements CrearCoordinadorUseCas
         if (usuarioRepositoryPort == null) {
             return Optional.empty();
         }
-        final Optional<UsuarioIdentidadRepositoryProjection> porCorreo = domain.getCorreo() == null
-                ? Optional.empty()
-                : usuarioRepositoryPort.consultarUsuarioPorCorreo(domain.getCorreo().trim());
+        final Optional<UsuarioIdentidadRepositoryProjection> porCorreo = consultarPorCorreo(domain);
         final Optional<UsuarioIdentidadRepositoryProjection> porDocumento = consultarPorDocumento(domain);
         if (porCorreo.isEmpty() && porDocumento.isEmpty()) {
             return Optional.empty();
@@ -129,13 +127,18 @@ public final class CrearCoordinadorUseCaseImpl implements CrearCoordinadorUseCas
             final Optional<UsuarioIdentidadRepositoryProjection> usuarioPreexistente) {
         final Optional<UsuarioIdentidadRepositoryProjection> usuario = usuarioPreexistente.isPresent()
                 ? usuarioRepositoryPort.consultarUsuarioPorId(usuarioPreexistente.get().id())
-                : consultarPorDocumento(domain).or(() -> domain.getCorreo() == null
-                        ? Optional.empty()
-                        : usuarioRepositoryPort.consultarUsuarioPorCorreo(domain.getCorreo().trim()));
+                : consultarPorDocumento(domain).or(() -> consultarPorCorreo(domain));
         return usuario.filter(this::esIdentidadCanonica)
                 .orElseThrow(() -> new InternalApplicationException(
                         "No fue posible resolver la identidad institucional canonica del coordinador despues del registro."
                 ));
+    }
+
+    private Optional<UsuarioIdentidadRepositoryProjection> consultarPorCorreo(final CrearCoordinadorDomain domain) {
+        if (domain.getCorreo() == null) {
+            return Optional.empty();
+        }
+        return usuarioRepositoryPort.consultarUsuarioPorCorreo(domain.getCorreo().trim());
     }
 
     private Optional<UsuarioIdentidadRepositoryProjection> consultarPorDocumento(final CrearCoordinadorDomain domain) {
@@ -145,7 +148,7 @@ public final class CrearCoordinadorUseCaseImpl implements CrearCoordinadorUseCas
         try {
             return usuarioRepositoryPort.consultarUsuarioPorNumeroIdentificacion(
                     Integer.valueOf(domain.getNumeroIdentificacion().trim()));
-        } catch (final NumberFormatException exception) {
+        } catch (final NumberFormatException _) {
             return Optional.empty();
         }
     }

@@ -251,6 +251,18 @@ class JpaQueryAdapterContractTest {
     }
 
     @Test
+    void usuario_por_numero_de_identificacion_sin_tipo() {
+        final UvUsuarioEntity usuario = HydratedViewRow.of(UvUsuarioEntity.class,
+                Map.of("id", ID, "correo", "luz@uco.edu.co"));
+        final TypedQuery<UvUsuarioEntity> porNumero = query(
+                UsuarioJpaRepository.HQL_POR_NUMERO_IDENTIFICACION, UvUsuarioEntity.class, List.of(usuario));
+        final UsuarioJpaRepository repository = new UsuarioJpaRepository(manager, new JpaProcedureExecutor(manager));
+
+        assertEquals(ID, repository.consultarUsuarioPorNumeroIdentificacion(1037).orElseThrow().id());
+        verify(porNumero).setParameter("numeroIdentificacion", 1037);
+    }
+
+    @Test
     void fallo_del_provider_en_consultas_academicas_no_devuelve_listas_vacias() {
         when(manager.createQuery(anyString(), any(Class.class))).thenThrow(new PersistenceException("db down"));
 
