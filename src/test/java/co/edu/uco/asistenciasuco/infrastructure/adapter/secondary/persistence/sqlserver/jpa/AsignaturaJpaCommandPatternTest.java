@@ -79,23 +79,25 @@ class AsignaturaJpaCommandPatternTest {
     }
 
     @Test
-    void ASG_PAT_002_actualizar_asignatura_usa_usp_actualizar_sin_usuario_ejecutor() {
-        command.actualizarAsignatura(ASIGNATURA, "MAT-1", "Calculo", 4, PLAN, 1, "CIENCIAS", "BASICO");
+    void ASG_PAT_002_actualizar_asignatura_envia_usuario_ejecutor() {
+        command.actualizarAsignatura(ASIGNATURA, "MAT-1", "Calculo", 4, PLAN, 1, "CIENCIAS", "BASICO", EJECUTOR);
 
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_actualizar_asignatura"));
+        verify(entityManager).createNativeQuery(contains("@idUsuarioEjecutor = :idUsuarioEjecutor"));
         verify(query).setParameter("idAsignatura", ASIGNATURA);
         verify(query).setParameter("idCorrelacion", CORRELATION);
-        verify(query, never()).setParameter(org.mockito.ArgumentMatchers.eq("idUsuarioEjecutor"), any());
+        verify(query).setParameter("idUsuarioEjecutor", EJECUTOR);
         verify(query).getResultList();
     }
 
     @Test
     void ASG_PAT_003_toggle_estado_usa_usp_toggle_con_correlacion() {
-        command.toggleEstadoAsignatura(ASIGNATURA);
+        command.toggleEstadoAsignatura(ASIGNATURA, EJECUTOR);
 
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_toggle_estado_asignatura"));
         verify(query).setParameter("idAsignatura", ASIGNATURA);
         verify(query).setParameter("idCorrelacion", CORRELATION);
+        verify(query).setParameter("idUsuarioEjecutor", EJECUTOR);
         verify(query).getResultList();
     }
 
@@ -104,7 +106,7 @@ class AsignaturaJpaCommandPatternTest {
         when(query.getResultList()).thenThrow(new PersistenceException("connection reset"));
 
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
-                () -> command.toggleEstadoAsignatura(ASIGNATURA));
+                () -> command.toggleEstadoAsignatura(ASIGNATURA, EJECUTOR));
 
         assertEquals(DatabaseErrorCode.DATABASE_OPERATION_ERROR.code(), exception.getCode());
         assertTrue(exception.getCause() instanceof PersistenceException);
@@ -115,7 +117,7 @@ class AsignaturaJpaCommandPatternTest {
         when(query.getResultList()).thenReturn(Collections.emptyList());
 
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
-                () -> command.toggleEstadoAsignatura(ASIGNATURA));
+                () -> command.toggleEstadoAsignatura(ASIGNATURA, EJECUTOR));
 
         assertEquals(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT.code(), exception.getCode());
     }

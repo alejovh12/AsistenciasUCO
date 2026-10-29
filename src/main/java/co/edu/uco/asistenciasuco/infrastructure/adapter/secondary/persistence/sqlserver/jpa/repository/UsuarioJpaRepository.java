@@ -46,8 +46,11 @@ public class UsuarioJpaRepository implements UsuarioRepositoryPort {
     static final String HQL_POR_IDENTIFICACION = SELECT_ROW
             + " where u.idTipoIdentificacion = :tipoIdentificacionId"
             + " and u.numeroIdentificacion = :numeroIdentificacion order by u.id";
+    static final String HQL_POR_NUMERO_IDENTIFICACION = SELECT_ROW
+            + " where u.numeroIdentificacion = :numeroIdentificacion order by u.id";
 
     static final String OP_SINCRONIZAR_USUARIO = "crearUsuario";
+    private static final String PARAM_NUMERO_IDENTIFICACION = "numeroIdentificacion";
 
     private final EntityManager entityManager;
     private final JpaProcedureExecutor procedureExecutor;
@@ -86,6 +89,15 @@ public class UsuarioJpaRepository implements UsuarioRepositoryPort {
         return consultarPorIdentificacion(tipoIdentificacionId, numeroIdentificacion);
     }
 
+    @Override
+    public Optional<UsuarioIdentidadRepositoryProjection> consultarUsuarioPorNumeroIdentificacion(
+            final Integer numeroIdentificacion) {
+        return first(HQL_POR_NUMERO_IDENTIFICACION,
+                query -> query.setParameter(PARAM_NUMERO_IDENTIFICACION, numeroIdentificacion),
+                "consultarUsuarioPorNumeroIdentificacion",
+                "No fue posible consultar el usuario por numero de identificacion.");
+    }
+
     private Optional<UsuarioIdentidadRepositoryProjection> consultarPorCorreo(final String correo) {
         return first(HQL_POR_CORREO, query -> query.setParameter("correo", correo), "consultarUsuarioPorCorreo",
                 "No fue posible consultar el usuario por correo.");
@@ -99,7 +111,7 @@ public class UsuarioJpaRepository implements UsuarioRepositoryPort {
     private Optional<UsuarioIdentidadRepositoryProjection> consultarPorIdentificacion(
             final UUID tipoIdentificacionId, final Integer numeroIdentificacion) {
         return first(HQL_POR_IDENTIFICACION, query -> query.setParameter("tipoIdentificacionId", tipoIdentificacionId)
-                        .setParameter("numeroIdentificacion", numeroIdentificacion),
+                        .setParameter(PARAM_NUMERO_IDENTIFICACION, numeroIdentificacion),
                 "consultarUsuarioPorIdentificacion", "No fue posible consultar el usuario por identificacion.");
     }
 
@@ -110,7 +122,7 @@ public class UsuarioJpaRepository implements UsuarioRepositoryPort {
 
         final Map<String, Object> parametros = new LinkedHashMap<>();
         parametros.put("idTipoIdIdentificacion", dto.getTipoIdIdentificacion());
-        parametros.put("numeroIdentificacion", dto.getNumeroIdentificacion());
+        parametros.put(PARAM_NUMERO_IDENTIFICACION, dto.getNumeroIdentificacion());
         parametros.put("primerApellido", dto.getPrimerApellido());
         parametros.put("segundoApellido", dto.getSegundoApellido());
         parametros.put("primerNombre", dto.getPrimerNombre());

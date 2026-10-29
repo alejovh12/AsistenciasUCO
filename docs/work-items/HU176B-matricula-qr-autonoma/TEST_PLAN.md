@@ -35,7 +35,7 @@ last-reviewed: 2026-10-21
 | T-10 | CA-03: registro público | Datos válidos desde una IP del campus | Usuario **activo**, estudiante, `EstudianteGrupo` en estado `MATRICULA_QR/ESTADO_MATRICULA`, `EstudiantePrograma`; `crearCuenta(..., ESTUDIANTE)`; evento publicado; 201 sin token de sesión | DB, UseCase, IT, E2E |
 | T-11 | Persona ya registrada | Documento o correo existentes | 409 `MQR_005`, sin cambios | DB |
 | T-12 | Ya matriculado | Repetir | 409 `MQR_004` | DB |
-| T-13 | Reglas de HU050 | Cupo agotado / cruce de horario / prerrequisito | Mismos códigos que HU050; 0 filas nuevas | DB |
+| T-13 | Reglas de HU050 | Cupo agotado / cruce de horario | Mismos códigos que HU050; 0 filas nuevas | DB |
 | T-14 | CA-06: atomicidad | Falla forzada después de crear el usuario | Rollback total, `@@TRANCOUNT=0`, `totalMatriculas` intacto | DB |
 | T-15 | Concurrencia por el último cupo | Dos registros simultáneos con el mismo token y cupo 1 | Uno OK y el otro con conflicto de cupo | DB (script de 2 conexiones) |
 | T-16 | CA-04: modo autenticado | JWT ESTUDIANTE + PIN | Matrícula sin crear usuario; no se llama a `crearCuenta` | DB, UseCase, Controller |

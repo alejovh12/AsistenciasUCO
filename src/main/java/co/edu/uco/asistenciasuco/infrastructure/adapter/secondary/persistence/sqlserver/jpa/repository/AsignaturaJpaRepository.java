@@ -45,13 +45,15 @@ public class AsignaturaJpaRepository implements AsignaturaQueryPort, AsignaturaC
                  @semestreNumero = :semestreNumero,
                  @nombreArea = :nombreArea,
                  @nombreComponente = :nombreComponente,
-                 @idCorrelacion = :idCorrelacion
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
 
     static final String SQL_TOGGLE_ESTADO_ASIGNATURA = """
             EXEC dbo.usp_toggle_estado_asignatura
                  @idAsignatura = :idAsignatura,
-                 @idCorrelacion = :idCorrelacion
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
 
     static final String HQL_SELECT = """
@@ -95,14 +97,14 @@ public class AsignaturaJpaRepository implements AsignaturaQueryPort, AsignaturaC
     @Override
     public void actualizarAsignatura(final UUID idAsignatura, final String codigo, final String nombre,
                                      final Integer creditos, final UUID idPlanEstudio, final Integer semestreNumero,
-                                     final String nombreArea, final String nombreComponente) {
+                                     final String nombreArea, final String nombreComponente, final UUID usuarioEjecutor) {
         ejecutarActualizarAsignatura(idAsignatura, codigo, nombre, creditos, idPlanEstudio, semestreNumero,
-                nombreArea, nombreComponente);
+                nombreArea, nombreComponente, usuarioEjecutor);
     }
 
     @Override
-    public void toggleEstadoAsignatura(final UUID idAsignatura) {
-        ejecutarToggleEstadoAsignatura(idAsignatura);
+    public void toggleEstadoAsignatura(final UUID idAsignatura, final UUID usuarioEjecutor) {
+        ejecutarToggleEstadoAsignatura(idAsignatura, usuarioEjecutor);
     }
 
     // QUERIES
@@ -184,7 +186,8 @@ public class AsignaturaJpaRepository implements AsignaturaQueryPort, AsignaturaC
             final UUID idPlanEstudio,
             final Integer semestreNumero,
             final String nombreArea,
-            final String nombreComponente
+            final String nombreComponente,
+            final UUID usuarioEjecutor
     ) {
         final UUID correlationId = CorrelationIdContext.require();
 
@@ -198,16 +201,18 @@ public class AsignaturaJpaRepository implements AsignaturaQueryPort, AsignaturaC
         parametros.put("nombreArea", nombreArea);
         parametros.put("nombreComponente", nombreComponente);
         parametros.put("idCorrelacion", correlationId);
+        parametros.put("idUsuarioEjecutor", usuarioEjecutor);
 
         return procedureExecutor.execute(OP_ACTUALIZAR, SQL_ACTUALIZAR_ASIGNATURA, parametros, correlationId);
     }
 
-    private ProcedureResult ejecutarToggleEstadoAsignatura(final UUID idAsignatura) {
+    private ProcedureResult ejecutarToggleEstadoAsignatura(final UUID idAsignatura, final UUID usuarioEjecutor) {
         final UUID correlationId = CorrelationIdContext.require();
 
         final Map<String, Object> parametros = new LinkedHashMap<>();
         parametros.put("idAsignatura", idAsignatura);
         parametros.put("idCorrelacion", correlationId);
+        parametros.put("idUsuarioEjecutor", usuarioEjecutor);
 
         return procedureExecutor.execute(OP_TOGGLE, SQL_TOGGLE_ESTADO_ASIGNATURA, parametros, correlationId);
     }

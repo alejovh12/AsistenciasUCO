@@ -15,7 +15,6 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.usuar
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,7 +24,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Objects;
 
 /**
- * Adaptador primario REST para operaciones relacionadas con usuarios.
+ * Adaptador primario REST para operaciones relacionadas con usuarios. La consulta del perfil propio (HU006) vive en
+ * {@code UsuarioPerfilController}.
  */
 @RestController
 @RequestMapping("/api/v1/usuarios")
@@ -39,13 +39,6 @@ public final class UsuarioController {
         this.provisionarUsuarioInputPort = Objects.requireNonNull(
                 provisionarUsuarioInputPort,
                 "ProvisionarUsuarioInputPort es obligatorio."
-        );
-    }
-
-    @GetMapping("/perfil")
-    public ResponseEntity<ApiDataResponse<Void>> consultarPerfilUsuarioAutenticado() {
-        throw new FeatureUnavailableException(
-                "La consulta de perfil requiere una vertical de lectura sobre vistas publicas de usuario."
         );
     }
 
