@@ -193,7 +193,8 @@ if (-not $NoDependencies) {
     }
 
     if (-not (Test-ListeningPort -Port 1433)) {
-        Invoke-ComposeUp -Root $dbRoot -ComposeFile (Join-Path $dbRoot 'docker-compose.dev.yml') -EnvFile (Join-Path $dbRoot '.env')
+        & docker start sql_server_asistencias | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw "No se pudo iniciar SQL Server original." }
         if (-not (Wait-ListeningPort -Port 1433)) { throw 'SQL Server no abrio el puerto 1433.' }
     }
     if (-not (Test-ListeningPort -Port 8081)) {
