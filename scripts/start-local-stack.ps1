@@ -160,8 +160,8 @@ function Stop-TrackedProcesses {
         }
     }
 
-    foreach ($pid in @($tracked | Sort-Object -Descending)) {
-        Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
+    foreach ($trackedPid in @($tracked | Sort-Object -Descending)) {
+        Stop-Process -Id $trackedPid -Force -ErrorAction SilentlyContinue
     }
     Remove-Item -LiteralPath $statePath -Force -ErrorAction SilentlyContinue
     Write-Status -Kind 'STOP' -Name 'processes' -Value ('STOPPED=' + $tracked.Count)
