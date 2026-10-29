@@ -78,7 +78,8 @@ class GestionarAsignaturaUseCaseImplTest {
         verify(commandPort).actualizarAsignatura(idCaptor.capture(), org.mockito.ArgumentMatchers.eq("COD1"),
                 org.mockito.ArgumentMatchers.eq("Calculo"), org.mockito.ArgumentMatchers.eq(3),
                 org.mockito.ArgumentMatchers.eq(plan), org.mockito.ArgumentMatchers.eq(1),
-                org.mockito.ArgumentMatchers.eq("Area"), org.mockito.ArgumentMatchers.eq("Componente"));
+                org.mockito.ArgumentMatchers.eq("Area"), org.mockito.ArgumentMatchers.eq("Componente"),
+                org.mockito.ArgumentMatchers.eq(ACTOR));
         assertEquals(id, idCaptor.getValue());
     }
 
@@ -121,7 +122,7 @@ class GestionarAsignaturaUseCaseImplTest {
 
         useCase.toggleEstado(id, ACTOR);
 
-        verify(commandPort).toggleEstadoAsignatura(id);
+        verify(commandPort).toggleEstadoAsignatura(id, ACTOR);
     }
 
     @Test

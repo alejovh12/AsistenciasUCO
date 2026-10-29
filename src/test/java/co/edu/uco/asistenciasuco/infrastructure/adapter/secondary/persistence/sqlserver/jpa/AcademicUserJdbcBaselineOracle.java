@@ -48,13 +48,15 @@ public final class AcademicUserJdbcBaselineOracle {
                  @semestreNumero = :semestreNumero,
                  @nombreArea = :nombreArea,
                  @nombreComponente = :nombreComponente,
-                 @idCorrelacion = :idCorrelacion
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
 
     static final String SQL_TOGGLE_ESTADO_ASIGNATURA = """
             EXEC dbo.usp_toggle_estado_asignatura
                  @idAsignatura = :idAsignatura,
-                 @idCorrelacion = :idCorrelacion
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
 
     static final String SQL_EJECUTAR_CIERRE_MASIVO = """
@@ -141,7 +143,8 @@ public final class AcademicUserJdbcBaselineOracle {
             final UUID idPlanEstudio,
             final Integer semestreNumero,
             final String nombreArea,
-            final String nombreComponente
+            final String nombreComponente,
+            final UUID usuarioEjecutor
     ) {
         return procedureExecutor.execute("actualizarAsignatura", SQL_ACTUALIZAR_ASIGNATURA, new MapSqlParameterSource()
                 .addValue("idAsignatura", idAsignatura)
@@ -152,13 +155,15 @@ public final class AcademicUserJdbcBaselineOracle {
                 .addValue("semestreNumero", semestreNumero)
                 .addValue("nombreArea", nombreArea)
                 .addValue("nombreComponente", nombreComponente)
-                .addValue(ID_CORRELACION, CorrelationIdContext.require()));
+                .addValue(ID_CORRELACION, CorrelationIdContext.require())
+                .addValue(ID_USUARIO_EJECUTOR, usuarioEjecutor));
     }
 
-    public CanonicalProcedureResult toggleEstadoAsignatura(final UUID idAsignatura) {
+    public CanonicalProcedureResult toggleEstadoAsignatura(final UUID idAsignatura, final UUID usuarioEjecutor) {
         return procedureExecutor.execute("toggleEstadoAsignatura", SQL_TOGGLE_ESTADO_ASIGNATURA, new MapSqlParameterSource()
                 .addValue("idAsignatura", idAsignatura)
-                .addValue(ID_CORRELACION, CorrelationIdContext.require()));
+                .addValue(ID_CORRELACION, CorrelationIdContext.require())
+                .addValue(ID_USUARIO_EJECUTOR, usuarioEjecutor));
     }
 
     public CanonicalProcedureResult ejecutarCierreMasivoPeriodo(

@@ -194,6 +194,24 @@ class DocenteProgramaReporteJpaRepositoryTest {
     }
 
     @Test
+    void HR07_RR04_uniqueidentifier_como_texto_del_driver_sqlserver() {
+        final UUID grupo = UUID.randomUUID();
+        final Object[] historial = fila(null, LocalDate.of(2026, 1, 20), "VIGENTE");
+        historial[0] = grupo.toString().toUpperCase();
+        historial[3] = UUID.randomUUID().toString();
+        historial[5] = PERIODO.toString();
+        when(query.getResultList()).thenReturn(Collections.singletonList(historial));
+
+        final var g = repository.consultarHistorial(ACTOR, DOCENTE, null, 1, 10).grupos().getFirst();
+        assertEquals(grupo, g.idGrupo());
+        assertEquals(PERIODO, g.idPeriodoAcademico());
+
+        final UUID tipo = UUID.randomUUID();
+        when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{tipo.toString(), "CAT", "Catedra", 1, 0}));
+        assertEquals(tipo, repository.consultarResumen(ACTOR).getFirst().idTipoVinculacion());
+    }
+
+    @Test
     void constructor_rechaza_entity_manager_nulo() {
         assertThrows(NullPointerException.class, () -> new DocenteProgramaReporteJpaRepository(null));
     }

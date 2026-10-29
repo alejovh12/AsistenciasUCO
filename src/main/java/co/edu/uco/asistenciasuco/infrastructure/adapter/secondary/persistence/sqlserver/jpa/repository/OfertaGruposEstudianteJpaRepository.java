@@ -6,6 +6,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.NativeRowValues;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Repository;
@@ -68,9 +69,9 @@ public class OfertaGruposEstudianteJpaRepository implements OfertaGruposEstudian
 
     private static GrupoOfertaEstudianteProjection toProjection(final Object[] f) {
         return new GrupoOfertaEstudianteProjection(
-                (UUID) f[0], entero(f[1]), texto(f[2]), (UUID) f[3], texto(f[4]), texto(f[5]), texto(f[6]), (UUID) f[7],
+                NativeRowValues.uuid(f[0]), entero(f[1]), texto(f[2]), NativeRowValues.uuid(f[3]), texto(f[4]), texto(f[5]), texto(f[6]), NativeRowValues.uuid(f[7]),
                 texto(f[8]), fecha(f[9]), fecha(f[10]), texto(f[11]), texto(f[12]), valor(f[13]), valor(f[14]), valor(f[15]),
-                Boolean.TRUE.equals(f[16]), (UUID) f[17], texto(f[18]), texto(f[19]));
+                Boolean.TRUE.equals(f[16]), NativeRowValues.uuid(f[17]), texto(f[18]), texto(f[19]));
     }
 
     /**

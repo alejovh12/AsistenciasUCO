@@ -8,6 +8,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.NativeRowValues;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Repository;
@@ -97,14 +98,14 @@ public class DocenteProgramaReporteJpaRepository implements HistorialGruposDocen
                         .setParameter("idCorrelacion", correlationId)
                         .getResultList()).stream()
                         .map(Object[].class::cast)
-                        .map(f -> new ResumenTipoVinculacionProjection(uuid(f[0]), texto(f[1]), texto(f[2]), valor(f[3]), valor(f[4])))
+                        .map(f -> new ResumenTipoVinculacionProjection(NativeRowValues.uuid(f[0]), texto(f[1]), texto(f[2]), valor(f[3]), valor(f[4])))
                         .toList()
         );
     }
 
     private static GrupoHistorialDocenteProjection toProjection(final Object[] f) {
         return new GrupoHistorialDocenteProjection(
-                (UUID) f[0], entero(f[1]), texto(f[2]), (UUID) f[3], texto(f[4]), (UUID) f[5], entero(f[6]), texto(f[7]),
+                NativeRowValues.uuid(f[0]), entero(f[1]), texto(f[2]), NativeRowValues.uuid(f[3]), texto(f[4]), NativeRowValues.uuid(f[5]), entero(f[6]), texto(f[7]),
                 fecha(f[8]), fecha(f[9]), texto(f[10]), valor(f[11]), valor(f[12]), valor(f[13]), valor(f[14]), valor(f[15]));
     }
 
@@ -129,12 +130,6 @@ public class DocenteProgramaReporteJpaRepository implements HistorialGruposDocen
         return valor == null ? null : ((Number) valor).intValue();
     }
 
-    private static UUID uuid(final Object valor) {
-        if (valor == null || valor instanceof UUID) {
-            return (UUID) valor;
-        }
-        return UUID.fromString(valor.toString().strip());
-    }
 
     private static int valor(final Object valor) {
         return valor == null ? 0 : ((Number) valor).intValue();
