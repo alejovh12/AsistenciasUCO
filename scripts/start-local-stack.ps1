@@ -28,8 +28,8 @@ function Resolve-WorkspaceRoot {
     $candidate = $Explicit
     if ([string]::IsNullOrWhiteSpace($candidate)) { $candidate = [Environment]::GetEnvironmentVariable($EnvironmentVariable) }
     if ([string]::IsNullOrWhiteSpace($candidate)) { $candidate = $OfficialPath }
-    $canonicalPath = [System.IO.Path]::GetFullPath($candidate).TrimEnd('\\', '/')
-    $officialCanonicalPath = [System.IO.Path]::GetFullPath($OfficialPath).TrimEnd('\\', '/')
+    $canonicalPath = [System.IO.Path]::GetFullPath($candidate).TrimEnd('\', '/')
+    $officialCanonicalPath = [System.IO.Path]::GetFullPath($OfficialPath).TrimEnd('\', '/')
     if (-not [string]::Equals($canonicalPath, $officialCanonicalPath, [System.StringComparison]::OrdinalIgnoreCase)) {
         throw "Ruta fuera de los tres repositorios oficiales para ${EnvironmentVariable}: $candidate. Ruta permitida: $OfficialPath"
     }
