@@ -135,7 +135,6 @@ class EstudiantePortalControllerTest {
     @Test
     void endpoints_no_implementados_lanzan_featureUnavailable() {
         final List<Executable> operations = List.of(
-                () -> controller.consultarPrerrequisitos(MATERIA),
                 controller::crearReclamo,
                 () -> controller.eliminarReclamo(MATERIA),
                 controller::matricularGrupo

@@ -73,11 +73,6 @@ public final class EstudiantePortalController {
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
     }
 
-    @GetMapping("/materias/{materiaId}/prerrequisitos")
-    public ResponseEntity<ApiListResponse<Void>> consultarPrerrequisitos(@PathVariable final UUID materiaId) {
-        throw unavailable("consultar prerrequisitos");
-    }
-
     /**
      * HU010/HU011: solicitudes de revision del estudiante autenticado (paginadas en SQL, ownership en la DB) con los
      * datos minimos del soporte. El soporte se descarga por {@code GET /api/v1/archivos/{fileId}} con Bearer.
