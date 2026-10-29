@@ -142,13 +142,13 @@ class AcademicUserCommandsSuccessParityIT {
 
         final UUID corrJdbc = nuevaCorrelacion();
         final ProcedureResult jdbc = oracle.actualizarAsignatura(idJdbc, tokenJdbc + "-NEW", "Nombre actualizado",
-                5, s.planEstudio(), s.semestreNumero(), "", "");
+                5, s.planEstudio(), s.semestreNumero(), "", "", s.ejecutorCoordinador());
         final String efectosJdbc = fixture.asignaturaPorId(idJdbc, tokenJdbc);
         final String resultadoJdbc = canonico(jdbc, corrJdbc);
 
         nuevaCorrelacion();
         final String resultadoJpa = exitoJpa(() -> new AsignaturaJpaRepository(entityManager, new JpaProcedureExecutor(entityManager)).actualizarAsignatura(idJpa,
-                tokenJpa + "-NEW", "Nombre actualizado", 5, s.planEstudio(), s.semestreNumero(), "", ""));
+                tokenJpa + "-NEW", "Nombre actualizado", 5, s.planEstudio(), s.semestreNumero(), "", "", s.ejecutorCoordinador()));
         final String efectosJpa = fixture.asignaturaPorId(idJpa, tokenJpa);
 
         assertTrue(jdbc.getEstadoResultado(), "El camino de exito JDBC debe producir estadoResultado = 1");
@@ -163,6 +163,7 @@ class AcademicUserCommandsSuccessParityIT {
 
     @Test
     void asg_success_03_toggle_jdbc_y_jpa_producen_la_misma_transicion() {
+        final Semilla s = fixture.semilla();
         final String tokenJdbc = fixture.nuevoToken();
         final String tokenJpa = fixture.nuevoToken();
         final UUID idJdbc = fixture.insertarAsignatura(tokenJdbc, true);
@@ -171,12 +172,12 @@ class AcademicUserCommandsSuccessParityIT {
         final String antesJpa = fixture.estadoAsignatura(idJpa);
 
         final UUID corrJdbc = nuevaCorrelacion();
-        final ProcedureResult jdbc = oracle.toggleEstadoAsignatura(idJdbc);
+        final ProcedureResult jdbc = oracle.toggleEstadoAsignatura(idJdbc, s.ejecutorCoordinador());
         final String despuesJdbc = fixture.estadoAsignatura(idJdbc);
         final String resultadoJdbc = canonico(jdbc, corrJdbc);
 
         nuevaCorrelacion();
-        final String resultadoJpa = exitoJpa(() -> new AsignaturaJpaRepository(entityManager, new JpaProcedureExecutor(entityManager)).toggleEstadoAsignatura(idJpa));
+        final String resultadoJpa = exitoJpa(() -> new AsignaturaJpaRepository(entityManager, new JpaProcedureExecutor(entityManager)).toggleEstadoAsignatura(idJpa, s.ejecutorCoordinador()));
         final String despuesJpa = fixture.estadoAsignatura(idJpa);
 
         assertEquals("true", antesJdbc, "Estado inicial JDBC debe ser activo");

@@ -60,15 +60,16 @@ public final class AsignaturaJdbcBaseline implements AsignaturaQueryPort, Asigna
             final UUID idPlanEstudio,
             final Integer semestreNumero,
             final String nombreArea,
-            final String nombreComponente
+            final String nombreComponente,
+            final UUID usuarioEjecutor
     ) {
         commands.actualizarAsignatura(idAsignatura, codigo, nombre, creditos, idPlanEstudio, semestreNumero,
-                nombreArea, nombreComponente);
+                nombreArea, nombreComponente, usuarioEjecutor);
     }
 
     @Override
-    public void toggleEstadoAsignatura(final UUID idAsignatura) {
-        commands.toggleEstadoAsignatura(idAsignatura);
+    public void toggleEstadoAsignatura(final UUID idAsignatura, final UUID usuarioEjecutor) {
+        commands.toggleEstadoAsignatura(idAsignatura, usuarioEjecutor);
     }
 
     @Override

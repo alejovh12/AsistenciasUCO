@@ -171,11 +171,13 @@ class SqlStoredProcedureContractIT {
                         input("@semestreNumero", "int"),
                         input("@nombreArea", "nvarchar"),
                         input("@nombreComponente", "nvarchar"),
-                        input("@idCorrelacion", "uniqueidentifier")
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
                 )),
                 Arguments.of("usp_toggle_estado_asignatura", List.of(
                         input("@idAsignatura", "uniqueidentifier"),
-                        input("@idCorrelacion", "uniqueidentifier")
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
                 )),
                 Arguments.of("usp_registrar_o_actualizar_plan_estudio", List.of(
                         input("@idPlanEstudio", "uniqueidentifier"),
