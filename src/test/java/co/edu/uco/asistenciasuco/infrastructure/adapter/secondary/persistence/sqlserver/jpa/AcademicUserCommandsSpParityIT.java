@@ -74,7 +74,7 @@ class AcademicUserCommandsSpParityIT {
     void asignatura_actualizar_inexistente_produce_el_mismo_resultado() {
         registrar("ASG_02_ACTUALIZAR_INEXISTENTE", () -> {
             asignaturaCommandPort.actualizarAsignatura(UUID.randomUUID(), PREFIJO + "A2", "Asignatura prueba",
-                    3, UUID.randomUUID(), 1, "AREA-NO-EXISTE", "COMPONENTE-NO-EXISTE");
+                    3, UUID.randomUUID(), 1, "AREA-NO-EXISTE", "COMPONENTE-NO-EXISTE", UUID.randomUUID());
             return "OK";
         });
     }
@@ -82,7 +82,7 @@ class AcademicUserCommandsSpParityIT {
     @Test
     void asignatura_toggle_inexistente_produce_el_mismo_resultado() {
         registrar("ASG_03_TOGGLE_INEXISTENTE", () -> {
-            asignaturaCommandPort.toggleEstadoAsignatura(UUID.randomUUID());
+            asignaturaCommandPort.toggleEstadoAsignatura(UUID.randomUUID(), UUID.randomUUID());
             return "OK";
         });
     }
