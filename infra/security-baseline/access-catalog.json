@@ -125,7 +125,6 @@
     {"method": "GET", "path": "/api/v1/estudiante/horarios", "roles": ["ESTUDIANTE"], "access": "ROLES", "ownership": "Solo datos del estudiante autenticado (Usuario->Estudiante del token)."},
     {"method": "GET", "path": "/api/v1/estudiante/materias", "roles": ["ESTUDIANTE"], "access": "ROLES", "ownership": "Solo datos del estudiante autenticado (Usuario->Estudiante del token)."},
     {"method": "GET", "path": "/api/v1/estudiante/oferta-academica", "roles": ["ESTUDIANTE"], "access": "ROLES", "ownership": "Programas del estudiante autenticado (EstudiantePrograma); el ámbito lo fuerza el procedimiento almacenado."},
-    {"method": "GET", "path": "/api/v1/estudiante/materias/{materiaId}/prerrequisitos", "roles": ["ESTUDIANTE"], "access": "ROLES", "ownership": "Solo datos del estudiante autenticado (Usuario->Estudiante del token)."},
     {"method": "GET", "path": "/api/v1/estudiante/materias/{materiaId}/sesiones", "roles": ["ESTUDIANTE"], "access": "ROLES", "ownership": "Solo datos del estudiante autenticado (Usuario->Estudiante del token)."},
     {"method": "POST", "path": "/api/v1/estudiante/matricular-grupo", "roles": ["ESTUDIANTE"], "access": "ROLES", "ownership": "Solo datos del estudiante autenticado (Usuario->Estudiante del token)."},
     {"method": "GET", "path": "/api/v1/estudiante/reclamos", "roles": ["ESTUDIANTE"], "access": "ROLES", "ownership": "Solo datos del estudiante autenticado (Usuario->Estudiante del token)."},

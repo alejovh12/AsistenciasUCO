@@ -48,7 +48,7 @@ Son las reglas del contrato del grupo A, §2.1:
 - lecturas sobre vistas y escrituras en `usp_internal_*`;
 - mensajes por código y tupla canónica en los comandos.
 
-**Excepción declarada:** `usp_validar_token_matricula_publico` y el modo público de `usp_matricular_estudiante_por_token` **no tienen ejecutor**. Su credencial es el **hash del token** (o el PIN) de una ventana activa. Las demás validaciones (grupo, cupo, cruce, prerrequisitos) se mantienen.
+**Excepción declarada:** `usp_validar_token_matricula_publico` y el modo público de `usp_matricular_estudiante_por_token` **no tienen ejecutor**. Su credencial es el **hash del token** (o el PIN) de una ventana activa. Las demás validaciones (grupo, cupo, cruce) se mantienen.
 
 ### 2.2 Tabla `dbo.TokenMatriculaGrupo` (migración + `schema/tables/`)
 
@@ -115,7 +115,7 @@ CONSTRAINT UQ_TokenMatriculaGrupo_tokenHash UNIQUE (tokenHash)
 Flujo (una transacción):
 1. Resuelve la ventana con `UPDLOCK` (`usp_internal_resolver_token_matricula`).
 2. Solo en modo público: `usp_sincronizar_usuario_interno` (**activo**, `correoConfirmado = 0`) y luego `usp_sincronizar_estudiante_interno`.
-3. `usp_registrar_estudiante_en_grupo_interno` con `@codigoEstado` = valor del parámetro `MATRICULA_QR / ESTADO_MATRICULA` (D3). Valida cupo, cruce, duplicado (si ya está → `MQR_004`), prerrequisitos y `EstudiantePrograma`.
+3. `usp_registrar_estudiante_en_grupo_interno` con `@codigoEstado` = valor del parámetro `MATRICULA_QR / ESTADO_MATRICULA` (D3). Valida cupo, cruce, duplicado (si ya está → `MQR_004`) y `EstudiantePrograma`.
 4. `UPDATE TokenMatriculaGrupo SET totalMatriculas += 1`.
 5. Éxito: `GEN_004` ("Matricula").
 
@@ -146,7 +146,7 @@ Flujo (una transacción):
 | `MQR_006` | 409 | (técnico) PIN repetido entre ventanas activas; el backend reintenta. |
 | `MQR_007` | 400 | Debes indicar el código QR o el PIN, pero no ambos. |
 
-Los errores de cupo, cruce y prerrequisitos reutilizan los códigos actuales del interno de HU050.
+Los errores de cupo y cruce reutilizan los códigos actuales del interno de HU050.
 
 ---
 
@@ -202,7 +202,7 @@ Los errores de cupo, cruce y prerrequisitos reutilizan los códigos actuales del
   3. `crearCuenta(..., ESTUDIANTE)` con la contraseña en claro; si falla, aplica el desfase de IAM-001.
   4. Publica `ESTUDIANTE_MATRICULADO`.
 - **201** `ApiDataResponse<MatriculaQrResultadoResponse>` = `{ nombreAsignatura, nombreGrupo, usuario: "<numeroIdentificacion>", mensajeUsuario }`. **No** devuelve un token de sesión: el front redirige a `/login` con el usuario precargado.
-- **Errores:** 400, 403, 404 `MQR_001`, 409 (`MQR_004`, `MQR_005`, cupo, cruce, prerrequisitos), 429, 500 controlado (`IAM_001`).
+- **Errores:** 400, 403, 404 `MQR_001`, 409 (`MQR_004`, `MQR_005`, cupo, cruce), 429, 500 controlado (`IAM_001`).
 
 ### 3.5 `POST /api/v1/estudiante/matricular-grupo` (estudiante autenticado)
 
