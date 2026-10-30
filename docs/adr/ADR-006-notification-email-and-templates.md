@@ -1,14 +1,14 @@
 ---
-status: draft
+status: accepted
 type: adr
 scope: backend
 owner: backend-team
-last-reviewed: 2026-10-29
+last-reviewed: 2026-10-30
 ---
 
 # ADR-006 — Envío de correo y plantillas de notificación como módulo removible
 
-- **Estado:** proposed (diseño aprobado por el owner el 2026-10-29; pasa a accepted al cerrar la Fase 5)
+- **Estado:** accepted (diseño aprobado por el owner el 2026-10-29; implementado y validado en NOTIF-002A el 2026-10-30)
 - **Fecha:** 2026-10-29
 - **Work item:** [NOTIF-002A](../work-items/NOTIF-002A-plantillas-correo/PLAN.md)
 - **Extiende:** [ADR-005](ADR-005-notification-provider-switch.md)
