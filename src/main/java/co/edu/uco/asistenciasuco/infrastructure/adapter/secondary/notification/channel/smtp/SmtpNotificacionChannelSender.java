@@ -182,12 +182,9 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
     }
 
     private List<UUID> extraerIdsUsuarios(final List<DestinatarioRef> destinatarios) {
-        if (destinatarios == null || destinatarios.isEmpty()) {
-            return List.of();
-        }
         final Set<UUID> unicos = new LinkedHashSet<>();
         for (final DestinatarioRef ref : destinatarios) {
-            if (ref != null && ref.idUsuario() != null) {
+            if (ref.idUsuario() != null) {
                 unicos.add(ref.idUsuario());
             }
         }

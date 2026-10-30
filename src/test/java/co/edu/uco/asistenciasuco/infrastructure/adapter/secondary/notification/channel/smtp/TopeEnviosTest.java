@@ -107,6 +107,9 @@ class TopeEnviosTest {
         assertEquals(15, exitos.get());
         assertFalse(tope.disponible());
 
+        tope.reiniciarVentanas();
+        assertTrue(tope.disponible());
+
         assertThrows(IllegalArgumentException.class, () -> new TopeEnvios(0, 10, clock, meterRegistry));
         assertThrows(IllegalArgumentException.class, () -> new TopeEnvios(5, 4, clock, meterRegistry));
     }

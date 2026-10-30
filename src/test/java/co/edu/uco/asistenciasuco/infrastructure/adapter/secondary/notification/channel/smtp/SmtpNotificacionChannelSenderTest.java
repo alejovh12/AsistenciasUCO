@@ -30,6 +30,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -379,6 +380,123 @@ class SmtpNotificacionChannelSenderTest {
         assertEquals(1, transport.enviados.size());
         assertEquals("Retiro del grupo G01 de Software", transport.enviados.getFirst().asunto());
         assertEquals(1.0, meterRegistry.counter("notification.template.render.total", "origin", "default").count());
+    }
+
+    @Test
+    @DisplayName("BE-S11: cobertura de ramas de sender, CorreoSaliente y JakartaMailCorreoTransport")
+    void BE_S11_cobertura_ramas_sender_y_jakarta_mail_transport() throws Exception {
+        // 1. CorreoSaliente ramas null en fromName y bccAddresses
+        final CorreoSaliente cNulls = new CorreoSaliente(
+                "from@uco.edu.co", null, "to@uco.edu.co", null, "Asunto", "Texto", "<p>HTML</p>", "<id@uco>"
+        );
+        assertEquals("", cNulls.fromName());
+        assertTrue(cNulls.bccAddresses().isEmpty());
+
+        // 2. SmtpNotificacionChannelSender ramas: disponible(), destinatarios vacios/nulos, tope agotado en mitad de envio,
+        // contactos null/elementos null, correo con \n, sanearAsunto(null)
+        final SmtpNotificationProperties props = crearProps(1, false);
+        final TopeEnvios topeCorto = new TopeEnvios(1, 5, Clock.systemUTC(), meterRegistry);
+        final SmtpNotificacionChannelSender sender = crearSender(props, topeCorto);
+        assertTrue(sender.disponible());
+
+        assertEquals("", SmtpNotificacionChannelSender.sanearAsunto(null));
+        assertFalse(SmtpNotificacionChannelSender.esCorreoSeguro(null));
+        assertFalse(SmtpNotificacionChannelSender.esCorreoSeguro("a@b.co\nBcc:x"));
+
+        // Destinatarios vacios y con idUsuario nulo
+        final NotificacionPersistida notifSinIds = new NotificacionPersistida(
+                UUID.randomUUID(), "RETIRO_ESTUDIANTE_GRUPO", "A", "M",
+                List.of(new DestinatarioRef("ESTUDIANTE", null)), Map.of(), 1, Instant.now()
+        );
+        assertThrows(NotificacionNoEntregableException.class, () -> sender.enviar(notifSinIds));
+        final NotificacionPersistida notifListaNula = new NotificacionPersistida(
+                UUID.randomUUID(), "RETIRO_ESTUDIANTE_GRUPO", "A", "M", null, Map.of(), 1, Instant.now()
+        );
+        assertThrows(NotificacionNoEntregableException.class, () -> sender.enviar(notifListaNula));
+
+        // Contactos devueltos = null
+        final UUID u1 = UUID.randomUUID();
+        final UUID u2 = UUID.randomUUID();
+        when(contactoResolver.consultarContactos(any())).thenReturn(null);
+        assertThrows(NotificacionNoEntregableException.class, () -> sender.enviar(notificacionRetiro(List.of(u1))));
+
+        // Contactos con elemento null y segundo bloque que agota el tope (maxBcc=1, ratePerMinute=1, 2 destinatarios)
+        final List<ContactoDestinatario> listaConElementoNull = new ArrayList<>();
+        listaConElementoNull.add(null);
+        listaConElementoNull.add(new ContactoDestinatario(u1, "u1@uco.edu.co", true));
+        listaConElementoNull.add(new ContactoDestinatario(u2, "u2@uco.edu.co", true));
+        when(contactoResolver.consultarContactos(any())).thenReturn(listaConElementoNull);
+        when(plantillaRepository.consultarActiva("RETIRO_ESTUDIANTE_GRUPO", "es")).thenReturn(Optional.empty());
+
+        assertThrows(IllegalStateException.class, () -> sender.enviar(notificacionRetiro(List.of(u1, u2))));
+        assertFalse(sender.disponible());
+
+        // 3. JakartaMailCorreoTransport con JavaMailSender mockeado y constructor con propiedades (con y sin auth)
+        final JakartaMailCorreoTransport transportConAuth = new JakartaMailCorreoTransport(crearProps(10, false));
+        assertNotNull(transportConAuth);
+        final SmtpNotificationProperties propsSinAuth = new SmtpNotificationProperties(
+                "smtp.uco.edu.co", 587, "", "", true, false,
+                "notificaciones@uco.edu.co", "Asistencia UCO",
+                Duration.ofSeconds(10), Duration.ofSeconds(20),
+                10, 60, 500, false, "https://asistencia.uco.edu.co", Duration.ofSeconds(60)
+        );
+        final JakartaMailCorreoTransport transportSinAuth = new JakartaMailCorreoTransport(propsSinAuth);
+        assertNotNull(transportSinAuth);
+
+        final org.springframework.mail.javamail.JavaMailSender mailSenderMock =
+                mock(org.springframework.mail.javamail.JavaMailSender.class);
+        when(mailSenderMock.createMimeMessage()).thenAnswer(
+                inv -> new jakarta.mail.internet.MimeMessage((jakarta.mail.Session) null)
+        );
+        final JakartaMailCorreoTransport jakartaTransport = new JakartaMailCorreoTransport(mailSenderMock);
+
+        // Envio con fromName lleno y bcc lleno
+        jakartaTransport.enviar(new CorreoSaliente(
+                "from@uco.edu.co", "Nombre UCO", "to@uco.edu.co",
+                List.of("bcc1@uco.edu.co"), "Asunto", "Plano", "<p>HTML</p>", "<m1@uco.edu.co>"
+        ));
+        // Envio con fromName vacio y bcc vacio
+        jakartaTransport.enviar(new CorreoSaliente(
+                "from@uco.edu.co", "", "to@uco.edu.co",
+                List.of(), "Asunto", "Plano", "<p>HTML</p>", "<m2@uco.edu.co>"
+        ));
+
+        // Clasificacion de fallos permanentes vs transitorios en JakartaMailCorreoTransport
+        assertTrue(JakartaMailCorreoTransport.esFalloPermanente(
+                new jakarta.mail.internet.AddressException("Direccion mal formada")
+        ));
+        final jakarta.mail.Address[] invalidAddrs =
+                new jakarta.mail.Address[]{new jakarta.mail.internet.InternetAddress("bad@uco.edu.co")};
+        assertTrue(JakartaMailCorreoTransport.esFalloPermanente(
+                new jakarta.mail.SendFailedException("Invalid", null, null, null, invalidAddrs)
+        ));
+        assertFalse(JakartaMailCorreoTransport.esFalloPermanente(
+                new jakarta.mail.SendFailedException("Partial", null, null, invalidAddrs, invalidAddrs)
+        ));
+        assertFalse(JakartaMailCorreoTransport.esFalloPermanente(
+                new jakarta.mail.SendFailedException("Empty", null, null, null, new jakarta.mail.Address[0])
+        ));
+        assertFalse(JakartaMailCorreoTransport.esFalloPermanente(
+                new jakarta.mail.SendFailedException("NullInvalid", null, null, null, null)
+        ));
+        assertTrue(JakartaMailCorreoTransport.esFalloPermanente(
+                new org.springframework.mail.MailSendException("550 5.1.1 Mailbox unavailable")
+        ));
+        assertFalse(JakartaMailCorreoTransport.esFalloPermanente(
+                new org.springframework.mail.MailSendException("421 4.7.0 Try again later")
+        ));
+        assertFalse(JakartaMailCorreoTransport.esFalloPermanente(
+                new RuntimeException((String) null)
+        ));
+
+        // Excepcion permanente y transitoria al llamar enviar()
+        org.mockito.Mockito.doThrow(new org.springframework.mail.MailSendException("554 5.7.1 Rejected"))
+                .when(mailSenderMock).send(any(jakarta.mail.internet.MimeMessage.class));
+        assertThrows(NotificacionNoEntregableException.class, () -> jakartaTransport.enviar(cNulls));
+
+        org.mockito.Mockito.doThrow(new org.springframework.mail.MailSendException("451 Temporary failure"))
+                .when(mailSenderMock).send(any(jakarta.mail.internet.MimeMessage.class));
+        assertThrows(IllegalStateException.class, () -> jakartaTransport.enviar(cNulls));
     }
 
     private static final class FakeCorreoTransport implements CorreoTransport {
