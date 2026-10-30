@@ -188,6 +188,17 @@ class PlantillaNotificacionJpaRepositoryTest {
 
             final Optional<PlantillaNotificacion> sinFilas = repository.consultarActiva("OTRO", "   ");
             assertFalse(sinFilas.isPresent());
+
+            // Caso con EntityManagerFactory presente (abre y cierra EntityManager dedicado)
+            final jakarta.persistence.EntityManagerFactory emf = mock(jakarta.persistence.EntityManagerFactory.class);
+            final EntityManager emDedicado = mock(EntityManager.class);
+            when(entityManager.getEntityManagerFactory()).thenReturn(emf);
+            when(emf.createEntityManager()).thenReturn(emDedicado);
+            when(emDedicado.isOpen()).thenReturn(true);
+            when(emDedicado.createStoredProcedureQuery("dbo.usp_consultar_plantilla_notificacion_activa")).thenReturn(spSinMas);
+
+            assertFalse(repository.consultarActiva("CON_EMF", "es").isPresent());
+            verify(emDedicado).close();
         } finally {
             co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext.clear();
         }

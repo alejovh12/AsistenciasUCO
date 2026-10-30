@@ -83,6 +83,7 @@ class NotificacionSmtpGreenMailIT {
 
     private static final int SMTP_PORT = allocateFreePort();
     private static GreenMail greenMail;
+    private static boolean greenMailActivo = false;
     private static final AtomicInteger DOC_SEQ = new AtomicInteger(198500000);
 
     @DynamicPropertySource
@@ -132,13 +133,15 @@ class NotificacionSmtpGreenMailIT {
         setup.setServerStartupTimeout(5000L);
         greenMail = new GreenMail(setup);
         greenMail.start();
+        greenMailActivo = true;
     }
 
     @AfterAll
     void stopGreenMail() {
         limpiarTodo();
-        if (greenMail != null) {
+        if (greenMail != null && greenMailActivo) {
             greenMail.stop();
+            greenMailActivo = false;
         }
     }
 
@@ -167,13 +170,19 @@ class NotificacionSmtpGreenMailIT {
     }
 
     private void asegurarGreenMailActivo() {
-        try {
-            greenMail.getReceivedMessages();
-        } catch (RuntimeException ex) {
+        if (!greenMailActivo) {
             ServerSetup setup = new ServerSetup(SMTP_PORT, "127.0.0.1", ServerSetup.PROTOCOL_SMTP);
             setup.setServerStartupTimeout(5000L);
             greenMail = new GreenMail(setup);
             greenMail.start();
+            greenMailActivo = true;
+        }
+    }
+
+    private void detenerGreenMailTemporalmente() {
+        if (greenMail != null && greenMailActivo) {
+            greenMail.stop();
+            greenMailActivo = false;
         }
     }
 
@@ -248,26 +257,21 @@ class NotificacionSmtpGreenMailIT {
         return ultima;
     }
 
-    private Multipart extraerMultipartAlternative(MimeMessage message) throws Exception {
-        Object content = message.getContent();
-        assertTrue(content instanceof Multipart, "El contenido del MimeMessage debe ser Multipart");
-        Multipart top = (Multipart) content;
-        for (int i = 0; i < top.getCount(); i++) {
-            BodyPart part = top.getBodyPart(i);
-            Object subContent = part.getContent();
-            if (subContent instanceof Multipart subMulti) {
-                return subMulti;
-            }
-        }
-        return top;
+    private String extraerParteTexto(MimeMessage message, String mimePrefix) throws Exception {
+        return buscarParteRecursiva(message.getContent(), message.getContentType(), mimePrefix);
     }
 
-    private String extraerParteTexto(MimeMessage message, String mimePrefix) throws Exception {
-        Multipart mp = extraerMultipartAlternative(message);
-        for (int i = 0; i < mp.getCount(); i++) {
-            BodyPart part = mp.getBodyPart(i);
-            if (part.getContentType().toLowerCase().startsWith(mimePrefix.toLowerCase())) {
-                return part.getContent().toString();
+    private String buscarParteRecursiva(Object content, String contentType, String mimePrefix) throws Exception {
+        if (contentType != null && contentType.toLowerCase().startsWith(mimePrefix.toLowerCase()) && content instanceof String s) {
+            return s;
+        }
+        if (content instanceof Multipart mp) {
+            for (int i = 0; i < mp.getCount(); i++) {
+                BodyPart part = mp.getBodyPart(i);
+                String hallado = buscarParteRecursiva(part.getContent(), part.getContentType(), mimePrefix);
+                if (!hallado.isEmpty()) {
+                    return hallado;
+                }
             }
         }
         return "";
@@ -339,7 +343,7 @@ class NotificacionSmtpGreenMailIT {
 
         assertTrue(textoPlano.contains("Ana <script>alert(1)</script> & Co"));
         assertTrue(html.contains("<!DOCTYPE html>"));
-        assertTrue(html.contains("Sistema de Asistencias UCO"));
+        assertTrue(html.contains("Universidad Católica de Oriente — Gestión de Asistencia"));
         assertTrue(html.contains("&lt;script&gt;alert(1)&lt;/script&gt;"));
         assertFalse(html.contains("<script>alert(1)</script>"));
         assertTrue(html.contains("https://asistencias.uco.edu.co"));
@@ -372,8 +376,8 @@ class NotificacionSmtpGreenMailIT {
                         "WHERE tipo = 'RETIRO_ESTUDIANTE_GRUPO' AND idioma = 'es' AND version = 1"
         );
         jdbcTemplate.update(
-                "INSERT INTO dbo.PlantillaNotificacion (id, tipo, idioma, version, asunto, cuerpo, activa, creadoPor) " +
-                        "VALUES (?, 'RETIRO_ESTUDIANTE_GRUPO', 'es', 2, N'[V2] Retiro en {grupo}', N'Plantilla V2 para {estudiante} en {grupo}.', 1, NULL)",
+                "INSERT INTO dbo.PlantillaNotificacion (id, tipo, idioma, version, asunto, cuerpo, activa, creadoPor, creadoEn) " +
+                        "VALUES (?, 'RETIRO_ESTUDIANTE_GRUPO', 'es', 2, N'[V2] Retiro en {grupo}', N'Plantilla V2 para {estudiante} en {grupo}.', 1, NULL, SYSUTCDATETIME())",
                 idV2
         );
 
@@ -445,9 +449,12 @@ class NotificacionSmtpGreenMailIT {
 
         assertEquals("ENTREGADA", esperarFilaPorDestinatario(uActivo, "ENTREGADA", 10).get("estado"));
         assertTrue(greenMail.waitForIncomingEmail(5000, 1));
-        MimeMessage[] messages = greenMail.getReceivedMessages();
-        // GreenMail entrega 1 copia por cada RCPT TO (1 BCC activo = 1 mensaje recibido)
-        assertEquals(1, messages.length);
+        assertNotNull(greenMail.getUserManager().getUserByEmail("activo.ite05@uco.edu.co"),
+                "El destinatario activo debe haber recibido el correo en GreenMail");
+        org.junit.jupiter.api.Assertions.assertNull(
+                greenMail.getUserManager().getUserByEmail("inactivo.ite05@uco.edu.co"),
+                "El destinatario inhabilitado debe ser omitido y no recibir RCPT TO en GreenMail"
+        );
     }
 
     @Test
@@ -478,7 +485,7 @@ class NotificacionSmtpGreenMailIT {
     void ITE07_smtp_caido_reintenta_y_recupera_al_volver() throws Exception {
         UUID destId = crearUsuarioPrueba("est.ite07@uco.edu.co", true, true);
 
-        greenMail.stop();
+        detenerGreenMailTemporalmente();
         try {
             outboxNotificacionAdapter.notificar(new Notificacion(
                     "RETIRO_ESTUDIANTE_GRUPO",
@@ -490,12 +497,12 @@ class NotificacionSmtpGreenMailIT {
             dispatcher.signal();
 
             // Esperar a que falle el primer intento y quede PENDIENTE con intentos >= 1
-            for (int i = 0; i < 20; i++) {
+            for (int i = 0; i < 30; i++) {
                 Map<String, Object> f = esperarFilaPorDestinatario(destId, "PENDIENTE", 1);
                 if (f != null && ((Number) f.get("intentos")).intValue() >= 1) {
                     break;
                 }
-                Thread.sleep(200);
+                Thread.sleep(50);
             }
         } finally {
             asegurarGreenMailActivo();

@@ -103,6 +103,18 @@ class ContactoDestinatarioJpaRepositoryTest {
             when(spVacio.getResultList()).thenReturn(List.of((Object) new Object[]{ctxCorr, "OK", "DBCODE=GEN_003|OK", 1}));
 
             assertTrue(repository.consultarContactos(List.of(UUID.randomUUID())).isEmpty());
+
+            // Caso con EntityManagerFactory presente (abre y cierra EntityManager dedicado)
+            final jakarta.persistence.EntityManagerFactory emf = mock(jakarta.persistence.EntityManagerFactory.class);
+            final EntityManager emDedicado = mock(EntityManager.class);
+            when(entityManager.getEntityManagerFactory()).thenReturn(emf);
+            when(emf.createEntityManager()).thenReturn(emDedicado);
+            when(emDedicado.isOpen()).thenReturn(true);
+            when(emDedicado.createStoredProcedureQuery("dbo.usp_consultar_contacto_notificacion")).thenReturn(spVacio);
+
+            assertTrue(repository.consultarContactos(List.of(UUID.randomUUID())).isEmpty());
+            verify(emDedicado).close();
+            when(entityManager.getEntityManagerFactory()).thenReturn(null);
         } finally {
             co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext.clear();
         }

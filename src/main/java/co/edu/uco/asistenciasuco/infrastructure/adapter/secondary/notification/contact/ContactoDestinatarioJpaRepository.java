@@ -55,8 +55,10 @@ public class ContactoDestinatarioJpaRepository implements ContactoDestinatarioRe
                 .collect(Collectors.joining(",", "[", "]"));
         final UUID corrId = resolveCorrelationId();
 
+        final EntityManager emDedicado = abrirEntityManagerDedicado();
+        final EntityManager em = emDedicado != null ? emDedicado : entityManager;
         try {
-            final StoredProcedureQuery sp = entityManager.createStoredProcedureQuery(SP_NAME);
+            final StoredProcedureQuery sp = em.createStoredProcedureQuery(SP_NAME);
             sp.registerStoredProcedureParameter("usuariosJson", String.class, ParameterMode.IN);
             sp.registerStoredProcedureParameter("idCorrelacion", UUID.class, ParameterMode.IN);
 
@@ -89,7 +91,16 @@ public class ContactoDestinatarioJpaRepository implements ContactoDestinatarioRe
                     "No fue posible consultar los contactos de notificacion.",
                     e
             );
+        } finally {
+            if (emDedicado != null && emDedicado.isOpen()) {
+                emDedicado.close();
+            }
         }
+    }
+
+    private EntityManager abrirEntityManagerDedicado() {
+        final jakarta.persistence.EntityManagerFactory emf = entityManager.getEntityManagerFactory();
+        return emf != null ? emf.createEntityManager() : null;
     }
 
     private static UUID resolveCorrelationId() {

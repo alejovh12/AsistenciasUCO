@@ -68,8 +68,10 @@ public class PlantillaNotificacionJpaRepository implements PlantillaNotificacion
 
     private Optional<PlantillaNotificacion> ejecutarConsulta(final String tipo, final String idioma) {
         final UUID corrId = resolveCorrelationId();
+        final EntityManager emDedicado = abrirEntityManagerDedicado();
+        final EntityManager em = emDedicado != null ? emDedicado : entityManager;
         try {
-            final StoredProcedureQuery sp = entityManager.createStoredProcedureQuery(SP_NAME);
+            final StoredProcedureQuery sp = em.createStoredProcedureQuery(SP_NAME);
             sp.registerStoredProcedureParameter("tipo", String.class, ParameterMode.IN);
             sp.registerStoredProcedureParameter("idioma", String.class, ParameterMode.IN);
             sp.registerStoredProcedureParameter("idCorrelacion", UUID.class, ParameterMode.IN);
@@ -115,7 +117,16 @@ public class PlantillaNotificacionJpaRepository implements PlantillaNotificacion
                     "No fue posible consultar la plantilla activa de notificacion.",
                     e
             );
+        } finally {
+            if (emDedicado != null && emDedicado.isOpen()) {
+                emDedicado.close();
+            }
         }
+    }
+
+    private EntityManager abrirEntityManagerDedicado() {
+        final jakarta.persistence.EntityManagerFactory emf = entityManager.getEntityManagerFactory();
+        return emf != null ? emf.createEntityManager() : null;
     }
 
     private static UUID resolveCorrelationId() {
