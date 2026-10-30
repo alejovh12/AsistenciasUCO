@@ -379,4 +379,29 @@ class PlantillaRendererTest {
         assertTrue(res.textoPlano().contains("Mateo López solicitó ingresar al grupo G01 de Redes."));
         assertEquals(1.0, meterRegistry.counter("notification.template.render.total", "origin", "default").count());
     }
+
+    @Test
+    @DisplayName("BE-R13: dato con {{pie}} y {{contenido}} literales no es sustituido por el pie ni por el cuerpo del layout")
+    void BE_R13_dato_con_marcadores_de_layout_queda_literal() {
+        when(repository.consultarActiva("RETIRO_ESTUDIANTE_GRUPO", "es"))
+                .thenReturn(Optional.of(plantillaRetiroDb()));
+
+        final PlantillaRenderer renderer = crearRenderer("https://asistencia.uco.edu.co");
+        final ContenidoRenderizado res = renderer.renderizar(
+                "RETIRO_ESTUDIANTE_GRUPO",
+                Map.of("grupo", "G01 {{contenido}}", "estudiante", "Ana {{pie}}"),
+                "Asunto",
+                "Mensaje"
+        );
+
+        assertEquals("db", res.origen());
+        assertTrue(res.html().contains("Ana {{pie}}"));
+        assertTrue(res.html().contains("G01 {{contenido}}"));
+        // El enlace del pie debe aparecer exactamente una vez (en el pie real, no dentro del contenido)
+        final String marcaPie = "Ir a la plataforma";
+        final int primera = res.html().indexOf(marcaPie);
+        final int ultima = res.html().lastIndexOf(marcaPie);
+        assertTrue(primera > 0);
+        assertEquals(primera, ultima);
+    }
 }
