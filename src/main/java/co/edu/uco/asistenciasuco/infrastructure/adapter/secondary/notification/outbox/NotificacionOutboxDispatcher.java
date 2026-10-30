@@ -157,6 +157,9 @@ public class NotificacionOutboxDispatcher implements SmartLifecycle {
     }
 
     public void ejecutarCiclo() {
+        if (!sender.disponible()) {
+            return;
+        }
         final boolean establishedCorrelation = CorrelationIdContext.get() == null;
         if (establishedCorrelation) {
             CorrelationIdContext.set(UUID.randomUUID());

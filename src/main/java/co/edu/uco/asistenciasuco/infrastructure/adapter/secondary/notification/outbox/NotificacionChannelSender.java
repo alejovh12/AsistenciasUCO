@@ -12,4 +12,13 @@ public interface NotificacionChannelSender {
      * @throws NotificacionNoEntregableException si el fallo es definitivo (no reintentable)
      */
     void enviar(NotificacionPersistida notificacion) throws NotificacionNoEntregableException;
+
+    /**
+     * Indica si el canal tiene cupo disponible para despachar en este ciclo.
+     *
+     * @return {@code true} por defecto
+     */
+    default boolean disponible() {
+        return true;
+    }
 }

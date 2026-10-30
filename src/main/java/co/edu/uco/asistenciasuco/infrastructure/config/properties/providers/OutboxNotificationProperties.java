@@ -71,6 +71,7 @@ public record OutboxNotificationProperties(
     }
 
     public enum Sender {
-        LOG
+        LOG,
+        SMTP
     }
 }
