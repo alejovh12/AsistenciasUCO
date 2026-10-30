@@ -165,7 +165,7 @@ class NotificationWiringTest {
     void WI08_sender_desconocido_falla() {
         runner.withPropertyValues(
                 "app.adapters.notification.provider=outbox",
-                "app.providers.outbox-notification.sender=smtp"
+                "app.providers.outbox-notification.sender=desconocido"
         ).run(context -> {
             assertThat(context).hasFailed();
         });

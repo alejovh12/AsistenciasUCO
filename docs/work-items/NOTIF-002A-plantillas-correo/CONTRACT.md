@@ -232,3 +232,8 @@ Endpoints y pantalla de administración (NOTIF-002B), otros canales, preferencia
 - **Precisión (no desvío):**
   1. `PlantillaRenderer#envolverEnLayout` sustituye primero `{{pie}}` y luego `{{contenido}}` (evitando que un valor de `datos` que contenga el literal `{{pie}}` o `{{contenido}}` sea reemplazado por el pie del correo dentro del contenido renderizado).
   2. `SmtpNotificationProperties` valida fail-fast que, si `platformUrl` no está vacía tras recortar espacios, empiece obligatoriamente por `http://` o `https://` (rechazando con `IllegalArgumentException` esquemas como `javascript:`, `ftp:` o texto libre).
+
+### 10.3 Resolución de `TEST_CONTRACT_CONFLICT` en `NotificationWiringTest#WI08_sender_desconocido_falla`
+- **Fecha:** 2026-10-30
+- **Ámbito:** Backend — `NotificationWiringTest.java` línea 168.
+- **Motivo y decisión del owner:** En `NOTIF-001`, el caso `WI08_sender_desconocido_falla` usaba `"app.providers.outbox-notification.sender=smtp"` como ejemplo de valor desconocido porque `OutboxNotificationProperties.Sender` solo tenía `LOG`. En `NOTIF-002A` (`CONTRACT §3.1` y `§4.5`), `SMTP` pasa a ser un valor válido del enum `Sender`. Con autorización expresa del owner, se actualizó únicamente el literal de la línea 168 de `"smtp"` a `"desconocido"` para que `WI-08` siga verificando el rechazo de un `sender` desconocido en el enum, mientras que el cableado de `sender=smtp` se prueba en `SmtpNotificationWiringTest` (`WI-S01`..`WI-S05`).
