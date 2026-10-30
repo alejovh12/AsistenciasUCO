@@ -343,6 +343,21 @@ class PlantillaRendererTest {
 
         assertEquals("default", r1.origen());
         assertEquals(r1, r2);
+
+        // Casos borde adicionales: tipo desconocido, datos nulos, catalogo con tipo vacio, validaciones de record
+        assertTrue(catalogoDefecto.obtener(null, "es").isEmpty());
+        assertTrue(catalogoDefecto.obtener("   ", "es").isEmpty());
+        assertTrue(catalogoDefecto.obtener("TIPO_INEXISTENTE", null).isEmpty());
+        assertTrue(catalogoDefecto.obtener("SOLICITUD_INGRESO_RETIRADA", "   ").isPresent());
+
+        final ContenidoRenderizado rStored = renderer.renderizar(null, null, null, null);
+        assertEquals("stored", rStored.origen());
+        assertEquals("", rStored.asunto());
+
+        final PlantillaNotificacion sinLista = new PlantillaNotificacion(1, "A", "C", null);
+        assertTrue(sinLista.marcadores().isEmpty());
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> new PlantillaNotificacion(0, "A", "C", List.of()));
     }
 
     @Test

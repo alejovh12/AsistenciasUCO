@@ -145,6 +145,11 @@ class PlantillaNotificacionJpaRepositoryTest {
         when(entityManager.createStoredProcedureQuery(anyString())).thenThrow(new PersistenceException("DB down"));
         assertThrows(DatabaseOperationException.class,
                 () -> repository.consultarActiva("OTRO_TIPO", "es"));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> new PlantillaNotificacionJpaRepository(entityManager, clock, Duration.ZERO));
+        assertThrows(IllegalArgumentException.class,
+                () -> new PlantillaNotificacionJpaRepository(entityManager, clock, Duration.ofSeconds(-5)));
     }
 
     private static final class MutableClock extends Clock {
