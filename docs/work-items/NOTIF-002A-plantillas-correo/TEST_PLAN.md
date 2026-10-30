@@ -101,6 +101,22 @@ Registro en `test_suite.sql` y excepciones en `test_contract_closure.sql` solo s
 | BE-U01 | Cada uno de los 4 casos de uso incluye en `datos` las claves del CONTRACT §4.4 con valores legibles |
 | BE-U02 | `tipo`, `asunto`, `mensaje` y las claves previas de `datos` permanecen **idénticos** a los de antes (aserción nueva sobre las claves previas; las pruebas existentes no se modifican) |
 
+### 2.7 Modo de pruebas con redirección (D15)
+
+| ID | Caso |
+| :-- | :-- |
+| BE-P05 | Defaults: `test-mode.enabled=false` y `redirect-to` vacío |
+| BE-P06 | `enabled=true` con `redirect-to` vacío, con una dirección insegura (`a@b.co,c.com`, `<a@b.co>`, con espacios o CR/LF) o con más de 5 direcciones → `IllegalArgumentException` (fail-fast) |
+| BE-P07 | `redirect-to` con `"a@x.co, b@x.co ,a@x.co"` → 2 direcciones recortadas y sin duplicados; con `enabled=false` el valor se ignora sin error |
+| BE-R14 | Sobrecarga del renderizador con aviso: el aviso aparece como primer párrafo en texto plano y en HTML (escapado); sin aviso, la salida es idéntica a la de la firma de 4 argumentos |
+| BE-S11 | Modo activo: el transporte recibe como BCC solo `redirect-to`; ninguna dirección original aparece en BCC, `To`, asunto, texto ni HTML |
+| BE-S12 | Modo activo: el asunto empieza por `[PRUEBA] ` y no supera 200 caracteres ni contiene saltos de línea |
+| BE-S13 | Modo activo: el aviso indica el número `N` de destinatarios originales omitidos y no contiene direcciones ni nombres |
+| BE-S14 | Modo activo: cada mensaje incrementa `notification.email.redirected.total`; con el modo apagado el contador no se incrementa |
+| BE-S15 | Modo apagado: sin prefijo ni aviso; comportamiento idéntico al de BE-S01 |
+| BE-S16 | Modo activo sin destinatarios válidos → `NotificacionNoEntregableException` y **nada** se envía a `redirect-to` |
+| BE-S17 | Modo activo con más de `max-bcc` direcciones de `redirect-to` → bloques; todas las direcciones de pruebas reciben el correo |
+
 ## 3. Wiring y arquitectura
 
 | ID | Caso |
@@ -109,6 +125,7 @@ Registro en `test_suite.sql` y excepciones en `test_contract_closure.sql` solo s
 | WI-S02 | `sender=smtp` con propiedades válidas: se crean `SmtpNotificacionChannelSender`, `TopeEnvios`, renderizador, repositorios |
 | WI-S03 | `sender=smtp` con `host` o `from-address` vacíos → el contexto no arranca (fail-fast) |
 | WI-S04 | `sender=desconocido` → no arranca |
+| WI-S06 | `test-mode.enabled=true` sin `redirect-to` válido → el contexto no arranca; con `redirect-to` válido arranca y registra el `WARN` de modo de pruebas sin las direcciones |
 | WI-S05 | El fixture **no** declara beans que el runtime real no provee (lección de NOTIF-001: `ObjectMapper`): cada bean externo usado debe existir en el arranque real |
 | AR-07 | Solo `config` instancia clases concretas de `notification.template/contact/channel.smtp` |
 | AR-08 | `application..` y controladores no dependen de `notification.template`, `contact` ni `channel.smtp` |
@@ -130,6 +147,7 @@ Antes de escribir las IT, guardar el **baseline** de `mvnw -Pintegration failsaf
 | IT-E07 | SMTP caído → reintentos con backoff → recupera al volver el servidor; fila `ENTREGADA` |
 | IT-E08 | Tope de envíos agotado → filas quedan `PENDIENTE` sin consumir intentos; se despachan al liberarse cupo |
 | IT-E09 | Los 4 tipos producen correo legible y distinguible |
+| IT-E11 | Modo de pruebas (GreenMail): solo los buzones de `redirect-to` reciben el correo; los buzones de los destinatarios reales quedan vacíos; el asunto lleva `[PRUEBA]` y el cuerpo el aviso con `N` correcto |
 | IT-E10 | Ningún log del contexto contiene correos ni cuerpo (captura de logs) |
 
 ## 5. Compatibilidad
@@ -138,18 +156,19 @@ Antes de escribir las IT, guardar el **baseline** de `mvnw -Pintegration failsaf
 
 ## 6. E2E (puerto 8090, `APP_ADAPTERS_SECURITY_PROVIDER=legacy`; declarar que no se probó contra el PDP)
 
-Con Mailpit local (contenedor propio, puertos distintos de los del proyecto), `sender=smtp`, `host=127.0.0.1`, `port=1025`, y el endpoint HU051 `POST /api/v1/docente/grupos/{grupoId}/estudiantes/{estudianteId}/retiro` con JWT reales.
+Con un **sumidero SMTP local sin Docker** (scratch, no versionado: una clase Java que levanta GreenMail —ya presente en el `pom.xml` como dependencia de test; classpath con `mvnw dependency:build-classpath -Dmdep.includeScope=test`— en `127.0.0.1:3025` y vuelca cada mensaje recibido como `.eml` en un directorio temporal **fuera del repositorio**), `sender=smtp`, `host=127.0.0.1`, `port=3025`, y el endpoint HU051 `POST /api/v1/docente/grupos/{grupoId}/estudiantes/{estudianteId}/retiro` con JWT reales.
 
 | ID | Caso |
 | :-- | :-- |
 | E2E-M01 | Arranque con `sender=smtp` sin errores; con `sender=log` sin beans SMTP |
-| E2E-M02 | El retiro HU051 produce un correo en Mailpit con asunto/cuerpo de la plantilla; BCC con los destinatarios esperados |
+| E2E-M02 | El retiro HU051 produce un correo en el sumidero con asunto/cuerpo de la plantilla; BCC con los destinatarios esperados |
 | E2E-M03 | El cuerpo **no** contiene el motivo del retiro (D12) |
-| E2E-M04 | HTML escapado y alternativa de texto plano presentes (verificado vía API de Mailpit) |
+| E2E-M04 | HTML escapado y alternativa de texto plano presentes (verificado leyendo los `.eml` del sumidero) |
 | E2E-M05 | Cambiar la plantilla en BD (script de prueba, versión nueva activa) y verificar el siguiente correo; **restaurar** la semilla al terminar |
-| E2E-M06 | Mailpit detenido → el retiro responde 2xx, la fila queda reintentable y se entrega al volver Mailpit |
+| E2E-M06 | Sumidero detenido → el retiro responde 2xx, la fila queda reintentable y se entrega al volver el sumidero |
 | E2E-M07 | Métricas `notification.email.send.total` y `notification.template.render.total` presentes |
-| E2E-M08 | Cero residuos: filas de prueba en `NotificacionSaliente` eliminadas, matrícula restaurada, plantilla restaurada, contenedor de Mailpit detenido y eliminado, puerto 8090 libre |
+| E2E-M09 | Modo de pruebas (`SMTP_NOTIFICATION_TEST_MODE_ENABLED=true`, `SMTP_NOTIFICATION_TEST_MODE_REDIRECT_TO` con 2 direcciones ficticias): el retiro HU051 produce un único correo cuyo BCC es solo `redirect-to`, con asunto `[PRUEBA]` y aviso; **ninguna** dirección real de los destinatarios aparece en ningún `.eml`; arranque con `WARN` de modo de pruebas sin direcciones; métrica `notification.email.redirected.total` presente |
+| E2E-M08 | Cero residuos: filas de prueba en `NotificacionSaliente` eliminadas, matrícula restaurada, plantilla restaurada, sumidero detenido y su directorio temporal eliminado, puerto 8090 libre |
 
 Cualquier caso que exija alterar la BD compartida de forma no restaurable se declara `NO_EJECUTADO` con su razón.
 

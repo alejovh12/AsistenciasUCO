@@ -16,7 +16,7 @@ NOTIF-001 dejó la capacidad de notificaciones durable e intercambiable, pero el
 1. **Envío real de correo** por SMTP genérico (`SmtpNotificacionChannelSender`), seleccionable con `app.providers.outbox-notification.sender=smtp` (default `log`).
 2. **Plantillas con contenido editable**: el contenido (asunto y cuerpo) por `tipo` vive en la base de datos con versionado; la **estructura HTML es fija** y vive en el backend. La edición por el Administrador (pantalla y endpoints) es **NOTIF-002B**, fuera de este work item; aquí solo el modelo, la lectura y las plantillas semilla.
 3. **Resolución del contacto en el momento de la entrega**: el outbox sigue guardando solo `rol` + `idUsuario`; el correo se consulta al entregar y no se persiste.
-4. Tope de envíos, clasificación de errores y métricas, sin proveedores de pago ni dependencias externas: el SMTP lo provee la universidad (servidor propio); en desarrollo y CI se usan Mailpit y GreenMail.
+4. Tope de envíos, clasificación de errores y métricas, sin proveedores de pago ni dependencias externas: el SMTP lo provee la universidad (servidor propio); en desarrollo y CI se usa GreenMail y, para pruebas reales, el **modo de pruebas con redirección** (D15).
 
 ## 2. Estado actual verificado (2026-10-29)
 
@@ -36,7 +36,7 @@ NOTIF-001 dejó la capacidad de notificaciones durable e intercambiable, pero el
 - DB: tablas `PlantillaNotificacion` (versionada) y `PlantillaNotificacionMarcador` (catálogo de marcadores por tipo), plantillas semilla de los 4 tipos, SP técnicos de lectura de plantilla activa y de contacto.
 - Backend (módulo `notification`, sub-paquetes `template`, `contact`, `channel.smtp`): renderizador con escape, layout HTML fijo + alternativa de texto plano, resolución de contacto, sender SMTP, tope de envíos, método `disponible()` del sender, propiedades, wiring y métricas.
 - Enriquecer `Notificacion.datos` en los 4 casos de uso con los valores legibles (solo agregar claves; `asunto`/`mensaje` actuales no cambian y son el último respaldo).
-- Pruebas (T-SQL, unitarias, ArchUnit, GreenMail, E2E con Mailpit) y documentación (ADR-006, estándar de composición, deuda técnica).
+- Pruebas (T-SQL, unitarias, ArchUnit, GreenMail, E2E con sumidero SMTP local y modo de pruebas) y documentación (ADR-006, estándar de composición, deuda técnica).
 
 **Fuera (seguimientos, §7)**
 - **NOTIF-002B:** endpoints y pantalla de administración de plantillas (listar, editar, vista previa, activar/revertir versión) y su permiso en el catálogo de accesos.
@@ -60,7 +60,8 @@ NOTIF-001 dejó la capacidad de notificaciones durable e intercambiable, pero el
 | D11 | Selector del canal: `app.providers.outbox-notification.sender` = `log` (default) \| `smtp`. Con `smtp`, el arranque falla si faltan `host`, `port` o `from-address` (fail-fast). Credenciales **nunca** en el repositorio: usuario/clave por variable de entorno o `SecretVaultPort` (el implementador verifica el patrón vigente y lo replica). | Sí |
 | D12 | **Privacidad del contenido (default):** el `motivo` del retiro **no** va en el cuerpo de la plantilla semilla (el marcador `{motivo}` existe y es válido, pero la plantilla semilla no lo usa); el correo es un aviso breve que remite a la plataforma. El owner puede cambiarlo editando la plantilla (002B). | Sí (decisión del owner: ver §9) |
 | D13 | Datos y logs: ningún log incluye correos, asunto ni cuerpo; solo `idNotificacion`, `tipo`, conteos y `origin`. Las métricas llevan etiquetas de baja cardinalidad. | Sí |
-| D14 | Sin proveedores de pago: dependencia permitida solo `spring-boot-starter-mail` (Jakarta Mail) y, solo en pruebas, GreenMail. Mailpit se usa como contenedor local (no se versiona en este repositorio; su alta en `docker-compose` es un seguimiento de Infra). | Sí |
+| D14 | Sin proveedores de pago ni imágenes de terceros: dependencia permitida solo `spring-boot-starter-mail` (Jakarta Mail) y, solo en pruebas, GreenMail (ya en el `pom.xml`). El E2E usa un sumidero SMTP local sin Docker (ver D15 y TEST_PLAN §6). **No se usa Mailpit.** | Sí |
+| D15 | **Modo de pruebas con redirección (decisión del owner, 2026-10-30):** el sistema de correo puede ponerse en modo de pruebas (`test-mode.enabled`, default `false`); en ese modo **ningún destinatario real recibe el correo**: todo se redirige a las direcciones definidas en `test-mode.redirect-to`, con asunto prefijado `[PRUEBA]` y un aviso inicial en el cuerpo que indica cuántos destinatarios originales se omitieron (sin mostrar direcciones ni nombres). Detalle en CONTRACT §4.6. | Sí |
 
 ## 5. Fases (TDD estricto; cada fase termina en commits atómicos, verde y parada)
 
@@ -72,9 +73,10 @@ NOTIF-001 dejó la capacidad de notificaciones durable e intercambiable, pero el
 | 3 | **Contacto y casos de uso**: resolución de contacto; agregar claves a `datos` en los 4 casos de uso (sin tocar `asunto`/`mensaje`). | Pruebas de los 4 casos de uso sin cambios en sus aserciones previas |
 | 4 | **Sender SMTP**: pruebas RED → `SmtpNotificacionChannelSender`, tope de envíos, `disponible()` en SPI/despachador, propiedades, wiring fail-fast. | Unitarias + IT con GreenMail |
 | 5 | **Archivos calientes y docs**: `git merge origin/develop`; `application.yml`, `AdapterPropertiesConfiguration`, ArchUnit, `adapter-composition-standard.md`, ADR-006, deuda técnica. | `mvnw test` + failsafe vs baseline |
-| 6 | **E2E** en el puerto 8090 con Mailpit; `VALIDATION.md`. | Correo recibido y renderizado |
+| 4b | **Modo de pruebas con redirección (D15)**: pruebas RED → propiedades, redirección en el sender, aviso en el renderizador, fail-fast y métrica. | Unitarias + IT con GreenMail |
+| 6 | **E2E** en el puerto 8090 con un sumidero SMTP local (sin Docker) y, además, en modo de pruebas con redirección; `VALIDATION.md`. | Correo recibido, renderizado y redirigido |
 
-Paradas obligatorias: fin de las fases 1, 2, 4 y 6, y ante cualquier conflicto de contrato.
+Paradas obligatorias: fin de las fases 1, 2, 4 y 6 (la 4b se encadena a la 5 sin parada y se reporta en la parada de la fase 6), y ante cualquier conflicto de contrato.
 
 ## 6. Riesgos y mitigaciones
 
@@ -83,7 +85,7 @@ Paradas obligatorias: fin de las fases 1, 2, 4 y 6, y ante cualquier conflicto d
 | Agregar claves a `datos` rompe pruebas existentes que comparan el mapa completo. | Si ocurre, es `TEST_CONTRACT_CONFLICT`: se detiene y se consulta; no se relajan aserciones. |
 | Duplicados por reintento tras fallo parcial entre bloques BCC. | Documentado (D8); notificaciones de este sistema tienen pocos destinatarios (bloque único). |
 | Plantilla editada con errores deja el correo ilegible. | Marcadores validados (D5) y descenso a respaldo (D3); vista previa en 002B. |
-| El servidor SMTP institucional exige TLS/autenticación particular. | Propiedades `starttls`, `ssl`, `username`; probadas contra Mailpit/GreenMail; ajuste fino cuando TI entregue datos. |
+| El servidor SMTP institucional exige TLS/autenticación particular. | Propiedades `starttls`, `ssl`, `username`; probadas contra GreenMail y el sumidero local; ajuste fino cuando TI entregue datos. |
 | Cuenta de remitente limitada (si se usa una cuenta con topes bajos). | Tope de envíos (D10) configurable. |
 | El correo del usuario cambia entre el aviso y la entrega. | Se resuelve al entregar (D7); es el comportamiento deseado. |
 | Retiro futuro del módulo. | D1 + reglas ArchUnit; ver CONTRACT §6. |
@@ -91,7 +93,7 @@ Paradas obligatorias: fin de las fases 1, 2, 4 y 6, y ante cualquier conflicto d
 ## 7. Seguimientos (se registran como deuda técnica al cerrar; números = siguientes libres tras recontar)
 
 1. **NOTIF-002B** (HU de administración de plantillas): DB (SP de guardado, activación y consulta paginada), backend (endpoints, permiso en `access-catalog.json`) y frontend (Signals, OnPush).
-2. Alta de Mailpit en `docker-compose` de Infra y documentación de su uso.
+2. Documentar el uso del modo de pruebas con redirección (D15) y su apagado obligatorio en producción.
 3. Credenciales SMTP en el almacén de secretos definitivo cuando TI las entregue.
 4. SPF/DKIM/DMARC del dominio remitente (coordinación con TI).
 5. Exportación de plantillas (volcado) para migrar a otro componente.
@@ -99,8 +101,9 @@ Paradas obligatorias: fin de las fases 1, 2, 4 y 6, y ante cualquier conflicto d
 
 ## 8. Criterios de cierre
 
+- El modo de pruebas con redirección (D15) verificado: ningún destinatario real recibe correo con el modo activo y el modo apagado es idéntico a producción.
 - Todas las pruebas de TEST_PLAN en verde con cifras reales (DB gate, unitarias, failsafe contra baseline, E2E).
-- Correo de los 4 tipos recibido y legible en Mailpit; HTML escapado; alternativa de texto plano presente; sin PII en logs.
+- Correo de los 4 tipos recibido y legible en el sumidero SMTP local; HTML escapado; alternativa de texto plano presente; sin PII en logs.
 - ArchUnit del módulo en verde; `NotificacionPort`/`Notificacion` sin cambios de firma.
 - Sin cambios en `SecurityConfig`, `access-catalog.json` ni OpenAPI (no hay endpoints en 002A).
 - Documentación actualizada y deuda técnica registrada. Sin push ni PR hasta orden explícita del owner.
@@ -112,5 +115,5 @@ Paradas obligatorias: fin de las fases 1, 2, 4 y 6, y ante cualquier conflicto d
 | Q1 | ¿El `motivo` del retiro puede ir en el cuerpo del correo? | No (D12): aviso breve con enlace a la plataforma |
 | Q2 | Tope de envíos | 60/min y 500/día (configurable) |
 | Q3 | ¿Enviar solo a correos confirmados (`correoConfirmado=1`)? | No filtrar por defecto; propiedad `require-confirmed-email=false` |
-| Q4 | Datos del SMTP institucional (host, puerto, TLS, remitente) | Pendiente de TI (no bloquea 002A); hasta entonces Mailpit/GreenMail |
+| Q4 | Datos del SMTP institucional (host, puerto, TLS, remitente) | Pendiente de TI (no bloquea 002A); hasta entonces GreenMail y el modo de pruebas con redirección (D15) |
 | Q5 | URL base de la plataforma para el enlace del correo | Propiedad `app.providers.smtp-notification.platform-url` (sin valor por defecto en producción) |

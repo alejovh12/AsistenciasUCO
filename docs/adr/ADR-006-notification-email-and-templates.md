@@ -25,7 +25,7 @@ NOTIF-001 dejó el outbox durable y un SPI de canal (`NotificacionChannelSender`
 ## Decisión
 
 1. **Módulo dentro del backend, no un servicio aparte.** Código bajo `infrastructure.adapter.secondary.notification.{outbox,template,contact,channel.smtp}`; solo `config` instancia clases concretas; el resto del sistema conoce únicamente `NotificacionPort`. Reglas ArchUnit lo hacen verificable.
-2. **Transporte: SMTP genérico** (Jakarta Mail vía `spring-boot-starter-mail`) detrás del SPI `CorreoTransport` y del sender `smtp`. Cambiar de servidor (Mailpit, GreenMail, SMTP institucional, un servidor de pruebas con cuenta propia) es solo configuración. No hay SDK de proveedor.
+2. **Transporte: SMTP genérico** (Jakarta Mail vía `spring-boot-starter-mail`) detrás del SPI `CorreoTransport` y del sender `smtp`. Cambiar de servidor (GreenMail, SMTP institucional, un servidor de pruebas con cuenta propia) es solo configuración. No hay SDK de proveedor. Para pruebas reales sin riesgo, el sender tiene un **modo de pruebas con redirección** (`test-mode`): todo correo se envía únicamente a las direcciones de pruebas definidas, con asunto `[PRUEBA]` y aviso inicial, sin exponer a los destinatarios reales (decisión del owner, 2026-10-30).
 3. **Plantillas en SQL Server**, versionadas, con **contenido en texto plano y marcadores controlados** (`{grupo}`, `{estudiante}`…) y **estructura HTML fija** en el backend. Orden de resolución al entregar: plantilla activa en BD → plantilla por defecto del backend → `asunto`/`mensaje` guardados. La edición por el Administrador (endpoints y pantalla) es **NOTIF-002B**.
 4. **Contacto al entregar:** el correo se consulta por `idUsuario` en el momento del envío y no se persiste en el outbox (se conserva la minimización de NOTIF-001).
 5. **Tope de envíos** en el sender, expuesto al despachador mediante `disponible()` (método con implementación por defecto en el SPI): sin cupo no se reservan filas ni se consumen intentos.
@@ -48,4 +48,5 @@ NOTIF-001 dejó el outbox durable y un SPI de canal (`NotificacionChannelSender`
 - **Entrega *at-least-once*:** un fallo parcial entre bloques BCC provoca reintento de toda la fila y posibles duplicados (documentado; pocos destinatarios por aviso).
 - **Cambio acotado en casos de uso:** los 4 emisores agregan claves legibles a `Notificacion.datos` (no cambian `NotificacionPort` ni `asunto`/`mensaje`).
 - **Pendiente de terceros:** datos del SMTP institucional (host, puerto, TLS, remitente) y SPF/DKIM/DMARC del dominio remitente los entrega TI.
-- **Deuda registrada:** NOTIF-002B (administración), Mailpit en `docker-compose` de Infra, credenciales SMTP en el almacén definitivo de secretos, exportación de plantillas, idempotencia por bloque.
+- **Modo de pruebas:** debe estar apagado en producción (default `false`; `WARN` de arranque visible). No sustituye a un entorno de pruebas del proveedor.
+- **Deuda registrada:** NOTIF-002B (administración), credenciales SMTP en el almacén definitivo de secretos, exportación de plantillas, idempotencia por bloque.

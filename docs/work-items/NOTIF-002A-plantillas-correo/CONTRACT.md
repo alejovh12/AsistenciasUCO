@@ -112,10 +112,13 @@ app:
       rate-per-minute: ${SMTP_NOTIFICATION_RATE_PER_MINUTE:60}     # 1..10000
       rate-per-day: ${SMTP_NOTIFICATION_RATE_PER_DAY:500}          # >= rate-per-minute
       require-confirmed-email: ${SMTP_NOTIFICATION_REQUIRE_CONFIRMED_EMAIL:false}
-      platform-url: ${SMTP_NOTIFICATION_PLATFORM_URL:}             # vacío => el correo no incluye enlace
+      platform-url: ${SMTP_NOTIFICATION_PLATFORM_URL:}             # vacío => el correo no incluye enlace (si se define: http:// o https://)
+      test-mode:
+        enabled: ${SMTP_NOTIFICATION_TEST_MODE_ENABLED:false}      # D15: true => redirige TODO a redirect-to
+        redirect-to: ${SMTP_NOTIFICATION_TEST_MODE_REDIRECT_TO:}   # 1..5 direcciones separadas por coma; obligatorio si enabled=true
 ```
 
-Reglas de validación (fail-fast al arrancar, con `sender=smtp`): `host` no vacío; `port` 1..65535; `from-address` con formato de correo; `starttls` y `ssl` no simultáneos; `rate-per-day >= rate-per-minute`. Con `sender=log` ninguna propiedad `smtp-notification.*` es obligatoria y no se crean beans SMTP.
+Reglas de validación (fail-fast al arrancar, con `sender=smtp`): `host` no vacío; `port` 1..65535; `from-address` con formato de correo; `starttls` y `ssl` no simultáneos; `rate-per-day >= rate-per-minute`; con `test-mode.enabled=true`, `redirect-to` debe contener entre 1 y 5 direcciones válidas (mismo criterio de seguridad que `esCorreoSeguro`: sin espacios, saltos de línea ni `, ; < > "` dentro de cada dirección). Con `sender=log` ninguna propiedad `smtp-notification.*` es obligatoria y no se crean beans SMTP.
 
 La clave `password` se resuelve **sin imprimirla**: por variable de entorno o por `SecretVaultPort` (el implementador sigue el patrón ya usado para secretos y lo documenta; no se inventa uno nuevo).
 
@@ -176,13 +179,29 @@ El implementador inspecciona los 4 casos de uso para tomar los valores ya dispon
 - `SmtpNotificacionAdapterConfiguration` (nueva): `@Conditional` de outbox **y** `sender=smtp`; crea `SmtpNotificationProperties`, `TopeEnvios`, `JakartaMailCorreoTransport`, repositorios de plantilla y contacto, renderizador y `SmtpNotificacionChannelSender` como `NotificacionChannelSender`. Sin `@Component`/`@Service` en las clases del módulo.
 - `sender` con valor desconocido → el arranque falla (fail-closed).
 
-### 4.6 Observabilidad (Micrometer; nombres fijados)
+### 4.6 Modo de pruebas con redirección (D15)
+
+Propiedades: `app.providers.smtp-notification.test-mode.enabled` (default `false`) y `test-mode.redirect-to` (lista de 1..5 direcciones; el valor de entorno admite comas, se recortan espacios y se eliminan duplicados). Con `enabled=true` y `redirect-to` vacío o con una dirección insegura el arranque falla (fail-fast). Con `enabled=false` el valor de `redirect-to` se ignora y el comportamiento es **idéntico** al de producción.
+
+Comportamiento de `SmtpNotificacionChannelSender` con el modo activo:
+
+1. Los contactos se resuelven y filtran igual que siempre (para decidir si existe algún destinatario válido). Si no hay ninguno, sigue siendo `NotificacionNoEntregableException`: **no** se envía nada al buzón de pruebas.
+2. Los destinatarios reales **nunca** llegan al transporte: el BCC se reemplaza por `redirect-to` (en bloques de `max-bcc`, `To` = remitente). Ninguna dirección original aparece en cabeceras, asunto ni cuerpo.
+3. El asunto se prefija con `[PRUEBA] ` (después de sanear y antes de recortar a 200 caracteres).
+4. El cuerpo (texto plano y HTML) comienza con un párrafo de aviso: `MODO DE PRUEBAS: este correo no se envió a los destinatarios reales. Destinatarios originales omitidos: {N}.`, donde `N` es el número de destinatarios válidos (sin direcciones ni nombres). El aviso lo inserta el renderizador mediante una **sobrecarga** `renderizar(tipo, datos, asuntoGuardado, mensajeGuardado, avisoModoPrueba)`; la firma de 4 argumentos existente no cambia.
+5. Métrica nueva `notification.email.redirected.total` (counter, sin etiquetas) por cada mensaje redirigido. Al arrancar con el modo activo se registra un `WARN` único ("modo de pruebas de correo ACTIVO: los correos se redirigen") **sin** las direcciones.
+6. El tope de envíos, la clasificación de errores y los reintentos funcionan igual.
+
+Es una medida de pruebas, no de seguridad: debe estar apagada en producción (el default es `false` y el `WARN` de arranque lo hace visible).
+
+### 4.7 Observabilidad (Micrometer; nombres fijados)
 
 | Métrica | Tipo | Etiquetas |
 | :-- | :-- | :-- |
 | `notification.email.send.total` | counter | `outcome` (`sent`/`retry`/`permanent`/`no_recipients`) |
 | `notification.email.recipients.total` | counter | `outcome` (`sent`/`omitted`) |
 | `notification.email.throttled.total` | counter | `window` (`minute`/`day`) |
+| `notification.email.redirected.total` | counter | — (solo con `test-mode.enabled=true`) |
 | `notification.template.render.total` | counter | `origin` (`db`/`default`/`stored`) |
 | `notification.email.send.duration` | timer | `outcome` |
 
@@ -213,7 +232,7 @@ Etiquetas de baja cardinalidad (nunca `tipo` libre ni correos). Logs con `idNoti
 
 ## 8. Documentación a actualizar (al final, commit aparte por archivo)
 
-`docs/architecture/adapter-composition-standard.md` (sender `smtp`, módulo notification), `docs/adr/ADR-006-notification-email-and-templates.md` (nuevo), `docs/baseline/TECHNICAL_DEBT.md` (seguimientos del PLAN §7; actualizar TD-067 y TD-068), `.env.template` (nombres de variables), `README`/guía de uso local con Mailpit.
+`docs/architecture/adapter-composition-standard.md` (sender `smtp`, módulo notification), `docs/adr/ADR-006-notification-email-and-templates.md` (nuevo), `docs/baseline/TECHNICAL_DEBT.md` (seguimientos del PLAN §7; actualizar TD-067 y TD-068), `.env.template` (nombres de variables), guía breve de uso del modo de pruebas con redirección (D15).
 
 ## 9. Fuera de alcance
 
