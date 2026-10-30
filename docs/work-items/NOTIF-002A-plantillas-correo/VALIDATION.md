@@ -60,7 +60,22 @@ Metas del TEST_PLAN para código nuevo (≥ 90 % líneas, ≥ 85 % ramas): cumpl
 | E2E-M08 | PASS | `NotificacionSaliente`=0, 4 plantillas v1 activas, matrícula `A`, carpeta temporal eliminada |
 | E2E-M09 | PASS | Modo de pruebas con 2 direcciones ficticias: un único correo con BCC solo a esas dos, asunto `[PRUEBA]`, aviso con N=3, **ninguna** dirección real en el `.eml`, `WARN` de arranque sin direcciones y `notification_email_redirected_total` ≥ 1 |
 
-Totales: 9 ejecutadas, 9 en verde, 0 omitidas. No hubo prueba E2E contra un SMTP real: el servidor SMTP de la universidad aún no se entrega (PLAN Q4).
+Totales: 9 ejecutadas, 9 en verde, 0 omitidas. El E2E automatizado no usó un SMTP real (el servidor SMTP de la universidad aún no se entrega, PLAN Q4). La entrega real se validó aparte (siguiente sección).
+
+### Envío real con Gmail en modo de pruebas (2026-10-30, validado por el owner)
+
+Backend propio en `:8090` (seguridad e identidad `legacy`), `OUTBOX_NOTIFICATION_SENDER=smtp` hacia `smtp.gmail.com:587` con STARTTLS, contraseña de aplicación de una cuenta de pruebas del owner (leída del `.env` local ignorado por git; no se registra en ningún log) y `SMTP_NOTIFICATION_TEST_MODE_ENABLED=true` con `REDIRECT_TO` igual a la cuenta de pruebas. Disparador: retiro HU051.
+
+| Comprobación | Resultado |
+| :-- | :-- |
+| Advertencia de arranque del modo de pruebas (sin direcciones) | Presente |
+| Retiro HU051 | HTTP 200 |
+| Log del sender | `Notificacion enviada por SMTP ... tipo=RETIRO_ESTUDIANTE_GRUPO, destinatarios=3, origenPlantilla=db, outcome=sent` |
+| Fila del outbox | `ENTREGADA` |
+| Buzones que recibieron el correo | Solo la cuenta de pruebas (los 3 destinatarios reales omitidos) |
+| Recepción en la bandeja de la cuenta de pruebas, con asunto `[PRUEBA]` y aviso inicial | **Confirmada por el owner** |
+
+Restauración tras la prueba: outbox 0 filas, matrícula del estudiante de prueba en `A`, 4 plantillas v1 activas, puerto 8090 libre. Pendiente de seguridad: revocar la contraseña de aplicación al terminar las pruebas.
 
 ### Ajustes al script de E2E durante la validación (scratch, no versionado)
 
