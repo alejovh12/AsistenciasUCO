@@ -509,17 +509,34 @@ Application.
 
 ---
 
-## 13. Notification — estado actual (NOTIF-001)
+## 13. Notification — estado actual (NOTIF-001 / NOTIF-002A)
 
 AsistenciasUCO desacopla el despacho de notificaciones académicas mediante el puerto secundario `NotificacionPort` (`application/secondaryports/notification`).
 
 La capacidad soporta tres Composition Roots mutuamente excluyentes vía `app.adapters.notification.provider`:
 
 1. `log` (`LogNotificacionAdapterConfiguration`): adaptador síncrono que registra las notificaciones en el logger institucional sin mutación de BD (modo predeterminado).
-2. `outbox` (`OutboxNotificacionAdapterConfiguration`): adaptador transaccional duradero que persiste en `dbo.NotificacionSaliente` mediante `usp_registrar_notificacion_saliente`, con un despachador en segundo plano (`NotificacionOutboxDispatcher`) que reserva lotes vía `usp_reservar_notificaciones_salientes`, entrega a un canal SPI `NotificacionChannelSender` (v1: `LogNotificacionChannelSender`), reporta éxito o fallo reintentable/definitivo y ejecuta depuración periódica de filas terminales.
+2. `outbox` (`OutboxNotificacionAdapterConfiguration`): adaptador transaccional duradero que persiste en `dbo.NotificacionSaliente` mediante `usp_registrar_notificacion_saliente`, con un despachador en segundo plano (`NotificacionOutboxDispatcher`) que verifica disponibilidad del canal (`sender.disponible()`), reserva lotes vía `usp_reservar_notificaciones_salientes`, entrega al canal SPI `NotificacionChannelSender`, reporta éxito o fallo reintentable/definitivo y ejecuta depuración periódica de filas terminales.
 3. `composite` (`CompositeNotificacionAdapterConfiguration`): adaptador compuesto que realiza *fan-out* a múltiples destinos hojas configurados en `app.adapters.notification.composite.targets` (p. ej. `log,outbox`), garantizando aislamiento contra fallos parciales.
 
-Las properties tipadas residen en `NotificationAdapterProperties` y `OutboxNotificationProperties`. Ninguna clase de Application o Domain conoce el provider activo.
+### 13.1 Selección de canal del outbox (`sender=log|smtp`) y módulo `notification.*` (NOTIF-002A)
+
+Sobre el proveedor `outbox`, el canal concreto de salida (`NotificacionChannelSender`) se selecciona mediante `app.providers.outbox-notification.sender` ([ADR-006](../adr/ADR-006-notification-email-and-templates.md)):
+
+- `log` (predeterminado): `LogNotificacionChannelSender` registra el envío en el log estructurado sin tráfico de red externo.
+- `smtp` (`SmtpNotificacionAdapterConfiguration`): activa el módulo removible `infrastructure.adapter.secondary.notification.{template,contact,channel.smtp}` compuesto por:
+  - **Plantillas editables (`template`):** consulta la plantilla activa versionada en SQL Server (`usp_consultar_plantilla_notificacion_activa`) con caché por `(tipo, idioma)` (`PlantillaNotificacionJpaRepository`), desciende al catálogo de respaldo del classpath (`PlantillaPorDefectoCatalogo`) o al texto almacenado en la fila si faltan marcadores obligatorios, y renderiza texto plano + HTML escapado envuelto en un layout institucional fijo (`PlantillaRenderer`).
+  - **Resolución de contacto al entregar (`contact`):** resuelve correos activos y habilitados en tiempo de entrega vía `usp_consultar_contacto_notificacion` (`ContactoDestinatarioJpaRepository`), manteniendo la minimización de PII en el outbox.
+  - **Canal SMTP y tope de envíos (`channel.smtp`):** `SmtpNotificacionChannelSender` agrupa destinatarios en bloques BCC (`max-bcc`), consume cupo de `TopeEnvios` (ventanas por minuto y por día; cuando se agota, `disponible()=false` evita reservar filas o gastar intentos) y envía mediante `CorreoTransport` (`JakartaMailCorreoTransport`).
+
+### 13.2 Modo de pruebas con redirección (D15)
+
+Para realizar pruebas con servidor SMTP sin riesgo de enviar correos a usuarios reales, `SmtpNotificationProperties` incluye `app.providers.smtp-notification.test-mode`:
+
+- `enabled` (default `false`): debe permanecer en `false` en producción. Al iniciar con `enabled=true`, se emite un único `WARN` de arranque sin exponer las direcciones.
+- `redirect-to` (1..5 direcciones válidas separadas por coma, obligatorias si `enabled=true` con validación fail-fast): cuando el modo de pruebas está activo, los contactos reales se validan igual que en producción (si no hay destinatarios válidos se lanza `NotificacionNoEntregableException` y no se envía nada), pero el BCC se reemplaza exclusivamente por `redirect-to`, el asunto se prefija con `[PRUEBA] `, el cuerpo (texto plano y HTML) inicia con el párrafo de aviso indicando cuántos destinatarios originales se omitieron (`N`) sin incluir correos ni nombres reales, y se incrementa la métrica `notification.email.redirected.total`.
+
+Las properties tipadas residen en `NotificationAdapterProperties`, `OutboxNotificationProperties` y `SmtpNotificationProperties`. Ninguna clase de Application o Domain conoce el provider ni el canal activo (`NotificationEmailModuleIsolationRulesTest` AR-07..AR-10).
 
 ---
 
@@ -559,7 +576,7 @@ src/main/java/co/edu/uco/asistenciasuco/application/features/coordinador/common/
 | Realtime | `RealtimePublisherPort` | `ReactorRealtimeAdapter` + SSE gateway | `app.adapters.realtime.provider=local-sse` | Provider seleccionado por Composition Root; solo `local-sse` | Angular SSE autenticado, API First, distribución/durabilidad con proveedor por decidir en ADR |
 | Audit | `AuditEventPublisher` | logging + soporte SQL existente | `app.adapters.audit.provider=logging` | Parcialmente desacoplado | Durable provider si se requiere |
 | Observability | APIs OTel/Micrometer/logging | OTel + Micrometer + logs estructurados | configuración externa | Provider-neutral | Validación operacional continua |
-| Notification | `NotificacionPort` | `LogNotificacionAdapter`, `OutboxNotificacionAdapter`, `CompositeNotificacionAdapter` | `app.adapters.notification.provider=log` (log \| outbox \| composite) | Desacoplado (NOTIF-001); outbox durable con worker autónomo, fallback sweeper y composite fan-out | Canales externos reales (SMTP, SMS, push) vía SPI `NotificacionChannelSender` |
+| Notification | `NotificacionPort` / `NotificacionChannelSender` | `LogNotificacionAdapter`, `OutboxNotificacionAdapter` (`LogNotificacionChannelSender`, `SmtpNotificacionChannelSender`), `CompositeNotificacionAdapter` | `app.adapters.notification.provider=log` (`log` \| `outbox` \| `composite`) y `app.providers.outbox-notification.sender=log` (`log` \| `smtp`) | Desacoplado (NOTIF-001 / NOTIF-002A); outbox durable con plantillas versionadas en BD, resolución de contacto al entregar, canal SMTP con tope de envíos y modo de pruebas con redirección (`test-mode`) | Administración de plantillas (NOTIF-002B), credenciales SMTP definitivas de TI y otros canales (SMS, push) |
 
 ---
 
