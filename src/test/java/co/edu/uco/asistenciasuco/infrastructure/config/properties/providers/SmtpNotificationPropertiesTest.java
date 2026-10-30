@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -220,5 +221,90 @@ class SmtpNotificationPropertiesTest {
                 "smtp.uco.edu.co", 587, "", "", true, false, "no-reply@uco.edu.co", "Asistencia UCO",
                 Duration.ofSeconds(10), Duration.ofSeconds(20), 50, 60, 500, false, "asistencia.uco.edu.co", Duration.ofSeconds(60)
         ));
+    }
+
+    @Test
+    @DisplayName("BE-P05: defaults de test-mode: enabled=false y redirect-to vacio")
+    void BE_P05_defaults_test_mode() {
+        final SmtpNotificationProperties props = new SmtpNotificationProperties(
+                "smtp.uco.edu.co",
+                null,
+                null,
+                null,
+                null,
+                null,
+                "notificaciones@uco.edu.co",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        assertFalse(props.testMode().enabled());
+        assertTrue(props.testMode().redirectTo().isEmpty());
+    }
+
+    @Test
+    @DisplayName("BE-P06: test-mode.enabled=true con redirect-to vacio, direccion insegura o mas de 5 direcciones -> IllegalArgumentException (fail-fast)")
+    void BE_P06_test_mode_activo_rechaza_redirect_to_vacio_inseguro_o_mas_de_5() {
+        // Vacio o nulo con enabled=true
+        assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties.TestMode(true, ""));
+        assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties.TestMode(true, "   "));
+        assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties.TestMode(true, (String) null));
+
+        // Direccion insegura: a@b.co,c.com / <a@b.co> / con espacios / con CR/LF / punto y coma / comillas / parentesis
+        assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties.TestMode(true, "a@b.co,c.com"));
+        assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties.TestMode(true, "<a@b.co>"));
+        assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties.TestMode(true, "a b@b.co"));
+        assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties.TestMode(true, "a@b.co\r\nBcc:x@y.co"));
+        assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties.TestMode(true, "a@b.co;x@y.co"));
+        assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties.TestMode(true, "\"a\"@b.co"));
+        assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties.TestMode(true, "a(1)@b.co"));
+
+        // Mas de 5 direcciones distintas
+        assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties.TestMode(
+                true,
+                "u1@x.co, u2@x.co, u3@x.co, u4@x.co, u5@x.co, u6@x.co"
+        ));
+    }
+
+    @Test
+    @DisplayName("BE-P07: redirect-to con 'a@x.co, b@x.co ,a@x.co' -> 2 direcciones recortadas y sin duplicados; con enabled=false el valor se ignora sin error")
+    void BE_P07_test_mode_normaliza_y_deduplica_o_ignora_cuando_apagado() {
+        final SmtpNotificationProperties.TestMode modoActivo = new SmtpNotificationProperties.TestMode(
+                true,
+                "a@x.co, b@x.co ,a@x.co"
+        );
+        assertTrue(modoActivo.enabled());
+        assertEquals(List.of("a@x.co", "b@x.co"), modoActivo.redirectTo());
+
+        final SmtpNotificationProperties propsActivas = new SmtpNotificationProperties(
+                "smtp.uco.edu.co", 587, "", "", true, false, "no-reply@uco.edu.co", "Asistencia UCO",
+                Duration.ofSeconds(10), Duration.ofSeconds(20), 50, 60, 500, false, "https://asistencia.uco.edu.co",
+                Duration.ofSeconds(60), modoActivo
+        );
+        assertTrue(propsActivas.testMode().enabled());
+        assertEquals(List.of("a@x.co", "b@x.co"), propsActivas.testMode().redirectTo());
+
+        // Con enabled=false (o null -> false) el valor de redirect-to se ignora sin error aunque sea vacio o invalido
+        final SmtpNotificationProperties.TestMode modoApagado = new SmtpNotificationProperties.TestMode(
+                false,
+                "direccion-invalida-ignorada, <otra@mala>"
+        );
+        assertFalse(modoApagado.enabled());
+        assertTrue(modoApagado.redirectTo().isEmpty());
+
+        final SmtpNotificationProperties.TestMode modoNull = new SmtpNotificationProperties.TestMode(
+                null,
+                "a@x.co, b@x.co"
+        );
+        assertFalse(modoNull.enabled());
+        assertTrue(modoNull.redirectTo().isEmpty());
     }
 }

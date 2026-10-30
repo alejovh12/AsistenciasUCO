@@ -406,8 +406,74 @@ class PlantillaRendererTest {
     }
 
     @Test
-    @DisplayName("BE-R14: PlantillaPorDefectoCatalogo maneja propiedades sin asunto/cuerpo, tokens vacios en CSV y fallo de lectura")
-    void BE_R14_catalogo_por_defecto_ramas_borde() throws Exception {
+    @DisplayName("BE-R14: sobrecarga del renderizador con aviso: el aviso aparece como primer parrafo en texto plano y en HTML (escapado); sin aviso la salida es identica a 4 argumentos")
+    void BE_R14_sobrecarga_con_aviso_modo_prueba() {
+        when(repository.consultarActiva("RETIRO_ESTUDIANTE_GRUPO", "es"))
+                .thenReturn(Optional.of(plantillaRetiroDb()));
+
+        final PlantillaRenderer renderer = crearRenderer("https://asistencia.uco.edu.co");
+        final Map<String, String> datos = Map.of("grupo", "G01", "estudiante", "Ana");
+
+        final ContenidoRenderizado base4Args = renderer.renderizar(
+                "RETIRO_ESTUDIANTE_GRUPO",
+                datos,
+                "Asunto",
+                "Mensaje"
+        );
+        final ContenidoRenderizado sinAvisoNull = renderer.renderizar(
+                "RETIRO_ESTUDIANTE_GRUPO",
+                datos,
+                "Asunto",
+                "Mensaje",
+                null
+        );
+        final ContenidoRenderizado sinAvisoBlanco = renderer.renderizar(
+                "RETIRO_ESTUDIANTE_GRUPO",
+                datos,
+                "Asunto",
+                "Mensaje",
+                "   "
+        );
+
+        assertEquals(base4Args, sinAvisoNull);
+        assertEquals(base4Args, sinAvisoBlanco);
+
+        final String aviso = "MODO DE PRUEBAS: este correo no se envió a los destinatarios reales <test> & control. Destinatarios originales omitidos: 3.";
+        final ContenidoRenderizado conAviso = renderer.renderizar(
+                "RETIRO_ESTUDIANTE_GRUPO",
+                datos,
+                "Asunto",
+                "Mensaje",
+                aviso
+        );
+
+        // En texto plano el aviso es el primer parrafo
+        assertTrue(conAviso.textoPlano().startsWith(aviso + "\n\n"));
+        assertTrue(conAviso.textoPlano().contains("Se registró el retiro de Ana del grupo G01."));
+
+        // En HTML el aviso aparece escapado como primer <p> antes del cuerpo
+        final String avisoHtmlEsperado = "<p>MODO DE PRUEBAS: este correo no se envió a los destinatarios reales &lt;test&gt; &amp; control. Destinatarios originales omitidos: 3.</p>";
+        final int posAviso = conAviso.html().indexOf(avisoHtmlEsperado);
+        final int posCuerpo = conAviso.html().indexOf("<p>Se registró el retiro de Ana del grupo G01.");
+        assertTrue(posAviso > 0);
+        assertTrue(posCuerpo > posAviso);
+
+        // Tambien funciona en nivel stored (cuando cae al respaldo de fila)
+        final ContenidoRenderizado storedConAviso = renderer.renderizar(
+                "TIPO_NO_EXISTE",
+                Map.of(),
+                "Asunto guardado",
+                "Cuerpo guardado",
+                "MODO DE PRUEBAS: Destinatarios originales omitidos: 1."
+        );
+        assertEquals("stored", storedConAviso.origen());
+        assertTrue(storedConAviso.textoPlano().startsWith("MODO DE PRUEBAS: Destinatarios originales omitidos: 1.\n\nCuerpo guardado"));
+        assertTrue(storedConAviso.html().contains("<p>MODO DE PRUEBAS: Destinatarios originales omitidos: 1.</p><p>Cuerpo guardado</p>"));
+    }
+
+    @Test
+    @DisplayName("BE-R14b: PlantillaPorDefectoCatalogo maneja propiedades sin asunto/cuerpo, tokens vacios en CSV y fallo de lectura")
+    void BE_R14b_catalogo_por_defecto_ramas_borde() throws Exception {
         final ClassLoader original = Thread.currentThread().getContextClassLoader();
         try {
             // 1. Recurso con asunto vacio -> Optional.empty()

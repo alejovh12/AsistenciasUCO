@@ -4,9 +4,15 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notificacion;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.contact.ContactoDestinatarioResolver;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.outbox.NotificacionOutboxDispatcher;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.outbox.NotificacionOutboxRepository;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.outbox.OutboxNotificacionAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.PlantillaRenderer;
+import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.OutboxNotificationProperties;
+import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.SmtpNotificationProperties;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
+import io.micrometer.core.instrument.MeterRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icegreen.greenmail.util.GreenMail;
 import com.icegreen.greenmail.util.ServerSetup;
@@ -116,6 +122,24 @@ class NotificacionSmtpGreenMailIT {
 
     @Autowired
     private TopeEnvios topeEnvios;
+
+    @Autowired
+    private ContactoDestinatarioResolver contactoResolver;
+
+    @Autowired
+    private PlantillaRenderer plantillaRenderer;
+
+    @Autowired
+    private CorreoTransport correoTransport;
+
+    @Autowired
+    private NotificacionOutboxRepository outboxRepository;
+
+    @Autowired
+    private OutboxNotificationProperties outboxProperties;
+
+    @Autowired
+    private MeterRegistry meterRegistry;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -631,6 +655,98 @@ class NotificacionSmtpGreenMailIT {
             String msg = event.getFormattedMessage();
             assertFalse(msg.contains(correoSecreto), "El log no debe exponer el correo del destinatario: " + msg);
             assertFalse(msg.contains(cuerpoSecreto), "El log no debe exponer el cuerpo renderizado: " + msg);
+        }
+    }
+
+    @Test
+    @Order(11)
+    @DisplayName("IT-E11: Modo de pruebas (GreenMail): solo los buzones de redirect-to reciben el correo; los buzones reales quedan vacíos; asunto [PRUEBA] y aviso con N correcto")
+    void ITE11_modo_pruebas_redirige_solo_a_redirect_to_y_omite_reales() throws Exception {
+        UUID real1 = crearUsuarioPrueba("real1.ite11@uco.edu.co", true, true);
+        UUID real2 = crearUsuarioPrueba("real2.ite11@uco.edu.co", true, true);
+
+        dispatcher.stop();
+        try {
+            SmtpNotificationProperties testModeProps = new SmtpNotificationProperties(
+                    "127.0.0.1",
+                    SMTP_PORT,
+                    "",
+                    "",
+                    false,
+                    false,
+                    "notificaciones@uco.edu.co",
+                    "Sistema de Asistencias UCO",
+                    java.time.Duration.ofSeconds(10),
+                    java.time.Duration.ofSeconds(20),
+                    50,
+                    60,
+                    500,
+                    false,
+                    "https://asistencias.uco.edu.co",
+                    java.time.Duration.ofSeconds(1),
+                    new SmtpNotificationProperties.TestMode(true, "qa1.ite11@prueba.test, qa2.ite11@prueba.test")
+            );
+            SmtpNotificacionChannelSender testModeSender = new SmtpNotificacionChannelSender(
+                    contactoResolver,
+                    plantillaRenderer,
+                    correoTransport,
+                    topeEnvios,
+                    testModeProps,
+                    meterRegistry
+            );
+            NotificacionOutboxDispatcher testModeDispatcher = new NotificacionOutboxDispatcher(
+                    outboxRepository,
+                    testModeSender,
+                    outboxProperties,
+                    meterRegistry,
+                    java.time.Clock.systemUTC()
+            );
+
+            outboxNotificacionAdapter.notificar(new Notificacion(
+                    "RETIRO_ESTUDIANTE_GRUPO",
+                    "Asunto respaldo",
+                    "Mensaje respaldo",
+                    List.of(
+                            new Notificacion.Destinatario("ESTUDIANTE", real1, null, null),
+                            new Notificacion.Destinatario("DOCENTE", real2, null, null)
+                    ),
+                    Map.of("grupo", "G-11", "estudiante", "Valeria", "notif002aIt", "true")
+            ));
+
+            testModeDispatcher.ejecutarCiclo();
+
+            Map<String, Object> fila = esperarFilaPorDestinatario(real1, "ENTREGADA", 10);
+            assertNotNull(fila);
+            assertEquals("ENTREGADA", fila.get("estado"));
+
+            // GreenMail recibe 2 copias (1 para qa1 y 1 para qa2 en BCC)
+            assertTrue(greenMail.waitForIncomingEmail(5000, 2));
+            assertNotNull(greenMail.getUserManager().getUserByEmail("qa1.ite11@prueba.test"),
+                    "El buzón de pruebas qa1 debe recibir el correo");
+            assertNotNull(greenMail.getUserManager().getUserByEmail("qa2.ite11@prueba.test"),
+                    "El buzón de pruebas qa2 debe recibir el correo");
+            org.junit.jupiter.api.Assertions.assertNull(
+                    greenMail.getUserManager().getUserByEmail("real1.ite11@uco.edu.co"),
+                    "El buzón del destinatario real 1 debe quedar vacío"
+            );
+            org.junit.jupiter.api.Assertions.assertNull(
+                    greenMail.getUserManager().getUserByEmail("real2.ite11@uco.edu.co"),
+                    "El buzón del destinatario real 2 debe quedar vacío"
+            );
+
+            MimeMessage msg = greenMail.getReceivedMessages()[0];
+            assertEquals("[PRUEBA] Retiro del grupo G-11", msg.getSubject());
+            String textoPlano = extraerParteTexto(msg, "text/plain");
+            String html = extraerParteTexto(msg, "text/html");
+            String avisoEsperado = "MODO DE PRUEBAS: este correo no se envió a los destinatarios reales. Destinatarios originales omitidos: 2.";
+            assertTrue(textoPlano.startsWith(avisoEsperado));
+            assertTrue(html.contains("<p>" + avisoEsperado + "</p>"));
+            assertFalse(textoPlano.contains("real1.ite11@uco.edu.co"));
+            assertFalse(textoPlano.contains("real2.ite11@uco.edu.co"));
+            assertFalse(html.contains("real1.ite11@uco.edu.co"));
+            assertFalse(html.contains("real2.ite11@uco.edu.co"));
+        } finally {
+            dispatcher.start();
         }
     }
 }

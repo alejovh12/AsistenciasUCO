@@ -1,5 +1,9 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.adapters.notification;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.channel.smtp.CorreoTransport;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.channel.smtp.SmtpNotificacionChannelSender;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.channel.smtp.TopeEnvios;
@@ -18,6 +22,7 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -127,5 +132,62 @@ class SmtpNotificationWiringTest {
                 "app.adapters.notification.provider=outbox",
                 "app.providers.outbox-notification.sender=desconocido"
         ).run(context -> assertThat(context).hasFailed());
+    }
+
+    @Test
+    @DisplayName("WI-S06: test-mode.enabled=true sin redirect-to valido -> no arranca; con redirect-to valido arranca y registra WARN sin las direcciones")
+    void WI_S06_test_mode_sin_redirect_to_valido_falla_y_con_redirect_to_valido_arranca_con_warn_sin_direcciones() {
+        // 1. Sin redirect-to -> falla al arrancar
+        runner.withPropertyValues(
+                "app.adapters.notification.provider=outbox",
+                "app.providers.outbox-notification.sender=smtp",
+                "app.providers.outbox-notification.dispatcher-enabled=false",
+                "app.providers.smtp-notification.host=smtp.uco.edu.co",
+                "app.providers.smtp-notification.port=587",
+                "app.providers.smtp-notification.from-address=notificaciones@uco.edu.co",
+                "app.providers.smtp-notification.test-mode.enabled=true",
+                "app.providers.smtp-notification.test-mode.redirect-to="
+        ).run(context -> assertThat(context).hasFailed());
+
+        // 2. Con direccion insegura en redirect-to -> falla al arrancar
+        runner.withPropertyValues(
+                "app.adapters.notification.provider=outbox",
+                "app.providers.outbox-notification.sender=smtp",
+                "app.providers.outbox-notification.dispatcher-enabled=false",
+                "app.providers.smtp-notification.host=smtp.uco.edu.co",
+                "app.providers.smtp-notification.port=587",
+                "app.providers.smtp-notification.from-address=notificaciones@uco.edu.co",
+                "app.providers.smtp-notification.test-mode.enabled=true",
+                "app.providers.smtp-notification.test-mode.redirect-to=<insegura@uco.edu.co>"
+        ).run(context -> assertThat(context).hasFailed());
+
+        // 3. Con redirect-to valido -> arranca y registra WARN unico sin mostrar las direcciones
+        final Logger logger = (Logger) LoggerFactory.getLogger(SmtpNotificacionChannelSender.class);
+        final ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            runner.withPropertyValues(
+                    "app.adapters.notification.provider=outbox",
+                    "app.providers.outbox-notification.sender=smtp",
+                    "app.providers.outbox-notification.dispatcher-enabled=false",
+                    "app.providers.smtp-notification.host=smtp.uco.edu.co",
+                    "app.providers.smtp-notification.port=587",
+                    "app.providers.smtp-notification.from-address=notificaciones@uco.edu.co",
+                    "app.providers.smtp-notification.test-mode.enabled=true",
+                    "app.providers.smtp-notification.test-mode.redirect-to=buzon.secreto1@prueba.test, buzon.secreto2@prueba.test"
+            ).run(context -> {
+                assertThat(context).hasNotFailed();
+                assertThat(context).hasSingleBean(NotificacionChannelSender.class);
+                assertThat(appender.list)
+                        .anyMatch(ev -> ev.getLevel() == Level.WARN
+                                && ev.getFormattedMessage().toLowerCase().contains("modo de pruebas de correo activo"));
+                assertThat(appender.list)
+                        .noneMatch(ev -> ev.getFormattedMessage().contains("buzon.secreto1@prueba.test")
+                                || ev.getFormattedMessage().contains("buzon.secreto2@prueba.test"));
+            });
+        } finally {
+            logger.detachAppender(appender);
+        }
     }
 }

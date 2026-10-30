@@ -73,6 +73,28 @@ class SmtpNotificacionChannelSenderTest {
         );
     }
 
+    private SmtpNotificationProperties crearPropsModoPrueba(final int maxBcc, final String redirectToCsv) {
+        return new SmtpNotificationProperties(
+                "smtp.uco.edu.co",
+                587,
+                "user",
+                "secret",
+                true,
+                false,
+                "notificaciones@uco.edu.co",
+                "Asistencia UCO",
+                Duration.ofSeconds(10),
+                Duration.ofSeconds(20),
+                maxBcc,
+                60,
+                500,
+                false,
+                "https://asistencia.uco.edu.co",
+                Duration.ofSeconds(60),
+                new SmtpNotificationProperties.TestMode(true, redirectToCsv)
+        );
+    }
+
     private SmtpNotificacionChannelSender crearSender(
             final SmtpNotificationProperties props,
             final TopeEnvios tope
@@ -395,8 +417,220 @@ class SmtpNotificacionChannelSenderTest {
     }
 
     @Test
-    @DisplayName("BE-S11: cobertura de ramas de sender, CorreoSaliente y JakartaMailCorreoTransport")
-    void BE_S11_cobertura_ramas_sender_y_jakarta_mail_transport() throws Exception {
+    @DisplayName("BE-S11: modo activo: el transporte recibe como BCC solo redirect-to; ninguna direccion original aparece en BCC, To, asunto, texto ni HTML")
+    void BE_S11_modo_activo_bcc_solo_redirect_to_sin_direcciones_originales() throws Exception {
+        final UUID u1 = UUID.randomUUID();
+        final UUID u2 = UUID.randomUUID();
+        final String real1 = "estudiante.real.1@uco.edu.co";
+        final String real2 = "docente.real.2@uco.edu.co";
+        when(contactoResolver.consultarContactos(any())).thenReturn(List.of(
+                new ContactoDestinatario(u1, real1, true),
+                new ContactoDestinatario(u2, real2, true)
+        ));
+        when(plantillaRepository.consultarActiva("RETIRO_ESTUDIANTE_GRUPO", "es")).thenReturn(Optional.empty());
+
+        final SmtpNotificationProperties props = crearPropsModoPrueba(50, "qa1@prueba.test, qa2@prueba.test");
+        final TopeEnvios tope = new TopeEnvios(60, 500, Clock.systemUTC(), meterRegistry);
+        final SmtpNotificacionChannelSender sender = crearSender(props, tope);
+
+        sender.enviar(notificacionRetiro(List.of(u1, u2)));
+
+        assertEquals(1, transport.enviados.size());
+        final CorreoSaliente enviado = transport.enviados.getFirst();
+        assertEquals("notificaciones@uco.edu.co", enviado.toAddress());
+        assertEquals(List.of("qa1@prueba.test", "qa2@prueba.test"), enviado.bccAddresses());
+        assertFalse(enviado.bccAddresses().contains(real1));
+        assertFalse(enviado.bccAddresses().contains(real2));
+        assertFalse(enviado.toAddress().contains(real1));
+        assertFalse(enviado.asunto().contains(real1));
+        assertFalse(enviado.textoPlano().contains(real1));
+        assertFalse(enviado.textoPlano().contains(real2));
+        assertFalse(enviado.html().contains(real1));
+        assertFalse(enviado.html().contains(real2));
+    }
+
+    @Test
+    @DisplayName("BE-S12: modo activo: el asunto empieza por '[PRUEBA] ' y no supera 200 caracteres ni contiene saltos de linea")
+    void BE_S12_modo_activo_asunto_prefijado_prueba_y_truncado_200_sin_saltos() throws Exception {
+        final UUID u1 = UUID.randomUUID();
+        when(contactoResolver.consultarContactos(any())).thenReturn(List.of(
+                new ContactoDestinatario(u1, "u1@uco.edu.co", true)
+        ));
+        final String grupoLargo = "G-" + "X".repeat(220) + "\r\nInyeccion";
+        when(plantillaRepository.consultarActiva("RETIRO_ESTUDIANTE_GRUPO", "es"))
+                .thenReturn(Optional.of(new PlantillaNotificacion(
+                        1,
+                        "Retiro del grupo {grupo}",
+                        "Cuerpo {estudiante} en {grupo}",
+                        List.of(
+                                new PlantillaNotificacion.Marcador("grupo", true),
+                                new PlantillaNotificacion.Marcador("estudiante", true)
+                        )
+                )));
+
+        final SmtpNotificacionChannelSender sender = crearSender(
+                crearPropsModoPrueba(50, "qa@prueba.test"),
+                new TopeEnvios(60, 500, Clock.systemUTC(), meterRegistry)
+        );
+
+        final NotificacionPersistida notif = new NotificacionPersistida(
+                UUID.randomUUID(),
+                "RETIRO_ESTUDIANTE_GRUPO",
+                "Asunto guardado",
+                "Mensaje guardado",
+                List.of(new DestinatarioRef("ESTUDIANTE", u1)),
+                Map.of("grupo", grupoLargo, "estudiante", "Ana"),
+                1,
+                Instant.now()
+        );
+        sender.enviar(notif);
+
+        assertEquals(1, transport.enviados.size());
+        final String asunto = transport.enviados.getFirst().asunto();
+        assertTrue(asunto.startsWith("[PRUEBA] Retiro del grupo "));
+        assertEquals(200, asunto.length());
+        assertFalse(asunto.contains("\r"));
+        assertFalse(asunto.contains("\n"));
+    }
+
+    @Test
+    @DisplayName("BE-S13: modo activo: el aviso indica el numero N de destinatarios originales omitidos y no contiene direcciones ni nombres")
+    void BE_S13_modo_activo_aviso_indica_n_omitidos_sin_direcciones_ni_nombres() throws Exception {
+        final UUID u1 = UUID.randomUUID();
+        final UUID u2 = UUID.randomUUID();
+        final UUID u3 = UUID.randomUUID();
+        when(contactoResolver.consultarContactos(any())).thenReturn(List.of(
+                new ContactoDestinatario(u1, "real1@uco.edu.co", true),
+                new ContactoDestinatario(u2, "real2@uco.edu.co", true),
+                new ContactoDestinatario(u3, "real3@uco.edu.co", true)
+        ));
+        when(plantillaRepository.consultarActiva("SOLICITUD_INGRESO_RESUELTA", "es")).thenReturn(Optional.empty());
+
+        final SmtpNotificacionChannelSender sender = crearSender(
+                crearPropsModoPrueba(50, "qa@prueba.test"),
+                new TopeEnvios(60, 500, Clock.systemUTC(), meterRegistry)
+        );
+
+        final NotificacionPersistida notif = new NotificacionPersistida(
+                UUID.randomUUID(),
+                "SOLICITUD_INGRESO_RESUELTA",
+                "Solicitud resuelta",
+                "Mensaje guardado",
+                List.of(
+                        new DestinatarioRef("ESTUDIANTE", u1),
+                        new DestinatarioRef("ESTUDIANTE", u2),
+                        new DestinatarioRef("DOCENTE", u3)
+                ),
+                Map.of("grupo", "G02 de Cálculo", "resultado", "aceptada"),
+                1,
+                Instant.now()
+        );
+        sender.enviar(notif);
+
+        final CorreoSaliente enviado = transport.enviados.getFirst();
+        final String avisoEsperado = "MODO DE PRUEBAS: este correo no se envió a los destinatarios reales. Destinatarios originales omitidos: 3.";
+        assertTrue(enviado.textoPlano().startsWith(avisoEsperado + "\n\n"));
+        assertTrue(enviado.html().contains("<p>" + avisoEsperado + "</p>"));
+        assertFalse(enviado.textoPlano().contains("real1@uco.edu.co"));
+        assertFalse(enviado.html().contains("real1@uco.edu.co"));
+    }
+
+    @Test
+    @DisplayName("BE-S14: modo activo: cada mensaje incrementa notification.email.redirected.total; con el modo apagado no se incrementa")
+    void BE_S14_modo_activo_incrementa_metrica_redirected_y_apagado_no() throws Exception {
+        final UUID u1 = UUID.randomUUID();
+        when(contactoResolver.consultarContactos(any())).thenReturn(List.of(
+                new ContactoDestinatario(u1, "u1@uco.edu.co", true)
+        ));
+        when(plantillaRepository.consultarActiva("RETIRO_ESTUDIANTE_GRUPO", "es")).thenReturn(Optional.empty());
+
+        // Modo apagado -> contador en 0
+        final SmtpNotificacionChannelSender senderNormal = crearSender(
+                crearProps(50, false),
+                new TopeEnvios(60, 500, Clock.systemUTC(), meterRegistry)
+        );
+        senderNormal.enviar(notificacionRetiro(List.of(u1)));
+        assertEquals(0.0, meterRegistry.counter("notification.email.redirected.total").count());
+
+        // Modo activo -> incrementa por cada mensaje redirigido
+        final SmtpNotificacionChannelSender senderPrueba = crearSender(
+                crearPropsModoPrueba(50, "qa@prueba.test"),
+                new TopeEnvios(60, 500, Clock.systemUTC(), meterRegistry)
+        );
+        senderPrueba.enviar(notificacionRetiro(List.of(u1)));
+        assertEquals(1.0, meterRegistry.counter("notification.email.redirected.total").count());
+    }
+
+    @Test
+    @DisplayName("BE-S15: modo apagado: sin prefijo ni aviso; comportamiento identico al de BE-S01")
+    void BE_S15_modo_apagado_sin_prefijo_ni_aviso_identico_a_be_s01() throws Exception {
+        final UUID u1 = UUID.randomUUID();
+        when(contactoResolver.consultarContactos(any())).thenReturn(List.of(
+                new ContactoDestinatario(u1, "u1@uco.edu.co", true)
+        ));
+        when(plantillaRepository.consultarActiva("RETIRO_ESTUDIANTE_GRUPO", "es")).thenReturn(Optional.empty());
+
+        final SmtpNotificacionChannelSender sender = crearSender(
+                crearProps(50, false),
+                new TopeEnvios(60, 500, Clock.systemUTC(), meterRegistry)
+        );
+        sender.enviar(notificacionRetiro(List.of(u1)));
+
+        final CorreoSaliente enviado = transport.enviados.getFirst();
+        assertEquals(List.of("u1@uco.edu.co"), enviado.bccAddresses());
+        assertFalse(enviado.asunto().startsWith("[PRUEBA]"));
+        assertFalse(enviado.textoPlano().contains("MODO DE PRUEBAS:"));
+        assertFalse(enviado.html().contains("MODO DE PRUEBAS:"));
+    }
+
+    @Test
+    @DisplayName("BE-S16: modo activo sin destinatarios validos -> NotificacionNoEntregableException y nada se envia a redirect-to")
+    void BE_S16_modo_activo_sin_destinatarios_validos_lanza_no_entregable_y_no_envia() {
+        final UUID u1 = UUID.randomUUID();
+        when(contactoResolver.consultarContactos(any())).thenReturn(List.of());
+
+        final SmtpNotificacionChannelSender sender = crearSender(
+                crearPropsModoPrueba(50, "qa1@prueba.test, qa2@prueba.test"),
+                new TopeEnvios(60, 500, Clock.systemUTC(), meterRegistry)
+        );
+
+        assertThrows(NotificacionNoEntregableException.class,
+                () -> sender.enviar(notificacionRetiro(List.of(u1))));
+        assertTrue(transport.enviados.isEmpty());
+        assertEquals(0.0, meterRegistry.counter("notification.email.redirected.total").count());
+    }
+
+    @Test
+    @DisplayName("BE-S17: modo activo con mas de max-bcc direcciones de redirect-to -> bloques; todas las direcciones de pruebas reciben el correo")
+    void BE_S17_modo_activo_mas_de_max_bcc_en_redirect_to_divide_en_bloques() throws Exception {
+        final UUID u1 = UUID.randomUUID();
+        when(contactoResolver.consultarContactos(any())).thenReturn(List.of(
+                new ContactoDestinatario(u1, "real@uco.edu.co", true)
+        ));
+        when(plantillaRepository.consultarActiva("RETIRO_ESTUDIANTE_GRUPO", "es")).thenReturn(Optional.empty());
+
+        // maxBcc = 2 y 5 direcciones en redirect-to -> 3 bloques (2 + 2 + 1)
+        final SmtpNotificationProperties props = crearPropsModoPrueba(
+                2,
+                "qa1@prueba.test, qa2@prueba.test, qa3@prueba.test, qa4@prueba.test, qa5@prueba.test"
+        );
+        final SmtpNotificacionChannelSender sender = crearSender(
+                props,
+                new TopeEnvios(60, 500, Clock.systemUTC(), meterRegistry)
+        );
+
+        sender.enviar(notificacionRetiro(List.of(u1)));
+
+        assertEquals(3, transport.enviados.size());
+        assertEquals(List.of("qa1@prueba.test", "qa2@prueba.test"), transport.enviados.get(0).bccAddresses());
+        assertEquals(List.of("qa3@prueba.test", "qa4@prueba.test"), transport.enviados.get(1).bccAddresses());
+        assertEquals(List.of("qa5@prueba.test"), transport.enviados.get(2).bccAddresses());
+        assertEquals(3.0, meterRegistry.counter("notification.email.redirected.total").count());
+    }
+
+    @Test
+    @DisplayName("BE-S18: cobertura de ramas de sender, CorreoSaliente y JakartaMailCorreoTransport")
+    void BE_S18_cobertura_ramas_sender_y_jakarta_mail_transport() throws Exception {
         // 1. CorreoSaliente ramas null en fromName y bccAddresses
         final CorreoSaliente cNulls = new CorreoSaliente(
                 "from@uco.edu.co", null, "to@uco.edu.co", null, "Asunto", "Texto", "<p>HTML</p>", "<id@uco>"
