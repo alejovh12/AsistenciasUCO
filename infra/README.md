@@ -3,12 +3,12 @@ status: active
 type: operational
 scope: backend
 owner: backend-team
-last-reviewed: 2026-10-26
+last-reviewed: 2026-10-29
 ---
 
 # Infraestructura local cotidiana
 
-Todo lo operativo vive en `infra/`. Cada carpeta es un proyecto Compose independiente con volumenes externos o
+La infraestructura del Backend vive en `infra/`; SQL Server se administra desde el repositorio DB de John. Cada carpeta es un proyecto Compose independiente con volumenes externos o
 nombrados que **se conservan**. El repositorio hermano `AsistenciasUCO-Infra` (CLI `infra.ps1`) se mantiene aparte y
 no se usa para publicar. Los secretos viven fuera de Git (`.env` por carpeta y `%USERPROFILE%\.asistencias-security-lab\lab.env`).
 
@@ -16,16 +16,33 @@ no se usa para publicar. Los secretos viven fuera de Git (`.env` por carpeta y `
 
 | Carpeta | Proyecto Compose | Servicios y puertos (solo 127.0.0.1) |
 |---|---|---|
-| `sqlserver/` | `asistencias-sqlserver` | SQL Server `sql_server_asistencias` 1433, base `gestionasistenciadb` (volumen externo `sql_server_asistencias_data`) |
+| Repositorio DB de John | `gestion-asistencia-db` | SQL Server `sql_server_asistencias` 1433, base `gestionasistenciadb` (volumen `sql_server_asistencias_data`) |
 | `security-baseline/` | `asistencias-security-lab` | Keycloak 19090, PDP 18080, PEP 18081, Redis, OPA, SurrealDB (Security Baseline 0.1.7) |
 | `files/` | `asistencias-files` | MinIO 9000, ClamAV 3310 |
 | `observability/` | `asistencias-uco-observability` | Grafana 3000, Loki 3100, Tempo 3200, Prometheus 9090, Alloy 4318 |
 | `keycloak/` | `asistencias-uco-security` | Keycloak **legacy** (alternativa explicita; no arranca por defecto) |
 
+## Rutas oficiales
+
+Solo existen tres copias de trabajo: Backend (`%USERPROFILE%\AsistenciasUCO\AsistenciasUCO`), Frontend
+(`%USERPROFILE%\OneDrive\Documentos\Front_Asistecias\AsistenciasUCO-Frontend`) y DB
+(`%USERPROFILE%\OneDrive\Documentos\AsisteciaUco_db\git\gestion-asistencia-db`). No se crean clones, worktrees,
+carpetas de cuarentena/laboratorio ni bases duplicadas; `scripts\start-local-stack.ps1` rechaza rutas que lo parezcan.
+
+## Seguridad: Security Baseline (predeterminado) y legacy (alternativa explicita)
+
+| Modo | Servicios | Backend | Frontend |
+|---|---|---|---|
+| `baseline` (predeterminado) | Keycloak 19090, PDP 18080, PEP 18081 (`infra/security-baseline`) | `APP_ADAPTERS_SECURITY_PROVIDER=baseline` (valor por defecto de `application.yml`) | `SECURITY_PROVIDER=baseline` |
+| `legacy` | Keycloak 8081 (`infra/keycloak`) | `-Provider legacy` | `SECURITY_PROVIDER=legacy` |
+
+Legacy nunca es un fallback automatico: se elige explicitamente con `-Provider legacy`. El stack integrado se arranca con
+`.\scripts\start-local-stack.ps1 [-Provider baseline|legacy]` (`-Check` solo diagnostica; `-Stop` detiene los procesos que inicio).
+
 ## Arrancar (orden: datos -> seguridad -> archivos -> backend -> frontend)
 
 ```powershell
-docker compose --env-file infra\sqlserver\.env -f infra\sqlserver\compose.yaml up -d
+docker start sql_server_asistencias
 docker compose --env-file "$env:USERPROFILE\.asistencias-security-lab\lab.env" -f infra\security-baseline\compose.yaml up -d
 docker compose --env-file infra\files\.env -f infra\files\compose.yaml up -d
 docker compose -f infra\observability\compose.yaml up -d   # opcional
@@ -53,15 +70,15 @@ curl.exe -s http://127.0.0.1:8080/actuator/health
 docker compose -f infra\observability\compose.yaml down
 docker compose --env-file infra\files\.env -f infra\files\compose.yaml down
 docker compose --env-file "$env:USERPROFILE\.asistencias-security-lab\lab.env" -f infra\security-baseline\compose.yaml down
-docker compose --env-file infra\sqlserver\.env -f infra\sqlserver\compose.yaml down
+docker stop sql_server_asistencias
 ```
 
 ## Recuperar
 
 - Contenedor caido: repetir el `up -d` correspondiente (los volumenes se reutilizan).
 - `minio-init` termina con codigo 0 (idempotente); relanzar con `up -d minio-init` si falta el bucket.
-- SQL Server: el compose **describe** el contenedor existente y exige el volumen externo; si el volumen no existe, `up`
-  falla en lugar de crear una base vacia.
+- SQL Server: el Compose oficial esta en el repositorio DB de John. No ejecutar `docker compose up`
+  sin `--no-recreate` mientras se conserva el contenedor original.
 - Pruebas que mutan estado (E2E de identidad, aprovisionamiento, perfiles) solo corren contra una base desechable
   (`asistencias-e2e-sqlserver`, 14333); `e2e_safety.py` bloquea `sql_server_asistencias`/1433.
 
