@@ -44,13 +44,19 @@ public final class RetirarSolicitudIngresoUseCaseImpl implements RetirarSolicitu
 
         port.retirarSolicitud(solicitudId, actorUsuarioId);
         try {
-            final List<DestinatarioSolicitudIngresoProjection> docentes = port.consultarDestinatarios(solicitudId, actorUsuarioId)
-                    .stream()
+            final List<DestinatarioSolicitudIngresoProjection> destinatarios =
+                    port.consultarDestinatarios(solicitudId, actorUsuarioId);
+            final List<DestinatarioSolicitudIngresoProjection> docentes = destinatarios.stream()
                     .filter(destinatario -> "DOCENTE".equals(destinatario.rol()))
                     .toList();
             if (docentes.isEmpty()) {
                 return;
             }
+            final String estudiante = destinatarios.stream()
+                    .filter(destinatario -> "ESTUDIANTE".equals(destinatario.rol()))
+                    .map(DestinatarioSolicitudIngresoProjection::nombreCompleto)
+                    .findFirst()
+                    .orElse("Un estudiante");
             final DestinatarioSolicitudIngresoProjection contexto = docentes.getFirst();
             final String grupo = contexto.nombreGrupo() + " de " + contexto.nombreAsignatura();
             notificacionPort.notificar(new Notificacion(
@@ -61,7 +67,9 @@ public final class RetirarSolicitudIngresoUseCaseImpl implements RetirarSolicitu
                             .map(destinatario -> new Notificacion.Destinatario(destinatario.rol(), destinatario.idUsuario(),
                                     destinatario.nombreCompleto(), destinatario.correo()))
                             .toList(),
-                    Map.of("idSolicitud", solicitudId.toString())));
+                    Map.of("idSolicitud", solicitudId.toString(),
+                            "grupo", grupo,
+                            "estudiante", estudiante)));
         } catch (final RuntimeException exception) {
             LOGGER.warn("No fue posible enviar el aviso de retiro de la solicitud {}: {}", solicitudId,
                     exception.getClass().getSimpleName());

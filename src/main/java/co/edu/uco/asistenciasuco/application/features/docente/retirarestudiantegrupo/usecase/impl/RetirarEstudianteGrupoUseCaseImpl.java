@@ -85,6 +85,8 @@ public final class RetirarEstudianteGrupoUseCaseImpl implements RetirarEstudiant
                         .toList(),
                 Map.of("idGrupo", domain.grupoId().toString(),
                         "idEstudiante", domain.estudianteId().toString(),
-                        "motivo", domain.motivo()));
+                        "motivo", domain.motivo(),
+                        "grupo", grupo,
+                        "estudiante", estudiante));
     }
 }

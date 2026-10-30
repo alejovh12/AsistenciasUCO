@@ -68,9 +68,16 @@ public final class ResolverSolicitudIngresoUseCaseImpl implements ResolverSolici
                 case "EN_ESPERA" -> "El grupo " + grupo + " no tiene cupo: tu solicitud quedo en lista de espera.";
                 default -> "Tu solicitud de ingreso al grupo " + grupo + " fue rechazada. Motivo: " + domain.motivo();
             };
+            final String resultado = switch (estado) {
+                case "ACEPTADA" -> "aceptada";
+                case "EN_ESPERA" -> "puesta en espera";
+                default -> "rechazada";
+            };
             final Map<String, String> datos = new HashMap<>();
             datos.put("idSolicitud", domain.solicitudId().toString());
             datos.put("estado", estado);
+            datos.put("grupo", grupo);
+            datos.put("resultado", resultado);
             if (domain.motivo() != null) {
                 datos.put("motivo", domain.motivo());
             }
