@@ -90,6 +90,8 @@ final class DbFailureClassifier {
             case "ERR_UNICIDAD_DOCUMENTO" -> UsuarioErrorCode.ERR_UNICIDAD_DOCUMENTO;
             case "USU_002" -> UsuarioErrorCode.ERR_USUARIO_INACTIVO;
             case "HOR_001" -> GrupoErrorCode.ERR_CRUCE_HORARIO_ESTUDIANTE;
+            // HOR_002: el docente ya tiene otro grupo en la misma franja del periodo (usp_crear_grupo / usp_actualizar_grupo).
+            case "HOR_002" -> GrupoErrorCode.ERR_CRUCE_HORARIO_DOCENTE;
             case "SES_001", "PROG_001", "PER_001", "FAC_001", "DEC_001" -> CommonErrorCode.RESOURCE_NOT_FOUND;
             // Catalogos administrativos (HU154/HU151): codigos propios con mensaje institucional.
             case "TPR_001" -> CatalogoErrorCode.TPR_001;
