@@ -575,4 +575,36 @@ class NotificacionOutboxDispatcherTest {
             co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext.clear();
         }
     }
+
+    @Test
+    @DisplayName("BE-K04: disponible()=false en el sender -> el despachador no reserva filas ni incrementa intentos")
+    void BE_K04_sender_no_disponible_no_reserva_filas() {
+        when(sender.disponible()).thenReturn(false);
+
+        dispatcher = new NotificacionOutboxDispatcher(repository, sender, properties, meterRegistry, Clock.systemUTC());
+        dispatcher.ejecutarCiclo();
+
+        verify(repository, never()).reservar(anyInt(), any(Duration.class), any());
+        verify(sender, never()).enviar(any());
+    }
+
+    @Test
+    @DisplayName("BE-K05: sender log (disponible() por defecto) -> comportamiento identico a NOTIF-001")
+    void BE_K05_sender_log_disponible_por_defecto() {
+        final LogNotificacionChannelSender logSender = new LogNotificacionChannelSender();
+        assertTrue(logSender.disponible());
+
+        final UUID id = UUID.randomUUID();
+        final NotificacionReservada reservada = new NotificacionReservada(
+                id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, Instant.now(), null, null, null
+        );
+        when(repository.reservar(anyInt(), any(Duration.class), any()))
+                .thenReturn(List.of(reservada))
+                .thenReturn(List.of());
+
+        dispatcher = new NotificacionOutboxDispatcher(repository, logSender, properties, meterRegistry, Clock.systemUTC());
+        dispatcher.ejecutarCiclo();
+
+        verify(repository).marcarEntregada(eq(id), eq("test-instance-1"));
+    }
 }

@@ -1,0 +1,629 @@
+package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.channel.smtp;
+
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notificacion;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.outbox.NotificacionOutboxDispatcher;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.outbox.OutboxNotificacionAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.icegreen.greenmail.util.GreenMail;
+import com.icegreen.greenmail.util.ServerSetup;
+import jakarta.mail.BodyPart;
+import jakarta.mail.Multipart;
+import jakarta.mail.internet.MimeMessage;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * Pruebas de integración reales contra SQL Server + GreenMail (TEST_PLAN §4, IT-E01..IT-E10).
+ */
+@Tag("integration")
+@SpringBootTest(properties = {
+        "app.adapters.notification.provider=outbox",
+        "app.providers.outbox-notification.sender=smtp",
+        "app.providers.outbox-notification.sweeper-interval=1s",
+        "app.providers.outbox-notification.backoff-base=1s",
+        "app.providers.outbox-notification.lease=5s",
+        "app.providers.outbox-notification.max-attempts=3",
+        "app.providers.outbox-notification.retention-days=30",
+        "app.providers.smtp-notification.host=127.0.0.1",
+        "app.providers.smtp-notification.from-address=notificaciones@uco.edu.co",
+        "app.providers.smtp-notification.from-name=Sistema de Asistencias UCO",
+        "app.providers.smtp-notification.starttls=false",
+        "app.providers.smtp-notification.ssl=false",
+        "app.providers.smtp-notification.require-confirmed-email=false",
+        "app.providers.smtp-notification.default-locale=es",
+        "app.providers.smtp-notification.template-cache-ttl=1s",
+        "app.providers.smtp-notification.rate-per-minute=60",
+        "app.providers.smtp-notification.rate-per-day=500",
+        "app.providers.smtp-notification.max-bcc=50",
+        "app.providers.smtp-notification.platform-url=https://asistencias.uco.edu.co"
+})
+@MockitoBean(types = JwtDecoder.class)
+@Import(NotificacionSmtpGreenMailIT.TestJacksonConfig.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+class NotificacionSmtpGreenMailIT {
+
+    private static final int SMTP_PORT = allocateFreePort();
+    private static GreenMail greenMail;
+    private static final AtomicInteger DOC_SEQ = new AtomicInteger(198500000);
+
+    @DynamicPropertySource
+    static void registerDynamicProperties(DynamicPropertyRegistry registry) {
+        registry.add("app.providers.smtp-notification.port", () -> SMTP_PORT);
+    }
+
+    private static int allocateFreePort() {
+        try (ServerSocket socket = new ServerSocket(0)) {
+            socket.setReuseAddress(true);
+            return socket.getLocalPort();
+        } catch (IOException e) {
+            throw new IllegalStateException("No se pudo reservar puerto libre para GreenMail", e);
+        }
+    }
+
+    @TestConfiguration
+    static class TestJacksonConfig {
+        @Bean
+        public ObjectMapper objectMapper() {
+            return new ObjectMapper();
+        }
+    }
+
+    @Autowired
+    private OutboxNotificacionAdapter outboxNotificacionAdapter;
+
+    @Autowired
+    private NotificacionOutboxDispatcher dispatcher;
+
+    @Autowired
+    private TopeEnvios topeEnvios;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    private final Set<UUID> trackedNotifIds = ConcurrentHashMap.newKeySet();
+    private final Set<UUID> trackedUserIds = ConcurrentHashMap.newKeySet();
+    private final Set<UUID> trackedTemplateIds = ConcurrentHashMap.newKeySet();
+
+    private ListAppender<ILoggingEvent> logAppender;
+    private Logger smtpLogger;
+
+    @BeforeAll
+    void startGreenMail() {
+        ServerSetup setup = new ServerSetup(SMTP_PORT, "127.0.0.1", ServerSetup.PROTOCOL_SMTP);
+        setup.setServerStartupTimeout(5000L);
+        greenMail = new GreenMail(setup);
+        greenMail.start();
+    }
+
+    @AfterAll
+    void stopGreenMail() {
+        limpiarTodo();
+        if (greenMail != null) {
+            greenMail.stop();
+        }
+    }
+
+    @BeforeEach
+    void setUp() throws Exception {
+        CorrelationIdContext.set(UUID.randomUUID().toString());
+        asegurarGreenMailActivo();
+        greenMail.purgeEmailFromAllMailboxes();
+        topeEnvios.reiniciarVentanas();
+
+        smtpLogger = (Logger) LoggerFactory.getLogger(SmtpNotificacionChannelSender.class);
+        logAppender = new ListAppender<>();
+        logAppender.start();
+        smtpLogger.addAppender(logAppender);
+    }
+
+    @AfterEach
+    void tearDown() {
+        if (smtpLogger != null && logAppender != null) {
+            smtpLogger.detachAppender(logAppender);
+            logAppender.stop();
+        }
+        CorrelationIdContext.clear();
+        topeEnvios.reiniciarVentanas();
+        limpiarTodo();
+    }
+
+    private void asegurarGreenMailActivo() {
+        try {
+            greenMail.getReceivedMessages();
+        } catch (RuntimeException ex) {
+            ServerSetup setup = new ServerSetup(SMTP_PORT, "127.0.0.1", ServerSetup.PROTOCOL_SMTP);
+            setup.setServerStartupTimeout(5000L);
+            greenMail = new GreenMail(setup);
+            greenMail.start();
+        }
+    }
+
+    private void limpiarTodo() {
+        restaurarPlantillasSemilla();
+        for (UUID id : trackedNotifIds) {
+            jdbcTemplate.update("DELETE FROM dbo.NotificacionSaliente WHERE id = ?", id);
+        }
+        trackedNotifIds.clear();
+        jdbcTemplate.update("DELETE FROM dbo.NotificacionSaliente WHERE datos LIKE '%\"notif002aIt\":\"true\"%'");
+
+        for (UUID userId : trackedUserIds) {
+            jdbcTemplate.update("DELETE FROM dbo.Usuario WHERE id = ?", userId);
+        }
+        trackedUserIds.clear();
+    }
+
+    private void restaurarPlantillasSemilla() {
+        for (UUID tplId : trackedTemplateIds) {
+            jdbcTemplate.update("DELETE FROM dbo.PlantillaNotificacion WHERE id = ?", tplId);
+        }
+        trackedTemplateIds.clear();
+        jdbcTemplate.update(
+                "UPDATE dbo.PlantillaNotificacion SET activa = 1 " +
+                        "WHERE idioma = 'es' AND version = 1 AND tipo IN (" +
+                        "'RETIRO_ESTUDIANTE_GRUPO','SOLICITUD_INGRESO_REGISTRADA'," +
+                        "'SOLICITUD_INGRESO_RESUELTA','SOLICITUD_INGRESO_RETIRADA')"
+        );
+    }
+
+    private UUID crearUsuarioPrueba(String correo, boolean confirmado, boolean habilitado) {
+        UUID userId = UUID.randomUUID();
+        UUID idTipoDoc = jdbcTemplate.queryForObject(
+                "SELECT TOP 1 id FROM dbo.TipoIdentificacion",
+                UUID.class
+        );
+        int numDoc = DOC_SEQ.incrementAndGet();
+        jdbcTemplate.update(
+                "INSERT INTO dbo.Usuario (" +
+                        "id, tipoIdIdentificacion, numeroIdentificacion, primerApellido, segundoApellido, " +
+                        "primerNombre, segundoNombre, correo, correoConfirmado, estado, [password]" +
+                        ") VALUES (?, ?, ?, N'TestNotif', N'Uco', N'Usuario', N'', ?, ?, ?, N'HashTest')",
+                userId, idTipoDoc, numDoc, correo, confirmado ? 1 : 0, habilitado ? 1 : 0
+        );
+        trackedUserIds.add(userId);
+        return userId;
+    }
+
+    private Map<String, Object> esperarFilaPorDestinatario(UUID destId, String estadoEsperado, int maxSegundos)
+            throws InterruptedException {
+        String patron = "%" + destId + "%";
+        Map<String, Object> ultima = null;
+        for (int i = 0; i < maxSegundos * 4; i++) {
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                    "SELECT n.id, n.intentos, n.entregadoEn, n.codigoError, n.detalleError, e.codigo AS estado " +
+                            "FROM dbo.NotificacionSaliente n " +
+                            "JOIN dbo.EstadoNotificacion e ON n.idEstado = e.id " +
+                            "WHERE n.destinatarios LIKE ?",
+                    patron
+            );
+            if (!rows.isEmpty()) {
+                ultima = rows.get(0);
+                Object idObj = ultima.get("id");
+                UUID id = idObj instanceof UUID u ? u : UUID.fromString(idObj.toString());
+                trackedNotifIds.add(id);
+                if (estadoEsperado.equals(ultima.get("estado"))) {
+                    return ultima;
+                }
+            }
+            Thread.sleep(250);
+        }
+        return ultima;
+    }
+
+    private Multipart extraerMultipartAlternative(MimeMessage message) throws Exception {
+        Object content = message.getContent();
+        assertTrue(content instanceof Multipart, "El contenido del MimeMessage debe ser Multipart");
+        Multipart top = (Multipart) content;
+        for (int i = 0; i < top.getCount(); i++) {
+            BodyPart part = top.getBodyPart(i);
+            Object subContent = part.getContent();
+            if (subContent instanceof Multipart subMulti) {
+                return subMulti;
+            }
+        }
+        return top;
+    }
+
+    private String extraerParteTexto(MimeMessage message, String mimePrefix) throws Exception {
+        Multipart mp = extraerMultipartAlternative(message);
+        for (int i = 0; i < mp.getCount(); i++) {
+            BodyPart part = mp.getBodyPart(i);
+            if (part.getContentType().toLowerCase().startsWith(mimePrefix.toLowerCase())) {
+                return part.getContent().toString();
+            }
+        }
+        return "";
+    }
+
+    @Test
+    @Order(1)
+    @DisplayName("IT-E01: RETIRO_ESTUDIANTE_GRUPO registrado en outbox -> despachado -> GreenMail recibe 1 correo con plantilla de BD")
+    void ITE01_retiro_estudiante_grupo_despachado_en_greenmail() throws Exception {
+        UUID destId = crearUsuarioPrueba("est.ite01@uco.edu.co", true, true);
+        Notificacion notificacion = new Notificacion(
+                "RETIRO_ESTUDIANTE_GRUPO",
+                "Asunto respaldo",
+                "Mensaje respaldo",
+                List.of(new Notificacion.Destinatario("ESTUDIANTE", destId, null, null)),
+                Map.of(
+                        "grupo", "ISW-101 (Grupo 01)",
+                        "estudiante", "Ana Gómez",
+                        "motivo", "Inasistencia reiterada",
+                        "notif002aIt", "true"
+                )
+        );
+
+        outboxNotificacionAdapter.notificar(notificacion);
+        dispatcher.signal();
+
+        Map<String, Object> fila = esperarFilaPorDestinatario(destId, "ENTREGADA", 10);
+        assertNotNull(fila);
+        assertEquals("ENTREGADA", fila.get("estado"));
+
+        assertTrue(greenMail.waitForIncomingEmail(5000, 1));
+        MimeMessage[] messages = greenMail.getReceivedMessages();
+        assertTrue(messages.length >= 1);
+        MimeMessage msg = messages[0];
+        assertEquals("Retiro del grupo ISW-101 (Grupo 01)", msg.getSubject());
+        String textoPlano = extraerParteTexto(msg, "text/plain");
+        assertTrue(textoPlano.contains("Se registró el retiro de Ana Gómez del grupo ISW-101 (Grupo 01)."));
+        assertFalse(textoPlano.contains("Inasistencia reiterada"), "El motivo opcional no está en la plantilla semilla v1");
+    }
+
+    @Test
+    @Order(2)
+    @DisplayName("IT-E02: Multipart text/plain y text/html con layout fijo y valores escapados")
+    void ITE02_multipart_texto_y_html_con_layout_y_escape() throws Exception {
+        UUID destId = crearUsuarioPrueba("est.ite02@uco.edu.co", true, true);
+        Notificacion notificacion = new Notificacion(
+                "RETIRO_ESTUDIANTE_GRUPO",
+                "Asunto respaldo",
+                "Mensaje respaldo",
+                List.of(new Notificacion.Destinatario("ESTUDIANTE", destId, null, null)),
+                Map.of(
+                        "grupo", "ISW-102 <G1>",
+                        "estudiante", "Ana <script>alert(1)</script> & Co",
+                        "notif002aIt", "true"
+                )
+        );
+
+        outboxNotificacionAdapter.notificar(notificacion);
+        dispatcher.signal();
+
+        Map<String, Object> fila = esperarFilaPorDestinatario(destId, "ENTREGADA", 10);
+        assertNotNull(fila);
+        assertEquals("ENTREGADA", fila.get("estado"));
+
+        assertTrue(greenMail.waitForIncomingEmail(5000, 1));
+        MimeMessage msg = greenMail.getReceivedMessages()[0];
+        String textoPlano = extraerParteTexto(msg, "text/plain");
+        String html = extraerParteTexto(msg, "text/html");
+
+        assertTrue(textoPlano.contains("Ana <script>alert(1)</script> & Co"));
+        assertTrue(html.contains("<!DOCTYPE html>"));
+        assertTrue(html.contains("Sistema de Asistencias UCO"));
+        assertTrue(html.contains("&lt;script&gt;alert(1)&lt;/script&gt;"));
+        assertFalse(html.contains("<script>alert(1)</script>"));
+        assertTrue(html.contains("https://asistencias.uco.edu.co"));
+    }
+
+    @Test
+    @Order(3)
+    @DisplayName("IT-E03: Cambiar plantilla activa (v2) -> siguiente correo usa el contenido nuevo tras TTL de caché")
+    void ITE03_cambiar_plantilla_activa_usa_contenido_nuevo_tras_ttl() throws Exception {
+        UUID destId1 = crearUsuarioPrueba("est1.ite03@uco.edu.co", true, true);
+        UUID destId2 = crearUsuarioPrueba("est2.ite03@uco.edu.co", true, true);
+
+        // 1. Calentar caché con v1
+        outboxNotificacionAdapter.notificar(new Notificacion(
+                "RETIRO_ESTUDIANTE_GRUPO",
+                "Asunto respaldo",
+                "Mensaje respaldo",
+                List.of(new Notificacion.Destinatario("ESTUDIANTE", destId1, null, null)),
+                Map.of("grupo", "G-V1", "estudiante", "Pedro", "notif002aIt", "true")
+        ));
+        dispatcher.signal();
+        assertEquals("ENTREGADA", esperarFilaPorDestinatario(destId1, "ENTREGADA", 10).get("estado"));
+        greenMail.purgeEmailFromAllMailboxes();
+
+        // 2. Desactivar v1 e insertar v2 activa
+        UUID idV2 = UUID.randomUUID();
+        trackedTemplateIds.add(idV2);
+        jdbcTemplate.update(
+                "UPDATE dbo.PlantillaNotificacion SET activa = 0 " +
+                        "WHERE tipo = 'RETIRO_ESTUDIANTE_GRUPO' AND idioma = 'es' AND version = 1"
+        );
+        jdbcTemplate.update(
+                "INSERT INTO dbo.PlantillaNotificacion (id, tipo, idioma, version, asunto, cuerpo, activa, creadoPor) " +
+                        "VALUES (?, 'RETIRO_ESTUDIANTE_GRUPO', 'es', 2, N'[V2] Retiro en {grupo}', N'Plantilla V2 para {estudiante} en {grupo}.', 1, NULL)",
+                idV2
+        );
+
+        // Esperar TTL de caché (1s configurado en @SpringBootTest)
+        Thread.sleep(1300);
+
+        outboxNotificacionAdapter.notificar(new Notificacion(
+                "RETIRO_ESTUDIANTE_GRUPO",
+                "Asunto respaldo",
+                "Mensaje respaldo",
+                List.of(new Notificacion.Destinatario("ESTUDIANTE", destId2, null, null)),
+                Map.of("grupo", "G-V2", "estudiante", "Lucía", "notif002aIt", "true")
+        ));
+        dispatcher.signal();
+
+        assertEquals("ENTREGADA", esperarFilaPorDestinatario(destId2, "ENTREGADA", 10).get("estado"));
+        assertTrue(greenMail.waitForIncomingEmail(5000, 1));
+        MimeMessage msg = greenMail.getReceivedMessages()[0];
+        assertEquals("[V2] Retiro en G-V2", msg.getSubject());
+        assertTrue(extraerParteTexto(msg, "text/plain").contains("Plantilla V2 para Lucía en G-V2."));
+    }
+
+    @Test
+    @Order(4)
+    @DisplayName("IT-E04: Sin plantilla activa en BD -> se envía con el respaldo por defecto del classpath")
+    void ITE04_sin_plantilla_activa_usa_respaldo_por_defecto() throws Exception {
+        UUID destId = crearUsuarioPrueba("est.ite04@uco.edu.co", true, true);
+
+        jdbcTemplate.update(
+                "UPDATE dbo.PlantillaNotificacion SET activa = 0 " +
+                        "WHERE tipo = 'RETIRO_ESTUDIANTE_GRUPO' AND idioma = 'es' AND version = 1"
+        );
+        Thread.sleep(1300);
+
+        outboxNotificacionAdapter.notificar(new Notificacion(
+                "RETIRO_ESTUDIANTE_GRUPO",
+                "Asunto almacenado ignorado",
+                "Mensaje almacenado ignorado",
+                List.of(new Notificacion.Destinatario("ESTUDIANTE", destId, null, null)),
+                Map.of("grupo", "G-DEFAULT", "estudiante", "Carlos", "notif002aIt", "true")
+        ));
+        dispatcher.signal();
+
+        assertEquals("ENTREGADA", esperarFilaPorDestinatario(destId, "ENTREGADA", 10).get("estado"));
+        assertTrue(greenMail.waitForIncomingEmail(5000, 1));
+        MimeMessage msg = greenMail.getReceivedMessages()[0];
+        assertEquals("Retiro del grupo G-DEFAULT", msg.getSubject());
+        assertTrue(extraerParteTexto(msg, "text/plain").contains("Se registró el retiro de Carlos del grupo G-DEFAULT."));
+    }
+
+    @Test
+    @Order(5)
+    @DisplayName("IT-E05: Usuario destinatario inhabilitado -> omitido; el usuario activo recibe el correo")
+    void ITE05_usuario_inhabilitado_omitido_y_activo_recibe() throws Exception {
+        UUID uInactivo = crearUsuarioPrueba("inactivo.ite05@uco.edu.co", true, false);
+        UUID uActivo = crearUsuarioPrueba("activo.ite05@uco.edu.co", true, true);
+
+        outboxNotificacionAdapter.notificar(new Notificacion(
+                "RETIRO_ESTUDIANTE_GRUPO",
+                "Asunto",
+                "Mensaje",
+                List.of(
+                        new Notificacion.Destinatario("ESTUDIANTE", uInactivo, null, null),
+                        new Notificacion.Destinatario("DOCENTE", uActivo, null, null)
+                ),
+                Map.of("grupo", "G-05", "estudiante", "Mario", "notif002aIt", "true")
+        ));
+        dispatcher.signal();
+
+        assertEquals("ENTREGADA", esperarFilaPorDestinatario(uActivo, "ENTREGADA", 10).get("estado"));
+        assertTrue(greenMail.waitForIncomingEmail(5000, 1));
+        MimeMessage[] messages = greenMail.getReceivedMessages();
+        // GreenMail entrega 1 copia por cada RCPT TO (1 BCC activo = 1 mensaje recibido)
+        assertEquals(1, messages.length);
+    }
+
+    @Test
+    @Order(6)
+    @DisplayName("IT-E06: Ningún destinatario con correo activo -> fila FALLIDA_DEFINITIVA sin reintentos (intentos=1)")
+    void ITE06_ningun_destinatario_con_correo_marca_fallida_definitiva() throws Exception {
+        UUID uInactivo = crearUsuarioPrueba("inactivo.ite06@uco.edu.co", true, false);
+
+        outboxNotificacionAdapter.notificar(new Notificacion(
+                "RETIRO_ESTUDIANTE_GRUPO",
+                "Asunto",
+                "Mensaje",
+                List.of(new Notificacion.Destinatario("ESTUDIANTE", uInactivo, null, null)),
+                Map.of("grupo", "G-06", "estudiante", "Nadie", "notif002aIt", "true")
+        ));
+        dispatcher.signal();
+
+        Map<String, Object> fila = esperarFilaPorDestinatario(uInactivo, "FALLIDA_DEFINITIVA", 10);
+        assertNotNull(fila);
+        assertEquals("FALLIDA_DEFINITIVA", fila.get("estado"));
+        assertEquals(1, ((Number) fila.get("intentos")).intValue());
+        assertEquals(0, greenMail.getReceivedMessages().length);
+    }
+
+    @Test
+    @Order(7)
+    @DisplayName("IT-E07: SMTP caído -> reintentos con backoff -> recupera al volver el servidor; fila ENTREGADA")
+    void ITE07_smtp_caido_reintenta_y_recupera_al_volver() throws Exception {
+        UUID destId = crearUsuarioPrueba("est.ite07@uco.edu.co", true, true);
+
+        greenMail.stop();
+        try {
+            outboxNotificacionAdapter.notificar(new Notificacion(
+                    "RETIRO_ESTUDIANTE_GRUPO",
+                    "Asunto",
+                    "Mensaje",
+                    List.of(new Notificacion.Destinatario("ESTUDIANTE", destId, null, null)),
+                    Map.of("grupo", "G-07", "estudiante", "Elena", "notif002aIt", "true")
+            ));
+            dispatcher.signal();
+
+            // Esperar a que falle el primer intento y quede PENDIENTE con intentos >= 1
+            for (int i = 0; i < 20; i++) {
+                Map<String, Object> f = esperarFilaPorDestinatario(destId, "PENDIENTE", 1);
+                if (f != null && ((Number) f.get("intentos")).intValue() >= 1) {
+                    break;
+                }
+                Thread.sleep(200);
+            }
+        } finally {
+            asegurarGreenMailActivo();
+        }
+
+        dispatcher.signal();
+        Map<String, Object> filaFinal = esperarFilaPorDestinatario(destId, "ENTREGADA", 12);
+        assertNotNull(filaFinal);
+        assertEquals("ENTREGADA", filaFinal.get("estado"));
+        assertTrue(((Number) filaFinal.get("intentos")).intValue() >= 2);
+        assertTrue(greenMail.waitForIncomingEmail(5000, 1));
+    }
+
+    @Test
+    @Order(8)
+    @DisplayName("IT-E08: Tope de envíos agotado -> filas quedan PENDIENTE con intentos=0; se despachan al liberarse cupo")
+    void ITE08_tope_envios_agotado_conserva_pendiente_sin_intentos_y_despacha_al_liberar() throws Exception {
+        UUID destId = crearUsuarioPrueba("est.ite08@uco.edu.co", true, true);
+
+        // Agotar el tope por minuto (60 configurados)
+        for (int i = 0; i < 60; i++) {
+            assertTrue(topeEnvios.intentarConsumir());
+        }
+        assertFalse(topeEnvios.disponible());
+
+        outboxNotificacionAdapter.notificar(new Notificacion(
+                "RETIRO_ESTUDIANTE_GRUPO",
+                "Asunto",
+                "Mensaje",
+                List.of(new Notificacion.Destinatario("ESTUDIANTE", destId, null, null)),
+                Map.of("grupo", "G-08", "estudiante", "Tomás", "notif002aIt", "true")
+        ));
+        dispatcher.signal();
+        Thread.sleep(1200);
+
+        Map<String, Object> enEspera = esperarFilaPorDestinatario(destId, "PENDIENTE", 2);
+        assertNotNull(enEspera);
+        assertEquals("PENDIENTE", enEspera.get("estado"));
+        assertEquals(0, ((Number) enEspera.get("intentos")).intValue());
+        assertEquals(0, greenMail.getReceivedMessages().length);
+
+        // Liberar cupo y despachar
+        topeEnvios.reiniciarVentanas();
+        dispatcher.signal();
+
+        Map<String, Object> entregada = esperarFilaPorDestinatario(destId, "ENTREGADA", 10);
+        assertNotNull(entregada);
+        assertEquals("ENTREGADA", entregada.get("estado"));
+        assertEquals(1, ((Number) entregada.get("intentos")).intValue());
+        assertTrue(greenMail.waitForIncomingEmail(5000, 1));
+    }
+
+    @Test
+    @Order(9)
+    @DisplayName("IT-E09: Los 4 tipos producen correo legible y distinguible")
+    void ITE09_los_4_tipos_producen_correo_legible_y_distinguible() throws Exception {
+        UUID d1 = crearUsuarioPrueba("d1.ite09@uco.edu.co", true, true);
+        UUID d2 = crearUsuarioPrueba("d2.ite09@uco.edu.co", true, true);
+        UUID d3 = crearUsuarioPrueba("d3.ite09@uco.edu.co", true, true);
+        UUID d4 = crearUsuarioPrueba("d4.ite09@uco.edu.co", true, true);
+
+        outboxNotificacionAdapter.notificar(new Notificacion(
+                "RETIRO_ESTUDIANTE_GRUPO", "A1", "M1",
+                List.of(new Notificacion.Destinatario("ESTUDIANTE", d1, null, null)),
+                Map.of("grupo", "G-901", "estudiante", "Est Uno", "notif002aIt", "true")
+        ));
+        outboxNotificacionAdapter.notificar(new Notificacion(
+                "SOLICITUD_INGRESO_REGISTRADA", "A2", "M2",
+                List.of(new Notificacion.Destinatario("DOCENTE", d2, null, null)),
+                Map.of("grupo", "G-902", "estudiante", "Est Dos", "notif002aIt", "true")
+        ));
+        outboxNotificacionAdapter.notificar(new Notificacion(
+                "SOLICITUD_INGRESO_RESUELTA", "A3", "M3",
+                List.of(new Notificacion.Destinatario("ESTUDIANTE", d3, null, null)),
+                Map.of("grupo", "G-903", "resultado", "aprobada", "notif002aIt", "true")
+        ));
+        outboxNotificacionAdapter.notificar(new Notificacion(
+                "SOLICITUD_INGRESO_RETIRADA", "A4", "M4",
+                List.of(new Notificacion.Destinatario("DOCENTE", d4, null, null)),
+                Map.of("grupo", "G-904", "estudiante", "Est Cuatro", "notif002aIt", "true")
+        ));
+        dispatcher.signal();
+
+        assertEquals("ENTREGADA", esperarFilaPorDestinatario(d1, "ENTREGADA", 10).get("estado"));
+        assertEquals("ENTREGADA", esperarFilaPorDestinatario(d2, "ENTREGADA", 10).get("estado"));
+        assertEquals("ENTREGADA", esperarFilaPorDestinatario(d3, "ENTREGADA", 10).get("estado"));
+        assertEquals("ENTREGADA", esperarFilaPorDestinatario(d4, "ENTREGADA", 10).get("estado"));
+
+        assertTrue(greenMail.waitForIncomingEmail(5000, 4));
+        List<String> subjects = java.util.Arrays.stream(greenMail.getReceivedMessages())
+                .map(m -> {
+                    try {
+                        return m.getSubject();
+                    } catch (Exception e) {
+                        return "";
+                    }
+                })
+                .toList();
+
+        assertTrue(subjects.contains("Retiro del grupo G-901"));
+        assertTrue(subjects.contains("Nueva solicitud de ingreso al grupo G-902"));
+        assertTrue(subjects.contains("Respuesta a tu solicitud de ingreso al grupo G-903"));
+        assertTrue(subjects.contains("Solicitud de ingreso retirada del grupo G-904"));
+    }
+
+    @Test
+    @Order(10)
+    @DisplayName("IT-E10: Ningún log del sender contiene direcciones de correo ni cuerpo renderizado")
+    void ITE10_ningun_log_contiene_correos_ni_cuerpo() throws Exception {
+        String correoSecreto = "privacidad.ite10.unico@uco.edu.co";
+        String cuerpoSecreto = "DatoUltraSecretoDeCuerpo987654";
+        UUID destId = crearUsuarioPrueba(correoSecreto, true, true);
+
+        outboxNotificacionAdapter.notificar(new Notificacion(
+                "RETIRO_ESTUDIANTE_GRUPO",
+                "Asunto",
+                "Mensaje",
+                List.of(new Notificacion.Destinatario("ESTUDIANTE", destId, null, null)),
+                Map.of("grupo", "G-10", "estudiante", cuerpoSecreto, "notif002aIt", "true")
+        ));
+        dispatcher.signal();
+
+        assertEquals("ENTREGADA", esperarFilaPorDestinatario(destId, "ENTREGADA", 10).get("estado"));
+
+        for (ILoggingEvent event : logAppender.list) {
+            String msg = event.getFormattedMessage();
+            assertFalse(msg.contains(correoSecreto), "El log no debe exponer el correo del destinatario: " + msg);
+            assertFalse(msg.contains(cuerpoSecreto), "El log no debe exponer el cuerpo renderizado: " + msg);
+        }
+    }
+}
