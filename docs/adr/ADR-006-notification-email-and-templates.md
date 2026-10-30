@@ -8,7 +8,7 @@ last-reviewed: 2026-10-29
 
 # ADR-006 — Envío de correo y plantillas de notificación como módulo removible
 
-- **Estado:** proposed (pendiente de aprobación del owner)
+- **Estado:** proposed (diseño aprobado por el owner el 2026-10-29; pasa a accepted al cerrar la Fase 5)
 - **Fecha:** 2026-10-29
 - **Work item:** [NOTIF-002A](../work-items/NOTIF-002A-plantillas-correo/PLAN.md)
 - **Extiende:** [ADR-005](ADR-005-notification-provider-switch.md)

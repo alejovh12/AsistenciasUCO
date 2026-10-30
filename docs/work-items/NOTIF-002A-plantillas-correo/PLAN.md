@@ -1,5 +1,5 @@
 ---
-status: draft-pending-approval
+status: frozen-approved
 type: plan
 scope: database-backend
 last-reviewed: 2026-10-29
@@ -7,7 +7,7 @@ last-reviewed: 2026-10-29
 
 # PLAN — NOTIF-002A: Plantillas de notificación y envío de correo (SMTP) sobre el outbox
 
-Estado: **`DRAFT`** (pendiente de aprobación del owner). Depende de NOTIF-001 (outbox, despachador y SPI `NotificacionChannelSender`), hoy en commits locales de la rama `feature/NOTIF-001-notificaciones-outbox`.
+Estado: **`FROZEN`** (aprobado por el owner el 2026-10-29 con D1–D14 y los defaults de Q1–Q5). Depende de NOTIF-001 (outbox, despachador y SPI `NotificacionChannelSender`), hoy en commits locales de la rama `feature/NOTIF-001-notificaciones-outbox`.
 
 ## 1. Objetivo
 
@@ -105,12 +105,12 @@ Paradas obligatorias: fin de las fases 1, 2, 4 y 6, y ante cualquier conflicto d
 - Sin cambios en `SecurityConfig`, `access-catalog.json` ni OpenAPI (no hay endpoints en 002A).
 - Documentación actualizada y deuda técnica registrada. Sin push ni PR hasta orden explícita del owner.
 
-## 9. Decisiones abiertas para el owner (antes de congelar)
+## 9. Decisiones del owner (aprobadas con los defaults propuestos el 2026-10-29)
 
 | ID | Pregunta | Default propuesto |
 | :-- | :-- | :-- |
 | Q1 | ¿El `motivo` del retiro puede ir en el cuerpo del correo? | No (D12): aviso breve con enlace a la plataforma |
 | Q2 | Tope de envíos | 60/min y 500/día (configurable) |
 | Q3 | ¿Enviar solo a correos confirmados (`correoConfirmado=1`)? | No filtrar por defecto; propiedad `require-confirmed-email=false` |
-| Q4 | Datos del SMTP institucional (host, puerto, TLS, remitente) | Pendiente de TI; hasta entonces Mailpit/GreenMail |
+| Q4 | Datos del SMTP institucional (host, puerto, TLS, remitente) | Pendiente de TI (no bloquea 002A); hasta entonces Mailpit/GreenMail |
 | Q5 | URL base de la plataforma para el enlace del correo | Propiedad `app.providers.smtp-notification.platform-url` (sin valor por defecto en producción) |

@@ -1,5 +1,5 @@
 ---
-status: draft-pending-approval
+status: ready
 type: handoff-prompt
 scope: database-backend
 last-reviewed: 2026-10-29
@@ -7,7 +7,7 @@ last-reviewed: 2026-10-29
 
 # Prompt de implementación para el agente (Antigravity) — NOTIF-002A
 
-> Pegar tal cual **solo después** de que el owner apruebe el PLAN y el CONTRACT (y responda Q1–Q5 del PLAN §9 o acepte los defaults). Al enviarlo, el owner aprueba D1–D14.
+> Pegar tal cual. El owner aprobó el PLAN y el CONTRACT (D1–D14 y los defaults de Q1–Q5) el 2026-10-29; los documentos ya están en `frozen-approved`.
 
 ```text
 ROL: eres el implementador de NOTIF-002A (plantillas de notificación editables y envío de correo SMTP sobre el outbox de NOTIF-001) en el sistema de gestión de asistencia UCO. El diseño ya está hecho y aprobado por el owner. Tu trabajo es ejecutarlo con TDD estricto, por fases, deteniéndote donde se indica.
@@ -38,7 +38,7 @@ REGLAS INNEGOCIABLES (violarlas invalida el trabajo):
 - Crea archivos con la herramienta de escritura de archivos (los heredocs con apóstrofes rompen algunas herramientas).
 
 EJECUCIÓN POR FASES (PLAN §5; después de CADA fase corre su verificación y reporta antes de seguir):
-FASE 0. git fetch; crea worktrees y ramas (ver reglas); cherry-pick de los documentos de NOTIF-002A desde la rama docs/notif002-plantillas-correo; cambia status de PLAN/CONTRACT/TEST_PLAN/ADR a frozen-approved en un commit docs. Guarda el BASELINE: mvnw test (unitarias) y failsafe -Pintegration sobre la rama NOTIF-001 antes de tocar nada, con el entorno cargado; anota cifras exactas y los fallos preexistentes con su causa.
+FASE 0. git fetch; crea worktrees y ramas (ver reglas); cherry-pick de los documentos de NOTIF-002A desde la rama docs/notif002-plantillas-correo (ya vienen en status frozen-approved; ADR-006 sigue en proposed hasta la Fase 5). Guarda el BASELINE: mvnw test (unitarias) y failsafe -Pintegration sobre la rama NOTIF-001 antes de tocar nada, con el entorno cargado; anota cifras exactas y los fallos preexistentes con su causa.
 FASE 1 — DB. (a) Escribe las pruebas T-SQL de TEST_PLAN §1; confirma RED real y commitea. (b) Implementa tablas, índice único filtrado, catálogo de marcadores, semillas idempotentes (CONTRACT §2.2), migración up/down y los 2 SP (público + interno) según CONTRACT §2; despliega SOLO tus objetos en la BD local (contenedor sql_server_asistencias) y llega a GREEN; ejecuta la migración dos veces. (c) Replica el mecanismo de permisos de NOTIF-001 en rol_asistencias_runtime_notif002a.sql; si hiciera falta algo más que GRANT EXECUTE, PARA. (d) Archivos calientes en commits aparte (test_suite.sql y los mensajes si hicieran falta). PARADA al terminar.
 FASE 2 — Backend: plantillas. Escribe primero TEST_PLAN §2.1, §2.2 (plantilla) y §2.5; confirma RED y commitea. Implementa renderizador, layout HTML fijo, texto plano, respaldo por defecto, repositorio de plantillas con caché y propiedades hasta GREEN. mvnw test completo en verde; mide cobertura del código nuevo (líneas e instrucciones por separado). PARADA al terminar.
 FASE 3 — Contacto y casos de uso. TEST_PLAN §2.2 (contacto) y §2.6: RED → resolución de contacto y claves nuevas en datos de los 4 casos de uso. Si una prueba existente falla por las claves nuevas, PARA (TEST_CONTRACT_CONFLICT). Continúa sin parada si todo queda verde y sin tocar pruebas existentes.
