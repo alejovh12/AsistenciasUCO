@@ -79,6 +79,11 @@ public record SmtpNotificationProperties(
         }
         requireConfirmedEmail = requireConfirmedEmail == null ? Boolean.FALSE : requireConfirmedEmail;
         platformUrl = platformUrl == null ? "" : platformUrl.trim();
+        if (!platformUrl.isEmpty()
+                && !platformUrl.startsWith("http://")
+                && !platformUrl.startsWith("https://")) {
+            throw new IllegalArgumentException("app.providers.smtp-notification.platform-url debe iniciar con http:// o https://.");
+        }
         templateCacheTtl = templateCacheTtl == null ? Duration.ofSeconds(60) : templateCacheTtl;
         if (templateCacheTtl.isZero() || templateCacheTtl.isNegative()) {
             throw new IllegalArgumentException("app.providers.smtp-notification.template-cache-ttl debe ser mayor que cero.");
