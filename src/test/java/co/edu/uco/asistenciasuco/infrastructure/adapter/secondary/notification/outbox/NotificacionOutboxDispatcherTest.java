@@ -49,6 +49,7 @@ class NotificacionOutboxDispatcherTest {
     void setUp() {
         repository = mock(NotificacionOutboxRepository.class);
         sender = mock(NotificacionChannelSender.class);
+        when(sender.disponible()).thenReturn(true);
         meterRegistry = new SimpleMeterRegistry();
         properties = new OutboxNotificationProperties(
                 OutboxNotificationProperties.Sender.LOG,
@@ -578,7 +579,7 @@ class NotificacionOutboxDispatcherTest {
 
     @Test
     @DisplayName("BE-K04: disponible()=false en el sender -> el despachador no reserva filas ni incrementa intentos")
-    void BE_K04_sender_no_disponible_no_reserva_filas() {
+    void BE_K04_sender_no_disponible_no_reserva_filas() throws Exception {
         when(sender.disponible()).thenReturn(false);
 
         dispatcher = new NotificacionOutboxDispatcher(repository, sender, properties, meterRegistry, Clock.systemUTC());
