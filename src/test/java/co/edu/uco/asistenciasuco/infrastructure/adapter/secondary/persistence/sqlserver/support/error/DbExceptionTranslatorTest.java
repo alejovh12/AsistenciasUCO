@@ -184,6 +184,7 @@ class DbExceptionTranslatorTest {
             "ERR_UNICIDAD_DOCUMENTO, ERR_UNICIDAD_DOCUMENTO",
             "USU_002, ERR_USUARIO_INACTIVO",
             "HOR_001, ERR_CRUCE_HORARIO_ESTUDIANTE",
+            "HOR_002, ERR_CRUCE_HORARIO_DOCENTE",
             "VAL_006, CONFLICT",
             "GEN_003, CONFLICT"
     })
