@@ -186,4 +186,39 @@ class SmtpNotificationPropertiesTest {
         assertTrue(repr.contains("smtp.uco.edu.co"));
         assertTrue(repr.contains("[PROTECTED]"));
     }
+
+    @Test
+    @DisplayName("BE-P04: platformUrl vacia, http:// o https:// son aceptadas; javascript:, ftp: o texto libre se rechazan fail-fast")
+    void BE_P04_platformUrl_valida_esquema_http_https_o_vacio() {
+        final SmtpNotificationProperties vacia = new SmtpNotificationProperties(
+                "smtp.uco.edu.co", 587, "", "", true, false, "no-reply@uco.edu.co", "Asistencia UCO",
+                Duration.ofSeconds(10), Duration.ofSeconds(20), 50, 60, 500, false, "   ", Duration.ofSeconds(60)
+        );
+        assertEquals("", vacia.platformUrl());
+
+        final SmtpNotificationProperties conHttp = new SmtpNotificationProperties(
+                "smtp.uco.edu.co", 587, "", "", true, false, "no-reply@uco.edu.co", "Asistencia UCO",
+                Duration.ofSeconds(10), Duration.ofSeconds(20), 50, 60, 500, false, "http://localhost:4200", Duration.ofSeconds(60)
+        );
+        assertEquals("http://localhost:4200", conHttp.platformUrl());
+
+        final SmtpNotificationProperties conHttps = new SmtpNotificationProperties(
+                "smtp.uco.edu.co", 587, "", "", true, false, "no-reply@uco.edu.co", "Asistencia UCO",
+                Duration.ofSeconds(10), Duration.ofSeconds(20), 50, 60, 500, false, "https://asistencia.uco.edu.co", Duration.ofSeconds(60)
+        );
+        assertEquals("https://asistencia.uco.edu.co", conHttps.platformUrl());
+
+        assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties(
+                "smtp.uco.edu.co", 587, "", "", true, false, "no-reply@uco.edu.co", "Asistencia UCO",
+                Duration.ofSeconds(10), Duration.ofSeconds(20), 50, 60, 500, false, "javascript:alert(1)", Duration.ofSeconds(60)
+        ));
+        assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties(
+                "smtp.uco.edu.co", 587, "", "", true, false, "no-reply@uco.edu.co", "Asistencia UCO",
+                Duration.ofSeconds(10), Duration.ofSeconds(20), 50, 60, 500, false, "ftp://archivos.uco.edu.co", Duration.ofSeconds(60)
+        ));
+        assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties(
+                "smtp.uco.edu.co", 587, "", "", true, false, "no-reply@uco.edu.co", "Asistencia UCO",
+                Duration.ofSeconds(10), Duration.ofSeconds(20), 50, 60, 500, false, "asistencia.uco.edu.co", Duration.ofSeconds(60)
+        ));
+    }
 }
