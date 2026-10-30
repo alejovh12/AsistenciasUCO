@@ -30,10 +30,11 @@ public class OutboxNotificacionAdapterConfiguration {
     public OutboxNotificacionAdapter outboxNotificacionAdapter(
             final NotificacionOutboxRepository repository,
             final NotificacionOutboxDispatcher dispatcher,
-            final MeterRegistry meterRegistry,
-            final ObjectMapper objectMapper
+            final MeterRegistry meterRegistry
     ) {
-        return new OutboxNotificacionAdapter(repository, dispatcher, meterRegistry, objectMapper);
+        // Spring Boot 4 autoconfigura Jackson 3 (tools.jackson); este adaptador serializa con Jackson 2
+        // y no depende de un bean del contenedor (igual que NotificacionOutboxDispatcher).
+        return new OutboxNotificacionAdapter(repository, dispatcher, meterRegistry, new ObjectMapper());
     }
 
     @Bean

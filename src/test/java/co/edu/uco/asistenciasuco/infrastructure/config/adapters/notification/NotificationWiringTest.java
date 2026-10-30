@@ -13,7 +13,6 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.o
 import co.edu.uco.asistenciasuco.infrastructure.config.adapters.notification.composite.CompositeNotificacionAdapterConfiguration;
 import co.edu.uco.asistenciasuco.infrastructure.config.adapters.notification.log.LogNotificacionAdapterConfiguration;
 import co.edu.uco.asistenciasuco.infrastructure.config.adapters.notification.outbox.OutboxNotificacionAdapterConfiguration;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.DisplayName;
@@ -43,11 +42,6 @@ class NotificationWiringTest {
         @Bean
         MeterRegistry meterRegistry() {
             return new SimpleMeterRegistry();
-        }
-
-        @Bean
-        ObjectMapper objectMapper() {
-            return new ObjectMapper();
         }
 
         @Bean
