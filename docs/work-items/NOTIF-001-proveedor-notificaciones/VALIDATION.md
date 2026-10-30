@@ -2,7 +2,7 @@
 
 ## Dictamen
 
-IN PROGRESS (Fases 1, 2 y 3 completadas; Fase 3 pendiente de aprobación formal para avanzar a Fase 4).
+IN PROGRESS (Fases 1 a 5 ejecutadas; E2E 7/7 ejecutados en verde con E2E-06 `NO_EJECUTADO`; pendiente la suite completa unitaria + failsafe posterior al merge con `origin/develop` del 2026-10-29).
 
 ## Comandos ejecutados
 
@@ -43,3 +43,22 @@ IN PROGRESS (Fases 1, 2 y 3 completadas; Fase 3 pendiente de aprobación formal 
 - **Instrucciones:** 2.048 / 2.108 (**97,15 %**)
 - **Líneas:** 454 / 467 (**97,22 %**)
 - **Ramas:** 173 / 197 (**87,82 %**) (Meta ≥ 85 % cumplida)
+
+## Fase 5 — E2E real (puerto 8090)
+
+**Declaración:** ejecutado con `APP_ADAPTERS_SECURITY_PROVIDER=legacy` e identidad `legacy`. **NO se probó contra el PDP remoto de seguridad baseline.** Backend propio en `:8090` (no se tocaron `:8080` ni `:4200`), JWT reales de Keycloak, BD local `gestionasistenciadb`, jar construido tras el fix de `ObjectMapper` (5e7b29c). Script: `scratch/test_notif001.ps1`; salida cruda fuera del repo (`e2e_notif001_raw.log`).
+
+| ID | Resultado | Nota |
+|---|---|---|
+| E2E-01 | PASS | Arranque con `outbox` y con `composite` sin errores de contexto |
+| E2E-02 | PASS | Retiro HU051 → 2xx; 1 fila `RETIRO_ESTUDIANTE_GRUPO` pasa a `ENTREGADA`; sin `nombre`/`correo` en destinatarios; roles DOCENTE/ESTUDIANTE/COORDINADOR |
+| E2E-03 | PASS | `composite`: fila entregada + log `NOTIFICACION_PENDIENTE_DE_CANAL` |
+| E2E-04 | PASS | `log`: 0 filas en `NotificacionSaliente` |
+| E2E-05 | PASS | Despachador deshabilitado: fila `PENDIENTE`, retiro 2xx |
+| E2E-06 | NO_EJECUTADO | Simular fallo exigiría alterar un SP en la BD local compartida; TEST_PLAN §6 permite declararlo |
+| E2E-07 | PASS | `notification.publish.total` y `notification.dispatch.total` en `/actuator/prometheus` |
+| E2E-08 | PASS | `NotificacionSaliente`=0 y matrícula restaurada (estado activo); puerto 8090 liberado |
+
+Totales: ejecutadas 8, PASSED 7, FAILED 0, SKIPPED 1.
+
+**Hallazgo de la Fase 5 (corregido):** el arranque real fallaba porque `OutboxNotificacionAdapterConfiguration` exigía un bean `com.fasterxml.jackson.databind.ObjectMapper` (Jackson 2) y Spring Boot 4 autoconfigura `tools.jackson` (Jackson 3); el fixture de `NotificationWiringTest` declaraba ese bean y lo enmascaraba. Corrección en 5e7b29c: el adaptador crea su propio `ObjectMapper` (igual que el despachador) y se elimina el bean del fixture. Test modificado para el PR: `NotificationWiringTest` (fixture sin `ObjectMapper`; 12/12 en verde).
