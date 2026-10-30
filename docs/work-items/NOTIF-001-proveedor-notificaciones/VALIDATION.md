@@ -2,7 +2,7 @@
 
 ## Dictamen
 
-IN PROGRESS (Fases 1 a 5 ejecutadas; E2E 7/7 ejecutados en verde con E2E-06 `NO_EJECUTADO`; pendiente la suite completa unitaria + failsafe posterior al merge con `origin/develop` del 2026-10-29).
+APROBADO LOCALMENTE (Fases 0 a 5 completas; sin push ni PR). Tras el merge con `origin/develop` del 2026-10-29: unitarias 2797/0 fallos; failsafe igual a la línea base salvo +9 IT NOTIF-001 en verde; gate de BD PASS; E2E 7/7 ejecutados en verde con E2E-06 `NO_EJECUTADO`.
 
 ## Comandos ejecutados
 
@@ -12,6 +12,12 @@ IN PROGRESS (Fases 1 a 5 ejecutadas; E2E 7/7 ejecutados en verde con E2E-06 `NO_
 | 2026-10-27 Local (Docker SQL Server) | `mvnw.cmd test -Pintegration` (feature) | 1 | +9 IT GREEN (NOTIF-001) | Tests run: 280, Failures: 7, Errors: 10, Skipped: 7 |
 | 2026-10-27 Local (Java 25) | `mvnw.cmd test` | 0 | PASS | Tests run: 2657, Failures: 0, Errors: 0, Skipped: 0 |
 | 2026-10-27 Local (Java 25) | `mvnw.cmd jacoco:report` | 0 | PASS | Reporte JaCoCo generado en target/site/jacoco/ |
+| 2026-10-29 Local, tras merge con `origin/develop` | `mvnw.cmd test` | 0 | PASS | Tests run: 2797, Failures: 0, Errors: 0, Skipped: 0 |
+| 2026-10-29 Local (BD Docker, entorno cargado) | `mvnw.cmd -Pintegration failsafe:integration-test failsafe:verify` sobre `origin/develop` (147801d) | 1 | BASELINE PREEXISTENTE | Tests run: 238, Failures: 1, Errors: 1, Skipped: 7 (`CoreViewQueriesJpaParityIT` por fixture con 4 estudiantes en la BD local; `AuthorizationReportJpaParityIT` por UUID nulo) |
+| 2026-10-29 Local (BD Docker, entorno cargado) | mismo comando sobre la rama NOTIF-001 | 1 | +9 IT NOTIF-001 en verde | Tests run: 247, Failures: 1, Errors: 1, Skipped: 7; los mismos 2 tests de la línea base; `NotificacionOutboxIT` 9/9 |
+| 2026-10-29 Local (SQL Server Docker) | `deploy_schema.ps1` + `test_summary.ps1` (rama DB fusionada con develop) | 0 | DB GATE PASS | TOTAL_EXECUTED=392, PASSED=391, FAILED=0, SKIPPED=1 (permitido), SQL_ERROR_COUNT=0, @@TRANCOUNT=0 |
+
+Nota: la primera corrida de failsafe falló masivamente por entorno (el `.env` empieza con BOM y `SPRING_DATASOURCE_URL` no se cargaba; faltaban `CLAMAV_*`), no por código; se repitió con el entorno cargado correctamente.
 
 ## Hallazgos de Producción e Integración (Fase 3)
 
