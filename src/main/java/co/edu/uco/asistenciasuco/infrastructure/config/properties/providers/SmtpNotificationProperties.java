@@ -30,8 +30,8 @@ public record SmtpNotificationProperties(
         @DefaultValue("60s") Duration templateCacheTtl
 ) {
 
-    private static final Pattern EMAIL_PATTERN = Pattern.compile(
-            "^[A-Za-z0-9._%+\\-]+@[A-Za-z0-9.\\-]+\\.[A-Za-z]{2,}$"
+    private static final Pattern SAFE_EMAIL_PATTERN = Pattern.compile(
+            "^[^@\\s\\r\\n,;<>\"()]+@[^@\\s\\r\\n,;<>\"().]+(?:\\.[^@\\s\\r\\n,;<>\"().]+)+$"
     );
 
     @ConstructorBinding
@@ -51,8 +51,7 @@ public record SmtpNotificationProperties(
         if (Boolean.TRUE.equals(starttls) && Boolean.TRUE.equals(ssl)) {
             throw new IllegalArgumentException("app.providers.smtp-notification.starttls y ssl no pueden estar ambos en true.");
         }
-        if (fromAddress == null || fromAddress.isBlank() || containsLineBreak(fromAddress)
-                || !EMAIL_PATTERN.matcher(fromAddress.trim()).matches()) {
+        if (!esCorreoSeguro(fromAddress)) {
             throw new IllegalArgumentException("app.providers.smtp-notification.from-address debe tener un formato de correo valido.");
         }
         fromAddress = fromAddress.trim();
@@ -127,8 +126,19 @@ public record SmtpNotificationProperties(
         );
     }
 
-    private static boolean containsLineBreak(final String value) {
-        return value.indexOf('\r') >= 0 || value.indexOf('\n') >= 0;
+    /**
+     * Valida que una direccion de correo electronico tenga formato seguro de direccion unica,
+     * rechazando nulos, blancos, saltos de linea, espacios, separadores de lista (, ;),
+     * parentesis angulares (< >), comillas (") y parentesis (( )).
+     */
+    public static boolean esCorreoSeguro(final String correo) {
+        if (correo == null || correo.isBlank()) {
+            return false;
+        }
+        if (correo.indexOf('\r') >= 0 || correo.indexOf('\n') >= 0) {
+            return false;
+        }
+        return SAFE_EMAIL_PATTERN.matcher(correo.trim()).matches();
     }
 
     @Override

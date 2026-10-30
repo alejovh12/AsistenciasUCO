@@ -22,7 +22,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 
 /**
  * Canal de salida SMTP para el outbox de notificaciones (CONTRACT §4.3).
@@ -32,8 +31,6 @@ import java.util.regex.Pattern;
 public class SmtpNotificacionChannelSender implements NotificacionChannelSender {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SmtpNotificacionChannelSender.class);
-    private static final Pattern PATRON_CORREO_SEGURO =
-            Pattern.compile("^[^@\\s\\r\\n]+@[^@\\s\\r\\n]+\\.[^@\\s\\r\\n]+$");
 
     private final ContactoDestinatarioResolver contactoResolver;
     private final PlantillaRenderer plantillaRenderer;
@@ -212,14 +209,7 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
     }
 
     static boolean esCorreoSeguro(final String correo) {
-        if (correo == null || correo.isBlank()) {
-            return false;
-        }
-        if (correo.indexOf('\r') >= 0 || correo.indexOf('\n') >= 0) {
-            return false;
-        }
-        final String limpio = correo.trim();
-        return PATRON_CORREO_SEGURO.matcher(limpio).matches();
+        return SmtpNotificationProperties.esCorreoSeguro(correo);
     }
 
     static String sanearAsunto(final String asunto) {

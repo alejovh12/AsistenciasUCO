@@ -261,3 +261,9 @@ Endpoints y pantalla de administración (NOTIF-002B), otros canales, preferencia
 - **Archivo y línea:** `src/test/java/co/edu/uco/asistenciasuco/infrastructure/adapter/secondary/notification/outbox/NotificacionOutboxDispatcherTest.java`, método `setUp()`, línea 52.
 - **Motivo y decisión del owner:** En `NOTIF-002A` (`CONTRACT §4.3`), el SPI `NotificacionChannelSender` incorpora `default boolean disponible() { return true; }` y `NotificacionOutboxDispatcher#ejecutarCiclo()` verifica `if (!sender.disponible()) return;`. Como `mock(NotificacionChannelSender.class)` en Mockito (`RETURNS_DEFAULTS`) no ejecuta métodos `default` de interfaz y devuelve `false` para cualquier método `boolean` no configurado, con autorización expresa del owner se agregó la línea `when(sender.disponible()).thenReturn(true);` en `setUp()` para que el mock del fixture refleje el valor por defecto `true` del contrato sin alterar ninguna aserción preexistente, mientras `BE-K04` sobrescribe `when(sender.disponible()).thenReturn(false)` en su propio cuerpo.
 
+### 10.5 Precisión de endurecimiento de `esCorreoSeguro` y reutilización en propiedades y canal SMTP
+- **Fecha:** 2026-10-30
+- **Ámbito:** Backend — `SmtpNotificationProperties#esCorreoSeguro` y `SmtpNotificacionChannelSender#esCorreoSeguro`.
+- **Precisión (no desvío):** El criterio de validación de direcciones de correo (`esCorreoSeguro`) se centraliza en `SmtpNotificationProperties.esCorreoSeguro(String)` y se reutiliza en `SmtpNotificacionChannelSender`, `from-address` y `test-mode.redirect-to`, rechazando además de nulos, blancos, espacios y saltos de línea (`\r`, `\n`), los caracteres separadores o delimitadores `,`, `;`, `<`, `>`, `"`, `(` y `)` (evitando que una dirección contenga múltiples destinatarios o sintaxis RFC 5322 compuesta).
+
+
