@@ -328,6 +328,18 @@ class SmtpNotificacionChannelSenderTest {
     }
 
     @Test
+    @DisplayName("BE-S08b: esCorreoSeguro rechaza comas, punto y coma, paréntesis angulares, comillas y paréntesis, y acepta ana.perez@uco.edu.co")
+    void BE_S08b_esCorreoSeguro_rechaza_separadores_angulares_comillas_y_parentesis() {
+        assertFalse(SmtpNotificacionChannelSender.esCorreoSeguro("a@b.co,c.com"));
+        assertFalse(SmtpNotificacionChannelSender.esCorreoSeguro("a@b.co;x"));
+        assertFalse(SmtpNotificacionChannelSender.esCorreoSeguro("<a@b.co>"));
+        assertFalse(SmtpNotificacionChannelSender.esCorreoSeguro("\"a\"@b.co"));
+        assertFalse(SmtpNotificacionChannelSender.esCorreoSeguro("a(b)@b.co"));
+        assertFalse(SmtpNotificacionChannelSender.esCorreoSeguro("a@b(c).co"));
+        assertTrue(SmtpNotificacionChannelSender.esCorreoSeguro("ana.perez@uco.edu.co"));
+    }
+
+    @Test
     @DisplayName("BE-S09: el sender nunca loguea correos, asunto ni cuerpo")
     void BE_S09_sender_nunca_loguea_correos_asunto_ni_cuerpo() throws Exception {
         final Logger logger = (Logger) LoggerFactory.getLogger(SmtpNotificacionChannelSender.class);
