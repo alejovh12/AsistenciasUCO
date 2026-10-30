@@ -949,19 +949,19 @@ GOLDEN PATH EFFECT:         NONE
 
 ## TD-067
 
-- **Fecha / responsable:** 2026-10-28 / backend-team (NOTIF-001 / PLAN §7). **Clasificación:** INTEGRATION_EXTERNAL_SENDER. **Prioridad:** MEDIA.
-- **Descripción:** La implementación de NOTIF-001 incorpora el SPI `NotificacionChannelSender` con un remitente por defecto `LogNotificacionChannelSender` (`app.providers.outbox-notification.sender=log`). Falta implementar el remitente del componente institucional de notificaciones (`app.providers.outbox-notification.sender=institucional` o proveedor `institucional` directo para correo SMTP, WhatsApp o SMS institucional).
-- **Impacto:** Las notificaciones procesadas por el outbox se despachan y registran como `ENTREGADA` simulando el envío mediante log estructurado, pero aún no envían el mensaje a los canales telemáticos externos reales.
-- **Resolución esperada:** Implementar `InstitucionalNotificacionChannelSender` integrando el servicio telemático institucional de la UCO y configurarlo vía selector de propiedades.
-- **Bloquea línea base:** No. **Estado:** **OPEN / MEDIUM / BACKEND**. **Work item:** [NOTIF-001](../work-items/NOTIF-001-proveedor-notificaciones/PLAN.md).
+- **Fecha / responsable:** 2026-10-28 / backend-team (NOTIF-001 / PLAN §7; resuelta en NOTIF-002A el 2026-10-30). **Clasificación:** INTEGRATION_EXTERNAL_SENDER. **Prioridad:** MEDIA.
+- **Descripción:** La implementación de NOTIF-001 incorporó el SPI `NotificacionChannelSender` con un remitente por defecto `LogNotificacionChannelSender` (`app.providers.outbox-notification.sender=log`). Faltaba implementar el remitente real de correo sobre el outbox.
+- **Impacto:** Las notificaciones procesadas por el outbox se despachaban y registraban como `ENTREGADA` simulando el envío mediante log estructurado.
+- **Resolución esperada:** Implementar el canal SMTP de correo institucional sobre `NotificacionChannelSender` seleccionable por propiedades.
+- **Bloquea línea base:** No. **Estado:** **RESOLVED (NOTIF-002A, 2026-10-30)**: Implementado `SmtpNotificacionChannelSender` (`app.providers.outbox-notification.sender=smtp`) con plantillas editables versionadas en SQL Server (`PlantillaNotificacion`), layout HTML fijo y texto plano (`PlantillaRenderer`), tope de envíos (`TopeEnvios` + `disponible()`), transporte Jakarta Mail (`JakartaMailCorreoTransport`) y modo de pruebas con redirección (`test-mode`, D15). **Work items:** [NOTIF-001](../work-items/NOTIF-001-proveedor-notificaciones/PLAN.md), [NOTIF-002A](../work-items/NOTIF-002A-plantillas-correo/PLAN.md).
 
 ## TD-068
 
-- **Fecha / responsable:** 2026-10-28 / backend-team (NOTIF-001 / PLAN §7). **Clasificación:** PRIVACY_DATA_MINIMIZATION. **Prioridad:** BAJA.
-- **Descripción:** En cumplimiento de la minimización de datos (D5), `dbo.NotificacionSaliente` no persiste `nombre` ni `correo` de los destinatarios (solo `rol` e `idUsuario`). Al realizar la entrega física externa (TD-067), se requerirá resolver los datos de contacto (correo/teléfono) de los destinatarios en el momento de entrega sin persistirlos en el outbox.
-- **Impacto:** Sin impacto funcional en v1 (el sender actual solo registra rol e idUsuario). Necesario para el sender telemático real.
-- **Resolución esperada:** Incorporar resolución de datos de contacto vía `UsuarioQueryPort` o cliente de identidad en tiempo de despacho antes de invocar `NotificacionChannelSender`.
-- **Bloquea línea base:** No. **Estado:** **OPEN / LOW / BACKEND**. **Work item:** [NOTIF-001](../work-items/NOTIF-001-proveedor-notificaciones/PLAN.md).
+- **Fecha / responsable:** 2026-10-28 / backend-team (NOTIF-001 / PLAN §7; resuelta en NOTIF-002A el 2026-10-30). **Clasificación:** PRIVACY_DATA_MINIMIZATION. **Prioridad:** BAJA.
+- **Descripción:** En cumplimiento de la minimización de datos (D5), `dbo.NotificacionSaliente` no persiste `nombre` ni `correo` de los destinatarios (solo `rol` e `idUsuario`). Al realizar la entrega física externa (TD-067), se requería resolver los datos de contacto de los destinatarios en el momento de entrega sin persistirlos en el outbox.
+- **Impacto:** Necesario para el sender de correo real.
+- **Resolución esperada:** Incorporar resolución de datos de contacto en tiempo de despacho antes de enviar por el canal externo.
+- **Bloquea línea base:** No. **Estado:** **RESOLVED (NOTIF-002A, 2026-10-30)**: Implementada la resolución de contacto al momento de la entrega mediante el procedimiento almacenado público `dbo.usp_consultar_contacto_notificacion` y el adaptador `ContactoDestinatarioJpaRepository` (`ContactoDestinatarioResolver`), filtrando usuarios activos/habilitados y validando direcciones seguras sin persistir correos en el outbox. **Work items:** [NOTIF-001](../work-items/NOTIF-001-proveedor-notificaciones/PLAN.md), [NOTIF-002A](../work-items/NOTIF-002A-plantillas-correo/PLAN.md).
 
 ## TD-069
 
@@ -978,3 +978,52 @@ GOLDEN PATH EFFECT:         NONE
 - **Impacto:** Coherente con la semántica institucional vigente de mejor esfuerzo para avisos informativos.
 - **Resolución esperada:** Si un caso de negocio futuro requiere garantía transaccional fuerte (two-phase commit o atomic outbox estricto), se deberá instrumentar el registro del evento outbox directamente dentro del SP transaccional del negocio en DB.
 - **Bloquea línea base:** No. **Estado:** **OPEN / LOW / ARCHITECTURE**. **Work item:** [NOTIF-001](../work-items/NOTIF-001-proveedor-notificaciones/PLAN.md).
+
+## TD-071
+
+- **Fecha / responsable:** 2026-10-30 / fullstack-team (NOTIF-002A / PLAN §7.1). **Clasificación:** FEATURE_FOLLOWUP_ADMIN_TEMPLATES. **Prioridad:** MEDIA.
+- **Descripción:** NOTIF-002A incorpora el modelo versionado `dbo.PlantillaNotificacion`, el catálogo `dbo.PlantillaNotificacionMarcador`, las semillas v1 de los 4 tipos y la lectura de plantilla activa, pero la administración de plantillas por el rol `ADMINISTRADOR` (listar, crear nueva versión, vista previa y activar/revertir versión) corresponde al work item **NOTIF-002B**.
+- **Impacto:** Mientras no se implemente NOTIF-002B, las plantillas se gestionan por semilla/migración en base de datos.
+- **Resolución esperada:** Implementar NOTIF-002B: DB (SP de guardado de versión `>= 2`, activación y consulta paginada), backend (endpoints administrativos, permiso en `access-catalog.json` y contrato OpenAPI) y frontend (pantalla con Signals y `ChangeDetectionStrategy.OnPush`).
+- **Bloquea línea base:** No. **Estado:** **OPEN / MEDIUM / FULLSTACK**. **Work item:** [NOTIF-002A](../work-items/NOTIF-002A-plantillas-correo/PLAN.md).
+
+## TD-072
+
+- **Fecha / responsable:** 2026-10-30 / backend-team & ops (NOTIF-002A / PLAN §7.2). **Clasificación:** OPERATIONAL_SAFETY_GOVERNANCE. **Prioridad:** MEDIA.
+- **Descripción:** El canal SMTP cuenta con el modo de pruebas con redirección (`app.providers.smtp-notification.test-mode.enabled`, default `false`, y `test-mode.redirect-to`, D15), que redirige todos los correos a buzones de prueba y omite a los destinatarios reales. Es una medida exclusiva para pruebas y debe permanecer obligatoriamente apagada (`enabled=false`) en producción.
+- **Impacto:** Si se habilitara accidentalmente en producción, ningún destinatario real recibiría los avisos institucionales (aunque el `WARN` de arranque y la métrica `notification.email.redirected.total` lo hacen visible).
+- **Resolución esperada:** Incluir la verificación `SMTP_NOTIFICATION_TEST_MODE_ENABLED=false` en el checklist de despliegue a producción y monitoreo de `notification.email.redirected.total`.
+- **Bloquea línea base:** No. **Estado:** **OPEN / MEDIUM / OPS**. **Work item:** [NOTIF-002A](../work-items/NOTIF-002A-plantillas-correo/PLAN.md).
+
+## TD-073
+
+- **Fecha / responsable:** 2026-10-30 / backend-team & TI UCO (NOTIF-002A / PLAN §7.3). **Clasificación:** EXTERNAL_INFRA_CREDENTIALS. **Prioridad:** MEDIA.
+- **Descripción:** Los datos y credenciales del servidor SMTP institucional definitivo (host, puerto, TLS, usuario/contraseña y remitente) están pendientes de entrega por parte de TI de la universidad. En desarrollo y pruebas se utiliza GreenMail y el modo de pruebas con redirección (D15).
+- **Impacto:** El envío hacia buzones institucionales en producción requiere la provisión de las credenciales SMTP definitivas en el almacén de secretos (`SecretVaultPort` / variables de entorno del despliegue).
+- **Resolución esperada:** Registrar credenciales SMTP definitivas en el almacén de secretos cuando TI las entregue y validar conectividad en el entorno institucional.
+- **Bloquea línea base:** No. **Estado:** **OPEN / MEDIUM / INFRA_TI**. **Work item:** [NOTIF-002A](../work-items/NOTIF-002A-plantillas-correo/PLAN.md).
+
+## TD-074
+
+- **Fecha / responsable:** 2026-10-30 / TI UCO (NOTIF-002A / PLAN §7.4). **Clasificación:** EMAIL_DELIVERABILITY_DNS. **Prioridad:** BAJA.
+- **Descripción:** La entregabilidad de los correos enviados desde el dominio remitente institucional requiere la configuración y verificación de registros SPF, DKIM y DMARC por parte del equipo de TI de la universidad.
+- **Impacto:** Sin alineación SPF/DKIM/DMARC en el servidor SMTP institucional, los servidores de correo receptores podrían clasificar los avisos como spam.
+- **Resolución esperada:** Coordinar con TI la validación de registros SPF, DKIM y DMARC del dominio remitente antes de habilitar `sender=smtp` en producción.
+- **Bloquea línea base:** No. **Estado:** **OPEN / LOW / INFRA_TI**. **Work item:** [NOTIF-002A](../work-items/NOTIF-002A-plantillas-correo/PLAN.md).
+
+## TD-075
+
+- **Fecha / responsable:** 2026-10-30 / database-team & backend-team (NOTIF-002A / PLAN §7.5, CONTRACT §6.6). **Clasificación:** MODULE_REMOVABILITY_EXPORT. **Prioridad:** BAJA.
+- **Descripción:** El módulo de plantillas y correo fue diseñado como removible ([ADR-006](../adr/ADR-006-notification-email-and-templates.md)). Si en el futuro otro equipo entrega un componente externo de notificaciones y plantillas, se requerirá un script de exportación/volcado de las plantillas activas en `dbo.PlantillaNotificacion` para migrar los textos editados por el Administrador.
+- **Impacto:** Sin impacto mientras las plantillas residan en SQL Server del proyecto.
+- **Resolución esperada:** Proveer script utilitario de volcado de plantillas activas (`JSON`/`SQL`) cuando se planifique la migración a un componente externo.
+- **Bloquea línea base:** No. **Estado:** **OPEN / LOW / BACKEND**. **Work item:** [NOTIF-002A](../work-items/NOTIF-002A-plantillas-correo/PLAN.md).
+
+## TD-076
+
+- **Fecha / responsable:** 2026-10-30 / backend-team (NOTIF-002A / PLAN §7.6, D8). **Clasificación:** AT_LEAST_ONCE_BLOCK_IDEMPOTENCY. **Prioridad:** BAJA.
+- **Descripción:** Cuando una notificación supera `max-bcc` destinatarios (default 50), `SmtpNotificacionChannelSender` divide el envío en bloques BCC. Si ocurre un fallo transitorio después de haber enviado el primer bloque y antes de completar los siguientes, el reintento de la fila del outbox vuelve a enviar todos los bloques (*at-least-once* documentado en D8).
+- **Impacto:** Bajo en el dominio actual, ya que los avisos académicos tienen pocos destinatarios (1 a ~35 por grupo, cabiendo en un único bloque BCC de 50).
+- **Resolución esperada:** Si se incorporan avisos masivos (> `max-bcc`), registrar progreso por bloque o particionar la notificación en filas por bloque para evitar duplicados en reintentos parciales.
+- **Bloquea línea base:** No. **Estado:** **OPEN / LOW / BACKEND**. **Work item:** [NOTIF-002A](../work-items/NOTIF-002A-plantillas-correo/PLAN.md).
+
