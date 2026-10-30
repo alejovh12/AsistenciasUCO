@@ -225,3 +225,10 @@ Endpoints y pantalla de administración (NOTIF-002B), otros canales, preferencia
 - **Fecha:** 2026-10-29
 - **Ámbito:** Base de datos — `schema/seed/26_plantillas_notificacion.sql` y `migrations/08_notif002a_plantillas_notificacion_up.sql`.
 - **Nota:** El `MERGE` idempotente de semillas actualiza `asunto` y `cuerpo` de `version = 1` cuando coincide `(tipo, idioma, version = 1)` sin tocar la columna `activa` en `WHEN MATCHED`. En `NOTIF-002B` (edición de plantillas por el Administrador), toda versión editada por el Administrador se creará con `version >= 2`, y la semilla del sistema nunca debe reactivar `version = 1` ni alterar versiones `>= 2`.
+
+### 10.2 Precisión de sustitución de layout en `PlantillaRenderer` y validación de `platform-url` en `SmtpNotificationProperties`
+- **Fecha:** 2026-10-30
+- **Ámbito:** Backend — `PlantillaRenderer#envolverEnLayout` y `SmtpNotificationProperties`.
+- **Precisión (no desvío):**
+  1. `PlantillaRenderer#envolverEnLayout` sustituye primero `{{pie}}` y luego `{{contenido}}` (evitando que un valor de `datos` que contenga el literal `{{pie}}` o `{{contenido}}` sea reemplazado por el pie del correo dentro del contenido renderizado).
+  2. `SmtpNotificationProperties` valida fail-fast que, si `platformUrl` no está vacía tras recortar espacios, empiece obligatoriamente por `http://` o `https://` (rechazando con `IllegalArgumentException` esquemas como `javascript:`, `ftp:` o texto libre).

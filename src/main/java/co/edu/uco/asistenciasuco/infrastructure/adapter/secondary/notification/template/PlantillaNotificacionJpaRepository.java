@@ -82,7 +82,7 @@ public class PlantillaNotificacionJpaRepository implements PlantillaNotificacion
 
             final List<?> canonicalRows = sp.getResultList();
             final ProcedureResult canonical = ProcedureResultMapper.mapSingle(canonicalRows);
-            ProcedureResultValidator.validate(canonical, spCorrelationOrExpected(canonical, corrId), OPERATION);
+            ProcedureResultValidator.validate(canonical, canonical.getIdCorrelacion(), OPERATION);
 
             final List<?> plantillaRows = sp.hasMoreResults() ? sp.getResultList() : List.of();
             final List<?> marcadorRows = sp.hasMoreResults() ? sp.getResultList() : List.of();
@@ -116,10 +116,6 @@ public class PlantillaNotificacionJpaRepository implements PlantillaNotificacion
                     e
             );
         }
-    }
-
-    private static UUID spCorrelationOrExpected(final ProcedureResult result, final UUID expected) {
-        return result.getIdCorrelacion() != null ? result.getIdCorrelacion() : expected;
     }
 
     private static UUID resolveCorrelationId() {

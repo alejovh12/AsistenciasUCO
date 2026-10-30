@@ -404,4 +404,49 @@ class PlantillaRendererTest {
         assertTrue(primera > 0);
         assertEquals(primera, ultima);
     }
+
+    @Test
+    @DisplayName("BE-R14: PlantillaPorDefectoCatalogo maneja propiedades sin asunto/cuerpo, tokens vacios en CSV y fallo de lectura")
+    void BE_R14_catalogo_por_defecto_ramas_borde() throws Exception {
+        final ClassLoader original = Thread.currentThread().getContextClassLoader();
+        try {
+            // 1. Recurso con asunto vacio -> Optional.empty()
+            Thread.currentThread().setContextClassLoader(new ClassLoader(original) {
+                @Override
+                public java.io.InputStream getResourceAsStream(final String name) {
+                    if ("notification/templates/SIN_ASUNTO.es.properties".equals(name)) {
+                        return new java.io.ByteArrayInputStream("asunto = \ncuerpo = Hola".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    }
+                    if ("notification/templates/SIN_CUERPO.es.properties".equals(name)) {
+                        return new java.io.ByteArrayInputStream("asunto = Aviso\ncuerpo =   ".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    }
+                    if ("notification/templates/CSV_HUECOS.es.properties".equals(name)) {
+                        return new java.io.ByteArrayInputStream(
+                                "asunto = Aviso {grupo}\ncuerpo = Cuerpo {grupo}\nmarcadores.obligatorios = grupo, , estudiante\nmarcadores.opcionales = ,motivo,".getBytes(java.nio.charset.StandardCharsets.UTF_8)
+                        );
+                    }
+                    if ("notification/templates/IO_FALLO.es.properties".equals(name)) {
+                        return new java.io.InputStream() {
+                            @Override
+                            public int read() throws java.io.IOException {
+                                throw new java.io.IOException("Simulated stream failure");
+                            }
+                        };
+                    }
+                    return super.getResourceAsStream(name);
+                }
+            });
+
+            final PlantillaPorDefectoCatalogo cat = new PlantillaPorDefectoCatalogo();
+            assertTrue(cat.obtener("SIN_ASUNTO", "es").isEmpty());
+            assertTrue(cat.obtener("SIN_CUERPO", "es").isEmpty());
+            assertTrue(cat.obtener("IO_FALLO", "es").isEmpty());
+
+            final Optional<PlantillaNotificacion> conHuecos = cat.obtener("CSV_HUECOS", "es");
+            assertTrue(conHuecos.isPresent());
+            assertEquals(3, conHuecos.get().marcadores().size());
+        } finally {
+            Thread.currentThread().setContextClassLoader(original);
+        }
+    }
 }

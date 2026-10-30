@@ -152,6 +152,47 @@ class PlantillaNotificacionJpaRepositoryTest {
                 () -> new PlantillaNotificacionJpaRepository(entityManager, clock, Duration.ofSeconds(-5)));
     }
 
+    @Test
+    @DisplayName("BE-T01c: normalizacion de tipo/idioma nulos o blancos, CorrelationIdContext activo, conversion String/Number y sin result sets adicionales")
+    void BE_T01c_normalizacion_correlacion_y_conversion_tipos() {
+        final UUID ctxCorr = UUID.randomUUID();
+        co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext.set(ctxCorr);
+        try {
+            final StoredProcedureQuery sp = mockSpQuery();
+            final Object[] canonicalOk = new Object[]{ctxCorr, "OK", "DBCODE=GEN_003|OK", Boolean.TRUE};
+            final Object[] plantillaRow = new Object[]{"2", "Asunto {grupo}", "Cuerpo {grupo}"};
+            final Object[] m1 = new Object[]{"grupo", 0};
+            final Object[] m2 = new Object[]{"extra", "true"};
+
+            when(sp.execute()).thenReturn(true);
+            when(sp.hasMoreResults()).thenReturn(true, true, false);
+            when(sp.getResultList())
+                    .thenReturn(List.of((Object) canonicalOk))
+                    .thenReturn(List.of((Object) plantillaRow))
+                    .thenReturn(List.of(m1, m2));
+
+            final Optional<PlantillaNotificacion> res = repository.consultarActiva(null, null);
+            assertTrue(res.isPresent());
+            assertEquals(2, res.get().version());
+            assertTrue(res.get().marcadores().contains(new PlantillaNotificacion.Marcador("grupo", false)));
+            assertTrue(res.get().marcadores().contains(new PlantillaNotificacion.Marcador("extra", true)));
+
+            // Caso sin result sets adicionales (hasMoreResults = false desde el inicio) e idioma en blanco
+            final StoredProcedureQuery spSinMas = mock(StoredProcedureQuery.class);
+            when(entityManager.createStoredProcedureQuery("dbo.usp_consultar_plantilla_notificacion_activa")).thenReturn(spSinMas);
+            when(spSinMas.registerStoredProcedureParameter(anyString(), any(), any())).thenReturn(spSinMas);
+            when(spSinMas.setParameter(anyString(), any())).thenReturn(spSinMas);
+            when(spSinMas.execute()).thenReturn(true);
+            when(spSinMas.hasMoreResults()).thenReturn(false);
+            when(spSinMas.getResultList()).thenReturn(List.of((Object) canonicalOk));
+
+            final Optional<PlantillaNotificacion> sinFilas = repository.consultarActiva("OTRO", "   ");
+            assertFalse(sinFilas.isPresent());
+        } finally {
+            co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext.clear();
+        }
+    }
+
     private static final class MutableClock extends Clock {
         private final AtomicReference<Instant> current;
 
