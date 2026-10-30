@@ -52,27 +52,38 @@ public class PlantillaRenderer {
             final String asuntoGuardado,
             final String mensajeGuardado
     ) {
+        return renderizar(tipo, datos, asuntoGuardado, mensajeGuardado, null);
+    }
+
+    public ContenidoRenderizado renderizar(
+            final String tipo,
+            final Map<String, String> datos,
+            final String asuntoGuardado,
+            final String mensajeGuardado,
+            final String avisoModoPrueba
+    ) {
         final Map<String, String> mapaDatos = datos == null ? Map.of() : datos;
         final String tipoNorm = tipo == null ? "" : tipo.trim();
+        final String aviso = (avisoModoPrueba == null || avisoModoPrueba.isBlank()) ? "" : avisoModoPrueba.trim();
 
         // Nivel 1: Plantilla activa en BD
         final Optional<PlantillaNotificacion> desdeBd = consultarBdSegura(tipoNorm);
         if (desdeBd.isPresent() && esPlantillaValidaParaDatos(desdeBd.get(), mapaDatos)) {
-            return construirDesdePlantilla(desdeBd.get(), mapaDatos, "db");
+            return construirDesdePlantilla(desdeBd.get(), mapaDatos, "db", aviso);
         }
 
         // Nivel 2: Plantilla por defecto en recursos del backend
         final Optional<PlantillaNotificacion> porDefecto = catalogoDefecto.obtener(tipoNorm, DEFAULT_IDIOMA);
         if (porDefecto.isPresent() && esPlantillaValidaParaDatos(porDefecto.get(), mapaDatos)) {
-            return construirDesdePlantilla(porDefecto.get(), mapaDatos, "default");
+            return construirDesdePlantilla(porDefecto.get(), mapaDatos, "default", aviso);
         }
 
         // Nivel 3: Asunto y mensaje guardados en el outbox
         final String asuntoRaw = asuntoGuardado == null ? "" : asuntoGuardado;
         final String cuerpoRaw = mensajeGuardado == null ? "" : mensajeGuardado;
         final String asuntoSanitizado = sanitizarAsunto(asuntoRaw);
-        final String textoPlano = construirTextoPlano(cuerpoRaw);
-        final String html = envolverEnLayout(convertirCuerpoLiteralAHtml(cuerpoRaw));
+        final String textoPlano = construirTextoPlano(cuerpoRaw, aviso);
+        final String html = envolverEnLayout(antecederAvisoHtml(convertirCuerpoLiteralAHtml(cuerpoRaw), aviso));
         incrementarMetrica("stored");
         return new ContenidoRenderizado(asuntoSanitizado, textoPlano, html, "stored");
     }
@@ -121,12 +132,13 @@ public class PlantillaRenderer {
     private ContenidoRenderizado construirDesdePlantilla(
             final PlantillaNotificacion plantilla,
             final Map<String, String> datos,
-            final String origen
+            final String origen,
+            final String aviso
     ) {
         final String asuntoRenderizado = sanitizarAsunto(sustituirTextoPlano(plantilla.asunto(), datos));
         final String cuerpoPlano = sustituirTextoPlano(plantilla.cuerpo(), datos);
-        final String textoPlano = construirTextoPlano(cuerpoPlano);
-        final String cuerpoHtml = convertirPlantillaAHtml(plantilla.cuerpo(), datos);
+        final String textoPlano = construirTextoPlano(cuerpoPlano, aviso);
+        final String cuerpoHtml = antecederAvisoHtml(convertirPlantillaAHtml(plantilla.cuerpo(), datos), aviso);
         final String html = envolverEnLayout(cuerpoHtml);
         incrementarMetrica(origen);
         return new ContenidoRenderizado(asuntoRenderizado, textoPlano, html, origen);
@@ -198,11 +210,19 @@ public class PlantillaRenderer {
         return sb.toString();
     }
 
-    private String construirTextoPlano(final String cuerpoPlano) {
+    private String construirTextoPlano(final String cuerpoPlano, final String aviso) {
+        final String cuerpoConAviso = aviso.isEmpty() ? cuerpoPlano : aviso + "\n\n" + cuerpoPlano;
         if (platformUrl.isEmpty()) {
-            return cuerpoPlano + "\n\n---\nUniversidad Católica de Oriente — Sistema de Gestión de Asistencia";
+            return cuerpoConAviso + "\n\n---\nUniversidad Católica de Oriente — Sistema de Gestión de Asistencia";
         }
-        return cuerpoPlano + "\n\n---\nUniversidad Católica de Oriente — Sistema de Gestión de Asistencia\n" + platformUrl;
+        return cuerpoConAviso + "\n\n---\nUniversidad Católica de Oriente — Sistema de Gestión de Asistencia\n" + platformUrl;
+    }
+
+    private static String antecederAvisoHtml(final String cuerpoHtml, final String aviso) {
+        if (aviso.isEmpty()) {
+            return cuerpoHtml;
+        }
+        return "<p>" + escaparHtml(aviso) + "</p>" + cuerpoHtml;
     }
 
     private String envolverEnLayout(final String contenidoHtml) {

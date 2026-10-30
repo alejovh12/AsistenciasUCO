@@ -31,6 +31,8 @@ import java.util.concurrent.TimeUnit;
 public class SmtpNotificacionChannelSender implements NotificacionChannelSender {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SmtpNotificacionChannelSender.class);
+    private static final int MAX_SUBJECT_LENGTH = 200;
+    private static final String PREFIJO_ASUNTO_PRUEBA = "[PRUEBA] ";
 
     private final ContactoDestinatarioResolver contactoResolver;
     private final PlantillaRenderer plantillaRenderer;
@@ -45,6 +47,7 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
     private final Counter sendNoRecipientsCounter;
     private final Counter recipientsSentCounter;
     private final Counter recipientsOmittedCounter;
+    private final Counter redirectedCounter;
 
     public SmtpNotificacionChannelSender(
             final ContactoDestinatarioResolver contactoResolver,
@@ -79,6 +82,15 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
         this.recipientsOmittedCounter = Counter.builder("notification.email.recipients.total")
                 .tag("outcome", "omitted")
                 .register(meterRegistry);
+        this.redirectedCounter = Counter.builder("notification.email.redirected.total")
+                .register(meterRegistry);
+
+        if (Boolean.TRUE.equals(this.properties.testMode().enabled())) {
+            LOGGER.warn(
+                    "Modo de pruebas de correo ACTIVO: los correos se redirigen ({} buzones de prueba configurados).",
+                    this.properties.testMode().redirectTo().size()
+            );
+        }
     }
 
     @Override
@@ -115,15 +127,35 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
             );
         }
 
-        final ContenidoRenderizado contenido = plantillaRenderer.renderizar(
-                notificacion.tipo(),
-                notificacion.datos(),
-                notificacion.asunto(),
-                notificacion.mensaje()
-        );
-        final String asuntoSaneado = sanearAsunto(contenido.asunto());
+        final boolean modoPrueba = Boolean.TRUE.equals(properties.testMode().enabled());
+        final ContenidoRenderizado contenido;
+        final String asuntoSaneado;
+        final List<String> destinatariosEfectivos;
 
-        final List<List<String>> bloquesBcc = partirEnBloques(correosValidos, properties.maxBcc());
+        if (modoPrueba) {
+            final String avisoModoPrueba = "MODO DE PRUEBAS: este correo no se envió a los destinatarios reales. "
+                    + "Destinatarios originales omitidos: " + correosValidos.size() + ".";
+            contenido = plantillaRenderer.renderizar(
+                    notificacion.tipo(),
+                    notificacion.datos(),
+                    notificacion.asunto(),
+                    notificacion.mensaje(),
+                    avisoModoPrueba
+            );
+            asuntoSaneado = sanearAsunto(PREFIJO_ASUNTO_PRUEBA + sanearAsunto(contenido.asunto()));
+            destinatariosEfectivos = properties.testMode().redirectTo();
+        } else {
+            contenido = plantillaRenderer.renderizar(
+                    notificacion.tipo(),
+                    notificacion.datos(),
+                    notificacion.asunto(),
+                    notificacion.mensaje()
+            );
+            asuntoSaneado = sanearAsunto(contenido.asunto());
+            destinatariosEfectivos = correosValidos;
+        }
+
+        final List<List<String>> bloquesBcc = partirEnBloques(destinatariosEfectivos, properties.maxBcc());
         for (int idx = 0; idx < bloquesBcc.size(); idx++) {
             if (!topeEnvios.intentarConsumir()) {
                 sendRetryCounter.increment();
@@ -148,6 +180,9 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
                 registrarDuracion("sent", System.nanoTime() - inicioNanos);
                 sendSentCounter.increment();
                 recipientsSentCounter.increment(bloque.size());
+                if (modoPrueba) {
+                    redirectedCounter.increment();
+                }
             } catch (final NotificacionNoEntregableException ex) {
                 registrarDuracion("permanent", System.nanoTime() - inicioNanos);
                 sendPermanentCounter.increment();
@@ -216,7 +251,11 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
         if (asunto == null) {
             return "";
         }
-        return asunto.replace("\r", " ").replace("\n", " ").trim();
+        final String limpio = asunto.replace("\r", " ").replace("\n", " ").trim();
+        if (limpio.length() > MAX_SUBJECT_LENGTH) {
+            return limpio.substring(0, MAX_SUBJECT_LENGTH);
+        }
+        return limpio;
     }
 
     private static List<List<String>> partirEnBloques(final List<String> elementos, final int tamanoMaximo) {

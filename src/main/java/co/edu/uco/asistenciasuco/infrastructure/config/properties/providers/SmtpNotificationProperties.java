@@ -5,6 +5,10 @@ import org.springframework.boot.context.properties.bind.ConstructorBinding;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -27,7 +31,8 @@ public record SmtpNotificationProperties(
         @DefaultValue("500") Integer ratePerDay,
         @DefaultValue("false") Boolean requireConfirmedEmail,
         @DefaultValue("") String platformUrl,
-        @DefaultValue("60s") Duration templateCacheTtl
+        @DefaultValue("60s") Duration templateCacheTtl,
+        @DefaultValue TestMode testMode
 ) {
 
     private static final Pattern SAFE_EMAIL_PATTERN = Pattern.compile(
@@ -87,6 +92,46 @@ public record SmtpNotificationProperties(
         if (templateCacheTtl.isZero() || templateCacheTtl.isNegative()) {
             throw new IllegalArgumentException("app.providers.smtp-notification.template-cache-ttl debe ser mayor que cero.");
         }
+        testMode = testMode == null ? new TestMode(false, List.of()) : testMode;
+    }
+
+    public SmtpNotificationProperties(
+            final String host,
+            final Integer port,
+            final String username,
+            final String password,
+            final Boolean starttls,
+            final Boolean ssl,
+            final String fromAddress,
+            final String fromName,
+            final Duration connectTimeout,
+            final Duration readTimeout,
+            final Integer maxBcc,
+            final Integer ratePerMinute,
+            final Integer ratePerDay,
+            final Boolean requireConfirmedEmail,
+            final String platformUrl,
+            final Duration templateCacheTtl
+    ) {
+        this(
+                host,
+                port,
+                username,
+                password,
+                starttls,
+                ssl,
+                fromAddress,
+                fromName,
+                connectTimeout,
+                readTimeout,
+                maxBcc,
+                ratePerMinute,
+                ratePerDay,
+                requireConfirmedEmail,
+                platformUrl,
+                templateCacheTtl,
+                new TestMode(false, List.of())
+        );
     }
 
     public SmtpNotificationProperties(
@@ -122,8 +167,65 @@ public record SmtpNotificationProperties(
                 ratePerDay,
                 requireConfirmedEmail,
                 platformUrl,
-                Duration.ofSeconds(60)
+                Duration.ofSeconds(60),
+                new TestMode(false, List.of())
         );
+    }
+
+    /**
+     * Configuracion del modo de pruebas con redireccion de correo (D15, CONTRACT §3.1 y §4.6).
+     */
+    public record TestMode(
+            Boolean enabled,
+            List<String> redirectTo
+    ) {
+        private static final int MAX_REDIRECT_ADDRESSES = 5;
+
+        public TestMode {
+            enabled = Boolean.TRUE.equals(enabled);
+            if (!enabled) {
+                redirectTo = List.of();
+            } else {
+                if (redirectTo == null || redirectTo.isEmpty()) {
+                    throw new IllegalArgumentException(
+                            "app.providers.smtp-notification.test-mode.redirect-to es obligatorio cuando test-mode.enabled=true."
+                    );
+                }
+                final Set<String> unicos = new LinkedHashSet<>();
+                for (final String raw : redirectTo) {
+                    if (!esCorreoSeguro(raw)) {
+                        throw new IllegalArgumentException(
+                                "app.providers.smtp-notification.test-mode.redirect-to contiene una direccion invalida o insegura."
+                        );
+                    }
+                    unicos.add(raw.trim());
+                }
+                if (unicos.size() > MAX_REDIRECT_ADDRESSES) {
+                    throw new IllegalArgumentException(
+                            "app.providers.smtp-notification.test-mode.redirect-to admite entre 1 y 5 direcciones."
+                    );
+                }
+                redirectTo = List.copyOf(unicos);
+            }
+        }
+
+        @ConstructorBinding
+        public TestMode(
+                @DefaultValue("false") final Boolean enabled,
+                @DefaultValue("") final String redirectTo
+        ) {
+            this(enabled, parsearCsv(enabled, redirectTo));
+        }
+
+        private static List<String> parsearCsv(final Boolean enabled, final String csv) {
+            if (!Boolean.TRUE.equals(enabled)) {
+                return List.of();
+            }
+            if (csv == null || csv.isBlank()) {
+                return List.of();
+            }
+            return Arrays.asList(csv.split(",", -1));
+        }
     }
 
     /**
