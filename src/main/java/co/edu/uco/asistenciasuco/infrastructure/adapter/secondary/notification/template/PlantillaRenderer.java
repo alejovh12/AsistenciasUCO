@@ -215,8 +215,8 @@ public class PlantillaRenderer {
                     + "<a href=\"" + urlEscapada + "\" style=\"color:#0f5132;\">Ir a la plataforma</a>.";
         }
         return layoutHtml
-                .replace("{{contenido}}", contenidoHtml)
-                .replace("{{pie}}", pieHtml);
+                .replace("{{pie}}", pieHtml)
+                .replace("{{contenido}}", contenidoHtml);
     }
 
     private static String sanitizarAsunto(final String asunto) {
