@@ -89,6 +89,18 @@ public class JakartaMailCorreoTransport implements CorreoTransport {
     }
 
     static boolean esFalloPermanente(final Throwable error) {
+        // Un fallo de red (host que no resuelve, conexion rechazada o expirada) es transitorio. Su mensaje incluye el puerto
+        // (por ejemplo "..., 587") y no debe confundirse con una respuesta SMTP 5xx del servidor.
+        for (Throwable red = error; red != null; red = red.getCause()) {
+            if (red instanceof java.net.UnknownHostException
+                    || red instanceof java.net.ConnectException
+                    || red instanceof java.net.SocketException
+                    || red instanceof java.net.SocketTimeoutException
+                    || red instanceof java.io.InterruptedIOException
+                    || "MailConnectException".equals(red.getClass().getSimpleName())) {
+                return false;
+            }
+        }
         Throwable cursor = error;
         while (cursor != null) {
             if (cursor instanceof AddressException) {
