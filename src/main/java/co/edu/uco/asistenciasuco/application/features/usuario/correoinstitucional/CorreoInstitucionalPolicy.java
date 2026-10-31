@@ -41,8 +41,16 @@ public final class CorreoInstitucionalPolicy {
     public void exigir(final String correo) {
         final String dominio = dominio();
         if (!cumple(correo, dominio)) {
-            throw new ValidationException(CODIGO_MENSAJE, mensajes.getUserMessage(CODIGO_MENSAJE, dominio));
+            throw new ValidationException(CODIGO_MENSAJE, conDominio(mensajes.getUserMessage(CODIGO_MENSAJE, dominio), dominio));
         }
+    }
+
+    /**
+     * El catalogo de la BD escribe el parametro como {@code {}} y el catalogo Java usa {@code MessageFormat} ({@code {0}}); si
+     * el marcador de la BD llega sin reemplazar, se sustituye aqui para que el mensaje siempre muestre el dominio.
+     */
+    private static String conDominio(final String mensaje, final String dominio) {
+        return mensaje != null && mensaje.contains("{}") ? mensaje.replace("{}", dominio) : mensaje;
     }
 
     static boolean cumple(final String correo, final String dominioConfigurado) {

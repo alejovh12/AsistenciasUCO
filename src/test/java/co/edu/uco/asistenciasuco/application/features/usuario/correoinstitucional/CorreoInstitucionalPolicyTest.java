@@ -101,6 +101,32 @@ class CorreoInstitucionalPolicyTest {
     }
 
     @Test
+    void exigir_reemplaza_el_marcador_de_la_BD_si_el_catalogo_lo_devuelve_sin_sustituir() {
+        final MessageCatalogPort catalogoDeLaBd = new MessageCatalogPort() {
+            @Override
+            public String getUserMessage(final String code, final Object... args) {
+                return "El correo del estudiante debe ser institucional y terminar en {}.";
+            }
+
+            @Override
+            public String getTechnicalMessage(final String code, final Object... args) {
+                return code;
+            }
+
+            @Override
+            public java.util.Optional<String> findUserMessage(final String code) {
+                return java.util.Optional.empty();
+            }
+        };
+        final CorreoInstitucionalPolicy policy = new CorreoInstitucionalPolicy(
+                parametros(new AtomicReference<>(DOMINIO)), catalogoDeLaBd);
+
+        final ValidationException exception = assertThrows(ValidationException.class, () -> policy.exigir("ana@gmail.com"));
+
+        assertEquals("El correo del estudiante debe ser institucional y terminar en @uco.edu.co.", exception.getMessage());
+    }
+
+    @Test
     void sin_parametro_configurado_falla_en_lugar_de_aceptar() {
         final ParameterCatalogPort sinParametro = new ParameterCatalogPort() {
             @Override
