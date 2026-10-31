@@ -78,6 +78,11 @@ final class DbFailureClassifier {
             case "RET_001", "RET_002" -> CommonErrorCode.RESOURCE_NOT_FOUND;
             case "RET_003" -> CommonErrorCode.CONFLICT;
             case "RET_004" -> CommonErrorCode.VALIDATION_ERROR;
+            // IDENT-001: correo institucional y verificacion. VCE_001/VCE_002 son entradas invalidas (400, VCE_002 identico para
+            // cualquier token invalido); VCE_005 ya verificado es conflicto; VCE_007 usuario inexistente o inactivo es no encontrado.
+            case "VCE_001", "VCE_002" -> CommonErrorCode.VALIDATION_ERROR;
+            case "VCE_005" -> CommonErrorCode.CONFLICT;
+            case "VCE_007" -> CommonErrorCode.RESOURCE_NOT_FOUND;
             // HU053-HU055: solicitudes de ingreso a grupo. SIG_001 no es estudiante; SIG_002/SIG_007 no encontrado (las
             // solicitudes ajenas son indistinguibles); periodo, duplicados, ya resuelta o sin cupo son conflicto.
             case "SIG_001" -> SecurityErrorCode.FORBIDDEN;
