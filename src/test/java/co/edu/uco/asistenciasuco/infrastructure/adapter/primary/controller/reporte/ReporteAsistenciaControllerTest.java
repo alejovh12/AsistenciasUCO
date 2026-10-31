@@ -2,6 +2,8 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.repo
 
 import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.primaryports.GenerarReporteAsistenciaInputPort;
 import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.primaryports.dto.ReporteAsistenciaDTO;
+import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.primaryports.dto.GenerarReporteAsistenciaDTO;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
@@ -22,9 +24,10 @@ class ReporteAsistenciaControllerTest {
     @Test
     void exportsWorkbookWithExpectedColumnsRowsAndAttendanceStates() throws Exception {
         final UUID grupoId = UUID.randomUUID();
-        final AtomicReference<UUID> requestedGroup = new AtomicReference<>();
-        final GenerarReporteAsistenciaInputPort port = id -> {
-            requestedGroup.set(id);
+        final UUID actorId = UUID.randomUUID();
+        final AtomicReference<GenerarReporteAsistenciaDTO> request = new AtomicReference<>();
+        final GenerarReporteAsistenciaInputPort port = input -> {
+            request.set(input);
             return List.of(
                     row(Boolean.TRUE, null),
                     row(Boolean.FALSE, "Excusa médica"),
@@ -33,9 +36,11 @@ class ReporteAsistenciaControllerTest {
             );
         };
 
-        final ResponseEntity<byte[]> response = new ReporteAsistenciaController(port).generarReporteExcel(grupoId);
+        final AuthenticatedUserResolver resolver = () -> actorId;
+        final ResponseEntity<byte[]> response = new ReporteAsistenciaController(port, resolver).generarReporteExcel(grupoId);
 
-        assertEquals(grupoId, requestedGroup.get());
+        assertEquals(grupoId, request.get().grupoId());
+        assertEquals(actorId, request.get().usuarioEjecutor());
         assertEquals(200, response.getStatusCode().value());
         assertEquals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 response.getHeaders().getContentType().toString());
@@ -62,11 +67,44 @@ class ReporteAsistenciaControllerTest {
 
     @Test
     void exportsHeaderForEmptyReport() throws Exception {
-        final ResponseEntity<byte[]> response = new ReporteAsistenciaController(id -> List.of())
+        final ResponseEntity<byte[]> response = new ReporteAsistenciaController(input -> List.of(), UUID::randomUUID    )
                 .generarReporteExcel(UUID.randomUUID());
         assertNotNull(response.getBody());
         try (var workbook = new XSSFWorkbook(new ByteArrayInputStream(response.getBody()))) {
             assertEquals(1, workbook.getSheet("Asistencia").getPhysicalNumberOfRows());
+        }
+    }
+
+    @Test
+    void exportsValidWorkbookWithNullValuesAndAllElevenColumns() throws Exception {
+        final UUID grupoId = UUID.randomUUID();
+        final ReporteAsistenciaDTO nullValues = new ReporteAsistenciaDTO(
+                null, null, null, null, null, null, null, null, null, null, null);
+        final ResponseEntity<byte[]> response = new ReporteAsistenciaController(
+                input -> List.of(nullValues), UUID::randomUUID).generarReporteExcel(grupoId);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                response.getHeaders().getContentType().toString());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().length > 0);
+
+        try (var workbook = new XSSFWorkbook(new ByteArrayInputStream(response.getBody()))) {
+            final var sheet = workbook.getSheet("Asistencia");
+            assertNotNull(sheet);
+            assertEquals(2, sheet.getPhysicalNumberOfRows());
+            assertEquals(11, sheet.getRow(0).getPhysicalNumberOfCells());
+            assertEquals(11, sheet.getRow(1).getPhysicalNumberOfCells());
+            assertArrayEquals(new String[] {"Codigo grupo", "Grupo", "Numero sesion", "Sesion", "Inicio", "Fin",
+                    "Documento", "Estudiante", "Correo", "Estado asistencia", "Observacion"},
+                    java.util.stream.IntStream.range(0, 11)
+                            .mapToObj(index -> sheet.getRow(0).getCell(index).getStringCellValue())
+                            .toArray(String[]::new));
+            for (int column = 0; column < 11; column++) {
+                assertNotNull(sheet.getRow(1).getCell(column));
+                assertEquals(column == 9 ? "SIN REGISTRO" : "",
+                        sheet.getRow(1).getCell(column).getStringCellValue());
+            }
         }
     }
 

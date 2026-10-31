@@ -2,6 +2,8 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.repo
 
 import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.primaryports.GenerarReporteAsistenciaInputPort;
 import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.primaryports.dto.ReporteAsistenciaDTO;
+import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.primaryports.dto.GenerarReporteAsistenciaDTO;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.http.ContentDisposition;
@@ -26,17 +28,27 @@ public final class ReporteAsistenciaController {
     private static final String XLSX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
     private final GenerarReporteAsistenciaInputPort generarReporteAsistenciaInputPort;
+    private final AuthenticatedUserResolver authenticatedUserResolver;
 
-    public ReporteAsistenciaController(final GenerarReporteAsistenciaInputPort generarReporteAsistenciaInputPort) {
+    public ReporteAsistenciaController(
+            final GenerarReporteAsistenciaInputPort generarReporteAsistenciaInputPort,
+            final AuthenticatedUserResolver authenticatedUserResolver
+    ) {
         this.generarReporteAsistenciaInputPort = Objects.requireNonNull(
                 generarReporteAsistenciaInputPort,
                 "GenerarReporteAsistenciaInputPort es obligatorio."
+        );
+        this.authenticatedUserResolver = Objects.requireNonNull(
+                authenticatedUserResolver,
+                "AuthenticatedUserResolver es obligatorio."
         );
     }
 
     @GetMapping("/{grupoId}/reportes/asistencia-excel")
     public ResponseEntity<byte[]> generarReporteExcel(@PathVariable final UUID grupoId) throws IOException {
-        final List<ReporteAsistenciaDTO> rows = generarReporteAsistenciaInputPort.execute(grupoId);
+        final List<ReporteAsistenciaDTO> rows = generarReporteAsistenciaInputPort.execute(
+                new GenerarReporteAsistenciaDTO(grupoId, authenticatedUserResolver.requireAuthenticatedUserId())
+        );
         final byte[] content = buildWorkbook(rows);
 
         return ResponseEntity.ok()
