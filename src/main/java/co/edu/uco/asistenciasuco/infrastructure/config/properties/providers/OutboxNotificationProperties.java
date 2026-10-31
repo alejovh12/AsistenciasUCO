@@ -59,7 +59,7 @@ public record OutboxNotificationProperties(
         String host = "host";
         try {
             host = InetAddress.getLocalHost().getHostName();
-        } catch (final UnknownHostException ignored) {
+        } catch (final UnknownHostException _) {
         }
         final byte[] bytes = new byte[4];
         new SecureRandom().nextBytes(bytes);

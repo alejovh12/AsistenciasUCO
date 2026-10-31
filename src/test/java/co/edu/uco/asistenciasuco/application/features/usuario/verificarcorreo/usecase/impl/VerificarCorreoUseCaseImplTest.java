@@ -158,10 +158,13 @@ class VerificarCorreoUseCaseImplTest {
 
     @Test
     void los_colaboradores_son_obligatorios() {
-        assertThrows(NullPointerException.class, () -> new VerificarCorreoUseCaseImpl(null, identidad(true, false), mensajes()));
+        final IdentityProviderPort idPort = identidad(true, false);
+        final MessageCatalogPort msgPort = mensajes();
+        final VerificacionCorreoRepositoryPort repoPort = repositorio(Optional.empty());
+        assertThrows(NullPointerException.class, () -> new VerificarCorreoUseCaseImpl(null, idPort, msgPort));
         assertThrows(NullPointerException.class,
-                () -> new VerificarCorreoUseCaseImpl(repositorio(Optional.empty()), null, mensajes()));
+                () -> new VerificarCorreoUseCaseImpl(repoPort, null, msgPort));
         assertThrows(NullPointerException.class,
-                () -> new VerificarCorreoUseCaseImpl(repositorio(Optional.empty()), identidad(true, false), null));
+                () -> new VerificarCorreoUseCaseImpl(repoPort, idPort, null));
     }
 }

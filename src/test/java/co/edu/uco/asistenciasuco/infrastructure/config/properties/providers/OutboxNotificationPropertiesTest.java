@@ -15,6 +15,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class OutboxNotificationPropertiesTest {
 
+    private static final Duration SEC_4 = Duration.ofSeconds(4);
+    private static final Duration SEC_30 = Duration.ofSeconds(30);
+    private static final Duration SEC_60 = Duration.ofSeconds(60);
+    private static final Duration MIN_10 = Duration.ofMinutes(10);
+    private static final Duration MIN_15 = Duration.ofMinutes(15);
+    private static final Duration HR_2 = Duration.ofHours(2);
+    private static final Duration HR_5 = Duration.ofHours(5);
+    private static final Duration HR_6 = Duration.ofHours(6);
+    private static final Duration HR_25 = Duration.ofHours(25);
+    private static final Duration MS_500 = Duration.ofMillis(500);
+
     @Test
     @DisplayName("BE-P02: propiedades con valores validos")
     void BE_P02_valores_validos() {
@@ -22,13 +33,13 @@ class OutboxNotificationPropertiesTest {
                 Sender.LOG,
                 true,
                 50,
-                Duration.ofSeconds(60),
-                Duration.ofSeconds(30),
+                SEC_60,
+                SEC_30,
                 5,
-                Duration.ofSeconds(30),
-                Duration.ofMinutes(15),
+                SEC_30,
+                MIN_15,
                 30,
-                Duration.ofHours(6),
+                HR_6,
                 "instancia-1"
         );
 
@@ -43,8 +54,8 @@ class OutboxNotificationPropertiesTest {
         final IllegalArgumentException exMin = assertThrows(
                 IllegalArgumentException.class,
                 () -> new OutboxNotificationProperties(
-                        Sender.LOG, true, 0, Duration.ofSeconds(60), Duration.ofSeconds(30), 5,
-                        Duration.ofSeconds(30), Duration.ofMinutes(15), 30, Duration.ofHours(6), ""
+                        Sender.LOG, true, 0, SEC_60, SEC_30, 5,
+                        SEC_30, MIN_15, 30, HR_6, ""
                 )
         );
         assertTrue(exMin.getMessage().contains("batch-size"));
@@ -52,8 +63,8 @@ class OutboxNotificationPropertiesTest {
         final IllegalArgumentException exMax = assertThrows(
                 IllegalArgumentException.class,
                 () -> new OutboxNotificationProperties(
-                        Sender.LOG, true, 501, Duration.ofSeconds(60), Duration.ofSeconds(30), 5,
-                        Duration.ofSeconds(30), Duration.ofMinutes(15), 30, Duration.ofHours(6), ""
+                        Sender.LOG, true, 501, SEC_60, SEC_30, 5,
+                        SEC_30, MIN_15, 30, HR_6, ""
                 )
         );
         assertTrue(exMax.getMessage().contains("batch-size"));
@@ -65,8 +76,8 @@ class OutboxNotificationPropertiesTest {
         final IllegalArgumentException exMin = assertThrows(
                 IllegalArgumentException.class,
                 () -> new OutboxNotificationProperties(
-                        Sender.LOG, true, 50, Duration.ofSeconds(4), Duration.ofSeconds(30), 5,
-                        Duration.ofSeconds(30), Duration.ofMinutes(15), 30, Duration.ofHours(6), ""
+                        Sender.LOG, true, 50, SEC_4, SEC_30, 5,
+                        SEC_30, MIN_15, 30, HR_6, ""
                 )
         );
         assertTrue(exMin.getMessage().contains("lease"));
@@ -74,8 +85,8 @@ class OutboxNotificationPropertiesTest {
         final IllegalArgumentException exMax = assertThrows(
                 IllegalArgumentException.class,
                 () -> new OutboxNotificationProperties(
-                        Sender.LOG, true, 50, Duration.ofHours(2), Duration.ofSeconds(30), 5,
-                        Duration.ofSeconds(30), Duration.ofMinutes(15), 30, Duration.ofHours(6), ""
+                        Sender.LOG, true, 50, HR_2, SEC_30, 5,
+                        SEC_30, MIN_15, 30, HR_6, ""
                 )
         );
         assertTrue(exMax.getMessage().contains("lease"));
@@ -87,8 +98,8 @@ class OutboxNotificationPropertiesTest {
         final IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
                 () -> new OutboxNotificationProperties(
-                        Sender.LOG, true, 50, Duration.ofSeconds(60), Duration.ofSeconds(30), 5,
-                        Duration.ofMinutes(10), Duration.ofSeconds(30), 30, Duration.ofHours(6), ""
+                        Sender.LOG, true, 50, SEC_60, SEC_30, 5,
+                        MIN_10, SEC_30, 30, HR_6, ""
                 )
         );
         assertTrue(ex.getMessage().contains("backoff-max"));
@@ -100,8 +111,8 @@ class OutboxNotificationPropertiesTest {
         final IllegalArgumentException exMin = assertThrows(
                 IllegalArgumentException.class,
                 () -> new OutboxNotificationProperties(
-                        Sender.LOG, true, 50, Duration.ofSeconds(60), Duration.ofSeconds(30), 5,
-                        Duration.ofSeconds(30), Duration.ofMinutes(15), 0, Duration.ofHours(6), ""
+                        Sender.LOG, true, 50, SEC_60, SEC_30, 5,
+                        SEC_30, MIN_15, 0, HR_6, ""
                 )
         );
         assertTrue(exMin.getMessage().contains("retention-days"));
@@ -109,8 +120,8 @@ class OutboxNotificationPropertiesTest {
         final IllegalArgumentException exMax = assertThrows(
                 IllegalArgumentException.class,
                 () -> new OutboxNotificationProperties(
-                        Sender.LOG, true, 50, Duration.ofSeconds(60), Duration.ofSeconds(30), 5,
-                        Duration.ofSeconds(30), Duration.ofMinutes(15), 3651, Duration.ofHours(6), ""
+                        Sender.LOG, true, 50, SEC_60, SEC_30, 5,
+                        SEC_30, MIN_15, 3651, HR_6, ""
                 )
         );
         assertTrue(exMax.getMessage().contains("retention-days"));
@@ -120,12 +131,12 @@ class OutboxNotificationPropertiesTest {
     @DisplayName("BE-P02: sweeperInterval fuera de rango (1s..1h) lanza excepcion")
     void BE_P02_sweeper_interval_fuera_de_rango() {
         assertThrows(IllegalArgumentException.class, () -> new OutboxNotificationProperties(
-                Sender.LOG, true, 50, Duration.ofSeconds(60), Duration.ofMillis(500), 5,
-                Duration.ofSeconds(30), Duration.ofMinutes(15), 30, Duration.ofHours(6), ""
+                Sender.LOG, true, 50, SEC_60, MS_500, 5,
+                SEC_30, MIN_15, 30, HR_6, ""
         ));
         assertThrows(IllegalArgumentException.class, () -> new OutboxNotificationProperties(
-                Sender.LOG, true, 50, Duration.ofSeconds(60), Duration.ofHours(2), 5,
-                Duration.ofSeconds(30), Duration.ofMinutes(15), 30, Duration.ofHours(6), ""
+                Sender.LOG, true, 50, SEC_60, HR_2, 5,
+                SEC_30, MIN_15, 30, HR_6, ""
         ));
     }
 
@@ -133,12 +144,12 @@ class OutboxNotificationPropertiesTest {
     @DisplayName("BE-P02: maxAttempts fuera de rango (1..20) lanza excepcion")
     void BE_P02_max_attempts_fuera_de_rango() {
         assertThrows(IllegalArgumentException.class, () -> new OutboxNotificationProperties(
-                Sender.LOG, true, 50, Duration.ofSeconds(60), Duration.ofSeconds(30), 0,
-                Duration.ofSeconds(30), Duration.ofMinutes(15), 30, Duration.ofHours(6), ""
+                Sender.LOG, true, 50, SEC_60, SEC_30, 0,
+                SEC_30, MIN_15, 30, HR_6, ""
         ));
         assertThrows(IllegalArgumentException.class, () -> new OutboxNotificationProperties(
-                Sender.LOG, true, 50, Duration.ofSeconds(60), Duration.ofSeconds(30), 21,
-                Duration.ofSeconds(30), Duration.ofMinutes(15), 30, Duration.ofHours(6), ""
+                Sender.LOG, true, 50, SEC_60, SEC_30, 21,
+                SEC_30, MIN_15, 30, HR_6, ""
         ));
     }
 
@@ -146,12 +157,12 @@ class OutboxNotificationPropertiesTest {
     @DisplayName("BE-P02: backoffBase fuera de rango (1s..1h) lanza excepcion")
     void BE_P02_backoff_base_fuera_de_rango() {
         assertThrows(IllegalArgumentException.class, () -> new OutboxNotificationProperties(
-                Sender.LOG, true, 50, Duration.ofSeconds(60), Duration.ofSeconds(30), 5,
-                Duration.ofMillis(500), Duration.ofMinutes(15), 30, Duration.ofHours(6), ""
+                Sender.LOG, true, 50, SEC_60, SEC_30, 5,
+                MS_500, MIN_15, 30, HR_6, ""
         ));
         assertThrows(IllegalArgumentException.class, () -> new OutboxNotificationProperties(
-                Sender.LOG, true, 50, Duration.ofSeconds(60), Duration.ofSeconds(30), 5,
-                Duration.ofHours(2), Duration.ofHours(5), 30, Duration.ofHours(6), ""
+                Sender.LOG, true, 50, SEC_60, SEC_30, 5,
+                HR_2, HR_5, 30, HR_6, ""
         ));
     }
 
@@ -159,8 +170,8 @@ class OutboxNotificationPropertiesTest {
     @DisplayName("BE-P02: backoffMax mayor a 24h lanza excepcion")
     void BE_P02_backoff_max_mayor_a_24h() {
         assertThrows(IllegalArgumentException.class, () -> new OutboxNotificationProperties(
-                Sender.LOG, true, 50, Duration.ofSeconds(60), Duration.ofSeconds(30), 5,
-                Duration.ofSeconds(30), Duration.ofHours(25), 30, Duration.ofHours(6), ""
+                Sender.LOG, true, 50, SEC_60, SEC_30, 5,
+                SEC_30, HR_25, 30, HR_6, ""
         ));
     }
 
@@ -168,20 +179,20 @@ class OutboxNotificationPropertiesTest {
     @DisplayName("BE-P02: duraciones nulas lanzan excepcion")
     void BE_P02_duraciones_nulas() {
         assertThrows(IllegalArgumentException.class, () -> new OutboxNotificationProperties(
-                Sender.LOG, true, 50, null, Duration.ofSeconds(30), 5,
-                Duration.ofSeconds(30), Duration.ofMinutes(15), 30, Duration.ofHours(6), ""
+                Sender.LOG, true, 50, null, SEC_30, 5,
+                SEC_30, MIN_15, 30, HR_6, ""
         ));
         assertThrows(IllegalArgumentException.class, () -> new OutboxNotificationProperties(
-                Sender.LOG, true, 50, Duration.ofSeconds(60), null, 5,
-                Duration.ofSeconds(30), Duration.ofMinutes(15), 30, Duration.ofHours(6), ""
+                Sender.LOG, true, 50, SEC_60, null, 5,
+                SEC_30, MIN_15, 30, HR_6, ""
         ));
         assertThrows(IllegalArgumentException.class, () -> new OutboxNotificationProperties(
-                Sender.LOG, true, 50, Duration.ofSeconds(60), Duration.ofSeconds(30), 5,
-                null, Duration.ofMinutes(15), 30, Duration.ofHours(6), ""
+                Sender.LOG, true, 50, SEC_60, SEC_30, 5,
+                null, MIN_15, 30, HR_6, ""
         ));
         assertThrows(IllegalArgumentException.class, () -> new OutboxNotificationProperties(
-                Sender.LOG, true, 50, Duration.ofSeconds(60), Duration.ofSeconds(30), 5,
-                Duration.ofSeconds(30), null, 30, Duration.ofHours(6), ""
+                Sender.LOG, true, 50, SEC_60, SEC_30, 5,
+                SEC_30, null, 30, HR_6, ""
         ));
     }
 

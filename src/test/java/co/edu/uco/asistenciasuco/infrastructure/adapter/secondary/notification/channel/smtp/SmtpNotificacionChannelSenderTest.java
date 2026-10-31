@@ -34,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -674,7 +675,8 @@ class SmtpNotificacionChannelSenderTest {
         when(contactoResolver.consultarContactos(any())).thenReturn(listaConElementoNull);
         when(plantillaRepository.consultarActiva("RETIRO_ESTUDIANTE_GRUPO", "es")).thenReturn(Optional.empty());
 
-        assertThrows(IllegalStateException.class, () -> sender.enviar(notificacionRetiro(List.of(u1, u2))));
+        final NotificacionPersistida notif = notificacionRetiro(List.of(u1, u2));
+        assertThrows(IllegalStateException.class, () -> sender.enviar(notif));
         assertFalse(sender.disponible());
 
         // 3. JakartaMailCorreoTransport con JavaMailSender mockeado y constructor con propiedades (con y sin auth)
@@ -736,11 +738,11 @@ class SmtpNotificacionChannelSenderTest {
         ));
 
         // Excepcion permanente y transitoria al llamar enviar()
-        org.mockito.Mockito.doThrow(new org.springframework.mail.MailSendException("554 5.7.1 Rejected"))
+        doThrow(new org.springframework.mail.MailSendException("554 5.7.1 Rejected"))
                 .when(mailSenderMock).send(any(jakarta.mail.internet.MimeMessage.class));
         assertThrows(NotificacionNoEntregableException.class, () -> jakartaTransport.enviar(cNulls));
 
-        org.mockito.Mockito.doThrow(new org.springframework.mail.MailSendException("451 Temporary failure"))
+        doThrow(new org.springframework.mail.MailSendException("451 Temporary failure"))
                 .when(mailSenderMock).send(any(jakarta.mail.internet.MimeMessage.class));
         assertThrows(IllegalStateException.class, () -> jakartaTransport.enviar(cNulls));
     }

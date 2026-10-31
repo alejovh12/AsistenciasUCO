@@ -36,7 +36,7 @@ public record SmtpNotificationProperties(
 ) {
 
     private static final Pattern SAFE_EMAIL_PATTERN = Pattern.compile(
-            "^[^@\\s\\r\\n,;<>\"()]+@[^@\\s\\r\\n,;<>\"().]+(?:\\.[^@\\s\\r\\n,;<>\"().]+)+$"
+            "^[^@\\s,;<>\"()]+@[^@\\s,;<>\"().]+(?:\\.[^@\\s,;<>\"().]+)+$"
     );
 
     @ConstructorBinding

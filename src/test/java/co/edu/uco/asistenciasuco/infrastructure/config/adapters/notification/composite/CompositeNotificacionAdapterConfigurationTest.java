@@ -35,8 +35,9 @@ class CompositeNotificacionAdapterConfigurationTest {
         final ObjectProvider<OutboxNotificacionAdapter> outboxProvider = mock(ObjectProvider.class);
         when(logProvider.getIfAvailable()).thenReturn(null);
 
+        final SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
         assertThrows(IllegalStateException.class, () -> configuration.compositeNotificacionPort(
-                props, logProvider, outboxProvider, new SimpleMeterRegistry()
+                props, logProvider, outboxProvider, meterRegistry
         ));
     }
 
@@ -53,8 +54,9 @@ class CompositeNotificacionAdapterConfigurationTest {
         when(logProvider.getIfAvailable()).thenReturn(new LogNotificacionAdapter());
         when(outboxProvider.getIfAvailable()).thenReturn(null);
 
+        final SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
         assertThrows(IllegalStateException.class, () -> configuration.compositeNotificacionPort(
-                props, logProvider, outboxProvider, new SimpleMeterRegistry()
+                props, logProvider, outboxProvider, meterRegistry
         ));
     }
 

@@ -178,7 +178,7 @@ class NotificacionSalienteJpaRepositoryTest {
         final UUID id = UUID.randomUUID();
         final UUID corrId = UUID.randomUUID();
         final java.sql.Timestamp ts = java.sql.Timestamp.from(Instant.now());
-        final Object[] fila = new Object[]{
+        final Object[] fila = {
                 id.toString(), "TIPO_B", "Asunto", "Mensaje", "[]", "{}",
                 Integer.valueOf(2), ts, corrId, null, null
         };
@@ -216,19 +216,19 @@ class NotificacionSalienteJpaRepositoryTest {
         final java.time.ZonedDateTime zdt = java.time.ZonedDateTime.now();
 
         final UUID corrId = UUID.randomUUID();
-        final Object[] fila1 = new Object[]{
+        final Object[] fila1 = {
                 id, "TIPO_1", "A1", "M1", "[]", "{}", "1", now, corrId, "tr1", "sp1"
         };
-        final Object[] fila2 = new Object[]{
+        final Object[] fila2 = {
                 null, "TIPO_2", "A2", "M2", "[]", "{}", null, odt, null, null, null
         };
-        final Object[] fila3 = new Object[]{
+        final Object[] fila3 = {
                 id.toString(), "TIPO_3", "A3", "M3", "[]", "{}", 3, zdt, corrId.toString(), null, null
         };
-        final Object[] fila4 = new Object[]{
+        final Object[] fila4 = {
                 id, "TIPO_4", "A4", "M4", "[]", "{}", 4, now.toString(), corrId, null, null
         };
-        final Object[] fila5 = new Object[]{
+        final Object[] fila5 = {
                 id, "TIPO_5", "A5", "M5", "[]", "{}", 5, null, null, null, null
         };
 

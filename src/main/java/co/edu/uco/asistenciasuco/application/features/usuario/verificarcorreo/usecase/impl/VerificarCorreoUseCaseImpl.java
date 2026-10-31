@@ -19,7 +19,7 @@ import java.util.UUID;
  *   <li>se habilita la cuenta y se marca el correo verificado en el IdP (idempotente);</li>
  *   <li>solo entonces se consume el token y se marca {@code correoConfirmado} en la base de datos.</li>
  * </ol>
- * Si el IdP falla el token sigue vigente y el enlace se puede reintentar. Todo token invalido (formato incorrecto,
+ * Si el IdP falla el token sigue vigente y el enlace se puede reintentar. Cualquier token invalido (formato incorrecto,
  * inexistente, vencido, usado o revocado) produce exactamente la misma respuesta (VCE_002).
  */
 public final class VerificarCorreoUseCaseImpl implements VerificarCorreoUseCase {

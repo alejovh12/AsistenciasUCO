@@ -38,7 +38,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
+
+import static org.awaitility.Awaitility.await;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -126,20 +129,20 @@ class NotificacionOutboxIT {
         jdbcTemplate.update("DELETE FROM dbo.NotificacionSaliente WHERE tipo LIKE 'TEST_IT%'");
     }
 
-    private Map<String, Object> esperarEstado(UUID id, String estadoEsperado, int maxSegundos) throws InterruptedException {
-        Map<String, Object> row = null;
-        for (int i = 0; i < maxSegundos * 4; i++) {
-            row = jdbcTemplate.queryForMap(
-                    "SELECT n.intentos, n.entregadoEn, n.reservadoPor, e.codigo as estado " +
-                            "FROM dbo.NotificacionSaliente n " +
-                            "JOIN dbo.EstadoNotificacion e ON n.idEstado = e.id " +
-                            "WHERE n.id = ?", id);
-            if (estadoEsperado.equals(row.get("estado"))) {
-                return row;
-            }
-            Thread.sleep(250);
-        }
-        return row;
+    private Map<String, Object> esperarEstado(UUID id, String estadoEsperado, int maxSegundos) {
+        final AtomicReference<Map<String, Object>> rowRef = new AtomicReference<>();
+        await().atMost(Duration.ofSeconds(maxSegundos))
+                .pollInterval(Duration.ofMillis(250))
+                .until(() -> {
+                    Map<String, Object> row = jdbcTemplate.queryForMap(
+                            "SELECT n.intentos, n.entregadoEn, n.reservadoPor, e.codigo as estado " +
+                                    "FROM dbo.NotificacionSaliente n " +
+                                    "JOIN dbo.EstadoNotificacion e ON n.idEstado = e.id " +
+                                    "WHERE n.id = ?", id);
+                    rowRef.set(row);
+                    return estadoEsperado.equals(row.get("estado"));
+                });
+        return rowRef.get();
     }
 
     @Test
@@ -238,23 +241,25 @@ class NotificacionOutboxIT {
 
         outboxNotificacionAdapter.notificar(notificacion);
 
-        UUID id = null;
-        for (int i = 0; i < 30; i++) {
-            List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                    "SELECT n.id, n.intentos, e.codigo as estado " +
-                            "FROM dbo.NotificacionSaliente n " +
-                            "JOIN dbo.EstadoNotificacion e ON n.idEstado = e.id " +
-                            "WHERE n.tipo = ?", tipo);
-            if (!rows.isEmpty()) {
-                Object idObj = rows.get(0).get("id");
-                id = idObj instanceof UUID u ? u : UUID.fromString(idObj.toString());
-                trackedIds.add(id);
-                if ("FALLIDA_DEFINITIVA".equals(rows.get(0).get("estado"))) {
-                    break;
-                }
-            }
-            Thread.sleep(500);
-        }
+        final AtomicReference<UUID> idRef = new AtomicReference<>();
+        await().atMost(Duration.ofSeconds(15))
+                .pollInterval(Duration.ofMillis(500))
+                .until(() -> {
+                    List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                            "SELECT n.id, n.intentos, e.codigo as estado " +
+                                    "FROM dbo.NotificacionSaliente n " +
+                                    "JOIN dbo.EstadoNotificacion e ON n.idEstado = e.id " +
+                                    "WHERE n.tipo = ?", tipo);
+                    if (!rows.isEmpty()) {
+                        Object idObj = rows.get(0).get("id");
+                        UUID currentId = idObj instanceof UUID u ? u : UUID.fromString(idObj.toString());
+                        idRef.set(currentId);
+                        trackedIds.add(currentId);
+                        return "FALLIDA_DEFINITIVA".equals(rows.get(0).get("estado"));
+                    }
+                    return false;
+                });
+        UUID id = idRef.get();
 
         assertNotNull(id, "La fila debio persistirse en dbo.NotificacionSaliente");
         Map<String, Object> finalRow = jdbcTemplate.queryForMap(
@@ -291,23 +296,25 @@ class NotificacionOutboxIT {
 
         outboxNotificacionAdapter.notificar(notificacion);
 
-        UUID id = null;
-        for (int i = 0; i < 20; i++) {
-            List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                    "SELECT n.id, n.intentos, n.codigoError, n.detalleError, e.codigo as estado " +
-                            "FROM dbo.NotificacionSaliente n " +
-                            "JOIN dbo.EstadoNotificacion e ON n.idEstado = e.id " +
-                            "WHERE n.tipo = ?", tipo);
-            if (!rows.isEmpty()) {
-                Object idObj = rows.get(0).get("id");
-                id = idObj instanceof UUID u ? u : UUID.fromString(idObj.toString());
-                trackedIds.add(id);
-                if ("FALLIDA_DEFINITIVA".equals(rows.get(0).get("estado"))) {
-                    break;
-                }
-            }
-            Thread.sleep(500);
-        }
+        final AtomicReference<UUID> idRef = new AtomicReference<>();
+        await().atMost(Duration.ofSeconds(10))
+                .pollInterval(Duration.ofMillis(500))
+                .until(() -> {
+                    List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                            "SELECT n.id, n.intentos, n.codigoError, n.detalleError, e.codigo as estado " +
+                                    "FROM dbo.NotificacionSaliente n " +
+                                    "JOIN dbo.EstadoNotificacion e ON n.idEstado = e.id " +
+                                    "WHERE n.tipo = ?", tipo);
+                    if (!rows.isEmpty()) {
+                        Object idObj = rows.get(0).get("id");
+                        UUID currentId = idObj instanceof UUID u ? u : UUID.fromString(idObj.toString());
+                        idRef.set(currentId);
+                        trackedIds.add(currentId);
+                        return "FALLIDA_DEFINITIVA".equals(rows.get(0).get("estado"));
+                    }
+                    return false;
+                });
+        UUID id = idRef.get();
 
         assertNotNull(id, "La fila debio persistirse");
         Map<String, Object> finalRow = jdbcTemplate.queryForMap(

@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -67,7 +68,8 @@ class CorreoInstitucionalPolicyTest {
 
     @Test
     void exigir_con_correo_valido_no_lanza() {
-        politica(DOMINIO).exigir("ana.perez@uco.edu.co");
+        final CorreoInstitucionalPolicy policy = politica(DOMINIO);
+        assertDoesNotThrow(() -> policy.exigir("ana.perez@uco.edu.co"));
     }
 
     @Test

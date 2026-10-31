@@ -44,13 +44,16 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -255,30 +258,34 @@ class NotificacionSmtpGreenMailIT {
         return userId;
     }
 
-    private Map<String, Object> esperarFilaPorDestinatario(UUID destId, String estadoEsperado, int maxSegundos)
-            throws InterruptedException {
+    private Map<String, Object> esperarFilaPorDestinatario(UUID destId, String estadoEsperado, int maxSegundos) {
         String patron = "%" + destId + "%";
-        Map<String, Object> ultima = null;
-        for (int i = 0; i < maxSegundos * 4; i++) {
-            List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                    "SELECT n.id, n.intentos, n.entregadoEn, n.codigoError, n.detalleError, e.codigo AS estado " +
-                            "FROM dbo.NotificacionSaliente n " +
-                            "JOIN dbo.EstadoNotificacion e ON n.idEstado = e.id " +
-                            "WHERE n.destinatarios LIKE ?",
-                    patron
-            );
-            if (!rows.isEmpty()) {
-                ultima = rows.get(0);
-                Object idObj = ultima.get("id");
-                UUID id = idObj instanceof UUID u ? u : UUID.fromString(idObj.toString());
-                trackedNotifIds.add(id);
-                if (estadoEsperado.equals(ultima.get("estado"))) {
-                    return ultima;
-                }
-            }
-            Thread.sleep(250);
+        final AtomicReference<Map<String, Object>> ultimaRef = new AtomicReference<>();
+        try {
+            await().atMost(Duration.ofSeconds(maxSegundos))
+                    .pollInterval(Duration.ofMillis(250))
+                    .until(() -> {
+                        List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                                "SELECT n.id, n.intentos, n.entregadoEn, n.codigoError, n.detalleError, e.codigo AS estado " +
+                                        "FROM dbo.NotificacionSaliente n " +
+                                        "JOIN dbo.EstadoNotificacion e ON n.idEstado = e.id " +
+                                        "WHERE n.destinatarios LIKE ?",
+                                patron
+                        );
+                        if (!rows.isEmpty()) {
+                            Map<String, Object> ultima = rows.get(0);
+                            ultimaRef.set(ultima);
+                            Object idObj = ultima.get("id");
+                            UUID id = idObj instanceof UUID u ? u : UUID.fromString(idObj.toString());
+                            trackedNotifIds.add(id);
+                            return estadoEsperado.equals(ultima.get("estado"));
+                        }
+                        return false;
+                    });
+        } catch (org.awaitility.core.ConditionTimeoutException _) {
+            // Se retorna la ultima fila capturada si agoto el tiempo
         }
-        return ultima;
+        return ultimaRef.get();
     }
 
     private String extraerParteTexto(MimeMessage message, String mimePrefix) throws Exception {
@@ -406,7 +413,7 @@ class NotificacionSmtpGreenMailIT {
         );
 
         // Esperar TTL de caché (1s configurado en @SpringBootTest)
-        Thread.sleep(1300);
+        await().pollDelay(Duration.ofMillis(1300)).until(() -> true);
 
         outboxNotificacionAdapter.notificar(new Notificacion(
                 "RETIRO_ESTUDIANTE_GRUPO",
@@ -434,7 +441,7 @@ class NotificacionSmtpGreenMailIT {
                 "UPDATE dbo.PlantillaNotificacion SET activa = 0 " +
                         "WHERE tipo = 'RETIRO_ESTUDIANTE_GRUPO' AND idioma = 'es' AND version = 1"
         );
-        Thread.sleep(1300);
+        await().pollDelay(Duration.ofMillis(1300)).until(() -> true);
 
         outboxNotificacionAdapter.notificar(new Notificacion(
                 "RETIRO_ESTUDIANTE_GRUPO",
@@ -521,13 +528,12 @@ class NotificacionSmtpGreenMailIT {
             dispatcher.signal();
 
             // Esperar a que falle el primer intento y quede PENDIENTE con intentos >= 1
-            for (int i = 0; i < 30; i++) {
-                Map<String, Object> f = esperarFilaPorDestinatario(destId, "PENDIENTE", 1);
-                if (f != null && ((Number) f.get("intentos")).intValue() >= 1) {
-                    break;
-                }
-                Thread.sleep(50);
-            }
+            await().atMost(Duration.ofSeconds(3))
+                    .pollInterval(Duration.ofMillis(100))
+                    .until(() -> {
+                        Map<String, Object> f = esperarFilaPorDestinatario(destId, "PENDIENTE", 1);
+                        return f != null && ((Number) f.get("intentos")).intValue() >= 1;
+                    });
         } finally {
             asegurarGreenMailActivo();
         }
@@ -560,7 +566,7 @@ class NotificacionSmtpGreenMailIT {
                 Map.of("grupo", "G-08", "estudiante", "Tomás", "notif002aIt", "true")
         ));
         dispatcher.signal();
-        Thread.sleep(1200);
+        await().pollDelay(Duration.ofMillis(1200)).until(() -> true);
 
         Map<String, Object> enEspera = esperarFilaPorDestinatario(destId, "PENDIENTE", 2);
         assertNotNull(enEspera);

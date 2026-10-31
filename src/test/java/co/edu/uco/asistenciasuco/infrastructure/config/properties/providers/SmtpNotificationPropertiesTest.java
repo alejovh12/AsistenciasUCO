@@ -78,84 +78,89 @@ class SmtpNotificationPropertiesTest {
     @Test
     @DisplayName("BE-P02: rechaza host vacio, puerto invalido, from-address invalido, starttls+ssl, rate-per-day < rate-per-minute y max-bcc fuera de 1..100")
     void BE_P02_rechaza_configuraciones_invalidas() {
+        final Duration d10 = Duration.ofSeconds(10);
+        final Duration d20 = Duration.ofSeconds(20);
+        final Duration d60 = Duration.ofSeconds(60);
+        final Duration dNeg1 = Duration.ofSeconds(-1);
+
         // Host nulo o vacio
         assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties(
                 null, 587, "", "", true, false, "no-reply@uco.edu.co", "Asistencia UCO",
-                Duration.ofSeconds(10), Duration.ofSeconds(20), 50, 60, 500, false, "", Duration.ofSeconds(60)
+                d10, d20, 50, 60, 500, false, "", d60
         ));
         assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties(
                 "   ", 587, "", "", true, false, "no-reply@uco.edu.co", "Asistencia UCO",
-                Duration.ofSeconds(10), Duration.ofSeconds(20), 50, 60, 500, false, "", Duration.ofSeconds(60)
+                d10, d20, 50, 60, 500, false, "", d60
         ));
 
         // Puerto fuera de 1..65535
         assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties(
                 "smtp.uco.edu.co", 0, "", "", true, false, "no-reply@uco.edu.co", "Asistencia UCO",
-                Duration.ofSeconds(10), Duration.ofSeconds(20), 50, 60, 500, false, "", Duration.ofSeconds(60)
+                d10, d20, 50, 60, 500, false, "", d60
         ));
         assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties(
                 "smtp.uco.edu.co", 65536, "", "", true, false, "no-reply@uco.edu.co", "Asistencia UCO",
-                Duration.ofSeconds(10), Duration.ofSeconds(20), 50, 60, 500, false, "", Duration.ofSeconds(60)
+                d10, d20, 50, 60, 500, false, "", d60
         ));
 
         // from-address invalido o con salto de linea
         assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties(
                 "smtp.uco.edu.co", 587, "", "", true, false, "", "Asistencia UCO",
-                Duration.ofSeconds(10), Duration.ofSeconds(20), 50, 60, 500, false, "", Duration.ofSeconds(60)
+                d10, d20, 50, 60, 500, false, "", d60
         ));
         assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties(
                 "smtp.uco.edu.co", 587, "", "", true, false, "correo-sin-arroba", "Asistencia UCO",
-                Duration.ofSeconds(10), Duration.ofSeconds(20), 50, 60, 500, false, "", Duration.ofSeconds(60)
+                d10, d20, 50, 60, 500, false, "", d60
         ));
         assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties(
                 "smtp.uco.edu.co", 587, "", "", true, false, "bad\r\n@uco.edu.co", "Asistencia UCO",
-                Duration.ofSeconds(10), Duration.ofSeconds(20), 50, 60, 500, false, "", Duration.ofSeconds(60)
+                d10, d20, 50, 60, 500, false, "", d60
         ));
 
         // starttls y ssl simultaneos
         assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties(
                 "smtp.uco.edu.co", 587, "", "", true, true, "no-reply@uco.edu.co", "Asistencia UCO",
-                Duration.ofSeconds(10), Duration.ofSeconds(20), 50, 60, 500, false, "", Duration.ofSeconds(60)
+                d10, d20, 50, 60, 500, false, "", d60
         ));
 
         // max-bcc fuera de 1..100
         assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties(
                 "smtp.uco.edu.co", 587, "", "", true, false, "no-reply@uco.edu.co", "Asistencia UCO",
-                Duration.ofSeconds(10), Duration.ofSeconds(20), 0, 60, 500, false, "", Duration.ofSeconds(60)
+                d10, d20, 0, 60, 500, false, "", d60
         ));
         assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties(
                 "smtp.uco.edu.co", 587, "", "", true, false, "no-reply@uco.edu.co", "Asistencia UCO",
-                Duration.ofSeconds(10), Duration.ofSeconds(20), 101, 60, 500, false, "", Duration.ofSeconds(60)
+                d10, d20, 101, 60, 500, false, "", d60
         ));
 
         // rate-per-minute fuera de 1..10000
         assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties(
                 "smtp.uco.edu.co", 587, "", "", true, false, "no-reply@uco.edu.co", "Asistencia UCO",
-                Duration.ofSeconds(10), Duration.ofSeconds(20), 50, 0, 500, false, "", Duration.ofSeconds(60)
+                d10, d20, 50, 0, 500, false, "", d60
         ));
         assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties(
                 "smtp.uco.edu.co", 587, "", "", true, false, "no-reply@uco.edu.co", "Asistencia UCO",
-                Duration.ofSeconds(10), Duration.ofSeconds(20), 50, 10001, 20000, false, "", Duration.ofSeconds(60)
+                d10, d20, 50, 10001, 20000, false, "", d60
         ));
 
         // rate-per-day < rate-per-minute
         assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties(
                 "smtp.uco.edu.co", 587, "", "", true, false, "no-reply@uco.edu.co", "Asistencia UCO",
-                Duration.ofSeconds(10), Duration.ofSeconds(20), 50, 60, 59, false, "", Duration.ofSeconds(60)
+                d10, d20, 50, 60, 59, false, "", d60
         ));
 
         // connect-timeout / read-timeout / template-cache-ttl invalidos (<= 0)
         assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties(
                 "smtp.uco.edu.co", 587, "", "", true, false, "no-reply@uco.edu.co", "Asistencia UCO",
-                Duration.ZERO, Duration.ofSeconds(20), 50, 60, 500, false, "", Duration.ofSeconds(60)
+                Duration.ZERO, d20, 50, 60, 500, false, "", d60
         ));
         assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties(
                 "smtp.uco.edu.co", 587, "", "", true, false, "no-reply@uco.edu.co", "Asistencia UCO",
-                Duration.ofSeconds(10), Duration.ZERO, 50, 60, 500, false, "", Duration.ofSeconds(60)
+                d10, Duration.ZERO, 50, 60, 500, false, "", d60
         ));
         assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties(
                 "smtp.uco.edu.co", 587, "", "", true, false, "no-reply@uco.edu.co", "Asistencia UCO",
-                Duration.ofSeconds(10), Duration.ofSeconds(20), 50, 60, 500, false, "", Duration.ofSeconds(-1)
+                d10, d20, 50, 60, 500, false, "", dNeg1
         ));
     }
 
@@ -203,23 +208,27 @@ class SmtpNotificationPropertiesTest {
         );
         assertEquals("http://localhost:4200", conHttp.platformUrl());
 
+        final Duration d10 = Duration.ofSeconds(10);
+        final Duration d20 = Duration.ofSeconds(20);
+        final Duration d60 = Duration.ofSeconds(60);
+
         final SmtpNotificationProperties conHttps = new SmtpNotificationProperties(
                 "smtp.uco.edu.co", 587, "", "", true, false, "no-reply@uco.edu.co", "Asistencia UCO",
-                Duration.ofSeconds(10), Duration.ofSeconds(20), 50, 60, 500, false, "https://asistencia.uco.edu.co", Duration.ofSeconds(60)
+                d10, d20, 50, 60, 500, false, "https://asistencia.uco.edu.co", d60
         );
         assertEquals("https://asistencia.uco.edu.co", conHttps.platformUrl());
 
         assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties(
                 "smtp.uco.edu.co", 587, "", "", true, false, "no-reply@uco.edu.co", "Asistencia UCO",
-                Duration.ofSeconds(10), Duration.ofSeconds(20), 50, 60, 500, false, "javascript:alert(1)", Duration.ofSeconds(60)
+                d10, d20, 50, 60, 500, false, "javascript:alert(1)", d60
         ));
         assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties(
                 "smtp.uco.edu.co", 587, "", "", true, false, "no-reply@uco.edu.co", "Asistencia UCO",
-                Duration.ofSeconds(10), Duration.ofSeconds(20), 50, 60, 500, false, "ftp://archivos.uco.edu.co", Duration.ofSeconds(60)
+                d10, d20, 50, 60, 500, false, "ftp://archivos.uco.edu.co", d60
         ));
         assertThrows(IllegalArgumentException.class, () -> new SmtpNotificationProperties(
                 "smtp.uco.edu.co", 587, "", "", true, false, "no-reply@uco.edu.co", "Asistencia UCO",
-                Duration.ofSeconds(10), Duration.ofSeconds(20), 50, 60, 500, false, "asistencia.uco.edu.co", Duration.ofSeconds(60)
+                d10, d20, 50, 60, 500, false, "asistencia.uco.edu.co", d60
         ));
     }
 
