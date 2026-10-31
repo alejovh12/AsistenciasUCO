@@ -1,6 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
-import co.edu.uco.asistenciasuco.application.features.usuario.dominiocorreo.DominioCorreoInstitucionalPolicy;
+import co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional.CorreoInstitucionalPolicy;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
@@ -57,11 +57,11 @@ public class GrupoWiringConfiguration {
     }
 
     @Bean
-    public DominioCorreoInstitucionalPolicy dominioCorreoInstitucionalPolicy(
+    public CorreoInstitucionalPolicy correoInstitucionalPolicy(
             final ParameterCatalogPort parameterCatalogPort,
             final MessageCatalogPort messageCatalogPort
     ) {
-        return new DominioCorreoInstitucionalPolicy(parameterCatalogPort, messageCatalogPort);
+        return new CorreoInstitucionalPolicy(parameterCatalogPort, messageCatalogPort);
     }
 
     @Bean
@@ -70,12 +70,12 @@ public class GrupoWiringConfiguration {
             final UsuarioRepositoryPort usuarioRepositoryPort,
             final PasswordEncoderPort passwordEncoderPort,
             final IdentityProviderPort identityProviderPort,
-            final DominioCorreoInstitucionalPolicy dominioCorreoInstitucionalPolicy,
+            final CorreoInstitucionalPolicy correoInstitucionalPolicy,
             final NotificacionPort notificacionPort
     ) {
         return new RegistrarEstudianteUseCaseImpl(
                 grupoRepositoryPort, usuarioRepositoryPort, passwordEncoderPort, identityProviderPort,
-                dominioCorreoInstitucionalPolicy, notificacionPort
+                correoInstitucionalPolicy, notificacionPort
         );
     }
 

@@ -102,6 +102,10 @@ app:
   sesiones:
     v2:
       enabled: ${APP_SESIONES_V2_ENABLED:true}
+  # IDENT-001: limite de intentos por IP del endpoint publico de verificacion de correo (en memoria, por instancia).
+  verificacion-correo:
+    limite-por-minuto: ${VERIFICACION_CORREO_LIMITE_POR_MINUTO:20}
+    max-claves: ${VERIFICACION_CORREO_MAX_CLAVES:10000}
   adapters:
     identity:
       # Un solo selector (APP_ADAPTERS_SECURITY_PROVIDER) gobierna seguridad e identidad; si se define este

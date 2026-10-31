@@ -13,6 +13,8 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 public final class SecurityPublicEndpoints {
 
     public static final String ACTUATOR = "/actuator/**";
+    /** IDENT-001: verificacion publica del correo; su credencial es el token de un solo uso del enlace. */
+    public static final String VERIFICAR_CORREO = "/api/v1/public/verificar-correo";
     private static final String[] DOCUMENTATION_GET = {
             "/swagger-ui",
             "/swagger-ui/**",
@@ -39,6 +41,7 @@ public final class SecurityPublicEndpoints {
         return new OrRequestMatcher(
                 paths.matcher(ACTUATOR),
                 paths.matcher(AzureEventGridAuthFilter.WEBHOOK_PATH),
+                paths.matcher(HttpMethod.POST, VERIFICAR_CORREO),
                 paths.matcher(ERROR_VIEW),
                 new OrRequestMatcher(documentation)
         );

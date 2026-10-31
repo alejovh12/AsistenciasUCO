@@ -37,7 +37,7 @@ class GrupoWiringConfigurationTest {
 
         final var registrarEstudianteUseCase = config.registrarEstudianteUseCase(
                 grupoRepositoryPort, mock(UsuarioRepositoryPort.class), mock(PasswordEncoderPort.class), mock(IdentityProviderPort.class),
-                config.dominioCorreoInstitucionalPolicy(
+                config.correoInstitucionalPolicy(
                         mock(co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort.class),
                         mock(co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort.class)),
                 mock(co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort.class));
