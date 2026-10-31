@@ -37,6 +37,8 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
     private static final Logger LOGGER = LoggerFactory.getLogger(SmtpNotificacionChannelSender.class);
     private static final int MAX_SUBJECT_LENGTH = 200;
     private static final String PREFIJO_ASUNTO_PRUEBA = "[PRUEBA] ";
+    private static final String METRIC_EMAIL_SEND = "notification.email.send.total";
+    private static final String TAG_OUTCOME = "outcome";
 
     private final ContactoDestinatarioResolver contactoResolver;
     private final PlantillaRenderer plantillaRenderer;
@@ -84,23 +86,23 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
         this.meterRegistry = Objects.requireNonNull(meterRegistry, "MeterRegistry es obligatorio.");
         this.marcadoresDinamicos = Objects.requireNonNull(marcadoresDinamicos, "MarcadorDinamicoProvider es obligatorio.");
 
-        this.sendSentCounter = Counter.builder("notification.email.send.total")
-                .tag("outcome", "sent")
+        this.sendSentCounter = Counter.builder(METRIC_EMAIL_SEND)
+                .tag(TAG_OUTCOME, "sent")
                 .register(meterRegistry);
-        this.sendRetryCounter = Counter.builder("notification.email.send.total")
-                .tag("outcome", "retry")
+        this.sendRetryCounter = Counter.builder(METRIC_EMAIL_SEND)
+                .tag(TAG_OUTCOME, "retry")
                 .register(meterRegistry);
-        this.sendPermanentCounter = Counter.builder("notification.email.send.total")
-                .tag("outcome", "permanent")
+        this.sendPermanentCounter = Counter.builder(METRIC_EMAIL_SEND)
+                .tag(TAG_OUTCOME, "permanent")
                 .register(meterRegistry);
-        this.sendNoRecipientsCounter = Counter.builder("notification.email.send.total")
-                .tag("outcome", "no_recipients")
+        this.sendNoRecipientsCounter = Counter.builder(METRIC_EMAIL_SEND)
+                .tag(TAG_OUTCOME, "no_recipients")
                 .register(meterRegistry);
         this.recipientsSentCounter = Counter.builder("notification.email.recipients.total")
-                .tag("outcome", "sent")
+                .tag(TAG_OUTCOME, "sent")
                 .register(meterRegistry);
         this.recipientsOmittedCounter = Counter.builder("notification.email.recipients.total")
-                .tag("outcome", "omitted")
+                .tag(TAG_OUTCOME, "omitted")
                 .register(meterRegistry);
         this.redirectedCounter = Counter.builder("notification.email.redirected.total")
                 .register(meterRegistry);
@@ -264,15 +266,10 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
         }
         final Set<String> validos = new LinkedHashSet<>();
         for (final ContactoDestinatario c : contactos) {
-            if (c == null) {
-                continue;
-            }
-            if (!exentoDeConfirmacion && Boolean.TRUE.equals(properties.requireConfirmedEmail()) && !c.correoConfirmado()) {
-                continue;
-            }
-            final String correo = c.correo();
-            if (esCorreoSeguro(correo)) {
-                validos.add(correo.trim());
+            if (c != null
+                    && (exentoDeConfirmacion || !Boolean.TRUE.equals(properties.requireConfirmedEmail()) || c.correoConfirmado())
+                    && esCorreoSeguro(c.correo())) {
+                validos.add(c.correo().trim());
             }
         }
         return List.copyOf(validos);

@@ -245,7 +245,7 @@ class OutboxNotificacionAdapterTest {
         );
         final io.opentelemetry.api.trace.Span span = io.opentelemetry.api.trace.Span.wrap(spanContext);
 
-        try (io.opentelemetry.context.Scope _ = span.makeCurrent()) {
+        try (var _ = span.makeCurrent()) {
             final Notificacion notificacion = new Notificacion(
                     "TIPO_TEST",
                     "Asunto",

@@ -47,7 +47,7 @@ public class PlantillaPorDefectoCatalogo {
             agregarMarcadores(marcadores, props.getProperty("marcadores.obligatorios", ""), true);
             agregarMarcadores(marcadores, props.getProperty("marcadores.opcionales", ""), false);
             return Optional.of(new PlantillaNotificacion(1, asunto, cuerpo, marcadores));
-        } catch (final IOException ignored) {
+        } catch (final IOException _) {
             return Optional.empty();
         }
     }

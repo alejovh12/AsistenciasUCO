@@ -23,6 +23,8 @@ import java.util.UUID;
 @Repository
 public class VerificacionCorreoJpaRepository implements VerificacionCorreoRepositoryPort {
 
+    private static final String PARAM_ID_CORRELACION = "idCorrelacion";
+
     static final String SQL_CONSULTAR_TOKEN = """
             EXEC dbo.usp_consultar_token_verificacion_correo
                  @tokenHash = :tokenHash,
@@ -64,7 +66,7 @@ public class VerificacionCorreoJpaRepository implements VerificacionCorreoReposi
                 () -> {
                     final List<?> filas = entityManager.createNativeQuery(SQL_CONSULTAR_TOKEN)
                             .setParameter("tokenHash", hash)
-                            .setParameter("idCorrelacion", correlationId)
+                            .setParameter(PARAM_ID_CORRELACION, correlationId)
                             .getResultList();
                     return filas.isEmpty() ? Optional.<UUID>empty() : Optional.of(aUuid(filas.getFirst()));
                 }
@@ -77,7 +79,7 @@ public class VerificacionCorreoJpaRepository implements VerificacionCorreoReposi
         final UUID correlationId = CorrelationIdContext.require();
         final Map<String, Object> parametros = new LinkedHashMap<>();
         parametros.put("tokenHash", hash);
-        parametros.put("idCorrelacion", correlationId);
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
         procedureExecutor.execute(OP_CONFIRMAR, SQL_CONFIRMAR, parametros, correlationId);
     }
 
@@ -94,7 +96,7 @@ public class VerificacionCorreoJpaRepository implements VerificacionCorreoReposi
                                 .setParameter("idGrupo", grupoId)
                                 .setParameter("idEstudiante", estudianteId)
                                 .setParameter("idUsuarioEjecutor", actorUsuarioId)
-                                .setParameter("idCorrelacion", correlationId)
+                                .setParameter(PARAM_ID_CORRELACION, correlationId)
                                 .getResultList();
                     } catch (final PersistenceException exception) {
                         throw DbCodeTranslator.traducir(exception);

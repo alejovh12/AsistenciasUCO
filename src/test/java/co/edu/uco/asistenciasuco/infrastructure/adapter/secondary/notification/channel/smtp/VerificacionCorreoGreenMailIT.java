@@ -36,6 +36,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -197,22 +198,27 @@ class VerificacionCorreoGreenMailIT {
         dispatcher.signal();
     }
 
-    private String estadoDelAviso(final UUID usuario, final int maxSegundos, final String esperado) throws InterruptedException {
-        String ultimo = null;
-        for (int i = 0; i < maxSegundos * 4; i++) {
-            final List<String> filas = jdbcTemplate.queryForList(
-                    "SELECT e.codigo FROM dbo.NotificacionSaliente n JOIN dbo.EstadoNotificacion e ON e.id = n.idEstado "
-                            + "WHERE n.destinatarios LIKE ? ORDER BY n.creadoEn DESC",
-                    String.class, "%" + usuario + "%");
-            if (!filas.isEmpty()) {
-                ultimo = filas.getFirst();
-                if (esperado.equals(ultimo)) {
-                    return ultimo;
-                }
-            }
-            Thread.sleep(250);
+    private String estadoDelAviso(final UUID usuario, final int maxSegundos, final String esperado) {
+        final java.util.concurrent.atomic.AtomicReference<String> ultimo = new java.util.concurrent.atomic.AtomicReference<>();
+        try {
+            org.awaitility.Awaitility.await()
+                    .atMost(Duration.ofSeconds(maxSegundos))
+                    .pollInterval(Duration.ofMillis(250))
+                    .until(() -> {
+                        final List<String> filas = jdbcTemplate.queryForList(
+                                "SELECT e.codigo FROM dbo.NotificacionSaliente n JOIN dbo.EstadoNotificacion e ON e.id = n.idEstado "
+                                        + "WHERE n.destinatarios LIKE ? ORDER BY n.creadoEn DESC",
+                                String.class, "%" + usuario + "%");
+                        if (!filas.isEmpty()) {
+                            ultimo.set(filas.getFirst());
+                            return esperado.equals(ultimo.get());
+                        }
+                        return false;
+                    });
+        } catch (final org.awaitility.core.ConditionTimeoutException _) {
+            // Retorna el ultimo estado observado si se agota el tiempo
         }
-        return ultimo;
+        return ultimo.get();
     }
 
     private String textoDelUltimoCorreo() throws Exception {
@@ -263,7 +269,7 @@ class VerificacionCorreoGreenMailIT {
         final String texto = textoDelUltimoCorreo();
         final String token = extraerToken(texto);
         assertTrue(texto.contains("Ana Maria"), texto);
-        assertTrue(extraerToken(htmlDelUltimoCorreo()).equals(token), "El HTML debe llevar el mismo enlace.");
+        assertEquals(token, extraerToken(htmlDelUltimoCorreo()), "El HTML debe llevar el mismo enlace.");
         assertTrue(htmlDelUltimoCorreo().contains("<a href=\"https://asistencias.uco.edu.co/verificar-correo#token="));
 
         final Map<String, Object> fila = jdbcTemplate.queryForMap(

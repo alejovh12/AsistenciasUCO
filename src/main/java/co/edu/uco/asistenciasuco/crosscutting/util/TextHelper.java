@@ -38,7 +38,7 @@ public final class TextHelper {
         }
         final StringBuilder resultado = new StringBuilder();
         for (final String parte : limpio.toLowerCase(Locale.ROOT).split("\s+")) {
-            if (resultado.length() > 0) {
+            if (!resultado.isEmpty()) {
                 resultado.append(' ');
             }
             resultado.append(Character.toUpperCase(parte.charAt(0))).append(parte.substring(1));

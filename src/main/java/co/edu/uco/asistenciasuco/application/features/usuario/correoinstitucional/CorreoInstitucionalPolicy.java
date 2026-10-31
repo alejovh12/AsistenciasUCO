@@ -12,7 +12,7 @@ import java.util.Objects;
  * {@code REGISTRO/DOMINIO_CORREO_ESTUDIANTE}; no hay dominio escrito en el código. Aplica la misma regla que
  * {@code dbo.ufn_correo_cumple_dominio_institucional}: exactamente un {@code @}, parte local no vacía y dominio
  * <b>igual</b> al configurado, sin distinguir mayúsculas ni espacios laterales. Fail-closed: un dominio vacío o mal
- * formado rechaza todo correo. El SP sigue siendo la autoridad; esta política evita el viaje a la base de datos.
+ * formado rechaza cualquier correo. El SP sigue siendo la autoridad; esta política evita el viaje a la base de datos.
  */
 public final class CorreoInstitucionalPolicy {
 

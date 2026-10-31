@@ -24,7 +24,10 @@ import java.util.Objects;
 public final class ResolverSolicitudIngresoUseCaseImpl implements ResolverSolicitudIngresoUseCase {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ResolverSolicitudIngresoUseCaseImpl.class);
-    private static final Map<String, String> ESTADO_LEGIBLE = Map.of("A", "ACEPTADA", "E", "EN_ESPERA", "R", "RECHAZADA");
+    private static final String ESTADO_ACEPTADA = "ACEPTADA";
+    private static final String ESTADO_EN_ESPERA = "EN_ESPERA";
+    private static final String ESTADO_RECHAZADA = "RECHAZADA";
+    private static final Map<String, String> ESTADO_LEGIBLE = Map.of("A", ESTADO_ACEPTADA, "E", ESTADO_EN_ESPERA, "R", ESTADO_RECHAZADA);
 
     private final InstitutionalScopePort scopePort;
     private final SolicitudIngresoGrupoPort port;
@@ -64,13 +67,13 @@ public final class ResolverSolicitudIngresoUseCaseImpl implements ResolverSolici
             final DestinatarioSolicitudIngresoProjection contexto = estudiantes.getFirst();
             final String grupo = contexto.nombreGrupo() + " de " + contexto.nombreAsignatura();
             final String mensaje = switch (estado) {
-                case "ACEPTADA" -> "Tu solicitud de ingreso al grupo " + grupo + " fue aceptada: ya estas matriculado.";
-                case "EN_ESPERA" -> "El grupo " + grupo + " no tiene cupo: tu solicitud quedo en lista de espera.";
+                case ESTADO_ACEPTADA -> "Tu solicitud de ingreso al grupo " + grupo + " fue aceptada: ya estas matriculado.";
+                case ESTADO_EN_ESPERA -> "El grupo " + grupo + " no tiene cupo: tu solicitud quedo en lista de espera.";
                 default -> "Tu solicitud de ingreso al grupo " + grupo + " fue rechazada. Motivo: " + domain.motivo();
             };
             final String resultado = switch (estado) {
-                case "ACEPTADA" -> "aceptada";
-                case "EN_ESPERA" -> "puesta en espera";
+                case ESTADO_ACEPTADA -> "aceptada";
+                case ESTADO_EN_ESPERA -> "puesta en espera";
                 default -> "rechazada";
             };
             final Map<String, String> datos = new HashMap<>();

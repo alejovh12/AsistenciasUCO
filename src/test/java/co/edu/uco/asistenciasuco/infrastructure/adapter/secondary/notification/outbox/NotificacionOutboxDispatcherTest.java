@@ -14,13 +14,11 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -86,7 +84,7 @@ class NotificacionOutboxDispatcherTest {
         dispatcher.ejecutarCiclo();
 
         verify(sender).enviar(any(NotificacionPersistida.class));
-        verify(repository).marcarEntregada(eq(id), eq("test-instance-1"));
+        verify(repository).marcarEntregada(id, "test-instance-1");
 
         final double delivered = meterRegistry.get("notification.dispatch.total")
                 .tag("outcome", "delivered")
@@ -148,7 +146,7 @@ class NotificacionOutboxDispatcherTest {
 
     @Test
     @DisplayName("BE-D04: marcarEntregada lanza reserva perdida e incrementa lost_lease")
-    void BE_D04_reserva_perdida_al_marcar_entregada() throws Exception {
+    void BE_D04_reserva_perdida_al_marcar_entregada() {
         final UUID id = UUID.randomUUID();
         final NotificacionReservada reservada = new NotificacionReservada(
                 id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, Instant.now(), null, null, null
@@ -487,7 +485,7 @@ class NotificacionOutboxDispatcherTest {
 
     @Test
     @DisplayName("BE-D32: fallo al marcar entregada incrementa lostLeaseCounter")
-    void BE_D32_fallo_marcar_entregada_incrementa_lost_lease() throws Exception {
+    void BE_D32_fallo_marcar_entregada_incrementa_lost_lease() {
         final UUID id = UUID.randomUUID();
         final NotificacionReservada res = new NotificacionReservada(
                 id, "TIPO", "Asunto", "Mensaje", "[]", "{}", 1, Instant.now(), null, null, null
@@ -603,6 +601,6 @@ class NotificacionOutboxDispatcherTest {
         dispatcher = new NotificacionOutboxDispatcher(repository, logSender, properties, meterRegistry, Clock.systemUTC());
         dispatcher.ejecutarCiclo();
 
-        verify(repository).marcarEntregada(eq(id), eq("test-instance-1"));
+        verify(repository).marcarEntregada(id, "test-instance-1");
     }
 }

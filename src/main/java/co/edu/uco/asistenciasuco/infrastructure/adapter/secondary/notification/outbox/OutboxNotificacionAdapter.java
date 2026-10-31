@@ -24,6 +24,8 @@ public class OutboxNotificacionAdapter implements NotificacionPort {
     private static final Logger LOGGER = LoggerFactory.getLogger(OutboxNotificacionAdapter.class);
     private static final String TAG_PROVIDER = "provider";
     private static final String TAG_OUTCOME = "outcome";
+    private static final String METRIC_PUBLISH_TOTAL = "notification.publish.total";
+    private static final String PROVIDER_OUTBOX = "outbox";
 
     private final NotificacionOutboxRepository repository;
     private final NotificacionOutboxDispatcher dispatcher;
@@ -44,16 +46,16 @@ public class OutboxNotificacionAdapter implements NotificacionPort {
         this.objectMapper = Objects.requireNonNull(objectMapper, "ObjectMapper es obligatorio.");
         Objects.requireNonNull(meterRegistry, "MeterRegistry es obligatorio.");
 
-        this.acceptedCounter = Counter.builder("notification.publish.total")
-                .tag(TAG_PROVIDER, "outbox")
+        this.acceptedCounter = Counter.builder(METRIC_PUBLISH_TOTAL)
+                .tag(TAG_PROVIDER, PROVIDER_OUTBOX)
                 .tag(TAG_OUTCOME, "accepted")
                 .register(meterRegistry);
-        this.skippedCounter = Counter.builder("notification.publish.total")
-                .tag(TAG_PROVIDER, "outbox")
+        this.skippedCounter = Counter.builder(METRIC_PUBLISH_TOTAL)
+                .tag(TAG_PROVIDER, PROVIDER_OUTBOX)
                 .tag(TAG_OUTCOME, "skipped")
                 .register(meterRegistry);
-        this.failedCounter = Counter.builder("notification.publish.total")
-                .tag(TAG_PROVIDER, "outbox")
+        this.failedCounter = Counter.builder(METRIC_PUBLISH_TOTAL)
+                .tag(TAG_PROVIDER, PROVIDER_OUTBOX)
                 .tag(TAG_OUTCOME, "failed")
                 .register(meterRegistry);
     }
@@ -106,7 +108,7 @@ public class OutboxNotificacionAdapter implements NotificacionPort {
             repository.registrar(registro);
             acceptedCounter.increment();
             dispatcher.signal();
-        } catch (final JsonProcessingException e) {
+        } catch (final JsonProcessingException _) {
             LOGGER.warn("Fallo de serializacion JSON al preparar notificacion outbox tipo={}", notificacion.tipo());
             failedCounter.increment();
         } catch (final RuntimeException e) {

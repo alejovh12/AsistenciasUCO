@@ -146,10 +146,12 @@ class PlantillaNotificacionJpaRepositoryTest {
         assertThrows(DatabaseOperationException.class,
                 () -> repository.consultarActiva("OTRO_TIPO", "es"));
 
+        final Duration ttlZero = Duration.ZERO;
         assertThrows(IllegalArgumentException.class,
-                () -> new PlantillaNotificacionJpaRepository(entityManager, clock, Duration.ZERO));
+                () -> new PlantillaNotificacionJpaRepository(entityManager, clock, ttlZero));
+        final Duration ttlNegativo = Duration.ofSeconds(-5);
         assertThrows(IllegalArgumentException.class,
-                () -> new PlantillaNotificacionJpaRepository(entityManager, clock, Duration.ofSeconds(-5)));
+                () -> new PlantillaNotificacionJpaRepository(entityManager, clock, ttlNegativo));
     }
 
     @Test

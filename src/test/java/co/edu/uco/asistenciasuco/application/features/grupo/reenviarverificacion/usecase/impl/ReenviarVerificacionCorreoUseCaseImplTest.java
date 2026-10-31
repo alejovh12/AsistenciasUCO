@@ -156,8 +156,12 @@ class ReenviarVerificacionCorreoUseCaseImplTest {
 
     @Test
     void los_colaboradores_son_obligatorios() {
-        assertThrows(NullPointerException.class, () -> new ReenviarVerificacionCorreoUseCaseImpl(null, usuarios(ana()), avisos::add));
-        assertThrows(NullPointerException.class, () -> new ReenviarVerificacionCorreoUseCaseImpl(repositorio(null), null, avisos::add));
-        assertThrows(NullPointerException.class, () -> new ReenviarVerificacionCorreoUseCaseImpl(repositorio(null), usuarios(ana()), null));
+        final UsuarioRepositoryPort usuariosPort = usuarios(ana());
+        final VerificacionCorreoRepositoryPort repoPort = repositorio(null);
+        final NotificacionPort notifPort = avisos::add;
+
+        assertThrows(NullPointerException.class, () -> new ReenviarVerificacionCorreoUseCaseImpl(null, usuariosPort, notifPort));
+        assertThrows(NullPointerException.class, () -> new ReenviarVerificacionCorreoUseCaseImpl(repoPort, null, notifPort));
+        assertThrows(NullPointerException.class, () -> new ReenviarVerificacionCorreoUseCaseImpl(repoPort, usuariosPort, null));
     }
 }

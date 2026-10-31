@@ -300,7 +300,7 @@ public class PlantillaRenderer {
                 return "<!DOCTYPE html><html><body><div>{{contenido}}</div><footer>{{pie}}</footer></body></html>";
             }
             return new String(in.readAllBytes(), StandardCharsets.UTF_8);
-        } catch (final IOException ex) {
+        } catch (final IOException _) {
             return "<!DOCTYPE html><html><body><div>{{contenido}}</div><footer>{{pie}}</footer></body></html>";
         }
     }

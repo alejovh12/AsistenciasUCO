@@ -462,7 +462,7 @@ class NotificacionSmtpGreenMailIT {
     @Test
     @Order(5)
     @DisplayName("IT-E05: Usuario destinatario inhabilitado -> omitido; el usuario activo recibe el correo")
-    void ITE05_usuario_inhabilitado_omitido_y_activo_recibe() throws Exception {
+    void ITE05_usuario_inhabilitado_omitido_y_activo_recibe() {
         UUID uInactivo = crearUsuarioPrueba("inactivo.ite05@uco.edu.co", true, false);
         UUID uActivo = crearUsuarioPrueba("activo.ite05@uco.edu.co", true, true);
 
@@ -513,7 +513,7 @@ class NotificacionSmtpGreenMailIT {
     @Test
     @Order(7)
     @DisplayName("IT-E07: SMTP caído -> reintentos con backoff -> recupera al volver el servidor; fila ENTREGADA")
-    void ITE07_smtp_caido_reintenta_y_recupera_al_volver() throws Exception {
+    void ITE07_smtp_caido_reintenta_y_recupera_al_volver() {
         UUID destId = crearUsuarioPrueba("est.ite07@uco.edu.co", true, true);
 
         detenerGreenMailTemporalmente();
@@ -549,7 +549,7 @@ class NotificacionSmtpGreenMailIT {
     @Test
     @Order(8)
     @DisplayName("IT-E08: Tope de envíos agotado -> filas quedan PENDIENTE con intentos=0; se despachan al liberarse cupo")
-    void ITE08_tope_envios_agotado_conserva_pendiente_sin_intentos_y_despacha_al_liberar() throws Exception {
+    void ITE08_tope_envios_agotado_conserva_pendiente_sin_intentos_y_despacha_al_liberar() {
         UUID destId = crearUsuarioPrueba("est.ite08@uco.edu.co", true, true);
 
         // Agotar el tope por minuto (60 configurados)
@@ -641,7 +641,7 @@ class NotificacionSmtpGreenMailIT {
     @Test
     @Order(10)
     @DisplayName("IT-E10: Ningún log del sender contiene direcciones de correo ni cuerpo renderizado")
-    void ITE10_ningun_log_contiene_correos_ni_cuerpo() throws Exception {
+    void ITE10_ningun_log_contiene_correos_ni_cuerpo() {
         String correoSecreto = "privacidad.ite10.unico@uco.edu.co";
         String cuerpoSecreto = "DatoUltraSecretoDeCuerpo987654";
         UUID destId = crearUsuarioPrueba(correoSecreto, true, true);

@@ -54,10 +54,10 @@ class ContactoDestinatarioJpaRepositoryTest {
         final UUID u1 = UUID.randomUUID();
         final UUID u2 = UUID.randomUUID();
         final UUID u3 = UUID.randomUUID();
-        final Object[] canonicalOk = new Object[]{UUID.randomUUID(), "OK", "DBCODE=GEN_003|OK", Boolean.TRUE};
-        final Object[] c1 = new Object[]{u1, "u1@uco.edu.co", Boolean.TRUE};
-        final Object[] c2 = new Object[]{u2.toString(), "u2@uco.edu.co", 0};
-        final Object[] c3 = new Object[]{u3.toString(), "u3@uco.edu.co", "true"};
+        final Object[] canonicalOk = {UUID.randomUUID(), "OK", "DBCODE=GEN_003|OK", Boolean.TRUE};
+        final Object[] c1 = {u1, "u1@uco.edu.co", Boolean.TRUE};
+        final Object[] c2 = {u2.toString(), "u2@uco.edu.co", 0};
+        final Object[] c3 = {u3.toString(), "u3@uco.edu.co", "true"};
 
         when(sp.execute()).thenReturn(true);
         when(sp.hasMoreResults()).thenReturn(true, false);

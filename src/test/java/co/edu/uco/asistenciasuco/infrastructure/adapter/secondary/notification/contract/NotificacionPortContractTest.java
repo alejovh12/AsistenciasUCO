@@ -4,6 +4,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notific
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.ThrowingSupplier;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +45,8 @@ public abstract class NotificacionPortContractTest {
     @Test
     @DisplayName("CT-02: notificacion nula lanza NullPointerException")
     void CT02_notificacion_nula_lanza_npe() {
-        assertThrows(NullPointerException.class, () -> puerto().notificar(null));
+        final NotificacionPort port = puerto();
+        assertThrows(NullPointerException.class, () -> port.notificar(null));
     }
 
     @Test
@@ -116,7 +118,7 @@ public abstract class NotificacionPortContractTest {
 
             final List<Future<Void>> futures = executor.invokeAll(tasks);
             for (final Future<Void> future : futures) {
-                assertDoesNotThrow(() -> future.get());
+                assertDoesNotThrow((ThrowingSupplier<Void>) future::get);
             }
         } finally {
             executor.shutdownNow();

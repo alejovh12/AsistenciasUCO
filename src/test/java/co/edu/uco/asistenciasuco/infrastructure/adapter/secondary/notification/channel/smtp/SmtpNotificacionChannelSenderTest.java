@@ -292,7 +292,8 @@ class SmtpNotificacionChannelSenderTest {
                 new TopeEnvios(60, 500, Clock.systemUTC(), meterRegistry)
         );
 
-        assertThrows(RuntimeException.class, () -> sender.enviar(notificacionRetiro(List.of(u1))));
+        final NotificacionPersistida notif = notificacionRetiro(List.of(u1));
+        assertThrows(RuntimeException.class, () -> sender.enviar(notif));
         assertEquals(1.0, meterRegistry.counter("notification.email.send.total", "outcome", "retry").count());
     }
 
@@ -714,7 +715,7 @@ class SmtpNotificacionChannelSenderTest {
                 new jakarta.mail.internet.AddressException("Direccion mal formada")
         ));
         final jakarta.mail.Address[] invalidAddrs =
-                new jakarta.mail.Address[]{new jakarta.mail.internet.InternetAddress("bad@uco.edu.co")};
+                {new jakarta.mail.internet.InternetAddress("bad@uco.edu.co")};
         assertTrue(JakartaMailCorreoTransport.esFalloPermanente(
                 new jakarta.mail.SendFailedException("Invalid", null, null, null, invalidAddrs)
         ));

@@ -9,7 +9,6 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 /**
  * Propiedades del proveedor SMTP de notificaciones.
@@ -34,10 +33,6 @@ public record SmtpNotificationProperties(
         @DefaultValue("60s") Duration templateCacheTtl,
         @DefaultValue TestMode testMode
 ) {
-
-    private static final Pattern SAFE_EMAIL_PATTERN = Pattern.compile(
-            "^[^@\\s,;<>\"()]+@[^@\\s,;<>\"().]++(?:\\.[^@\\s,;<>\"().]++)+$"
-    );
 
     @ConstructorBinding
     public SmtpNotificationProperties {
@@ -288,10 +283,19 @@ public record SmtpNotificationProperties(
         if (correo == null || correo.isBlank()) {
             return false;
         }
-        if (correo.indexOf('\r') >= 0 || correo.indexOf('\n') >= 0) {
+        final String trimmed = correo.trim();
+        final int atIndex = trimmed.indexOf('@');
+        if (atIndex <= 0 || atIndex != trimmed.lastIndexOf('@') || atIndex >= trimmed.length() - 3) {
             return false;
         }
-        return SAFE_EMAIL_PATTERN.matcher(correo.trim()).matches();
+        for (int i = 0; i < trimmed.length(); i++) {
+            final char c = trimmed.charAt(i);
+            if (Character.isWhitespace(c) || c == ',' || c == ';' || c == '<' || c == '>' || c == '"' || c == '(' || c == ')') {
+                return false;
+            }
+        }
+        final String domain = trimmed.substring(atIndex + 1);
+        return domain.contains(".") && !domain.startsWith(".") && !domain.endsWith(".");
     }
 
     @Override

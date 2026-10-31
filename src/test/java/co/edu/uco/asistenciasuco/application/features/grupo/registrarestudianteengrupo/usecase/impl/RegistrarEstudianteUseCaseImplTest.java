@@ -321,7 +321,8 @@ class RegistrarEstudianteUseCaseImplTest {
                 identityProviderPort
         );
 
-        assertThrows(InternalApplicationException.class, () -> useCase.execute(domainValido()));
+        final var domain = domainValido();
+        assertThrows(InternalApplicationException.class, () -> useCase.execute(domain));
 
         assertEquals(1, spLlamadas.get());
         assertEquals(0, identityProviderPort.crearCuentaCount.get());
@@ -456,7 +457,8 @@ class RegistrarEstudianteUseCaseImplTest {
                 avisos::add
         );
 
-        assertThrows(InternalApplicationException.class, () -> useCase.execute(domainValido()));
+        final var domain = domainValido();
+        assertThrows(InternalApplicationException.class, () -> useCase.execute(domain));
 
         assertTrue(avisos.isEmpty());
     }

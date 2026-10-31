@@ -13,7 +13,6 @@ import org.springframework.context.SmartLifecycle;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -29,11 +28,11 @@ public class NotificacionOutboxDispatcher implements SmartLifecycle {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NotificacionOutboxDispatcher.class);
     private static final String TAG_OUTCOME = "outcome";
+    private static final String METRIC_DISPATCH_TOTAL = "notification.dispatch.total";
 
     private final NotificacionOutboxRepository repository;
     private final NotificacionChannelSender sender;
     private final OutboxNotificationProperties properties;
-    private final MeterRegistry meterRegistry;
     private final Clock clock;
     private final ObjectMapper objectMapper;
 
@@ -60,20 +59,20 @@ public class NotificacionOutboxDispatcher implements SmartLifecycle {
         this.repository = Objects.requireNonNull(repository, "NotificacionOutboxRepository es obligatorio.");
         this.sender = Objects.requireNonNull(sender, "NotificacionChannelSender es obligatorio.");
         this.properties = Objects.requireNonNull(properties, "OutboxNotificationProperties es obligatorio.");
-        this.meterRegistry = Objects.requireNonNull(meterRegistry, "MeterRegistry es obligatorio.");
+        Objects.requireNonNull(meterRegistry, "MeterRegistry es obligatorio.");
         this.clock = Objects.requireNonNull(clock, "Clock es obligatorio.");
         this.objectMapper = new ObjectMapper();
 
-        this.deliveredCounter = Counter.builder("notification.dispatch.total")
+        this.deliveredCounter = Counter.builder(METRIC_DISPATCH_TOTAL)
                 .tag(TAG_OUTCOME, "delivered")
                 .register(meterRegistry);
-        this.retryCounter = Counter.builder("notification.dispatch.total")
+        this.retryCounter = Counter.builder(METRIC_DISPATCH_TOTAL)
                 .tag(TAG_OUTCOME, "retry")
                 .register(meterRegistry);
-        this.deadCounter = Counter.builder("notification.dispatch.total")
+        this.deadCounter = Counter.builder(METRIC_DISPATCH_TOTAL)
                 .tag(TAG_OUTCOME, "dead")
                 .register(meterRegistry);
-        this.lostLeaseCounter = Counter.builder("notification.dispatch.total")
+        this.lostLeaseCounter = Counter.builder(METRIC_DISPATCH_TOTAL)
                 .tag(TAG_OUTCOME, "lost_lease")
                 .register(meterRegistry);
         this.purgedCounter = Counter.builder("notification.outbox.purged.total")
@@ -119,7 +118,7 @@ public class NotificacionOutboxDispatcher implements SmartLifecycle {
             if (workerThread != null) {
                 try {
                     workerThread.join(TimeUnit.SECONDS.toMillis(5));
-                } catch (final InterruptedException e) {
+                } catch (final InterruptedException _) {
                     Thread.currentThread().interrupt();
                 }
             }

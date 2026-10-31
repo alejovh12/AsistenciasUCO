@@ -14,7 +14,7 @@ import java.util.Objects;
 
 /**
  * IDENT-001: verificacion publica del correo. Es la unica ruta publica nueva (sin comodin {@code /public/**}); su
- * credencial es el token de un solo uso del enlace. La respuesta nunca incluye datos personales y todo token invalido
+ * credencial es el token de un solo uso del enlace. La respuesta nunca incluye datos personales y cualquier token invalido
  * responde exactamente igual (el formato se valida en Application para no distinguir casos).
  */
 @RestController

@@ -473,7 +473,7 @@ class PlantillaRendererTest {
 
     @Test
     @DisplayName("BE-R14b: PlantillaPorDefectoCatalogo maneja propiedades sin asunto/cuerpo, tokens vacios en CSV y fallo de lectura")
-    void BE_R14b_catalogo_por_defecto_ramas_borde() throws Exception {
+    void BE_R14b_catalogo_por_defecto_ramas_borde() {
         final ClassLoader original = Thread.currentThread().getContextClassLoader();
         try {
             // 1. Recurso con asunto vacio -> Optional.empty()
