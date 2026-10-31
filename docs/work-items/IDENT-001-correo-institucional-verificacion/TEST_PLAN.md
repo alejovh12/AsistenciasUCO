@@ -90,3 +90,18 @@ Registro manual con GreenMail → correo → verificación → inicio de sesión
 
 ## 7. Entorno de ejecución (documentado)
 En esta PC: `JAVA_TOOL_OPTIONS=-Djdk.net.unixdomain.tmpdir=C:\jtmp -Djdk.net.hosts.file=C:\jtmp\hosts`, `.env` cargado solo en el proceso y claves de MinIO de Infra. La BD debe estar recreada desde el esquema del repositorio.
+
+## 8. Estado de ejecución y desviaciones (2026-10-31)
+
+Resultados y cifras reales en [VALIDATION](VALIDATION.md). Desviaciones respecto a este plan:
+
+| Prueba planeada | Estado | Nota |
+|---|---|---|
+| DB-C03 (atomicidad con falla forzada) y DB-C04 (concurrencia de dos confirmaciones) | No automatizadas en T-SQL | Requieren inyectar un fallo o dos conexiones; la unicidad del uso la garantizan `UPDLOCK, HOLDLOCK` y el índice único filtrado. Seguimiento: script de concurrencia de dos conexiones (como `test_enroll.ps1`) |
+| DB-V01/V02 y DB-R01 con `usp_validar_*` / `usp_preparar_*` | Ejecutadas con los SP renombrados | `usp_consultar_token_verificacion_correo` y `usp_consultar_reenvio_verificacion_correo` (CONTRACT §9, E1/E2) |
+| BE-C01 `POST verificar-correo` valida el formato en el validator | Cubierta en el caso de uso | CONTRACT §9, E6 |
+| BE-R01 429 del reenvío por espera mínima | 409 | CONTRACT §9, E5 |
+| BE-C02 (`SecurityConfig` con `POST /public/otra` → 401) | Cubierta por `AccessCatalogConsistencyTest` | Solo la ruta de verificación es pública; el catálogo y la cadena de filtros deben coincidir |
+| Sección 5 (frontend) | Pendiente | TD-081 |
+| IT-V01…V08 | Ejecutadas (7 pruebas: V01/V02 y V03…V08) | `VerificacionCorreoGreenMailIT` |
+| E2E | 23/23 | `scratch/test_ident001.ps1` (no versionado: contiene credenciales de desarrollo local) |

@@ -265,7 +265,7 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 - **Motivo:** Confirmación funcional necesaria antes de producción.
 - **Resolución esperada:** Política aprobada y pruebas de verificación acordes.
 - **Bloquea línea base:** no para LB-000; sí release de identidad.
-- **Estado:** ABIERTA.
+- **Estado:** PARCIALMENTE RESUELTA (IDENT-001, 2026-10-31): el estudiante registrado manualmente por el docente se crea deshabilitado y con `emailVerified=false` hasta verificar el enlace. Sigue ABIERTA para los demás roles (decano, coordinador, docente, administrador) y para el registro por QR (HU176B). Work item: [IDENT-001](../work-items/IDENT-001-correo-institucional-verificacion/PLAN.md).
 - **Actualización Security Baseline 0.1.7 (2026-10-26, cierre):** resuelto el binding `issuer+subject → Usuario.id`
   con persistencia propia (migración SEC-BASELINE-017 en la DB) y la API queda Bearer-only (PKCE en la SPA; la cookie BFF
   no es credencial del backend). Pendiente: (a) renovación del access token por re-autenticación silenciosa (redirección)
@@ -1027,3 +1027,51 @@ GOLDEN PATH EFFECT:         NONE
 - **Resolución esperada:** Si se incorporan avisos masivos (> `max-bcc`), registrar progreso por bloque o particionar la notificación en filas por bloque para evitar duplicados en reintentos parciales.
 - **Bloquea línea base:** No. **Estado:** **OPEN / LOW / BACKEND**. **Work item:** [NOTIF-002A](../work-items/NOTIF-002A-plantillas-correo/PLAN.md).
 
+
+## TD-077
+
+- **Fecha / responsable:** 2026-10-31 / backend-team & ops (IDENT-001). **Clasificación:** CONFIG_DUAL_SOURCE. **Prioridad:** MEDIA.
+- **Descripción:** El dominio institucional del estudiante (`REGISTRO/DOMINIO_CORREO_ESTUDIANTE`) y los mensajes `VCE_001..VCE_007` viven en SQL Server (`CatalogoParametro`, `CatalogoMensaje*`), que es lo que lee el procedimiento almacenado. El backend los lee por `ParameterCatalogPort`/`MessageCatalogPort`: con el proveedor `sqlserver` coinciden, pero con el proveedor por defecto (`azure_appconfig`/`azure`) deben existir también en Azure App Configuration (`asistencias:registro:dominio_correo_estudiante`, `messages:user:VCE_00x`).
+- **Impacto:** Si el dominio cambia en un solo lado, el backend y el SP discrepan (el SP siempre es la autoridad y rechazaría el alta, pero el mensaje y el formulario mostrarían el dominio anterior).
+- **Resolución esperada:** Sembrar los mismos valores en App Configuration al desplegar (script de sincronización de Infra) y verificar la paridad en el checklist de despliegue; evaluar que el backend lea el dominio con un SP de consulta para tener una sola fuente.
+- **Bloquea línea base:** No. **Estado:** **OPEN / MEDIUM / OPS**. **Work item:** [IDENT-001](../work-items/IDENT-001-correo-institucional-verificacion/PLAN.md).
+
+## TD-078
+
+- **Fecha / responsable:** 2026-10-31 / backend-team (IDENT-001 / PLAN §1 fuera de alcance). **Clasificación:** UNVERIFIED_ACCOUNT_HOUSEKEEPING. **Prioridad:** MEDIA.
+- **Descripción:** Un estudiante registrado por el docente queda matriculado (ocupa cupo) desde el registro, pero su cuenta permanece deshabilitada hasta que abra el enlace. No hay un proceso que depure cuentas que nunca verifican.
+- **Impacto:** Cupos ocupados y cuentas huérfanas en Keycloak si el correo nunca llega o el estudiante no actúa.
+- **Resolución esperada:** Proceso periódico (con parámetro de vigencia, propuesta 7 días) que avise al docente y, según decisión funcional, retire la matrícula y elimine la cuenta no verificada.
+- **Bloquea línea base:** No. **Estado:** **OPEN / MEDIUM / BACKEND**. **Work item:** [IDENT-001](../work-items/IDENT-001-correo-institucional-verificacion/PLAN.md).
+
+## TD-079
+
+- **Fecha / responsable:** 2026-10-31 / fullstack-team (IDENT-001 / alcance acordado). **Clasificación:** CREDENTIAL_ASSIGNMENT_BY_THIRD_PARTY. **Prioridad:** MEDIA.
+- **Descripción:** En el registro manual la contraseña inicial sigue definiéndola el docente (REG-000 DA-5) y viaja por el backend hacia Keycloak; el correo verificado solo habilita la cuenta. El docente conoce la clave inicial del estudiante.
+- **Impacto:** Mientras no se mueva la asignación de la contraseña al enlace de verificación, el docente conoce una credencial ajena (Keycloak la marca temporal, por lo que el estudiante debe cambiarla en el primer ingreso).
+- **Resolución esperada:** Fase posterior: que el estudiante defina su contraseña al abrir el enlace (acción `UPDATE_PASSWORD`/formulario propio) y retirar `password` de la petición, del DTO y del SP (cambia contratos congelados).
+- **Bloquea línea base:** No. **Estado:** **OPEN / MEDIUM / FULLSTACK**. **Work item:** [IDENT-001](../work-items/IDENT-001-correo-institucional-verificacion/PLAN.md).
+
+## TD-080
+
+- **Fecha / responsable:** 2026-10-31 / backend-team (IDENT-001). **Clasificación:** RATE_LIMIT_SCOPE. **Prioridad:** BAJA.
+- **Descripción:** El límite de intentos de `POST /api/v1/public/verificar-correo` (`VerificacionCorreoRateLimitFilter`) es en memoria y por instancia, y solo cuenta `remoteAddr` (ignora `X-Forwarded-For`). Detrás de un proxy todas las solicitudes comparten IP.
+- **Impacto:** Con varias instancias el límite efectivo se multiplica; detrás de un proxy sin resolución explícita del cliente real el límite es global. La defensa principal es el token de 256 bits de un solo uso.
+- **Resolución esperada:** Resolver la IP real con un proxy de confianza explícito (como propone HU176B D5) y, si hay varias instancias, mover el contador a un almacén compartido.
+- **Bloquea línea base:** No. **Estado:** **OPEN / LOW / BACKEND**. **Work item:** [IDENT-001](../work-items/IDENT-001-correo-institucional-verificacion/PLAN.md).
+
+## TD-081
+
+- **Fecha / responsable:** 2026-10-31 / frontend-team (IDENT-001 / CONTRACT §5). **Clasificación:** FRONTEND_PENDING_REPOSITORY. **Prioridad:** ALTA.
+- **Descripción:** La validación del dominio en el formulario de enrolamiento manual, la página pública `verificar-correo` (lee `#token=`, llama al endpoint y muestra el mensaje) y la acción «Reenviar enlace» no están implementadas: el repositorio del frontend no estaba disponible en este workspace.
+- **Impacto:** Sin la página `verificar-correo` el enlace del correo no tiene destino; el backend y la BD ya están listos y verificados.
+- **Resolución esperada:** Implementar el frontend según CONTRACT §5 (Signals, OnPush, sin dominio escrito en el cliente, sin `setInterval`) y agregar su E2E.
+- **Bloquea línea base:** No para BD/backend; sí para el uso real del correo de verificación. **Estado:** **OPEN / HIGH / FRONTEND**. **Work item:** [IDENT-001](../work-items/IDENT-001-correo-institucional-verificacion/PLAN.md).
+
+## TD-082
+
+- **Fecha / responsable:** 2026-10-31 / fullstack-team (IDENT-001). **Clasificación:** DOCS_SUPERSEDED_DECISION. **Prioridad:** BAJA.
+- **Descripción:** REG-000 DA-5 («la contraseña se asigna en la creación; sin correo de activación») y el CA-03 de HU176B («contraseña inicial» sin verificación del correo) quedan parcialmente superados para el registro manual por IDENT-001. HU176B (QR) debe reutilizar el mecanismo de verificación y la política de dominio.
+- **Impacto:** Si HU176B se implementa sin actualizar su PLAN, el alta por QR no verificaría el correo ni exigiría el dominio.
+- **Resolución esperada:** Reabrir el PLAN/CONTRACT de HU176B (D8) para exigir `CorreoInstitucionalPolicy` y el aviso `VERIFICACION_CORREO` en el alta autónoma.
+- **Bloquea línea base:** No. **Estado:** **OPEN / LOW / DOCS**. **Work items:** [IDENT-001](../work-items/IDENT-001-correo-institucional-verificacion/PLAN.md), [HU176B](../work-items/HU176B-matricula-qr-autonoma/PLAN.md).

@@ -161,6 +161,10 @@ flowchart LR
     D --> E["Ninguna dirección real<br/>en cabeceras ni cuerpo"]
 ```
 
+### 3.5 Aviso de verificación de correo (IDENT-001)
+
+El tipo `VERIFICACION_CORREO` es el primero cuyo contenido incluye un valor secreto y de un solo uso (el enlace). Por eso **el token no entra al outbox**: el aviso registra solo `rol` + `idUsuario` y `datos.nombre`; el canal SMTP resuelve el marcador `{enlace}` **al entregar** mediante el SPI `MarcadorDinamicoProvider` (implementación `VerificacionCorreoMarcadorProvider`), que genera 32 bytes con `SecureRandom`, guarda solo el SHA-256 con `usp_emitir_token_verificacion_correo` (revoca el token anterior) y arma `<platform-url>/verificar-correo#token=<token>`. Un correo ya verificado o un usuario inexistente es fallo permanente; cualquier otro fallo se reintenta (cada intento emite un token nuevo). Este tipo ignora `require-confirmed-email` (el destinatario aún no está confirmado) y el renderer lo muestra como vínculo HTML solo si es `http`/`https`. Detalle: [IDENT-001](../work-items/IDENT-001-correo-institucional-verificacion/CONTRACT.md).
+
 ---
 
 ## 4. Inventario de lo que pertenece al módulo
@@ -180,6 +184,7 @@ flowchart LR
 | Propiedades SMTP | `SmtpNotificationProperties` (`app.providers.smtp-notification.*`, incluye `test-mode`) | NOTIF-002A |
 | Dependencias | `spring-boot-starter-mail` (main) y `greenmail` (test) en el `pom.xml` | NOTIF-002A |
 | Configuración | bloques `app.adapters.notification` y `app.providers.{outbox,smtp}-notification` en `application.yml`; variables `SMTP_*` y `OUTBOX_*` en `.env.template` | ambos |
+| Verificación de correo (IDENT-001) | `template/MarcadorDinamicoProvider`, `template/VerificacionCorreoMarcadorProvider`, `template/TokenVerificacionCorreoRepository` y `…JpaRepository`; SPs `usp_emitir_token_verificacion_correo`, `usp_consultar_token_verificacion_correo`, `usp_confirmar_verificacion_correo`, `usp_consultar_reenvio_verificacion_correo`; tabla `TokenVerificacionCorreo`; plantilla `VERIFICACION_CORREO` | IDENT-001 |
 | Pruebas del módulo | `*Notificacion*Test`, `NotificationWiringTest`, `SmtpNotificationWiringTest`, `NotificationEmailModuleIsolationRulesTest` (AR-07..AR-10), `NotificacionOutboxIT`, `NotificacionSmtpGreenMailIT`, `Plantilla*Test`, `ContactoDestinatario*Test`, `TopeEnviosTest`, `SmtpNotification*Test` | ambos |
 
 ### Base de datos (`GestioAsistenciaDB`)

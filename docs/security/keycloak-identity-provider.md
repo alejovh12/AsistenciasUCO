@@ -130,9 +130,12 @@ El nombre del atributo sale de `userIdAttribute` (configurable, default `idUsuar
 hardcodeado. El UUID es exactamente el recibido desde Application (`dbo.Usuario.id`); el
 adapter nunca genera otro.
 
-La implementación actual marca `emailVerified=true` porque supone que el correo institucional
-recibido desde Application ya es confiable y está verificado. Esta decisión funcional debe
-confirmarse antes de producción.
+Para las cuentas de `ESTUDIANTE` registradas manualmente por el docente (IDENT-001) la cuenta nueva se crea
+**deshabilitada y con `emailVerified=false`** (`CrearCuentaIdentidadDTO.requiereVerificacionCorreo`) y se habilita al
+confirmar el enlace (`IdentityProviderPort.confirmarCorreoCuenta`: `PUT /users/{id}` con `enabled=true` y
+`emailVerified=true`, idempotente). Para los demás roles el adapter sigue marcando `emailVerified=true` porque supone
+que el correo institucional recibido desde Application ya es confiable (TD-014 sigue abierta para ellos). Una cuenta
+que ya existía en el IdP nunca se modifica.
 
 - **Búsqueda previa**: `GET /admin/realms/{realm}/users?q={userIdAttribute}:{idUsuario}`
   (parámetro `q` codificado). `idUsuario` es el vínculo institucional estable. Cero resultados

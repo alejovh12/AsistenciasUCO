@@ -1,3 +1,6 @@
+| `POST /api/v1/public/verificar-correo` | PUBLICO (token de un solo uso) | Verificar el correo del estudiante registrado manualmente (IDENT-001): valida el token, habilita la cuenta en el IdP y consume el token | `VerificacionCorreoRepositoryPort`, `IdentityProviderPort` | `usp_consultar_token_verificacion_correo`, `usp_confirmar_verificacion_correo` | IMPLEMENTATION_AVAILABLE_E2E_LOCAL | Limite de intentos por IP (429); todo token invalido responde igual (VCE_002) | `ApiDataResponse<MensajeResponse>` |
+| `POST /api/v1/grupos/{grupoId}/estudiantes/{estudianteId}/reenviar-verificacion` | DOCENTE, COORDINADOR | Reenviar el enlace de verificacion (IDENT-001): la DB valida ambito, estado y espera minima; el aviso nuevo revoca el token anterior | `VerificacionCorreoRepositoryPort`, `NotificacionPort` | `usp_consultar_reenvio_verificacion_correo` | IMPLEMENTATION_AVAILABLE_E2E_LOCAL | Ajeno 404; ya verificado o en espera 409 | `ApiDataResponse<Void>` |
+| `GET /api/v1/configuracion/registro-estudiante` | DOCENTE, COORDINADOR | Dominio institucional vigente del correo del estudiante (IDENT-001) | `CorreoInstitucionalPolicy` | parametro `REGISTRO/DOMINIO_CORREO_ESTUDIANTE` | IMPLEMENTATION_AVAILABLE_E2E_LOCAL | | `ApiDataResponse<ConfiguracionRegistroEstudianteResponse>` |
 ---
 status: active
 type: active

@@ -179,3 +179,23 @@ Migración `10_ident001_*_down.sql` (elimina tabla, función, SPs y parámetros)
 - Convención exacta del marcador de parámetros en `usp_obtener_mensaje_catalogo` (hoy `{}`).
 - Qué adaptador de `ParameterCatalogPort` (BD o Azure) está activo en cada perfil; el valor sembrado en BD es el SSOT para el SP.
 - Nombre de las propiedades de configuración y su ubicación en `application.yml` / `.env.template`.
+
+---
+
+## 9. Enmiendas de implementación (2026-10-31, aprobadas por el owner al delegar las decisiones de diseño)
+
+Refinamientos surgidos al implementar. Ninguno cambia el comportamiento observable de los criterios CA-01…CA-11; ajustan la forma para respetar los gates vigentes del repositorio.
+
+| # | Contrato original | Implementación | Motivo |
+|---|---|---|---|
+| E1 | `usp_validar_token_verificacion_correo` devolvía la tupla canónica + `idUsuario` y fallaba con `VCE_002` | Se llama **`usp_consultar_token_verificacion_correo`**: devuelve 0..1 fila con `idUsuario`; un token inválido da 0 filas y la aplicación responde `VCE_002` | `test_contract_closure` reserva el resultset canónico de 4 columnas a los comandos; las lecturas con columnas propias van en la lista de excepciones documentadas |
+| E2 | `usp_preparar_reenvio_verificacion_correo` | Se llama **`usp_consultar_reenvio_verificacion_correo`**: devuelve `idUsuario` y rechaza con `THROW 51000` + `DBCODE=VCE_00x\|…` (patrón de `usp_consultar_detalle_solicitud_revision_docente`) | Misma regla que E1 |
+| E3 | `VCE_007` no existía | Se agrega `VCE_007` («El usuario no existe o no está activo.») para la emisión de un token a un usuario inexistente o inactivo | Caso no cubierto por `VCE_001..006` |
+| E4 | `POST /public/verificar-correo` → `ApiDataResponse<Void>` con `mensajeUsuario` | → `ApiDataResponse<{ "mensaje": "<VCE_006>" }>` | `ApiDataResponse` no tiene campo de mensaje; el frontend muestra `datos.mensaje` |
+| E5 | `VCE_003` (espera mínima) → HTTP 429 | → **409** (`ConflictException`) | No existe un tipo de excepción 429; el 429 queda reservado para el límite de intentos del filtro |
+| E6 | Validación del formato del token en el validator del controlador | Se valida en `VerificarCorreoUseCaseImpl` con `TokenHashHelper.esFormatoValido` | Garantiza que formato inválido y token desconocido respondan idéntico (`VCE_002`) sin duplicar la regla |
+| E7 | Clases del canal en un paquete `notification/verification` | Se ubican en `notification/template` | La regla ArchUnit AR-07 define el módulo de correo como `template`, `contact` y `channel.smtp`; no se relaja la regla |
+| E8 | `CorreoInstitucionalPolicy` se llamaba `DominioCorreoInstitucionalPolicy` | Renombrada | El patrón de `StorageProviderIsolationRulesTest` (`.*[Mm]inio.*`) coincide con «Dominio» |
+| E9 | Savepoint con el nombre del SP | Nombres cortos `sp_ident_*` | SQL Server limita los nombres de savepoint a 32 caracteres |
+| E10 | `usp_confirmar_verificacion_correo` hacía `ROLLBACK` al rechazar | No escribe nada al rechazar, así que solo confirma la transacción propia | Un `ROLLBACK` no es válido si el llamador usa `INSERT … EXEC`, y no había nada que deshacer |
+| E11 | Mensaje por defecto de la validación genérica | `VerificacionCorreoErrorCode` (`VCE_001/002/005/007`) | `DbExceptionTranslator` usa el mensaje por defecto del código; sin código propio saldría el mensaje genérico de validación |
