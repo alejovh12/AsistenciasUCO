@@ -1,11 +1,17 @@
 package co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.primaryports.mapper;
 
 import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.primaryports.dto.ReporteAsistenciaDTO;
+import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.primaryports.dto.GenerarReporteAsistenciaDTO;
+import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.usecase.domain.GenerarReporteAsistenciaDomain;
 import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.usecase.entity.ReporteAsistenciaEntity;
 
 public final class ReporteAsistenciaMapper {
 
     private ReporteAsistenciaMapper() {
+    }
+
+    public static GenerarReporteAsistenciaDomain toDomain(final GenerarReporteAsistenciaDTO dto) {
+        return new GenerarReporteAsistenciaDomain(dto.grupoId(), dto.usuarioEjecutor());
     }
 
     public static ReporteAsistenciaDTO toDTO(final ReporteAsistenciaEntity entity) {

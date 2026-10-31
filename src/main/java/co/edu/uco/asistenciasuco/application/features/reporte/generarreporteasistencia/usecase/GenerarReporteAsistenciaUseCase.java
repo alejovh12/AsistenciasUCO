@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.usecase;
 
 import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.usecase.entity.ReporteAsistenciaEntity;
-import java.util.List; import java.util.UUID;
+import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.usecase.domain.GenerarReporteAsistenciaDomain;
+import java.util.List;
 
-public interface GenerarReporteAsistenciaUseCase { List<ReporteAsistenciaEntity> execute(UUID grupoId); }
+public interface GenerarReporteAsistenciaUseCase { List<ReporteAsistenciaEntity> execute(GenerarReporteAsistenciaDomain domain); }
