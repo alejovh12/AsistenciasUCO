@@ -306,3 +306,5 @@ Ver [TEST_PLAN.md](TEST_PLAN.md).
 | 9. Archivos calientes liberados | ❌ (pasos ⚠️) | HU035/036 |
 
 **Dictamen DoR:** 👉 **`NOT_READY`**.
+
+> **Nota IDENT-001 (2026-10-31): antes de congelar el CONTRACT de esta HU, el alta autónoma (CA-03) debe reutilizar `CorreoInstitucionalPolicy` (dominio institucional) y el aviso `VERIFICACION_CORREO` de [IDENT-001](../IDENT-001-correo-institucional-verificacion/CONTRACT.md); el punto «Captcha y verificación del correo (TD-014)» de «No alcance» queda parcialmente cubierto (TD-082).
