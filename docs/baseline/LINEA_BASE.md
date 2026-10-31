@@ -321,3 +321,8 @@ Work items funcionales fuera de la secuencia LB, integrados en `develop` con CI 
 - [HU094/HU095 (ficha del docente y consolidado del directorio del coordinador)](../work-items/HU094-HU095-directorio-docentes-coordinador/CLOSURE.md) — rama `feature/HU094-HU095-directorio-docentes-coordinador` subida (PR #51 hacia `develop`, con `develop` integrado); PENDIENTE de reaprovisionar el PDP con 2 rutas y de [MV-008](MANUAL_VALIDATION_LEDGER.md).
 - [HU008 (oferta de grupos del estudiante)](../work-items/HU008-oferta-grupos-estudiante/CLOSURE.md) — commits locales en `feature/HU008-oferta-grupos-estudiante`, sin subir; cambia la regla de matrícula (solo ESP inscribe en el programa); PENDIENTE de reaprovisionar el PDP con 1 ruta y de [MV-008](MANUAL_VALIDATION_LEDGER.md).
 - [HU053/HU054/HU055 (solicitudes de ingreso a grupo)](../work-items/HU053-HU054-HU055-solicitudes-ingreso-grupo/CLOSURE.md) — PR por integrar (tabla nueva `SolicitudIngresoGrupo` aprobada por John); PENDIENTE de reaprovisionar el PDP con 4 rutas y de [MV-008](MANUAL_VALIDATION_LEDGER.md).
+
+### Corrección de seguridad FIX-002 (2026-10-30)
+
+- Estado: IN_PROGRESS. La descarga del reporte Excel debe validar el rol institucional activo y su scope antes de leer datos. Alcance y DoR READY: [work item FIX-002](../work-items/FIX-002-reporte-asistencia-titularidad/PLAN.md).
+- No cambia el contrato OpenAPI, la consulta SQL ni la estructura del XLSX.

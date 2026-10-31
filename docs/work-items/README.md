@@ -31,6 +31,7 @@ Ejemplo de work item técnico cerrado: [TECH-001](TECH-001-restaurar-gate-arquit
 - [LB-004C MinIO + ClamAV](LB-004-stateless-serverless-readiness/LB-004C-EXECUTION_REPORT.md): reanudación autorizada 2026-10-18 de la storage foundation independiente de DB; handoffs [DB](LB-004-stateless-serverless-readiness/DB_BINDING_HANDOFF.md) y [frontend](LB-004-stateless-serverless-readiness/FRONTEND_FILES_HANDOFF.md).
 
 ## Correcciones de defectos — octubre 2026
+- [FIX-002 — reporte Excel de asistencia](FIX-002-reporte-asistencia-titularidad/PLAN.md): trabajo activo para validar rol y scope institucional antes de consultar o generar el XLSX; no altera OpenAPI, SQL ni el formato del reporte.
 - [FIX-001](FIX-001-sse-error-content-negotiation/PLAN.md): errores de `/api/v1/realtime/stream` con `Accept: text/event-stream` respondían 500 (403 esperado) o 400 sin cuerpo; ahora el `ApiErrorResponse` se escribe siempre en JSON. Hallado en el E2E SEC-BASELINE-002.
 ## P0-B2 — implementación y estabilización — 2026-10-20
 - [Higiene de logs](P0-B2-log-hygiene/PLAN.md): runner local corregido, rotación y retención aisladas; arranque real pendiente de servicios externos.

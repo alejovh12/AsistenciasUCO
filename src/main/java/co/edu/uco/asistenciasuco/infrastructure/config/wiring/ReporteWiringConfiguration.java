@@ -5,12 +5,13 @@ import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasis
 import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.usecase.GenerarReporteAsistenciaUseCase;
 import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.usecase.impl.GenerarReporteAsistenciaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.report.ReporteAsistenciaQueryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration(proxyBeanMethods = false)
 public class ReporteWiringConfiguration {
 
-    @Bean GenerarReporteAsistenciaUseCase generarReporteAsistenciaUseCase(final ReporteAsistenciaQueryPort queryPort) { return new GenerarReporteAsistenciaUseCaseImpl(queryPort); }
+    @Bean GenerarReporteAsistenciaUseCase generarReporteAsistenciaUseCase(final ReporteAsistenciaQueryPort queryPort, final InstitutionalScopePort institutionalScopePort) { return new GenerarReporteAsistenciaUseCaseImpl(queryPort, institutionalScopePort); }
     @Bean GenerarReporteAsistenciaInputPort generarReporteAsistenciaInputPort(final GenerarReporteAsistenciaUseCase useCase) { return new GenerarReporteAsistenciaInteractor(useCase); }
 }
