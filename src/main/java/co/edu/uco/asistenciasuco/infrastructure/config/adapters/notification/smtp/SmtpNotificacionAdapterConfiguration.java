@@ -10,7 +10,11 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.o
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.PlantillaNotificacionJpaRepository;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.PlantillaNotificacionRepository;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.PlantillaPorDefectoCatalogo;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.MarcadorDinamicoProvider;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.PlantillaRenderer;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.TokenVerificacionCorreoJpaRepository;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.TokenVerificacionCorreoRepository;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.VerificacionCorreoMarcadorProvider;
 import co.edu.uco.asistenciasuco.infrastructure.config.adapters.notification.condition.OutboxAdapterCondition;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.SmtpNotificationProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,6 +27,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
+import java.security.SecureRandom;
 import java.time.Clock;
 
 /**
@@ -101,13 +106,29 @@ public class SmtpNotificacionAdapterConfiguration {
     }
 
     @Bean
+    @ConditionalOnMissingBean(TokenVerificacionCorreoRepository.class)
+    public TokenVerificacionCorreoRepository tokenVerificacionCorreoRepository(final EntityManager entityManager) {
+        return new TokenVerificacionCorreoJpaRepository(entityManager);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(MarcadorDinamicoProvider.class)
+    public MarcadorDinamicoProvider marcadorDinamicoProvider(
+            final TokenVerificacionCorreoRepository tokenRepository,
+            final SmtpNotificationProperties properties
+    ) {
+        return new VerificacionCorreoMarcadorProvider(tokenRepository, properties.platformUrl(), new SecureRandom());
+    }
+
+    @Bean
     public NotificacionChannelSender smtpNotificacionChannelSender(
             final ContactoDestinatarioResolver contactoResolver,
             final PlantillaRenderer plantillaRenderer,
             final CorreoTransport correoTransport,
             final TopeEnvios topeEnvios,
             final SmtpNotificationProperties properties,
-            final MeterRegistry meterRegistry
+            final MeterRegistry meterRegistry,
+            final MarcadorDinamicoProvider marcadorDinamicoProvider
     ) {
         return new SmtpNotificacionChannelSender(
                 contactoResolver,
@@ -115,7 +136,8 @@ public class SmtpNotificacionAdapterConfiguration {
                 correoTransport,
                 topeEnvios,
                 properties,
-                meterRegistry
+                meterRegistry,
+                marcadorDinamicoProvider
         );
     }
 }

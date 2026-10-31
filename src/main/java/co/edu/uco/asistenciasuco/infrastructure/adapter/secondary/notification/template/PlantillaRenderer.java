@@ -25,6 +25,7 @@ public class PlantillaRenderer {
     private static final String LAYOUT_RESOURCE = "notification/email/layout.html";
     private static final String METRIC_RENDER_TOTAL = "notification.template.render.total";
     private static final int MAX_SUBJECT_LENGTH = 200;
+    private static final String MARCADOR_ENLACE = "enlace";
     private static final Pattern TOKEN_PATTERN = Pattern.compile("\\{([a-zA-Z][a-zA-Z0-9_]*)\\}");
 
     private final PlantillaNotificacionRepository repository;
@@ -167,11 +168,29 @@ public class PlantillaRenderer {
             sb.append(escaparHtml(lineaPlantilla.substring(cursor, matcher.start())));
             final String nombre = matcher.group(1);
             final String valor = datos.getOrDefault(nombre, "");
-            sb.append(escaparHtml(valor == null ? "" : valor));
+            sb.append(renderizarValorHtml(nombre, valor));
             cursor = matcher.end();
         }
         sb.append(escaparHtml(lineaPlantilla.substring(cursor)));
         return sb.toString();
+    }
+
+    /**
+     * El marcador {@code enlace} (valor emitido por el sistema, nunca por una persona) se muestra como vinculo solo si es
+     * una URL http o https; cualquier otro valor, y todo otro marcador, se escapa como texto.
+     */
+    private static String renderizarValorHtml(final String nombre, final String valor) {
+        final String texto = valor == null ? "" : valor;
+        final String escapado = escaparHtml(texto);
+        if (MARCADOR_ENLACE.equals(nombre) && esUrlHttp(texto)) {
+            return "<a href=\"" + escapado + "\" style=\"color:#0f5132;\">" + escapado + "</a>";
+        }
+        return escapado;
+    }
+
+    private static boolean esUrlHttp(final String texto) {
+        final String minusculas = texto.toLowerCase(java.util.Locale.ROOT);
+        return (minusculas.startsWith("https://") || minusculas.startsWith("http://")) && texto.indexOf(' ') < 0;
     }
 
     private static String convertirPlantillaAHtml(final String cuerpoPlantilla, final Map<String, String> datos) {

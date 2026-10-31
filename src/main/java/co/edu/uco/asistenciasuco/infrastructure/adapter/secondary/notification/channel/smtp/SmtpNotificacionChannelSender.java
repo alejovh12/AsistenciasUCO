@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.channel.smtp;
 
+import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notificacion;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.contact.ContactoDestinatario;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.contact.ContactoDestinatarioResolver;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.outbox.DestinatarioRef;
@@ -7,6 +8,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.o
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.outbox.NotificacionNoEntregableException;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.outbox.NotificacionPersistida;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.ContenidoRenderizado;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.MarcadorDinamicoProvider;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.PlantillaRenderer;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.SmtpNotificationProperties;
 import io.micrometer.core.instrument.Counter;
@@ -17,7 +19,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -40,6 +44,7 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
     private final TopeEnvios topeEnvios;
     private final SmtpNotificationProperties properties;
     private final MeterRegistry meterRegistry;
+    private final MarcadorDinamicoProvider marcadoresDinamicos;
 
     private final Counter sendSentCounter;
     private final Counter sendRetryCounter;
@@ -49,6 +54,7 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
     private final Counter recipientsOmittedCounter;
     private final Counter redirectedCounter;
 
+    /** Sin marcadores dinamicos: comportamiento previo a IDENT-001. */
     public SmtpNotificacionChannelSender(
             final ContactoDestinatarioResolver contactoResolver,
             final PlantillaRenderer plantillaRenderer,
@@ -57,12 +63,26 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
             final SmtpNotificationProperties properties,
             final MeterRegistry meterRegistry
     ) {
+        this(contactoResolver, plantillaRenderer, correoTransport, topeEnvios, properties, meterRegistry,
+                MarcadorDinamicoProvider.NINGUNO);
+    }
+
+    public SmtpNotificacionChannelSender(
+            final ContactoDestinatarioResolver contactoResolver,
+            final PlantillaRenderer plantillaRenderer,
+            final CorreoTransport correoTransport,
+            final TopeEnvios topeEnvios,
+            final SmtpNotificationProperties properties,
+            final MeterRegistry meterRegistry,
+            final MarcadorDinamicoProvider marcadoresDinamicos
+    ) {
         this.contactoResolver = Objects.requireNonNull(contactoResolver, "ContactoDestinatarioResolver es obligatorio.");
         this.plantillaRenderer = Objects.requireNonNull(plantillaRenderer, "PlantillaRenderer es obligatorio.");
         this.correoTransport = Objects.requireNonNull(correoTransport, "CorreoTransport es obligatorio.");
         this.topeEnvios = Objects.requireNonNull(topeEnvios, "TopeEnvios es obligatorio.");
         this.properties = Objects.requireNonNull(properties, "SmtpNotificationProperties es obligatorio.");
         this.meterRegistry = Objects.requireNonNull(meterRegistry, "MeterRegistry es obligatorio.");
+        this.marcadoresDinamicos = Objects.requireNonNull(marcadoresDinamicos, "MarcadorDinamicoProvider es obligatorio.");
 
         this.sendSentCounter = Counter.builder("notification.email.send.total")
                 .tag("outcome", "sent")
@@ -109,7 +129,8 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
                 ? List.of()
                 : contactoResolver.consultarContactos(idsSolicitados);
 
-        final List<String> correosValidos = filtrarCorreosValidos(contactos);
+        final boolean exentoDeConfirmacion = Notificacion.TIPO_VERIFICACION_CORREO.equals(notificacion.tipo());
+        final List<String> correosValidos = filtrarCorreosValidos(contactos, exentoDeConfirmacion);
         final int omitidos = Math.max(0, totalSolicitados - correosValidos.size());
         if (omitidos > 0) {
             recipientsOmittedCounter.increment(omitidos);
@@ -127,6 +148,9 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
             );
         }
 
+        // IDENT-001: los marcadores dinamicos (enlace de verificacion) se emiten solo cuando hay a quien enviar.
+        final Map<String, String> datos = combinarMarcadoresDinamicos(notificacion, idsSolicitados);
+
         final boolean modoPrueba = Boolean.TRUE.equals(properties.testMode().enabled());
         final ContenidoRenderizado contenido;
         final String asuntoSaneado;
@@ -137,7 +161,7 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
                     + "Destinatarios originales omitidos: " + correosValidos.size() + ".";
             contenido = plantillaRenderer.renderizar(
                     notificacion.tipo(),
-                    notificacion.datos(),
+                    datos,
                     notificacion.asunto(),
                     notificacion.mensaje(),
                     avisoModoPrueba
@@ -147,7 +171,7 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
         } else {
             contenido = plantillaRenderer.renderizar(
                     notificacion.tipo(),
-                    notificacion.datos(),
+                    datos,
                     notificacion.asunto(),
                     notificacion.mensaje()
             );
@@ -213,6 +237,17 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
         );
     }
 
+    private Map<String, String> combinarMarcadoresDinamicos(final NotificacionPersistida notificacion, final List<UUID> idsUsuarios)
+            throws NotificacionNoEntregableException {
+        final Map<String, String> dinamicos = marcadoresDinamicos.resolver(notificacion.tipo(), idsUsuarios);
+        if (dinamicos == null || dinamicos.isEmpty()) {
+            return notificacion.datos();
+        }
+        final Map<String, String> combinados = new HashMap<>(notificacion.datos());
+        combinados.putAll(dinamicos);
+        return Map.copyOf(combinados);
+    }
+
     private List<UUID> extraerIdsUsuarios(final List<DestinatarioRef> destinatarios) {
         final Set<UUID> unicos = new LinkedHashSet<>();
         for (final DestinatarioRef ref : destinatarios) {
@@ -223,7 +258,7 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
         return List.copyOf(unicos);
     }
 
-    private List<String> filtrarCorreosValidos(final List<ContactoDestinatario> contactos) {
+    private List<String> filtrarCorreosValidos(final List<ContactoDestinatario> contactos, final boolean exentoDeConfirmacion) {
         if (contactos == null || contactos.isEmpty()) {
             return List.of();
         }
@@ -232,7 +267,7 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
             if (c == null) {
                 continue;
             }
-            if (properties.requireConfirmedEmail() && !c.correoConfirmado()) {
+            if (!exentoDeConfirmacion && properties.requireConfirmedEmail() && !c.correoConfirmado()) {
                 continue;
             }
             final String correo = c.correo();
