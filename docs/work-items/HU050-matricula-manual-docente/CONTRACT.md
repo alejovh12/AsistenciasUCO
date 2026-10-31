@@ -68,3 +68,5 @@ Retorna exactamente un ResultSet con:
 ### 3.3 Respuesta
 - HTTP Status: `201 Created`
 - Body: `RegistrarEstudianteResultadoDTO` `{ exitoso: true, mensajeUsuario: "..." }`
+
+> **Nota IDENT-001 (2026-10-31): el alta nueva de un estudiante exige correo institucional (parámetro `REGISTRO/DOMINIO_CORREO_ESTUDIANTE`, hoy `@uco.edu.co`) y su cuenta nace deshabilitada hasta verificar el correo por enlace. La contraseña se sigue asignando en la creación (TD-079). Ver [IDENT-001](../IDENT-001-correo-institucional-verificacion/CONTRACT.md).

@@ -30,6 +30,22 @@ public final class TextHelper {
         return trimToEmpty(value).toUpperCase(Locale.ROOT);
     }
 
+    /** Pasa un nombre a formato de nombre propio ("ANA MARIA" a "Ana Maria"); nulo o vacio devuelve cadena vacia. */
+    public static String toNombrePropio(final String value) {
+        final String limpio = trimToEmpty(value);
+        if (limpio.isEmpty()) {
+            return limpio;
+        }
+        final StringBuilder resultado = new StringBuilder();
+        for (final String parte : limpio.toLowerCase(Locale.ROOT).split("\s+")) {
+            if (!resultado.isEmpty()) {
+                resultado.append(' ');
+            }
+            resultado.append(Character.toUpperCase(parte.charAt(0))).append(parte.substring(1));
+        }
+        return resultado.toString();
+    }
+
     public static String normalizeTrimLower(final String value) {
         final String trimmed = trim(value);
         return isNull(trimmed) ? null : trimmed.toLowerCase(Locale.ROOT);

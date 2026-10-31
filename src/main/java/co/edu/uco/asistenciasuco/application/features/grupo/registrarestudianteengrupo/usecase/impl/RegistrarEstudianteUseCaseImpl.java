@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.impl;
 
 
+import co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional.CorreoInstitucionalPolicy;
 import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
@@ -10,6 +11,9 @@ import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudiantee
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.mapper.RegistrarEstudianteIdentityMapper;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.mapper.RegistrarEstudianteRepositoryMapper;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CrearCuentaIdentidadDTO;
+import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notificacion;
+import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.RegistrarEstudianteRepositoryProjection;
@@ -18,7 +22,13 @@ import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEnc
 import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Objects;
 import java.util.UUID;
@@ -33,23 +43,31 @@ import java.util.UUID;
  */
 public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudianteUseCase {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(RegistrarEstudianteUseCaseImpl.class);
+
     private static final InstitutionalRole ROL_ESTUDIANTE = InstitutionalRole.ESTUDIANTE;
 
     private final GrupoRepositoryPort grupoRepositoryPort;
     private final UsuarioRepositoryPort usuarioRepositoryPort;
     private final PasswordEncoderPort passwordEncoderPort;
     private final IdentityProviderPort identityProviderPort;
+    private final CorreoInstitucionalPolicy dominioCorreoPolicy;
+    private final NotificacionPort notificacionPort;
 
     public RegistrarEstudianteUseCaseImpl(
             final GrupoRepositoryPort grupoRepositoryPort,
             final UsuarioRepositoryPort usuarioRepositoryPort,
             final PasswordEncoderPort passwordEncoderPort,
-            final IdentityProviderPort identityProviderPort
+            final IdentityProviderPort identityProviderPort,
+            final CorreoInstitucionalPolicy dominioCorreoPolicy,
+            final NotificacionPort notificacionPort
     ) {
         this.grupoRepositoryPort = Objects.requireNonNull(grupoRepositoryPort, "El puerto de salida GrupoRepositoryPort es obligatorio.");
         this.usuarioRepositoryPort = Objects.requireNonNull(usuarioRepositoryPort, "El puerto de salida UsuarioRepositoryPort es obligatorio.");
         this.passwordEncoderPort = Objects.requireNonNull(passwordEncoderPort, "El puerto PasswordEncoderPort es obligatorio.");
         this.identityProviderPort = Objects.requireNonNull(identityProviderPort, "El puerto IdentityProviderPort es obligatorio.");
+        this.dominioCorreoPolicy = Objects.requireNonNull(dominioCorreoPolicy, "CorreoInstitucionalPolicy es obligatoria.");
+        this.notificacionPort = Objects.requireNonNull(notificacionPort, "El puerto NotificacionPort es obligatorio.");
     }
 
     @Override
@@ -58,6 +76,11 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
             throw new CrosscuttingException("El dominio para registrar estudiante en grupo es obligatorio.");
         }
         final boolean usuarioExistente = validarConflictoIdentidadUsuario(domain);
+        // IDENT-001: un alta nueva exige correo institucional (un usuario existente no se revalida). Se rechaza antes
+        // de tocar la base de datos o el proveedor de identidad; el SP repite la regla como autoridad final.
+        if (!usuarioExistente) {
+            dominioCorreoPolicy.exigir(domain.getCorreo());
+        }
         final String passwordParaPersistir = resolverPasswordParaPersistir(domain, usuarioExistente);
 
         final RegistrarEstudianteRepositoryProjection resultado = grupoRepositoryPort.registrarEstudianteEnGrupo(
@@ -66,9 +89,35 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
 
         // DB SUCCESS a partir de aqui: Identity nunca se invoca antes de este punto.
         final UsuarioIdentidadRepositoryProjection usuarioCanonico = resolverUsuarioPostCommand(domain);
-        provisionarIdentidad(domain, usuarioCanonico);
+        provisionarIdentidad(domain, usuarioCanonico, !usuarioExistente);
+        if (!usuarioExistente) {
+            avisarVerificacionCorreo(domain, usuarioCanonico);
+        }
 
         return RegistrarEstudianteRepositoryMapper.toUseCaseEntity(resultado);
+    }
+
+    /**
+     * IDENT-001: avisa al estudiante nuevo que debe verificar su correo. El aviso es de mejor esfuerzo: el registro ya
+     * quedo confirmado y un fallo de la cola nunca lo revierte. No lleva correo ni token (el enlace lo emite el canal al
+     * entregar el correo).
+     */
+    private void avisarVerificacionCorreo(
+            final RegistrarEstudianteDomain domain,
+            final UsuarioIdentidadRepositoryProjection usuarioCanonico
+    ) {
+        try {
+            notificacionPort.notificar(new Notificacion(
+                    Notificacion.TIPO_VERIFICACION_CORREO,
+                    "Verifique su correo institucional",
+                    "Se registro una cuenta a su nombre en la plataforma de asistencia. Verifique su correo institucional.",
+                    List.of(new Notificacion.Destinatario(ROL_ESTUDIANTE.name(), usuarioCanonico.id(), null, null)),
+                    Map.of("nombre", TextHelper.toNombrePropio(domain.getPrimerNombre()))
+            ));
+        } catch (final RuntimeException exception) {
+            LOGGER.warn("No fue posible registrar el aviso de verificacion de correo del usuario {}: {}",
+                    usuarioCanonico.id(), exception.getClass().getSimpleName());
+        }
     }
 
     /**
@@ -94,12 +143,13 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
      */
     private void provisionarIdentidad(
             final RegistrarEstudianteDomain domain,
-            final UsuarioIdentidadRepositoryProjection usuarioCanonico
+            final UsuarioIdentidadRepositoryProjection usuarioCanonico,
+            final boolean requiereVerificacionCorreo
     ) {
         try {
-            identityProviderPort.crearCuenta(
-                    RegistrarEstudianteIdentityMapper.toCrearCuentaIdentidadDTO(domain, usuarioCanonico, ROL_ESTUDIANTE)
-            );
+            final CrearCuentaIdentidadDTO cuenta =
+                    RegistrarEstudianteIdentityMapper.toCrearCuentaIdentidadDTO(domain, usuarioCanonico, ROL_ESTUDIANTE);
+            identityProviderPort.crearCuenta(requiereVerificacionCorreo ? cuenta.conVerificacionCorreo() : cuenta);
         } catch (final IdentityProviderPort.IdentityProviderException exception) {
             throw new InternalApplicationException(
                     "No fue posible completar el aprovisionamiento de identidad del estudiante registrado.",

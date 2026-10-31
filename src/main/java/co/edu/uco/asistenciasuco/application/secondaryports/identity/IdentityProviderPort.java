@@ -92,6 +92,14 @@ public interface IdentityProviderPort {
         throw operacionNoSoportada();
     }
 
+    /**
+     * IDENT-001: confirma el correo de la cuenta (habilita la cuenta y marca el correo verificado). Idempotente.
+     * Capacidad opcional del proveedor: si no la implementa falla de forma controlada.
+     */
+    default void confirmarCorreoCuenta(final String idExterno) {
+        throw operacionNoSoportada();
+    }
+
     /** Retira un rol institucional de la cuenta. Idempotente: si no lo tiene, no falla. */
     default void retirarRol(final String idExterno, final InstitutionalRole rol) {
         throw operacionNoSoportada();

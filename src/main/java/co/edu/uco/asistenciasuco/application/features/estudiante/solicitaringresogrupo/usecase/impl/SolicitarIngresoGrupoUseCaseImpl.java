@@ -72,7 +72,10 @@ public final class SolicitarIngresoGrupoUseCaseImpl implements SolicitarIngresoG
                             .map(destinatario -> new Notificacion.Destinatario(destinatario.rol(), destinatario.idUsuario(),
                                     destinatario.nombreCompleto(), destinatario.correo()))
                             .toList(),
-                    Map.of("idSolicitud", idSolicitud.toString(), "idGrupo", String.valueOf(contexto.idGrupo()))));
+                    Map.of("idSolicitud", idSolicitud.toString(),
+                            "idGrupo", String.valueOf(contexto.idGrupo()),
+                            "grupo", grupo,
+                            "estudiante", estudiante)));
         } catch (final RuntimeException exception) {
             LOGGER.warn("No fue posible enviar el aviso de la solicitud de ingreso {}: {}", idSolicitud,
                     exception.getClass().getSimpleName());

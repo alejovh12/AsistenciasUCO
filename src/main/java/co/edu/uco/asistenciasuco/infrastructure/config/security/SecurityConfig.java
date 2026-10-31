@@ -100,6 +100,9 @@ public class SecurityConfig {
                 // permitAll de AUTORIZACION: la autenticacion la exige AzureEventGridAuthFilter (header
                 // aeg-sas-token, fail-closed). No equivale a un endpoint sin autenticacion.
                 .requestMatchers(AzureEventGridAuthFilter.WEBHOOK_PATH).permitAll()
+                // IDENT-001: verificacion publica del correo. permitAll solo para esta ruta POST (sin comodin /public/**): la
+                // credencial es el token de un solo uso y el limite de intentos lo aplica VerificacionCorreoRateLimitFilter.
+                .requestMatchers(HttpMethod.POST, SecurityPublicEndpoints.VERIFICAR_CORREO).permitAll()
                 // Solo lectura de documentación runtime. La propiedad de Swagger UI controla
                 // si estos handlers existen; ningún endpoint de negocio se abre por esta regla.
                 .requestMatchers(
@@ -123,6 +126,9 @@ public class SecurityConfig {
                 // en docs/security/runtime-security-provider-architecture.md).
                 .requestMatchers("/api/v1/docentes/**").hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
                 .requestMatchers("/api/v1/estudiante/**").hasRole(ROLE_ESTUDIANTE)
+                // IDENT-001: dominio institucional vigente para validar el formulario de registro manual del estudiante.
+                .requestMatchers(HttpMethod.GET, "/api/v1/configuracion/registro-estudiante")
+                    .hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR)
                 // Directorio general/institucional de estudiantes: permite a DOCENTE consultar y validar
                 // la existencia del estudiante a matricular en su grupo (junto con COORDINADOR y ADMINISTRADOR).
                 .requestMatchers("/api/v1/estudiantes/**").hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
@@ -173,6 +179,10 @@ public class SecurityConfig {
                 // ADMINISTRADOR no tiene bypass en la DB para esta operacion; por eso no se incluye
                 // aqui, a diferencia de crear/actualizar grupo.
                 .requestMatchers(HttpMethod.POST, "/api/v1/grupos/*/estudiantes", "/api/v1/grupos/{grupoId}/estudiantes")
+                    .hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR)
+                // IDENT-001: reenvio del enlace de verificacion de correo. Mismo criterio que la matricula manual: la DB valida
+                // que el ejecutor sea docente titular del grupo o coordinador de su programa.
+                .requestMatchers(HttpMethod.POST, "/api/v1/grupos/*/estudiantes/*/reenviar-verificacion")
                     .hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR)
                 .requestMatchers(HttpMethod.POST, "/api/v1/grupos/**").hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
                 .requestMatchers(HttpMethod.PUT, "/api/v1/grupos/**").hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)

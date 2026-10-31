@@ -1,5 +1,9 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional.CorreoInstitucionalPolicy;
+import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.primaryports.ActualizarGrupoInputPort;
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.primaryports.interactor.ActualizarGrupoInteractor;
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.usecase.ActualizarGrupoUseCase;
@@ -53,14 +57,25 @@ public class GrupoWiringConfiguration {
     }
 
     @Bean
+    public CorreoInstitucionalPolicy correoInstitucionalPolicy(
+            final ParameterCatalogPort parameterCatalogPort,
+            final MessageCatalogPort messageCatalogPort
+    ) {
+        return new CorreoInstitucionalPolicy(parameterCatalogPort, messageCatalogPort);
+    }
+
+    @Bean
     public RegistrarEstudianteUseCase registrarEstudianteUseCase(
             final GrupoRepositoryPort grupoRepositoryPort,
             final UsuarioRepositoryPort usuarioRepositoryPort,
             final PasswordEncoderPort passwordEncoderPort,
-            final IdentityProviderPort identityProviderPort
+            final IdentityProviderPort identityProviderPort,
+            final CorreoInstitucionalPolicy correoInstitucionalPolicy,
+            final NotificacionPort notificacionPort
     ) {
         return new RegistrarEstudianteUseCaseImpl(
-                grupoRepositoryPort, usuarioRepositoryPort, passwordEncoderPort, identityProviderPort
+                grupoRepositoryPort, usuarioRepositoryPort, passwordEncoderPort, identityProviderPort,
+                correoInstitucionalPolicy, notificacionPort
         );
     }
 

@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
+import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
@@ -32,6 +33,10 @@ final class DbCodeTranslator {
             case "KPI_004" -> new ForbiddenException("KPI_004", "No tiene una institucion a su cargo para consultar estos indicadores.");
             case "GEN_001" -> new ResourceNotFoundException("El " + entidadNoEncontrada + " especificado no existe en el sistema.");
             case "PER_001" -> new ResourceNotFoundException("El periodo academico especificado no existe en el sistema.");
+            // IDENT-001: reenvio del enlace de verificacion. VCE_004 (fuera de ambito) es indistinguible de inexistente.
+            case "VCE_003" -> new ConflictException("VCE_003", "Debe esperar unos minutos antes de volver a enviar el enlace de verificacion.");
+            case "VCE_004" -> new ResourceNotFoundException("VCE_004", "El estudiante no pertenece a un grupo a su cargo.");
+            case "VCE_005" -> new ConflictException("VCE_005", "El correo de este estudiante ya fue verificado.");
             case "PAG_001" -> new ValidationException("Los parametros de paginacion no son validos.");
             case "GEN_002", "VAL_001" -> new ValidationException("Los datos de la consulta no son validos.");
             default -> exception;

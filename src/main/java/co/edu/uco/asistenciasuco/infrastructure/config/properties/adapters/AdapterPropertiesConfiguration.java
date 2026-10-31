@@ -10,7 +10,8 @@ import org.springframework.context.annotation.Configuration;
         SecurityAdapterProperties.class,
         StorageAdapterProperties.class,
         RealtimeAdapterProperties.class,
-        AuditAdapterProperties.class
+        AuditAdapterProperties.class,
+        NotificationAdapterProperties.class
 })
 public class AdapterPropertiesConfiguration {
 

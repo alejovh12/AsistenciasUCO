@@ -9,6 +9,7 @@ import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoError
 import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.exception.TipoIdentificacionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
+import co.edu.uco.asistenciasuco.application.features.usuario.exception.VerificacionCorreoErrorCode;
 import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorDefinition;
 import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.CommonErrorCode;
 import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.SecurityErrorCode;
@@ -78,6 +79,12 @@ final class DbFailureClassifier {
             case "RET_001", "RET_002" -> CommonErrorCode.RESOURCE_NOT_FOUND;
             case "RET_003" -> CommonErrorCode.CONFLICT;
             case "RET_004" -> CommonErrorCode.VALIDATION_ERROR;
+            // IDENT-001: correo institucional y verificacion. VCE_001/VCE_002 son entradas invalidas (400, VCE_002 identico para
+            // cualquier token invalido); VCE_005 ya verificado es conflicto; VCE_007 usuario inexistente o inactivo es no encontrado.
+            case "VCE_001" -> VerificacionCorreoErrorCode.VCE_001;
+            case "VCE_002" -> VerificacionCorreoErrorCode.VCE_002;
+            case "VCE_005" -> VerificacionCorreoErrorCode.VCE_005;
+            case "VCE_007" -> VerificacionCorreoErrorCode.VCE_007;
             // HU053-HU055: solicitudes de ingreso a grupo. SIG_001 no es estudiante; SIG_002/SIG_007 no encontrado (las
             // solicitudes ajenas son indistinguibles); periodo, duplicados, ya resuelta o sin cupo son conflicto.
             case "SIG_001" -> SecurityErrorCode.FORBIDDEN;

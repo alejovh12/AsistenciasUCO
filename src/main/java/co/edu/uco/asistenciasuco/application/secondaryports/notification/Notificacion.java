@@ -25,6 +25,8 @@ public record Notificacion(
     public static final String TIPO_SOLICITUD_INGRESO_RESUELTA = "SOLICITUD_INGRESO_RESUELTA";
     /** HU055: el estudiante retiro su solicitud (aviso al docente titular). */
     public static final String TIPO_SOLICITUD_INGRESO_RETIRADA = "SOLICITUD_INGRESO_RETIRADA";
+    /** IDENT-001: aviso al estudiante registrado por el docente para verificar su correo (el enlace lo emite el canal al entregar). */
+    public static final String TIPO_VERIFICACION_CORREO = "VERIFICACION_CORREO";
 
     public Notificacion {
         Objects.requireNonNull(tipo, "El tipo de notificacion es obligatorio.");

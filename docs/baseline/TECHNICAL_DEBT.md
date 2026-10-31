@@ -265,7 +265,7 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 - **Motivo:** Confirmación funcional necesaria antes de producción.
 - **Resolución esperada:** Política aprobada y pruebas de verificación acordes.
 - **Bloquea línea base:** no para LB-000; sí release de identidad.
-- **Estado:** ABIERTA.
+- **Estado:** PARCIALMENTE RESUELTA (IDENT-001, 2026-10-31): el estudiante registrado manualmente por el docente se crea deshabilitado y con `emailVerified=false` hasta verificar el enlace. Sigue ABIERTA para los demás roles (decano, coordinador, docente, administrador) y para el registro por QR (HU176B). Work item: [IDENT-001](../work-items/IDENT-001-correo-institucional-verificacion/PLAN.md).
 - **Actualización Security Baseline 0.1.7 (2026-10-26, cierre):** resuelto el binding `issuer+subject → Usuario.id`
   con persistencia propia (migración SEC-BASELINE-017 en la DB) y la API queda Bearer-only (PKCE en la SPA; la cookie BFF
   no es credencial del backend). Pendiente: (a) renovación del access token por re-autenticación silenciosa (redirección)
@@ -945,4 +945,134 @@ GOLDEN PATH EFFECT:         NONE
 - **Descripción:** `NotificacionPort` (avisos institucionales por correo, WhatsApp, SMS…) existe en Application, pero el componente de notificaciones del equipo aún no está lanzado. El provider por defecto (`LogNotificacionAdapter`, `@ConditionalOnMissingBean`) solo registra en el log el tipo de aviso, los roles e ids de los destinatarios y los ids de trazabilidad, sin correos, nombres ni texto del mensaje.
 - **Impacto:** El retiro de HU051 se realiza y se audita, pero el estudiante, el docente y el coordinador no reciben el aviso real. También afecta a HU053-HU055 (avisos de solicitud registrada, resuelta y retirada) y afectará a HU038.
 - **Resolución esperada:** Implementar el adaptador del componente institucional de notificaciones (su configuración aporta otro `NotificacionPort` y el de log deja de crearse) y validar la entrega en MV.
-- **Bloquea línea base:** No. **Estado:** **OPEN / MEDIUM / BACKEND**. **Work item:** [HU051](../work-items/HU051-retirar-estudiante-grupo/CLOSURE.md).
+- **Bloquea línea base:** No. **Estado:** **OPEN / MEDIUM / BACKEND (PARCIALMENTE MITIGADA)**: Infraestructura de notificaciones intercambiable lista bajo NOTIF-001 mediante `app.adapters.notification.provider` (`log`, `outbox`, `composite`), con persistencia durable en `dbo.NotificacionSaliente`, procedimientos almacenados técnicos transaccionales (`usp_registrar_notificacion_saliente`, `usp_reservar_notificaciones_salientes`, `usp_marcar_notificacion_entregada`, `usp_registrar_fallo_notificacion` y `usp_depurar_notificaciones_salientes`), despachador en segundo plano (`NotificacionOutboxDispatcher`), reintentos exponenciales deterministas y dead-letter (`FALLIDA_DEFINITIVA`). Pendiente la integración del sender telemático institucional real y la resolución de datos de contacto (seguimientos TD-067 y TD-068). **Work item:** [NOTIF-001](../work-items/NOTIF-001-proveedor-notificaciones/PLAN.md).
+
+## TD-067
+
+- **Fecha / responsable:** 2026-10-28 / backend-team (NOTIF-001 / PLAN §7; resuelta en NOTIF-002A el 2026-10-30). **Clasificación:** INTEGRATION_EXTERNAL_SENDER. **Prioridad:** MEDIA.
+- **Descripción:** La implementación de NOTIF-001 incorporó el SPI `NotificacionChannelSender` con un remitente por defecto `LogNotificacionChannelSender` (`app.providers.outbox-notification.sender=log`). Faltaba implementar el remitente real de correo sobre el outbox.
+- **Impacto:** Las notificaciones procesadas por el outbox se despachaban y registraban como `ENTREGADA` simulando el envío mediante log estructurado.
+- **Resolución esperada:** Implementar el canal SMTP de correo institucional sobre `NotificacionChannelSender` seleccionable por propiedades.
+- **Bloquea línea base:** No. **Estado:** **RESOLVED (NOTIF-002A, 2026-10-30)**: Implementado `SmtpNotificacionChannelSender` (`app.providers.outbox-notification.sender=smtp`) con plantillas editables versionadas en SQL Server (`PlantillaNotificacion`), layout HTML fijo y texto plano (`PlantillaRenderer`), tope de envíos (`TopeEnvios` + `disponible()`), transporte Jakarta Mail (`JakartaMailCorreoTransport`) y modo de pruebas con redirección (`test-mode`, D15). **Work items:** [NOTIF-001](../work-items/NOTIF-001-proveedor-notificaciones/PLAN.md), [NOTIF-002A](../work-items/NOTIF-002A-plantillas-correo/PLAN.md).
+
+## TD-068
+
+- **Fecha / responsable:** 2026-10-28 / backend-team (NOTIF-001 / PLAN §7; resuelta en NOTIF-002A el 2026-10-30). **Clasificación:** PRIVACY_DATA_MINIMIZATION. **Prioridad:** BAJA.
+- **Descripción:** En cumplimiento de la minimización de datos (D5), `dbo.NotificacionSaliente` no persiste `nombre` ni `correo` de los destinatarios (solo `rol` e `idUsuario`). Al realizar la entrega física externa (TD-067), se requería resolver los datos de contacto de los destinatarios en el momento de entrega sin persistirlos en el outbox.
+- **Impacto:** Necesario para el sender de correo real.
+- **Resolución esperada:** Incorporar resolución de datos de contacto en tiempo de despacho antes de enviar por el canal externo.
+- **Bloquea línea base:** No. **Estado:** **RESOLVED (NOTIF-002A, 2026-10-30)**: Implementada la resolución de contacto al momento de la entrega mediante el procedimiento almacenado público `dbo.usp_consultar_contacto_notificacion` y el adaptador `ContactoDestinatarioJpaRepository` (`ContactoDestinatarioResolver`), filtrando usuarios activos/habilitados y validando direcciones seguras sin persistir correos en el outbox. **Work items:** [NOTIF-001](../work-items/NOTIF-001-proveedor-notificaciones/PLAN.md), [NOTIF-002A](../work-items/NOTIF-002A-plantillas-correo/PLAN.md).
+
+## TD-069
+
+- **Fecha / responsable:** 2026-10-28 / fullstack-team (NOTIF-001 / PLAN §7). **Clasificación:** OPERABILITY_MONITORING_GAP. **Prioridad:** BAJA.
+- **Descripción:** NOTIF-001 implementa el motor de persistencia, despacho, reintentos y dead-letter en base de datos y backend, pero no expone endpoints HTTP administrativos ni interfaz gráfica para consultar el histórico de notificaciones o reencolar registros en estado `FALLIDA_DEFINITIVA`.
+- **Impacto:** La inspección y remediación de dead-letter requiere acceso a base de datos mediante queries técnicas.
+- **Resolución esperada:** Implementar endpoint REST `GET /api/v1/admin/notificaciones` paginado vía SP `usp_consultar_notificaciones_salientes` sobre vista autorizada y acción de reintento manual `POST /api/v1/admin/notificaciones/{id}/reintentar`.
+- **Bloquea línea base:** No. **Estado:** **OPEN / LOW / FULLSTACK**. **Work item:** [NOTIF-001](../work-items/NOTIF-001-proveedor-notificaciones/PLAN.md).
+
+## TD-070
+
+- **Fecha / responsable:** 2026-10-28 / architecture-team (NOTIF-001 / PLAN §7). **Clasificación:** TRANSACTIONAL_OUTBOX_DUAL_WRITE. **Prioridad:** BAJA.
+- **Descripción:** La arquitectura de la aplicación delega la atomicidad de negocio exclusivamente a los procedimientos almacenados de SQL Server sin transacciones Java (`@Transactional`) globales que abarquen el caso de uso y el outbox. Por diseño de mejor esfuerzo (D4), el outbox registra la notificación una vez el caso de uso ha ejecutado con éxito su SP de negocio. Existe una ventana teórica de pérdida si el proceso backend colapsa exactamente entre la respuesta del SP y la inserción del outbox.
+- **Impacto:** Coherente con la semántica institucional vigente de mejor esfuerzo para avisos informativos.
+- **Resolución esperada:** Si un caso de negocio futuro requiere garantía transaccional fuerte (two-phase commit o atomic outbox estricto), se deberá instrumentar el registro del evento outbox directamente dentro del SP transaccional del negocio en DB.
+- **Bloquea línea base:** No. **Estado:** **OPEN / LOW / ARCHITECTURE**. **Work item:** [NOTIF-001](../work-items/NOTIF-001-proveedor-notificaciones/PLAN.md).
+
+## TD-071
+
+- **Fecha / responsable:** 2026-10-30 / fullstack-team (NOTIF-002A / PLAN §7.1). **Clasificación:** FEATURE_FOLLOWUP_ADMIN_TEMPLATES. **Prioridad:** MEDIA.
+- **Descripción:** NOTIF-002A incorpora el modelo versionado `dbo.PlantillaNotificacion`, el catálogo `dbo.PlantillaNotificacionMarcador`, las semillas v1 de los 4 tipos y la lectura de plantilla activa, pero la administración de plantillas por el rol `ADMINISTRADOR` (listar, crear nueva versión, vista previa y activar/revertir versión) corresponde al work item **NOTIF-002B**.
+- **Impacto:** Mientras no se implemente NOTIF-002B, las plantillas se gestionan por semilla/migración en base de datos.
+- **Resolución esperada:** Implementar NOTIF-002B: DB (SP de guardado de versión `>= 2`, activación y consulta paginada), backend (endpoints administrativos, permiso en `access-catalog.json` y contrato OpenAPI) y frontend (pantalla con Signals y `ChangeDetectionStrategy.OnPush`).
+- **Bloquea línea base:** No. **Estado:** **OPEN / MEDIUM / FULLSTACK**. **Work item:** [NOTIF-002A](../work-items/NOTIF-002A-plantillas-correo/PLAN.md).
+
+## TD-072
+
+- **Fecha / responsable:** 2026-10-30 / backend-team & ops (NOTIF-002A / PLAN §7.2). **Clasificación:** OPERATIONAL_SAFETY_GOVERNANCE. **Prioridad:** MEDIA.
+- **Descripción:** El canal SMTP cuenta con el modo de pruebas con redirección (`app.providers.smtp-notification.test-mode.enabled`, default `false`, y `test-mode.redirect-to`, D15), que redirige todos los correos a buzones de prueba y omite a los destinatarios reales. Es una medida exclusiva para pruebas y debe permanecer obligatoriamente apagada (`enabled=false`) en producción.
+- **Impacto:** Si se habilitara accidentalmente en producción, ningún destinatario real recibiría los avisos institucionales (aunque el `WARN` de arranque y la métrica `notification.email.redirected.total` lo hacen visible).
+- **Resolución esperada:** Incluir la verificación `SMTP_NOTIFICATION_TEST_MODE_ENABLED=false` en el checklist de despliegue a producción y monitoreo de `notification.email.redirected.total`.
+- **Bloquea línea base:** No. **Estado:** **OPEN / MEDIUM / OPS**. **Work item:** [NOTIF-002A](../work-items/NOTIF-002A-plantillas-correo/PLAN.md).
+
+## TD-073
+
+- **Fecha / responsable:** 2026-10-30 / backend-team & TI UCO (NOTIF-002A / PLAN §7.3). **Clasificación:** EXTERNAL_INFRA_CREDENTIALS. **Prioridad:** MEDIA.
+- **Descripción:** Los datos y credenciales del servidor SMTP institucional definitivo (host, puerto, TLS, usuario/contraseña y remitente) están pendientes de entrega por parte de TI de la universidad. En desarrollo y pruebas se utiliza GreenMail y el modo de pruebas con redirección (D15).
+- **Impacto:** El envío hacia buzones institucionales en producción requiere la provisión de las credenciales SMTP definitivas en el almacén de secretos (`SecretVaultPort` / variables de entorno del despliegue).
+- **Resolución esperada:** Registrar credenciales SMTP definitivas en el almacén de secretos cuando TI las entregue y validar conectividad en el entorno institucional.
+- **Bloquea línea base:** No. **Estado:** **OPEN / MEDIUM / INFRA_TI**. **Work item:** [NOTIF-002A](../work-items/NOTIF-002A-plantillas-correo/PLAN.md).
+
+## TD-074
+
+- **Fecha / responsable:** 2026-10-30 / TI UCO (NOTIF-002A / PLAN §7.4). **Clasificación:** EMAIL_DELIVERABILITY_DNS. **Prioridad:** BAJA.
+- **Descripción:** La entregabilidad de los correos enviados desde el dominio remitente institucional requiere la configuración y verificación de registros SPF, DKIM y DMARC por parte del equipo de TI de la universidad.
+- **Impacto:** Sin alineación SPF/DKIM/DMARC en el servidor SMTP institucional, los servidores de correo receptores podrían clasificar los avisos como spam.
+- **Resolución esperada:** Coordinar con TI la validación de registros SPF, DKIM y DMARC del dominio remitente antes de habilitar `sender=smtp` en producción.
+- **Bloquea línea base:** No. **Estado:** **OPEN / LOW / INFRA_TI**. **Work item:** [NOTIF-002A](../work-items/NOTIF-002A-plantillas-correo/PLAN.md).
+
+## TD-075
+
+- **Fecha / responsable:** 2026-10-30 / database-team & backend-team (NOTIF-002A / PLAN §7.5, CONTRACT §6.6). **Clasificación:** MODULE_REMOVABILITY_EXPORT. **Prioridad:** BAJA.
+- **Descripción:** El módulo de plantillas y correo fue diseñado como removible ([ADR-006](../adr/ADR-006-notification-email-and-templates.md)). Si en el futuro otro equipo entrega un componente externo de notificaciones y plantillas, se requerirá un script de exportación/volcado de las plantillas activas en `dbo.PlantillaNotificacion` para migrar los textos editados por el Administrador.
+- **Impacto:** Sin impacto mientras las plantillas residan en SQL Server del proyecto.
+- **Resolución esperada:** Proveer script utilitario de volcado de plantillas activas (`JSON`/`SQL`) cuando se planifique la migración a un componente externo.
+- **Bloquea línea base:** No. **Estado:** **OPEN / LOW / BACKEND**. **Work item:** [NOTIF-002A](../work-items/NOTIF-002A-plantillas-correo/PLAN.md).
+
+## TD-076
+
+- **Fecha / responsable:** 2026-10-30 / backend-team (NOTIF-002A / PLAN §7.6, D8). **Clasificación:** AT_LEAST_ONCE_BLOCK_IDEMPOTENCY. **Prioridad:** BAJA.
+- **Descripción:** Cuando una notificación supera `max-bcc` destinatarios (default 50), `SmtpNotificacionChannelSender` divide el envío en bloques BCC. Si ocurre un fallo transitorio después de haber enviado el primer bloque y antes de completar los siguientes, el reintento de la fila del outbox vuelve a enviar todos los bloques (*at-least-once* documentado en D8).
+- **Impacto:** Bajo en el dominio actual, ya que los avisos académicos tienen pocos destinatarios (1 a ~35 por grupo, cabiendo en un único bloque BCC de 50).
+- **Resolución esperada:** Si se incorporan avisos masivos (> `max-bcc`), registrar progreso por bloque o particionar la notificación en filas por bloque para evitar duplicados en reintentos parciales.
+- **Bloquea línea base:** No. **Estado:** **OPEN / LOW / BACKEND**. **Work item:** [NOTIF-002A](../work-items/NOTIF-002A-plantillas-correo/PLAN.md).
+
+
+## TD-077
+
+- **Fecha / responsable:** 2026-10-31 / backend-team & ops (IDENT-001). **Clasificación:** CONFIG_DUAL_SOURCE. **Prioridad:** MEDIA.
+- **Descripción:** El dominio institucional del estudiante (`REGISTRO/DOMINIO_CORREO_ESTUDIANTE`) y los mensajes `VCE_001..VCE_007` viven en SQL Server (`CatalogoParametro`, `CatalogoMensaje*`), que es lo que lee el procedimiento almacenado. El backend los lee por `ParameterCatalogPort`/`MessageCatalogPort`: con el proveedor `sqlserver` coinciden, pero con el proveedor por defecto (`azure_appconfig`/`azure`) deben existir también en Azure App Configuration (`asistencias:registro:dominio_correo_estudiante`, `messages:user:VCE_00x`).
+- **Impacto:** Si el dominio cambia en un solo lado, el backend y el SP discrepan (el SP siempre es la autoridad y rechazaría el alta, pero el mensaje y el formulario mostrarían el dominio anterior).
+- **Resolución esperada:** Sembrar los mismos valores en App Configuration al desplegar (script de sincronización de Infra) y verificar la paridad en el checklist de despliegue; evaluar que el backend lea el dominio con un SP de consulta para tener una sola fuente.
+- **Bloquea línea base:** No. **Estado:** **OPEN / MEDIUM / OPS**. **Work item:** [IDENT-001](../work-items/IDENT-001-correo-institucional-verificacion/PLAN.md).
+
+## TD-078
+
+- **Fecha / responsable:** 2026-10-31 / backend-team (IDENT-001 / PLAN §1 fuera de alcance). **Clasificación:** UNVERIFIED_ACCOUNT_HOUSEKEEPING. **Prioridad:** MEDIA.
+- **Descripción:** Un estudiante registrado por el docente queda matriculado (ocupa cupo) desde el registro, pero su cuenta permanece deshabilitada hasta que abra el enlace. No hay un proceso que depure cuentas que nunca verifican.
+- **Impacto:** Cupos ocupados y cuentas huérfanas en Keycloak si el correo nunca llega o el estudiante no actúa.
+- **Resolución esperada:** Proceso periódico (con parámetro de vigencia, propuesta 7 días) que avise al docente y, según decisión funcional, retire la matrícula y elimine la cuenta no verificada.
+- **Bloquea línea base:** No. **Estado:** **OPEN / MEDIUM / BACKEND**. **Work item:** [IDENT-001](../work-items/IDENT-001-correo-institucional-verificacion/PLAN.md).
+
+## TD-079
+
+- **Fecha / responsable:** 2026-10-31 / fullstack-team (IDENT-001 / alcance acordado). **Clasificación:** CREDENTIAL_ASSIGNMENT_BY_THIRD_PARTY. **Prioridad:** MEDIA.
+- **Descripción:** En el registro manual la contraseña inicial sigue definiéndola el docente (REG-000 DA-5) y viaja por el backend hacia Keycloak; el correo verificado solo habilita la cuenta. El docente conoce la clave inicial del estudiante.
+- **Impacto:** Mientras no se mueva la asignación de la contraseña al enlace de verificación, el docente conoce una credencial ajena (Keycloak la marca temporal, por lo que el estudiante debe cambiarla en el primer ingreso).
+- **Resolución esperada:** Fase posterior: que el estudiante defina su contraseña al abrir el enlace (acción `UPDATE_PASSWORD`/formulario propio) y retirar `password` de la petición, del DTO y del SP (cambia contratos congelados).
+- **Bloquea línea base:** No. **Estado:** **OPEN / MEDIUM / FULLSTACK**. **Work item:** [IDENT-001](../work-items/IDENT-001-correo-institucional-verificacion/PLAN.md).
+
+## TD-080
+
+- **Fecha / responsable:** 2026-10-31 / backend-team (IDENT-001). **Clasificación:** RATE_LIMIT_SCOPE. **Prioridad:** BAJA.
+- **Descripción:** El límite de intentos de `POST /api/v1/public/verificar-correo` (`VerificacionCorreoRateLimitFilter`) es en memoria y por instancia, y solo cuenta `remoteAddr` (ignora `X-Forwarded-For`). Detrás de un proxy todas las solicitudes comparten IP.
+- **Impacto:** Con varias instancias el límite efectivo se multiplica; detrás de un proxy sin resolución explícita del cliente real el límite es global. La defensa principal es el token de 256 bits de un solo uso.
+- **Resolución esperada:** Resolver la IP real con un proxy de confianza explícito (como propone HU176B D5) y, si hay varias instancias, mover el contador a un almacén compartido.
+- **Bloquea línea base:** No. **Estado:** **OPEN / LOW / BACKEND**. **Work item:** [IDENT-001](../work-items/IDENT-001-correo-institucional-verificacion/PLAN.md).
+
+## TD-081
+
+- **Fecha / responsable:** 2026-10-31 / frontend-team (IDENT-001 / CONTRACT §5). **Clasificación:** FRONTEND_PENDING_REPOSITORY. **Prioridad:** ALTA.
+- **Descripción:** La validación del dominio en el formulario de enrolamiento manual, la página pública `verificar-correo` (lee `#token=`, llama al endpoint y muestra el mensaje) y la acción «Reenviar enlace» no están implementadas: el repositorio del frontend no estaba disponible en este workspace.
+- **Impacto:** Sin la página `verificar-correo` el enlace del correo no tiene destino; el backend y la BD ya están listos y verificados.
+- **Resolución esperada:** Implementar el frontend según CONTRACT §5 (Signals, OnPush, sin dominio escrito en el cliente, sin `setInterval`) y agregar su E2E.
+- **Avance (2026-10-31):** implementado en local en el repositorio del frontend (rama `feature/IDENT-001-correo-institucional-verificacion`, commits `bb3651c` y `f954eb9`; sin push): página pública `verificar-correo`, validación del dominio leído del endpoint, y «Reenviar enlace» por estudiante. Pruebas unitarias: 1359/1359 en verde; `ng build` sin errores. **Falta** ejercitarlo en un navegador real contra backend y Keycloak, y el E2E.
+- **Bloquea línea base:** No para BD/backend; sí para el uso real del correo de verificación hasta cerrar la prueba en navegador. **Estado:** **IN_PROGRESS / HIGH / FRONTEND**. **Work item:** [IDENT-001](../work-items/IDENT-001-correo-institucional-verificacion/PLAN.md).
+
+## TD-082
+
+- **Fecha / responsable:** 2026-10-31 / fullstack-team (IDENT-001). **Clasificación:** DOCS_SUPERSEDED_DECISION. **Prioridad:** BAJA.
+- **Descripción:** REG-000 DA-5 («la contraseña se asigna en la creación; sin correo de activación») y el CA-03 de HU176B («contraseña inicial» sin verificación del correo) quedan parcialmente superados para el registro manual por IDENT-001. HU176B (QR) debe reutilizar el mecanismo de verificación y la política de dominio.
+- **Impacto:** Si HU176B se implementa sin actualizar su PLAN, el alta por QR no verificaría el correo ni exigiría el dominio.
+- **Resolución esperada:** Reabrir el PLAN/CONTRACT de HU176B (D8) para exigir `CorreoInstitucionalPolicy` y el aviso `VERIFICACION_CORREO` en el alta autónoma.
+- **Bloquea línea base:** No. **Estado:** **OPEN / LOW / DOCS**. **Work items:** [IDENT-001](../work-items/IDENT-001-correo-institucional-verificacion/PLAN.md), [HU176B](../work-items/HU176B-matricula-qr-autonoma/PLAN.md).

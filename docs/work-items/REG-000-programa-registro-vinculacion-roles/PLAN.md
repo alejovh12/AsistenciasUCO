@@ -234,3 +234,5 @@ Se proponen como tareas `docs(...)` en el cierre del grupo que corresponda (E pa
 | WI-A redactado | ✅ (draft) | `docs/work-items/HU076-HU077-HU078-programa-academico-decano/` |
 
 **Dictamen DoR del índice:** `NOT_READY`, pendiente de que el owner revise el índice y la adopción de las HUs propuestas. Cada grupo tiene su propio DoR.
+
+> **Nota IDENT-001 (2026-10-31): la decisión DA-5 («la contraseña se asigna en la creación; sin correo de activación») queda superada para el **registro manual del estudiante** por [IDENT-001](../IDENT-001-correo-institucional-verificacion/PLAN.md): se agrega verificación del correo por enlace y dominio institucional. Para los demás roles DA-5 sigue vigente (TD-082).

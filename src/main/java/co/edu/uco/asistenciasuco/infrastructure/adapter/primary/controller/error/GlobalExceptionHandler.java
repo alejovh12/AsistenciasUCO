@@ -216,7 +216,10 @@ public final class GlobalExceptionHandler {
     private String resolveErrorMessage(final ApiErrorDescriptor descriptor) {
         try {
             final Optional<String> catalogMessage = resolverMensajeUsuario.execute(descriptor.code());
-            if (catalogMessage.isPresent() && !TextHelper.isNullOrBlank(catalogMessage.get())) {
+            // Un texto del catalogo con el marcador de parametro sin resolver ("{}") nunca se muestra: se prefiere el mensaje de la
+            // excepcion, que ya trae el parametro (por ejemplo el dominio institucional de VCE_001).
+            if (catalogMessage.isPresent() && !TextHelper.isNullOrBlank(catalogMessage.get())
+                    && !(catalogMessage.get().contains("{}") && !TextHelper.isNullOrBlank(descriptor.message()))) {
                 return catalogMessage.get();
             }
         } catch (final RuntimeException e) {
