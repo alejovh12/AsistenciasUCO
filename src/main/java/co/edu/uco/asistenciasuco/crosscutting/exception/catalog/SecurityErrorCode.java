@@ -9,7 +9,9 @@ public enum SecurityErrorCode implements ErrorDefinition {
     // SEC-BASELINE-001: solo se emite cuando el PEP baseline no puede confirmar una decisión;
     // nunca se emite en el provider legacy.
     ACCESS_DECISION_UNAVAILABLE("ACCESS_DECISION_UNAVAILABLE",
-            "No fue posible verificar la autorizacion en este momento. Intente nuevamente.", ErrorKind.TECHNICAL);
+            "No fue posible verificar la autorizacion en este momento. Intente nuevamente.", ErrorKind.TECHNICAL),
+    // IDENT-001: limite de intentos del endpoint publico de verificacion de correo (HTTP 429).
+    TOO_MANY_REQUESTS("TOO_MANY_REQUESTS", "Demasiados intentos. Intente nuevamente en unos minutos.", ErrorKind.BUSINESS);
 
     private final String code;
     private final String defaultMessage;

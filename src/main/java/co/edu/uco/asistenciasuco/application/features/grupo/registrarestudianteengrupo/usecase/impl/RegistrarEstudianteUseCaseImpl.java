@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.impl;
 
 
-import co.edu.uco.asistenciasuco.application.features.usuario.dominiocorreo.DominioCorreoInstitucionalPolicy;
+import co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional.CorreoInstitucionalPolicy;
 import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
@@ -22,6 +22,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEnc
 import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +51,7 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
     private final UsuarioRepositoryPort usuarioRepositoryPort;
     private final PasswordEncoderPort passwordEncoderPort;
     private final IdentityProviderPort identityProviderPort;
-    private final DominioCorreoInstitucionalPolicy dominioCorreoPolicy;
+    private final CorreoInstitucionalPolicy dominioCorreoPolicy;
     private final NotificacionPort notificacionPort;
 
     public RegistrarEstudianteUseCaseImpl(
@@ -58,14 +59,14 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
             final UsuarioRepositoryPort usuarioRepositoryPort,
             final PasswordEncoderPort passwordEncoderPort,
             final IdentityProviderPort identityProviderPort,
-            final DominioCorreoInstitucionalPolicy dominioCorreoPolicy,
+            final CorreoInstitucionalPolicy dominioCorreoPolicy,
             final NotificacionPort notificacionPort
     ) {
         this.grupoRepositoryPort = Objects.requireNonNull(grupoRepositoryPort, "El puerto de salida GrupoRepositoryPort es obligatorio.");
         this.usuarioRepositoryPort = Objects.requireNonNull(usuarioRepositoryPort, "El puerto de salida UsuarioRepositoryPort es obligatorio.");
         this.passwordEncoderPort = Objects.requireNonNull(passwordEncoderPort, "El puerto PasswordEncoderPort es obligatorio.");
         this.identityProviderPort = Objects.requireNonNull(identityProviderPort, "El puerto IdentityProviderPort es obligatorio.");
-        this.dominioCorreoPolicy = Objects.requireNonNull(dominioCorreoPolicy, "DominioCorreoInstitucionalPolicy es obligatoria.");
+        this.dominioCorreoPolicy = Objects.requireNonNull(dominioCorreoPolicy, "CorreoInstitucionalPolicy es obligatoria.");
         this.notificacionPort = Objects.requireNonNull(notificacionPort, "El puerto NotificacionPort es obligatorio.");
     }
 
@@ -111,7 +112,7 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
                     "Verifique su correo institucional",
                     "Se registro una cuenta a su nombre en la plataforma de asistencia. Verifique su correo institucional.",
                     List.of(new Notificacion.Destinatario(ROL_ESTUDIANTE.name(), usuarioCanonico.id(), null, null)),
-                    Map.of("nombre", aNombrePropio(domain.getPrimerNombre()))
+                    Map.of("nombre", TextHelper.toNombrePropio(domain.getPrimerNombre()))
             ));
         } catch (final RuntimeException exception) {
             LOGGER.warn("No fue posible registrar el aviso de verificacion de correo del usuario {}: {}",
@@ -155,23 +156,6 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
                     exception
             );
         }
-    }
-
-    /** El dominio normaliza los nombres a mayusculas; el correo se lee mejor en formato de nombre propio. */
-    private static String aNombrePropio(final String nombre) {
-        final String limpio = nombre == null ? "" : nombre.strip();
-        if (limpio.isEmpty()) {
-            return limpio;
-        }
-        final String[] partes = limpio.toLowerCase(java.util.Locale.ROOT).split("\s+");
-        final StringBuilder resultado = new StringBuilder();
-        for (final String parte : partes) {
-            if (resultado.length() > 0) {
-                resultado.append(' ');
-            }
-            resultado.append(Character.toUpperCase(parte.charAt(0))).append(parte.substring(1));
-        }
-        return resultado.toString();
     }
 
     private boolean validarConflictoIdentidadUsuario(final RegistrarEstudianteDomain domain) {

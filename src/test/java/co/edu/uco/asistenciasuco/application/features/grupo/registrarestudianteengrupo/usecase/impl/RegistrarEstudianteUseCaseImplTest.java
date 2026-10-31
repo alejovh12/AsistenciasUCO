@@ -2,7 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.grupo.registrarestudiante
 
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
-import co.edu.uco.asistenciasuco.application.features.usuario.dominiocorreo.DominioCorreoInstitucionalPolicy;
+import co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional.CorreoInstitucionalPolicy;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notificacion;
@@ -511,7 +511,7 @@ class RegistrarEstudianteUseCaseImplTest {
         };
         return new RegistrarEstudianteUseCaseImpl(
                 grupoRepositoryPort, usuarioRepositoryPort, passwordEncoderPort, identityProviderPort,
-                new DominioCorreoInstitucionalPolicy(parametros, mensajes), notificacionPort
+                new CorreoInstitucionalPolicy(parametros, mensajes), notificacionPort
         );
     }
 

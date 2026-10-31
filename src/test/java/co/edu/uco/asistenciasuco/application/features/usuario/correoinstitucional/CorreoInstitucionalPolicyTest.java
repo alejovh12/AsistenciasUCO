@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.application.features.usuario.dominiocorreo;
+package co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional;
 
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort;
@@ -18,13 +18,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * IDENT-001 BE-P01/BE-P02: la politica aplica la misma regla que {@code ufn_correo_cumple_dominio_institucional}
  * (coincidencia exacta del dominio, sin distinguir mayusculas) y lee el dominio del parametro, sin valor quemado.
  */
-class DominioCorreoInstitucionalPolicyTest {
+class CorreoInstitucionalPolicyTest {
 
     private static final String DOMINIO = "@uco.edu.co";
 
     @Test
     void BE_P01_acepta_solo_el_dominio_exacto_sin_distinguir_mayusculas_ni_espacios_laterales() {
-        final DominioCorreoInstitucionalPolicy policy = politica(DOMINIO);
+        final CorreoInstitucionalPolicy policy = politica(DOMINIO);
 
         assertTrue(policy.cumple("a@uco.edu.co"));
         assertTrue(policy.cumple("A@UCO.EDU.CO "));
@@ -52,7 +52,7 @@ class DominioCorreoInstitucionalPolicyTest {
     @Test
     void BE_P02_el_dominio_se_lee_del_parametro_y_cambiarlo_cambia_el_resultado() {
         final AtomicReference<String> valor = new AtomicReference<>(DOMINIO);
-        final DominioCorreoInstitucionalPolicy policy = new DominioCorreoInstitucionalPolicy(
+        final CorreoInstitucionalPolicy policy = new CorreoInstitucionalPolicy(
                 parametros(valor), mensajes());
 
         assertTrue(policy.cumple("a@uco.edu.co"));
@@ -90,7 +90,7 @@ class DominioCorreoInstitucionalPolicyTest {
                 return java.util.Optional.empty();
             }
         };
-        final DominioCorreoInstitucionalPolicy policy = new DominioCorreoInstitucionalPolicy(
+        final CorreoInstitucionalPolicy policy = new CorreoInstitucionalPolicy(
                 parametros(new AtomicReference<>(DOMINIO)), mensajes);
 
         final ValidationException exception = assertThrows(ValidationException.class, () -> policy.exigir("ana@gmail.com"));
@@ -118,20 +118,20 @@ class DominioCorreoInstitucionalPolicyTest {
                 throw new ParameterNotFoundException(group, key);
             }
         };
-        final DominioCorreoInstitucionalPolicy policy = new DominioCorreoInstitucionalPolicy(sinParametro, mensajes());
+        final CorreoInstitucionalPolicy policy = new CorreoInstitucionalPolicy(sinParametro, mensajes());
 
         assertThrows(ParameterCatalogPort.ParameterNotFoundException.class, () -> policy.cumple("a@uco.edu.co"));
     }
 
     @Test
     void los_colaboradores_son_obligatorios() {
-        assertThrows(NullPointerException.class, () -> new DominioCorreoInstitucionalPolicy(null, mensajes()));
+        assertThrows(NullPointerException.class, () -> new CorreoInstitucionalPolicy(null, mensajes()));
         assertThrows(NullPointerException.class,
-                () -> new DominioCorreoInstitucionalPolicy(parametros(new AtomicReference<>(DOMINIO)), null));
+                () -> new CorreoInstitucionalPolicy(parametros(new AtomicReference<>(DOMINIO)), null));
     }
 
-    private static DominioCorreoInstitucionalPolicy politica(final String dominio) {
-        return new DominioCorreoInstitucionalPolicy(parametros(new AtomicReference<>(dominio)), mensajes());
+    private static CorreoInstitucionalPolicy politica(final String dominio) {
+        return new CorreoInstitucionalPolicy(parametros(new AtomicReference<>(dominio)), mensajes());
     }
 
     private static ParameterCatalogPort parametros(final AtomicReference<String> valor) {

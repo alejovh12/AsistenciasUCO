@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.application.features.usuario.dominiocorreo;
+package co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional;
 
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort;
@@ -14,7 +14,7 @@ import java.util.Objects;
  * <b>igual</b> al configurado, sin distinguir mayúsculas ni espacios laterales. Fail-closed: un dominio vacío o mal
  * formado rechaza todo correo. El SP sigue siendo la autoridad; esta política evita el viaje a la base de datos.
  */
-public final class DominioCorreoInstitucionalPolicy {
+public final class CorreoInstitucionalPolicy {
 
     public static final String GRUPO_PARAMETRO = "REGISTRO";
     public static final String CLAVE_DOMINIO = "DOMINIO_CORREO_ESTUDIANTE";
@@ -23,7 +23,7 @@ public final class DominioCorreoInstitucionalPolicy {
     private final ParameterCatalogPort parametros;
     private final MessageCatalogPort mensajes;
 
-    public DominioCorreoInstitucionalPolicy(final ParameterCatalogPort parametros, final MessageCatalogPort mensajes) {
+    public CorreoInstitucionalPolicy(final ParameterCatalogPort parametros, final MessageCatalogPort mensajes) {
         this.parametros = Objects.requireNonNull(parametros, "ParameterCatalogPort es obligatorio.");
         this.mensajes = Objects.requireNonNull(mensajes, "MessageCatalogPort es obligatorio.");
     }
