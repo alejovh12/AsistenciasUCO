@@ -231,6 +231,18 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
                 .log("Cuenta habilitada en Keycloak.");
     }
 
+    /** IDENT-001: habilita la cuenta y marca el correo verificado tras confirmar el enlace. Idempotente. */
+    @Override
+    public void confirmarCorreoCuenta(final String idExterno) {
+        final String externalId = requireValidExternalUserId(idExterno, "externalUserId es obligatorio para confirmar el correo de la cuenta.");
+        final String adminToken = obtenerAdminToken();
+        actualizarUsuario(adminToken, externalId, new EmailVerifiedRequest(true, true), "confirmar el correo de");
+        LOGGER.atInfo()
+                .addKeyValue("operation", "IDENTITY_CONFIRM_EMAIL")
+                .addKeyValue("externalUserId", externalId)
+                .log("Correo confirmado y cuenta habilitada en Keycloak.");
+    }
+
     @Override
     public void actualizarDatosCuenta(final String idExterno, final ActualizarCuentaIdentidadDTO datos) {
         final String externalId = requireValidExternalUserId(idExterno, "externalUserId es obligatorio para actualizar la cuenta.");
@@ -437,8 +449,9 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
                 dto.correo(),
                 dto.primerNombre(),
                 dto.primerApellido(),
-                true,
-                true,
+                // IDENT-001: con verificacion pendiente la cuenta nace deshabilitada y con el correo sin verificar.
+                !dto.requiereVerificacionCorreo(),
+                !dto.requiereVerificacionCorreo(),
                 Map.of(userIdAttribute, List.of(dto.idUsuario().toString()))
         );
         final HttpRequest request = authorizedRequestBuilder(adminUrl("/users"), adminToken)
@@ -817,6 +830,9 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
     }
 
     private record EnabledRequest(boolean enabled) {
+    }
+
+    private record EmailVerifiedRequest(boolean enabled, boolean emailVerified) {
     }
 
     private record UserUpdateRequest(String email, String firstName, String lastName, boolean emailVerified) {
