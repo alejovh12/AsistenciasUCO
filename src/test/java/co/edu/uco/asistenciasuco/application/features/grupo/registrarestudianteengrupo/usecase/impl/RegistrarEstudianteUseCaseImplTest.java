@@ -1,6 +1,12 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
+import co.edu.uco.asistenciasuco.application.features.usuario.dominiocorreo.DominioCorreoInstitucionalPolicy;
+import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notificacion;
+import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.domain.RegistrarEstudianteDomain;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.entity.RegistrarEstudianteResultadoEntity;
@@ -23,6 +29,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEnc
 import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -66,7 +73,7 @@ class RegistrarEstudianteUseCaseImplTest {
         final AtomicInteger spLlamadas = new AtomicInteger();
         final FakePasswordEncoderPort passwordEncoderPort = new FakePasswordEncoderPort();
         final FakeIdentityProviderPort identityProviderPort = FakeIdentityProviderPort.exitoso(USUARIO_NUEVO_ID, true);
-        final RegistrarEstudianteUseCaseImpl useCase = new RegistrarEstudianteUseCaseImpl(
+        final RegistrarEstudianteUseCaseImpl useCase = useCase(
                 grupoRepositoryPort(dto -> {
                     spLlamadas.incrementAndGet();
                     dtoCapturado.set(dto);
@@ -107,7 +114,7 @@ class RegistrarEstudianteUseCaseImplTest {
     @Test
     void caso_D_E_dto_identity_recibe_exactamente_el_uuid_resuelto_post_command_y_rol_estudiante_tipado() {
         final FakeIdentityProviderPort identityProviderPort = FakeIdentityProviderPort.exitoso(USUARIO_NUEVO_ID, true);
-        final RegistrarEstudianteUseCaseImpl useCase = new RegistrarEstudianteUseCaseImpl(
+        final RegistrarEstudianteUseCaseImpl useCase = useCase(
                 grupoRepositoryPort(dto -> new RegistrarEstudianteRepositoryProjection("Estudiante registrado.")),
                 usuarioRepositoryPort(null, Arrays.asList(null, USUARIO_NUEVO_ID)),
                 new FakePasswordEncoderPort(),
@@ -129,7 +136,7 @@ class RegistrarEstudianteUseCaseImplTest {
     @Test
     void caso_B_fallo_db_impide_llamar_identity() {
         final FakeIdentityProviderPort identityProviderPort = FakeIdentityProviderPort.exitoso(USUARIO_NUEVO_ID, true);
-        final RegistrarEstudianteUseCaseImpl useCase = new RegistrarEstudianteUseCaseImpl(
+        final RegistrarEstudianteUseCaseImpl useCase = useCase(
                 grupoRepositoryPort(dto -> {
                     throw new ConflictException("Matricula duplicada.");
                 }),
@@ -155,7 +162,7 @@ class RegistrarEstudianteUseCaseImplTest {
         final FakeIdentityProviderPort identityProviderPort = FakeIdentityProviderPort.exitoso(USUARIO_NUEVO_ID, true);
         final UUID usuarioCorreo = UUID.fromString("aaaaaaaa-e3cd-485c-b275-47e7b731e18c");
         final UUID usuarioDocumento = UUID.fromString("bbbbbbbb-e3cd-485c-b275-47e7b731e18c");
-        final RegistrarEstudianteUseCaseImpl useCase = new RegistrarEstudianteUseCaseImpl(
+        final RegistrarEstudianteUseCaseImpl useCase = useCase(
                 grupoRepositoryPort(dto -> {
                     spEjecutado.set(true);
                     return new RegistrarEstudianteRepositoryProjection("Estudiante registrado.");
@@ -187,7 +194,7 @@ class RegistrarEstudianteUseCaseImplTest {
         final AtomicBoolean spEjecutado = new AtomicBoolean(false);
         final FakePasswordEncoderPort passwordEncoderPort = new FakePasswordEncoderPort();
         final FakeIdentityProviderPort identityProviderPort = FakeIdentityProviderPort.exitoso(USUARIO_NUEVO_ID, true);
-        final RegistrarEstudianteUseCaseImpl useCase = new RegistrarEstudianteUseCaseImpl(
+        final RegistrarEstudianteUseCaseImpl useCase = useCase(
                 grupoRepositoryPort(dto -> {
                     spEjecutado.set(true);
                     return new RegistrarEstudianteRepositoryProjection("Estudiante registrado.");
@@ -216,7 +223,7 @@ class RegistrarEstudianteUseCaseImplTest {
         final FakePasswordEncoderPort passwordEncoderPort = new FakePasswordEncoderPort();
         final FakeIdentityProviderPort identityProviderPort = FakeIdentityProviderPort.exitoso(USUARIO_NUEVO_ID, false);
         final UUID usuarioExistente = UUID.fromString("aaaaaaaa-e3cd-485c-b275-47e7b731e18c");
-        final RegistrarEstudianteUseCaseImpl useCase = new RegistrarEstudianteUseCaseImpl(
+        final RegistrarEstudianteUseCaseImpl useCase = useCase(
                 grupoRepositoryPort(dto -> {
                     dtoCapturado.set(dto);
                     return new RegistrarEstudianteRepositoryProjection("Estudiante registrado.");
@@ -240,7 +247,7 @@ class RegistrarEstudianteUseCaseImplTest {
         final FakeIdentityProviderPort identity = FakeIdentityProviderPort.exitoso(USUARIO_NUEVO_ID, false);
         final UUID existente = UUID.fromString("aaaaaaaa-e3cd-485c-b275-47e7b731e18c");
         final RegistrarEstudianteDomain request = domainConCorreo("nuevo@uco.edu.co");
-        final RegistrarEstudianteUseCaseImpl useCase = new RegistrarEstudianteUseCaseImpl(
+        final RegistrarEstudianteUseCaseImpl useCase = useCase(
                 grupoRepositoryPort(dto -> new RegistrarEstudianteRepositoryProjection("Estudiante registrado.")),
                 usuarioRepositoryPort(existente, List.of(existente, existente), "viejo@uco.edu.co"),
                 new FakePasswordEncoderPort(), identity
@@ -257,7 +264,7 @@ class RegistrarEstudianteUseCaseImplTest {
     @Test
     void correo_identity_usuario_nuevo_tambien_proviene_de_proyeccion_post_command() {
         final FakeIdentityProviderPort identity = FakeIdentityProviderPort.exitoso(USUARIO_NUEVO_ID, true);
-        final RegistrarEstudianteUseCaseImpl useCase = new RegistrarEstudianteUseCaseImpl(
+        final RegistrarEstudianteUseCaseImpl useCase = useCase(
                 grupoRepositoryPort(dto -> new RegistrarEstudianteRepositoryProjection("Estudiante registrado.")),
                 usuarioRepositoryPort(null, Arrays.asList(null, USUARIO_NUEVO_ID), "ana.perez@uco.edu.co"),
                 new FakePasswordEncoderPort(), identity
@@ -276,7 +283,7 @@ class RegistrarEstudianteUseCaseImplTest {
     void caso_H_fallo_identity_posterior_a_db_success_no_intenta_rollback_ni_eliminar_cuenta() {
         final AtomicInteger spLlamadas = new AtomicInteger();
         final FakeIdentityProviderPort identityProviderPort = FakeIdentityProviderPort.fallido();
-        final RegistrarEstudianteUseCaseImpl useCase = new RegistrarEstudianteUseCaseImpl(
+        final RegistrarEstudianteUseCaseImpl useCase = useCase(
                 grupoRepositoryPort(dto -> {
                     spLlamadas.incrementAndGet();
                     return new RegistrarEstudianteRepositoryProjection("Estudiante registrado.");
@@ -304,7 +311,7 @@ class RegistrarEstudianteUseCaseImplTest {
     void caso_I_uuid_no_encontrado_post_command_no_llama_identity() {
         final AtomicInteger spLlamadas = new AtomicInteger();
         final FakeIdentityProviderPort identityProviderPort = FakeIdentityProviderPort.exitoso(USUARIO_NUEVO_ID, true);
-        final RegistrarEstudianteUseCaseImpl useCase = new RegistrarEstudianteUseCaseImpl(
+        final RegistrarEstudianteUseCaseImpl useCase = useCase(
                 grupoRepositoryPort(dto -> {
                     spLlamadas.incrementAndGet();
                     return new RegistrarEstudianteRepositoryProjection("Estudiante registrado.");
@@ -326,7 +333,7 @@ class RegistrarEstudianteUseCaseImplTest {
 
     @Test
     void caso_J_mensaje_funcional_no_menciona_al_proveedor_de_identidad() {
-        final RegistrarEstudianteUseCaseImpl useCase = new RegistrarEstudianteUseCaseImpl(
+        final RegistrarEstudianteUseCaseImpl useCase = useCase(
                 grupoRepositoryPort(dto -> new RegistrarEstudianteRepositoryProjection("Estudiante registrado.")),
                 usuarioRepositoryPort(null, Arrays.asList(null, USUARIO_NUEVO_ID)),
                 new FakePasswordEncoderPort(),
@@ -339,6 +346,173 @@ class RegistrarEstudianteUseCaseImplTest {
         assertFalse(mensaje.contains("idp"));
         assertFalse(mensaje.contains("keycloak"));
         assertFalse(mensaje.contains("identity provider"));
+    }
+
+    // -------------------------------------------------------------------------
+    // IDENT-001: correo institucional obligatorio en altas nuevas + aviso de verificacion
+    // -------------------------------------------------------------------------
+
+    @Test
+    void BE_U01_alta_nueva_con_correo_no_institucional_se_rechaza_sin_tocar_db_ni_identity() {
+        final AtomicInteger spLlamadas = new AtomicInteger();
+        final FakeIdentityProviderPort identityProviderPort = FakeIdentityProviderPort.exitoso(USUARIO_NUEVO_ID, true);
+        final List<Notificacion> avisos = new ArrayList<>();
+        final RegistrarEstudianteUseCaseImpl useCase = useCase(
+                grupoRepositoryPort(dto -> {
+                    spLlamadas.incrementAndGet();
+                    return new RegistrarEstudianteRepositoryProjection("Estudiante registrado.");
+                }),
+                usuarioRepositoryPort(null, Arrays.asList(null, USUARIO_NUEVO_ID)),
+                new FakePasswordEncoderPort(),
+                identityProviderPort,
+                avisos::add
+        );
+
+        final ValidationException exception = assertThrows(ValidationException.class,
+                () -> useCase.execute(domainConCorreo("ana.perez@gmail.com")));
+
+        assertEquals("VCE_001", exception.getCode());
+        assertEquals(0, spLlamadas.get());
+        assertEquals(0, identityProviderPort.crearCuentaCount.get());
+        assertTrue(avisos.isEmpty());
+    }
+
+    @Test
+    void BE_U02_alta_nueva_valida_pide_cuenta_con_verificacion_y_registra_un_aviso_sin_token_ni_correo() {
+        final FakeIdentityProviderPort identityProviderPort = FakeIdentityProviderPort.exitoso(USUARIO_NUEVO_ID, true);
+        final List<Notificacion> avisos = new ArrayList<>();
+        final RegistrarEstudianteUseCaseImpl useCase = useCase(
+                grupoRepositoryPort(dto -> new RegistrarEstudianteRepositoryProjection("Estudiante registrado.")),
+                usuarioRepositoryPort(null, Arrays.asList(null, USUARIO_NUEVO_ID)),
+                new FakePasswordEncoderPort(),
+                identityProviderPort,
+                avisos::add
+        );
+
+        useCase.execute(domainValido());
+
+        assertTrue(identityProviderPort.dtoCapturado.get().requiereVerificacionCorreo());
+        assertEquals(1, avisos.size());
+        final Notificacion aviso = avisos.getFirst();
+        assertEquals(Notificacion.TIPO_VERIFICACION_CORREO, aviso.tipo());
+        assertEquals(1, aviso.destinatarios().size());
+        assertEquals("ESTUDIANTE", aviso.destinatarios().getFirst().rol());
+        assertEquals(USUARIO_NUEVO_ID, aviso.destinatarios().getFirst().idUsuario());
+        assertNull(aviso.destinatarios().getFirst().correo());
+        assertEquals("Ana", aviso.datos().get("nombre"));
+        final String serializado = aviso.toString().toLowerCase(Locale.ROOT);
+        assertFalse(serializado.contains("ana.perez@uco.edu.co"));
+        assertFalse(serializado.contains("token"));
+        assertFalse(serializado.contains("clave123"));
+    }
+
+    @Test
+    void BE_U03_usuario_existente_no_revalida_el_dominio_ni_pide_verificacion_ni_notifica() {
+        final FakeIdentityProviderPort identityProviderPort = FakeIdentityProviderPort.exitoso(USUARIO_NUEVO_ID, false);
+        final List<Notificacion> avisos = new ArrayList<>();
+        final RegistrarEstudianteUseCaseImpl useCase = useCase(
+                grupoRepositoryPort(dto -> new RegistrarEstudianteRepositoryProjection("Estudiante registrado.")),
+                usuarioRepositoryPort(USUARIO_NUEVO_ID, Arrays.asList(USUARIO_NUEVO_ID, USUARIO_NUEVO_ID), "ana.perez@gmail.com"),
+                new FakePasswordEncoderPort(),
+                identityProviderPort,
+                avisos::add
+        );
+
+        useCase.execute(domainConCorreo("ana.perez@gmail.com"));
+
+        assertEquals(1, identityProviderPort.crearCuentaCount.get());
+        assertFalse(identityProviderPort.dtoCapturado.get().requiereVerificacionCorreo());
+        assertTrue(avisos.isEmpty());
+    }
+
+    @Test
+    void BE_U04_un_fallo_del_aviso_no_revierte_ni_propaga_el_registro() {
+        final FakeIdentityProviderPort identityProviderPort = FakeIdentityProviderPort.exitoso(USUARIO_NUEVO_ID, true);
+        final RegistrarEstudianteUseCaseImpl useCase = useCase(
+                grupoRepositoryPort(dto -> new RegistrarEstudianteRepositoryProjection("Estudiante registrado.")),
+                usuarioRepositoryPort(null, Arrays.asList(null, USUARIO_NUEVO_ID)),
+                new FakePasswordEncoderPort(),
+                identityProviderPort,
+                aviso -> {
+                    throw new IllegalStateException("Cola de notificaciones caida.");
+                }
+        );
+
+        final RegistrarEstudianteResultadoEntity resultado = useCase.execute(domainValido());
+
+        assertTrue(resultado.isExitoso());
+        assertEquals(1, identityProviderPort.crearCuentaCount.get());
+    }
+
+    @Test
+    void BE_U05_un_fallo_de_identity_no_notifica() {
+        final List<Notificacion> avisos = new ArrayList<>();
+        final RegistrarEstudianteUseCaseImpl useCase = useCase(
+                grupoRepositoryPort(dto -> new RegistrarEstudianteRepositoryProjection("Estudiante registrado.")),
+                usuarioRepositoryPort(null, Arrays.asList(null, USUARIO_NUEVO_ID)),
+                new FakePasswordEncoderPort(),
+                FakeIdentityProviderPort.fallido(),
+                avisos::add
+        );
+
+        assertThrows(InternalApplicationException.class, () -> useCase.execute(domainValido()));
+
+        assertTrue(avisos.isEmpty());
+    }
+
+    /** Colaboradores de IDENT-001 permisivos: dominio institucional {@code @uco.edu.co} y aviso descartado. */
+    private static RegistrarEstudianteUseCaseImpl useCase(
+            final GrupoRepositoryPort grupoRepositoryPort,
+            final UsuarioRepositoryPort usuarioRepositoryPort,
+            final PasswordEncoderPort passwordEncoderPort,
+            final IdentityProviderPort identityProviderPort
+    ) {
+        return useCase(grupoRepositoryPort, usuarioRepositoryPort, passwordEncoderPort, identityProviderPort, aviso -> { });
+    }
+
+    private static RegistrarEstudianteUseCaseImpl useCase(
+            final GrupoRepositoryPort grupoRepositoryPort,
+            final UsuarioRepositoryPort usuarioRepositoryPort,
+            final PasswordEncoderPort passwordEncoderPort,
+            final IdentityProviderPort identityProviderPort,
+            final NotificacionPort notificacionPort
+    ) {
+        final ParameterCatalogPort parametros = new ParameterCatalogPort() {
+            @Override
+            public Optional<String> getParameter(final String group, final String key) {
+                return Optional.of("@uco.edu.co");
+            }
+
+            @Override
+            public String getRequiredParameter(final String group, final String key) {
+                return "@uco.edu.co";
+            }
+
+            @Override
+            public <T> T getParameterAs(final String group, final String key, final Class<T> targetType) {
+                return targetType.cast("@uco.edu.co");
+            }
+        };
+        final MessageCatalogPort mensajes = new MessageCatalogPort() {
+            @Override
+            public String getUserMessage(final String code, final Object... args) {
+                return "El correo del estudiante debe ser institucional y terminar en " + args[0] + ".";
+            }
+
+            @Override
+            public String getTechnicalMessage(final String code, final Object... args) {
+                return code;
+            }
+
+            @Override
+            public Optional<String> findUserMessage(final String code) {
+                return Optional.empty();
+            }
+        };
+        return new RegistrarEstudianteUseCaseImpl(
+                grupoRepositoryPort, usuarioRepositoryPort, passwordEncoderPort, identityProviderPort,
+                new DominioCorreoInstitucionalPolicy(parametros, mensajes), notificacionPort
+        );
     }
 
     private RegistrarEstudianteDomain domainValido() {
