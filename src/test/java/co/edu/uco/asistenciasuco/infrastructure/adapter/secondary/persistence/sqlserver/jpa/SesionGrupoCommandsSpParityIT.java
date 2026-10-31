@@ -91,6 +91,13 @@ class SesionGrupoCommandsSpParityIT {
         }
     }
 
+    /** IDENT-001: el alta de un estudiante nuevo exige el dominio institucional configurado (REGISTRO/DOMINIO_CORREO_ESTUDIANTE). */
+    private String dominioInstitucional() {
+        return jdbcTemplate.queryForObject(
+                "SELECT valor FROM dbo.CatalogoParametro WHERE grupo = 'REGISTRO' AND clave = 'DOMINIO_CORREO_ESTUDIANTE'",
+                String.class);
+    }
+
     /** Retira el usuario/estudiante que crea GRP_04 (correos con prefijo de la IT + "ana") para que la IT sea repetible. */
     private void limpiarEstudiantesDeLaIt() {
         final String correo = PREFIJO.toLowerCase() + "ana%";
@@ -233,7 +240,7 @@ class SesionGrupoCommandsSpParityIT {
 
         final Outcome outcome = ejecutar("GRP_04", () -> grupoRepositoryPort.registrarEstudianteEnGrupo(
                 new RegistrarEstudianteRepositoryDTO(tipo.get(), ThreadLocalRandom.current().nextInt(100_000_000, 999_999_999),
-                        "PEREZ", "GOMEZ", "ANA", "MARIA", PREFIJO.toLowerCase() + "ana-" + UUID.randomUUID().toString().substring(0, 8) + "@example.test", "Clave123!", grupo,
+                        "PEREZ", "GOMEZ", "ANA", "MARIA", PREFIJO.toLowerCase() + "ana-" + UUID.randomUUID().toString().substring(0, 8) + dominioInstitucional(), "Clave123!", grupo,
                         docenteUsuario)),
                 () -> contarUsuariosPerez() - usuariosAntes);
 
