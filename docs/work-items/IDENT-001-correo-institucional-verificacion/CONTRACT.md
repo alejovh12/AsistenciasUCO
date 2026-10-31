@@ -8,7 +8,7 @@ last-reviewed: 2026-10-31
 
 # CONTRACT — IDENT-001: Correo institucional y verificación del correo
 
-Fase 02. **Estado: `DRAFT` (sin `.sha256`).** Pasa a `CONTRACT_FROZEN` cuando el owner lo apruebe. Deriva del [PLAN](PLAN.md) (D1–D10 aprobadas). Los puntos marcados **[CONFIRMAR F03]** se verifican contra el código al escribir las pruebas RED y no cambian el comportamiento descrito.
+Fase 02. **Estado: `FROZEN` (aprobado por el owner el 2026-10-31).** Deriva del [PLAN](PLAN.md) (D1–D10 aprobadas). Los puntos marcados **[CONFIRMAR F03]** se verifican contra el código al escribir las pruebas RED y no cambian el comportamiento descrito.
 
 ---
 
