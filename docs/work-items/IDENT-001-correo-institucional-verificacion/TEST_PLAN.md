@@ -102,6 +102,6 @@ Resultados y cifras reales en [VALIDATION](VALIDATION.md). Desviaciones respecto
 | BE-C01 `POST verificar-correo` valida el formato en el validator | Cubierta en el caso de uso | CONTRACT §9, E6 |
 | BE-R01 429 del reenvío por espera mínima | 409 | CONTRACT §9, E5 |
 | BE-C02 (`SecurityConfig` con `POST /public/otra` → 401) | Cubierta por `AccessCatalogConsistencyTest` | Solo la ruta de verificación es pública; el catálogo y la cadena de filtros deben coincidir |
-| Sección 5 (frontend) | Pendiente | TD-081 |
+| Sección 5 (frontend) | Unitarias OK (1359/1359); falta prueba en navegador | TD-081 |
 | IT-V01…V08 | Ejecutadas (7 pruebas: V01/V02 y V03…V08) | `VerificacionCorreoGreenMailIT` |
 | E2E | 23/23 | `scratch/test_ident001.ps1` (no versionado: contiene credenciales de desarrollo local) |

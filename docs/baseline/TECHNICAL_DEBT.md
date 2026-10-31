@@ -1066,7 +1066,8 @@ GOLDEN PATH EFFECT:         NONE
 - **Descripción:** La validación del dominio en el formulario de enrolamiento manual, la página pública `verificar-correo` (lee `#token=`, llama al endpoint y muestra el mensaje) y la acción «Reenviar enlace» no están implementadas: el repositorio del frontend no estaba disponible en este workspace.
 - **Impacto:** Sin la página `verificar-correo` el enlace del correo no tiene destino; el backend y la BD ya están listos y verificados.
 - **Resolución esperada:** Implementar el frontend según CONTRACT §5 (Signals, OnPush, sin dominio escrito en el cliente, sin `setInterval`) y agregar su E2E.
-- **Bloquea línea base:** No para BD/backend; sí para el uso real del correo de verificación. **Estado:** **OPEN / HIGH / FRONTEND**. **Work item:** [IDENT-001](../work-items/IDENT-001-correo-institucional-verificacion/PLAN.md).
+- **Avance (2026-10-31):** implementado en local en el repositorio del frontend (rama `feature/IDENT-001-correo-institucional-verificacion`, commits `bb3651c` y `f954eb9`; sin push): página pública `verificar-correo`, validación del dominio leído del endpoint, y «Reenviar enlace» por estudiante. Pruebas unitarias: 1359/1359 en verde; `ng build` sin errores. **Falta** ejercitarlo en un navegador real contra backend y Keycloak, y el E2E.
+- **Bloquea línea base:** No para BD/backend; sí para el uso real del correo de verificación hasta cerrar la prueba en navegador. **Estado:** **IN_PROGRESS / HIGH / FRONTEND**. **Work item:** [IDENT-001](../work-items/IDENT-001-correo-institucional-verificacion/PLAN.md).
 
 ## TD-082
 

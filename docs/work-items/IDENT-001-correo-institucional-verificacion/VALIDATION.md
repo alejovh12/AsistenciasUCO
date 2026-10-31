@@ -84,7 +84,7 @@ Cambios por contrato formal (PLAN §4 / CONTRACT §6 y §9). Ninguno relaja una 
 `JAVA_TOOL_OPTIONS=-Djdk.net.unixdomain.tmpdir=C:\jtmp -Djdk.net.hosts.file=C:\jtmp\hosts` (la ruta temporal con espacio rompe los sockets del JDK 25 y el DNS inverso del equipo tarda ~5 s); `.env` cargado solo en el proceso; claves de MinIO de Infra; la BD debe estar recreada desde el esquema del repositorio (sin SP obsoletos) y con los datos de prueba que piden las pruebas de paridad.
 
 ## Pendientes y límites
-- **Frontend (TD-081):** validación con el dominio del endpoint, página pública `verificar-correo`, acción «Reenviar enlace».
+- **Frontend (TD-081):** implementado y probado con pruebas unitarias (1359/1359) en el repositorio del frontend (commits `bb3651c`, `f954eb9`, sin push). Pendiente: prueba en navegador real contra backend y Keycloak, y su E2E.
 - **Contraseña** definida por el docente (TD-079); **purga** de cuentas nunca verificadas (TD-078); **doble fuente** del dominio con Azure (TD-077); límite de intentos por instancia (TD-080); **HU176B** debe reutilizar el mecanismo (TD-082).
 - **SMTP institucional y SPF/DKIM/DMARC** (TD-073/TD-074): ahora condicionan el registro, porque sin entrega del correo el estudiante no puede activar su cuenta.
 - El correo de verificación sale por el módulo de NOTIF (no por Keycloak), así que el modo de pruebas con redirección sí lo cubre.
