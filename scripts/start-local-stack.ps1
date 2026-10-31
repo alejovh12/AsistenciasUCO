@@ -5,6 +5,7 @@ param(
     [switch]$NoDependencies,
     [switch]$NoBackend,
     [switch]$NoFrontend,
+    [ValidateSet('baseline', 'legacy')][string]$Provider = 'baseline',
     [ValidateRange(10, 600)][int]$WaitSeconds = 60,
     [string]$FilesEnvFile,
     [string]$FrontendRoot,
@@ -14,35 +15,44 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# Prioridad: parametro, variable de entorno, primera carpeta existente entre las candidatas
-# (repositorio hermano del backend o ruta historica). Si ninguna existe se reporta la primera como MISSING.
+# Rutas oficiales de los repositorios hermanos. Prioridad: parametro, variable de entorno, ruta oficial.
+# Se valida que la carpeta sea un repositorio Git con su archivo marcador y que su nombre no sea un clon,
+# laboratorio, cuarentena o copia; no se buscan carpetas alternativas.
 function Resolve-WorkspaceRoot {
     param(
         [string]$Explicit,
         [Parameter(Mandatory = $true)][string]$EnvironmentVariable,
-        [Parameter(Mandatory = $true)][string[]]$Candidates
+        [Parameter(Mandatory = $true)][string]$OfficialPath,
+        [Parameter(Mandatory = $true)][string]$Marker
     )
-    if (-not [string]::IsNullOrWhiteSpace($Explicit)) { return $Explicit }
-    $fromEnvironment = [Environment]::GetEnvironmentVariable($EnvironmentVariable)
-    if (-not [string]::IsNullOrWhiteSpace($fromEnvironment)) { return $fromEnvironment }
-    foreach ($candidate in $Candidates) {
-        if (Test-Path -LiteralPath $candidate -PathType Container) { return $candidate }
+    $candidate = $Explicit
+    if ([string]::IsNullOrWhiteSpace($candidate)) { $candidate = [Environment]::GetEnvironmentVariable($EnvironmentVariable) }
+    if ([string]::IsNullOrWhiteSpace($candidate)) { $candidate = $OfficialPath }
+    $canonicalPath = [System.IO.Path]::GetFullPath($candidate).TrimEnd('\', '/')
+    $officialCanonicalPath = [System.IO.Path]::GetFullPath($OfficialPath).TrimEnd('\', '/')
+    if (-not [string]::Equals($canonicalPath, $officialCanonicalPath, [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw "Ruta fuera de los tres repositorios oficiales para ${EnvironmentVariable}: $candidate. Ruta permitida: $OfficialPath"
     }
-    return $Candidates[0]
+    if ($candidate -match '(?i)(^|[\\/_.-])(lab|sandbox|quarantine|cuarentena|snapshot|recovery|backup|temporary|temp|copy|clone)([\\/_.-]|$)') {
+        throw "Ruta no permitida para ${EnvironmentVariable}: parece un clon o laboratorio ($candidate). Use la ruta oficial: $OfficialPath"
+    }
+    if ((Test-Path -LiteralPath $candidate -PathType Container) -and
+        -not ((Test-Path -LiteralPath (Join-Path $candidate '.git')) -and (Test-Path -LiteralPath (Join-Path $candidate $Marker) -PathType Leaf))) {
+        throw "La ruta $candidate no es el repositorio oficial esperado (falta .git o $Marker)."
+    }
+    return $candidate
 }
 
 $backendRoot = Split-Path -Parent $PSScriptRoot
-$workspaceRoot = Split-Path -Parent $backendRoot
-$frontendRoot = Resolve-WorkspaceRoot -Explicit $FrontendRoot -EnvironmentVariable 'ASISTENCIAS_FRONTEND_ROOT' -Candidates @(
-    (Join-Path $workspaceRoot 'Repositorio_GestionAsistenciaFrontend'),
-    'C:\Users\josev\OneDrive\Documentos\Front_Asistecias\AsistenciasUCO-Frontend'
-)
-$dbRoot = Resolve-WorkspaceRoot -Explicit $DbRoot -EnvironmentVariable 'ASISTENCIAS_DB_ROOT' -Candidates @(
-    (Join-Path $workspaceRoot 'Repositorio_GestionAsistenciadb'),
-    'C:\Users\josev\OneDrive\Documentos\AsisteciaUco_db\git\gestion-asistencia-db'
-)
+$documents = Join-Path $env:USERPROFILE 'OneDrive\Documentos'
+$frontendRoot = Resolve-WorkspaceRoot -Explicit $FrontendRoot -EnvironmentVariable 'ASISTENCIAS_FRONTEND_ROOT' `
+    -OfficialPath (Join-Path $documents 'Front_Asistecias\AsistenciasUCO-Frontend') -Marker 'package.json'
+$dbRoot = Resolve-WorkspaceRoot -Explicit $DbRoot -EnvironmentVariable 'ASISTENCIAS_DB_ROOT' `
+    -OfficialPath (Join-Path $documents 'AsisteciaUco_db\git\gestion-asistencia-db') -Marker 'docker-compose.dev.yml'
 $keycloakRoot = Join-Path $backendRoot 'infra\keycloak'
 $filesRoot = Join-Path $backendRoot 'infra\files'
+$securityLabRoot = Join-Path $backendRoot 'infra\security-baseline'
+$labEnvFile = Join-Path $env:USERPROFILE '.asistencias-security-lab\lab.env'
 $statePath = Join-Path ([System.IO.Path]::GetTempPath()) 'asistencias-uco-local-stack.json'
 
 if ([string]::IsNullOrWhiteSpace($FilesEnvFile)) {
@@ -55,7 +65,16 @@ function Test-ListeningPort {
         $null = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction Stop
         return $true
     } catch {
-        return $false
+        # Los puertos publicados por Docker Desktop no siempre aparecen como Listen: se confirma con una conexion TCP.
+        $client = New-Object System.Net.Sockets.TcpClient
+        try {
+            $pending = $client.BeginConnect('127.0.0.1', $Port, $null, $null)
+            return ($pending.AsyncWaitHandle.WaitOne(500) -and $client.Connected)
+        } catch {
+            return $false
+        } finally {
+            $client.Close()
+        }
     }
 }
 
@@ -146,8 +165,8 @@ function Stop-TrackedProcesses {
         }
     }
 
-    foreach ($pid in @($tracked | Sort-Object -Descending)) {
-        Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
+    foreach ($trackedPid in @($tracked | Sort-Object -Descending)) {
+        Stop-Process -Id $trackedPid -Force -ErrorAction SilentlyContinue
     }
     Remove-Item -LiteralPath $statePath -Force -ErrorAction SilentlyContinue
     Write-Status -Kind 'STOP' -Name 'processes' -Value ('STOPPED=' + $tracked.Count)
@@ -168,14 +187,16 @@ foreach ($required in @(
         @{ Name = 'db-root'; Path = $dbRoot },
         @{ Name = 'backend-env'; Path = (Join-Path $backendRoot '.env') },
         @{ Name = 'frontend-env'; Path = (Join-Path $frontendRoot '.env') },
-        @{ Name = 'keycloak-env'; Path = (Join-Path $keycloakRoot '.env') },
-        @{ Name = 'db-env'; Path = (Join-Path $dbRoot '.env') }
+        @{ Name = 'db-env'; Path = (Join-Path $dbRoot '.env') },
+        $(if ($Provider -eq 'baseline') { @{ Name = 'security-lab-env'; Path = $labEnvFile } } else { @{ Name = 'keycloak-env'; Path = (Join-Path $keycloakRoot '.env') } })
     )) {
     Write-Status -Kind 'PATH' -Name $required.Name -Value ($(if (Test-Path -LiteralPath $required.Path) { 'PRESENT' } else { 'MISSING' }))
 }
 Write-Status -Kind 'PATH' -Name 'files-env' -Value ($(if (Test-RequiredFile -Path $FilesEnvFile) { 'PRESENT' } else { 'MISSING' }))
 
-foreach ($port in @(1433, 8081, 9000, 3310, 8080, 4200)) {
+Write-Status -Kind 'SECURITY' -Name 'provider' -Value $Provider
+$securityPorts = if ($Provider -eq 'baseline') { @(19090, 18080, 18081) } else { @(8081) }
+foreach ($port in (@(1433) + $securityPorts + @(9000, 3310, 8080, 4200))) {
     Write-Status -Kind 'PORT' -Name ([string]$port) -Value ($(if (Test-ListeningPort -Port $port) { 'LISTENING' } else { 'FREE' }))
 }
 
@@ -193,10 +214,22 @@ if (-not $NoDependencies) {
     }
 
     if (-not (Test-ListeningPort -Port 1433)) {
-        Invoke-ComposeUp -Root $dbRoot -ComposeFile (Join-Path $dbRoot 'docker-compose.dev.yml') -EnvFile (Join-Path $dbRoot '.env')
+        & docker start sql_server_asistencias | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw "No se pudo iniciar SQL Server original." }
         if (-not (Wait-ListeningPort -Port 1433)) { throw 'SQL Server no abrio el puerto 1433.' }
     }
-    if (-not (Test-ListeningPort -Port 8081)) {
+    if ($Provider -eq 'baseline') {
+        if (-not (Test-RequiredFile -Path $labEnvFile)) {
+            throw "Falta $labEnvFile (Security Baseline); no se generan ni se imprimen secretos."
+        }
+        if (-not (Test-ListeningPort -Port 19090) -or -not (Test-ListeningPort -Port 18080) -or -not (Test-ListeningPort -Port 18081)) {
+            Invoke-ComposeUp -Root $securityLabRoot -ComposeFile (Join-Path $securityLabRoot 'compose.yaml') -EnvFile $labEnvFile
+            foreach ($securityPort in $securityPorts) {
+                if (-not (Wait-ListeningPort -Port $securityPort)) { throw "Security Baseline no abrio el puerto $securityPort." }
+            }
+        }
+    } elseif (-not (Test-ListeningPort -Port 8081)) {
+        # Alternativa explicita (-Provider legacy): Keycloak legacy, nunca un fallback automatico.
         Invoke-ComposeUp -Root $keycloakRoot -ComposeFile (Join-Path $keycloakRoot 'compose.yaml') -EnvFile (Join-Path $keycloakRoot '.env')
         if (-not (Wait-ListeningPort -Port 8081)) { throw 'Keycloak no abrio el puerto 8081.' }
     }
@@ -213,11 +246,12 @@ $started = @()
 if (-not $NoBackend -and -not (Test-ListeningPort -Port 8080)) {
     $backendLog = Join-Path ([System.IO.Path]::GetTempPath()) 'asistencias-uco-local-stack-backend.out.log'
     $backendErr = Join-Path ([System.IO.Path]::GetTempPath()) 'asistencias-uco-local-stack-backend.err.log'
-    $backendRunner = Join-Path $backendRoot 'scripts\run-local.ps1'
-    $process = Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $backendRunner) -WorkingDirectory $backendRoot -WindowStyle Hidden -RedirectStandardOutput $backendLog -RedirectStandardError $backendErr -PassThru
+    # Un solo selector (APP_ADAPTERS_SECURITY_PROVIDER) gobierna seguridad e identidad; lo fija el launcher.
+    $backendRunner = Join-Path $securityLabRoot 'scripts\start-backend-baseline.ps1'
+    $process = Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $backendRunner, '-Provider', $Provider) -WorkingDirectory $backendRoot -WindowStyle Hidden -RedirectStandardOutput $backendLog -RedirectStandardError $backendErr -PassThru
     $started += [pscustomobject]@{ Name = 'backend'; Pid = $process.Id; Log = $backendLog }
     Save-State -Processes $started
-    if (-not (Wait-ListeningPort -Port 8080)) { throw 'Backend no abrio el puerto 8080; consultar logs/backend.out.log.' }
+    if (-not (Wait-ListeningPort -Port 8080)) { throw 'Backend no abrio el puerto 8080; consultar el log temporal reportado.' }
 }
 
 if (-not $NoFrontend -and -not (Test-ListeningPort -Port 4200)) {
@@ -234,6 +268,6 @@ if ($started.Count -eq 0) {
 } else {
     foreach ($item in $started) { Write-Status -Kind 'PROCESS' -Name $item.Name -Value ('STARTED_PID=' + $item.Pid) }
 }
-Write-Status -Kind 'LOG' -Name 'backend' -Value (Join-Path $backendRoot 'logs\backend.out.log')
+Write-Status -Kind 'LOG' -Name 'backend' -Value (Join-Path ([System.IO.Path]::GetTempPath()) 'asistencias-baseline')
 Write-Status -Kind 'LOG' -Name 'frontend' -Value (Join-Path ([System.IO.Path]::GetTempPath()) 'asistencias-uco-local-stack-frontend.out.log')
 Write-Status -Kind 'STACK' -Name 'result' -Value 'READY'
