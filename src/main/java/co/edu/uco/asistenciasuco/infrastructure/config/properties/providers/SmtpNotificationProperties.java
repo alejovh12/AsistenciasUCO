@@ -36,63 +36,113 @@ public record SmtpNotificationProperties(
 ) {
 
     private static final Pattern SAFE_EMAIL_PATTERN = Pattern.compile(
-            "^[^@\\s,;<>\"()]+@[^@\\s,;<>\"().]+(?:\\.[^@\\s,;<>\"().]+)+$"
+            "^[^@\\s,;<>\"()]+@[^@\\s,;<>\"().]++(?:\\.[^@\\s,;<>\"().]++)+$"
     );
 
     @ConstructorBinding
     public SmtpNotificationProperties {
-        if (host == null || host.isBlank()) {
-            throw new IllegalArgumentException("app.providers.smtp-notification.host es obligatorio.");
-        }
-        host = host.trim();
-        port = port == null ? 587 : port;
-        if (port < 1 || port > 65535) {
-            throw new IllegalArgumentException("app.providers.smtp-notification.port debe estar entre 1 y 65535.");
-        }
+        host = validarHost(host);
+        port = validarPuerto(port);
         username = username == null ? "" : username;
         password = password == null ? "" : password;
         starttls = starttls == null ? Boolean.TRUE : starttls;
         ssl = ssl == null ? Boolean.FALSE : ssl;
+        validarTls(starttls, ssl);
+        fromAddress = validarFromAddress(fromAddress);
+        fromName = (fromName == null || fromName.isBlank()) ? "Asistencia UCO" : fromName.trim();
+        connectTimeout = validarConnectTimeout(connectTimeout);
+        readTimeout = validarReadTimeout(readTimeout);
+        maxBcc = validarMaxBcc(maxBcc);
+        ratePerMinute = validarRatePerMinute(ratePerMinute);
+        ratePerDay = validarRatePerDay(ratePerDay, ratePerMinute);
+        requireConfirmedEmail = requireConfirmedEmail == null ? Boolean.FALSE : requireConfirmedEmail;
+        platformUrl = validarPlatformUrl(platformUrl);
+        templateCacheTtl = validarTemplateCacheTtl(templateCacheTtl);
+        testMode = testMode == null ? new TestMode(false, List.of()) : testMode;
+    }
+
+    private static String validarHost(final String host) {
+        if (host == null || host.isBlank()) {
+            throw new IllegalArgumentException("app.providers.smtp-notification.host es obligatorio.");
+        }
+        return host.trim();
+    }
+
+    private static int validarPuerto(final Integer port) {
+        final int resolvedPort = port == null ? 587 : port;
+        if (resolvedPort < 1 || resolvedPort > 65535) {
+            throw new IllegalArgumentException("app.providers.smtp-notification.port debe estar entre 1 y 65535.");
+        }
+        return resolvedPort;
+    }
+
+    private static void validarTls(final Boolean starttls, final Boolean ssl) {
         if (Boolean.TRUE.equals(starttls) && Boolean.TRUE.equals(ssl)) {
             throw new IllegalArgumentException("app.providers.smtp-notification.starttls y ssl no pueden estar ambos en true.");
         }
+    }
+
+    private static String validarFromAddress(final String fromAddress) {
         if (!esCorreoSeguro(fromAddress)) {
             throw new IllegalArgumentException("app.providers.smtp-notification.from-address debe tener un formato de correo valido.");
         }
-        fromAddress = fromAddress.trim();
-        fromName = (fromName == null || fromName.isBlank()) ? "Asistencia UCO" : fromName.trim();
-        connectTimeout = connectTimeout == null ? Duration.ofSeconds(10) : connectTimeout;
-        if (connectTimeout.isZero() || connectTimeout.isNegative()) {
+        return fromAddress.trim();
+    }
+
+    private static Duration validarConnectTimeout(final Duration connectTimeout) {
+        final Duration timeout = connectTimeout == null ? Duration.ofSeconds(10) : connectTimeout;
+        if (timeout.isZero() || timeout.isNegative()) {
             throw new IllegalArgumentException("app.providers.smtp-notification.connect-timeout debe ser mayor que cero.");
         }
-        readTimeout = readTimeout == null ? Duration.ofSeconds(20) : readTimeout;
-        if (readTimeout.isZero() || readTimeout.isNegative()) {
+        return timeout;
+    }
+
+    private static Duration validarReadTimeout(final Duration readTimeout) {
+        final Duration timeout = readTimeout == null ? Duration.ofSeconds(20) : readTimeout;
+        if (timeout.isZero() || timeout.isNegative()) {
             throw new IllegalArgumentException("app.providers.smtp-notification.read-timeout debe ser mayor que cero.");
         }
-        maxBcc = maxBcc == null ? 50 : maxBcc;
-        if (maxBcc < 1 || maxBcc > 100) {
+        return timeout;
+    }
+
+    private static int validarMaxBcc(final Integer maxBcc) {
+        final int val = maxBcc == null ? 50 : maxBcc;
+        if (val < 1 || val > 100) {
             throw new IllegalArgumentException("app.providers.smtp-notification.max-bcc debe estar entre 1 y 100.");
         }
-        ratePerMinute = ratePerMinute == null ? 60 : ratePerMinute;
-        if (ratePerMinute < 1 || ratePerMinute > 10000) {
+        return val;
+    }
+
+    private static int validarRatePerMinute(final Integer ratePerMinute) {
+        final int val = ratePerMinute == null ? 60 : ratePerMinute;
+        if (val < 1 || val > 10000) {
             throw new IllegalArgumentException("app.providers.smtp-notification.rate-per-minute debe estar entre 1 y 10000.");
         }
-        ratePerDay = ratePerDay == null ? 500 : ratePerDay;
-        if (ratePerDay < ratePerMinute) {
+        return val;
+    }
+
+    private static int validarRatePerDay(final Integer ratePerDay, final int ratePerMinute) {
+        final int val = ratePerDay == null ? 500 : ratePerDay;
+        if (val < ratePerMinute) {
             throw new IllegalArgumentException("app.providers.smtp-notification.rate-per-day debe ser >= rate-per-minute.");
         }
-        requireConfirmedEmail = requireConfirmedEmail == null ? Boolean.FALSE : requireConfirmedEmail;
-        platformUrl = platformUrl == null ? "" : platformUrl.trim();
-        if (!platformUrl.isEmpty()
-                && !platformUrl.startsWith("http://")
-                && !platformUrl.startsWith("https://")) {
+        return val;
+    }
+
+    private static String validarPlatformUrl(final String platformUrl) {
+        final String trimmed = platformUrl == null ? "" : platformUrl.trim();
+        if (!trimmed.isEmpty() && !trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
             throw new IllegalArgumentException("app.providers.smtp-notification.platform-url debe iniciar con http:// o https://.");
         }
-        templateCacheTtl = templateCacheTtl == null ? Duration.ofSeconds(60) : templateCacheTtl;
-        if (templateCacheTtl.isZero() || templateCacheTtl.isNegative()) {
+        return trimmed;
+    }
+
+    private static Duration validarTemplateCacheTtl(final Duration templateCacheTtl) {
+        final Duration ttl = templateCacheTtl == null ? Duration.ofSeconds(60) : templateCacheTtl;
+        if (ttl.isZero() || ttl.isNegative()) {
             throw new IllegalArgumentException("app.providers.smtp-notification.template-cache-ttl debe ser mayor que cero.");
         }
-        testMode = testMode == null ? new TestMode(false, List.of()) : testMode;
+        return ttl;
     }
 
     public SmtpNotificationProperties(
@@ -182,8 +232,8 @@ public record SmtpNotificationProperties(
         private static final int MAX_REDIRECT_ADDRESSES = 5;
 
         public TestMode {
-            enabled = Boolean.TRUE.equals(enabled);
-            if (!enabled) {
+            final boolean isEnabled = Boolean.TRUE.equals(enabled);
+            if (!isEnabled) {
                 redirectTo = List.of();
             } else {
                 if (redirectTo == null || redirectTo.isEmpty()) {
@@ -207,6 +257,7 @@ public record SmtpNotificationProperties(
                 }
                 redirectTo = List.copyOf(unicos);
             }
+            enabled = isEnabled;
         }
 
         @ConstructorBinding
@@ -231,7 +282,7 @@ public record SmtpNotificationProperties(
     /**
      * Valida que una direccion de correo electronico tenga formato seguro de direccion unica,
      * rechazando nulos, blancos, saltos de linea, espacios, separadores de lista (, ;),
-     * parentesis angulares (< >), comillas (") y parentesis (( )).
+     * parentesis angulares (&lt; &gt;), comillas (") y parentesis (( )).
      */
     public static boolean esCorreoSeguro(final String correo) {
         if (correo == null || correo.isBlank()) {

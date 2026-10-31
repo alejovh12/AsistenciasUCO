@@ -55,11 +55,11 @@ class PlantillaNotificacionJpaRepositoryTest {
     void BE_T01_mapeo_tres_result_sets_y_cero_filas() {
         final StoredProcedureQuery sp = mockSpQuery();
         final UUID corrId = UUID.randomUUID();
-        final Object[] canonicalOk = new Object[]{corrId, "OK", "DBCODE=GEN_003|OK", Boolean.TRUE};
-        final Object[] plantillaRow = new Object[]{1, "Retiro del grupo {grupo}", "Se registró el retiro de {estudiante} del grupo {grupo}."};
-        final Object[] m1 = new Object[]{"estudiante", Boolean.TRUE};
-        final Object[] m2 = new Object[]{"grupo", 1};
-        final Object[] m3 = new Object[]{"motivo", Boolean.FALSE};
+        final Object[] canonicalOk = {corrId, "OK", "DBCODE=GEN_003|OK", Boolean.TRUE};
+        final Object[] plantillaRow = {1, "Retiro del grupo {grupo}", "Se registró el retiro de {estudiante} del grupo {grupo}."};
+        final Object[] m1 = {"estudiante", Boolean.TRUE};
+        final Object[] m2 = {"grupo", 1};
+        final Object[] m3 = {"motivo", Boolean.FALSE};
 
         when(sp.execute()).thenReturn(true);
         when(sp.hasMoreResults()).thenReturn(true, true, false);
@@ -97,10 +97,10 @@ class PlantillaNotificacionJpaRepositoryTest {
     @DisplayName("BE-T02: cache por (tipo, idioma) con TTL: segunda lectura no vuelve a la BD; vencido el TTL, si")
     void BE_T02_cache_por_tipo_idioma_con_ttl() {
         final StoredProcedureQuery sp = mockSpQuery();
-        final Object[] canonicalOk = new Object[]{UUID.randomUUID(), "OK", "DBCODE=GEN_003|OK", Boolean.TRUE};
-        final Object[] plantillaV1 = new Object[]{1, "Asunto v1 {grupo}", "Cuerpo v1 {grupo}"};
-        final Object[] plantillaV2 = new Object[]{2, "Asunto v2 {grupo}", "Cuerpo v2 {grupo}"};
-        final Object[] marcadorGrupo = new Object[]{"grupo", Boolean.TRUE};
+        final Object[] canonicalOk = {UUID.randomUUID(), "OK", "DBCODE=GEN_003|OK", Boolean.TRUE};
+        final Object[] plantillaV1 = {1, "Asunto v1 {grupo}", "Cuerpo v1 {grupo}"};
+        final Object[] plantillaV2 = {2, "Asunto v2 {grupo}", "Cuerpo v2 {grupo}"};
+        final Object[] marcadorGrupo = {"grupo", Boolean.TRUE};
 
         when(sp.execute()).thenReturn(true);
         when(sp.hasMoreResults()).thenReturn(true, true, false, true, true, false);
@@ -121,21 +121,21 @@ class PlantillaNotificacionJpaRepositoryTest {
         final Optional<PlantillaNotificacion> segunda = repository.consultarActiva("SOLICITUD_INGRESO_REGISTRADA", "es");
         assertTrue(segunda.isPresent());
         assertEquals(1, segunda.get().version());
-        verify(entityManager, times(1)).createStoredProcedureQuery(eq("dbo.usp_consultar_plantilla_notificacion_activa"));
+        verify(entityManager, times(1)).createStoredProcedureQuery("dbo.usp_consultar_plantilla_notificacion_activa");
 
         // Avanzar otros 31s (TTL vencido): vuelve a consultar BD y obtiene v2
         clock.advance(Duration.ofSeconds(31));
         final Optional<PlantillaNotificacion> tercera = repository.consultarActiva("SOLICITUD_INGRESO_REGISTRADA", "es");
         assertTrue(tercera.isPresent());
         assertEquals(2, tercera.get().version());
-        verify(entityManager, times(2)).createStoredProcedureQuery(eq("dbo.usp_consultar_plantilla_notificacion_activa"));
+        verify(entityManager, times(2)).createStoredProcedureQuery("dbo.usp_consultar_plantilla_notificacion_activa");
     }
 
     @Test
     @DisplayName("BE-T01b: rechazo del SP (estadoResultado=0) o PersistenceException lanza DatabaseOperationException")
     void BE_T01b_error_sp_o_jpa_lanza_excepcion() {
         final StoredProcedureQuery spError = mockSpQuery();
-        final Object[] canonicalFail = new Object[]{UUID.randomUUID(), "Datos invalidos", "DBCODE=NTF_001|Invalido", Boolean.FALSE};
+        final Object[] canonicalFail = {UUID.randomUUID(), "Datos invalidos", "DBCODE=NTF_001|Invalido", Boolean.FALSE};
         when(spError.execute()).thenReturn(true);
         when(spError.getResultList()).thenReturn(List.of((Object) canonicalFail));
 
@@ -159,10 +159,10 @@ class PlantillaNotificacionJpaRepositoryTest {
         co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext.set(ctxCorr);
         try {
             final StoredProcedureQuery sp = mockSpQuery();
-            final Object[] canonicalOk = new Object[]{ctxCorr, "OK", "DBCODE=GEN_003|OK", Boolean.TRUE};
-            final Object[] plantillaRow = new Object[]{"2", "Asunto {grupo}", "Cuerpo {grupo}"};
-            final Object[] m1 = new Object[]{"grupo", 0};
-            final Object[] m2 = new Object[]{"extra", "true"};
+            final Object[] canonicalOk = {ctxCorr, "OK", "DBCODE=GEN_003|OK", Boolean.TRUE};
+            final Object[] plantillaRow = {"2", "Asunto {grupo}", "Cuerpo {grupo}"};
+            final Object[] m1 = {"grupo", 0};
+            final Object[] m2 = {"extra", "true"};
 
             when(sp.execute()).thenReturn(true);
             when(sp.hasMoreResults()).thenReturn(true, true, false);

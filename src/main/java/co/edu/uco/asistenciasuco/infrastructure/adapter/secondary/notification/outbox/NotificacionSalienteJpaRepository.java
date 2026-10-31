@@ -22,6 +22,8 @@ import java.util.UUID;
 @Repository
 public class NotificacionSalienteJpaRepository implements NotificacionOutboxRepository {
 
+    private static final String INSTANCIA_OBLIGATORIA = "La instancia es obligatoria.";
+
     private final JpaProcedureExecutor procedureExecutor;
     private final EntityManager entityManager;
 
@@ -60,7 +62,7 @@ public class NotificacionSalienteJpaRepository implements NotificacionOutboxRepo
     @SuppressWarnings("unchecked")
     public List<NotificacionReservada> reservar(final int lote, final Duration lease, final String instancia) {
         Objects.requireNonNull(lease, "El lease es obligatorio.");
-        Objects.requireNonNull(instancia, "La instancia es obligatoria.");
+        Objects.requireNonNull(instancia, INSTANCIA_OBLIGATORIA);
         final UUID corrId = resolveCorrelationId();
 
         final String sql = "EXEC dbo.usp_reservar_notificaciones_salientes "
@@ -110,7 +112,7 @@ public class NotificacionSalienteJpaRepository implements NotificacionOutboxRepo
     @Override
     public void marcarEntregada(final UUID id, final String instancia) {
         Objects.requireNonNull(id, "El id de notificacion es obligatorio.");
-        Objects.requireNonNull(instancia, "La instancia es obligatoria.");
+        Objects.requireNonNull(instancia, INSTANCIA_OBLIGATORIA);
         final UUID corrId = resolveCorrelationId();
 
         final Map<String, Object> params = new HashMap<>();
@@ -136,7 +138,7 @@ public class NotificacionSalienteJpaRepository implements NotificacionOutboxRepo
             final Duration max
     ) {
         Objects.requireNonNull(id, "El id de notificacion es obligatorio.");
-        Objects.requireNonNull(instancia, "La instancia es obligatoria.");
+        Objects.requireNonNull(instancia, INSTANCIA_OBLIGATORIA);
         final UUID corrId = resolveCorrelationId();
 
         final Map<String, Object> params = new HashMap<>();
@@ -196,7 +198,7 @@ public class NotificacionSalienteJpaRepository implements NotificacionOutboxRepo
         str = str.replaceFirst(" ", "T").replace(" +", "+").replace(" -", "-");
         try {
             return java.time.OffsetDateTime.parse(str).toInstant();
-        } catch (final Exception e) {
+        } catch (final Exception _) {
             return Instant.parse(str);
         }
     }

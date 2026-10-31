@@ -368,8 +368,9 @@ class RegistrarEstudianteUseCaseImplTest {
                 avisos::add
         );
 
+        final var domain = domainConCorreo("ana.perez@gmail.com");
         final ValidationException exception = assertThrows(ValidationException.class,
-                () -> useCase.execute(domainConCorreo("ana.perez@gmail.com")));
+                () -> useCase.execute(domain));
 
         assertEquals("VCE_001", exception.getCode());
         assertEquals(0, spLlamadas.get());

@@ -153,9 +153,11 @@ class CorreoInstitucionalPolicyTest {
 
     @Test
     void los_colaboradores_son_obligatorios() {
-        assertThrows(NullPointerException.class, () -> new CorreoInstitucionalPolicy(null, mensajes()));
-        assertThrows(NullPointerException.class,
-                () -> new CorreoInstitucionalPolicy(parametros(new AtomicReference<>(DOMINIO)), null));
+        final MessageCatalogPort msg = mensajes();
+        assertThrows(NullPointerException.class, () -> new CorreoInstitucionalPolicy(null, msg));
+
+        final ParameterCatalogPort params = parametros(new AtomicReference<>(DOMINIO));
+        assertThrows(NullPointerException.class, () -> new CorreoInstitucionalPolicy(params, null));
     }
 
     private static CorreoInstitucionalPolicy politica(final String dominio) {

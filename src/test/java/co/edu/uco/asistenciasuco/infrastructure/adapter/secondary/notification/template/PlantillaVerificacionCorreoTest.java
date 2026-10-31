@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * IDENT-001 BE-T01: plantilla por defecto de {@code VERIFICACION_CORREO} y renderizado seguro del enlace (vinculo HTML
- * solo para URLs http/https; todo valor sustituido se escapa).
+ * solo para URLs http/https; cualquier valor sustituido se escapa).
  */
 class PlantillaVerificacionCorreoTest {
 

@@ -24,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -99,7 +98,7 @@ class NotificacionSalienteJpaRepositoryTest {
         final UUID id = UUID.randomUUID();
         final UUID corrId = UUID.randomUUID();
         final Instant creadoEn = Instant.now();
-        final Object[] fila = new Object[]{
+        final Object[] fila = {
                 id,
                 "TIPO_A",
                 "Asunto A",
@@ -254,7 +253,7 @@ class NotificacionSalienteJpaRepositoryTest {
         when(entityManager.createNativeQuery(anyString())).thenReturn(query);
         when(query.setParameter(anyString(), any())).thenReturn(query);
 
-        final Object[] filaDesplazada = new Object[]{
+        final Object[] filaDesplazada = {
                 UUID.randomUUID(), "TIPO_A", "Asunto", "Mensaje", "[]", "{}", 1, 5, Instant.now(), "trace", "span"
         };
         when(query.getResultList()).thenReturn(List.of((Object) filaDesplazada));

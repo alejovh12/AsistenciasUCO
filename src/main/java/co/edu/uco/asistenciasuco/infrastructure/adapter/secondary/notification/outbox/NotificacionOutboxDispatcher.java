@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class NotificacionOutboxDispatcher implements SmartLifecycle {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NotificacionOutboxDispatcher.class);
+    private static final String TAG_OUTCOME = "outcome";
 
     private final NotificacionOutboxRepository repository;
     private final NotificacionChannelSender sender;
@@ -64,16 +65,16 @@ public class NotificacionOutboxDispatcher implements SmartLifecycle {
         this.objectMapper = new ObjectMapper();
 
         this.deliveredCounter = Counter.builder("notification.dispatch.total")
-                .tag("outcome", "delivered")
+                .tag(TAG_OUTCOME, "delivered")
                 .register(meterRegistry);
         this.retryCounter = Counter.builder("notification.dispatch.total")
-                .tag("outcome", "retry")
+                .tag(TAG_OUTCOME, "retry")
                 .register(meterRegistry);
         this.deadCounter = Counter.builder("notification.dispatch.total")
-                .tag("outcome", "dead")
+                .tag(TAG_OUTCOME, "dead")
                 .register(meterRegistry);
         this.lostLeaseCounter = Counter.builder("notification.dispatch.total")
-                .tag("outcome", "lost_lease")
+                .tag(TAG_OUTCOME, "lost_lease")
                 .register(meterRegistry);
         this.purgedCounter = Counter.builder("notification.outbox.purged.total")
                 .register(meterRegistry);
@@ -103,7 +104,9 @@ public class NotificacionOutboxDispatcher implements SmartLifecycle {
             workerThread = new Thread(this::runLoop, "notificacion-outbox-dispatcher-" + instanceId());
             workerThread.setDaemon(true);
             workerThread.start();
-            LOGGER.info("Despachador outbox iniciado para instancia: {}", instanceId());
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("Despachador outbox iniciado para instancia: {}", instanceId());
+            }
         }
     }
 
@@ -147,7 +150,7 @@ public class NotificacionOutboxDispatcher implements SmartLifecycle {
                 if (running.get()) {
                     try {
                         monitor.wait(properties.sweeperInterval().toMillis());
-                    } catch (final InterruptedException e) {
+                    } catch (final InterruptedException _) {
                         Thread.currentThread().interrupt();
                         break;
                     }
@@ -293,7 +296,7 @@ public class NotificacionOutboxDispatcher implements SmartLifecycle {
         }
         try {
             return objectMapper.readValue(json, new TypeReference<List<DestinatarioRef>>() {});
-        } catch (final Exception e) {
+        } catch (final Exception _) {
             return List.of();
         }
     }
@@ -304,7 +307,7 @@ public class NotificacionOutboxDispatcher implements SmartLifecycle {
         }
         try {
             return objectMapper.readValue(json, new TypeReference<Map<String, String>>() {});
-        } catch (final Exception e) {
+        } catch (final Exception _) {
             return Map.of();
         }
     }

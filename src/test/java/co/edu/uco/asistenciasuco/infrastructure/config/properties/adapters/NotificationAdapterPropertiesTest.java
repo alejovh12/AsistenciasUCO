@@ -28,15 +28,17 @@ class NotificationAdapterPropertiesTest {
     @Test
     @DisplayName("BE-P01: composite con targets vacio o menos de 2 destinos lanza excepcion")
     void BE_P01_composite_menos_de_dos_destinos_falla() {
+        final Composite vacio = new Composite(List.of());
         final IllegalArgumentException exVacio = assertThrows(
                 IllegalArgumentException.class,
-                () -> new NotificationAdapterProperties(Provider.COMPOSITE, new Composite(List.of()))
+                () -> new NotificationAdapterProperties(Provider.COMPOSITE, vacio)
         );
         assertTrue(exVacio.getMessage().contains("app.adapters.notification.composite.targets"));
 
+        final Composite uno = new Composite(List.of(Target.LOG));
         final IllegalArgumentException exUno = assertThrows(
                 IllegalArgumentException.class,
-                () -> new NotificationAdapterProperties(Provider.COMPOSITE, new Composite(List.of(Target.LOG)))
+                () -> new NotificationAdapterProperties(Provider.COMPOSITE, uno)
         );
         assertTrue(exUno.getMessage().contains("app.adapters.notification.composite.targets"));
     }
@@ -44,9 +46,10 @@ class NotificationAdapterPropertiesTest {
     @Test
     @DisplayName("BE-P01: composite con destinos duplicados lanza excepcion")
     void BE_P01_composite_destinos_duplicados_falla() {
+        final Composite duplicados = new Composite(List.of(Target.LOG, Target.LOG));
         final IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
-                () -> new NotificationAdapterProperties(Provider.COMPOSITE, new Composite(List.of(Target.LOG, Target.LOG)))
+                () -> new NotificationAdapterProperties(Provider.COMPOSITE, duplicados)
         );
         assertTrue(ex.getMessage().contains("app.adapters.notification.composite.targets"));
     }

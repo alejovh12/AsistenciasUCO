@@ -45,9 +45,10 @@ class VerificacionCorreoMarcadorProviderTest {
     }
 
     @Test
-    void BE_M01_genera_un_token_de_43_caracteres_y_guarda_solo_su_hash() throws Exception {
+    void BE_M01_genera_un_token_de_43_caracteres_y_guarda_solo_su_hash() throws NotificacionNoEntregableException {
+        final List<UUID> destinatarios = List.of(USUARIO);
         final Map<String, String> marcadores =
-                provider(repositorioOk(), PLATFORM_URL).resolver(Notificacion.TIPO_VERIFICACION_CORREO, List.of(USUARIO));
+                provider(repositorioOk(), PLATFORM_URL).resolver(Notificacion.TIPO_VERIFICACION_CORREO, destinatarios);
 
         final String enlace = marcadores.get("enlace");
         final String prefijo = PLATFORM_URL + "/verificar-correo#token=";
@@ -62,88 +63,107 @@ class VerificacionCorreoMarcadorProviderTest {
     }
 
     @Test
-    void BE_M01_la_url_con_barra_final_no_duplica_la_barra() throws Exception {
+    void BE_M01_la_url_con_barra_final_no_duplica_la_barra() throws NotificacionNoEntregableException {
+        final List<UUID> destinatarios = List.of(USUARIO);
         final Map<String, String> marcadores = provider(repositorioOk(), PLATFORM_URL + "/")
-                .resolver(Notificacion.TIPO_VERIFICACION_CORREO, List.of(USUARIO));
+                .resolver(Notificacion.TIPO_VERIFICACION_CORREO, destinatarios);
 
         assertTrue(marcadores.get("enlace").startsWith(PLATFORM_URL + "/verificar-correo#token="));
     }
 
     @Test
-    void BE_M01_cada_llamada_emite_un_token_distinto() throws Exception {
+    void BE_M01_cada_llamada_emite_un_token_distinto() throws NotificacionNoEntregableException {
         final VerificacionCorreoMarcadorProvider provider = provider(repositorioOk(), PLATFORM_URL);
+        final List<UUID> destinatarios = List.of(USUARIO);
 
-        final String primero = provider.resolver(Notificacion.TIPO_VERIFICACION_CORREO, List.of(USUARIO)).get("enlace");
-        final String segundo = provider.resolver(Notificacion.TIPO_VERIFICACION_CORREO, List.of(USUARIO)).get("enlace");
+        final String primero = provider.resolver(Notificacion.TIPO_VERIFICACION_CORREO, destinatarios).get("enlace");
+        final String segundo = provider.resolver(Notificacion.TIPO_VERIFICACION_CORREO, destinatarios).get("enlace");
 
         assertNotEquals(primero, segundo);
     }
 
     @Test
-    void otros_tipos_no_emiten_token_ni_marcadores() throws Exception {
+    void otros_tipos_no_emiten_token_ni_marcadores() throws NotificacionNoEntregableException {
+        final List<UUID> destinatarios = List.of(USUARIO);
         final Map<String, String> marcadores =
-                provider(repositorioOk(), PLATFORM_URL).resolver(Notificacion.TIPO_RETIRO_ESTUDIANTE_GRUPO, List.of(USUARIO));
+                provider(repositorioOk(), PLATFORM_URL).resolver(Notificacion.TIPO_RETIRO_ESTUDIANTE_GRUPO, destinatarios);
 
         assertTrue(marcadores.isEmpty());
         assertTrue(hashes.isEmpty());
     }
 
     @Test
-    void exige_exactamente_un_destinatario() throws Exception {
+    void exige_exactamente_un_destinatario() {
         final VerificacionCorreoMarcadorProvider provider = provider(repositorioOk(), PLATFORM_URL);
 
+        final List<UUID> vacio = List.of();
         assertThrows(NotificacionNoEntregableException.class,
-                () -> provider.resolver(Notificacion.TIPO_VERIFICACION_CORREO, List.of()));
+                () -> provider.resolver(Notificacion.TIPO_VERIFICACION_CORREO, vacio));
+
+        final List<UUID> multiples = List.of(USUARIO, UUID.randomUUID());
         assertThrows(NotificacionNoEntregableException.class,
-                () -> provider.resolver(Notificacion.TIPO_VERIFICACION_CORREO, List.of(USUARIO, UUID.randomUUID())));
+                () -> provider.resolver(Notificacion.TIPO_VERIFICACION_CORREO, multiples));
         assertTrue(hashes.isEmpty());
     }
 
     @Test
-    void sin_url_de_plataforma_configurada_es_un_fallo_permanente_y_no_emite_token() throws Exception {
-        assertThrows(NotificacionNoEntregableException.class, () -> provider(repositorioOk(), "  ")
-                .resolver(Notificacion.TIPO_VERIFICACION_CORREO, List.of(USUARIO)));
-        assertThrows(NotificacionNoEntregableException.class, () -> provider(repositorioOk(), null)
-                .resolver(Notificacion.TIPO_VERIFICACION_CORREO, List.of(USUARIO)));
+    void sin_url_de_plataforma_configurada_es_un_fallo_permanente_y_no_emite_token() {
+        final VerificacionCorreoMarcadorProvider providerBlanco = provider(repositorioOk(), "  ");
+        final List<UUID> destinatarios = List.of(USUARIO);
+        assertThrows(NotificacionNoEntregableException.class,
+                () -> providerBlanco.resolver(Notificacion.TIPO_VERIFICACION_CORREO, destinatarios));
+
+        final VerificacionCorreoMarcadorProvider providerNulo = provider(repositorioOk(), null);
+        assertThrows(NotificacionNoEntregableException.class,
+                () -> providerNulo.resolver(Notificacion.TIPO_VERIFICACION_CORREO, destinatarios));
         assertTrue(hashes.isEmpty());
     }
 
     @Test
-    void BE_M02_un_correo_ya_verificado_es_un_fallo_permanente() throws Exception {
+    void BE_M02_un_correo_ya_verificado_es_un_fallo_permanente() {
         final TokenVerificacionCorreoRepository yaVerificado = (idUsuario, hash) -> {
             throw new ConflictException("VCE_005", "El correo de este estudiante ya fue verificado.");
         };
 
-        assertThrows(NotificacionNoEntregableException.class, () -> provider(yaVerificado, PLATFORM_URL)
-                .resolver(Notificacion.TIPO_VERIFICACION_CORREO, List.of(USUARIO)));
+        final VerificacionCorreoMarcadorProvider provider = provider(yaVerificado, PLATFORM_URL);
+        final List<UUID> destinatarios = List.of(USUARIO);
+        assertThrows(NotificacionNoEntregableException.class,
+                () -> provider.resolver(Notificacion.TIPO_VERIFICACION_CORREO, destinatarios));
     }
 
     @Test
-    void BE_M02_un_usuario_inexistente_o_inactivo_es_un_fallo_permanente() throws Exception {
+    void BE_M02_un_usuario_inexistente_o_inactivo_es_un_fallo_permanente() {
         final TokenVerificacionCorreoRepository inexistente = (idUsuario, hash) -> {
             throw new ResourceNotFoundException("El usuario no existe o no esta activo.");
         };
 
-        assertThrows(NotificacionNoEntregableException.class, () -> provider(inexistente, PLATFORM_URL)
-                .resolver(Notificacion.TIPO_VERIFICACION_CORREO, List.of(USUARIO)));
+        final VerificacionCorreoMarcadorProvider provider = provider(inexistente, PLATFORM_URL);
+        final List<UUID> destinatarios = List.of(USUARIO);
+        assertThrows(NotificacionNoEntregableException.class,
+                () -> provider.resolver(Notificacion.TIPO_VERIFICACION_CORREO, destinatarios));
     }
 
     @Test
-    void BE_M03_un_fallo_tecnico_de_la_base_de_datos_se_propaga_para_reintentar() throws Exception {
+    void BE_M03_un_fallo_tecnico_de_la_base_de_datos_se_propaga_para_reintentar() {
         final TokenVerificacionCorreoRepository caido = (idUsuario, hash) -> {
             throw new IllegalStateException("SQL Server no disponible.");
         };
 
-        final IllegalStateException exception = assertThrows(IllegalStateException.class, () -> provider(caido, PLATFORM_URL)
-                .resolver(Notificacion.TIPO_VERIFICACION_CORREO, List.of(USUARIO)));
+        final VerificacionCorreoMarcadorProvider provider = provider(caido, PLATFORM_URL);
+        final List<UUID> destinatarios = List.of(USUARIO);
+        final IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> provider.resolver(Notificacion.TIPO_VERIFICACION_CORREO, destinatarios));
         assertEquals("SQL Server no disponible.", exception.getMessage());
     }
 
     @Test
-    void los_colaboradores_son_obligatorios() throws Exception {
+    void los_colaboradores_son_obligatorios() {
+        final SecureRandom random = new SecureRandom();
         assertThrows(NullPointerException.class,
-                () -> new VerificacionCorreoMarcadorProvider(null, PLATFORM_URL, new SecureRandom()));
+                () -> new VerificacionCorreoMarcadorProvider(null, PLATFORM_URL, random));
+
+        final TokenVerificacionCorreoRepository repo = repositorioOk();
         assertThrows(NullPointerException.class,
-                () -> new VerificacionCorreoMarcadorProvider(repositorioOk(), PLATFORM_URL, null));
+                () -> new VerificacionCorreoMarcadorProvider(repo, PLATFORM_URL, null));
     }
 }

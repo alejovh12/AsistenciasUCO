@@ -97,7 +97,7 @@ public class JakartaMailCorreoTransport implements CorreoTransport {
                     || red instanceof java.net.SocketException
                     || red instanceof java.net.SocketTimeoutException
                     || red instanceof java.io.InterruptedIOException
-                    || "MailConnectException".equals(red.getClass().getSimpleName())) {
+                    || red instanceof org.eclipse.angus.mail.util.MailConnectException) {
                 return false;
             }
         }

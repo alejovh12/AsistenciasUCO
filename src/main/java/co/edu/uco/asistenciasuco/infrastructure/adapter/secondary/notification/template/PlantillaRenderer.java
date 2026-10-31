@@ -26,7 +26,7 @@ public class PlantillaRenderer {
     private static final String METRIC_RENDER_TOTAL = "notification.template.render.total";
     private static final int MAX_SUBJECT_LENGTH = 200;
     private static final String MARCADOR_ENLACE = "enlace";
-    private static final Pattern TOKEN_PATTERN = Pattern.compile("\\{([a-zA-Z][a-zA-Z0-9_]*)\\}");
+    private static final Pattern TOKEN_PATTERN = Pattern.compile("\\{([a-zA-Z]\\w*)\\}");
 
     private final PlantillaNotificacionRepository repository;
     private final PlantillaPorDefectoCatalogo catalogoDefecto;
@@ -95,7 +95,7 @@ public class PlantillaRenderer {
         }
         try {
             return repository.consultarActiva(tipo, DEFAULT_IDIOMA);
-        } catch (final RuntimeException ex) {
+        } catch (final RuntimeException _) {
             LOGGER.warn("No fue posible consultar plantilla activa en BD para tipo={}. Se usara respaldo.", tipo);
             return Optional.empty();
         }
@@ -177,7 +177,7 @@ public class PlantillaRenderer {
 
     /**
      * El marcador {@code enlace} (valor emitido por el sistema, nunca por una persona) se muestra como vinculo solo si es
-     * una URL http o https; cualquier otro valor, y todo otro marcador, se escapa como texto.
+     * una URL http o https; cualquier otro valor, y cualquier otro marcador, se escapa como texto.
      */
     private static String renderizarValorHtml(final String nombre, final String valor) {
         final String texto = valor == null ? "" : valor;

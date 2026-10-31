@@ -17,7 +17,6 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.t
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.VerificacionCorreoMarcadorProvider;
 import co.edu.uco.asistenciasuco.infrastructure.config.adapters.notification.condition.OutboxAdapterCondition;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.SmtpNotificationProperties;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.persistence.EntityManager;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

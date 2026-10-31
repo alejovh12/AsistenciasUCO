@@ -491,7 +491,7 @@ class NotificacionSmtpGreenMailIT {
     @Test
     @Order(6)
     @DisplayName("IT-E06: Ningún destinatario con correo activo -> fila FALLIDA_DEFINITIVA sin reintentos (intentos=1)")
-    void ITE06_ningun_destinatario_con_correo_marca_fallida_definitiva() throws Exception {
+    void ITE06_ningun_destinatario_con_correo_marca_fallida_definitiva() {
         UUID uInactivo = crearUsuarioPrueba("inactivo.ite06@uco.edu.co", true, false);
 
         outboxNotificacionAdapter.notificar(new Notificacion(
@@ -626,7 +626,7 @@ class NotificacionSmtpGreenMailIT {
                 .map(m -> {
                     try {
                         return m.getSubject();
-                    } catch (Exception e) {
+                    } catch (Exception _) {
                         return "";
                     }
                 })

@@ -1,7 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.outbox;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notificacion;
-import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.LogNotificacionAdapter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.composite.CompositeNotificacionAdapter;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.OutboxNotificationProperties;
@@ -39,7 +38,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 
 import static org.awaitility.Awaitility.await;
 

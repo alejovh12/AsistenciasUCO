@@ -83,12 +83,13 @@ class ContactoDestinatarioJpaRepositoryTest {
     @DisplayName("BE-C02: error del SP (exitoso=0) o PersistenceException lanza DatabaseOperationException")
     void BE_C02_error_sp_o_jpa_lanza_excepcion_transitoria() {
         final StoredProcedureQuery spError = mockSpQuery();
-        final Object[] canonicalFail = new Object[]{UUID.randomUUID(), "Datos invalidos", "DBCODE=NTF_001|Invalido", Boolean.FALSE};
+        final Object[] canonicalFail = {UUID.randomUUID(), "Datos invalidos", "DBCODE=NTF_001|Invalido", Boolean.FALSE};
         when(spError.execute()).thenReturn(true);
         when(spError.getResultList()).thenReturn(List.of((Object) canonicalFail));
 
+        final List<UUID> ids = List.of(UUID.randomUUID());
         assertThrows(DatabaseOperationException.class,
-                () -> repository.consultarContactos(List.of(UUID.randomUUID())));
+                () -> repository.consultarContactos(ids));
 
         // Caso sin segundo result set (hasMoreResults = false) con correlationId en contexto
         final UUID ctxCorr = UUID.randomUUID();
@@ -100,7 +101,8 @@ class ContactoDestinatarioJpaRepositoryTest {
             when(spVacio.setParameter(anyString(), any())).thenReturn(spVacio);
             when(spVacio.execute()).thenReturn(true);
             when(spVacio.hasMoreResults()).thenReturn(false);
-            when(spVacio.getResultList()).thenReturn(List.of((Object) new Object[]{ctxCorr, "OK", "DBCODE=GEN_003|OK", 1}));
+            final Object[] okFila = {ctxCorr, "OK", "DBCODE=GEN_003|OK", 1};
+            when(spVacio.getResultList()).thenReturn(List.of((Object) okFila));
 
             assertTrue(repository.consultarContactos(List.of(UUID.randomUUID())).isEmpty());
 

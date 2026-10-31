@@ -22,6 +22,8 @@ import java.util.UUID;
 public class OutboxNotificacionAdapter implements NotificacionPort {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OutboxNotificacionAdapter.class);
+    private static final String TAG_PROVIDER = "provider";
+    private static final String TAG_OUTCOME = "outcome";
 
     private final NotificacionOutboxRepository repository;
     private final NotificacionOutboxDispatcher dispatcher;
@@ -43,16 +45,16 @@ public class OutboxNotificacionAdapter implements NotificacionPort {
         Objects.requireNonNull(meterRegistry, "MeterRegistry es obligatorio.");
 
         this.acceptedCounter = Counter.builder("notification.publish.total")
-                .tag("provider", "outbox")
-                .tag("outcome", "accepted")
+                .tag(TAG_PROVIDER, "outbox")
+                .tag(TAG_OUTCOME, "accepted")
                 .register(meterRegistry);
         this.skippedCounter = Counter.builder("notification.publish.total")
-                .tag("provider", "outbox")
-                .tag("outcome", "skipped")
+                .tag(TAG_PROVIDER, "outbox")
+                .tag(TAG_OUTCOME, "skipped")
                 .register(meterRegistry);
         this.failedCounter = Counter.builder("notification.publish.total")
-                .tag("provider", "outbox")
-                .tag("outcome", "failed")
+                .tag(TAG_PROVIDER, "outbox")
+                .tag(TAG_OUTCOME, "failed")
                 .register(meterRegistry);
     }
 

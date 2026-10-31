@@ -36,8 +36,7 @@ public class TokenVerificacionCorreoJpaRepository implements TokenVerificacionCo
         Objects.requireNonNull(tokenHash, "tokenHash es obligatorio.");
         final UUID correlacion = CorrelationIdContext.get() != null ? CorrelationIdContext.get() : UUID.randomUUID();
 
-        final EntityManagerFactory fabrica = entityManager.getEntityManagerFactory();
-        final EntityManager dedicado = fabrica != null ? fabrica.createEntityManager() : null;
+        final EntityManager dedicado = abrirEntityManagerDedicado();
         final EntityManager em = dedicado != null ? dedicado : entityManager;
         try {
             final StoredProcedureQuery sp = em.createStoredProcedureQuery(SP_NAME);
@@ -57,5 +56,10 @@ public class TokenVerificacionCorreoJpaRepository implements TokenVerificacionCo
                 dedicado.close();
             }
         }
+    }
+
+    private EntityManager abrirEntityManagerDedicado() {
+        final EntityManagerFactory fabrica = entityManager.getEntityManagerFactory();
+        return fabrica != null ? fabrica.createEntityManager() : null;
     }
 }

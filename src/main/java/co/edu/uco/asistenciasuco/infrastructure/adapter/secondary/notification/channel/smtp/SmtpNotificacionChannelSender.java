@@ -267,7 +267,7 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
             if (c == null) {
                 continue;
             }
-            if (!exentoDeConfirmacion && properties.requireConfirmedEmail() && !c.correoConfirmado()) {
+            if (!exentoDeConfirmacion && Boolean.TRUE.equals(properties.requireConfirmedEmail()) && !c.correoConfirmado()) {
                 continue;
             }
             final String correo = c.correo();
