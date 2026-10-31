@@ -9,6 +9,7 @@ import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoError
 import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.exception.TipoIdentificacionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
+import co.edu.uco.asistenciasuco.application.features.usuario.exception.VerificacionCorreoErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.ApplicationException;
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
@@ -38,6 +39,7 @@ public final class DbExceptionTranslator {
     );
     private static final Set<ErrorDefinition> NOT_FOUND_CODES = Set.of(
             UsuarioErrorCode.ERR_USUARIO_NO_EXISTE,
+            VerificacionCorreoErrorCode.VCE_007,
             EstudianteErrorCode.ERR_ESTUDIANTE_NO_EXISTE,
             DocenteErrorCode.ERR_DOCENTE_NO_EXISTE,
             DocenteErrorCode.ERR_DOCENTE_NO_VINCULADO_PROGRAMA,
@@ -52,6 +54,7 @@ public final class DbExceptionTranslator {
             UsuarioErrorCode.ERR_UNICIDAD_CORREO,
             UsuarioErrorCode.ERR_UNICIDAD_DOCUMENTO,
             UsuarioErrorCode.ERR_IDENTIDAD_USUARIO_CONFLICTO,
+            VerificacionCorreoErrorCode.VCE_005,
             GrupoErrorCode.ERR_CUPO_SUPERADO,
             GrupoErrorCode.ERR_CRUCE_HORARIO_ESTUDIANTE,
             GrupoErrorCode.ERR_CRUCE_HORARIO_DOCENTE,
@@ -72,6 +75,8 @@ public final class DbExceptionTranslator {
     private static final Set<ErrorDefinition> VALIDATION_CODES = Set.of(
             UsuarioErrorCode.ERR_NOMBRE_PERSONA_INVALIDO,
             UsuarioErrorCode.ERR_PASSWORD_POLITICA_INVALIDA,
+            VerificacionCorreoErrorCode.VCE_001,
+            VerificacionCorreoErrorCode.VCE_002,
             AsistenciaErrorCode.ERR_ESTADO_ASISTENCIA_INVALIDO,
             DocenteErrorCode.ERR_TIPO_VINCULACION_INVALIDO,
             DocenteErrorCode.ERR_MODO_VINCULACION_INVALIDO,
