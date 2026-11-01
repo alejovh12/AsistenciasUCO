@@ -91,6 +91,8 @@ BE-C01 invoca todos los destinos en orden; BE-C02 un destino lanza `RuntimeExcep
 ### 2.4 `LogNotificacionChannelSender`
 BE-S01 registra `tipo`, `rol:idUsuario`, claves de `datos` salvo `motivo`, `id`; BE-S02 captura los logs y verifica que **no** aparecen `asunto`, `mensaje`, nombres ni correos; BE-S03 `null` → `NullPointerException`.
 
+Enmienda 2026-10-31: para los adaptadores log, se sustituye la expectativa de registrar claves de `datos` por la omisión de todas sus claves y valores, incluidos campos desconocidos. Se mantienen y amplían los negativos de privacidad; ver [test plan del fix](../FIX-log-privacidad-notificaciones/TEST_PLAN.md).
+
 ### 2.5 Properties
 BE-P01 `NotificationAdapterProperties`: `provider` ausente → error; valor desconocido (`kafka`) → no enlaza; `composite` con 0/1 destino, repetidos o `composite` anidado → error con mensaje que nombra la propiedad; `composite` válido (`log,outbox`) en cualquier orden. BE-P02 `OutboxNotificationProperties`: cada rango fuera de límite (batch 0/501, lease 4s, max-attempts 0/21, backoff-max < base, retention 0, etc.) → error con el nombre de la clave; valores por defecto conformes a CONTRACT §3.1; duraciones `60s`/`15m`/`6h` se interpretan correctamente.
 
