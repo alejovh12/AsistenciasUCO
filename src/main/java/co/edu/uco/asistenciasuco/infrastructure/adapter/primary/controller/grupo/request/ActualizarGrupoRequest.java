@@ -13,6 +13,7 @@ public final class ActualizarGrupoRequest {
     private List<String> dias;
     private String horaInicio;
     private String horaFin;
+    private List<FranjaHorarioRequest> franjas;
 
     public Integer getCodigo() {
         return codigo;
@@ -80,5 +81,13 @@ public final class ActualizarGrupoRequest {
 
     public void setHoraFin(final String horaFin) {
         this.horaFin = horaFin;
+    }
+
+    public List<FranjaHorarioRequest> getFranjas() {
+        return franjas;
+    }
+
+    public void setFranjas(final List<FranjaHorarioRequest> franjas) {
+        this.franjas = franjas;
     }
 }

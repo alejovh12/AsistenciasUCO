@@ -16,6 +16,7 @@ public final class CrearGrupoRequest {
     private List<String> dias;
     private String horaInicio;
     private String horaFin;
+    private List<FranjaHorarioRequest> franjas;
     private Boolean generarSesionesAutomaticas;
     private Boolean crearSesionesAutomaticamente;
 
@@ -125,5 +126,13 @@ public final class CrearGrupoRequest {
 
     public void setCrearSesionesAutomaticamente(final Boolean crearSesionesAutomaticamente) {
         this.crearSesionesAutomaticamente = crearSesionesAutomaticamente;
+    }
+
+    public List<FranjaHorarioRequest> getFranjas() {
+        return franjas;
+    }
+
+    public void setFranjas(final List<FranjaHorarioRequest> franjas) {
+        this.franjas = franjas;
     }
 }

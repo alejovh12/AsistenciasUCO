@@ -35,7 +35,7 @@ class ConsultarGruposDecanoUseCaseImplTest {
 
     private static GrupoRepositoryProjection grupo(final String codigo) {
         return new GrupoRepositoryProjection(UUID.randomUUID(), codigo, "Grupo " + codigo, UUID.randomUUID(), "Algebra",
-                UUID.randomUUID(), 35, 20, 15, true, LocalDate.of(2026, 1, 15), LocalDate.of(2026, 6, 15));
+                UUID.randomUUID(), 35, 20, 15, true, LocalDate.of(2026, 1, 15), LocalDate.of(2026, 6, 15), List.of());
     }
 
     @Test

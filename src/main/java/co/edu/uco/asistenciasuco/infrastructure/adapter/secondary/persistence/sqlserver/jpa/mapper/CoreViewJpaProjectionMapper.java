@@ -7,6 +7,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Date;
+import java.util.List;
 
 public final class CoreViewJpaProjectionMapper {
     private CoreViewJpaProjectionMapper() { }
@@ -21,7 +22,12 @@ public final class CoreViewJpaProjectionMapper {
         return new GrupoRepositoryProjection(row.id(), textOrNull(row.codigo()), row.nombre(), row.idAsignatura(),
                 row.nombreAsignatura(), row.idDocente(), row.capacidadMaximaPermitida(), row.estudiantesActivos(),
                 row.cuposDisponibles(), Integer.valueOf(1).equals(row.grupoEstaHablitado()),
-                row.fechaInicioPeriodoAcademico(), row.fechaFinPeriodoAcademico());
+                row.fechaInicioPeriodoAcademico(), row.fechaFinPeriodoAcademico(), List.of());
+    }
+
+    public static FranjaHorarioRepositoryProjection toFranjaHorario(final UvHorarioEntity row) {
+        return new FranjaHorarioRepositoryProjection(row.idGrupo(), row.codigoDia(), row.nombreDia(),
+                row.horaInicio(), row.horaFin());
     }
 
     public static EstudianteGrupoRepositoryProjection toEstudianteGrupo(final EstudianteGrupoQueryRow row) {

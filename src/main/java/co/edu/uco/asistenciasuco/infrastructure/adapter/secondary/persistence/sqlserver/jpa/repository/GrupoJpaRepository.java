@@ -2,10 +2,12 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ActualizarGrupoRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.CrearGrupoRepositoryDTO;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.FranjaHorarioRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarEstudianteRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoFacultadQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.EstudianteGrupoRepositoryProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.FranjaHorarioRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.GrupoCommandRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.GrupoRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.RegistrarEstudianteRepositoryProjection;
@@ -14,11 +16,16 @@ import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.mapper.CoreViewJpaProjectionMapper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.projection.EstudianteGrupoQueryRow;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvGrupoEntity;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvHorarioEntity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.JpaProcedureExecutor;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.ProcedureResult;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import jakarta.persistence.EntityManager;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +33,8 @@ import java.util.Objects;
 import java.util.UUID;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.support.TransactionOperations;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 @Repository
 public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQueryPort {
@@ -95,6 +104,27 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
     static final String OP_CREAR_GRUPO = "crearGrupo";
     static final String OP_ACTUALIZAR_GRUPO = "actualizarGrupo";
     static final String OP_REGISTRAR_ESTUDIANTE = "registrarEstudianteEnGrupo";
+    static final String OP_GUARDAR_HORARIOS = "guardarHorariosGrupo";
+
+    // F1: horario semanal del grupo. Se ejecuta en la MISMA transaccion que crear/actualizar grupo (si falla, nada queda).
+    static final String SQL_GUARDAR_HORARIOS = """
+            EXEC dbo.usp_guardar_horarios_grupo
+                 @idGrupo = :idGrupo,
+                 @horariosJSON = :horariosJSON,
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
+            """;
+    static final String HQL_HORARIOS_DE_GRUPOS = """
+            select h
+            from UvHorarioEntity h
+            where h.idGrupo in :idsGrupo
+            order by h.idGrupo, h.codigoDia, h.horaInicio
+            """;
+
+    private static final ObjectMapper OBJECT_MAPPER = JsonMapper.builder().build();
+    private static final DateTimeFormatter HORA = DateTimeFormatter.ofPattern("HH:mm");
+    private static final List<String> ORDEN_DIAS = List.of("LU", "MA", "MI", "JU", "VI", "SA", "DO");
+    private static final int MAX_PARAMETROS_IN = 1000;
 
     private final EntityManager entityManager;
     private final TransactionOperations transactionOperations;
@@ -115,15 +145,21 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
     @Override
     public GrupoCommandRepositoryProjection crearGrupo(final CrearGrupoRepositoryDTO dto) {
         require(dto, "El DTO para crear grupo es obligatorio.");
-        return transactionOperations.execute(status -> new GrupoCommandRepositoryProjection(
-                dto.idGrupo(), ejecutarCrearGrupo(dto).getMensajeUsuarioResultado()));
+        return transactionOperations.execute(status -> {
+            final String mensaje = ejecutarCrearGrupo(dto).getMensajeUsuarioResultado();
+            guardarHorariosSiCorresponde(dto.idGrupo(), dto.franjas(), dto.usuarioEjecutor());
+            return new GrupoCommandRepositoryProjection(dto.idGrupo(), mensaje);
+        });
     }
 
     @Override
     public GrupoCommandRepositoryProjection actualizarGrupo(final ActualizarGrupoRepositoryDTO dto) {
         require(dto, "El DTO para actualizar grupo es obligatorio.");
-        return transactionOperations.execute(status -> new GrupoCommandRepositoryProjection(
-                dto.idGrupo(), ejecutarActualizarGrupo(dto).getMensajeUsuarioResultado()));
+        return transactionOperations.execute(status -> {
+            final String mensaje = ejecutarActualizarGrupo(dto).getMensajeUsuarioResultado();
+            guardarHorariosSiCorresponde(dto.idGrupo(), dto.franjas(), dto.usuarioEjecutor());
+            return new GrupoCommandRepositoryProjection(dto.idGrupo(), mensaje);
+        });
     }
 
     @Override
@@ -140,8 +176,8 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
         return JpaQueryExecutor.execute(
                 "consultarGrupos",
                 "No fue posible consultar los grupos.",
-                () -> entityManager.createQuery(HQL_GRUPOS, UvGrupoEntity.class).getResultList().stream()
-                        .map(CoreViewJpaProjectionMapper::toGrupo).toList()
+                () -> conHorarios(entityManager.createQuery(HQL_GRUPOS, UvGrupoEntity.class).getResultList().stream()
+                        .map(CoreViewJpaProjectionMapper::toGrupo).toList())
         );
     }
 
@@ -218,6 +254,62 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
         parametros.put("idTipoIdIdentificacion", dto.getTipoIdentificacionId());
 
         return procedureExecutor.execute(OP_REGISTRAR_ESTUDIANTE, SQL_REGISTRAR_ESTUDIANTE, parametros, correlationId);
+    }
+
+    // F1: guarda el horario semanal solo si el comando trae franjas (null = el horario no cambia).
+    private void guardarHorariosSiCorresponde(
+            final UUID idGrupo,
+            final List<FranjaHorarioRepositoryDTO> franjas,
+            final UUID usuarioEjecutor
+    ) {
+        if (franjas == null) {
+            return;
+        }
+        final UUID correlationId = CorrelationIdContext.require();
+        final Map<String, Object> parametros = new LinkedHashMap<>();
+        parametros.put("idGrupo", idGrupo);
+        parametros.put("horariosJSON", serializarFranjas(franjas));
+        parametros.put("idCorrelacion", correlationId);
+        parametros.put("idUsuarioEjecutor", usuarioEjecutor);
+        procedureExecutor.execute(OP_GUARDAR_HORARIOS, SQL_GUARDAR_HORARIOS, parametros, correlationId);
+    }
+
+    private static String serializarFranjas(final List<FranjaHorarioRepositoryDTO> franjas) {
+        try {
+            final List<Map<String, String>> items = new ArrayList<>();
+            for (final FranjaHorarioRepositoryDTO franja : franjas) {
+                final Map<String, String> item = new LinkedHashMap<>();
+                item.put("codigoDia", franja.codigoDia());
+                item.put("horaInicio", franja.horaInicio() == null ? null : franja.horaInicio().format(HORA));
+                item.put("horaFin", franja.horaFin() == null ? null : franja.horaFin().format(HORA));
+                items.add(item);
+            }
+            return OBJECT_MAPPER.writeValueAsString(items);
+        } catch (RuntimeException exception) {
+            throw new CrosscuttingException("No fue posible serializar el horario del grupo.", exception);
+        }
+    }
+
+    // F1: agrega a cada grupo las franjas de su horario semanal, ordenadas de lunes a domingo y por hora.
+    private List<GrupoRepositoryProjection> conHorarios(final List<GrupoRepositoryProjection> grupos) {
+        if (grupos.isEmpty()) {
+            return grupos;
+        }
+        final Map<UUID, List<FranjaHorarioRepositoryProjection>> porGrupo = new HashMap<>();
+        final List<UUID> ids = grupos.stream().map(GrupoRepositoryProjection::getId).toList();
+        for (int desde = 0; desde < ids.size(); desde += MAX_PARAMETROS_IN) {
+            entityManager.createQuery(HQL_HORARIOS_DE_GRUPOS, UvHorarioEntity.class)
+                    .setParameter("idsGrupo", ids.subList(desde, Math.min(desde + MAX_PARAMETROS_IN, ids.size())))
+                    .getResultList().stream()
+                    .map(CoreViewJpaProjectionMapper::toFranjaHorario)
+                    .forEach(franja -> porGrupo.computeIfAbsent(franja.idGrupo(), id -> new ArrayList<>()).add(franja));
+        }
+        final Comparator<FranjaHorarioRepositoryProjection> orden = Comparator
+                .comparingInt((FranjaHorarioRepositoryProjection franja) -> ORDEN_DIAS.indexOf(franja.codigoDia()))
+                .thenComparing(FranjaHorarioRepositoryProjection::horaInicio);
+        return grupos.stream()
+                .map(grupo -> grupo.conFranjas(porGrupo.getOrDefault(grupo.getId(), List.of()).stream().sorted(orden).toList()))
+                .toList();
     }
 
     private static void require(final Object value, final String message) {

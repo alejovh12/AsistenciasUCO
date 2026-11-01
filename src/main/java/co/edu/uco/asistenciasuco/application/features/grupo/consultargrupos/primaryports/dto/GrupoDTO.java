@@ -1,6 +1,8 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.consultargrupos.primaryports.dto;
 
+import co.edu.uco.asistenciasuco.application.features.grupo.common.dto.FranjaHorarioDTO;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -20,6 +22,7 @@ public final class GrupoDTO {
     private boolean grupoHabilitado;
     private LocalDate fechaInicioPeriodoAcademico;
     private LocalDate fechaFinPeriodoAcademico;
+    private List<FranjaHorarioDTO> franjas = List.of();
 
     public GrupoDTO() {
         super();
@@ -37,7 +40,8 @@ public final class GrupoDTO {
             final Integer cuposDisponibles,
             final boolean grupoHabilitado,
             final LocalDate fechaInicioPeriodoAcademico,
-            final LocalDate fechaFinPeriodoAcademico
+            final LocalDate fechaFinPeriodoAcademico,
+            final List<FranjaHorarioDTO> franjas
     ) {
         this.id = id;
         this.codigo = codigo;
@@ -51,6 +55,7 @@ public final class GrupoDTO {
         this.grupoHabilitado = grupoHabilitado;
         this.fechaInicioPeriodoAcademico = fechaInicioPeriodoAcademico;
         this.fechaFinPeriodoAcademico = fechaFinPeriodoAcademico;
+        this.franjas = franjas == null ? List.of() : List.copyOf(franjas);
     }
 
     public UUID getId() {
@@ -99,5 +104,9 @@ public final class GrupoDTO {
 
     public LocalDate getFechaFinPeriodoAcademico() {
         return fechaFinPeriodoAcademico;
+    }
+
+    public List<FranjaHorarioDTO> getFranjas() {
+        return franjas;
     }
 }

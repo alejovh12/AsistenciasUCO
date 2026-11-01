@@ -22,7 +22,7 @@ public final class CrearGrupoUseCaseImpl implements CrearGrupoUseCase {
     public CrearGrupoResultadoEntity execute(final CrearGrupoDomain domain) {
         if (domain.generarSesionesAutomaticas()) {
             throw new FeatureUnavailableException(
-                    "La generacion automatica de sesiones requiere que la DB publique primero la gestion de horario del grupo."
+                    "La generacion automatica de sesiones al crear el grupo aun no esta disponible (fase F2: precarga de sesiones)."
             );
         }
         final UUID idGrupo = UUID.randomUUID();

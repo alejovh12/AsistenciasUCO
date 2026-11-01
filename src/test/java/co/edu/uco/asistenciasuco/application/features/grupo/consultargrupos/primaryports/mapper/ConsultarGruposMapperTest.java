@@ -23,7 +23,7 @@ class ConsultarGruposMapperTest {
         final UUID id = UUID.randomUUID();
         final GrupoEntity entity = new GrupoEntity(
                 id, "G1", "Grupo 1", UUID.randomUUID(), "Backend", UUID.randomUUID(),
-                30, 12, 18, true, LocalDate.of(2026, 1, 20), LocalDate.of(2026, 5, 30));
+                30, 12, 18, true, LocalDate.of(2026, 1, 20), LocalDate.of(2026, 5, 30), java.util.List.of());
 
         final List<GrupoDTO> resultado = ConsultarGruposMapper.toDTOs(List.of(entity));
 

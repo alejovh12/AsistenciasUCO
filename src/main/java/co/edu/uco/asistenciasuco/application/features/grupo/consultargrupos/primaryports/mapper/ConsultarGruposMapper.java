@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.consultargrupos.primaryports.mapper;
 
+import co.edu.uco.asistenciasuco.application.features.grupo.common.mapper.FranjaHorarioMapper;
 import co.edu.uco.asistenciasuco.application.features.grupo.consultargrupos.primaryports.dto.GrupoDTO;
 import co.edu.uco.asistenciasuco.application.features.grupo.consultargrupos.usecase.entity.GrupoEntity;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
@@ -45,7 +46,8 @@ public final class ConsultarGruposMapper {
                 entity.getCuposDisponibles(),
                 entity.isGrupoHabilitado(),
                 entity.getFechaInicioPeriodoAcademico(),
-                entity.getFechaFinPeriodoAcademico()
+                entity.getFechaFinPeriodoAcademico(),
+                FranjaHorarioMapper.toDTOs(entity.getFranjas())
         );
     }
 }

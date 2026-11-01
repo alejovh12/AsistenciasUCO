@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.usecase.mapper;
 
+import co.edu.uco.asistenciasuco.application.features.grupo.common.mapper.FranjaHorarioMapper;
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.usecase.domain.ActualizarGrupoDomain;
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.usecase.entity.ActualizarGrupoResultadoEntity;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ActualizarGrupoRepositoryDTO;
@@ -17,7 +18,8 @@ public final class ActualizarGrupoRepositoryMapper {
                 domain.nombre(),
                 domain.idDocente(),
                 domain.cupoMaximo(),
-                domain.usuarioEjecutor()
+                domain.usuarioEjecutor(),
+                FranjaHorarioMapper.toRepositoryDTOs(domain.franjas())
         );
     }
 

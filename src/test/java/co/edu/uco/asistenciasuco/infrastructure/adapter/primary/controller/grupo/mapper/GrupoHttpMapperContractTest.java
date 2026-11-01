@@ -1,18 +1,21 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo.mapper;
 
-import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.primaryports.dto.ActualizarGrupoDTO;
+import co.edu.uco.asistenciasuco.application.features.grupo.common.dto.FranjaHorarioDTO;
 import co.edu.uco.asistenciasuco.application.features.grupo.creargrupo.primaryports.dto.CrearGrupoDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo.request.ActualizarGrupoRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo.request.CrearGrupoRequest;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo.request.FranjaHorarioRequest;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -99,28 +102,64 @@ class GrupoHttpMapperContractTest {
     }
 
     @Test
-    void scheduleFieldsAreParsedButRejectedUntilPublicDbCommandExists() {
+    void withoutScheduleFieldsTheScheduleIsNotChanged() {
+        assertNull(GrupoHttpMapper.toApplicationDTO(basicCreate(), USUARIO_EJECUTOR).franjas());
+        assertNull(GrupoHttpMapper.toApplicationDTO(GROUP, new ActualizarGrupoRequest(), USUARIO_EJECUTOR).franjas());
+    }
+
+    @Test
+    void franjasAreNormalizedToDayCodeAndHoursMinutes() {
+        final CrearGrupoRequest create = basicCreate();
+        create.setFranjas(List.of(franja("Miércoles", "08:00", "10:00:00"), franja("lu", "14:00", "16:00")));
+
+        final List<FranjaHorarioDTO> franjas = GrupoHttpMapper.toApplicationDTO(create, USUARIO_EJECUTOR).franjas();
+
+        assertEquals(List.of(new FranjaHorarioDTO("MI", "08:00", "10:00"), new FranjaHorarioDTO("LU", "14:00", "16:00")),
+                franjas);
+    }
+
+    @Test
+    void legacyDaysWithSameHoursExpandIntoOneFranjaPerDay() {
+        final ActualizarGrupoRequest update = new ActualizarGrupoRequest();
+        update.setDias(List.of("Lunes", "MI"));
+        update.setHoraInicio("08:00");
+        update.setHoraFin("10:00");
+
+        assertEquals(List.of(new FranjaHorarioDTO("LU", "08:00", "10:00"), new FranjaHorarioDTO("MI", "08:00", "10:00")),
+                GrupoHttpMapper.toApplicationDTO(GROUP, update, USUARIO_EJECUTOR).franjas());
+    }
+
+    @Test
+    void invalidOrIncompleteScheduleIsRejectedBeforeTheUseCase() {
         final CrearGrupoRequest create = basicCreate();
         create.setHoraInicio("08:00");
-        assertThrows(FeatureUnavailableException.class,
-                () -> GrupoHttpMapper.toApplicationDTO(create, USUARIO_EJECUTOR));
-        create.setHoraInicio("25:00");
-        assertEquals("ERR_FECHA_HORA_INVALIDA",
+        assertEquals("ERR_CAMPO_OBLIGATORIO",
                 assertThrows(ValidationException.class,
                         () -> GrupoHttpMapper.toApplicationDTO(create, USUARIO_EJECUTOR)).getCode());
 
         final ActualizarGrupoRequest update = new ActualizarGrupoRequest();
-        update.setHoraFin("09:00:00");
-        assertThrows(FeatureUnavailableException.class,
-                () -> GrupoHttpMapper.toApplicationDTO(GROUP, update, USUARIO_EJECUTOR));
-        update.setHoraFin("24:00");
+        update.setFranjas(List.of(franja("LU", "25:00", "10:00")));
         assertEquals("ERR_FECHA_HORA_INVALIDA",
                 assertThrows(ValidationException.class,
                         () -> GrupoHttpMapper.toApplicationDTO(GROUP, update, USUARIO_EJECUTOR)).getCode());
-        update.setHoraFin(null);
-        update.setDias(java.util.List.of("LUNES"));
-        assertThrows(FeatureUnavailableException.class,
-                () -> GrupoHttpMapper.toApplicationDTO(GROUP, update, USUARIO_EJECUTOR));
+
+        update.setFranjas(java.util.Arrays.asList((FranjaHorarioRequest) null));
+        assertEquals("ERR_CAMPO_OBLIGATORIO",
+                assertThrows(ValidationException.class,
+                        () -> GrupoHttpMapper.toApplicationDTO(GROUP, update, USUARIO_EJECUTOR)).getCode());
+
+        update.setFranjas(List.of(franja(" ", "08:00", "10:00")));
+        assertEquals("ERR_CAMPO_OBLIGATORIO",
+                assertThrows(ValidationException.class,
+                        () -> GrupoHttpMapper.toApplicationDTO(GROUP, update, USUARIO_EJECUTOR)).getCode());
+    }
+
+    private static FranjaHorarioRequest franja(final String dia, final String horaInicio, final String horaFin) {
+        final FranjaHorarioRequest franja = new FranjaHorarioRequest();
+        franja.setDia(dia);
+        franja.setHoraInicio(horaInicio);
+        franja.setHoraFin(horaFin);
+        return franja;
     }
 
     private static CrearGrupoRequest basicCreate() {

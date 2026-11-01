@@ -1,6 +1,8 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.consultargrupos.usecase.entity;
 
+import co.edu.uco.asistenciasuco.application.features.grupo.common.domain.FranjaHorarioDomain;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -20,6 +22,7 @@ public final class GrupoEntity {
     private final boolean grupoHabilitado;
     private final LocalDate fechaInicioPeriodoAcademico;
     private final LocalDate fechaFinPeriodoAcademico;
+    private final List<FranjaHorarioDomain> franjas;
 
     public GrupoEntity(
             final UUID id,
@@ -33,7 +36,8 @@ public final class GrupoEntity {
             final Integer cuposDisponibles,
             final boolean grupoHabilitado,
             final LocalDate fechaInicioPeriodoAcademico,
-            final LocalDate fechaFinPeriodoAcademico
+            final LocalDate fechaFinPeriodoAcademico,
+            final List<FranjaHorarioDomain> franjas
     ) {
         this.id = id;
         this.codigo = codigo;
@@ -47,6 +51,7 @@ public final class GrupoEntity {
         this.grupoHabilitado = grupoHabilitado;
         this.fechaInicioPeriodoAcademico = fechaInicioPeriodoAcademico;
         this.fechaFinPeriodoAcademico = fechaFinPeriodoAcademico;
+        this.franjas = franjas == null ? List.of() : List.copyOf(franjas);
     }
 
     public UUID getId() {
@@ -95,5 +100,9 @@ public final class GrupoEntity {
 
     public LocalDate getFechaFinPeriodoAcademico() {
         return fechaFinPeriodoAcademico;
+    }
+
+    public List<FranjaHorarioDomain> getFranjas() {
+        return franjas;
     }
 }

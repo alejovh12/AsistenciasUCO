@@ -34,7 +34,7 @@ class DecanoGrupoControllerTest {
     @Test
     void lista_los_grupos_del_decano_usando_el_actor_autenticado() throws Exception {
         final GrupoDTO grupo = new GrupoDTO(UUID.randomUUID(), "G1", "Grupo 1", UUID.randomUUID(), "Algebra",
-                UUID.randomUUID(), 35, 20, 15, true, LocalDate.of(2026, 1, 15), LocalDate.of(2026, 6, 15));
+                UUID.randomUUID(), 35, 20, 15, true, LocalDate.of(2026, 1, 15), LocalDate.of(2026, 6, 15), List.of());
         when(inputPort.execute(ACTOR)).thenReturn(List.of(grupo));
 
         mvc.perform(get("/api/v1/decano/grupos"))

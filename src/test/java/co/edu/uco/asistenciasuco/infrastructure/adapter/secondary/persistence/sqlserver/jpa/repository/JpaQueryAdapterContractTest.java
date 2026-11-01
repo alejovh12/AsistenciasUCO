@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.transaction.support.TransactionOperations;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -218,6 +219,11 @@ class JpaQueryAdapterContractTest {
     void grupos_y_estudiantes_de_grupo() {
         query(GrupoJpaRepository.HQL_GRUPOS, UvGrupoEntity.class, List.of(HydratedViewRow.of(UvGrupoEntity.class,
                 Map.of("id", ID, "codigo", 508, "grupoEstaHablitado", 1))));
+        query(GrupoJpaRepository.HQL_HORARIOS_DE_GRUPOS, UvHorarioEntity.class, List.of(
+                HydratedViewRow.of(UvHorarioEntity.class, Map.of("id", OTHER, "idGrupo", ID, "codigoDia", "MI", "nombreDia",
+                        "Miercoles", "horaInicio", LocalTime.of(14, 0), "horaFin", LocalTime.of(16, 0))),
+                HydratedViewRow.of(UvHorarioEntity.class, Map.of("id", UUID.randomUUID(), "idGrupo", ID, "codigoDia", "LU",
+                        "nombreDia", "Lunes", "horaInicio", LocalTime.of(8, 0), "horaFin", LocalTime.of(10, 0)))));
         final TypedQuery<EstudianteGrupoQueryRow> estudiantes = query(GrupoJpaRepository.HQL_ESTUDIANTES,
                 EstudianteGrupoQueryRow.class,
                 List.of(new EstudianteGrupoQueryRow(ID, OTHER, null, "Ana", "ana@uco.edu.co", "A", "Activo")));
@@ -225,6 +231,9 @@ class JpaQueryAdapterContractTest {
                 new JpaProcedureExecutor(manager));
 
         assertTrue(repository.consultarGrupos().getFirst().isGrupoHabilitado());
+        // F1: el listado trae el horario semanal ordenado de lunes a domingo
+        assertEquals(List.of("LU", "MI"), repository.consultarGrupos().getFirst().getFranjas().stream()
+                .map(franja -> franja.codigoDia()).toList());
         assertNull(repository.consultarEstudiantesGrupo(OTHER).getFirst().documento());
         verify(estudiantes).setParameter("idGrupo", OTHER);
     }
