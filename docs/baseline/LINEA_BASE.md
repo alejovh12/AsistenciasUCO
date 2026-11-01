@@ -27,6 +27,8 @@ La vertical patrÃ³n es [asistencia en lote + consulta + realtime](GOLDEN_PATH_
 
 Ninguna fase autoriza automÃ¡ticamente la siguiente. No combinar JPA, negocio, contrato, realtime y cloud en una sola tarea sin lÃ­mites.
 
+Trabajo correctivo activo: [privacidad de logs de notificaciones](../work-items/FIX-log-privacidad-notificaciones/PLAN.md), acotado a los adaptadores log y su evidencia.
+
 ## Golden Path actual
 
 ```text

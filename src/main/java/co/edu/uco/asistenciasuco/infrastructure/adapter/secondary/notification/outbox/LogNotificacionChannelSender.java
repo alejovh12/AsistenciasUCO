@@ -24,13 +24,8 @@ public class LogNotificacionChannelSender implements NotificacionChannelSender {
         final String destinatarios = notificacion.destinatarios().stream()
                 .map(d -> d.rol() + ":" + d.idUsuario())
                 .collect(Collectors.joining(","));
-        final String datos = notificacion.datos().keySet().stream()
-                .filter(clave -> !"motivo".equals(clave))
-                .sorted()
-                .map(clave -> clave + "=" + notificacion.datos().get(clave))
-                .collect(Collectors.joining(","));
         return "OUTBOX_NOTIFICACION_DESPACHADA id=" + notificacion.id()
                 + " tipo=" + notificacion.tipo()
-                + " destinatarios=[" + destinatarios + "] datos=[" + datos + "]";
+                + " destinatarios=[" + destinatarios + "]";
     }
 }

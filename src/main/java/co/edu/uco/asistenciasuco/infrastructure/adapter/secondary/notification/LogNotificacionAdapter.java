@@ -27,12 +27,7 @@ public final class LogNotificacionAdapter implements NotificacionPort {
         final String destinatarios = notificacion.destinatarios().stream()
                 .map(destinatario -> destinatario.rol() + ":" + destinatario.idUsuario())
                 .collect(Collectors.joining(","));
-        final String datos = notificacion.datos().keySet().stream()
-                .filter(clave -> !"motivo".equals(clave))
-                .sorted()
-                .map(clave -> clave + "=" + notificacion.datos().get(clave))
-                .collect(Collectors.joining(","));
         return "NOTIFICACION_PENDIENTE_DE_CANAL tipo=" + notificacion.tipo()
-                + " destinatarios=[" + destinatarios + "] datos=[" + datos + "]";
+                + " destinatarios=[" + destinatarios + "]";
     }
 }

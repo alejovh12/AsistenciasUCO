@@ -38,7 +38,7 @@ class LogNotificacionChannelSenderTest {
         assertTrue(desc.contains(id.toString()));
         assertTrue(desc.contains("RETIRO_ESTUDIANTE_GRUPO"));
         assertTrue(desc.contains("ESTUDIANTE:" + usuarioId));
-        assertTrue(desc.contains("grupoId=123"));
+        assertFalse(desc.contains("grupoId=123"), "No debe registrar valores del mapa de datos");
         assertFalse(desc.contains("motivo="), "No debe registrar clave motivo");
         assertFalse(desc.contains("Asunto confidencial"), "No debe registrar asunto");
         assertFalse(desc.contains("Mensaje privado"), "No debe registrar mensaje");
