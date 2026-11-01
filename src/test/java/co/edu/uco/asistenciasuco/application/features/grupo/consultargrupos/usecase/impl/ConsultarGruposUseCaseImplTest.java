@@ -56,7 +56,8 @@ class ConsultarGruposUseCaseImplTest {
                         18,
                         true,
                         LocalDate.of(2026, 1, 20),
-                        LocalDate.of(2026, 5, 30)
+                        LocalDate.of(2026, 5, 30),
+                        List.of()
                 ));
             }
 

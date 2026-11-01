@@ -58,24 +58,6 @@ public final class GrupoDTO {
         this.franjas = franjas == null ? List.of() : List.copyOf(franjas);
     }
 
-    public GrupoDTO(
-            final UUID id,
-            final String codigo,
-            final String nombre,
-            final UUID idAsignatura,
-            final String nombreAsignatura,
-            final UUID idDocente,
-            final Integer capacidadMaximaPermitida,
-            final Integer estudiantesActivos,
-            final Integer cuposDisponibles,
-            final boolean grupoHabilitado,
-            final LocalDate fechaInicioPeriodoAcademico,
-            final LocalDate fechaFinPeriodoAcademico
-    ) {
-        this(id, codigo, nombre, idAsignatura, nombreAsignatura, idDocente, capacidadMaximaPermitida, estudiantesActivos,
-                cuposDisponibles, grupoHabilitado, fechaInicioPeriodoAcademico, fechaFinPeriodoAcademico, List.of());
-    }
-
     public UUID getId() {
         return id;
     }
