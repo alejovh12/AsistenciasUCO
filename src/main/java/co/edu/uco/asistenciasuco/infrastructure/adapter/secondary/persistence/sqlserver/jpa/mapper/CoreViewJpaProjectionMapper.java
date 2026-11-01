@@ -24,6 +24,11 @@ public final class CoreViewJpaProjectionMapper {
                 row.fechaInicioPeriodoAcademico(), row.fechaFinPeriodoAcademico());
     }
 
+    public static FranjaHorarioRepositoryProjection toFranjaHorario(final UvHorarioEntity row) {
+        return new FranjaHorarioRepositoryProjection(row.idGrupo(), row.codigoDia(), row.nombreDia(),
+                row.horaInicio(), row.horaFin());
+    }
+
     public static EstudianteGrupoRepositoryProjection toEstudianteGrupo(final EstudianteGrupoQueryRow row) {
         return new EstudianteGrupoRepositoryProjection(row.id(), row.idEstudiante(), textOrNull(row.documento()),
                 row.nombreCompleto(), row.correo(), row.codigoEstado(), row.nombreEstado());

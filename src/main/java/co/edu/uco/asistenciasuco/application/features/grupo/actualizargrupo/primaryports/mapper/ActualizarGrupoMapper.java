@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.primaryports.mapper;
 
+import co.edu.uco.asistenciasuco.application.features.grupo.common.mapper.FranjaHorarioMapper;
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.primaryports.dto.ActualizarGrupoDTO;
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.primaryports.dto.ActualizarGrupoResultadoDTO;
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.usecase.domain.ActualizarGrupoDomain;
@@ -17,7 +18,8 @@ public final class ActualizarGrupoMapper {
                 dto.nombre(),
                 dto.idDocente(),
                 dto.cupoMaximo(),
-                dto.usuarioEjecutor()
+                dto.usuarioEjecutor(),
+                FranjaHorarioMapper.toDomains(dto.franjas())
         );
     }
 

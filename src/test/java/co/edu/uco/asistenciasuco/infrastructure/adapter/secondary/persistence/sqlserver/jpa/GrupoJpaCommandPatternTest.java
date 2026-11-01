@@ -18,7 +18,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.transaction.support.TransactionOperations;
 
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.FranjaHorarioRepositoryDTO;
+import org.mockito.InOrder;
+
+import java.time.LocalTime;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -27,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -104,6 +110,28 @@ class GrupoJpaCommandPatternTest {
         verify(query).setParameter("idUsuarioEjecutor", EJECUTOR);
         verify(query).getResultList();
         assertEquals("Grupo creado.", result.mensajeUsuario());
+    }
+
+    @Test
+    void GRP_PAT_005_crear_grupo_con_franjas_guarda_el_horario_en_la_misma_transaccion() {
+        command.crearGrupo(new CrearGrupoRepositoryDTO(GRUPO, ASIGNATURA, PERIODO, 1, "Grupo A", DOCENTE, EJECUTOR,
+                List.of(new FranjaHorarioRepositoryDTO("LU", LocalTime.of(8, 0), LocalTime.of(10, 0)),
+                        new FranjaHorarioRepositoryDTO("MI", LocalTime.of(14, 0), LocalTime.of(16, 30)))));
+
+        final InOrder orden = inOrder(entityManager);
+        orden.verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_crear_grupo"));
+        orden.verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_guardar_horarios_grupo"));
+        verify(transactionOperations).execute(any());
+        verify(query).setParameter("horariosJSON",
+                "[{\"codigoDia\":\"LU\",\"horaInicio\":\"08:00\",\"horaFin\":\"10:00\"},"
+                        + "{\"codigoDia\":\"MI\",\"horaInicio\":\"14:00\",\"horaFin\":\"16:30\"}]");
+    }
+
+    @Test
+    void GRP_PAT_006_sin_franjas_no_toca_el_horario() {
+        command.actualizarGrupo(new ActualizarGrupoRepositoryDTO(GRUPO, 2, "Grupo B", DOCENTE, 30, EJECUTOR));
+
+        verify(entityManager, never()).createNativeQuery(contains("usp_guardar_horarios_grupo"));
     }
 
     @Test

@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.creargrupo.primaryports.mapper;
 
+import co.edu.uco.asistenciasuco.application.features.grupo.common.mapper.FranjaHorarioMapper;
 import co.edu.uco.asistenciasuco.application.features.grupo.creargrupo.primaryports.dto.CrearGrupoDTO;
 import co.edu.uco.asistenciasuco.application.features.grupo.creargrupo.usecase.domain.CrearGrupoDomain;
 import co.edu.uco.asistenciasuco.application.features.grupo.creargrupo.usecase.entity.CrearGrupoResultadoEntity;
@@ -18,7 +19,8 @@ public final class CrearGrupoMapper {
                 dto.nombre(),
                 dto.idDocente(),
                 Boolean.TRUE.equals(dto.generarSesionesAutomaticas()),
-                dto.usuarioEjecutor()
+                dto.usuarioEjecutor(),
+                FranjaHorarioMapper.toDomains(dto.franjas())
         );
     }
 

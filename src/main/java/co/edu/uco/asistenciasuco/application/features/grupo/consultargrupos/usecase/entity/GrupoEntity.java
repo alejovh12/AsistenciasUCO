@@ -1,6 +1,8 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.consultargrupos.usecase.entity;
 
+import co.edu.uco.asistenciasuco.application.features.grupo.common.domain.FranjaHorarioDomain;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -20,6 +22,37 @@ public final class GrupoEntity {
     private final boolean grupoHabilitado;
     private final LocalDate fechaInicioPeriodoAcademico;
     private final LocalDate fechaFinPeriodoAcademico;
+    private final List<FranjaHorarioDomain> franjas;
+
+    public GrupoEntity(
+            final UUID id,
+            final String codigo,
+            final String nombre,
+            final UUID idAsignatura,
+            final String nombreAsignatura,
+            final UUID idDocente,
+            final Integer capacidadMaximaPermitida,
+            final Integer estudiantesActivos,
+            final Integer cuposDisponibles,
+            final boolean grupoHabilitado,
+            final LocalDate fechaInicioPeriodoAcademico,
+            final LocalDate fechaFinPeriodoAcademico,
+            final List<FranjaHorarioDomain> franjas
+    ) {
+        this.id = id;
+        this.codigo = codigo;
+        this.nombre = nombre;
+        this.idAsignatura = idAsignatura;
+        this.nombreAsignatura = nombreAsignatura;
+        this.idDocente = idDocente;
+        this.capacidadMaximaPermitida = capacidadMaximaPermitida;
+        this.estudiantesActivos = estudiantesActivos;
+        this.cuposDisponibles = cuposDisponibles;
+        this.grupoHabilitado = grupoHabilitado;
+        this.fechaInicioPeriodoAcademico = fechaInicioPeriodoAcademico;
+        this.fechaFinPeriodoAcademico = fechaFinPeriodoAcademico;
+        this.franjas = franjas == null ? List.of() : List.copyOf(franjas);
+    }
 
     public GrupoEntity(
             final UUID id,
@@ -35,18 +68,8 @@ public final class GrupoEntity {
             final LocalDate fechaInicioPeriodoAcademico,
             final LocalDate fechaFinPeriodoAcademico
     ) {
-        this.id = id;
-        this.codigo = codigo;
-        this.nombre = nombre;
-        this.idAsignatura = idAsignatura;
-        this.nombreAsignatura = nombreAsignatura;
-        this.idDocente = idDocente;
-        this.capacidadMaximaPermitida = capacidadMaximaPermitida;
-        this.estudiantesActivos = estudiantesActivos;
-        this.cuposDisponibles = cuposDisponibles;
-        this.grupoHabilitado = grupoHabilitado;
-        this.fechaInicioPeriodoAcademico = fechaInicioPeriodoAcademico;
-        this.fechaFinPeriodoAcademico = fechaFinPeriodoAcademico;
+        this(id, codigo, nombre, idAsignatura, nombreAsignatura, idDocente, capacidadMaximaPermitida, estudiantesActivos,
+                cuposDisponibles, grupoHabilitado, fechaInicioPeriodoAcademico, fechaFinPeriodoAcademico, List.of());
     }
 
     public UUID getId() {
@@ -95,5 +118,9 @@ public final class GrupoEntity {
 
     public LocalDate getFechaFinPeriodoAcademico() {
         return fechaFinPeriodoAcademico;
+    }
+
+    public List<FranjaHorarioDomain> getFranjas() {
+        return franjas;
     }
 }

@@ -198,7 +198,7 @@ class DbExceptionTranslatorTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"PLA_001", "VAL_001", "VAL_002", "VAL_003", "VAL_004", "VAL_005"})
+    @CsvSource({"PLA_001", "VAL_001", "VAL_002", "VAL_003", "VAL_004", "VAL_005", "HOR_003", "HOR_004"})
     void dbcode_formal_de_validacion_ampliado_lanza_validation_exception(final String dbCode) {
         final ValidationException exception = assertThrows(
                 ValidationException.class,

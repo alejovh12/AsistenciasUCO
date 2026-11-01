@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grup
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.primaryports.ActualizarGrupoInputPort;
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.primaryports.dto.ActualizarGrupoDTO;
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.primaryports.dto.ActualizarGrupoResultadoDTO;
+import co.edu.uco.asistenciasuco.application.features.grupo.common.dto.FranjaHorarioDTO;
 import co.edu.uco.asistenciasuco.application.features.grupo.consultarestudiantesgrupo.primaryports.ConsultarEstudiantesGrupoInputPort;
 import co.edu.uco.asistenciasuco.application.features.grupo.consultargrupos.primaryports.ConsultarGruposInputPort;
 import co.edu.uco.asistenciasuco.application.features.grupo.creargrupo.primaryports.CrearGrupoInputPort;
@@ -19,6 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -149,7 +151,33 @@ class GrupoControllerWriteEndpointsTest {
     }
 
     @Test
-    void crearGrupo_con_horarios_responde_como_capacidad_no_disponible() throws Exception {
+    void crearGrupo_con_franjas_delega_el_horario_al_caso_de_uso() throws Exception {
+        when(crearGrupoPort.execute(any())).thenReturn(new CrearGrupoResultadoDTO(UUID.randomUUID(), "Grupo creado."));
+
+        mockMvc.perform(post("/api/v1/grupos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "idAsignatura": "%s",
+                                  "idPeriodoAcademico": "%s",
+                                  "codigo": 9,
+                                  "nombre": "Grupo D",
+                                  "franjas": [
+                                    {"dia": "LU", "horaInicio": "08:00", "horaFin": "10:00"},
+                                    {"dia": "Miércoles", "horaInicio": "14:00", "horaFin": "16:00"}
+                                  ]
+                                }
+                                """.formatted(ASIGNATURA, PERIODO)))
+                .andExpect(status().isCreated());
+
+        final ArgumentCaptor<CrearGrupoDTO> dto = ArgumentCaptor.forClass(CrearGrupoDTO.class);
+        verify(crearGrupoPort).execute(dto.capture());
+        assertEquals(List.of(new FranjaHorarioDTO("LU", "08:00", "10:00"), new FranjaHorarioDTO("MI", "14:00", "16:00")),
+                dto.getValue().franjas());
+    }
+
+    @Test
+    void crearGrupo_con_horas_sin_dias_responde_400_sin_invocar_el_caso_de_uso() throws Exception {
         mockMvc.perform(post("/api/v1/grupos")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -162,7 +190,8 @@ class GrupoControllerWriteEndpointsTest {
                                   "horaFin": "10:00"
                                 }
                                 """.formatted(ASIGNATURA, PERIODO)))
-                .andExpect(jsonPath("$.code").value("FEATURE_UNAVAILABLE"));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("ERR_CAMPO_OBLIGATORIO"));
 
         verifyNoInteractions(crearGrupoPort);
     }

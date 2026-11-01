@@ -1,6 +1,8 @@
 package co.edu.uco.asistenciasuco.application.secondaryports.repository.projection;
 
+
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -20,6 +22,37 @@ public final class GrupoRepositoryProjection {
     private final boolean grupoHabilitado;
     private final LocalDate fechaInicioPeriodoAcademico;
     private final LocalDate fechaFinPeriodoAcademico;
+    private final List<FranjaHorarioRepositoryProjection> franjas;
+
+    public GrupoRepositoryProjection(
+            final UUID id,
+            final String codigo,
+            final String nombre,
+            final UUID idAsignatura,
+            final String nombreAsignatura,
+            final UUID idDocente,
+            final Integer capacidadMaximaPermitida,
+            final Integer estudiantesActivos,
+            final Integer cuposDisponibles,
+            final boolean grupoHabilitado,
+            final LocalDate fechaInicioPeriodoAcademico,
+            final LocalDate fechaFinPeriodoAcademico,
+            final List<FranjaHorarioRepositoryProjection> franjas
+    ) {
+        this.id = id;
+        this.codigo = codigo;
+        this.nombre = nombre;
+        this.idAsignatura = idAsignatura;
+        this.nombreAsignatura = nombreAsignatura;
+        this.idDocente = idDocente;
+        this.capacidadMaximaPermitida = capacidadMaximaPermitida;
+        this.estudiantesActivos = estudiantesActivos;
+        this.cuposDisponibles = cuposDisponibles;
+        this.grupoHabilitado = grupoHabilitado;
+        this.fechaInicioPeriodoAcademico = fechaInicioPeriodoAcademico;
+        this.fechaFinPeriodoAcademico = fechaFinPeriodoAcademico;
+        this.franjas = franjas == null ? List.of() : List.copyOf(franjas);
+    }
 
     public GrupoRepositoryProjection(
             final UUID id,
@@ -35,18 +68,8 @@ public final class GrupoRepositoryProjection {
             final LocalDate fechaInicioPeriodoAcademico,
             final LocalDate fechaFinPeriodoAcademico
     ) {
-        this.id = id;
-        this.codigo = codigo;
-        this.nombre = nombre;
-        this.idAsignatura = idAsignatura;
-        this.nombreAsignatura = nombreAsignatura;
-        this.idDocente = idDocente;
-        this.capacidadMaximaPermitida = capacidadMaximaPermitida;
-        this.estudiantesActivos = estudiantesActivos;
-        this.cuposDisponibles = cuposDisponibles;
-        this.grupoHabilitado = grupoHabilitado;
-        this.fechaInicioPeriodoAcademico = fechaInicioPeriodoAcademico;
-        this.fechaFinPeriodoAcademico = fechaFinPeriodoAcademico;
+        this(id, codigo, nombre, idAsignatura, nombreAsignatura, idDocente, capacidadMaximaPermitida, estudiantesActivos,
+                cuposDisponibles, grupoHabilitado, fechaInicioPeriodoAcademico, fechaFinPeriodoAcademico, List.of());
     }
 
     public UUID getId() {
@@ -95,5 +118,16 @@ public final class GrupoRepositoryProjection {
 
     public LocalDate getFechaFinPeriodoAcademico() {
         return fechaFinPeriodoAcademico;
+    }
+
+    public List<FranjaHorarioRepositoryProjection> getFranjas() {
+        return franjas;
+    }
+
+    /** Copia de la proyeccion con el horario semanal del grupo (F1). */
+    public GrupoRepositoryProjection conFranjas(final List<FranjaHorarioRepositoryProjection> nuevasFranjas) {
+        return new GrupoRepositoryProjection(id, codigo, nombre, idAsignatura, nombreAsignatura, idDocente,
+                capacidadMaximaPermitida, estudiantesActivos, cuposDisponibles, grupoHabilitado,
+                fechaInicioPeriodoAcademico, fechaFinPeriodoAcademico, nuevasFranjas);
     }
 }
