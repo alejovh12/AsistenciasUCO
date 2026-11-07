@@ -59,7 +59,11 @@ final class DbFailureClassifier {
 
     private static ErrorDefinition classifyDbCode(final String code, final String operation) {
         return switch (code) {
-            case "SEC_001", "SEC_002", "EST_004" -> SecurityErrorCode.FORBIDDEN;
+            case "SEC_001", "SEC_002", "EST_004", "COO_003" -> SecurityErrorCode.FORBIDDEN;
+            // CULM-001 B2NM (DEC-019/DEC-020, CONTRACT 2.8.1): asignaturas por plan, matricula con programa y ambito de coordinacion.
+            case "ASI_002", "ASI_003", "ASI_005", "ASI_006", "MQR_008" -> CommonErrorCode.CONFLICT;
+            case "ASI_004" -> CommonErrorCode.RESOURCE_NOT_FOUND;
+            case "ASI_007", "EST_005", "EST_006", "COO_002" -> CommonErrorCode.VALIDATION_ERROR;
             case "ATT_001", "ATT_002", "ATT_003", "GEN_002", "RC_001", "SES_004", "PLA_001",
                  "VAL_001", "VAL_002", "VAL_003", "VAL_004", "VAL_005" -> CommonErrorCode.VALIDATION_ERROR;
             case "VAL_006" -> CommonErrorCode.CONFLICT;
