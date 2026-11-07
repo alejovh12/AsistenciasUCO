@@ -162,14 +162,9 @@ public final class CoordinadorPortalController {
         final var data = consultarEstudiantesProgramaInputPort.execute(authenticatedUserResolver.requireAuthenticatedUserId());
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
     }
-    @GetMapping("/solicitudes-matricula")
-    public ResponseEntity<ApiListResponse<Void>> consultarSolicitudesMatricula() { throw unavailable(); }
-    @PatchMapping("/solicitudes-matricula/{id}")
-    public ResponseEntity<ApiDataResponse<Void>> resolverSolicitudMatricula(@PathVariable final UUID id) { throw unavailable(); }
-    @PostMapping("/grupos/{grupoId}/estudiantes")
-    public ResponseEntity<ApiDataResponse<Void>> matricularEstudianteEnGrupo(@PathVariable final UUID grupoId) { throw unavailable(); }
-    @DeleteMapping("/grupos/{grupoId}/estudiantes/{estudianteId}")
-    public ResponseEntity<ApiDataResponse<Void>> retirarEstudianteDeGrupo(@PathVariable final UUID grupoId, @PathVariable final UUID estudianteId) { throw unavailable(); }
+    // HU156 cubierta (decision de John 2026-11-07): la matricula, el retiro y las solicitudes de ingreso ya tienen su
+    // ruta real (POST /api/v1/grupos/{grupoId}/estudiantes para DOCENTE y COORDINADOR, HU051 y HU053-HU055 del docente).
+    // Se retiran los stubs 501 de /coordinador/grupos/{grupoId}/estudiantes y /coordinador/solicitudes-matricula.
 
     private static FeatureUnavailableException unavailable() {
         return new FeatureUnavailableException("La operacion de coordinador no esta disponible con el contrato DB publico actual.");

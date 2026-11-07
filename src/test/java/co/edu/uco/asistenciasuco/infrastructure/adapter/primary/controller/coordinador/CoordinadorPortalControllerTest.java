@@ -168,15 +168,35 @@ class CoordinadorPortalControllerTest {
     void unavailableEndpointsRemainExplicitlyUnavailable() throws Exception {
         final List<org.junit.jupiter.api.function.Executable> operations = List.of(
                 () -> controller.eliminarAsignaturaPlan(PLAN, SUBJECT),
-                () -> controller.toggleEstadoPeriodoAcademico(PLAN),
-                controller::consultarSolicitudesMatricula, () -> controller.resolverSolicitudMatricula(PLAN),
-                () -> controller.matricularEstudianteEnGrupo(PLAN),
-                () -> controller.retirarEstudianteDeGrupo(PLAN, SUBJECT)
+                () -> controller.toggleEstadoPeriodoAcademico(PLAN)
         );
         for (final var operation : operations) {
             assertEquals("FEATURE_UNAVAILABLE",
                     assertThrows(FeatureUnavailableException.class, operation).getCode());
         }
+    }
+
+    // HU156 cubierta (2026-11-07): la matricula y las solicitudes del coordinador tenian stubs 501 sin uso; se retiraron.
+    @Test
+    void stubs_de_matricula_y_solicitudes_del_coordinador_retirados_no_tienen_ruta() {
+        final List<String> rutas = java.util.Arrays.stream(CoordinadorPortalController.class.getDeclaredMethods())
+                .flatMap(metodo -> java.util.stream.Stream.of(
+                                java.util.Optional.ofNullable(metodo.getAnnotation(org.springframework.web.bind.annotation.GetMapping.class))
+                                        .map(org.springframework.web.bind.annotation.GetMapping::value),
+                                java.util.Optional.ofNullable(metodo.getAnnotation(org.springframework.web.bind.annotation.PostMapping.class))
+                                        .map(org.springframework.web.bind.annotation.PostMapping::value),
+                                java.util.Optional.ofNullable(metodo.getAnnotation(org.springframework.web.bind.annotation.PatchMapping.class))
+                                        .map(org.springframework.web.bind.annotation.PatchMapping::value),
+                                java.util.Optional.ofNullable(metodo.getAnnotation(org.springframework.web.bind.annotation.DeleteMapping.class))
+                                        .map(org.springframework.web.bind.annotation.DeleteMapping::value))
+                        .flatMap(java.util.Optional::stream)
+                        .flatMap(java.util.Arrays::stream))
+                .toList();
+
+        org.junit.jupiter.api.Assertions.assertFalse(rutas.isEmpty());
+        org.junit.jupiter.api.Assertions.assertTrue(rutas.stream().noneMatch(ruta ->
+                        ruta.startsWith("/solicitudes-matricula") || ruta.startsWith("/grupos/{grupoId}/estudiantes")),
+                () -> "Rutas retiradas aun mapeadas: " + rutas);
     }
 
     private static AsignaturaDTO subject() {
