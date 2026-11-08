@@ -12,6 +12,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.valid
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,6 +29,7 @@ import java.util.UUID;
  * interruptor los aplica el caso de uso. Los cuerpos jamas se registran en logs.
  */
 @RestController
+@CrossOrigin
 @RequestMapping("/api/v1/public/matricula-qr")
 public final class MatriculaQrPublicaController {
 
