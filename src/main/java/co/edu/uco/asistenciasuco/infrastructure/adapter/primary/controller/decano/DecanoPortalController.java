@@ -1,6 +1,5 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.decano;
 
-import co.edu.uco.asistenciasuco.application.features.decano.common.rule.ConsultaPaginadaRules;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.primaryports.ConsultarCoordinadoresInputPort;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.primaryports.dto.CoordinadorDTO;
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.primaryports.CrearCoordinadorInputPort;
@@ -8,6 +7,7 @@ import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.pr
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.decano.request.CrearCoordinadorRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiPageResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.PaginacionRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,10 +43,10 @@ public final class DecanoPortalController {
             @RequestParam(name = "pagina", required = false) final Integer pagina,
             @RequestParam(name = "tamano", required = false) final Integer tamano
     ) {
-        final int pag = ConsultaPaginadaRules.pagina(pagina);
-        final int tam = ConsultaPaginadaRules.tamano(tamano);
+        // Una sola regla de paginacion (CULM-001 D.9-a): 400 PAG_001 con details[] (PaginacionRequestValidator).
+        final PaginacionRequestValidator.Pagina solicitada = PaginacionRequestValidator.resolver(pagina, tamano);
         final var resultado = consultarCoordinadoresInputPort.execute(
-                authenticatedUserResolver.requireAuthenticatedUserId(), pag, tam);
+                authenticatedUserResolver.requireAuthenticatedUserId(), solicitada.numero(), solicitada.tamano());
         return ResponseEntity.ok(ApiPageResponse.of(
                 resultado.elementos(),
                 resultado.numeroPagina(),

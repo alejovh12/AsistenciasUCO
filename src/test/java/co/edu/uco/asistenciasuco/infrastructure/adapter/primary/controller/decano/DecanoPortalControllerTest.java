@@ -58,7 +58,9 @@ class DecanoPortalControllerTest {
     @Test
     void consultarCoordinadores_pagina_invalida_responde_400() throws Exception {
         mvc.perform(get("/api/v1/decano/coordinadores").param("pagina", "0"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.code").value("PAG_001"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.details[0].field").value("pagina"));
     }
 
     @Test
