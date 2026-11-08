@@ -27,6 +27,7 @@ public final class GestionarAsignaturaMapper {
                 dto.semestreNumero(),
                 dto.nombreArea(),
                 dto.nombreComponente(),
+                dto.codigoCaracter(),
                 dto.usuarioEjecutor()
         );
     }

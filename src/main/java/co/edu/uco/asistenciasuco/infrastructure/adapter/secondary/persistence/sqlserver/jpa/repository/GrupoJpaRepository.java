@@ -94,10 +94,9 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
     static final int COLUMNAS_GRUPOS = 13;
     static final String HQL_GRUPOS_POR_FACULTAD = """
             select g
-            from UvGrupoEntity g, UvAsignaturaEntity a, UvSemestrePlanEstudioEntity sp
-            where a.id = g.idAsignatura
-              and sp.id = a.idSemestrePlanEstudio
-              and sp.idPrograma in (select pr.id from UvProgramaEntity pr where pr.idFacultad = :idFacultad)
+            from UvGrupoEntity g
+            where exists (select 1 from UvAsignaturaPlanEstudioEntity v
+                          where v.idAsignatura = g.idAsignatura and v.estaActivoVinculo = true and v.idFacultad = :idFacultad)
             order by g.nombreAsignatura, g.codigo, g.nombre, g.id
             """;
     // CULM-001 A.2-2: estudiantes del grupo en todos los estados (DR-007) con ambito validado por el SP; lista completa

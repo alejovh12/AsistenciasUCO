@@ -46,7 +46,7 @@ class GestionarAsignaturaUseCaseImplTest {
         when(scopePort.findProgramaIdByCoordinadorUsuario(usuarioEjecutor)).thenReturn(Optional.of(PROGRAM));
         when(planQueryPort.consultarPlanesPorPrograma(PROGRAM)).thenReturn(List.of(plan(plan, PROGRAM)));
         final AsignaturaDomain domain = new AsignaturaDomain(
-                null, plan, "COD1", "Calculo", 3, 1, "Area", "Componente", usuarioEjecutor
+                null, plan, "COD1", "Calculo", 3, 1, "Area", "Componente", null, usuarioEjecutor
         );
 
         useCase.crear(domain);
@@ -54,7 +54,7 @@ class GestionarAsignaturaUseCaseImplTest {
         verify(commandPort).crearAsignatura(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq("COD1"),
                 org.mockito.ArgumentMatchers.eq("Calculo"), org.mockito.ArgumentMatchers.eq(3),
                 org.mockito.ArgumentMatchers.eq(plan), org.mockito.ArgumentMatchers.eq(1),
-                org.mockito.ArgumentMatchers.eq("Area"), org.mockito.ArgumentMatchers.eq("Componente"),
+                org.mockito.ArgumentMatchers.eq("Area"), org.mockito.ArgumentMatchers.eq("Componente"), org.mockito.ArgumentMatchers.isNull(),
                 org.mockito.ArgumentMatchers.eq(usuarioEjecutor));
     }
 
@@ -70,7 +70,7 @@ class GestionarAsignaturaUseCaseImplTest {
         when(scopePort.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.of(PROGRAM));
         when(planQueryPort.consultarPlanesPorPrograma(PROGRAM)).thenReturn(List.of(plan(plan, PROGRAM)));
         when(queryPort.consultarAsignaturasPorPlan(plan)).thenReturn(List.of(subject(id, plan, PROGRAM)));
-        final AsignaturaDomain domain = new AsignaturaDomain(id, plan, "COD1", "Calculo", 3, 1, "Area", "Componente", ACTOR);
+        final AsignaturaDomain domain = new AsignaturaDomain(id, plan, "COD1", "Calculo", 3, 1, "Area", "Componente", null, ACTOR);
 
         useCase.actualizar(domain);
 
@@ -78,7 +78,7 @@ class GestionarAsignaturaUseCaseImplTest {
         verify(commandPort).actualizarAsignatura(idCaptor.capture(), org.mockito.ArgumentMatchers.eq("COD1"),
                 org.mockito.ArgumentMatchers.eq("Calculo"), org.mockito.ArgumentMatchers.eq(3),
                 org.mockito.ArgumentMatchers.eq(plan), org.mockito.ArgumentMatchers.eq(1),
-                org.mockito.ArgumentMatchers.eq("Area"), org.mockito.ArgumentMatchers.eq("Componente"),
+                org.mockito.ArgumentMatchers.eq("Area"), org.mockito.ArgumentMatchers.eq("Componente"), org.mockito.ArgumentMatchers.isNull(),
                 org.mockito.ArgumentMatchers.eq(ACTOR));
         assertEquals(id, idCaptor.getValue());
     }
@@ -92,7 +92,7 @@ class GestionarAsignaturaUseCaseImplTest {
         when(queryPort.consultarAsignaturasPorPlan(plan)).thenReturn(List.of(subject(id, plan, UUID.randomUUID())));
 
         assertThrows(ForbiddenException.class, () -> useCase.actualizar(
-                new AsignaturaDomain(id, plan, "COD1", "Calculo", 3, 1, "Area", "Componente", ACTOR)));
+                new AsignaturaDomain(id, plan, "COD1", "Calculo", 3, 1, "Area", "Componente", null, ACTOR)));
 
         org.mockito.Mockito.verifyNoInteractions(commandPort);
     }
@@ -104,7 +104,7 @@ class GestionarAsignaturaUseCaseImplTest {
         when(planQueryPort.consultarPlanesPorPrograma(PROGRAM)).thenReturn(List.of(plan(plan, UUID.randomUUID())));
 
         assertThrows(ForbiddenException.class, () -> useCase.crear(
-                new AsignaturaDomain(null, plan, "COD1", "Calculo", 3, 1, "Area", "Componente", ACTOR)));
+                new AsignaturaDomain(null, plan, "COD1", "Calculo", 3, 1, "Area", "Componente", null, ACTOR)));
 
         org.mockito.Mockito.verifyNoInteractions(commandPort);
     }

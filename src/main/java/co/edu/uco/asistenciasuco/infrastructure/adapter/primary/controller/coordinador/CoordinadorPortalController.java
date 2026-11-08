@@ -176,6 +176,7 @@ public final class CoordinadorPortalController {
                 request == null ? null : request.getSemestreNumero(),
                 request == null ? null : request.getNombreArea(),
                 request == null ? null : request.getNombreComponente(),
+                request == null ? null : request.getCodigoCaracter(),
                 usuarioEjecutor
         );
     }

@@ -41,20 +41,17 @@ public class UvAsignaturaEntity {
     @Column(name = "nombreComponente")
     private String nombreComponente;
 
-    @Column(name = "idSemestrePlanEstudio")
-    private UUID idSemestrePlanEstudio;
 
-    @Column(name = "nombrePrograma")
-    private String nombrePrograma;
 
-    @Column(name = "codigoSemestre")
-    private String codigoSemestre;
 
     @Column(name = "estaActivaAsignatura")
     private Boolean estaActivaAsignatura;
 
     @Column(name = "estaActivaTextoAsignatura")
     private String estaActivaTextoAsignatura;
+
+    @Column(name = "totalPlanesActivos")
+    private Integer totalPlanesActivos;
 
     protected UvAsignaturaEntity() {
         // requerido por JPA

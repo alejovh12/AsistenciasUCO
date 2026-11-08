@@ -5,10 +5,10 @@ import java.util.UUID;
 public interface AsignaturaCommandPort {
 
     void crearAsignatura(UUID idAsignatura, String codigo, String nombre, Integer creditos, UUID idPlanEstudio,
-                         Integer semestreNumero, String nombreArea, String nombreComponente, UUID usuarioEjecutor);
+                         Integer semestreNumero, String nombreArea, String nombreComponente, String codigoCaracter, UUID usuarioEjecutor);
 
     void actualizarAsignatura(UUID idAsignatura, String codigo, String nombre, Integer creditos, UUID idPlanEstudio,
-                              Integer semestreNumero, String nombreArea, String nombreComponente, UUID usuarioEjecutor);
+                              Integer semestreNumero, String nombreArea, String nombreComponente, String codigoCaracter, UUID usuarioEjecutor);
 
     void toggleEstadoAsignatura(UUID idAsignatura, UUID usuarioEjecutor);
 }

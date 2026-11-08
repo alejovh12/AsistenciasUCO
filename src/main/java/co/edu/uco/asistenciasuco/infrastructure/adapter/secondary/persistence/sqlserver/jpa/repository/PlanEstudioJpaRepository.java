@@ -83,11 +83,11 @@ public class PlanEstudioJpaRepository implements PlanEstudioQueryPort, PlanEstud
      * {@code usp_consultar_programas_creditos_facultad_paginado}). Los planes sin asignaturas no aparecen y quedan en 0.
      */
     static final String HQL_TOTALES_MALLA = """
-            select sp.idPlanEstudio, count(a.id), sum(a.credito)
-            from UvAsignaturaEntity a, UvSemestrePlanEstudioEntity sp
-            where sp.id = a.idSemestrePlanEstudio
-              and sp.idPlanEstudio in :idsPlan
-            group by sp.idPlanEstudio
+            select v.idPlanEstudio, count(v.idAsignatura), sum(v.credito)
+            from UvAsignaturaPlanEstudioEntity v
+            where v.estaActivoVinculo = true
+              and v.idPlanEstudio in :idsPlan
+            group by v.idPlanEstudio
             """;
 
     static final String OP_REGISTRAR_O_ACTUALIZAR_PLAN = "registrarOActualizarPlanEstudio";
