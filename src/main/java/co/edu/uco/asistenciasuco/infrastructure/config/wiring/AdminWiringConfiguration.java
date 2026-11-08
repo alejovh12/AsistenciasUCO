@@ -30,6 +30,7 @@ import co.edu.uco.asistenciasuco.application.features.admin.consultarinstitucion
 import co.edu.uco.asistenciasuco.application.features.admin.consultarinstituciones.usecase.ConsultarInstitucionesUseCase;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarinstituciones.usecase.impl.ConsultarInstitucionesUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.CrearDecanoInputPort;
+import co.edu.uco.asistenciasuco.application.features.identidad.asegurarcuenta.AsegurarCuentaIdentidadService;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.interactor.CrearDecanoInteractor;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.CrearDecanoUseCase;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.impl.CrearDecanoUseCaseImpl;
@@ -78,10 +79,10 @@ public class AdminWiringConfiguration {
             final DecanoCommandPort decanoCommandPort,
             final UsuarioRepositoryPort usuarioRepositoryPort,
             final PasswordEncoderPort passwordEncoderPort,
-            final IdentityProviderPort identityProviderPort
+            final AsegurarCuentaIdentidadService asegurarCuentaIdentidadService
     ) {
         return new CrearDecanoUseCaseImpl(facultadQueryPort, decanoCommandPort,
-                usuarioRepositoryPort, passwordEncoderPort, identityProviderPort);
+                usuarioRepositoryPort, passwordEncoderPort, asegurarCuentaIdentidadService);
     }
     @Bean CrearDecanoInputPort crearDecanoInputPort(final CrearDecanoUseCase useCase) { return new CrearDecanoInteractor(useCase); }
     @Bean ConsultarInstitucionesUseCase consultarInstitucionesUseCase(final InstitucionQueryPort port) { return new ConsultarInstitucionesUseCaseImpl(port); }
@@ -111,7 +112,7 @@ public class AdminWiringConfiguration {
 
     @Bean EjecutarCierreMasivoInputPort ejecutarCierreMasivoInputPort(final EjecutarCierreMasivoUseCase useCase) { return new EjecutarCierreMasivoInteractor(useCase); }
     // HU096-HU098: el periodo es unico por institucion; solo lo gestiona el ADMINISTRADOR.
-    @Bean GestionarPeriodoAcademicoUseCase gestionarPeriodoAcademicoUseCase(final PeriodoAcademicoCommandPort commandPort) { return new GestionarPeriodoAcademicoUseCaseImpl(commandPort); }
+    @Bean GestionarPeriodoAcademicoUseCase gestionarPeriodoAcademicoUseCase(final PeriodoAcademicoCommandPort commandPort, final PeriodoAcademicoQueryPort queryPort) { return new GestionarPeriodoAcademicoUseCaseImpl(commandPort, queryPort); }
     @Bean GestionarPeriodoAcademicoInputPort gestionarPeriodoAcademicoInputPort(final GestionarPeriodoAcademicoUseCase useCase) { return new GestionarPeriodoAcademicoInteractor(useCase); }
 
     @Bean

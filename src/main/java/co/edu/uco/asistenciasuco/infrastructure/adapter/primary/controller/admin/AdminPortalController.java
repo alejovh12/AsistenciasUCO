@@ -25,6 +25,9 @@ import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiMessageResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin.validation.CrearDecanoRequestValidator;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin.validation.FacultadRequestValidator;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +45,9 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/admin")
 public final class AdminPortalController {
+
+    private static final CrearDecanoRequestValidator CREAR_DECANO_VALIDATOR = new CrearDecanoRequestValidator();
+    private static final FacultadRequestValidator FACULTAD_VALIDATOR = new FacultadRequestValidator();
 
     private final ConsultarDecanosInputPort consultarDecanosInputPort;
     private final CrearDecanoInputPort crearDecanoInputPort;
@@ -90,6 +96,7 @@ public final class AdminPortalController {
     @AuditableOperation(action = "CREAR_DECANO", resourceType = "DECANO", metadataRequestFields = {"idFacultad"})
     @PostMapping("/decanos")
     public ResponseEntity<ApiMessageResponse> crearDecano(@RequestBody final CrearDecanoRequest request) {
+        RequestValidationGuard.validate(CREAR_DECANO_VALIDATOR.validate(request));
         crearDecanoInputPort.execute(new CrearDecanoDTO(
                 request.tipoIdentificacionId(), request.numeroIdentificacion(), request.primerNombre(),
                 request.segundoNombre(), request.primerApellido(), request.segundoApellido(), request.correo(),
@@ -135,6 +142,7 @@ public final class AdminPortalController {
     @AuditableOperation(action = "CREAR_FACULTAD", resourceType = "FACULTAD", resourceIdResponseField = "id")
     @PostMapping("/facultades")
     public ResponseEntity<ApiDataResponse<FacultadDTO>> crearFacultad(@RequestBody final CrearFacultadRequest request) {
+        RequestValidationGuard.validate(FACULTAD_VALIDATOR.validarCreacion(request));
         final UUID actorId = authenticatedUserResolver.requireAuthenticatedUserId();
         final UUID facultadId = UUID.randomUUID();
         final String nombre = request != null ? request.nombre() : null;
@@ -170,6 +178,7 @@ public final class AdminPortalController {
             @PathVariable final UUID id,
             @RequestBody final ActualizarFacultadRequest request
     ) {
+        RequestValidationGuard.validate(FACULTAD_VALIDATOR.validarActualizacion(request));
         actualizarFacultadInputPort.execute(new ActualizarFacultadDTO(
                 id,
                 request != null ? request.nombre() : null,

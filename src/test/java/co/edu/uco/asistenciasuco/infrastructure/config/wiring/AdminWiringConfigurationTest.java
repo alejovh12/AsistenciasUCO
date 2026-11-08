@@ -39,7 +39,8 @@ class AdminWiringConfigurationTest {
 
         final var crearDecanoUseCase = config.crearDecanoUseCase(
                 mock(FacultadQueryPort.class), mock(DecanoCommandPort.class),
-                mock(UsuarioRepositoryPort.class), mock(PasswordEncoderPort.class), mock(IdentityProviderPort.class));
+                mock(UsuarioRepositoryPort.class), mock(PasswordEncoderPort.class),
+                mock(co.edu.uco.asistenciasuco.application.features.identidad.asegurarcuenta.AsegurarCuentaIdentidadService.class));
         assertInstanceOf(CrearDecanoUseCaseImpl.class, crearDecanoUseCase);
         assertInstanceOf(CrearDecanoInteractor.class, config.crearDecanoInputPort(crearDecanoUseCase));
 

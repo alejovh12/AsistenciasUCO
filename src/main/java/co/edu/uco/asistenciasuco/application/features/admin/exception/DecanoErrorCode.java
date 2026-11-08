@@ -9,7 +9,9 @@ import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorKind;
  * de {@code CONFLICT}; el texto de aqui es solo la contingencia ante desconexion del catalogo.
  */
 public enum DecanoErrorCode implements ErrorDefinition {
-    DEC_002("DEC_002", "No se puede desactivar al decano de una facultad con programas activos.", ErrorKind.CONFLICT);
+    DEC_002("DEC_002", "No se puede desactivar al decano de una facultad con programas activos.", ErrorKind.CONFLICT),
+    /** CULM-001 D.9-a (F-ADM-024): la persona ya es decano activo; antes el alta repetida respondia 201 sin crear nada. */
+    DEC_020("DEC_020", "La persona ya está registrada como decano.", ErrorKind.CONFLICT);
 
     private final String code;
     private final String defaultMessage;

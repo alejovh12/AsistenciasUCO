@@ -205,17 +205,14 @@ class AdminPortalControllerTest {
         assertEquals(DECANO, captor.getValue().idDecano());
     }
 
+    /** CULM-001 D.9-a (F-ADM-025, CONTRACT §11.1): el cuerpo vacio ya no llega al caso de uso: 400 con details[] del campo. */
     @Test
-    void actualizarFacultad_con_cuerpo_vacio_delega_nulos_para_que_el_caso_de_uso_valide() throws Exception {
-        when(consultarFacultades.execute()).thenReturn(List.of(facultadDto("Ingenieria", true)));
-
+    void actualizarFacultad_con_cuerpo_vacio_es_400_con_details_sin_llegar_al_caso_de_uso() throws Exception {
         mvc.perform(put("/api/v1/admin/facultades/" + FACULTAD).contentType("application/json").content("{}"))
-                .andExpect(status().isOk());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details[0].field").value("nombre"));
 
-        final ArgumentCaptor<ActualizarFacultadDTO> captor = ArgumentCaptor.forClass(ActualizarFacultadDTO.class);
-        verify(actualizarFacultad).execute(captor.capture());
-        assertNull(captor.getValue().nombre());
-        assertNull(captor.getValue().idDecano());
+        org.mockito.Mockito.verifyNoInteractions(actualizarFacultad);
     }
 
     @Test
@@ -331,5 +328,72 @@ class AdminPortalControllerTest {
         when(cambiarEstadoDecano.execute(new CambiarEstadoDecanoDTO(ajeno, ACTOR)))
                 .thenThrow(new co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException("El decano no existe."));
         mvc.perform(patch("/api/v1/admin/decanos/" + ajeno + "/toggle")).andExpect(status().isNotFound());
+    }
+
+    /** CULM-001 D.9-a (F-ADM-025): el 400 de decanos y facultades indica el campo y la regla en details[]. */
+    @Test
+    void culm001_d9_crearDecano_con_nombre_invalido_es_400_con_details_del_campo() throws Exception {
+        final String body = "{\"tipoIdentificacionId\":\"" + UUID.randomUUID() + "\",\"numeroIdentificacion\":123456789,"
+                + "\"primerNombre\":\"CULM1-Decano\",\"primerApellido\":\"Perez\",\"correo\":\"ana@uco.edu.co\","
+                + "\"password\":\"Clave123!\"}";
+
+        mvc.perform(post("/api/v1/admin/decanos").contentType("application/json").content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.details[0].field").value("primerNombre"))
+                .andExpect(jsonPath("$.details[0].code").value("FIELD_INVALID_FORMAT"))
+                .andExpect(jsonPath("$.details[0].message").value("El campo primerNombre contiene caracteres no permitidos."));
+        org.mockito.Mockito.verifyNoInteractions(crearDecano);
+    }
+
+    @Test
+    void culm001_d9_crearDecano_sin_campos_obligatorios_informa_cada_campo() throws Exception {
+        mvc.perform(post("/api/v1/admin/decanos").contentType("application/json").content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details[?(@.field=='tipoIdentificacionId')]").exists())
+                .andExpect(jsonPath("$.details[?(@.field=='numeroIdentificacion')]").exists())
+                .andExpect(jsonPath("$.details[?(@.field=='primerNombre')]").exists())
+                .andExpect(jsonPath("$.details[?(@.field=='primerApellido')]").exists())
+                .andExpect(jsonPath("$.details[?(@.field=='correo')]").exists())
+                .andExpect(jsonPath("$.details[?(@.field=='password')]").doesNotExist());
+    }
+
+    /** F-ADM-024: el alta repetida de un decano activo es 409 con el codigo DEC_020 (antes 201 sin crear nada). */
+    @Test
+    void culm001_d9_crearDecano_repetido_es_409_dec_020() throws Exception {
+        final String body = "{\"tipoIdentificacionId\":\"" + UUID.randomUUID() + "\",\"numeroIdentificacion\":123456789,"
+                + "\"primerNombre\":\"Ana\",\"primerApellido\":\"Perez\",\"correo\":\"ana@uco.edu.co\",\"password\":\"Clave123!\"}";
+        doThrow(new co.edu.uco.asistenciasuco.application.exception.business.ConflictException(
+                co.edu.uco.asistenciasuco.application.features.admin.exception.DecanoErrorCode.DEC_020))
+                .when(crearDecano).execute(any());
+
+        mvc.perform(post("/api/v1/admin/decanos").contentType("application/json").content(body))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("DEC_020"));
+    }
+
+    @Test
+    void culm001_d9_crearFacultad_con_nombre_de_2_caracteres_es_400_con_details_del_nombre() throws Exception {
+        mvc.perform(post("/api/v1/admin/facultades").contentType("application/json")
+                        .content("{\"nombre\":\"AB\",\"idDecano\":\"" + DECANO + "\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details[0].field").value("nombre"))
+                .andExpect(jsonPath("$.details[0].code").value("FIELD_INVALID_LENGTH"))
+                .andExpect(jsonPath("$.details[0].message").value("El nombre de la facultad debe tener entre 3 y 50 caracteres."));
+        org.mockito.Mockito.verifyNoInteractions(crearFacultad);
+    }
+
+    @Test
+    void culm001_d9_crearFacultad_sin_decano_y_actualizarFacultad_vacia_son_400_con_details() throws Exception {
+        mvc.perform(post("/api/v1/admin/facultades").contentType("application/json").content("{\"nombre\":\"Ingenieria\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details[0].field").value("idDecano"));
+        mvc.perform(put("/api/v1/admin/facultades/{id}", FACULTAD).contentType("application/json").content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details[0].field").value("nombre"));
+        mvc.perform(put("/api/v1/admin/facultades/{id}", FACULTAD).contentType("application/json").content("{\"nombre\":\"A\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details[0].code").value("FIELD_INVALID_LENGTH"));
+        org.mockito.Mockito.verifyNoInteractions(actualizarFacultad);
     }
 }
