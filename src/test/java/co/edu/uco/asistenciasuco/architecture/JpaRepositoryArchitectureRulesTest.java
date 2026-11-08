@@ -30,7 +30,7 @@ class JpaRepositoryArchitectureRulesTest {
             Map.entry("AreaJpaRepository", List.of("academic.AreaQueryPort")),
             Map.entry("AsignaturaJpaRepository", List.of("academic.AsignaturaCommandPort", "academic.AsignaturaQueryPort")),
             Map.entry("AsignaturaDocenteJpaRepository", List.of("academic.AsignaturaDocenteQueryPort")),
-            Map.entry("CierrePeriodoJpaRepository", List.of("academic.CierrePeriodoCommandPort")),
+            Map.entry("CierrePeriodoJpaRepository", List.of("academic.CierrePeriodoCommandPort", "academic.HistorialCierrePeriodoQueryPort")),
             Map.entry("CoordinadorJpaRepository", List.of("academic.CoordinadorCommandPort", "academic.CoordinadorQueryPort")),
             Map.entry("DecanoJpaRepository", List.of("academic.DecanoCommandPort", "academic.DecanoQueryPort")),
             Map.entry("EstudianteProgramaJpaRepository", List.of("academic.EstudianteProgramaQueryPort")),

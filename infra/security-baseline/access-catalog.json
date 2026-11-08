@@ -23,6 +23,7 @@
     {"method": "POST", "path": "/api/v1/admin/cargas/validacion", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": "HU171: Validacion previa sin escrituras de carga masiva de decanos."},
     {"method": "POST", "path": "/api/v1/admin/cargas", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": "HU171: Carga masiva de decanos por el administrador institucional; auditado."},
     {"method": "POST", "path": "/api/v1/admin/cierre-masivo", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": null},
+    {"method": "GET", "path": "/api/v1/admin/cierre-masivo/historial", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": null},
     {"method": "GET", "path": "/api/v1/admin/comparativa-facultades", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": null},
     {"method": "GET", "path": "/api/v1/admin/decanos", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": null},
     {"method": "POST", "path": "/api/v1/admin/estudiantes/admision", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": "CULM-001 D.4 (HU156): el administrador admite estudiantes en un programa de su institucion sin matricularlos; usp_admitir_estudiante valida RBAC, ambito, unicidad, correo institucional y clave inicial."},

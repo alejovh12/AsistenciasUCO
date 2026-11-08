@@ -4,6 +4,7 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.exception.Asist
 import co.edu.uco.asistenciasuco.application.features.admin.exception.AdmisionEstudianteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.CatalogoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.DecanoErrorCode;
+import co.edu.uco.asistenciasuco.application.features.admin.exception.FacultadErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.ParametroErrorCode;
 import co.edu.uco.asistenciasuco.application.features.decano.exception.CoordinadorErrorCode;
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
@@ -89,6 +90,7 @@ public final class DbExceptionTranslator {
             DocenteErrorCode.ERR_DOCENTE_YA_REGISTRADO,
             CoordinadorErrorCode.COO_001,
             DecanoErrorCode.DEC_002,
+            FacultadErrorCode.FAC_002,
             CatalogoErrorCode.TPR_002,
             CatalogoErrorCode.ARE_002,
             DocenteErrorCode.ERR_PERSONA_YA_REGISTRADA,

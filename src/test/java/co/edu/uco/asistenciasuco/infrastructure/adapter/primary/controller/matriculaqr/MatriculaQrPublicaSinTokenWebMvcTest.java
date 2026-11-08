@@ -41,8 +41,11 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.http.HttpHeaders;
 
 /**
  * CULM-001 A.2-5 (A2-B-08, N1): causa raiz del 401 en la ruta publica de matricula QR sin token. El catalogo de parametros
@@ -75,6 +78,17 @@ class MatriculaQrPublicaSinTokenWebMvcTest {
                 .andReturn().getResponse().getStatus();
 
         assertEquals(200, estado, "El filtro debe usar el limite por defecto y dejar pasar la peticion publica.");
+    }
+
+    /** F-EST-S14: soporte de preflight CORS (OPTIONS) para peticiones desde el cliente web. */
+    @Test
+    void preflight_cors_options_en_ruta_publica_responde_ok_con_headers_cors() throws Exception {
+        mockMvc.perform(options(MatriculaQrPublicaController.RUTA_VALIDAR)
+                        .header(HttpHeaders.ORIGIN, "http://localhost:4200")
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST")
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS, "Content-Type,X-Correlation-Id"))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:4200"));
     }
 
     @Test
