@@ -60,7 +60,8 @@ class DecanoJpaCommandPatternTest {
     }
 
     @Test
-    void DEC_PAT_001_crear_decano_usa_native_query_exec_sin_tipo_identificacion() {
+    // CULM-001 D.5 (CONTRACT D v2 §6.3, OBS-10): usp_crear_decano recibe @idTipoIdIdentificacion al final.
+    void DEC_PAT_001_crear_decano_usa_native_query_exec_con_tipo_identificacion() {
         command.crearDecano(comando());
 
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_crear_decano"));
@@ -71,7 +72,7 @@ class DecanoJpaCommandPatternTest {
         verify(query).setParameter("password", "Clave123!");
         verify(query).setParameter("idCorrelacion", CORRELATION);
         verify(query).setParameter("idUsuarioEjecutor", EJECUTOR);
-        verify(query, never()).setParameter(org.mockito.ArgumentMatchers.eq("idTipoIdIdentificacion"), any());
+        verify(query).setParameter(org.mockito.ArgumentMatchers.eq("idTipoIdIdentificacion"), any());
         verify(query).getResultList();
         verify(entityManager, never()).createStoredProcedureQuery(anyString());
     }
