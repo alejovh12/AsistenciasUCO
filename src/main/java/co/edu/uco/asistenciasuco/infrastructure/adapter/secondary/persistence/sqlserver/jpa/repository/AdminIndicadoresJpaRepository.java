@@ -79,7 +79,7 @@ public class AdminIndicadoresJpaRepository implements AdminIndicadoresQueryPort 
                 () -> ejecutar(SQL_COMPARATIVA, SpComparativaFacultadEntity.class, correlationId, actorUsuarioId, Map.of(), idPeriodoAcademico).stream()
                         .map(e -> new ComparativaFacultadProjection(e.idFacultad(), e.nombreFacultad(), verdadero(e.estaActivaFacultad()),
                                 cero(e.totalProgramas()), cero(e.totalEstudiantes()), cero(e.estudiantesRiesgo()), cero(e.estudiantesPerdida()),
-                                e.tasaRetencion(), cero(e.sesionesEjecutadas()), cero(e.faltasSinJustaCausa()), e.porcentajeAusentismo()))
+                                e.tasaRetencion(), cero(e.sesionesEjecutadas()), cero(e.faltasSinJustaCausa()), e.porcentajeAusentismo(), e.horasDictadas(), e.horasFalta()))
                         .toList());
     }
 
@@ -89,7 +89,7 @@ public class AdminIndicadoresJpaRepository implements AdminIndicadoresQueryPort 
         return JpaQueryExecutor.execute("consultarTendenciaAusentismo", "No fue posible consultar la tendencia de ausentismo desde base de datos.",
                 () -> ejecutar(SQL_TENDENCIA, SpPuntoTendenciaEntity.class, correlationId, actorUsuarioId, Map.of("granularidad", granularidad), idPeriodoAcademico).stream()
                         .map(e -> new PuntoTendenciaProjection(e.inicioIntervalo(), e.finIntervalo(), cero(e.sesionesEjecutadas()),
-                                cero(e.faltasSinJustaCausa()), e.porcentajeAusentismo()))
+                                cero(e.faltasSinJustaCausa()), e.porcentajeAusentismo(), e.horasDictadasEstudiante(), e.horasFalta()))
                         .toList());
     }
 

@@ -16,6 +16,6 @@ public final class ConsultarTendenciaAusentismoMapper {
     }
 
     public static List<PuntoTendenciaDTO> toDto(final List<PuntoTendenciaDomain> filas) {
-        return filas.stream().map(d -> new PuntoTendenciaDTO(d.inicioIntervalo(), d.finIntervalo(), d.sesionesEjecutadas(), d.faltasSinJustaCausa(), d.porcentajeAusentismo())).toList();
+        return filas.stream().map(d -> new PuntoTendenciaDTO(d.inicioIntervalo(), d.finIntervalo(), d.sesionesEjecutadas(), d.faltasSinJustaCausa(), d.porcentajeAusentismo(), d.horasDictadasEstudiante(), d.horasFalta())).toList();
     }
 }
