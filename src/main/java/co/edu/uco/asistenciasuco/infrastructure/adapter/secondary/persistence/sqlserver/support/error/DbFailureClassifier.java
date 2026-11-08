@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error;
 
+import co.edu.uco.asistenciasuco.application.features.alertainasistencia.exception.AlertaInasistenciaErrorCode;
+import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.exception.RevisionCancelacionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.asistencia.exception.AsistenciaErrorCode;
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
@@ -230,6 +232,18 @@ final class DbFailureClassifier {
             case "SES_016" -> SesionErrorCode.SES_016;
             // CULM-001 B.1: festivos (carga, aplicacion y consultas del administrador).
             // CULM-001 B.2: tomas de asistencia y QR de asistencia (el codigo de la DB se expone tal cual).
+            // CULM-001 C.1: revision de cancelacion por inasistencia (el codigo de la DB se expone tal cual).
+            case "RCN_001" -> RevisionCancelacionErrorCode.RCN_001;
+            case "RCN_002" -> RevisionCancelacionErrorCode.RCN_002;
+            case "RCN_003" -> RevisionCancelacionErrorCode.RCN_003;
+            case "RCN_004" -> RevisionCancelacionErrorCode.RCN_004;
+            case "RCN_005" -> RevisionCancelacionErrorCode.RCN_005;
+            case "RCN_006" -> RevisionCancelacionErrorCode.RCN_006;
+            case "RCN_012" -> RevisionCancelacionErrorCode.RCN_012;
+            case "RCN_013" -> RevisionCancelacionErrorCode.RCN_013;
+            case "RCN_014" -> RevisionCancelacionErrorCode.RCN_014;
+            case "ALR_004" -> AlertaInasistenciaErrorCode.ALR_004;
+            case "ALR_006" -> AlertaInasistenciaErrorCode.ALR_006;
             case "TOM_001" -> TomaAsistenciaErrorCode.TOM_001;
             case "TOM_002" -> TomaAsistenciaErrorCode.TOM_002;
             case "TOM_003" -> TomaAsistenciaErrorCode.TOM_003;

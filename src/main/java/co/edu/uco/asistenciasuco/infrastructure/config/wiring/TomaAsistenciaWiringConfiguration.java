@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.alertainasistencia.common.EvaluadorAlertasInasistencia;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarresumenasistencia.primaryports.ConsultarResumenAsistenciaGrupoInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarresumenasistencia.usecase.impl.ConsultarResumenAsistenciaGrupoUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.abrirtoma.primaryports.AbrirTomaAsistenciaInputPort;
@@ -63,15 +64,17 @@ public class TomaAsistenciaWiringConfiguration {
     @Bean
     public CerrarTomaAsistenciaInputPort cerrarTomaAsistenciaInputPort(final TomaAsistenciaAcceso acceso,
                                                                        final TomaAsistenciaRepositoryPort repositorio,
-                                                                       final TomaAsistenciaEventos eventos) {
-        return new CerrarTomaAsistenciaUseCaseImpl(acceso, repositorio, eventos);
+                                                                       final TomaAsistenciaEventos eventos,
+                                                                       final EvaluadorAlertasInasistencia evaluador) {
+        return new CerrarTomaAsistenciaUseCaseImpl(acceso, repositorio, eventos, evaluador);
     }
 
     @Bean
     public RegistrarAsistenciasTomaInputPort registrarAsistenciasTomaInputPort(final TomaAsistenciaAcceso acceso,
                                                                                final TomaAsistenciaRepositoryPort repositorio,
-                                                                               final TomaAsistenciaEventos eventos) {
-        return new RegistrarAsistenciasTomaUseCaseImpl(acceso, repositorio, eventos);
+                                                                               final TomaAsistenciaEventos eventos,
+                                                                               final EvaluadorAlertasInasistencia evaluador) {
+        return new RegistrarAsistenciasTomaUseCaseImpl(acceso, repositorio, eventos, evaluador);
     }
 
     @Bean
@@ -88,8 +91,9 @@ public class TomaAsistenciaWiringConfiguration {
 
     @Bean
     public CerrarTomasVencidasInputPort cerrarTomasVencidasInputPort(final TomaAsistenciaRepositoryPort repositorio,
-                                                                     final TomaAsistenciaEventos eventos) {
-        return new CerrarTomasVencidasUseCaseImpl(repositorio, eventos);
+                                                                     final TomaAsistenciaEventos eventos,
+                                                                     final EvaluadorAlertasInasistencia evaluador) {
+        return new CerrarTomasVencidasUseCaseImpl(repositorio, eventos, evaluador);
     }
 
     @Bean

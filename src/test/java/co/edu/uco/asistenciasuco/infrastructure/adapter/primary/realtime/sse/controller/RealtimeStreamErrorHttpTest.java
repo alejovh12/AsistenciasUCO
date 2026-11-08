@@ -1,7 +1,8 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.controller;
 
 import co.edu.uco.asistenciasuco.application.features.catalogo.resolvermensajeusuario.primaryports.ResolverMensajeUsuarioInputPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
+import co.edu.uco.asistenciasuco.application.features.realtime.resolveraudiencia.AudienciaRealtimeGrupo;
+import co.edu.uco.asistenciasuco.application.features.realtime.resolveraudiencia.primaryports.ResolverAudienciaRealtimeInputPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.localsse.LocalSseRealtimeStreamGateway;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.realtime.localsse.ReactorRealtimeAdapter;
@@ -40,15 +41,15 @@ class RealtimeStreamErrorHttpTest {
     private static final UUID GRUPO_AJENO = UUID.randomUUID();
 
     private final ReactorRealtimeAdapter realtimeAdapter = new ReactorRealtimeAdapter(new SimpleMeterRegistry());
-    private final InstitutionalScopePort institutionalScopePort = mock(InstitutionalScopePort.class);
+    private final ResolverAudienciaRealtimeInputPort institutionalScopePort = mock(ResolverAudienciaRealtimeInputPort.class);
     private final ResolverMensajeUsuarioInputPort resolverMensajeUsuario = mock(ResolverMensajeUsuarioInputPort.class);
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
         when(resolverMensajeUsuario.execute(any())).thenReturn(Optional.empty());
-        when(institutionalScopePort.canDocenteAccessGrupo(USUARIO, GRUPO_PROPIO)).thenReturn(true);
-        when(institutionalScopePort.canDocenteAccessGrupo(USUARIO, GRUPO_AJENO)).thenReturn(false);
+        when(institutionalScopePort.execute(new ResolverAudienciaRealtimeInputPort.Comando(USUARIO, GRUPO_PROPIO))).thenReturn(new AudienciaRealtimeGrupo(true, false, false));
+        when(institutionalScopePort.execute(new ResolverAudienciaRealtimeInputPort.Comando(USUARIO, GRUPO_AJENO))).thenReturn(new AudienciaRealtimeGrupo(false, false, false));
         final RealtimeEventsController controller = new RealtimeEventsController(
                 new LocalSseRealtimeStreamGateway(realtimeAdapter, institutionalScopePort),
                 () -> USUARIO

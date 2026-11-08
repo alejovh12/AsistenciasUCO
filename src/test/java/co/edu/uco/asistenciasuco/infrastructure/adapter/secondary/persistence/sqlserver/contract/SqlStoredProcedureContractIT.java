@@ -326,6 +326,73 @@ class SqlStoredProcedureContractIT {
                         input("@numeroPagina", "int"),
                         input("@tamanoPagina", "int")
                 )),
+                // CULM-001 C.1: alertas de inasistencia, revision de cancelacion y audiencias del SSE.
+                Arguments.of("usp_evaluar_alertas_inasistencia_grupo", List.of(
+                        input("@idGrupo", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idEstudianteGrupo", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_grupos_pendientes_evaluacion_alertas", List.of(
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@tamanoLote", "int"),
+                        input("@idPeriodoAcademico", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_alertas_estudiante", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int"),
+                        input("@soloNoLeidas", "bit"),
+                        input("@soloVigentes", "bit"),
+                        input("@idGrupo", "uniqueidentifier")
+                )),
+                Arguments.of("usp_decidir_revision_cancelacion", List.of(
+                        input("@idRevision", "uniqueidentifier"),
+                        input("@codigoDecision", "nvarchar"),
+                        input("@motivo", "nvarchar"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_resolver_revision_cancelacion", List.of(
+                        input("@idRevision", "uniqueidentifier"),
+                        input("@codigoDecision", "nvarchar"),
+                        input("@motivo", "nvarchar"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_revisiones_cancelacion_coordinador_paginado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int"),
+                        input("@soloPendientes", "bit"),
+                        input("@codigoEstado", "nvarchar"),
+                        input("@idPrograma", "uniqueidentifier"),
+                        input("@idGrupo", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_revisiones_cancelacion_decano_paginado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int"),
+                        input("@soloPendientes", "bit"),
+                        input("@codigoEstado", "nvarchar"),
+                        input("@idPrograma", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_destinatarios_revision_cancelacion", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idRevision", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_audiencias_realtime_grupo", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idGrupo", "uniqueidentifier")
+                )),
+                Arguments.of("usp_actualizar_resolutores_revisiones_cancelacion", List.of(
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@tamanoLote", "int")
+                )),
                 // CULM-001 B.1: cancelacion de sesion (HU047), festivos y generacion v2 que invoca el backend.
                 Arguments.of("usp_cancelar_sesion", List.of(
                         input("@idSesion", "uniqueidentifier"),

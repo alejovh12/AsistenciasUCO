@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.alertainasistencia.common.EvaluadorAlertasInasistencia;
 import co.edu.uco.asistenciasuco.application.features.identidad.sincronizarcuenta.SincronizarCuentaInstitucionalService;
 import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadodecano.usecase.impl.CambiarEstadoDecanoUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadodecano.usecase.CambiarEstadoDecanoUseCase;
@@ -106,12 +107,14 @@ public class AdminWiringConfiguration {
     EjecutarCierreMasivoUseCase ejecutarCierreMasivoUseCase(
             final PeriodoAcademicoQueryPort periodoPort,
             final CierrePeriodoCommandPort cierrePort,
-            final org.springframework.beans.factory.ObjectProvider<co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort> notificacionPortProvider
+            final org.springframework.beans.factory.ObjectProvider<co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort> notificacionPortProvider,
+            final EvaluadorAlertasInasistencia evaluadorAlertasInasistencia
     ) {
         return new EjecutarCierreMasivoUseCaseImpl(
                 periodoPort,
                 cierrePort,
-                notificacionPortProvider.getIfAvailable(() -> notificacion -> {})
+                notificacionPortProvider.getIfAvailable(() -> notificacion -> {}),
+                evaluadorAlertasInasistencia
         );
     }
 

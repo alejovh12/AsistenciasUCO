@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicitudrevisionasistencia.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.features.alertainasistencia.common.EvaluadorAlertasInasistencia;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicitudrevisionasistencia.usecase.ResolverSolicitudRevisionAsistenciaUseCase;
 import co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicitudrevisionasistencia.usecase.domain.ResolverSolicitudRevisionAsistenciaDomain;
@@ -28,6 +29,7 @@ public final class ResolverSolicitudRevisionAsistenciaUseCaseImpl implements Res
     private final InstitutionalScopePort institutionalScopePort;
     private final NotificacionPort notificacionPort;
     private final DestinatariosReclamoPort destinatariosPort;
+    private final EvaluadorAlertasInasistencia evaluador;
 
     public ResolverSolicitudRevisionAsistenciaUseCaseImpl(
             final AsistenciaRepositoryPort asistenciaRepositoryPort,
@@ -42,6 +44,18 @@ public final class ResolverSolicitudRevisionAsistenciaUseCaseImpl implements Res
             final NotificacionPort notificacionPort,
             final DestinatariosReclamoPort destinatariosPort
     ) {
+        this(asistenciaRepositoryPort, institutionalScopePort, notificacionPort, destinatariosPort, EvaluadorAlertasInasistencia.NINGUNO);
+    }
+
+    /** CULM-001 C.1: una aprobacion (EX) baja el porcentaje; con evaluador se reevalua el grupo (solo aprobaciones, SUPUESTO-C-04). */
+    public ResolverSolicitudRevisionAsistenciaUseCaseImpl(
+            final AsistenciaRepositoryPort asistenciaRepositoryPort,
+            final InstitutionalScopePort institutionalScopePort,
+            final NotificacionPort notificacionPort,
+            final DestinatariosReclamoPort destinatariosPort,
+            final EvaluadorAlertasInasistencia evaluador
+    ) {
+        this.evaluador = Objects.requireNonNull(evaluador, "EvaluadorAlertasInasistencia es obligatorio.");
         this.asistenciaRepositoryPort = Objects.requireNonNull(asistenciaRepositoryPort, "AsistenciaRepositoryPort es obligatorio.");
         this.institutionalScopePort = Objects.requireNonNull(institutionalScopePort, "InstitutionalScopePort es obligatorio.");
         this.notificacionPort = notificacionPort != null ? notificacionPort : notificacion -> {};
@@ -59,6 +73,22 @@ public final class ResolverSolicitudRevisionAsistenciaUseCaseImpl implements Res
                 ResolverSolicitudRevisionAsistenciaRepositoryMapper.toRepositoryDTO(domain, docenteId)
         );
         avisar(domain);
+        evaluarSiAprobada(domain);
+    }
+
+    private void evaluarSiAprobada(final ResolverSolicitudRevisionAsistenciaDomain domain) {
+        if (evaluador == EvaluadorAlertasInasistencia.NINGUNO || destinatariosPort == null
+                || !"APROBADA".equalsIgnoreCase(domain.getAccion())) {
+            return;
+        }
+        try {
+            final List<DestinatarioReclamoProjection> destinatarios = destinatariosPort.consultarDestinatariosPorSolicitud(domain.getSolicitud());
+            if (destinatarios != null && !destinatarios.isEmpty() && destinatarios.getFirst().idGrupo() != null) {
+                evaluador.evaluarYAvisar(destinatarios.getFirst().idGrupo(), null);
+            }
+        } catch (final RuntimeException exception) {
+            LOGGER.warn("No fue posible evaluar las alertas tras aprobar el reclamo {}: {}", domain.getSolicitud(), exception.getClass().getSimpleName());
+        }
     }
 
     private void avisar(final ResolverSolicitudRevisionAsistenciaDomain domain) {
