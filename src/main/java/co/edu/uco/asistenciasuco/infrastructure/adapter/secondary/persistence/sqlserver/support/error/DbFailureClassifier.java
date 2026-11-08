@@ -38,7 +38,6 @@ final class DbFailureClassifier {
     // Operaciones reales de los repositories JPA (OP_* en UsuarioJpaRepository / AsistenciaJpaRepository).
     private static final String OPERATION_CREAR_USUARIO = "crearUsuario";
     private static final String OPERATION_SINCRONIZAR_USUARIO = "sincronizarUsuario";
-    private static final String OPERATION_REGISTRAR_ASISTENCIA_AUTONOMA = "registrarAsistenciaAutonoma";
     private static final String OPERATION_RESOLVER_SOLICITUD_REVISION = "resolverSolicitudRevisionAsistencia";
     // P5 (2026-11-04): OP_* de AsignaturaJpaRepository.
     private static final String OPERATION_CREAR_ASIGNATURA = "crearAsignatura";
@@ -186,7 +185,7 @@ final class DbFailureClassifier {
             // Combinacion Programa/Facultad invalida enviada a la operacion.
             case "ERR_PROGRAMA_FACULTAD_INCONSISTENTE" -> CommonErrorCode.VALIDATION_ERROR;
             case "SES_003" -> DatabaseErrorCode.FEATURE_UNAVAILABLE;
-            // SES-01: ventana de registro de asistencia (lote y autonomo). La DB la repite bajo bloqueo con su reloj UTC:
+            // SES-01: ventana de registro de asistencia (lote, toma y token). La DB la repite bajo bloqueo con su reloj UTC:
             // sesion no iniciada, cerrada (sin tolerancia) o con procedencia temporal indeterminada son conflictos de estado.
             case "SES_007" -> AsistenciaErrorCode.ERR_SESION_NO_INICIADA;
             case "SES_008" -> AsistenciaErrorCode.ERR_SESION_CERRADA;
@@ -267,9 +266,6 @@ final class DbFailureClassifier {
     private static ErrorDefinition classifyVal007(final String operation) {
         if (OPERATION_CREAR_USUARIO.equals(operation) || OPERATION_SINCRONIZAR_USUARIO.equals(operation)) {
             return UsuarioErrorCode.ERR_PASSWORD_POLITICA_INVALIDA;
-        }
-        if (OPERATION_REGISTRAR_ASISTENCIA_AUTONOMA.equals(operation)) {
-            return CommonErrorCode.VALIDATION_ERROR;
         }
         if (OPERATION_RESOLVER_SOLICITUD_REVISION.equals(operation)) {
             return SecurityErrorCode.FORBIDDEN;

@@ -22,7 +22,7 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 | [TD-006](#td-006) | Identificación numérica | ABIERTA | no, salvo alcance de identificación |
 | [TD-007](#td-007) | Códigos DB machine-readable | ABIERTA | sí, si bloquea contrato de errores LB-001/002 |
 | [TD-008](#td-008) | Validación runtime de sesión/asistencia | CLOSED — LB-003 | no |
-| [TD-009](#td-009) | Estados de asistencia y registro individual | ABIERTA | sí, para contrato afectado; individual fuera del Golden Path |
+| [TD-009](#td-009) | Estados de asistencia y registro individual | CERRADA (CULM-001 D.7) | no; el registro individual se retiró |
 | [TD-010](#td-010) | Auditoría SQL con DML directo | RESUELTA (Opción A, JPA-06B, 2026-10-06) | auditoría por JPA directo sin SP nuevo ni cambio DB; ver sección |
 | [TD-011](#td-011) | Outbox y consistencia durable | ABIERTA | sí, LB-005 si exige durabilidad |
 | [TD-012](#td-012) | DataSource específico por provider | ABIERTA | no, salvo incorporar otro provider |
@@ -189,7 +189,7 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 - **Motivo:** No extrapolar enum de lote al registro individual.
 - **Resolución esperada:** Contrato DB liberado y semántica individual acordada; paridad/negativos certificados. LB-001B añade el lado de **lectura**: `GET …/asistencias` devuelve `codigoRazonCausa` sin filtrar y el consumer solo admite AN/SJC/EX ([DR-006](../work-items/LB-001B-backend-frontend-asistencia/CONTRACT_MATRIX.md#dr-006--dominio-de-estado-en-lectura)).
 - **Bloquea línea base:** sí, para contrato afectado; individual fuera del Golden Path.
-- **Estado:** ABIERTA.
+- **Estado:** CLOSED — CULM-001 D.7 (2026-11-08). Se retiró `POST /api/v1/asistencias` (ahora 404), `RegistrarAsistenciaInputPort` con su caso de uso, DTO, request, validador y mapper, `AsistenciaRepositoryPort.registrarAsistencia` y el SP `usp_registrar_asistencia_estudiante_autonomo` (migración 26 de la BD); la asistencia se registra con `POST /asistencias/lote`, `POST /tomas/{tomaId}/asistencias` y el registro por token (B.2). La lectura de estados (DR-006) sigue vigente.
 
 ## TD-010
 
