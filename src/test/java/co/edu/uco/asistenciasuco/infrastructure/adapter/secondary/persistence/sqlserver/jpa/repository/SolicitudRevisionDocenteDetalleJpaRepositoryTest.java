@@ -110,6 +110,36 @@ class SolicitudRevisionDocenteDetalleJpaRepositoryTest {
         assertThrows(DatabaseOperationException.class, () -> repository.consultarDetalleSolicitudDocente(SOLICITUD, USUARIO));
     }
 
+    // ---- CULM-001 D.2 (CONTRACT D 3.2/3.3): categoria y soportes del detalle del docente ----
+
+    @Test
+    void mapea_la_categoria_y_la_lista_de_soportes_del_json() {
+        CorrelationIdContext.set(UUID.randomUUID());
+        final UUID uno = UUID.randomUUID();
+        final UUID dos = UUID.randomUUID();
+        final SpDetalleSolicitudRevisionDocenteEntity conSoportes = fila("UTC_V2", uno);
+        when(conSoportes.codigoCategoria()).thenReturn("MED");
+        when(conSoportes.nombreCategoria()).thenReturn("Medico / Salud");
+        when(conSoportes.soportesJson()).thenReturn("[{\"idArchivo\":\"" + uno + "\",\"nombreOriginal\":\"uno.pdf\",\"tipoContenido\":\"application/pdf\","
+                + "\"tamanioBytes\":10},{\"idArchivo\":\"" + dos + "\",\"nombreOriginal\":\"dos.png\",\"tipoContenido\":\"image/png\",\"tamanioBytes\":20}]");
+        final SpDetalleSolicitudRevisionDocenteEntity sinCategoria = fila(null, null);
+        when(entityManager.createNativeQuery(anyString(), eq(SpDetalleSolicitudRevisionDocenteEntity.class))).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(conSoportes), List.of(sinCategoria));
+
+        final DetalleSolicitudRevisionDocenteProjection a = repository.consultarDetalleSolicitudDocente(SOLICITUD, USUARIO).orElseThrow();
+        final DetalleSolicitudRevisionDocenteProjection b = repository.consultarDetalleSolicitudDocente(SOLICITUD, USUARIO).orElseThrow();
+
+        assertEquals("MED", a.codigoCategoria());
+        assertEquals("Medico / Salud", a.nombreCategoria());
+        assertEquals(List.of(
+                new co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.SoporteReclamoProjection(uno, "uno.pdf", "application/pdf", 10L),
+                new co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.SoporteReclamoProjection(dos, "dos.png", "image/png", 20L)),
+                a.soportes());
+        assertNull(b.codigoCategoria());
+        assertNull(b.nombreCategoria());
+        assertEquals(List.of(), b.soportes());
+    }
+
     private static SpDetalleSolicitudRevisionDocenteEntity fila(final String procedencia, final UUID archivo) {
         final SpDetalleSolicitudRevisionDocenteEntity fila = mock(SpDetalleSolicitudRevisionDocenteEntity.class);
         when(fila.idSolicitudRevisionAsistencia()).thenReturn(SOLICITUD);

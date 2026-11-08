@@ -153,8 +153,8 @@ class ConsultasConsolidadoAuditoriaJpaRepositoryTest {
 
     @Test
     void T_005_PAT_01_categorias_leen_la_vista_del_catalogo() {
-        when(query.getResultList()).thenReturn(filas(new Object[]{ID.toString(), "MED", "Médico / Salud", "Enfermedad"},
-                new Object[]{ID, "OTR ", "Otro", null}));
+        when(query.getResultList()).thenReturn(filas(new Object[]{ID.toString(), "MED", "Médico / Salud", "Enfermedad", true},
+                new Object[]{ID, "OTR ", "Otro", null, false}));
 
         final var categorias = repository.consultarCategoriasJustificacion();
 
@@ -164,5 +164,7 @@ class ConsultasConsolidadoAuditoriaJpaRepositoryTest {
         assertEquals("Médico / Salud", categorias.getFirst().nombre());
         assertEquals("OTR", categorias.get(1).codigo());
         assertEquals(null, categorias.get(1).descripcion());
+        assertEquals(true, categorias.getFirst().requiereSoporte());
+        assertEquals(false, categorias.get(1).requiereSoporte());
     }
 }

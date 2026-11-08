@@ -2,7 +2,6 @@ package co.edu.uco.asistenciasuco.application.secondaryports.repository;
 
 import java.util.UUID;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarAsistenciasPorGrupoRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciaRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciasSesionRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ResolverSolicitudRevisionAsistenciaRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.SolicitarRevisionAsistenciaRepositoryDTO;
@@ -14,8 +13,6 @@ import java.util.List;
  * Puerto secundario para persistencia relacionada con asistencias.
  */
 public interface AsistenciaRepositoryPort {
-
-    void registrarAsistencia(RegistrarAsistenciaRepositoryDTO dto);
 
     void registrarAsistenciasSesion(RegistrarAsistenciasSesionRepositoryDTO dto);
 

@@ -50,6 +50,7 @@ class AsistenciaJpaCommandNativeQueryPatternTest {
     private static final UUID SESION = UUID.fromString("22222222-2222-2222-2222-222222222222");
     private static final UUID EJECUTOR = UUID.fromString("33333333-3333-3333-3333-333333333333");
     private static final UUID SOPORTE = UUID.fromString("55555555-5555-5555-5555-555555555555");
+    private static final UUID SOPORTE_2 = UUID.fromString("77777777-7777-7777-7777-777777777777");
     private static final UUID ESTUDIANTE = UUID.fromString("44444444-4444-4444-4444-444444444441");
     private static final UUID SOLICITUD = UUID.fromString("55555555-5555-5555-5555-555555555555");
     private static final UUID DOCENTE = UUID.fromString("66666666-6666-6666-6666-666666666666");
@@ -76,6 +77,11 @@ class AsistenciaJpaCommandNativeQueryPatternTest {
         return new Object[]{CORRELATION, "Operacion exitosa.", "", true};
     }
 
+    /** CULM-001 D.2: usp_radicar_solicitud_revision_asistencia_v3 agrega idSolicitudRevision y totalSoportes a las 4 canonicas. */
+    private static Object[] exitoV3() {
+        return new Object[]{CORRELATION, "Operacion exitosa.", "", true, UUID.randomUUID().toString(), 2};
+    }
+
     @Test
     void CMD_PAT_001_registrar_asistencias_sesion_usa_create_native_query_con_exec_y_binding_nombrado() {
         command.registrarAsistenciasSesion(new RegistrarAsistenciasSesionRepositoryDTO(
@@ -94,15 +100,17 @@ class AsistenciaJpaCommandNativeQueryPatternTest {
 
     @Test
     void CMD_PAT_003_solicitar_revision_usa_create_native_query_con_sus_parametros_reales() {
+        when(query.getResultList()).thenReturn(Collections.singletonList(exitoV3()));
         command.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
-                ESTUDIANTE, SESION, "NOTA", "Justificacion", SOPORTE, EJECUTOR));
+                ESTUDIANTE, SESION, "NOTA", "Justificacion", List.of(SOPORTE, SOPORTE_2), EJECUTOR));
 
-        verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_radicar_solicitud_revision_asistencia_v2"));
+        // CULM-001 D.2: la radicacion usa v3 con el arreglo JSON de soportes (idsArchivoSoporte)
+        verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_radicar_solicitud_revision_asistencia_v3"));
         verify(query).setParameter("idEstudiante", ESTUDIANTE);
         verify(query).setParameter("idSesion", SESION);
         verify(query).setParameter("categoria", "NOTA");
         verify(query).setParameter("justificacion", "Justificacion");
-        verify(query).setParameter("idArchivoSoporte", SOPORTE.toString());
+        verify(query).setParameter("idsArchivoSoporte", "[\"" + SOPORTE + "\",\"" + SOPORTE_2 + "\"]");
         verify(query).setParameter("idCorrelacion", CORRELATION);
         verify(query).setParameter("idUsuarioEjecutor", EJECUTOR);
         verify(query).getResultList();
@@ -127,8 +135,9 @@ class AsistenciaJpaCommandNativeQueryPatternTest {
 
     @Test
     void CMD_PAT_005_ningun_command_abre_transaccion_jpa_ni_consulta_el_entity_manager_mas_alla_del_patron() {
+        when(query.getResultList()).thenReturn(Collections.singletonList(exitoV3()));
         command.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
-                ESTUDIANTE, SESION, "NOTA", "J", null, EJECUTOR));
+                ESTUDIANTE, SESION, "NOTA", "J", List.of(), EJECUTOR));
 
         verify(entityManager).createNativeQuery(anyString());
         verifyNoMoreInteractions(entityManager);
@@ -147,11 +156,11 @@ class AsistenciaJpaCommandNativeQueryPatternTest {
 
     @Test
     void CMD_PAT_007_correlacion_devuelta_distinta_es_contrato_db_y_no_se_ignora() {
-        when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{UUID.randomUUID(), "m", "", true}));
+        when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{UUID.randomUUID(), "m", "", true, null, 0}));
 
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
                 () -> command.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
-                        ESTUDIANTE, SESION, "NOTA", "J", null, EJECUTOR)));
+                        ESTUDIANTE, SESION, "NOTA", "J", List.of(), EJECUTOR)));
 
         assertEquals(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT.code(), exception.getCode());
     }
@@ -162,7 +171,7 @@ class AsistenciaJpaCommandNativeQueryPatternTest {
 
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
                 () -> command.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
-                        ESTUDIANTE, SESION, "NOTA", "J", null, EJECUTOR)));
+                        ESTUDIANTE, SESION, "NOTA", "J", List.of(), EJECUTOR)));
 
         assertEquals(DatabaseErrorCode.DATABASE_OPERATION_ERROR.code(), exception.getCode());
         assertTrue(exception.getCause() instanceof PersistenceException);
@@ -175,8 +184,28 @@ class AsistenciaJpaCommandNativeQueryPatternTest {
 
         verify(entityManager, never()).createNativeQuery(anyString());
     }
+
+    // CULM-001 D.2: sin soportes el SP recibe NULL (un String nulo tiene JdbcType resoluble; un UUID nulo no) y la lista de uno viaja como JSON.
+    @Test
+    void CMD_PAT_010_sin_soportes_envia_idsArchivoSoporte_nulo_y_con_uno_envia_un_arreglo_json() {
+        when(query.getResultList()).thenReturn(Collections.singletonList(exitoV3()));
+        command.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
+                ESTUDIANTE, SESION, "CAL", "J", List.of(), EJECUTOR));
+        command.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
+                ESTUDIANTE, SESION, "CAL", "J", List.of(SOPORTE), EJECUTOR));
+
+        verify(query).setParameter("idsArchivoSoporte", (Object) null);
+        verify(query).setParameter("idsArchivoSoporte", "[\"" + SOPORTE + "\"]");
+    }
+
+    @Test
+    void CMD_PAT_011_la_fila_de_cuatro_columnas_ya_no_cumple_el_contrato_de_v3() {
+        when(query.getResultList()).thenReturn(Collections.singletonList(exito()));
+
+        final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
+                () -> command.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
+                        ESTUDIANTE, SESION, "CAL", "J", List.of(), EJECUTOR)));
+
+        assertEquals(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT.code(), exception.getCode());
+    }
 }
-
-
-
-

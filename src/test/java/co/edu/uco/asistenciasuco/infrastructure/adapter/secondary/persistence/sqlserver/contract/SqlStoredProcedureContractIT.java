@@ -260,13 +260,6 @@ class SqlStoredProcedureContractIT {
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@idUsuarioEjecutor", "uniqueidentifier")
                 )),
-                Arguments.of("usp_registrar_asistencia_estudiante_autonomo", List.of(
-                        input("@idEstudiante", "uniqueidentifier"),
-                        input("@idSesion", "uniqueidentifier"),
-                        input("@codigoVerificacion", "nvarchar"),
-                        input("@idCorrelacion", "uniqueidentifier"),
-                        input("@idUsuarioEjecutor", "uniqueidentifier")
-                )),
                 Arguments.of("usp_radicar_solicitud_revision_asistencia", List.of(
                         input("@idEstudiante", "uniqueidentifier"),
                         input("@idSesion", "uniqueidentifier"),
@@ -303,6 +296,20 @@ class SqlStoredProcedureContractIT {
                         input("@idArchivoSoporte", "uniqueidentifier"),
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                // CULM-001 D.2 (HU014/HU015): radicacion con categoria y varios soportes (arreglo JSON de GUID) y configuracion de reclamos.
+                Arguments.of("usp_radicar_solicitud_revision_asistencia_v3", List.of(
+                        input("@idEstudiante", "uniqueidentifier"),
+                        input("@idSesion", "uniqueidentifier"),
+                        input("@categoria", "nvarchar"),
+                        input("@justificacion", "nvarchar"),
+                        input("@idsArchivoSoporte", "nvarchar"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_configuracion_reclamos", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier")
                 )),
                 Arguments.of("usp_consultar_archivo_soporte_autorizado", List.of(
                         input("@idArchivoSoporte", "uniqueidentifier"),

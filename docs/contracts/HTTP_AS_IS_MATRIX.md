@@ -115,7 +115,7 @@ Los SP/views de las filas son contratos consumidos/reportados por Java; las firm
 
 | `GET /api/v1/grupos/{grupoId}/asistencias?sesionId={UUID}` | DOCENTE / COORDINADOR / ADMINISTRADOR | Consultar asistencias por grupo | `AsistenciaRepositoryPort`, `InstitutionalScopePort` | `uv_detalle_asistencia`, `uv_asistencia`, `uv_estudiante_grupo` | IMPLEMENTATION_AVAILABLE_PENDING_E2E | Titularidad si usuario resuelve docente; sesionId opcional | `ApiListResponse<AsistenciaConsultadaDTO>` |
 | `POST /api/v1/asistencias/consultas/grupo` | DOCENTE / COORDINADOR / ADMINISTRADOR | Consulta legacy | mismos puertos de consulta | mismas views | IMPLEMENTATION_AVAILABLE_PENDING_E2E | Compatibilidad; mismo caso de uso | `ConsultarAsistenciasPorGrupoRequest` |
-| `POST /api/v1/asistencias` | DOCENTE | Registro individual | `AsistenciaRepositoryPort` | sin command individual inequívoco | BLOCKED_BY_DB | Adapter lanza `FeatureUnavailableException` | `RegistrarAsistenciaRequest` |
+| `POST /api/v1/asistencias` | — | **RETIRADA (CULM-001 D.7, TD-009, HU027/HU033)**: el registro individual se cubre con `POST /asistencias/lote` y con el registro por toma (`POST /tomas/{tomaId}/asistencias`) y por token (B.2) | — | `usp_registrar_asistencia_estudiante_autonomo` borrado (migración 26) | RETIRED | 404 `ApiErrorResponse` (sin handler) | — |
 | `GET /api/v1/realtime/status` | AUTENTICADO | Estado local | gateway interno | no aplica | IMPLEMENTATION_AVAILABLE_PENDING_E2E | Contador por JVM | `ApiDataResponse`, activeSubscribers/status |
 | `POST /api/v1/realtime/emit` | ADMINISTRADOR | Diagnóstico | gateway interno | no aplica | IMPLEMENTATION_AVAILABLE_PENDING_E2E | TD-018, no caso de uso productivo | `ApiDataResponse` |
 

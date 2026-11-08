@@ -103,7 +103,8 @@ public class SolicitudRevisionDocenteJpaRepository implements SolicitudRevisionD
                 base.codigoGrupo(), base.nombreGrupo(), base.idAsignatura(), base.codigoAsignatura(),
                 base.nombreAsignatura(), fila.asistio(), fila.codigoRazonCausa(), fila.nombreRazonCausa(),
                 base.idArchivoSoporte(), base.nombreSoporte(), base.tipoContenidoSoporte(),
-                base.tamanioSoporteBytes(), base.fechaRegistroSoporteUtc());
+                base.tamanioSoporteBytes(), base.fechaRegistroSoporteUtc(),
+                fila.codigoCategoria(), fila.nombreCategoria(), SoportesReclamoJson.leer(fila.soportesJson()));
     }
 
     private static SolicitudRevisionDocenteProjection toProjection(final SpSolicitudRevisionDocenteEntity fila) {

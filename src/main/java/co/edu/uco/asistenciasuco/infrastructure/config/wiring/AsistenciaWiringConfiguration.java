@@ -1,13 +1,13 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.asistencia.consultarconfiguracionreclamos.primaryports.ConsultarConfiguracionReclamosInputPort;
+import co.edu.uco.asistenciasuco.application.features.asistencia.consultarconfiguracionreclamos.primaryports.interactor.ConsultarConfiguracionReclamosInteractor;
+import co.edu.uco.asistenciasuco.application.features.asistencia.consultarconfiguracionreclamos.usecase.ConsultarConfiguracionReclamosUseCase;
+import co.edu.uco.asistenciasuco.application.features.asistencia.consultarconfiguracionreclamos.usecase.impl.ConsultarConfiguracionReclamosUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.primaryports.ConsultarAsistenciasPorGrupoInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.primaryports.interactor.ConsultarAsistenciasPorGrupoInteractor;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.ConsultarAsistenciasPorGrupoUseCase;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.impl.ConsultarAsistenciasPorGrupoUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.primaryports.RegistrarAsistenciaInputPort;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.primaryports.interactor.RegistrarAsistenciaInteractor;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.usecase.RegistrarAsistenciaUseCase;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.usecase.impl.RegistrarAsistenciaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.RegistrarAsistenciasSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.interactor.RegistrarAsistenciasSesionInteractor;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.usecase.RegistrarAsistenciasSesionUseCase;
@@ -31,21 +31,6 @@ import java.time.Clock;
 
 @Configuration(proxyBeanMethods = false)
 public class AsistenciaWiringConfiguration {
-
-    @Bean
-    public RegistrarAsistenciaUseCase registrarAsistenciaUseCase(
-            final AsistenciaRepositoryPort asistenciaRepositoryPort,
-            final RealtimePublisherPort realtimePublisherPort
-    ) {
-        return new RegistrarAsistenciaUseCaseImpl(asistenciaRepositoryPort, realtimePublisherPort);
-    }
-
-    @Bean
-    public RegistrarAsistenciaInputPort registrarAsistenciaInputPort(
-            final RegistrarAsistenciaUseCase registrarAsistenciaUseCase
-    ) {
-        return new RegistrarAsistenciaInteractor(registrarAsistenciaUseCase);
-    }
 
     @Bean
     public ConsultarAsistenciasPorGrupoUseCase consultarAsistenciasPorGrupoUseCase(
@@ -106,6 +91,21 @@ public class AsistenciaWiringConfiguration {
             final SolicitarRevisionAsistenciaUseCase solicitarRevisionAsistenciaUseCase
     ) {
         return new SolicitarRevisionAsistenciaInteractor(solicitarRevisionAsistenciaUseCase);
+    }
+
+    /** CULM-001 D.2: configuracion del formulario de reclamos (ESTUDIANTE y DOCENTE; el rol lo valida la base de datos). */
+    @Bean
+    public ConsultarConfiguracionReclamosUseCase consultarConfiguracionReclamosUseCase(
+            final co.edu.uco.asistenciasuco.application.secondaryports.academic.ConfiguracionReclamosQueryPort configuracionReclamosQueryPort
+    ) {
+        return new ConsultarConfiguracionReclamosUseCaseImpl(configuracionReclamosQueryPort);
+    }
+
+    @Bean
+    public ConsultarConfiguracionReclamosInputPort consultarConfiguracionReclamosInputPort(
+            final ConsultarConfiguracionReclamosUseCase consultarConfiguracionReclamosUseCase
+    ) {
+        return new ConsultarConfiguracionReclamosInteractor(consultarConfiguracionReclamosUseCase);
     }
 
     @Bean

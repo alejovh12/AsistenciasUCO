@@ -154,7 +154,7 @@ public final class ConsultasTransversalesInteractor implements ConsultasTransver
     @Override
     public List<CategoriaJustificacionDTO> consultarCategoriasJustificacion() {
         return useCase.consultarCategoriasJustificacion().stream()
-                .map(c -> new CategoriaJustificacionDTO(c.id(), c.codigo(), c.nombre(), c.descripcion()))
+                .map(c -> new CategoriaJustificacionDTO(c.id(), c.codigo(), c.nombre(), c.descripcion(), c.requiereSoporte()))
                 .toList();
     }
 

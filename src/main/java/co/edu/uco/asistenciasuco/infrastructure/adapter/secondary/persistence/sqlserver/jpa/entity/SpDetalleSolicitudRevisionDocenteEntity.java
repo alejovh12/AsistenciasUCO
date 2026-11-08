@@ -13,10 +13,13 @@ public class SpDetalleSolicitudRevisionDocenteEntity extends SpSolicitudRevision
     @Column(name = "asistio") private Boolean asistio;
     @Column(name = "codigoRazonCausa") private String codigoRazonCausa;
     @Column(name = "nombreRazonCausa") private String nombreRazonCausa;
+    // CULM-001 D.2: arreglo JSON [{idArchivo, nombreOriginal, tipoContenido, tamanioBytes}] ordenado por adjuncion
+    @Column(name = "soportesJson") private String soportesJson;
 
     protected SpDetalleSolicitudRevisionDocenteEntity() { }
 
     public Boolean asistio() { return asistio; }
     public String codigoRazonCausa() { return codigoRazonCausa; }
     public String nombreRazonCausa() { return nombreRazonCausa; }
+    public String soportesJson() { return soportesJson; }
 }

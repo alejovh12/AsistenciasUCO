@@ -38,7 +38,6 @@ final class DbFailureClassifier {
     // Operaciones reales de los repositories JPA (OP_* en UsuarioJpaRepository / AsistenciaJpaRepository).
     private static final String OPERATION_CREAR_USUARIO = "crearUsuario";
     private static final String OPERATION_SINCRONIZAR_USUARIO = "sincronizarUsuario";
-    private static final String OPERATION_REGISTRAR_ASISTENCIA_AUTONOMA = "registrarAsistenciaAutonoma";
     private static final String OPERATION_RESOLVER_SOLICITUD_REVISION = "resolverSolicitudRevisionAsistencia";
     // P5 (2026-11-04): OP_* de AsignaturaJpaRepository.
     private static final String OPERATION_CREAR_ASIGNATURA = "crearAsignatura";
@@ -140,6 +139,11 @@ final class DbFailureClassifier {
             // CULM-001 D.1 (HU026B): plazo de excusas vencido (409) o sin parametros para validarlo (500, fallo de configuracion).
             case "REV_020" -> AsistenciaErrorCode.ERR_PLAZO_JUSTIFICACION_VENCIDO;
             case "REV_025" -> AsistenciaErrorCode.ERR_CONFIGURACION_PLAZO_JUSTIFICACION;
+            // CULM-001 D.2 (HU014/HU015): categoria inexistente, soporte obligatorio por categoria, maximo de soportes y soporte repetido (400).
+            case "REV_021" -> AsistenciaErrorCode.ERR_CATEGORIA_JUSTIFICACION_INVALIDA;
+            case "REV_022" -> AsistenciaErrorCode.ERR_SOPORTE_OBLIGATORIO_CATEGORIA;
+            case "REV_023" -> AsistenciaErrorCode.ERR_MAXIMO_SOPORTES_RECLAMO;
+            case "REV_024" -> AsistenciaErrorCode.ERR_SOPORTE_RECLAMO_DUPLICADO;
             // CULM-001 A.2-8: no se desactiva al decano de una facultad con programas activos. 409 con su codigo de
             // catalogo (como COO_001) para que el usuario reciba el texto institucional (F-A-S02).
             case "DEC_002" -> DecanoErrorCode.DEC_002;
@@ -190,7 +194,7 @@ final class DbFailureClassifier {
             // Combinacion Programa/Facultad invalida enviada a la operacion.
             case "ERR_PROGRAMA_FACULTAD_INCONSISTENTE" -> CommonErrorCode.VALIDATION_ERROR;
             case "SES_003" -> DatabaseErrorCode.FEATURE_UNAVAILABLE;
-            // SES-01: ventana de registro de asistencia (lote y autonomo). La DB la repite bajo bloqueo con su reloj UTC:
+            // SES-01: ventana de registro de asistencia (lote, toma y token). La DB la repite bajo bloqueo con su reloj UTC:
             // sesion no iniciada, cerrada (sin tolerancia) o con procedencia temporal indeterminada son conflictos de estado.
             case "SES_007" -> AsistenciaErrorCode.ERR_SESION_NO_INICIADA;
             case "SES_008" -> AsistenciaErrorCode.ERR_SESION_CERRADA;
@@ -271,9 +275,6 @@ final class DbFailureClassifier {
     private static ErrorDefinition classifyVal007(final String operation) {
         if (OPERATION_CREAR_USUARIO.equals(operation) || OPERATION_SINCRONIZAR_USUARIO.equals(operation)) {
             return UsuarioErrorCode.ERR_PASSWORD_POLITICA_INVALIDA;
-        }
-        if (OPERATION_REGISTRAR_ASISTENCIA_AUTONOMA.equals(operation)) {
-            return CommonErrorCode.VALIDATION_ERROR;
         }
         if (OPERATION_RESOLVER_SOLICITUD_REVISION.equals(operation)) {
             return SecurityErrorCode.FORBIDDEN;

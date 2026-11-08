@@ -36,9 +36,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
- * LB-008 JPA-01 COMMANDS — paridad REAL sobre SQL Server para los tres commands NO batch de Asistencia:
- * {@code usp_registrar_asistencia_estudiante_autonomo}, {@code usp_radicar_solicitud_revision_asistencia} y
- * {@code usp_resolver_solicitud_revision_asistencia}. El batch {@code usp_registrar_asistencias_sesion} se
+ * LB-008 JPA-01 COMMANDS — paridad REAL sobre SQL Server para los commands NO batch de Asistencia:
+ * {@code usp_radicar_solicitud_revision_asistencia} y {@code usp_resolver_solicitud_revision_asistencia}
+ * (CULM-001 D.7 retiro {@code usp_registrar_asistencia_estudiante_autonomo}, TD-009). El batch {@code usp_registrar_asistencias_sesion} se
  * certifica en {@link AsistenciaCommandJpaParityIT}.
  *
  * <p>Oraculo: {@link AsistenciaJdbcBaselineOracle} (JDBC baseline, sin cambios). Candidato:
@@ -217,7 +217,7 @@ class AsistenciaCommandsSpParityIT {
             final UUID ejecutor
     ) {
         final SolicitarRevisionAsistenciaRepositoryDTO dto = new SolicitarRevisionAsistenciaRepositoryDTO(
-                estudiante, sesion, "NOTA", "Justificacion de revision", null, ejecutor);
+                estudiante, sesion, "CAL", "Justificacion de revision", java.util.List.of(), ejecutor);
         return ejecutar(sesion, () -> {
             if (candidato) {
                 jpaCandidate.solicitarRevisionAsistencia(dto);
@@ -341,7 +341,7 @@ class AsistenciaCommandsSpParityIT {
     /** Radica con el baseline JDBC (solo preparacion de datos) y devuelve la solicitud creada en la sesion. */
     private UUID solicitudRadicadaPorBaseline(final UUID sesion, final UUID estudiante) {
         jdbcOracle.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
-                estudiante, sesion, "NOTA", "Preparacion de datos", null,
+                estudiante, sesion, "CAL", "Preparacion de datos", java.util.List.of(),
                 usuarioDe(estudiante)));
         return UUID.fromString(jdbcTemplate.queryForObject("""
                 SELECT s.id FROM dbo.SolicitudRevisionAsistencia s

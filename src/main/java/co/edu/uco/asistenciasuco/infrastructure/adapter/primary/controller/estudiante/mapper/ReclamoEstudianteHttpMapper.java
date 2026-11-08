@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.estu
 
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.primaryports.dto.ReclamoEstudianteDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.estudiante.response.ReclamoEstudianteResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.mapper.ReclamoCategoriaSoportesHttpMapper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.HttpUtcInstantCodec;
 
 import java.time.Instant;
@@ -35,7 +36,9 @@ public final class ReclamoEstudianteHttpMapper {
                 dto.materiaNombre(),
                 soporte == null ? null : new ReclamoEstudianteResponse.SoporteAdjuntoResponse(
                         soporte.fileId(), soporte.nombre(), soporte.tipo(), soporte.tamanioBytes(),
-                        utc(soporte.fechaSubidaUtc()), soporte.url())
+                        utc(soporte.fechaSubidaUtc()), soporte.url()),
+                ReclamoCategoriaSoportesHttpMapper.categoria(dto.categoria()),
+                ReclamoCategoriaSoportesHttpMapper.soportes(dto.soportes())
         );
     }
 
