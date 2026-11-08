@@ -160,7 +160,8 @@ class SqlStoredProcedureContractIT {
                         input("@nombreArea", "nvarchar"),
                         input("@nombreComponente", "nvarchar"),
                         input("@idCorrelacion", "uniqueidentifier"),
-                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@codigoCaracter", "nvarchar")   // CULM-001 B2NM (DEC-019, CONTRACT B2 2.7.2)
                 )),
                 Arguments.of("usp_actualizar_asignatura", List.of(
                         input("@idAsignatura", "uniqueidentifier"),
@@ -172,7 +173,8 @@ class SqlStoredProcedureContractIT {
                         input("@nombreArea", "nvarchar"),
                         input("@nombreComponente", "nvarchar"),
                         input("@idCorrelacion", "uniqueidentifier"),
-                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@codigoCaracter", "nvarchar")   // CULM-001 B2NM (DEC-019, CONTRACT B2 2.7.2)
                 )),
                 Arguments.of("usp_toggle_estado_asignatura", List.of(
                         input("@idAsignatura", "uniqueidentifier"),
@@ -227,7 +229,8 @@ class SqlStoredProcedureContractIT {
                         input("@password", "nvarchar"),
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@idUsuarioEjecutor", "uniqueidentifier"),
-                        input("@idTipoIdIdentificacion", "uniqueidentifier")
+                        input("@idTipoIdIdentificacion", "uniqueidentifier"),
+                        input("@idPrograma", "uniqueidentifier")   // CULM-001 B2NM (DEC-020, S3): programa elegido en grupos con varios programas
                 )),
                 Arguments.of("usp_crear_sesion", List.of(
                         input("@idGrupo", "uniqueidentifier"),

@@ -184,7 +184,7 @@ class CoreViewQueriesJpaParityIT {
                             INNER JOIN dbo.Programa p ON p.facultad = f.id
                             INNER JOIN dbo.PlanEstudio pe ON pe.programa = p.id
                             INNER JOIN dbo.SemestrePlanEstudio spe ON spe.planEstudio = pe.id
-                            INNER JOIN dbo.Asignatura a ON a.semestrePlanEstudio = spe.id
+                            INNER JOIN dbo.AsignaturaPlanEstudio ape ON ape.semestrePlanEstudio = spe.id AND ape.estaActivo = 1 INNER JOIN dbo.Asignatura a ON a.id = ape.asignatura
                             INNER JOIN dbo.Grupo g ON g.asignatura = a.id
                             INNER JOIN dbo.EstudianteGrupo eg ON eg.grupo = g.id
                             WHERE ad.usuario = '%s'
@@ -215,7 +215,7 @@ class CoreViewQueriesJpaParityIT {
                             INNER JOIN dbo.Programa p ON p.facultad = f.id
                             INNER JOIN dbo.PlanEstudio pe ON pe.programa = p.id
                             INNER JOIN dbo.SemestrePlanEstudio spe ON spe.planEstudio = pe.id
-                            INNER JOIN dbo.Asignatura a ON a.semestrePlanEstudio = spe.id
+                            INNER JOIN dbo.AsignaturaPlanEstudio ape ON ape.semestrePlanEstudio = spe.id AND ape.estaActivo = 1 INNER JOIN dbo.Asignatura a ON a.id = ape.asignatura
                             INNER JOIN dbo.Grupo g ON g.asignatura = a.id
                             INNER JOIN dbo.EstudianteGrupo eg ON eg.grupo = g.id
                             WHERE ad.usuario = '%s'
@@ -261,7 +261,7 @@ class CoreViewQueriesJpaParityIT {
                             INNER JOIN dbo.Programa p ON p.facultad = f.id
                             INNER JOIN dbo.PlanEstudio pe ON pe.programa = p.id
                             INNER JOIN dbo.SemestrePlanEstudio spe ON spe.planEstudio = pe.id
-                            INNER JOIN dbo.Asignatura a ON a.semestrePlanEstudio = spe.id
+                            INNER JOIN dbo.AsignaturaPlanEstudio ape ON ape.semestrePlanEstudio = spe.id AND ape.estaActivo = 1 INNER JOIN dbo.Asignatura a ON a.id = ape.asignatura
                             INNER JOIN dbo.Grupo g ON g.asignatura = a.id
                             INNER JOIN dbo.EstudianteGrupo eg ON eg.grupo = g.id
                             WHERE ad.usuario = '%s'
