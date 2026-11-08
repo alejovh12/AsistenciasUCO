@@ -20,6 +20,7 @@ import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryp
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.dto.CrearDecanoDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.crearfacultad.primaryports.CrearFacultadInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.crearfacultad.primaryports.dto.CrearFacultadDTO;
+import co.edu.uco.asistenciasuco.application.features.admin.consultarhistorialcierres.primaryports.ConsultarHistorialCierresMasivosInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.primaryports.EjecutarCierreMasivoInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.primaryports.dto.EjecutarCierreMasivoDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
@@ -54,6 +55,7 @@ public final class AdminPortalController {
     private final ConsultarAreasInputPort consultarAreasInputPort;
     private final CambiarEstadoDecanoInputPort cambiarEstadoDecanoInputPort;
     private final AuthenticatedUserResolver authenticatedUserResolver;
+    private final ConsultarHistorialCierresMasivosInputPort consultarHistorialCierresMasivosInputPort;
 
     public AdminPortalController(
             final ConsultarDecanosInputPort consultarDecanosInputPort,
@@ -68,6 +70,26 @@ public final class AdminPortalController {
             final CambiarEstadoDecanoInputPort cambiarEstadoDecanoInputPort,
             final AuthenticatedUserResolver authenticatedUserResolver
     ) {
+        this(consultarDecanosInputPort, crearDecanoInputPort, ejecutarCierreMasivoInputPort,
+                consultarInstitucionesInputPort, consultarFacultadesInputPort, crearFacultadInputPort,
+                actualizarFacultadInputPort, cambiarEstadoFacultadInputPort, consultarAreasInputPort,
+                cambiarEstadoDecanoInputPort, authenticatedUserResolver, null);
+    }
+
+    public AdminPortalController(
+            final ConsultarDecanosInputPort consultarDecanosInputPort,
+            final CrearDecanoInputPort crearDecanoInputPort,
+            final EjecutarCierreMasivoInputPort ejecutarCierreMasivoInputPort,
+            final ConsultarInstitucionesInputPort consultarInstitucionesInputPort,
+            final ConsultarFacultadesInputPort consultarFacultadesInputPort,
+            final CrearFacultadInputPort crearFacultadInputPort,
+            final ActualizarFacultadInputPort actualizarFacultadInputPort,
+            final CambiarEstadoFacultadInputPort cambiarEstadoFacultadInputPort,
+            final ConsultarAreasInputPort consultarAreasInputPort,
+            final CambiarEstadoDecanoInputPort cambiarEstadoDecanoInputPort,
+            final AuthenticatedUserResolver authenticatedUserResolver,
+            final ConsultarHistorialCierresMasivosInputPort consultarHistorialCierresMasivosInputPort
+    ) {
         this.consultarDecanosInputPort = consultarDecanosInputPort;
         this.crearDecanoInputPort = crearDecanoInputPort;
         this.ejecutarCierreMasivoInputPort = ejecutarCierreMasivoInputPort;
@@ -79,6 +101,7 @@ public final class AdminPortalController {
         this.consultarAreasInputPort = consultarAreasInputPort;
         this.cambiarEstadoDecanoInputPort = cambiarEstadoDecanoInputPort;
         this.authenticatedUserResolver = authenticatedUserResolver;
+        this.consultarHistorialCierresMasivosInputPort = consultarHistorialCierresMasivosInputPort;
     }
 
     @GetMapping("/decanos")
