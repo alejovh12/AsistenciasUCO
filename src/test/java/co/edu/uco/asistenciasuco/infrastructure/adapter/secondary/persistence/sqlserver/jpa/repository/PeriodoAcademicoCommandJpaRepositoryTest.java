@@ -51,6 +51,8 @@ class PeriodoAcademicoCommandJpaRepositoryTest {
 
     @Test
     void crear_ejecuta_el_sp_con_nombre_fechas_y_ejecutor() {
+        // CULM-001 D.9-a (F-ADM-030): el SP devuelve ademas idPeriodo (quinta columna).
+        when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{CORRELATION, "ok", "", true, PERIODO}));
         repository.crearPeriodoAcademico(PERIODO, "2027-1", INICIO, FIN, ACTOR);
 
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_crear_periodo_academico"));

@@ -3,7 +3,11 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.PeriodoAcademicoQueryPort;
 import org.springframework.stereotype.Repository;
 
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PaginaPeriodosAdminProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PeriodoAcademicoProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PeriodoAdminProjection;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.NativeRowValues;
+import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.mapper.AcademicViewJpaProjectionMapper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvPeriodoAcademicoEntity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
@@ -40,6 +44,48 @@ public class PeriodoAcademicoJpaRepository implements PeriodoAcademicoQueryPort 
                         .map(AcademicViewJpaProjectionMapper::toPeriodoAcademico)
                         .toList()
         );
+    }
+
+    static final String SQL_PERIODOS_ADMIN = """
+            EXEC dbo.usp_consultar_periodos_academicos_paginado
+                 @idUsuarioEjecutor = :idUsuarioEjecutor,
+                 @idCorrelacion = :idCorrelacion,
+                 @numeroPagina = :numeroPagina,
+                 @tamanoPagina = :tamanoPagina
+            """;
+    static final int COLUMNAS_PERIODO_ADMIN = 10;
+
+    @Override
+    public PaginaPeriodosAdminProjection consultarPeriodosAdministrador(final UUID idUsuarioEjecutor, final int pagina, final int tamano) {
+        final UUID correlationId = CorrelationIdContext.require();
+        return JpaQueryExecutor.execute("consultarPeriodosAdministrador", "No fue posible consultar los periodos del administrador.", () -> {
+            final List<?> filas = entityManager.createNativeQuery(SQL_PERIODOS_ADMIN)
+                    .setParameter("idUsuarioEjecutor", idUsuarioEjecutor)
+                    .setParameter("idCorrelacion", correlationId)
+                    .setParameter("numeroPagina", pagina)
+                    .setParameter("tamanoPagina", tamano)
+                    .getResultList();
+            long total = 0;
+            final List<PeriodoAdminProjection> periodos = new java.util.ArrayList<>();
+            for (final Object fila : filas) {
+                final Object[] c = (Object[]) fila;
+                if (c.length != COLUMNAS_PERIODO_ADMIN) {
+                    throw new IllegalStateException("usp_consultar_periodos_academicos_paginado debe devolver " + COLUMNAS_PERIODO_ADMIN + " columnas.");
+                }
+                periodos.add(new PeriodoAdminProjection(NativeRowValues.uuid(c[0]), NativeRowValues.uuid(c[1]), NativeRowValues.texto(c[2]),
+                        NativeRowValues.texto(c[3]), String.valueOf(c[4]), fecha(c[5]), fecha(c[6]), NativeRowValues.entero(c[7]),
+                        NativeRowValues.bit(c[8])));
+                total = NativeRowValues.entero(c[9]);
+            }
+            return new PaginaPeriodosAdminProjection(periodos, total);
+        }, DbCodeTranslator::traducir);
+    }
+
+    private static java.time.LocalDate fecha(final Object valor) {
+        if (valor instanceof java.time.LocalDate fecha) {
+            return fecha;
+        }
+        return valor == null ? null : java.sql.Date.valueOf(valor.toString().substring(0, 10)).toLocalDate();
     }
 
     @Override
