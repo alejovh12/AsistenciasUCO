@@ -7,6 +7,7 @@ import java.util.UUID;
  */
 public final class CrearCoordinadorDomain {
 
+    private final UUID tipoIdentificacionId;
     private final String numeroIdentificacion;
     private final String primerNombre;
     private final String segundoNombre;
@@ -16,6 +17,30 @@ public final class CrearCoordinadorDomain {
     private final UUID idPrograma;
     private final String password;
     private final UUID usuario;
+
+    public CrearCoordinadorDomain(
+            final UUID tipoIdentificacionId,
+            final String numeroIdentificacion,
+            final String primerNombre,
+            final String segundoNombre,
+            final String primerApellido,
+            final String segundoApellido,
+            final String correo,
+            final UUID idPrograma,
+            final String password,
+            final UUID usuario
+    ) {
+        this.tipoIdentificacionId = tipoIdentificacionId;
+        this.numeroIdentificacion = numeroIdentificacion;
+        this.primerNombre = primerNombre;
+        this.segundoNombre = segundoNombre;
+        this.primerApellido = primerApellido;
+        this.segundoApellido = segundoApellido;
+        this.correo = correo;
+        this.idPrograma = idPrograma;
+        this.password = password;
+        this.usuario = usuario;
+    }
 
     public CrearCoordinadorDomain(
             final String numeroIdentificacion,
@@ -28,15 +53,11 @@ public final class CrearCoordinadorDomain {
             final String password,
             final UUID usuario
     ) {
-        this.numeroIdentificacion = numeroIdentificacion;
-        this.primerNombre = primerNombre;
-        this.segundoNombre = segundoNombre;
-        this.primerApellido = primerApellido;
-        this.segundoApellido = segundoApellido;
-        this.correo = correo;
-        this.idPrograma = idPrograma;
-        this.password = password;
-        this.usuario = usuario;
+        this(null, numeroIdentificacion, primerNombre, segundoNombre, primerApellido, segundoApellido, correo, idPrograma, password, usuario);
+    }
+
+    public UUID getTipoIdentificacionId() {
+        return tipoIdentificacionId;
     }
 
     public String getNumeroIdentificacion() {

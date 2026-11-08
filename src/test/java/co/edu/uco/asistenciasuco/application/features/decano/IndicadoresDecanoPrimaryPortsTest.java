@@ -78,8 +78,8 @@ class IndicadoresDecanoPrimaryPortsTest {
     void comparativa_mapea_cada_fila() {
         final ConsultarComparativaProgramasUseCase useCase = mock(ConsultarComparativaProgramasUseCase.class);
         when(useCase.execute(any())).thenReturn(List.of(
-                new ComparativaProgramaDomain(PROGRAMA, "Programa 1", true, 5, 1, 2, new BigDecimal("60.00"), 33, 5, new BigDecimal("15.15")),
-                new ComparativaProgramaDomain(UUID.randomUUID(), "Programa 4", false, 0, 0, 0, null, 0, 0, null)));
+                new ComparativaProgramaDomain(PROGRAMA, "Programa 1", true, 5, 1, 2, new BigDecimal("60.00"), 33, 5, new BigDecimal("15.15"), new BigDecimal("120.00"), new BigDecimal("18.00")),
+                new ComparativaProgramaDomain(UUID.randomUUID(), "Programa 4", false, 0, 0, 0, null, 0, 0, null, new BigDecimal("120.00"), new BigDecimal("18.00"))));
 
         final List<ComparativaProgramaDTO> dto = new ConsultarComparativaProgramasInteractor(useCase)
                 .execute(new ConsultarComparativaProgramasDTO(ACTOR, PERIODO));
@@ -95,6 +95,8 @@ class IndicadoresDecanoPrimaryPortsTest {
         assertEquals(33, dto.get(0).sesionesEjecutadas());
         assertEquals(5, dto.get(0).faltasSinJustaCausa());
         assertEquals(new BigDecimal("15.15"), dto.get(0).porcentajeAusentismo());
+        assertEquals(new BigDecimal("120.00"), dto.get(0).horasDictadas());
+        assertEquals(new BigDecimal("18.00"), dto.get(0).horasFalta());
         assertNull(dto.get(1).porcentajeAusentismo());
         assertThrows(NullPointerException.class, () -> new ConsultarComparativaProgramasInteractor(null));
     }

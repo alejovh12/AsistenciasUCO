@@ -45,9 +45,9 @@ class ConsultarComparativaProgramasUseCaseImplTest {
     @Test
     void T_BE_01_conserva_filas_orden_y_cifras_del_puerto() {
         when(queryPort.consultarComparativa(ACTOR, PERIODO)).thenReturn(List.of(
-                new ComparativaProgramaProjection(P2, "Programa 2", true, 1, 0, 1, new BigDecimal("0.00"), 2, 1, new BigDecimal("50.00")),
-                new ComparativaProgramaProjection(P1, "Programa 1", true, 5, 1, 2, new BigDecimal("60.00"), 33, 5, new BigDecimal("15.15")),
-                new ComparativaProgramaProjection(P4, "Programa 4", false, 0, 0, 0, null, 0, 0, null)));
+                new ComparativaProgramaProjection(P2, "Programa 2", true, 1, 0, 1, new BigDecimal("0.00"), 2, 1, new BigDecimal("50.00"), new BigDecimal("120.00"), new BigDecimal("18.00")),
+                new ComparativaProgramaProjection(P1, "Programa 1", true, 5, 1, 2, new BigDecimal("60.00"), 33, 5, new BigDecimal("15.15"), new BigDecimal("120.00"), new BigDecimal("18.00")),
+                new ComparativaProgramaProjection(P4, "Programa 4", false, 0, 0, 0, null, 0, 0, null, new BigDecimal("120.00"), new BigDecimal("18.00"))));
 
         final List<ComparativaProgramaDomain> r = useCase.execute(new ConsultarComparativaProgramasDomain(ACTOR, PERIODO));
 
@@ -56,6 +56,8 @@ class ConsultarComparativaProgramasUseCaseImplTest {
         assertEquals(5, r.get(1).totalEstudiantes());
         assertEquals(33, r.get(1).sesionesEjecutadas());
         assertEquals(new BigDecimal("60.00"), r.get(1).tasaRetencion());
+        assertEquals(new BigDecimal("120.00"), r.get(1).horasDictadas());
+        assertEquals(new BigDecimal("18.00"), r.get(1).horasFalta());
         assertFalse(r.get(2).estaActivoPrograma());
         assertTrue(r.get(0).estaActivoPrograma());
     }
@@ -63,7 +65,7 @@ class ConsultarComparativaProgramasUseCaseImplTest {
     @Test
     void T_BE_03_un_programa_sin_datos_conserva_nulos_y_no_se_oculta() {
         when(queryPort.consultarComparativa(ACTOR, null)).thenReturn(List.of(
-                new ComparativaProgramaProjection(P4, "Programa 4", false, 0, 0, 0, null, 0, 0, null)));
+                new ComparativaProgramaProjection(P4, "Programa 4", false, 0, 0, 0, null, 0, 0, null, new BigDecimal("120.00"), new BigDecimal("18.00"))));
 
         final List<ComparativaProgramaDomain> r = useCase.execute(new ConsultarComparativaProgramasDomain(ACTOR, null));
 

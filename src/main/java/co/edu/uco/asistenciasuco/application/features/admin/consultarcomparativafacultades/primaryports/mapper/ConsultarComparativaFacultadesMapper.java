@@ -16,6 +16,6 @@ public final class ConsultarComparativaFacultadesMapper {
     }
 
     public static List<ComparativaFacultadDTO> toDto(final List<ComparativaFacultadDomain> filas) {
-        return filas.stream().map(d -> new ComparativaFacultadDTO(d.idFacultad(), d.nombreFacultad(), d.estaActivaFacultad(), d.totalProgramas(), d.totalEstudiantes(), d.estudiantesRiesgo(), d.estudiantesPerdida(), d.tasaRetencion(), d.sesionesEjecutadas(), d.faltasSinJustaCausa(), d.porcentajeAusentismo())).toList();
+        return filas.stream().map(d -> new ComparativaFacultadDTO(d.idFacultad(), d.nombreFacultad(), d.estaActivaFacultad(), d.totalProgramas(), d.totalEstudiantes(), d.estudiantesRiesgo(), d.estudiantesPerdida(), d.tasaRetencion(), d.sesionesEjecutadas(), d.faltasSinJustaCausa(), d.porcentajeAusentismo(), d.horasDictadas(), d.horasFalta())).toList();
     }
 }

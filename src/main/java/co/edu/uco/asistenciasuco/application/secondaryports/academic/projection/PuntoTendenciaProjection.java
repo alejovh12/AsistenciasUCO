@@ -8,6 +8,8 @@ public record PuntoTendenciaProjection(
         LocalDate finIntervalo,
         int sesionesEjecutadas,
         int faltasSinJustaCausa,
-        BigDecimal porcentajeAusentismo
+        BigDecimal porcentajeAusentismo,
+        BigDecimal horasDictadasEstudiante,
+        BigDecimal horasFalta
 ) {
 }

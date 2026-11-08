@@ -84,7 +84,7 @@ public class DecanoIndicadoresJpaRepository implements DecanoIndicadoresQueryPor
                 () -> ejecutar(SQL_COMPARATIVA, SpComparativaProgramaEntity.class, correlationId, actorUsuarioId, Map.of(), idPeriodoAcademico).stream()
                         .map(e -> new ComparativaProgramaProjection(e.idPrograma(), e.nombrePrograma(), verdadero(e.estaActivoPrograma()),
                                 cero(e.totalEstudiantes()), cero(e.estudiantesRiesgo()), cero(e.estudiantesPerdida()), e.tasaRetencion(),
-                                cero(e.sesionesEjecutadas()), cero(e.faltasSinJustaCausa()), e.porcentajeAusentismo()))
+                                cero(e.sesionesEjecutadas()), cero(e.faltasSinJustaCausa()), e.porcentajeAusentismo(), e.horasDictadas(), e.horasFalta()))
                         .toList());
     }
 

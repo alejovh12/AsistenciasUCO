@@ -7,6 +7,7 @@ import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteE
 import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.festivos.exception.FestivoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.asistenciaqr.exception.AsistenciaQrErrorCode;
+import co.edu.uco.asistenciasuco.application.features.cargamasiva.exception.CargaMasivaErrorCode;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.exception.TomaAsistenciaErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.AdmisionEstudianteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.CatalogoErrorCode;
@@ -138,6 +139,21 @@ final class DbFailureClassifier {
             case "ADS_004" -> AdmisionEstudianteErrorCode.ADS_004;
             case "ADS_005" -> AdmisionEstudianteErrorCode.ADS_005;
             case "ADS_006" -> AdmisionEstudianteErrorCode.ADS_006;
+            // CULM-001 D.5 (HU171): Carga masiva por CSV de usuarios
+            case "CMA_001" -> CargaMasivaErrorCode.CMA_001;
+            case "CMA_002" -> CargaMasivaErrorCode.CMA_002;
+            case "CMA_003" -> CargaMasivaErrorCode.CMA_003;
+            case "CMA_004" -> CargaMasivaErrorCode.CMA_004;
+            case "CMA_005" -> CargaMasivaErrorCode.CMA_005;
+            case "CMA_006" -> CargaMasivaErrorCode.CMA_006;
+            case "CMA_007" -> CargaMasivaErrorCode.CMA_007;
+            case "CMA_008" -> CargaMasivaErrorCode.CMA_008;
+            case "CMA_009" -> CargaMasivaErrorCode.CMA_009;
+            case "CMA_010" -> CargaMasivaErrorCode.CMA_010;
+            case "CMA_011" -> CargaMasivaErrorCode.CMA_011;
+            case "CMA_012" -> CargaMasivaErrorCode.CMA_012;
+            case "CMA_013" -> CargaMasivaErrorCode.CMA_013;
+            case "CMA_014" -> CargaMasivaErrorCode.CMA_014;
             // CULM-001 D.1 (HU026B): plazo de excusas vencido (409) o sin parametros para validarlo (500, fallo de configuracion).
             case "REV_020" -> AsistenciaErrorCode.ERR_PLAZO_JUSTIFICACION_VENCIDO;
             case "REV_025" -> AsistenciaErrorCode.ERR_CONFIGURACION_PLAZO_JUSTIFICACION;
