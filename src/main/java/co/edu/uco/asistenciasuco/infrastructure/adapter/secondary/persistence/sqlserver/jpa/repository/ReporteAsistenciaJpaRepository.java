@@ -7,6 +7,10 @@ import co.edu.uco.asistenciasuco.application.secondaryports.report.ReporteAsiste
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.mapper.AcademicViewJpaProjectionMapper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.projection.ReporteAsistenciaQueryRow;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.ProcedureResult;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.ProcedureResultMapper;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.ProcedureResultValidator;
+import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import jakarta.persistence.EntityManager;
 
 import java.util.List;
@@ -35,10 +39,34 @@ public class ReporteAsistenciaJpaRepository implements ReporteAsistenciaQueryPor
             order by s.numero, s.fechaHoraInicio, ei.nombreCompleto, ei.id, eg.id
             """;
 
+    static final String SQL_VALIDAR_ACCESO = """
+            EXEC dbo.usp_validar_acceso_reporte_grupo
+                 @idUsuarioEjecutor = :idUsuarioEjecutor,
+                 @idCorrelacion = :idCorrelacion,
+                 @idGrupo = :idGrupo
+            """;
+
     private final EntityManager entityManager;
 
     public ReporteAsistenciaJpaRepository(final EntityManager entityManager) {
         this.entityManager = Objects.requireNonNull(entityManager, "El EntityManager de reporte es obligatorio.");
+    }
+
+    @Override
+    public void validarAccesoGrupo(final UUID usuarioEjecutor, final UUID grupoId) {
+        final UUID correlationId = CorrelationIdContext.require();
+        JpaQueryExecutor.execute(
+                "validarAccesoReporteGrupo",
+                "No fue posible validar el acceso al reporte del grupo.",
+                () -> {
+                    final ProcedureResult resultado = ProcedureResultMapper.mapSingle(entityManager.createNativeQuery(SQL_VALIDAR_ACCESO)
+                            .setParameter("idUsuarioEjecutor", usuarioEjecutor)
+                            .setParameter("idCorrelacion", correlationId)
+                            .setParameter("idGrupo", grupoId)
+                            .getResultList());
+                    ProcedureResultValidator.validate(resultado, correlationId, "validarAccesoReporteGrupo");
+                    return Boolean.TRUE;
+                });
     }
 
     @Override
