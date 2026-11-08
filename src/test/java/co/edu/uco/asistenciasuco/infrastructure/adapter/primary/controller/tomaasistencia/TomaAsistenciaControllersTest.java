@@ -330,7 +330,51 @@ class TomaAsistenciaControllersTest {
                 .andExpect(jsonPath("$.elementos[0].porcentajeAsistencia").value(80.00))
                 .andExpect(jsonPath("$.elementos[0].codigoPermanencia").value("RIESGO"))
                 .andExpect(jsonPath("$.elementos[0].umbralPerdida").value(20.00))
+                .andExpect(jsonPath("$.elementos[0].marca").isEmpty())
                 .andExpect(jsonPath("$.totalElementos").value(1));
+    }
+
+    @Test
+    void resumen_del_docente_serializa_la_marca_con_alertas_y_revision() throws Exception {
+        final UUID revision = UUID.randomUUID();
+        final co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.MarcaInasistenciaDTO marca =
+                new co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.MarcaInasistenciaDTO(true,
+                        java.time.Instant.parse("2026-11-01T10:15:30Z"), true, java.time.Instant.parse("2026-11-05T08:00:00Z"),
+                        new co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.MarcaInasistenciaDTO.RevisionMarcaDTO(
+                                revision, "PENDIENTE_DOCENTE", "Pendiente del docente", true, null, List.of("MANTENER", "PROPONER")));
+        when(resumen.execute(new ConsultarResumenAsistenciaGrupoInputPort.Consulta(GRUPO, null, null, ACTOR))).thenReturn(new PaginaResultado<>(List.of(
+                new ResumenAsistenciaEstudianteDTO(ESTUDIANTE, "Ana Perez", "A", new IndicadoresAsistenciaDTO(10, new BigDecimal("20.00"),
+                        new BigDecimal("16.00"), new BigDecimal("3.00"), new BigDecimal("1.00"), new BigDecimal("0.00"), new BigDecimal("15.00"),
+                        new BigDecimal("80.00"), "RIESGO", new BigDecimal("15.00"), new BigDecimal("20.00")), marca)), 1, 50, 1));
+
+        mvc.perform(get("/api/v1/docente/grupos/{g}/resumen-asistencia", GRUPO))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.elementos[0].marca.advertenciaVigente").value(true))
+                .andExpect(jsonPath("$.elementos[0].marca.fechaAdvertenciaUtc").value("2026-11-01T10:15:30Z"))
+                .andExpect(jsonPath("$.elementos[0].marca.perdidaVigente").value(true))
+                .andExpect(jsonPath("$.elementos[0].marca.fechaPerdidaUtc").value("2026-11-05T08:00:00Z"))
+                .andExpect(jsonPath("$.elementos[0].marca.revision.id").value(revision.toString()))
+                .andExpect(jsonPath("$.elementos[0].marca.revision.estado").value("PENDIENTE_DOCENTE"))
+                .andExpect(jsonPath("$.elementos[0].marca.revision.nombreEstado").value("Pendiente del docente"))
+                .andExpect(jsonPath("$.elementos[0].marca.revision.requiereAccionDocente").value(true))
+                .andExpect(jsonPath("$.elementos[0].marca.revision.perfilResolutorActual").isEmpty())
+                .andExpect(jsonPath("$.elementos[0].marca.revision.accionesPermitidas[1]").value("PROPONER"));
+    }
+
+    @Test
+    void resumen_del_docente_con_marca_sin_revision_serializa_revision_null() throws Exception {
+        final co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.MarcaInasistenciaDTO marca =
+                new co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.MarcaInasistenciaDTO(true,
+                        java.time.Instant.parse("2026-11-01T10:15:30Z"), false, null, null);
+        when(resumen.execute(new ConsultarResumenAsistenciaGrupoInputPort.Consulta(GRUPO, null, null, ACTOR))).thenReturn(new PaginaResultado<>(List.of(
+                new ResumenAsistenciaEstudianteDTO(ESTUDIANTE, "Ana Perez", "A", new IndicadoresAsistenciaDTO(10, new BigDecimal("20.00"),
+                        new BigDecimal("16.00"), new BigDecimal("3.00"), new BigDecimal("1.00"), new BigDecimal("0.00"), new BigDecimal("15.00"),
+                        new BigDecimal("80.00"), "RIESGO", new BigDecimal("15.00"), new BigDecimal("20.00")), marca)), 1, 50, 1));
+
+        mvc.perform(get("/api/v1/docente/grupos/{g}/resumen-asistencia", GRUPO))
+                .andExpect(jsonPath("$.elementos[0].marca.advertenciaVigente").value(true))
+                .andExpect(jsonPath("$.elementos[0].marca.fechaPerdidaUtc").isEmpty())
+                .andExpect(jsonPath("$.elementos[0].marca.revision").isEmpty());
     }
 
     @Test

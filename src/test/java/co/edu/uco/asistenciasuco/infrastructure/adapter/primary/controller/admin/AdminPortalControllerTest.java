@@ -125,6 +125,17 @@ class AdminPortalControllerTest {
     }
 
     @Test
+    void ejecutarCierreMasivo_sin_periodo_responde_400_field_required_sin_llegar_al_caso_de_uso() throws Exception {
+        for (final String body : new String[]{"{}", "{\"idPeriodoAcademico\":null}"}) {
+            mvc.perform(post("/api/v1/admin/cierre-masivo").contentType("application/json").content(body))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.details[0].field").value("idPeriodoAcademico"))
+                    .andExpect(jsonPath("$.details[0].code").value("FIELD_REQUIRED"));
+        }
+        org.mockito.Mockito.verifyNoInteractions(ejecutarCierreMasivo);
+    }
+
+    @Test
     void consultarInstituciones_serializa_lista_del_puerto() throws Exception {
         when(consultarInstituciones.execute()).thenReturn(List.of(new InstitucionDTO(UUID.randomUUID(), "UCO", true, "Activa")));
 
