@@ -100,7 +100,8 @@ public class SecurityConfig {
                 // CULM-001 A.2-5: un error lanzado en un filtro se despacha a /error; ese despacho muestra el estado real (y el
                 // PEP ya exime /error, SecurityPublicEndpoints.ERROR_VIEW) en vez de un 401 falso por no estar autenticado.
                 .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                // F-EST-S14: solo el preflight CORS de las dos rutas publicas de matricula QR admite OPTIONS sin token.
+                .requestMatchers(HttpMethod.OPTIONS, SecurityPublicEndpoints.MATRICULA_QR_VALIDAR, SecurityPublicEndpoints.MATRICULA_QR_REGISTRO).permitAll()
                 .requestMatchers(SecurityPublicEndpoints.ACTUATOR).permitAll()
                 // permitAll de AUTORIZACION: la autenticacion la exige AzureEventGridAuthFilter (header
                 // aeg-sas-token, fail-closed). No equivale a un endpoint sin autenticacion.
@@ -111,7 +112,7 @@ public class SecurityConfig {
                 // HU176B: matricula publica por QR/PIN. Las unicas dos rutas publicas de negocio nuevas, declaradas una por una
                 // (sin comodin /public/**): la credencial es el token/PIN rotativo; el limite de intentos lo aplica
                 // MatriculaQrRateLimitFilter y la red del campus y el interruptor los exige el caso de uso.
-                .requestMatchers(SecurityPublicEndpoints.MATRICULA_QR_VALIDAR, SecurityPublicEndpoints.MATRICULA_QR_REGISTRO).permitAll()
+                .requestMatchers(HttpMethod.POST, SecurityPublicEndpoints.MATRICULA_QR_VALIDAR, SecurityPublicEndpoints.MATRICULA_QR_REGISTRO).permitAll()
                 // Solo lectura de documentación runtime. La propiedad de Swagger UI controla
                 // si estos handlers existen; ningún endpoint de negocio se abre por esta regla.
                 .requestMatchers(
@@ -262,7 +263,12 @@ public class SecurityConfig {
                 HttpMethod.DELETE.name(),
                 HttpMethod.OPTIONS.name()
         ));
-        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowedHeaders(List.of(
+                HttpHeaders.AUTHORIZATION,
+                HttpHeaders.CONTENT_TYPE,
+                "X-Correlation-Id",
+                HttpHeaders.ACCEPT
+        ));
         configuration.setExposedHeaders(List.of("X-Correlation-Id", "X-Decision-Id"));
         // Bearer-only en ambos modos: ninguna cookie (ni la del BFF del baseline) es credencial de esta API.
         configuration.setAllowCredentials(false);

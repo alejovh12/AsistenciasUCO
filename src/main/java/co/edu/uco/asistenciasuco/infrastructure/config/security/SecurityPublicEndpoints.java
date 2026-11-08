@@ -45,8 +45,10 @@ public final class SecurityPublicEndpoints {
                 paths.matcher(ACTUATOR),
                 paths.matcher(AzureEventGridAuthFilter.WEBHOOK_PATH),
                 paths.matcher(HttpMethod.POST, VERIFICAR_CORREO),
-                paths.matcher(MATRICULA_QR_VALIDAR),
-                paths.matcher(MATRICULA_QR_REGISTRO),
+                paths.matcher(HttpMethod.POST, MATRICULA_QR_VALIDAR),
+                paths.matcher(HttpMethod.OPTIONS, MATRICULA_QR_VALIDAR),
+                paths.matcher(HttpMethod.POST, MATRICULA_QR_REGISTRO),
+                paths.matcher(HttpMethod.OPTIONS, MATRICULA_QR_REGISTRO),
                 paths.matcher(ERROR_VIEW),
                 new OrRequestMatcher(documentation)
         );

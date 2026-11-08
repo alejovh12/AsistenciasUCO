@@ -8,6 +8,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.NativeRowValues;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import jakarta.persistence.EntityManager;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
@@ -57,6 +58,7 @@ public class CierrePeriodoJpaRepository implements CierrePeriodoCommandPort, His
         this(procedureExecutor, null);
     }
 
+    @Autowired
     public CierrePeriodoJpaRepository(final JpaProcedureExecutor procedureExecutor, final EntityManager entityManager) {
         this.procedureExecutor = Objects.requireNonNull(
                 procedureExecutor,
