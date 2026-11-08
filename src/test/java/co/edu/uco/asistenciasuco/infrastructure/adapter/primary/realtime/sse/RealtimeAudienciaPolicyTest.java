@@ -1,7 +1,8 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimeEvent;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
+import co.edu.uco.asistenciasuco.application.features.realtime.resolveraudiencia.AudienciaRealtimeGrupo;
+import co.edu.uco.asistenciasuco.application.features.realtime.resolveraudiencia.primaryports.ResolverAudienciaRealtimeInputPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.localsse.LocalSseRealtimeStreamGateway;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.response.RealtimeEventResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.realtime.localsse.ReactorRealtimeAdapter;
@@ -31,7 +32,9 @@ class RealtimeAudienciaPolicyTest {
 
     @Test
     void los_tipos_de_negocio_se_entregan_al_titular_por_igualdad_exacta() {
-        assertEquals(Set.of(RealtimeAudienciaPolicy.Audiencia.DOCENTE_TITULAR), policy.audienciasDe("SESION_CANCELADA"));
+        // CULM-001 C.1 (contrato 3.6.3): SESION_CANCELADA se abre al estudiante del grupo y al ambito de lectura, ademas del titular.
+        assertEquals(Set.of(RealtimeAudienciaPolicy.Audiencia.DOCENTE_TITULAR, RealtimeAudienciaPolicy.Audiencia.ESTUDIANTE_GRUPO,
+                RealtimeAudienciaPolicy.Audiencia.AMBITO_GRUPO), policy.audienciasDe("SESION_CANCELADA"));
         assertTrue(policy.entregaA("ASISTENCIAS_SESION_ACTUALIZADAS", RealtimeAudienciaPolicy.Audiencia.DOCENTE_TITULAR));
         // Un tipo de /realtime/emit (topic.action) o un prefijo nunca coincide con un tipo de negocio: va solo al titular.
         assertEquals(Set.of(RealtimeAudienciaPolicy.Audiencia.DOCENTE_TITULAR), policy.audienciasDe("sesion_cancelada.emit"));
@@ -50,8 +53,8 @@ class RealtimeAudienciaPolicyTest {
     void el_gateway_entrega_sesion_cancelada_al_titular_del_grupo_y_filtra_los_tipos_sin_audiencia() {
         final UUID docente = UUID.randomUUID();
         final UUID grupo = UUID.randomUUID();
-        final InstitutionalScopePort scope = mock(InstitutionalScopePort.class);
-        when(scope.canDocenteAccessGrupo(docente, grupo)).thenReturn(true);
+        final ResolverAudienciaRealtimeInputPort scope = mock(ResolverAudienciaRealtimeInputPort.class);
+        when(scope.execute(new ResolverAudienciaRealtimeInputPort.Comando(docente, grupo))).thenReturn(new AudienciaRealtimeGrupo(true, false, false));
         final ReactorRealtimeAdapter adapter = mock(ReactorRealtimeAdapter.class);
         when(adapter.events()).thenReturn(Flux.just(
                 RealtimeEvent.of("SESION_CANCELADA", Map.of("grupo", grupo.toString(), "sesion", "s1", "tipo", "DOCENTE")),
@@ -75,9 +78,11 @@ class RealtimeAudienciaPolicyTest {
     @Test
     void B2_los_cinco_tipos_de_tomas_y_qr_van_solo_al_titular_por_igualdad_exacta() {
         for (final String tipo : java.util.List.of("TOMA_ABIERTA", "TOMA_CERRADA", "ASISTENCIA_QR_ROTADO",
-                "ASISTENCIA_QR_REGISTRADA", "ASISTENCIAS_TOMA_ACTUALIZADAS")) {
+                "ASISTENCIA_QR_REGISTRADA")) {
             assertEquals(Set.of(RealtimeAudienciaPolicy.Audiencia.DOCENTE_TITULAR), policy.audienciasDe(tipo));
         }
+        // CULM-001 C.1 (contrato 3.6.3): el conteo sin identidad de la toma llega tambien al estudiante y al ambito de lectura.
+        assertTrue(policy.entregaA("ASISTENCIAS_TOMA_ACTUALIZADAS", RealtimeAudienciaPolicy.Audiencia.ESTUDIANTE_GRUPO));
         // Un tipo de /realtime/emit parecido no coincide con el del QR (que lleva el token).
         assertEquals(Set.of(RealtimeAudienciaPolicy.Audiencia.DOCENTE_TITULAR), policy.audienciasDe("asistencia_qr.rotado"));
         assertEquals(Set.of(RealtimeAudienciaPolicy.Audiencia.DOCENTE_TITULAR), policy.audienciasDe("ASISTENCIA_QR_ROTADO_X"));

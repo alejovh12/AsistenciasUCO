@@ -1,7 +1,8 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.localsse;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
+import co.edu.uco.asistenciasuco.application.features.realtime.resolveraudiencia.AudienciaRealtimeGrupo;
+import co.edu.uco.asistenciasuco.application.features.realtime.resolveraudiencia.primaryports.ResolverAudienciaRealtimeInputPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.realtime.localsse.ReactorRealtimeAdapter;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
@@ -24,13 +25,13 @@ class RealtimeStreamGatewayImplTest {
     private static final UUID GRUPO_AJENO = UUID.randomUUID();
 
     private final ReactorRealtimeAdapter realtimeAdapter = new ReactorRealtimeAdapter(new SimpleMeterRegistry());
-    private final InstitutionalScopePort institutionalScopePort = mock(InstitutionalScopePort.class);
+    private final ResolverAudienciaRealtimeInputPort institutionalScopePort = mock(ResolverAudienciaRealtimeInputPort.class);
     private final LocalSseRealtimeStreamGateway gateway =
             new LocalSseRealtimeStreamGateway(realtimeAdapter, institutionalScopePort);
 
     @Test
     void subscribe_autoriza_una_vez_y_mapea_el_evento_del_adapter_a_una_respuesta_http() {
-        when(institutionalScopePort.canDocenteAccessGrupo(USUARIO, GRUPO_PROPIO)).thenReturn(true);
+        when(institutionalScopePort.execute(new ResolverAudienciaRealtimeInputPort.Comando(USUARIO, GRUPO_PROPIO))).thenReturn(new AudienciaRealtimeGrupo(true, false, false));
 
         StepVerifier.create(gateway.subscribe(USUARIO, GRUPO_PROPIO))
                 .then(() -> realtimeAdapter.publish(
@@ -46,19 +47,19 @@ class RealtimeStreamGatewayImplTest {
                 .thenCancel()
                 .verify(Duration.ofSeconds(2));
 
-        verify(institutionalScopePort, org.mockito.Mockito.times(1)).canDocenteAccessGrupo(USUARIO, GRUPO_PROPIO);
+        verify(institutionalScopePort, org.mockito.Mockito.times(1)).execute(new ResolverAudienciaRealtimeInputPort.Comando(USUARIO, GRUPO_PROPIO));
     }
 
     @Test
     void subscribe_rechaza_grupo_ajeno_con_forbidden_sin_construir_el_flux() {
-        when(institutionalScopePort.canDocenteAccessGrupo(USUARIO, GRUPO_AJENO)).thenReturn(false);
+        when(institutionalScopePort.execute(new ResolverAudienciaRealtimeInputPort.Comando(USUARIO, GRUPO_AJENO))).thenReturn(new AudienciaRealtimeGrupo(false, false, false));
 
         assertThrows(ForbiddenException.class, () -> gateway.subscribe(USUARIO, GRUPO_AJENO));
     }
 
     @Test
     void subscribe_filtra_en_memoria_eventos_de_otros_grupos() {
-        when(institutionalScopePort.canDocenteAccessGrupo(USUARIO, GRUPO_PROPIO)).thenReturn(true);
+        when(institutionalScopePort.execute(new ResolverAudienciaRealtimeInputPort.Comando(USUARIO, GRUPO_PROPIO))).thenReturn(new AudienciaRealtimeGrupo(true, false, false));
 
         StepVerifier.create(gateway.subscribe(USUARIO, GRUPO_PROPIO))
                 .then(() -> {
@@ -74,7 +75,7 @@ class RealtimeStreamGatewayImplTest {
 
     @Test
     void subscribe_no_entrega_eventos_sin_grupo_en_el_payload() {
-        when(institutionalScopePort.canDocenteAccessGrupo(USUARIO, GRUPO_PROPIO)).thenReturn(true);
+        when(institutionalScopePort.execute(new ResolverAudienciaRealtimeInputPort.Comando(USUARIO, GRUPO_PROPIO))).thenReturn(new AudienciaRealtimeGrupo(true, false, false));
 
         StepVerifier.create(gateway.subscribe(USUARIO, GRUPO_PROPIO))
                 .then(() -> {
@@ -90,7 +91,7 @@ class RealtimeStreamGatewayImplTest {
 
     @Test
     void activeSubscribersCount_refleja_el_conteo_del_adapter() {
-        when(institutionalScopePort.canDocenteAccessGrupo(USUARIO, GRUPO_PROPIO)).thenReturn(true);
+        when(institutionalScopePort.execute(new ResolverAudienciaRealtimeInputPort.Comando(USUARIO, GRUPO_PROPIO))).thenReturn(new AudienciaRealtimeGrupo(true, false, false));
         assertEquals(0, gateway.activeSubscribersCount());
 
         final reactor.core.Disposable subscription = gateway.subscribe(USUARIO, GRUPO_PROPIO).subscribe();
@@ -103,7 +104,7 @@ class RealtimeStreamGatewayImplTest {
 
     @Test
     void emit_construye_el_evento_y_lo_publica_a_traves_del_adapter() {
-        when(institutionalScopePort.canDocenteAccessGrupo(USUARIO, GRUPO_PROPIO)).thenReturn(true);
+        when(institutionalScopePort.execute(new ResolverAudienciaRealtimeInputPort.Comando(USUARIO, GRUPO_PROPIO))).thenReturn(new AudienciaRealtimeGrupo(true, false, false));
 
         StepVerifier.create(gateway.subscribe(USUARIO, GRUPO_PROPIO))
                 .then(() -> gateway.emit("GENERAL.CUSTOM_EVENT", Map.of("grupo", GRUPO_PROPIO.toString(), "id", 42)))
