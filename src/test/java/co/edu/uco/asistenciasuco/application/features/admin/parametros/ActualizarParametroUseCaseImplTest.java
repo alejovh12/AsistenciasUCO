@@ -8,12 +8,16 @@ import co.edu.uco.asistenciasuco.application.features.admin.actualizarparametro.
 import co.edu.uco.asistenciasuco.application.features.admin.exception.ParametroErrorCode;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.CatalogInvalidationPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParametroEdicionCapacidadPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimeEvent;
+import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.ParametroAdminRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.ParametroAdminRepositoryPort.ParametroActualizado;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -41,7 +45,8 @@ class ActualizarParametroUseCaseImplTest {
     private final ParametroAdminRepositoryPort repositorio = mock(ParametroAdminRepositoryPort.class);
     private final ParametroEdicionCapacidadPort capacidad = mock(ParametroEdicionCapacidadPort.class);
     private final CatalogInvalidationPort invalidacion = mock(CatalogInvalidationPort.class);
-    private final ActualizarParametroUseCaseImpl useCase = new ActualizarParametroUseCaseImpl(repositorio, capacidad, invalidacion);
+    private final RealtimePublisherPort publisher = mock(RealtimePublisherPort.class);
+    private final ActualizarParametroUseCaseImpl useCase = new ActualizarParametroUseCaseImpl(repositorio, capacidad, invalidacion, publisher);
 
     private static Comando comando() {
         return new Comando(PARAMETRO, "20", ESPERADA, "Ajuste de prueba", ADMIN);
@@ -60,7 +65,7 @@ class ActualizarParametroUseCaseImplTest {
 
         assertEquals("PRM_010", error.getCode());
         assertEquals(ParametroErrorCode.PRM_010.defaultMessage(), error.getMessage());
-        verifyNoInteractions(repositorio, invalidacion);
+        verifyNoInteractions(repositorio, invalidacion, publisher);
     }
 
     @Test
@@ -105,7 +110,7 @@ class ActualizarParametroUseCaseImplTest {
                 .thenThrow(new ConflictException(ParametroErrorCode.PRM_008));
 
         assertEquals("PRM_008", assertThrows(ConflictException.class, () -> useCase.execute(comando())).getCode());
-        verifyNoInteractions(invalidacion);
+        verifyNoInteractions(invalidacion, publisher);
     }
 
     @Test
@@ -116,13 +121,61 @@ class ActualizarParametroUseCaseImplTest {
         assertThrows(ValidationException.class, () -> useCase.execute(new Comando(PARAMETRO, "20", null, "Ajuste de prueba", ADMIN)));
         assertThrows(ValidationException.class, () -> useCase.execute(new Comando(PARAMETRO, "20", ESPERADA, null, ADMIN)));
         assertThrows(ValidationException.class, () -> useCase.execute(new Comando(PARAMETRO, "20", ESPERADA, "Ajuste de prueba", null)));
-        verifyNoInteractions(capacidad, repositorio, invalidacion);
+        verifyNoInteractions(capacidad, repositorio, invalidacion, publisher);
     }
 
     @Test
     void las_dependencias_son_obligatorias() {
-        assertThrows(NullPointerException.class, () -> new ActualizarParametroUseCaseImpl(null, capacidad, invalidacion));
-        assertThrows(NullPointerException.class, () -> new ActualizarParametroUseCaseImpl(repositorio, null, invalidacion));
-        assertThrows(NullPointerException.class, () -> new ActualizarParametroUseCaseImpl(repositorio, capacidad, null));
+        assertThrows(NullPointerException.class, () -> new ActualizarParametroUseCaseImpl(null, capacidad, invalidacion, publisher));
+        assertThrows(NullPointerException.class, () -> new ActualizarParametroUseCaseImpl(repositorio, null, invalidacion, publisher));
+        assertThrows(NullPointerException.class, () -> new ActualizarParametroUseCaseImpl(repositorio, capacidad, null, publisher));
+        assertThrows(NullPointerException.class, () -> new ActualizarParametroUseCaseImpl(repositorio, capacidad, invalidacion, null));
+    }
+
+    // CULM-001 D.9-c / D.3 (CONTRACT §4.5): tras un cambio real se publica PARAMETER_UPDATED {grupo, clave}.
+    @Test
+    void un_cambio_real_publica_parameter_updated_con_grupo_y_clave_sin_valores() {
+        when(capacidad.admiteEdicion()).thenReturn(true);
+        when(repositorio.actualizar(any(), anyString(), any(), anyString(), any())).thenReturn(actualizado("15", "20"));
+
+        useCase.execute(comando());
+
+        final ArgumentCaptor<RealtimeEvent> captor = ArgumentCaptor.forClass(RealtimeEvent.class);
+        verify(publisher, times(1)).publish(captor.capture());
+        assertEquals("PARAMETER_UPDATED", captor.getValue().type());
+        assertEquals(Map.of("grupo", "ASISTENCIA", "clave", "TOLERANCIA_MINUTOS"), captor.getValue().payload());
+    }
+
+    @Test
+    void sin_cambios_no_publica_el_evento() {
+        when(capacidad.admiteEdicion()).thenReturn(true);
+        when(repositorio.actualizar(any(), anyString(), any(), anyString(), any())).thenReturn(actualizado("20", "20"));
+
+        useCase.execute(comando());
+
+        verifyNoInteractions(publisher);
+    }
+
+    @Test
+    void un_fallo_al_publicar_no_revierte_el_cambio_ni_impide_la_invalidacion() {
+        when(capacidad.admiteEdicion()).thenReturn(true);
+        when(repositorio.actualizar(any(), anyString(), any(), anyString(), any())).thenReturn(actualizado("15", "20"));
+        doThrow(new IllegalStateException("sink terminado")).when(publisher).publish(any());
+
+        final Resultado resultado = useCase.execute(comando());
+
+        assertFalse(resultado.sinCambios());
+        verify(invalidacion).invalidateParameter("ASISTENCIA", "TOLERANCIA_MINUTOS");
+    }
+
+    @Test
+    void un_fallo_al_invalidar_la_cache_no_impide_publicar_el_evento() {
+        when(capacidad.admiteEdicion()).thenReturn(true);
+        when(repositorio.actualizar(any(), anyString(), any(), anyString(), any())).thenReturn(actualizado("15", "20"));
+        doThrow(new IllegalStateException("cache caida")).when(invalidacion).invalidateParameter(anyString(), anyString());
+
+        useCase.execute(comando());
+
+        verify(publisher).publish(any());
     }
 }

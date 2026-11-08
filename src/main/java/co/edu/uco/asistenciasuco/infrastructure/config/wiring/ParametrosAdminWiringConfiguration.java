@@ -8,6 +8,7 @@ import co.edu.uco.asistenciasuco.application.features.admin.consultarparametros.
 import co.edu.uco.asistenciasuco.application.features.admin.consultarparametros.usecase.impl.ConsultarParametrosUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.CatalogInvalidationPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParametroEdicionCapacidadPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.ParametroAdminRepositoryPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.composite.ParametroEdicionCapacidadAdapter;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,8 +33,9 @@ public class ParametrosAdminWiringConfiguration {
     @Bean
     public ActualizarParametroInputPort actualizarParametroInputPort(final ParametroAdminRepositoryPort repositorio,
                                                                      final ParametroEdicionCapacidadPort capacidad,
-                                                                     final CatalogInvalidationPort invalidacion) {
-        return new ActualizarParametroUseCaseImpl(repositorio, capacidad, invalidacion);
+                                                                     final CatalogInvalidationPort invalidacion,
+                                                                     final RealtimePublisherPort publicador) {
+        return new ActualizarParametroUseCaseImpl(repositorio, capacidad, invalidacion, publicador);
     }
 
     @Bean

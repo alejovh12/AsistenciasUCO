@@ -4,6 +4,7 @@ import co.edu.uco.asistenciasuco.application.features.admin.actualizarparametro.
 import co.edu.uco.asistenciasuco.application.features.admin.consultarcambiosparametro.usecase.impl.ConsultarCambiosParametroUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarparametros.usecase.impl.ConsultarParametrosUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.CatalogInvalidationPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.ParametroAdminRepositoryPort;
 import org.junit.jupiter.api.Test;
 
@@ -25,7 +26,8 @@ class ParametrosAdminWiringConfigurationTest {
         assertFalse(config.parametroEdicionCapacidadPort("azure_appconfig").admiteEdicion());
         assertInstanceOf(ConsultarParametrosUseCaseImpl.class, config.consultarParametrosInputPort(repositorio));
         assertInstanceOf(ActualizarParametroUseCaseImpl.class,
-                config.actualizarParametroInputPort(repositorio, capacidad, mock(CatalogInvalidationPort.class)));
+                config.actualizarParametroInputPort(repositorio, capacidad, mock(CatalogInvalidationPort.class),
+                        mock(RealtimePublisherPort.class)));
         assertInstanceOf(ConsultarCambiosParametroUseCaseImpl.class, config.consultarCambiosParametroInputPort(repositorio));
     }
 }

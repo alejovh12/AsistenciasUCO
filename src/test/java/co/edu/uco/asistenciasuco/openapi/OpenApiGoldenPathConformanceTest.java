@@ -32,6 +32,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesio
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesion.request.CrearSesionRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesion.v2.SesionV2ConsultaController;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesion.v2.SesionV2Controller;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.contract.RealtimeStreamGateway;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.controller.RealtimeEventsController;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.response.RealtimeEventResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
@@ -80,6 +81,7 @@ class OpenApiGoldenPathConformanceTest {
             new OperationKey("/api/v1/grupos/{grupoId}/asistencias", HttpMethod.GET),
             new OperationKey("/api/v1/asistencias/lote", HttpMethod.POST),
             new OperationKey("/api/v1/realtime/stream", HttpMethod.GET),
+            new OperationKey("/api/v1/realtime/emit", HttpMethod.POST),
             new OperationKey("/api/v1/sesiones", HttpMethod.POST),
             new OperationKey("/api/v1/sesiones/{sesionId}", HttpMethod.PATCH),
             new OperationKey("/api/v1/sesiones/{sesionId}", HttpMethod.PUT)
@@ -104,6 +106,8 @@ class OpenApiGoldenPathConformanceTest {
         addMapping(controllerMappings, AsistenciaQueryController.class, "consultarAsistenciasPorGrupo", UUID.class, UUID.class);
         addMapping(controllerMappings, AsistenciaController.class, "registrarAsistenciasLote", RegistrarAsistenciasSesionRequest.class);
         addMapping(controllerMappings, RealtimeEventsController.class, "subscribe", UUID.class);
+        // CULM-001 D.9-c (CONTRACT §12, golden path 1.6.0): POST /realtime/emit, solo ADMINISTRADOR.
+        addMapping(controllerMappings, RealtimeEventsController.class, "emitCustomEvent", Map.class);
         addMapping(controllerMappings, SesionController.class, "crearSesion", CrearSesionRequest.class);
         addMapping(controllerMappings, SesionController.class, "actualizarSesion", UUID.class, ActualizarSesionRequest.class);
         addMapping(controllerMappings, SesionController.class, "actualizarSesionLegacy", UUID.class, ActualizarSesionRequest.class);
@@ -124,8 +128,8 @@ class OpenApiGoldenPathConformanceTest {
                         new OperationKey(path, HttpMethod.valueOf(method.name())))));
 
         assertEquals(controllerMappings, specificationMappings);
-        assertEquals(14, specificationMappings.size());
-        assertEquals(Map.of(HttpMethod.GET, 8L, HttpMethod.POST, 3L, HttpMethod.PUT, 1L, HttpMethod.PATCH, 2L),
+        assertEquals(15, specificationMappings.size());
+        assertEquals(Map.of(HttpMethod.GET, 8L, HttpMethod.POST, 4L, HttpMethod.PUT, 1L, HttpMethod.PATCH, 2L),
                 specificationMappings.stream().collect(java.util.stream.Collectors.groupingBy(
                         OperationKey::method, java.util.stream.Collectors.counting())));
     }
@@ -151,6 +155,7 @@ class OpenApiGoldenPathConformanceTest {
                 new OperationKey("/api/v1/realtime/stream", HttpMethod.GET), "text/event-stream"
         );
         final Set<OperationKey> jsonRequests = Set.of(
+                new OperationKey("/api/v1/realtime/emit", HttpMethod.POST),
                 new OperationKey("/api/v1/asistencias/lote", HttpMethod.POST),
                 new OperationKey("/api/v1/sesiones", HttpMethod.POST),
                 new OperationKey("/api/v1/sesiones/{sesionId}", HttpMethod.PATCH),
@@ -222,6 +227,34 @@ class OpenApiGoldenPathConformanceTest {
         assertObjectSchema("ApiErrorResponse",
                 Set.of("timestamp", "status", "error", "code", "message", "path", "correlationId", "details"),
                 Set.of("timestamp", "status", "error", "code", "message", "path", "correlationId"));
+    }
+
+    // CULM-001-D D.9-c (CONTRACT §12, F-TRX-019/F-TRX-016, DEC-044 (11)): golden path 1.6.0: GET /realtime/stream declara 406 y se
+    // agrega POST /realtime/emit (solo ADMINISTRADOR, cuerpo validado, 200/400/401/403/500).
+    @Test
+    void goldenPath160DeclaraElVersionadoEl406DelStreamYElEmitSoloAdministrador() {
+        assertEquals("1.6.0", OPEN_API.getInfo().getVersion());
+
+        final Operation stream = operation(new OperationKey("/api/v1/realtime/stream", HttpMethod.GET));
+        assertEquals(Set.of("200", "400", "401", "403", "406", "500"), stream.getResponses().keySet());
+        assertEquals("#/components/responses/NotAcceptable", stream.getResponses().get("406").get$ref());
+        final var notAcceptable = OPEN_API.getComponents().getResponses().get("NotAcceptable");
+        assertNotNull(notAcceptable, "Falta components.responses.NotAcceptable");
+        assertNotNull(notAcceptable.getContent().get("application/json"));
+        assertEquals("#/components/schemas/ApiErrorResponse",
+                notAcceptable.getContent().get("application/json").getSchema().get$ref());
+        assertNotNull(notAcceptable.getHeaders().get("X-Correlation-Id"));
+
+        final Operation emit = operation(new OperationKey("/api/v1/realtime/emit", HttpMethod.POST));
+        assertEquals("emitirEventoRealtime", emit.getOperationId());
+        assertEquals(List.of("ADMINISTRADOR"), emit.getExtensions().get("x-roles"));
+        assertEquals(Set.of("200", "400", "401", "403", "500"), emit.getResponses().keySet());
+        assertEquals("#/components/schemas/EmitirEventoRealtimeRequest",
+                emit.getRequestBody().getContent().get("application/json").getSchema().get$ref());
+        assertObjectSchema("EmitirEventoRealtimeRequest", Set.of("tipo", "audiencia", "payload"), Set.of("tipo", "audiencia", "payload"));
+        assertObjectSchema("EmitirEventoRealtimeResponse", Set.of("exitoso", "datos"), Set.of("exitoso", "datos"));
+        assertTrue(emit.getDescription().contains("GET /api/v1/realtime/status"),
+                "La descripcion de emit debe aclarar que status tambien es solo ADMINISTRADOR");
     }
 
     // CULM-001 C.1 (CONTRACT 3.8, DEC-032): golden path 1.5.0, solo la descripcion de GET /api/v1/realtime/stream (ambito por rol).
@@ -423,6 +456,10 @@ class OpenApiGoldenPathConformanceTest {
         statuses.put(new OperationKey("/api/v1/grupos/{grupoId}/asistencias", HttpMethod.GET), asistenciaQuery.consultarAsistenciasPorGrupo(GROUP, SESSION).getStatusCode().value());
         statuses.put(new OperationKey("/api/v1/asistencias/lote", HttpMethod.POST), asistencia.registrarAsistenciasLote(batchRequest).getStatusCode().value());
         statuses.put(new OperationKey("/api/v1/realtime/stream", HttpMethod.GET), 200);
+        final RealtimeEventsController realtime = new RealtimeEventsController(mock(RealtimeStreamGateway.class), identity);
+        statuses.put(new OperationKey("/api/v1/realtime/emit", HttpMethod.POST), realtime.emitCustomEvent(
+                Map.of("tipo", "SESION_CANCELADA", "audiencia", "DOCENTE_TITULAR", "payload", Map.of("grupo", GROUP.toString())))
+                .getStatusCode().value());
         statuses.put(new OperationKey("/api/v1/sesiones", HttpMethod.POST), sesion.crearSesion(createRequest).getStatusCode().value());
         statuses.put(new OperationKey("/api/v1/sesiones/{sesionId}", HttpMethod.PATCH), invokeUpdate(sesion, "actualizarSesion", updateRequest));
         statuses.put(new OperationKey("/api/v1/sesiones/{sesionId}", HttpMethod.PUT), invokeUpdate(sesion, "actualizarSesionLegacy", updateRequest));

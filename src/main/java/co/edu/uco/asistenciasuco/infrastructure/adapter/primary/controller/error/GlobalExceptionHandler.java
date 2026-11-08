@@ -19,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -111,6 +112,16 @@ public final class GlobalExceptionHandler {
             final HttpServletRequest request
     ) {
         final ApiErrorDescriptor descriptor = ApiErrorCatalog.unsupportedMediaType();
+        logFrameworkBadRequest(descriptor, exception, request);
+        return buildResponse(descriptor, request);
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
+    public ResponseEntity<ApiErrorResponse> handleNotAcceptable(
+            final HttpMediaTypeNotAcceptableException exception,
+            final HttpServletRequest request
+    ) {
+        final ApiErrorDescriptor descriptor = ApiErrorCatalog.notAcceptable();
         logFrameworkBadRequest(descriptor, exception, request);
         return buildResponse(descriptor, request);
     }

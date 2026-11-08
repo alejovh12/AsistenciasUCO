@@ -23,11 +23,17 @@ public final class RealtimeAudienciaPolicy {
         ESTUDIANTE_GRUPO,
         AMBITO_GRUPO,
         /** Solo los usuarios nombrados como destinatarios del evento (alertas y revisiones). */
-        DESTINATARIO
+        DESTINATARIO,
+        /**
+         * Eventos de configuracion (p. ej. {@code PARAMETER_UPDATED}, CULM-001 D.3): solo el rol ADMINISTRADOR. Ningun
+         * suscriptor del canal de grupo la tiene, de modo que estos tipos no se entregan por {@code /realtime/stream}.
+         */
+        ADMINISTRADOR
     }
 
     private static final Set<Audiencia> SOLO_TITULAR = EnumSet.of(Audiencia.DOCENTE_TITULAR);
     private static final Set<Audiencia> GRUPO_COMPLETO = EnumSet.of(Audiencia.DOCENTE_TITULAR, Audiencia.ESTUDIANTE_GRUPO, Audiencia.AMBITO_GRUPO);
+    private static final Set<Audiencia> SOLO_ADMINISTRADOR = EnumSet.of(Audiencia.ADMINISTRADOR);
     private static final Set<Audiencia> TITULAR_Y_DESTINATARIO = EnumSet.of(Audiencia.DOCENTE_TITULAR, Audiencia.DESTINATARIO);
 
     private final Map<String, Set<Audiencia>> audienciasPorTipo;
@@ -53,7 +59,14 @@ public final class RealtimeAudienciaPolicy {
                 "ASISTENCIA_QR_ROTADO", "ASISTENCIA_QR_REGISTRADA"}) {
             tabla.put(tipo, SOLO_TITULAR);
         }
+        // Configuracion (CULM-001 D.3, HU168): el cambio de un parametro solo concierne al ADMINISTRADOR.
+        tabla.put("PARAMETER_UPDATED", SOLO_ADMINISTRADOR);
         return new RealtimeAudienciaPolicy(tabla);
+    }
+
+    /** Catalogo de tipos de evento con audiencia declarada (CULM-001 D.9-c: valida el cuerpo de {@code POST /realtime/emit}). */
+    public Set<String> tiposConocidos() {
+        return audienciasPorTipo.keySet();
     }
 
     /** Audiencias del tipo por igualdad exacta; un tipo no listado (o nulo) llega solo al titular. */

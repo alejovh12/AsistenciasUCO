@@ -735,6 +735,28 @@ class RbacSecurityFilterChainTest {
                 .andExpect(status().isOk());
     }
 
+    // CULM-001 D.9-c (F-TRX-016): status y emit son solo ADMINISTRADOR.
+    @Test
+    void realtime_emit_docente_recibe_403() throws Exception {
+        mockMvc.perform(post("/api/v1/realtime/emit").header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void realtime_status_docente_estudiante_coordinador_y_decano_reciben_403() throws Exception {
+        for (final String rol : new String[]{"DOCENTE", "ESTUDIANTE", "COORDINADOR", "DECANO"}) {
+            mockMvc.perform(get("/api/v1/realtime/status").header(HttpHeaders.AUTHORIZATION, bearer(rol)))
+                    .andExpect(status().isForbidden());
+        }
+    }
+
+    @Test
+    void realtime_status_administrador_es_permitido_y_sin_token_recibe_401() throws Exception {
+        mockMvc.perform(get("/api/v1/realtime/status").header(HttpHeaders.AUTHORIZATION, bearer("ADMINISTRADOR")))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/realtime/status")).andExpect(status().isUnauthorized());
+    }
+
     private static String bearer(final String institutionalRoleName) {
         return "Bearer " + institutionalRoleName;
     }
@@ -903,6 +925,11 @@ class RbacSecurityFilterChainTest {
 
         @GetMapping("/api/v1/realtime/stream")
         String realtimeStream() {
+            return "ok";
+        }
+
+        @GetMapping("/api/v1/realtime/status")
+        String realtimeStatus() {
             return "ok";
         }
 
