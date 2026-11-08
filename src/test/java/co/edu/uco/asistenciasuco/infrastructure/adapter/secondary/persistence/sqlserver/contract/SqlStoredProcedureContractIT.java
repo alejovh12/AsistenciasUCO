@@ -107,7 +107,8 @@ class SqlStoredProcedureContractIT {
      * Inventario completo de los 19 stored procedures publicos realmente invocados por los
      * adapters SQL Server del backend (ver auditoria de esta microfase). Cada entrada refleja el
      * contrato vigente en la DB real, incluyendo los procedimientos donde {@code @idUsuarioEjecutor}
-     * fue agregado y, en {@code usp_crear_decano}, donde {@code @idTipoIdIdentificacion} fue retirado.
+     * fue agregado y, en {@code usp_crear_decano} y {@code usp_crear_coordinador}, donde CULM-001 D.5 agrego
+     * {@code @idTipoIdIdentificacion} al final (CONTRACT D v2 §6.3, OBS-10).
      */
     private static Stream<Arguments> contratosEsperados() {
         return Stream.of(
@@ -134,7 +135,8 @@ class SqlStoredProcedureContractIT {
                         input("@nombreFacultad", "nvarchar"),
                         input("@password", "nvarchar"),
                         input("@idCorrelacion", "uniqueidentifier"),
-                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idTipoIdIdentificacion", "uniqueidentifier") // CULM-001 D.5 (CONTRACT D v2 §6.3, OBS-10)
                 )),
                 Arguments.of("usp_crear_coordinador", List.of(
                         input("@idCoordinador", "uniqueidentifier"),
@@ -148,7 +150,8 @@ class SqlStoredProcedureContractIT {
                         input("@idFacultad", "uniqueidentifier"),
                         input("@password", "nvarchar"),
                         input("@idCorrelacion", "uniqueidentifier"),
-                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idTipoIdIdentificacion", "uniqueidentifier") // CULM-001 D.5 (CONTRACT D v2 §6.3, OBS-10)
                 )),
                 Arguments.of("usp_crear_asignatura", List.of(
                         input("@idAsignatura", "uniqueidentifier"),
