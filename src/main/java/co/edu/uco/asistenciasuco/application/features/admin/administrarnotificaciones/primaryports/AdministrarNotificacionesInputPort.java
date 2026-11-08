@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.primaryports;
 
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.EstadoCanalNotificacionProjection;
+import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.EstadoCanalPublicoProjection;
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.PaginaColaNotificacionProjection;
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.TipoPlantillaAdminProjection;
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.VersionPlantillaProjection;
@@ -15,6 +16,9 @@ import java.util.UUID;
 public interface AdministrarNotificacionesInputPort {
 
     EstadoCanalNotificacionProjection consultarEstadoCanal();
+
+    /** CULM-001 D.9-a (F-ADM-029): estado del canal sin host, puerto ni usuario de la cuenta tecnica. */
+    EstadoCanalPublicoProjection consultarEstadoCanalPublico(UUID idUsuarioEjecutor);
 
     List<TipoPlantillaAdminProjection> consultarPlantillas(String idioma, UUID idUsuarioEjecutor);
 

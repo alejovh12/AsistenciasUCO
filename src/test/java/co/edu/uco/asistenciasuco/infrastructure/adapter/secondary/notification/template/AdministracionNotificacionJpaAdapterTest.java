@@ -212,6 +212,7 @@ class AdministracionNotificacionJpaAdapterTest {
     @Test
     @DisplayName("generarVistaPrevia: renderiza asunto y cuerpo con marcadores de muestra")
     void generarVistaPrevia_renderizaPlantilla() {
+        tipoExistente();
         final VistaPreviaPlantillaProjection prev = adapter.generarVistaPrevia(
                 "RETIRO_ESTUDIANTE_GRUPO", "es", "Retiro del {grupo}", "Estimado {estudiante}, se retiro."
         );
@@ -294,6 +295,36 @@ class AdministracionNotificacionJpaAdapterTest {
     }
 
     // ---- NOTIF-002B: cobertura de ramas de mapeo, errores y respaldos ----
+
+    private void tipoExistente() {
+        final StoredProcedureQuery sp = mockSpQuery("dbo.usp_consultar_plantilla_notificacion_activa");
+        when(sp.execute()).thenReturn(true);
+        when(sp.getResultList()).thenReturn(List.of((Object) canonico(UUID.randomUUID(), true, "GEN_003")));
+    }
+
+    /** CULM-001 D.9-a (F-ADM-027): un tipo de plantilla inexistente (NTF_021) responde 404 y no renderiza nada. */
+    @Test
+    @DisplayName("generarVistaPrevia: un tipo inexistente (NTF_021) es 404")
+    void generarVistaPrevia_tipoInexistenteEs404() {
+        final StoredProcedureQuery sp = mockSpQuery("dbo.usp_consultar_plantilla_notificacion_activa");
+        when(sp.execute()).thenReturn(true);
+        when(sp.getResultList()).thenReturn(List.of((Object) canonico(UUID.randomUUID(), false, "NTF_021")));
+
+        org.junit.jupiter.api.Assertions.assertThrows(co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException.class,
+                () -> adapter.generarVistaPrevia("XX", "es", "a", "b"));
+        verify(sp).setParameter("validarExistencia", Boolean.TRUE);
+    }
+
+    @Test
+    @DisplayName("generarVistaPrevia: envuelve fallos tecnicos de la consulta del tipo")
+    void generarVistaPrevia_fallaTecnica() {
+        final StoredProcedureQuery sp = mockSpQuery("dbo.usp_consultar_plantilla_notificacion_activa");
+        when(sp.execute()).thenThrow(new jakarta.persistence.PersistenceException("caida"));
+
+        org.junit.jupiter.api.Assertions.assertThrows(
+                co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.DatabaseOperationException.class,
+                () -> adapter.generarVistaPrevia("RETIRO_ESTUDIANTE_GRUPO", "es", "a", "b"));
+    }
 
     private static Object[] canonico(final UUID corrId, final boolean exitoso, final String codigo) {
         return new Object[]{corrId, "mensaje", "DBCODE=" + codigo + "|detalle", exitoso};
@@ -420,6 +451,7 @@ class AdministracionNotificacionJpaAdapterTest {
     @Test
     @DisplayName("generarVistaPrevia: un tipo sin plantilla por defecto usa los datos basicos de muestra")
     void generarVistaPrevia_tipoDesconocido() {
+        tipoExistente();
         final VistaPreviaPlantillaProjection prev = adapter.generarVistaPrevia(null, null, "Hola {estudiante}", "{grupo}");
         assertTrue(prev.asunto().contains("Ana María Gómez"));
         assertTrue(prev.textoPlano().contains("G01 de Ingeniería de Software"));
