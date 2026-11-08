@@ -38,6 +38,17 @@ public final class AsistenciaHttpMapper {
         return new ConsultarAsistenciasPorGrupoDTO(request.getGrupo(), request.getSesion(), usuarioEjecutor);
     }
 
+    /**
+     * CULM-001 D.2: {@code soporteArchivoIds} (0..N) o, por compatibilidad, {@code soporteArchivoId} como lista de uno. El validador
+     * del controlador ya rechazo el caso de ambos a la vez.
+     */
+    private static List<UUID> soportesDe(final SolicitarRevisionAsistenciaRequest request) {
+        if (request.getSoporteArchivoIds() != null) {
+            return request.getSoporteArchivoIds();
+        }
+        return request.getSoporteArchivoId() == null ? List.of() : List.of(request.getSoporteArchivoId());
+    }
+
     public static SolicitarRevisionAsistenciaDTO toApplicationDTO(
             final SolicitarRevisionAsistenciaRequest request,
             final UUID usuarioId
@@ -47,7 +58,7 @@ public final class AsistenciaHttpMapper {
                 request.getSesionId(),
                 request.getCategoria(),
                 request.getJustificacion(),
-                request.getSoporteArchivoId(),
+                soportesDe(request),
                 usuarioId
         );
     }

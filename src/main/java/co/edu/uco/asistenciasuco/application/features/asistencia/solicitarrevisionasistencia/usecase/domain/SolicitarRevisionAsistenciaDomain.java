@@ -7,6 +7,7 @@ import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioE
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -17,21 +18,21 @@ public final class SolicitarRevisionAsistenciaDomain {
     private final UUID sesion;
     private final String categoria;
     private final String justificacion;
-    private final UUID soporteArchivoId;
+    private final List<UUID> soportes;
     private final UUID usuario;
 
     public SolicitarRevisionAsistenciaDomain(
             final UUID sesion,
             final String categoria,
             final String justificacion,
-            final UUID soporteArchivoId,
+            final List<UUID> soportes,
             final UUID usuario
     ) {
         validarSesion(sesion);
         validarUsuario(usuario);
         this.categoria = validarTextoObligatorio(categoria, AsistenciaErrorCode.ERR_CATEGORIA_REVISION_REQUERIDA);
         this.justificacion = validarTextoObligatorio(justificacion, AsistenciaErrorCode.ERR_JUSTIFICACION_REVISION_REQUERIDA);
-        this.soporteArchivoId = soporteArchivoId;
+        this.soportes = validarSoportes(soportes);
 
         this.sesion = sesion;
         this.usuario = usuario;
@@ -47,6 +48,16 @@ public final class SolicitarRevisionAsistenciaDomain {
         if (ObjectHelper.isNull(usuario)) {
             throw new ValidationException(UsuarioErrorCode.ERR_USUARIO_REQUERIDO);
         }
+    }
+
+    private List<UUID> validarSoportes(final List<UUID> soportes) {
+        if (ObjectHelper.isNull(soportes)) {
+            return List.of();
+        }
+        if (soportes.stream().anyMatch(ObjectHelper::isNull)) {
+            throw new ValidationException(AsistenciaErrorCode.ERR_SOPORTE_RECLAMO_INVALIDO);
+        }
+        return List.copyOf(soportes);
     }
 
     private String validarTextoObligatorio(final String valor, final AsistenciaErrorCode errorCode) {
@@ -72,9 +83,12 @@ public final class SolicitarRevisionAsistenciaDomain {
         return justificacion;
     }
 
-    /** fileId opaco del soporte (opcional): SQL valida propiedad y estado antes de vincularlo. */
-    public UUID getSoporteArchivoId() {
-        return soporteArchivoId;
+    /**
+     * fileId opacos de 0 a N soportes (copia inmutable, en el orden recibido): SQL valida cantidad, repetidos, propiedad y estado
+     * de cada uno antes de vincularlos.
+     */
+    public List<UUID> getSoportes() {
+        return soportes;
     }
 
     public UUID getUsuario() {

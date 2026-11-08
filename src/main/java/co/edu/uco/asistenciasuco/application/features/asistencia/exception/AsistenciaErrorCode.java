@@ -37,7 +37,14 @@ public enum AsistenciaErrorCode implements ErrorDefinition {
     // CULM-001 D.1 (HU026B): plazo de excusas. DB: REV_020 (vencido, el SP informa la ultima fecha local admitida) y REV_025
     // (faltan ASISTENCIA/DIAS_LIMITE_JUSTIFICACION o TIEMPO/ZONA_HORARIA_SQLSERVER). Java no recalcula el plazo.
     ERR_PLAZO_JUSTIFICACION_VENCIDO("ERR_PLAZO_JUSTIFICACION_VENCIDO", "El plazo para justificar esta inasistencia ya venció.", ErrorKind.CONFLICT),
-    ERR_CONFIGURACION_PLAZO_JUSTIFICACION("ERR_CONFIGURACION_PLAZO_JUSTIFICACION", "No es posible validar el plazo de justificación en este momento.", ErrorKind.TECHNICAL);
+    ERR_CONFIGURACION_PLAZO_JUSTIFICACION("ERR_CONFIGURACION_PLAZO_JUSTIFICACION", "No es posible validar el plazo de justificación en este momento.", ErrorKind.TECHNICAL),
+    // CULM-001 D.2 (HU014/HU015): categoria y soportes del reclamo. DB: REV_021 (categoria inexistente), REV_022 (la categoria exige
+    // soporte), REV_023 (mas soportes que ARCHIVOS/MAXIMO_SOPORTES_POR_RECLAMO) y REV_024 (soporte repetido). Java no recalcula las reglas.
+    ERR_CATEGORIA_JUSTIFICACION_INVALIDA("ERR_CATEGORIA_JUSTIFICACION_INVALIDA", "La categoría de justificación no es válida.", ErrorKind.VALIDATION),
+    ERR_SOPORTE_OBLIGATORIO_CATEGORIA("ERR_SOPORTE_OBLIGATORIO_CATEGORIA", "La categoría seleccionada exige adjuntar al menos un soporte.", ErrorKind.VALIDATION),
+    ERR_MAXIMO_SOPORTES_RECLAMO("ERR_MAXIMO_SOPORTES_RECLAMO", "Se superó el máximo de soportes permitido por reclamo.", ErrorKind.VALIDATION),
+    ERR_SOPORTE_RECLAMO_DUPLICADO("ERR_SOPORTE_RECLAMO_DUPLICADO", "Un mismo soporte no se puede adjuntar dos veces.", ErrorKind.VALIDATION),
+    ERR_SOPORTE_RECLAMO_INVALIDO("ERR_SOPORTE_RECLAMO_INVALIDO", "La lista de soportes contiene un identificador no válido.", ErrorKind.VALIDATION);
 
     private final String code;
     private final String defaultMessage;

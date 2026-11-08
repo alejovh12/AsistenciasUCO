@@ -51,7 +51,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * CULM-001 D.2 (CONTRACT D 3.3, DEC-044 (7)): secuencia de TRES subidas del mismo estudiante en la que la segunda lleva la firma
- * EICAR. El doble de ClamAV la rechaza con el codigo existente del antivirus (400, mensaje de firma de malware) y SIN fileId ni
+ * EICAR. El doble de ClamAV la rechaza con el codigo existente del antivirus (400 VALIDATION_ERROR) y SIN fileId ni
  * fila de soporte; la primera y la tercera quedan DRAFT y radicar el reclamo con esos dos fileId responde 202 con los dos soportes.
  * Un fileId que no quedo como borrador (el rechazado) no se puede adjuntar. Casos de uso, interactores y controladores reales;
  * solo los puertos secundarios (almacenamiento, antivirus, metadata y repositorio) son dobles en memoria.
@@ -105,7 +105,7 @@ class RadicarReclamoConVariosSoportesAntivirusTest {
                         .file(new MockMultipartFile("archivo", "infectado.pdf", "application/pdf",
                                 pdf(SoporteFixtures.EICAR_TEST_STRING))))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("El archivo fue rechazado: se detecto una firma de malware conocida."))
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
                 .andExpect(jsonPath("$.datos").doesNotExist())
                 .andExpect(jsonPath("$.fileId").doesNotExist());
 
