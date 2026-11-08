@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.toma
 
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.PaginaResultado;
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.IndicadoresAsistenciaDTO;
+import co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.MarcaInasistenciaDTO;
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.ResumenAsistenciaEstudianteDTO;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.cerrartoma.primaryports.CerrarTomaAsistenciaInputPort;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.AsistenciaTomaFila;
@@ -98,14 +99,36 @@ public final class TomaAsistenciaHttpResponses {
                                                       int sesionesEjecutadas, BigDecimal horasDictadas, BigDecimal horasAsistidas,
                                                       BigDecimal horasFalta, BigDecimal horasExcusa, BigDecimal horasSinRegistro,
                                                       BigDecimal porcentajeInasistencia, BigDecimal porcentajeAsistencia,
-                                                      String codigoPermanencia, BigDecimal umbralAdvertencia, BigDecimal umbralPerdida) {
+                                                      String codigoPermanencia, BigDecimal umbralAdvertencia, BigDecimal umbralPerdida,
+                                                      MarcaResponse marca) {
 
         public static ResumenAsistenciaEstudianteResponse from(final ResumenAsistenciaEstudianteDTO r) {
             final IndicadoresAsistenciaDTO i = r.indicadores();
             return new ResumenAsistenciaEstudianteResponse(r.estudianteId(), r.nombreCompleto(), r.codigoEstadoEstudiante(),
                     i.sesionesEjecutadas(), i.horasDictadas(), i.horasAsistidas(), i.horasFalta(), i.horasExcusa(),
                     i.horasSinRegistro(), i.porcentajeInasistencia(), i.porcentajeAsistencia(), i.codigoPermanencia(),
-                    i.umbralAdvertencia(), i.umbralPerdida());
+                    i.umbralAdvertencia(), i.umbralPerdida(), MarcaResponse.from(r.marca()));
+        }
+    }
+
+    /** CULM-001 C.1 (contrato 3.2 "marca"): alertas vigentes y revision de cancelacion; {@code null} si no hay ninguna. */
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public record MarcaResponse(boolean advertenciaVigente, String fechaAdvertenciaUtc, boolean perdidaVigente, String fechaPerdidaUtc,
+                                RevisionMarcaResponse revision) {
+
+        public static MarcaResponse from(final MarcaInasistenciaDTO m) {
+            return m == null ? null : new MarcaResponse(m.advertenciaVigente(), utc(m.fechaAdvertenciaUtc()), m.perdidaVigente(),
+                    utc(m.fechaPerdidaUtc()), RevisionMarcaResponse.from(m.revision()));
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public record RevisionMarcaResponse(UUID id, String estado, String nombreEstado, boolean requiereAccionDocente,
+                                        String perfilResolutorActual, List<String> accionesPermitidas) {
+
+        public static RevisionMarcaResponse from(final MarcaInasistenciaDTO.RevisionMarcaDTO r) {
+            return r == null ? null : new RevisionMarcaResponse(r.id(), r.estado(), r.nombreEstado(), r.requiereAccionDocente(),
+                    r.perfilResolutorActual(), r.accionesPermitidas());
         }
     }
 
