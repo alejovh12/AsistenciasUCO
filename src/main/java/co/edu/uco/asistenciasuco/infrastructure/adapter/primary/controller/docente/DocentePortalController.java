@@ -25,6 +25,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docen
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.response.ReclamoDocenteResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.PaginacionRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -79,6 +80,8 @@ public final class DocentePortalController {
             @RequestParam(name = "pagina", required = false) final Integer pagina,
             @RequestParam(name = "tamano", required = false) final Integer tamano
     ) {
+        // CULM-001 D.9-a (F-ADM-023, F-EST-022): pagina < 1 o tamano fuera de 1..100 es 400 PAG_001, no se acota en silencio.
+        PaginacionRequestValidator.resolver(pagina, tamano);
         final ReclamosDocentePaginaDTO resultado = consultarReclamosDocenteInputPort.execute(
                 new ConsultarReclamosDocenteDTO(authenticatedUserResolver.requireAuthenticatedUserId(), estado, pagina, tamano));
         return ResponseEntity.ok(new ApiListResponse<>(

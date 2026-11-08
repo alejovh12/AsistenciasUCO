@@ -8,7 +8,10 @@ import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DecanoCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.FacultadProjection;
+import co.edu.uco.asistenciasuco.application.features.admin.exception.DecanoErrorCode;
+import co.edu.uco.asistenciasuco.application.features.identidad.asegurarcuenta.AsegurarCuentaIdentidadService;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.UsuarioSincronizacionIdentidadPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CrearCuentaIdentidadDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CuentaIdentidadDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
@@ -29,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
@@ -52,6 +56,7 @@ class CrearDecanoUseCaseImplTest {
     private UsuarioRepositoryPort usuarios;
     private PasswordEncoderPort encoder;
     private IdentityProviderPort identity;
+    private UsuarioSincronizacionIdentidadPort desfases;
     private CrearDecanoUseCaseImpl useCase;
 
     @BeforeEach
@@ -65,7 +70,9 @@ class CrearDecanoUseCaseImplTest {
                 FACULTAD_ID, "Facultad", null, null, null, null, true, "Activa"
         )));
         when(identity.crearCuenta(any())).thenReturn(new CuentaIdentidadDTO("kc-1", true));
-        useCase = new CrearDecanoUseCaseImpl(facultad, command, usuarios, encoder, identity);
+        desfases = mock(UsuarioSincronizacionIdentidadPort.class);
+        useCase = new CrearDecanoUseCaseImpl(facultad, command, usuarios, encoder,
+                new AsegurarCuentaIdentidadService(identity, desfases));
     }
 
     @Test
@@ -186,8 +193,12 @@ class CrearDecanoUseCaseImplTest {
         verifyNoInteractions(identity);
     }
 
+    /**
+     * CULM-001 D.9-a (F-ADM-024, CONTRACT §11.1): con {@code AsegurarCuentaIdentidadService} un fallo del proveedor despues de
+     * confirmar la base de datos ya no responde 500: registra el desfase (cuenta pendiente de sincronizacion) y no revierte nada.
+     */
     @Test
-    void fallo_identity_despues_de_db_preserva_cause_sin_rollback_ni_eliminarCuenta() {
+    void fallo_identity_despues_de_db_registra_el_desfase_sin_error_ni_rollback_ni_eliminarCuenta() {
         final IdentityProviderPort.IdentityProviderException fallo =
                 new IdentityProviderPort.IdentityProviderException("Fallo IdP");
         when(usuarios.consultarUsuarioPorIdentificacion(TIPO_ID, 123456789)).thenReturn(
@@ -196,12 +207,26 @@ class CrearDecanoUseCaseImplTest {
         when(encoder.encode(RAW)).thenReturn(HASH);
         when(identity.crearCuenta(any())).thenThrow(fallo);
 
-        final InternalApplicationException exception = assertThrows(InternalApplicationException.class,
+        useCase.execute(domain(123456789, CORREO));
+
+        verify(command).crearDecano(any());
+        verify(desfases).registrar(eq(USUARIO_ID), eq("APROVISIONAR"), any());
+        verify(identity, never()).eliminarCuenta(any());
+    }
+
+    /** CULM-001 D.9-a (F-ADM-024): la persona ya es decano activo; la BD responde DEC_020 (409) y no se toca la identidad. */
+    @Test
+    void decano_activo_repetido_propaga_el_conflicto_dec_020_sin_tocar_la_identidad() {
+        final UsuarioIdentidadRepositoryProjection previo = usuario(USUARIO_ID, 123456789, CORREO);
+        when(usuarios.consultarUsuarioPorCorreo(CORREO)).thenReturn(Optional.of(previo));
+        when(usuarios.consultarUsuarioPorIdentificacion(TIPO_ID, 123456789)).thenReturn(Optional.of(previo));
+        doThrow(new ConflictException(DecanoErrorCode.DEC_020)).when(command).crearDecano(any());
+
+        final ConflictException exception = assertThrows(ConflictException.class,
                 () -> useCase.execute(domain(123456789, CORREO)));
 
-        assertSame(fallo, exception.getCause());
-        verify(command).crearDecano(any());
-        verify(identity, never()).eliminarCuenta(any());
+        assertEquals("DEC_020", exception.getCode());
+        verifyNoInteractions(identity, desfases);
     }
 
     @Test

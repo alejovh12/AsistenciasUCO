@@ -77,6 +77,13 @@ public final class AsignaturaPlanInteractor implements AsignaturaPlanInputPort {
                 g.grupoEstaHablitado(), g.programas())).toList(), p.total());
     }
 
+    @Override
+    public GrupoFacultadDTO consultarGrupoFacultad(final UUID idUsuarioEjecutor, final UUID idGrupo) {
+        final var g = useCase.consultarGrupoFacultad(idUsuarioEjecutor, idGrupo);
+        return new GrupoFacultadDTO(g.idGrupo(), g.codigo(), g.nombre(), g.idPeriodoAcademico(), g.idAsignatura(), g.nombreAsignatura(), g.idDocente(),
+                g.capacidadMaximaPermitida(), g.estudiantesActivos(), g.cuposDisponibles(), g.grupoEstaHablitado(), g.programas());
+    }
+
     private static PaginaAsignaturasPlanDTO aDto(final PaginaAsignaturasPlanProjection p) {
         return new PaginaAsignaturasPlanDTO(p.elementos().stream().map(a -> new AsignaturaPlanDTO(a.idAsignatura(), a.codigo(), a.nombre(), a.credito(), a.idArea(),
                 a.nombreArea(), a.idComponente(), a.nombreComponente(), a.idPlanEstudio(), a.inpPlanEstudio(), a.idPrograma(), a.nombrePrograma(),

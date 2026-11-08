@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin;
 
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.primaryports.AdministrarNotificacionesInputPort;
-import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.EstadoCanalNotificacionProjection;
+import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.EstadoCanalPublicoProjection;
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.MarcadorPlantillaProjection;
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.NotificacionSalienteAdminProjection;
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.PaginaColaNotificacionProjection;
@@ -54,40 +54,34 @@ class AdminNotificacionControllerTest {
     }
 
     @Test
-    @DisplayName("GET /estado-canal: retorna estado del canal con datos estructurados")
-    void consultarEstadoCanal_retornaOk() throws Exception {
-        final EstadoCanalNotificacionProjection estado = new EstadoCanalNotificacionProjection(
-                "outbox",
-                "smtp",
-                true,
-                true,
-                "smtp.uco.edu.co",
-                587,
-                "asistencias@uco.edu.co",
-                true,
-                "no-reply@uco.edu.co",
-                "Asistencias UCO",
-                true,
-                false,
-                50,
-                60,
-                500,
-                false,
-                "https://asistencias.uco.edu.co",
-                false,
-                0
-        );
-        when(administracionPort.consultarEstadoCanal()).thenReturn(estado);
+    @DisplayName("GET /estado-canal: solo canalActivo, ultimoEnvioUtc y ultimoError (sin host, puerto ni usuario)")
+    void consultarEstadoCanal_retornaSoloElEstadoPublico() throws Exception {
+        when(administracionPort.consultarEstadoCanalPublico(ADMIN_ID)).thenReturn(
+                new EstadoCanalPublicoProjection(true, Instant.parse("2026-11-08T14:30:00Z"), "SMTP_TIMEOUT"));
 
         mockMvc.perform(get("/api/v1/admin/notificaciones/estado-canal"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exitoso").value(true))
-                .andExpect(jsonPath("$.datos.provider").value("outbox"))
-                .andExpect(jsonPath("$.datos.sender").value("smtp"))
-                .andExpect(jsonPath("$.datos.dispatcherEnabled").value(true))
-                .andExpect(jsonPath("$.datos.disponible").value(true))
-                .andExpect(jsonPath("$.datos.host").value("smtp.uco.edu.co"))
-                .andExpect(jsonPath("$.datos.tienePasswordConfigurado").value(true));
+                .andExpect(jsonPath("$.datos.canalActivo").value(true))
+                .andExpect(jsonPath("$.datos.ultimoEnvioUtc").value("2026-11-08T14:30:00Z"))
+                .andExpect(jsonPath("$.datos.ultimoError").value("SMTP_TIMEOUT"))
+                .andExpect(jsonPath("$.datos.host").doesNotExist())
+                .andExpect(jsonPath("$.datos.port").doesNotExist())
+                .andExpect(jsonPath("$.datos.username").doesNotExist())
+                .andExpect(jsonPath("$.datos.fromAddress").doesNotExist())
+                .andExpect(jsonPath("$.datos.tienePasswordConfigurado").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("GET /estado-canal: sin entregas ni errores devuelve nulos y el JSON no trae mas campos que los tres")
+    void consultarEstadoCanal_sinHistorial() throws Exception {
+        when(administracionPort.consultarEstadoCanalPublico(ADMIN_ID)).thenReturn(new EstadoCanalPublicoProjection(false, null, null));
+
+        mockMvc.perform(get("/api/v1/admin/notificaciones/estado-canal"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.datos.canalActivo").value(false))
+                .andExpect(jsonPath("$.datos.ultimoEnvioUtc").doesNotExist())
+                .andExpect(jsonPath("$.datos.length()").value(org.hamcrest.Matchers.lessThanOrEqualTo(3)));
     }
 
     @Test

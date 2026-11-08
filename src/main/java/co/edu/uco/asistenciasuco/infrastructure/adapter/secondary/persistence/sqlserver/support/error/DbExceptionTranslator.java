@@ -90,6 +90,7 @@ public final class DbExceptionTranslator {
             DocenteErrorCode.ERR_DOCENTE_YA_REGISTRADO,
             CoordinadorErrorCode.COO_001,
             DecanoErrorCode.DEC_002,
+            DecanoErrorCode.DEC_020,
             FacultadErrorCode.FAC_002,
             CatalogoErrorCode.TPR_002,
             CatalogoErrorCode.ARE_002,

@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase;
 
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.EstadoCanalNotificacionProjection;
+import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.EstadoCanalPublicoProjection;
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.PaginaColaNotificacionProjection;
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.TipoPlantillaAdminProjection;
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.VersionPlantillaProjection;
@@ -12,6 +13,8 @@ import java.util.UUID;
 public interface AdministrarNotificacionesUseCase {
 
     EstadoCanalNotificacionProjection consultarEstadoCanal();
+
+    EstadoCanalPublicoProjection consultarEstadoCanalPublico(UUID idUsuarioEjecutor);
 
     List<TipoPlantillaAdminProjection> consultarPlantillas(String idioma, UUID idUsuarioEjecutor);
 

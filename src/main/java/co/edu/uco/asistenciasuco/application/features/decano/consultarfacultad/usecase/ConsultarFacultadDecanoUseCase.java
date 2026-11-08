@@ -20,5 +20,5 @@ public interface ConsultarFacultadDecanoUseCase {
     List<EstructuraFacultadProjection> consultarEstructura(UUID usuario);
 
     Pagina<SesionFacultadHorarioDomain> consultarSesiones(UUID usuario, LocalDate desde, LocalDate hasta,
-                                                          UUID idPrograma, Integer pagina, Integer tamano);
+                                                          UUID idPrograma, UUID idGrupo, Integer pagina, Integer tamano);
 }

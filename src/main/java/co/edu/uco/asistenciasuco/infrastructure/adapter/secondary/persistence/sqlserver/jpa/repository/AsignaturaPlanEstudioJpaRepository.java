@@ -74,6 +74,11 @@ public class AsignaturaPlanEstudioJpaRepository implements AsignaturaPlanPort {
                  @numeroPagina = :numeroPagina, @tamanoPagina = :tamanoPagina,
                  @idPeriodoAcademico = :idPeriodoAcademico, @idPrograma = :idPrograma, @busqueda = :busqueda
             """;
+    static final String SQL_GRUPO_FACULTAD = """
+            EXEC dbo.usp_consultar_grupo_facultad_detalle
+                 @idUsuarioEjecutor = :idUsuarioEjecutor, @idCorrelacion = :idCorrelacion, @idGrupo = :idGrupo
+            """;
+    static final int COLUMNAS_GRUPO_DETALLE = 12;
     static final int COLUMNAS_ASIGNATURA_PLAN = 21;
     static final int COLUMNAS_PLAN = 11;
     static final int COLUMNAS_GRUPO_FACULTAD = 13;
@@ -203,6 +208,24 @@ public class AsignaturaPlanEstudioJpaRepository implements AsignaturaPlanPort {
                 total = ((Number) c[12]).longValue();
             }
             return new PaginaGruposFacultadProjection(lista, total);
+        });
+    }
+
+    @Override
+    public GrupoFacultadProjection consultarGrupoFacultad(final UUID idUsuarioEjecutor, final UUID idGrupo) {
+        final Map<String, Object> p = new LinkedHashMap<>();
+        p.put("idUsuarioEjecutor", idUsuarioEjecutor);
+        p.put("idCorrelacion", CorrelationIdContext.require());
+        p.put("idGrupo", idGrupo);
+        return JpaQueryExecutor.execute("consultarGrupoFacultad", "No fue posible consultar el grupo de la facultad.", () -> {
+            final List<?> filas = consulta(SQL_GRUPO_FACULTAD, p);
+            if (filas.isEmpty()) {
+                // El SP ya lanzo SEC_002 para un grupo inexistente o ajeno; sin fila nunca se devuelve un grupo vacio.
+                throw new IllegalStateException("usp_consultar_grupo_facultad_detalle no devolvio el grupo solicitado.");
+            }
+            final Object[] c = exigirColumnas((Object[]) filas.getFirst(), COLUMNAS_GRUPO_DETALLE, "usp_consultar_grupo_facultad_detalle");
+            return new GrupoFacultadProjection(uuid(c[0]), entero(c[1]), (String) c[2], uuid(c[3]), uuid(c[4]), (String) c[5], uuid(c[6]), entero(c[7]),
+                    entero(c[8]), entero(c[9]), bool(c[10]), nombres((String) c[11]));
         });
     }
 

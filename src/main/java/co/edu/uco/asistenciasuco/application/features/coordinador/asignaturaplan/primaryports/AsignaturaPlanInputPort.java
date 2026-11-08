@@ -15,4 +15,7 @@ public interface AsignaturaPlanInputPort {
     PaginaAsignaturasPlanDTO consultarAsignaturasCoordinador(UUID idUsuarioEjecutor, UUID idPrograma, String busqueda, Boolean estaActiva, int pagina, int tamano);
     PaginaPlanesEstudioDTO consultarPlanes(UUID idUsuarioEjecutor, UUID idPrograma, Boolean estaActivo, int pagina, int tamano);
     PaginaGruposFacultadDTO consultarGruposFacultad(UUID idUsuarioEjecutor, UUID idPeriodoAcademico, UUID idPrograma, String busqueda, int pagina, int tamano);
+
+    /** CULM-001 D.9-a (F-DEC-003): detalle de un grupo de la facultad del decano; inexistente o ajeno es 403. */
+    GrupoFacultadDTO consultarGrupoFacultad(UUID idUsuarioEjecutor, UUID idGrupo);
 }

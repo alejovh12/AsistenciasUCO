@@ -7,7 +7,7 @@ import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationResult;
 import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationErrorType;
 import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationHelper;
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.primaryports.AdministrarNotificacionesInputPort;
-import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.EstadoCanalNotificacionProjection;
+import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.EstadoCanalPublicoProjection;
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.NotificacionSalienteAdminProjection;
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.PaginaColaNotificacionProjection;
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.ResumenColaNotificacionProjection;
@@ -64,29 +64,11 @@ public class AdminNotificacionController {
 
     @GetMapping("/estado-canal")
     public ResponseEntity<ApiDataResponse<EstadoCanalNotificacionResponse>> consultarEstadoCanal() {
-        final EstadoCanalNotificacionProjection p = administracionPort.consultarEstadoCanal();
-        final EstadoCanalNotificacionResponse resp = new EstadoCanalNotificacionResponse(
-                p.provider(),
-                p.sender(),
-                p.dispatcherEnabled(),
-                p.disponible(),
-                p.host(),
-                p.port(),
-                p.username(),
-                p.tienePasswordConfigurado(),
-                p.fromAddress(),
-                p.fromName(),
-                p.starttls(),
-                p.ssl(),
-                p.maxBcc(),
-                p.ratePerMinute(),
-                p.ratePerDay(),
-                p.requireConfirmedEmail(),
-                p.platformUrl(),
-                p.testModeEnabled(),
-                p.testModeRedirectCount()
-        );
-        return ResponseEntity.ok(new ApiDataResponse<>(true, resp));
+        // CULM-001 D.9-a (F-ADM-029): nunca se expone host, puerto ni usuario de la cuenta tecnica del canal.
+        final EstadoCanalPublicoProjection p = administracionPort.consultarEstadoCanalPublico(
+                authenticatedUserResolver.requireAuthenticatedUserId());
+        return ResponseEntity.ok(new ApiDataResponse<>(true,
+                new EstadoCanalNotificacionResponse(p.canalActivo(), p.ultimoEnvioUtc(), p.ultimoError())));
     }
 
     @GetMapping("/plantillas")

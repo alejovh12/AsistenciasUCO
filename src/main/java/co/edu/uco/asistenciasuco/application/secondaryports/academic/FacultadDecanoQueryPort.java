@@ -19,7 +19,7 @@ public interface FacultadDecanoQueryPort {
     List<EstructuraFacultadProjection> consultarEstructura(UUID idUsuarioEjecutor);
 
     Pagina<SesionFacultadProjection> consultarSesiones(UUID idUsuarioEjecutor, LocalDate desde, LocalDate hasta,
-                                                       UUID idPrograma, int pagina, int tamano);
+                                                       UUID idPrograma, UUID idGrupo, int pagina, int tamano);
 
     record Pagina<T>(List<T> elementos, int total) {
     }

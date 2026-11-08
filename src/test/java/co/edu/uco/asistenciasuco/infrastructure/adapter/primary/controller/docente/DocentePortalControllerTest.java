@@ -316,4 +316,21 @@ class DocentePortalControllerTest {
         request.setRespuestaDocente("Directa");
         assertEquals("Directa", request.getRespuestaDocente());
     }
+
+    /** CULM-001 D.9-a (F-ADM-023, F-EST-022): pagina < 1 o tamano fuera de 1..100 es 400 PAG_001 y no llega al caso de uso. */
+    @Test
+    void culm001_d9_reclamos_con_paginacion_invalida_es_400_pag_001() throws Exception {
+        mvc.perform(get("/api/v1/docente/reclamos").param("pagina", "0").param("tamano", "10"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("PAG_001"))
+                .andExpect(jsonPath("$.details[0].field").value("pagina"));
+        mvc.perform(get("/api/v1/docente/reclamos").param("pagina", "1").param("tamano", "100000"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("PAG_001"))
+                .andExpect(jsonPath("$.details[0].field").value("tamano"));
+        mvc.perform(get("/api/v1/docente/reclamos").param("pagina", "-1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("PAG_001"));
+        org.mockito.Mockito.verifyNoInteractions(reclamos);
+    }
 }

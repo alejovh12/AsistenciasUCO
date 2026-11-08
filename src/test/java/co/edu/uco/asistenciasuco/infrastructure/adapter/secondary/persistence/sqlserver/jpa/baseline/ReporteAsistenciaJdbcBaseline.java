@@ -56,6 +56,11 @@ public final class ReporteAsistenciaJdbcBaseline implements ReporteAsistenciaQue
     }
 
     @Override
+    public void validarAccesoGrupo(final UUID usuarioEjecutor, final UUID grupoId) {
+        throw new UnsupportedOperationException("El baseline JDBC no valida el acceso (CULM-001 D.9-a).");
+    }
+
+    @Override
     public List<ReporteAsistenciaRow> consultarReporteAsistenciaGrupo(final UUID grupoId) {
         try {
             return jdbcOperations.query(

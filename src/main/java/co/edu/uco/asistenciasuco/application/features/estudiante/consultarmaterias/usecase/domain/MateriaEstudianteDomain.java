@@ -9,7 +9,12 @@ import java.util.UUID;
  * indicadores de asistencia por horas de la matricula.
  */
 public record MateriaEstudianteDomain(UUID idAsignatura, String nombreAsignatura, UUID idGrupo, String nombreGrupo,
-                                      IndicadoresAsistenciaDTO indicadores) {
+                                      IndicadoresAsistenciaDTO indicadores, Integer creditos) {
+
+    public MateriaEstudianteDomain(final UUID idAsignatura, final String nombreAsignatura, final UUID idGrupo,
+                                   final String nombreGrupo, final IndicadoresAsistenciaDTO indicadores) {
+        this(idAsignatura, nombreAsignatura, idGrupo, nombreGrupo, indicadores, null);
+    }
 
     public MateriaEstudianteDomain(final UUID idAsignatura, final String nombreAsignatura, final UUID idGrupo,
                                    final String nombreGrupo) {

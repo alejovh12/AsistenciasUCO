@@ -104,6 +104,9 @@ final class DbFailureClassifier {
             case "NTF_004" -> CommonErrorCode.VALIDATION_ERROR;
             // CULM-001 A.2-6: NTF_002 notificacion inexistente al reintentar desde la cola (antes ERR_DB_UNCLASSIFIED, 500).
             case "NTF_002", "NTF_005" -> CommonErrorCode.RESOURCE_NOT_FOUND;
+            // CULM-001 D.9-a (F-ADM-027): NTF_020 reintento de una notificacion inexistente y NTF_021 vista previa de un tipo de plantilla
+            // inexistente: 404 (antes ERR_DB_UNCLASSIFIED, 500, o un 200 con asunto vacio).
+            case "NTF_020", "NTF_021" -> CommonErrorCode.RESOURCE_NOT_FOUND;
             case "NTF_008" -> CommonErrorCode.CONFLICT;
             case "IDE_001" -> CommonErrorCode.VALIDATION_ERROR;
             case "IDE_003" -> CommonErrorCode.CONFLICT;
@@ -164,6 +167,8 @@ final class DbFailureClassifier {
             // CULM-001 A.2-8: no se desactiva al decano de una facultad con programas activos. 409 con su codigo de
             // catalogo (como COO_001) para que el usuario reciba el texto institucional (F-A-S02).
             case "DEC_002" -> DecanoErrorCode.DEC_002;
+            // CULM-001 D.9-a (F-ADM-024): alta repetida de un decano activo. 409 con su codigo de catalogo.
+            case "DEC_020" -> DecanoErrorCode.DEC_020;
             // CULM-001 A.2-10: sesion solapada en el grupo o con otro grupo del docente. 400 como SES_004: el OpenAPI de
             // POST/PATCH/PUT /api/v1/sesiones y POST /api/v2/sesiones declara 400 y no 409 (§8.1 del contrato). Con su
             // codigo de catalogo para que el formulario muestre el texto del solape (A2-F-09, N11, F-A-S04).

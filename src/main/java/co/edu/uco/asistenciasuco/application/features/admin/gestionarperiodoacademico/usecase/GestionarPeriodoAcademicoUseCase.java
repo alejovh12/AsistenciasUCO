@@ -2,11 +2,15 @@ package co.edu.uco.asistenciasuco.application.features.admin.gestionarperiodoaca
 
 import co.edu.uco.asistenciasuco.application.features.admin.gestionarperiodoacademico.usecase.domain.PeriodoAcademicoDomain;
 
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PaginaPeriodosAdminProjection;
+
 import java.util.UUID;
 
 public interface GestionarPeriodoAcademicoUseCase {
 
-    void crear(PeriodoAcademicoDomain domain);
+    UUID crear(PeriodoAcademicoDomain domain);
+
+    PaginaPeriodosAdminProjection consultar(UUID usuario, Integer pagina, Integer tamano);
 
     void actualizar(PeriodoAcademicoDomain domain);
 

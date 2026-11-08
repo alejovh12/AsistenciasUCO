@@ -10,6 +10,8 @@ public final class ConsultarMateriasEstudianteRepositoryMapper {
 
     public static MateriaEstudianteDomain toDomain(final MateriaEstudianteProjection projection) {
         return new MateriaEstudianteDomain(projection.idAsignatura(), projection.nombreAsignatura(),
-                projection.idGrupo(), projection.nombreGrupo());
+                projection.idGrupo(), projection.nombreGrupo(),
+                co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.IndicadoresAsistenciaDTO.sinSesiones(null, null),
+                projection.creditos());
     }
 }

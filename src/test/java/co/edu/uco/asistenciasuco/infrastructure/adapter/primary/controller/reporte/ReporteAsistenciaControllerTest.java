@@ -113,4 +113,21 @@ class ReporteAsistenciaControllerTest {
                 LocalDateTime.of(2026, 1, 1, 8, 0), LocalDateTime.of(2026, 1, 1, 9, 0),
                 "12345678", "Persona", "persona@example.com", asistio, reason);
     }
+
+    /** CULM-001 D.9-a (F-TRX-021): grupo inexistente o fuera de ambito responde 403 y no se genera ningun .xlsx. */
+    @Test
+    void culm001_d9_grupo_inexistente_o_ajeno_responde_403_sin_archivo() throws Exception {
+        final GenerarReporteAsistenciaInputPort port = input -> {
+            throw new co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException("SEC_002", "Sin autorizacion.");
+        };
+        final org.springframework.test.web.servlet.MockMvc mvc = org.springframework.test.web.servlet.setup.MockMvcBuilders
+                .standaloneSetup(new ReporteAsistenciaController(port, () -> UUID.randomUUID()))
+                .setControllerAdvice(new co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler(codigo -> java.util.Optional.empty()))
+                .build();
+
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/v1/grupos/{id}/reportes/asistencia-excel", UUID.randomUUID()))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isForbidden())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().contentTypeCompatibleWith(org.springframework.http.MediaType.APPLICATION_JSON))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.status").value(403));
+    }
 }

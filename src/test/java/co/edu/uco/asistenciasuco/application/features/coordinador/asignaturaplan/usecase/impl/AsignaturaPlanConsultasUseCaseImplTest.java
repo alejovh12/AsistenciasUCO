@@ -63,4 +63,16 @@ class AsignaturaPlanConsultasUseCaseImplTest {
         assertSame(pagina, useCase.consultarGruposFacultad(usuario, periodo, programa, "calc", 2, 20));
         assertThrows(CrosscuttingException.class, () -> useCase.consultarGruposFacultad(null, null, null, null, 1, 10));
     }
+
+    @Test
+    void culm001_d9_detalle_del_grupo_de_la_facultad_exige_usuario_y_grupo() {
+        final var grupo = new co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.GrupoFacultadProjection(
+                UUID.randomUUID(), 1, "G1", periodo, UUID.randomUUID(), "Calculo", UUID.randomUUID(), 30, 1, 29, true, List.of("Sistemas"));
+        final UUID idGrupo = UUID.randomUUID();
+        when(port.consultarGrupoFacultad(usuario, idGrupo)).thenReturn(grupo);
+
+        assertSame(grupo, useCase.consultarGrupoFacultad(usuario, idGrupo));
+        assertThrows(CrosscuttingException.class, () -> useCase.consultarGrupoFacultad(null, idGrupo));
+        assertThrows(CrosscuttingException.class, () -> useCase.consultarGrupoFacultad(usuario, null));
+    }
 }

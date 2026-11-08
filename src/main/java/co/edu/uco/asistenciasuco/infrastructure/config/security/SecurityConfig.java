@@ -64,7 +64,9 @@ public class SecurityConfig {
             final InstitutionalJwtAuthenticationConverter institutionalJwtAuthenticationConverter,
             final AuthenticationEntryPoint authenticationEntryPoint,
             final AccessDeniedHandler accessDeniedHandler,
-            final ObjectProvider<SecurityPepEnforcementFilter> securityPepEnforcementFilter
+            final ObjectProvider<SecurityPepEnforcementFilter> securityPepEnforcementFilter,
+            final ObjectProvider<org.springframework.web.servlet.handler.HandlerMappingIntrospector> handlerMappingIntrospector,
+            final ObjectProvider<co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.handler.SecurityErrorResponseWriter> errorResponseWriter
     ) throws Exception {
         http
             .cors(Customizer.withDefaults())
@@ -239,11 +241,20 @@ public class SecurityConfig {
 
         // SEC-BASELINE-001: unico punto de registro del filtro PEP (su FilterRegistrationBean servlet
         // esta deshabilitado). Despues de autenticar el Bearer y antes de AuthorizationFilter.
-        securityPepEnforcementFilter.ifAvailable(filter ->
+        // CULM-001 D.9-a (F-EST-024, OBS-17): en modo baseline, una ruta sin handler responde 404 sin consultar al PDP; ese filtro se
+        // registra justo ANTES del PEP (ambos despues de BearerTokenAuthenticationFilter, en orden de registro).
+        securityPepEnforcementFilter.ifAvailable(filter -> {
+            if (handlerMappingIntrospector.getIfAvailable() != null && errorResponseWriter.getIfAvailable() != null) {
                 http.addFilterAfter(
-                        filter,
+                        new UnmappedRouteFilter(handlerMappingIntrospector.getObject(), errorResponseWriter.getObject()),
                         org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class
-                ));
+                );
+            }
+            http.addFilterAfter(
+                    filter,
+                    org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class
+            );
+        });
 
         return http.build();
     }

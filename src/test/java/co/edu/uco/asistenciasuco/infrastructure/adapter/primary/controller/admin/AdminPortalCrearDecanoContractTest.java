@@ -66,7 +66,7 @@ class AdminPortalCrearDecanoContractTest {
     void request_sin_tipo_identificacion_no_continua() {
         final var request = json.readValue(requestJson(null), AdminPortalController.CrearDecanoRequest.class);
 
-        assertThrows(ValidationException.class, () -> controller.crearDecano(request));
+        assertThrows(co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.RequestValidationException.class, () -> controller.crearDecano(request)); // CULM-001 D.9-a F-ADM-025 (§11.1): la forma se valida en el controlador con details[]
         verifyNoInteractions(useCase);
     }
 

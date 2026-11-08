@@ -59,4 +59,77 @@ class AdministrarNotificacionesUseCaseImplTest {
         verify(port).enviarCorreoPrueba(admin, "a@b.co");
         verifyNoMoreInteractions(port);
     }
+
+    /** CULM-001 D.9-a (F-ADM-029): estado publico del canal a partir de la cola; sin datos de la cuenta tecnica. */
+    @Test
+    void estadoCanalPublico_activo_con_ultima_entrega_y_sin_error_si_la_falla_es_anterior() {
+        final java.time.Instant entrega = java.time.Instant.parse("2026-11-08T14:00:00Z");
+        when(port.consultarEstadoCanal()).thenReturn(estado(true, true));
+        when(port.consultarCola("ENTREGADA", null, 1, 1, admin)).thenReturn(pagina(cola("ENTREGADA", entrega, entrega, null)));
+        when(port.consultarCola("FALLIDA_DEFINITIVA", null, 1, 1, admin)).thenReturn(
+                pagina(cola("FALLIDA_DEFINITIVA", java.time.Instant.parse("2026-11-08T10:00:00Z"), null, "SMTP_AUTH")));
+        when(port.consultarCola("FALLIDA_REINTENTABLE", null, 1, 1, admin)).thenReturn(pagina());
+
+        final var publico = interactor.consultarEstadoCanalPublico(admin);
+
+        assertEquals(true, publico.canalActivo());
+        assertEquals(entrega, publico.ultimoEnvioUtc());
+        assertEquals(null, publico.ultimoError());
+    }
+
+    @Test
+    void estadoCanalPublico_informa_el_error_mas_reciente_posterior_a_la_ultima_entrega() {
+        final java.time.Instant entrega = java.time.Instant.parse("2026-11-08T09:00:00Z");
+        when(port.consultarEstadoCanal()).thenReturn(estado(true, true));
+        when(port.consultarCola("ENTREGADA", null, 1, 1, admin)).thenReturn(pagina(cola("ENTREGADA", entrega, entrega, null)));
+        when(port.consultarCola("FALLIDA_DEFINITIVA", null, 1, 1, admin)).thenReturn(
+                pagina(cola("FALLIDA_DEFINITIVA", java.time.Instant.parse("2026-11-08T10:00:00Z"), null, "SMTP_AUTH")));
+        when(port.consultarCola("FALLIDA_REINTENTABLE", null, 1, 1, admin)).thenReturn(
+                pagina(cola("FALLIDA_REINTENTABLE", java.time.Instant.parse("2026-11-08T11:00:00Z"), null, "SMTP_TIMEOUT")));
+
+        assertEquals("SMTP_TIMEOUT", interactor.consultarEstadoCanalPublico(admin).ultimoError());
+    }
+
+    @Test
+    void estadoCanalPublico_sin_historial_y_canal_inactivo() {
+        when(port.consultarEstadoCanal()).thenReturn(estado(true, false));
+        when(port.consultarCola("ENTREGADA", null, 1, 1, admin)).thenReturn(pagina());
+        when(port.consultarCola("FALLIDA_DEFINITIVA", null, 1, 1, admin)).thenReturn(
+                pagina(cola("FALLIDA_DEFINITIVA", java.time.Instant.parse("2026-11-08T10:00:00Z"), null, "SMTP_AUTH")));
+        when(port.consultarCola("FALLIDA_REINTENTABLE", null, 1, 1, admin)).thenReturn(pagina());
+
+        final var publico = interactor.consultarEstadoCanalPublico(admin);
+
+        assertEquals(false, publico.canalActivo());
+        assertEquals(null, publico.ultimoEnvioUtc());
+        assertEquals("SMTP_AUTH", publico.ultimoError());
+    }
+
+    @Test
+    void estadoCanalPublico_con_despachador_apagado_no_esta_activo() {
+        when(port.consultarEstadoCanal()).thenReturn(estado(false, true));
+        when(port.consultarCola(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.eq(1), org.mockito.ArgumentMatchers.eq(1), org.mockito.ArgumentMatchers.eq(admin))).thenReturn(pagina());
+
+        assertEquals(false, interactor.consultarEstadoCanalPublico(admin).canalActivo());
+    }
+
+    private static co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.EstadoCanalNotificacionProjection estado(
+            final boolean despachador, final boolean disponible) {
+        return new co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.EstadoCanalNotificacionProjection(
+                "outbox", "smtp", despachador, disponible, "smtp.uco.edu.co", 587, "cuenta@uco.edu.co", true, "no-reply@uco.edu.co",
+                "UCO", true, false, 50, 60, 500, false, "https://x", false, 0);
+    }
+
+    private static co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.NotificacionSalienteAdminProjection cola(
+            final String estado, final java.time.Instant creado, final java.time.Instant entregado, final String codigoError) {
+        return new co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.NotificacionSalienteAdminProjection(
+                UUID.randomUUID(), "T", "a", estado, estado, false, 1, 1, creado, null, entregado, codigoError, null, null);
+    }
+
+    private static co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.PaginaColaNotificacionProjection pagina(
+            final co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.NotificacionSalienteAdminProjection... filas) {
+        return new co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.PaginaColaNotificacionProjection(
+                List.of(filas), 1, 1, filas.length, filas.length, null);
+    }
 }

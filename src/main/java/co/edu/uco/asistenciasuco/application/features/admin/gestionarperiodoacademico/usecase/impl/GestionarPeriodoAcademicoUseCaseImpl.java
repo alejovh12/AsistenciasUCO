@@ -3,7 +3,10 @@ package co.edu.uco.asistenciasuco.application.features.admin.gestionarperiodoaca
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.admin.gestionarperiodoacademico.usecase.GestionarPeriodoAcademicoUseCase;
 import co.edu.uco.asistenciasuco.application.features.admin.gestionarperiodoacademico.usecase.domain.PeriodoAcademicoDomain;
+import co.edu.uco.asistenciasuco.application.features.decano.common.rule.ConsultaPaginadaRules;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.PeriodoAcademicoCommandPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.PeriodoAcademicoQueryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PaginaPeriodosAdminProjection;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 
@@ -18,16 +21,30 @@ import java.util.UUID;
 public final class GestionarPeriodoAcademicoUseCaseImpl implements GestionarPeriodoAcademicoUseCase {
 
     private final PeriodoAcademicoCommandPort commandPort;
+    private final PeriodoAcademicoQueryPort queryPort;
 
-    public GestionarPeriodoAcademicoUseCaseImpl(final PeriodoAcademicoCommandPort commandPort) {
+    public GestionarPeriodoAcademicoUseCaseImpl(final PeriodoAcademicoCommandPort commandPort, final PeriodoAcademicoQueryPort queryPort) {
         this.commandPort = Objects.requireNonNull(commandPort, "PeriodoAcademicoCommandPort es obligatorio.");
+        this.queryPort = Objects.requireNonNull(queryPort, "PeriodoAcademicoQueryPort es obligatorio.");
     }
 
     @Override
-    public void crear(final PeriodoAcademicoDomain domain) {
+    public UUID crear(final PeriodoAcademicoDomain domain) {
         validar(domain);
-        commandPort.crearPeriodoAcademico(UUID.randomUUID(), domain.nombre().trim(), domain.fechaInicio(),
+        final UUID idPeriodo = UUID.randomUUID();
+        commandPort.crearPeriodoAcademico(idPeriodo, domain.nombre().trim(), domain.fechaInicio(),
                 domain.fechaFin(), domain.usuario());
+        return idPeriodo;
+    }
+
+    /** CULM-001 D.9-a (F-ADM-030): periodos de la institucion del administrador, paginados, con esVigente. */
+    @Override
+    public PaginaPeriodosAdminProjection consultar(final UUID usuario, final Integer pagina, final Integer tamano) {
+        if (ObjectHelper.isNull(usuario)) {
+            throw new ValidationException("El usuario ejecutor es obligatorio.");
+        }
+        return queryPort.consultarPeriodosAdministrador(usuario,
+                ConsultaPaginadaRules.pagina(pagina), ConsultaPaginadaRules.tamano(tamano));
     }
 
     @Override

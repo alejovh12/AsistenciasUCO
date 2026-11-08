@@ -191,4 +191,30 @@ class GenerarReporteAsistenciaUseCaseImplTest {
                 LocalDateTime.of(2026, 1, 1, 8, 0), LocalDateTime.of(2026, 1, 1, 9, 0),
                 "12345678", student, "estudiante@uco.edu.co", Boolean.TRUE, null);
     }
+
+    /** CULM-001 D.9-a (F-TRX-021): el grupo inexistente o ajeno es 403 en la BD antes de leer filas (no se genera el archivo). */
+    @Test
+    void culm001_d9_grupo_inexistente_o_ajeno_es_403_de_la_bd_sin_consultar_filas() {
+        when(institutionalScopePort.findRolesActivosByUsuario(ADMINISTRADOR)).thenReturn(Set.of(InstitutionalRole.ADMINISTRADOR));
+        when(institutionalScopePort.isAdministradorActivo(ADMINISTRADOR)).thenReturn(true);
+        org.mockito.Mockito.doThrow(new ForbiddenException("SEC_002", "Sin autorizacion sobre el recurso."))
+                .when(queryPort).validarAccesoGrupo(ADMINISTRADOR, GRUPO);
+
+        assertThrows(ForbiddenException.class, () -> useCase.execute(domain(ADMINISTRADOR)));
+
+        verify(queryPort, never()).consultarReporteAsistenciaGrupo(any());
+    }
+
+    @Test
+    void culm001_d9_valida_el_acceso_en_la_bd_con_el_ejecutor_y_el_grupo_antes_de_consultar() {
+        when(institutionalScopePort.findRolesActivosByUsuario(ADMINISTRADOR)).thenReturn(Set.of(InstitutionalRole.ADMINISTRADOR));
+        when(institutionalScopePort.isAdministradorActivo(ADMINISTRADOR)).thenReturn(true);
+        when(queryPort.consultarReporteAsistenciaGrupo(GRUPO)).thenReturn(List.of());
+
+        useCase.execute(domain(ADMINISTRADOR));
+
+        final var orden = org.mockito.Mockito.inOrder(queryPort);
+        orden.verify(queryPort).validarAccesoGrupo(ADMINISTRADOR, GRUPO);
+        orden.verify(queryPort).consultarReporteAsistenciaGrupo(GRUPO);
+    }
 }

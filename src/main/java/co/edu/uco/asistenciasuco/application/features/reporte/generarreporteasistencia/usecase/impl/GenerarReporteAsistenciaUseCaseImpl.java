@@ -25,6 +25,8 @@ public final class GenerarReporteAsistenciaUseCaseImpl implements GenerarReporte
 
     @Override public List<ReporteAsistenciaEntity> execute(final GenerarReporteAsistenciaDomain domain) {
         validarAutorizacion(domain);
+        // CULM-001 D.9-a (F-TRX-021): grupo inexistente o fuera de ambito es 403 en la BD, antes de leer filas o generar el .xlsx.
+        queryPort.validarAccesoGrupo(domain.usuarioEjecutor(), domain.grupoId());
         return queryPort.consultarReporteAsistenciaGrupo(domain.grupoId()).stream()
                 .map(ReporteAsistenciaRepositoryMapper::toEntity)
                 .toList();

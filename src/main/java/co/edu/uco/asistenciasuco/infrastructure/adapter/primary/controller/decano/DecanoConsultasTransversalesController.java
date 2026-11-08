@@ -7,6 +7,8 @@ import co.edu.uco.asistenciasuco.application.features.consultastransversales.pri
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.PaginaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.ProgramaCreditosDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiPageResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.PaginacionRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.springframework.http.ResponseEntity;
@@ -39,34 +41,37 @@ public final class DecanoConsultasTransversalesController {
     }
 
     @GetMapping("/programas-creditos")
-    public ResponseEntity<ApiListResponse<ProgramaCreditosDTO>> consultarProgramasCreditos(
+    public ResponseEntity<ApiPageResponse<ProgramaCreditosDTO>> consultarProgramasCreditos(
             @RequestParam(name = "busqueda", required = false) final String busqueda,
             @RequestParam(name = "estaActivo", required = false) final Boolean estaActivo,
             @RequestParam(name = "pagina", required = false) final Integer pagina,
             @RequestParam(name = "tamano", required = false) final Integer tamano
     ) {
-        return lista(inputPort.consultarProgramasCreditos(usuario(), busqueda, estaActivo, pagina, tamano));
+        final PaginacionRequestValidator.Pagina solicitada = PaginacionRequestValidator.resolver(pagina, tamano);
+        return paginaDe(inputPort.consultarProgramasCreditos(usuario(), busqueda, estaActivo, pagina, tamano), solicitada);
     }
 
     @GetMapping("/docentes")
-    public ResponseEntity<ApiListResponse<DocenteFacultadDTO>> consultarDocentes(
+    public ResponseEntity<ApiPageResponse<DocenteFacultadDTO>> consultarDocentes(
             @RequestParam(name = "busqueda", required = false) final String busqueda,
             @RequestParam(name = "idPrograma", required = false) final UUID idPrograma,
             @RequestParam(name = "estaActivo", required = false) final Boolean estaActivo,
             @RequestParam(name = "pagina", required = false) final Integer pagina,
             @RequestParam(name = "tamano", required = false) final Integer tamano
     ) {
-        return lista(inputPort.consultarDocentes(usuario(), busqueda, idPrograma, estaActivo, pagina, tamano));
+        final PaginacionRequestValidator.Pagina solicitada = PaginacionRequestValidator.resolver(pagina, tamano);
+        return paginaDe(inputPort.consultarDocentes(usuario(), busqueda, idPrograma, estaActivo, pagina, tamano), solicitada);
     }
 
     @GetMapping("/asignaturas")
-    public ResponseEntity<ApiListResponse<AsignaturaInstitucionDTO>> buscarAsignaturas(
+    public ResponseEntity<ApiPageResponse<AsignaturaInstitucionDTO>> buscarAsignaturas(
             @RequestParam(name = "busqueda", required = false) final String busqueda,
             @RequestParam(name = "estaActiva", required = false) final Boolean estaActiva,
             @RequestParam(name = "pagina", required = false) final Integer pagina,
             @RequestParam(name = "tamano", required = false) final Integer tamano
     ) {
-        return lista(inputPort.buscarAsignaturas(usuario(), busqueda, null, estaActiva, pagina, tamano));
+        final PaginacionRequestValidator.Pagina solicitada = PaginacionRequestValidator.resolver(pagina, tamano);
+        return paginaDe(inputPort.buscarAsignaturas(usuario(), busqueda, null, estaActiva, pagina, tamano), solicitada);
     }
 
     @GetMapping("/estudiantes/{estudianteId}/historial")
@@ -79,7 +84,8 @@ public final class DecanoConsultasTransversalesController {
         return authenticatedUserResolver.requireAuthenticatedUserId();
     }
 
-    private static <T> ResponseEntity<ApiListResponse<T>> lista(final PaginaDTO<T> pagina) {
-        return ResponseEntity.ok(new ApiListResponse<>(true, pagina.elementos(), pagina.total()));
+    private static <T> ResponseEntity<ApiPageResponse<T>> paginaDe(final PaginaDTO<T> pagina,
+                                                                   final PaginacionRequestValidator.Pagina solicitada) {
+        return ResponseEntity.ok(ApiPageResponse.of(pagina.elementos(), solicitada.numero(), solicitada.tamano(), pagina.total()));
     }
 }

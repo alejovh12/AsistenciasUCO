@@ -8,6 +8,8 @@ import co.edu.uco.asistenciasuco.application.features.decano.consultarfacultad.p
 import co.edu.uco.asistenciasuco.application.features.decano.consultarfacultad.primaryports.dto.ConsultasFacultadDecanoDTO.SesionFacultadDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiPageResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.PaginacionRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -41,14 +43,15 @@ public final class DecanoFacultadConsultaController {
     }
 
     @GetMapping("/estudiantes")
-    public ResponseEntity<ApiListResponse<EstudianteFacultadDTO>> consultarEstudiantes(
+    public ResponseEntity<ApiPageResponse<EstudianteFacultadDTO>> consultarEstudiantes(
             @RequestParam(name = "busqueda", required = false) final String busqueda,
             @RequestParam(name = "idPrograma", required = false) final UUID idPrograma,
             @RequestParam(name = "estaActivo", required = false) final Boolean estaActivo,
             @RequestParam(name = "pagina", required = false) final Integer pagina,
             @RequestParam(name = "tamano", required = false) final Integer tamano
     ) {
-        return lista(inputPort.consultarEstudiantes(usuario(), busqueda, idPrograma, estaActivo, pagina, tamano));
+        final PaginacionRequestValidator.Pagina solicitada = PaginacionRequestValidator.resolver(pagina, tamano);
+        return paginaDe(inputPort.consultarEstudiantes(usuario(), busqueda, idPrograma, estaActivo, pagina, tamano), solicitada);
     }
 
     @GetMapping("/estudiantes/{estudianteId}")
@@ -64,24 +67,27 @@ public final class DecanoFacultadConsultaController {
     }
 
     @GetMapping("/sesiones")
-    public ResponseEntity<ApiListResponse<SesionFacultadDecanoResponse>> consultarSesiones(
+    public ResponseEntity<ApiPageResponse<SesionFacultadDecanoResponse>> consultarSesiones(
             @RequestParam(name = "desde", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) final LocalDate desde,
             @RequestParam(name = "hasta", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) final LocalDate hasta,
             @RequestParam(name = "idPrograma", required = false) final UUID idPrograma,
+            @RequestParam(name = "idGrupo", required = false) final UUID idGrupo,
             @RequestParam(name = "pagina", required = false) final Integer pagina,
             @RequestParam(name = "tamano", required = false) final Integer tamano
     ) {
+        final PaginacionRequestValidator.Pagina solicitada = PaginacionRequestValidator.resolver(pagina, tamano);
         final PaginaDTO<SesionFacultadDTO> sesiones =
-                inputPort.consultarSesiones(usuario(), desde, hasta, idPrograma, pagina, tamano);
-        return ResponseEntity.ok(new ApiListResponse<>(true,
-                sesiones.elementos().stream().map(SesionFacultadDecanoResponse::from).toList(), sesiones.total()));
+                inputPort.consultarSesiones(usuario(), desde, hasta, idPrograma, idGrupo, pagina, tamano);
+        return paginaDe(new PaginaDTO<>(sesiones.elementos().stream().map(SesionFacultadDecanoResponse::from).toList(),
+                sesiones.total()), solicitada);
     }
 
     private UUID usuario() {
         return authenticatedUserResolver.requireAuthenticatedUserId();
     }
 
-    private static <T> ResponseEntity<ApiListResponse<T>> lista(final PaginaDTO<T> pagina) {
-        return ResponseEntity.ok(new ApiListResponse<>(true, pagina.elementos(), pagina.total()));
+    private static <T> ResponseEntity<ApiPageResponse<T>> paginaDe(final PaginaDTO<T> pagina,
+                                                                   final PaginacionRequestValidator.Pagina solicitada) {
+        return ResponseEntity.ok(ApiPageResponse.of(pagina.elementos(), solicitada.numero(), solicitada.tamano(), pagina.total()));
     }
 }

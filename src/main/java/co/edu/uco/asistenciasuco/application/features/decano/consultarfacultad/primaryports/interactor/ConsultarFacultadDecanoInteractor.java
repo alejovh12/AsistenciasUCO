@@ -84,8 +84,8 @@ public final class ConsultarFacultadDecanoInteractor implements ConsultarFaculta
     @Override
     public PaginaDTO<SesionFacultadDTO> consultarSesiones(final UUID usuario, final LocalDate desde,
                                                           final LocalDate hasta, final UUID idPrograma,
-                                                          final Integer pagina, final Integer tamano) {
-        final var resultado = useCase.consultarSesiones(usuario, desde, hasta, idPrograma, pagina, tamano);
+                                                          final UUID idGrupo, final Integer pagina, final Integer tamano) {
+        final var resultado = useCase.consultarSesiones(usuario, desde, hasta, idPrograma, idGrupo, pagina, tamano);
         return new PaginaDTO<>(resultado.elementos().stream()
                 .map(s -> new SesionFacultadDTO(s.id(), s.nombre(), s.codigo(), s.numeroSemana(),
                         s.fechaHoraInicio(), s.fechaHoraFin(), s.idGrupo(), s.codigoGrupo(), s.nombreGrupo(),

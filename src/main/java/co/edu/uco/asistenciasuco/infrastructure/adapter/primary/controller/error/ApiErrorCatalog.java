@@ -40,6 +40,14 @@ final class ApiErrorCatalog {
     }
 
     /**
+     * 400 de validacion con un codigo de catalogo propio (CULM-001 D.9-a, p. ej. {@code PAG_001}): el texto institucional lo
+     * resuelve el catalogo de mensajes por ese codigo; el de aqui es solo la contingencia ante desconexion.
+     */
+    static ApiErrorDescriptor validationWithCode(final String code) {
+        return new ApiErrorDescriptor(code, "Los parametros de la solicitud no son validos.", HttpStatus.BAD_REQUEST);
+    }
+
+    /**
      * Multipart rechazado por {@code spring.servlet.multipart.max-file-size}: mismo rechazo de
      * cliente que aplica la validacion de contenido de soportes (LB-004 CONTENT-005).
      */
