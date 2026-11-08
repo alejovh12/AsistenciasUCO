@@ -11,8 +11,11 @@ import org.hibernate.type.descriptor.jdbc.LocalDateTimeJdbcType;
 @Entity
 public class SpSolicitudRevisionEstudianteEntity extends SpSolicitudRevisionDocenteBaseEntity {
     @Column(name = "totalRegistros") private Integer totalRegistros;
+    // CULM-001 D.2: arreglo JSON [{idArchivo, nombreOriginal, tipoContenido, tamanioBytes}] ordenado por adjuncion
+    @Column(name = "soportesJson") private String soportesJson;
 
     protected SpSolicitudRevisionEstudianteEntity() { }
 
     public Integer totalRegistros() { return totalRegistros; }
+    public String soportesJson() { return soportesJson; }
 }

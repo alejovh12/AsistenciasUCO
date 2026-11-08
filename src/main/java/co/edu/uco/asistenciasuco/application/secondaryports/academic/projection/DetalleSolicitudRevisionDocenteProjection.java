@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.application.secondaryports.academic.projection
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -9,6 +10,8 @@ import java.util.UUID;
  * solicitud, estudiante, sesion, grupo y asignatura, causal de la asistencia ({@code asistio} y {@code RazonCausa}) y
  * metadatos del soporte adjunto. Causal y soporte son nulos si no existe detalle de asistencia o archivo adjunto.
  * Los instantes son UTC; {@code fechaHoraInicioSesionUtc} es nula si {@code procedenciaTemporalSesion} es nula.
+ * CULM-001 D.2: {@code codigoCategoria}/{@code nombreCategoria} (nulos en reclamos anteriores a la categoria persistida) y
+ * {@code soportes} (todos, en orden de adjuncion; las columnas de soporte unico siguen siendo las del primero).
  */
 public record DetalleSolicitudRevisionDocenteProjection(
         UUID idSolicitud,
@@ -37,6 +40,9 @@ public record DetalleSolicitudRevisionDocenteProjection(
         String nombreSoporte,
         String tipoContenidoSoporte,
         Long tamanioSoporteBytes,
-        Instant fechaRegistroSoporteUtc
+        Instant fechaRegistroSoporteUtc,
+        String codigoCategoria,
+        String nombreCategoria,
+        List<SoporteReclamoProjection> soportes
 ) {
 }

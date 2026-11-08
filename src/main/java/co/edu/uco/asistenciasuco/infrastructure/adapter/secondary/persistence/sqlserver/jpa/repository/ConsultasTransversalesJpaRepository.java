@@ -118,7 +118,7 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
             """;
     /** HU005/HU016: lectura directa de la vista del catalogo (sin SP: no hay ambito ni escritura). */
     static final String SQL_CATEGORIAS_JUSTIFICACION = """
-            SELECT c.id, c.codigo, c.nombre, c.descripcion FROM dbo.uv_categoria_justificacion c ORDER BY c.nombre
+            SELECT c.id, c.codigo, c.nombre, c.descripcion, c.requiereSoporte FROM dbo.uv_categoria_justificacion c ORDER BY c.nombre
             """;
     private static final DateTimeFormatter FORMATO_DATETIMEOFFSET = new DateTimeFormatterBuilder()
             .appendPattern("yyyy-MM-dd HH:mm:ss")
@@ -250,7 +250,7 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
                 () -> ((List<?>) entityManager.createNativeQuery(SQL_CATEGORIAS_JUSTIFICACION).getResultList()).stream()
                         .map(Object[].class::cast)
                         .map(f -> new CategoriaJustificacionProjection(NativeRowValues.uuid(f[0]), texto(f[1]), texto(f[2]),
-                                texto(f[3])))
+                                texto(f[3]), NativeRowValues.bit(f[4])))
                         .toList());
     }
 
