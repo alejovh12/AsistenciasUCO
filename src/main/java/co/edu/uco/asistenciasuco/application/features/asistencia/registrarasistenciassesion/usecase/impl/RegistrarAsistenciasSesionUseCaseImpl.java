@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.features.alertainasistencia.common.EvaluadorAlertasInasistencia;
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
@@ -53,6 +54,7 @@ public final class RegistrarAsistenciasSesionUseCaseImpl implements RegistrarAsi
     private final InstitutionalScopePort institutionalScopePort;
     private final RealtimePublisherPort realtimePublisherPort;
     private final Clock clock;
+    private final EvaluadorAlertasInasistencia evaluador;
 
     public RegistrarAsistenciasSesionUseCaseImpl(
             final AsistenciaRepositoryPort asistenciaRepositoryPort,
@@ -61,6 +63,20 @@ public final class RegistrarAsistenciasSesionUseCaseImpl implements RegistrarAsi
             final RealtimePublisherPort realtimePublisherPort,
             final Clock clock
     ) {
+        this(asistenciaRepositoryPort, sesionProcedenciaQueryPort, institutionalScopePort, realtimePublisherPort, clock,
+                EvaluadorAlertasInasistencia.NINGUNO);
+    }
+
+    /** CULM-001 C.1: con evaluador, tras el commit se evaluan las alertas de inasistencia del grupo (SUPUESTO-C-04). */
+    public RegistrarAsistenciasSesionUseCaseImpl(
+            final AsistenciaRepositoryPort asistenciaRepositoryPort,
+            final SesionProcedenciaQueryPort sesionProcedenciaQueryPort,
+            final InstitutionalScopePort institutionalScopePort,
+            final RealtimePublisherPort realtimePublisherPort,
+            final Clock clock,
+            final EvaluadorAlertasInasistencia evaluador
+    ) {
+        this.evaluador = Objects.requireNonNull(evaluador, "EvaluadorAlertasInasistencia es obligatorio.");
         this.asistenciaRepositoryPort = Objects.requireNonNull(asistenciaRepositoryPort, "AsistenciaRepositoryPort es obligatorio.");
         this.sesionProcedenciaQueryPort = Objects.requireNonNull(sesionProcedenciaQueryPort, "SesionProcedenciaQueryPort es obligatorio.");
         this.institutionalScopePort = Objects.requireNonNull(institutionalScopePort, "InstitutionalScopePort es obligatorio.");
@@ -85,6 +101,7 @@ public final class RegistrarAsistenciasSesionUseCaseImpl implements RegistrarAsi
         );
 
         publicarEventoRealtime(grupoId, domain);
+        evaluador.evaluarYAvisar(grupoId, null);
     }
 
     private SesionProcedenciaRepositoryProjection resolverSesion(final UUID sesionId) {

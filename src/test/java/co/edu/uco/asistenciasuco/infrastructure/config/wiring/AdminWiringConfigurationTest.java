@@ -57,7 +57,7 @@ class AdminWiringConfigurationTest {
         assertInstanceOf(ConsultarAreasInteractor.class, config.consultarAreasInputPort(consultarAreasUseCase));
 
         final var ejecutarCierreMasivoUseCase = config.ejecutarCierreMasivoUseCase(
-                mock(PeriodoAcademicoQueryPort.class), mock(CierrePeriodoCommandPort.class), providerVacio());
+                mock(PeriodoAcademicoQueryPort.class), mock(CierrePeriodoCommandPort.class), providerVacio(), co.edu.uco.asistenciasuco.application.features.alertainasistencia.common.EvaluadorAlertasInasistencia.NINGUNO);
         assertInstanceOf(EjecutarCierreMasivoUseCaseImpl.class, ejecutarCierreMasivoUseCase);
         assertInstanceOf(EjecutarCierreMasivoInteractor.class,
                 config.ejecutarCierreMasivoInputPort(ejecutarCierreMasivoUseCase));

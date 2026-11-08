@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.alertainasistencia.common.EvaluadorAlertasInasistencia;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarconfiguracionreclamos.primaryports.ConsultarConfiguracionReclamosInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarconfiguracionreclamos.primaryports.interactor.ConsultarConfiguracionReclamosInteractor;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarconfiguracionreclamos.usecase.ConsultarConfiguracionReclamosUseCase;
@@ -52,7 +53,8 @@ public class AsistenciaWiringConfiguration {
             final AsistenciaRepositoryPort asistenciaRepositoryPort,
             final SesionProcedenciaQueryPort sesionProcedenciaQueryPort,
             final InstitutionalScopePort institutionalScopePort,
-            final RealtimePublisherPort realtimePublisherPort
+            final RealtimePublisherPort realtimePublisherPort,
+            final EvaluadorAlertasInasistencia evaluadorAlertasInasistencia
     ) {
         // SES-01: el reloj autoritativo de la ventana de registro es el del servidor en UTC.
         return new RegistrarAsistenciasSesionUseCaseImpl(
@@ -60,7 +62,8 @@ public class AsistenciaWiringConfiguration {
                 sesionProcedenciaQueryPort,
                 institutionalScopePort,
                 realtimePublisherPort,
-                Clock.systemUTC()
+                Clock.systemUTC(),
+                evaluadorAlertasInasistencia
         );
     }
 
@@ -113,13 +116,15 @@ public class AsistenciaWiringConfiguration {
             final AsistenciaRepositoryPort asistenciaRepositoryPort,
             final InstitutionalScopePort institutionalScopePort,
             final org.springframework.beans.factory.ObjectProvider<co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort> notificacionPortProvider,
-            final org.springframework.beans.factory.ObjectProvider<co.edu.uco.asistenciasuco.application.secondaryports.academic.DestinatariosReclamoPort> destinatariosPortProvider
+            final org.springframework.beans.factory.ObjectProvider<co.edu.uco.asistenciasuco.application.secondaryports.academic.DestinatariosReclamoPort> destinatariosPortProvider,
+            final EvaluadorAlertasInasistencia evaluadorAlertasInasistencia
     ) {
         return new ResolverSolicitudRevisionAsistenciaUseCaseImpl(
                 asistenciaRepositoryPort,
                 institutionalScopePort,
                 notificacionPortProvider.getIfAvailable(() -> notificacion -> {}),
-                destinatariosPortProvider.getIfAvailable(() -> null)
+                destinatariosPortProvider.getIfAvailable(() -> null),
+                evaluadorAlertasInasistencia
         );
     }
 
