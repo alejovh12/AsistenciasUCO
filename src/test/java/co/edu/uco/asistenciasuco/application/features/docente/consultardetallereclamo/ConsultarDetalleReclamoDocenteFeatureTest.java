@@ -8,6 +8,9 @@ import co.edu.uco.asistenciasuco.application.features.docente.consultardetallere
 import co.edu.uco.asistenciasuco.application.features.docente.consultardetallereclamo.primaryports.interactor.ConsultarDetalleReclamoDocenteInteractor;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardetallereclamo.usecase.impl.ConsultarDetalleReclamoDocenteUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.SolicitudRevisionDocenteQueryPort;
+import co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.CategoriaReclamoDTO;
+import co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.SoporteReclamoDTO;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.SoporteReclamoProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.DetalleSolicitudRevisionDocenteProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import org.junit.jupiter.api.Test;
@@ -16,6 +19,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -214,6 +218,40 @@ class ConsultarDetalleReclamoDocenteFeatureTest {
                 UUID.randomUUID(), 1, "Grupo 1", UUID.randomUUID(), "MAT1", "Matematicas",
                 asistio, codigoRazon, nombreRazon,
                 archivo, archivo == null ? null : "evidencia.pdf", archivo == null ? null : "application/pdf",
-                archivo == null ? null : 1234L, archivo == null ? null : Instant.parse("2026-10-19T15:00:00Z"));
+                archivo == null ? null : 1234L, archivo == null ? null : Instant.parse("2026-10-19T15:00:00Z"),
+                null, null, List.of());
+    }
+
+    // ---- CULM-001 D.2 (CONTRACT D 3.3, HU015/HU036): categoria y lista de soportes en el detalle del docente ----
+
+    @Test
+    void expone_la_categoria_y_todos_los_soportes_en_orden() {
+        final UUID uno = UUID.randomUUID();
+        final UUID dos = UUID.randomUUID();
+        when(scope.findDocenteIdByUsuario(ACTOR)).thenReturn(Optional.of(UUID.randomUUID()));
+        when(query.consultarDetalleSolicitudDocente(SOLICITUD, ACTOR)).thenReturn(Optional.of(new DetalleSolicitudRevisionDocenteProjection(
+                SOLICITUD, "REC-1", LocalDate.of(2026, 10, 19), "P", "pendiente", "Cita medica", "", UUID.randomUUID(), "Ana",
+                UUID.randomUUID(), 3, null, null, UUID.randomUUID(), 1, "Grupo 1", UUID.randomUUID(), "MAT1", "Matematicas",
+                Boolean.FALSE, "SJC", "sin justa causa", uno, "uno.pdf", "application/pdf", 10L, Instant.parse("2026-10-19T15:00:00Z"),
+                "MED", "Medico / Salud", List.of(new SoporteReclamoProjection(uno, "uno.pdf", "application/pdf", 10L),
+                new SoporteReclamoProjection(dos, "dos.jpg", "image/jpeg", 20L)))));
+
+        final DetalleReclamoDocenteDTO detalle = interactor.execute(new ConsultarDetalleReclamoDocenteDTO(SOLICITUD, ACTOR));
+
+        assertEquals(new CategoriaReclamoDTO("MED", "Medico / Salud"), detalle.categoria());
+        assertEquals(List.of(new SoporteReclamoDTO(uno, "uno.pdf", "application/pdf", 10L),
+                new SoporteReclamoDTO(dos, "dos.jpg", "image/jpeg", 20L)), detalle.soportes());
+        assertEquals(uno, detalle.soporteAdjunto().fileId());
+    }
+
+    @Test
+    void un_reclamo_anterior_a_la_categoria_persistida_no_tiene_categoria_ni_soportes() {
+        when(scope.findDocenteIdByUsuario(ACTOR)).thenReturn(Optional.of(UUID.randomUUID()));
+        when(query.consultarDetalleSolicitudDocente(SOLICITUD, ACTOR)).thenReturn(Optional.of(proyeccion("P", null, null, null, null)));
+
+        final DetalleReclamoDocenteDTO detalle = interactor.execute(new ConsultarDetalleReclamoDocenteDTO(SOLICITUD, ACTOR));
+
+        assertNull(detalle.categoria());
+        assertEquals(List.of(), detalle.soportes());
     }
 }

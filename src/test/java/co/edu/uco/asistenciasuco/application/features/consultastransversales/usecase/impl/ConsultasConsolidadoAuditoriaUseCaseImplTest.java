@@ -145,7 +145,7 @@ class ConsultasConsolidadoAuditoriaUseCaseImplTest {
     @Test
     void T_005_UC_01_categorias_de_justificacion_delega_en_el_puerto() {
         final List<CategoriaJustificacionProjection> categorias = List.of(
-                new CategoriaJustificacionProjection(ID, "LAB", "Laboral", "Obligacion laboral"));
+                new CategoriaJustificacionProjection(ID, "LAB", "Laboral", "Obligacion laboral", true));
         when(port.consultarCategoriasJustificacion()).thenReturn(categorias);
 
         assertEquals(categorias, useCase.consultarCategoriasJustificacion());

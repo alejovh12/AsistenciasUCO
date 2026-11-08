@@ -35,7 +35,7 @@ class AsistenciaRepositoryMockAdapterTest {
                 UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), true, "A tiempo"));
         adapter.registrarAsistenciasSesion(new RegistrarAsistenciasSesionRepositoryDTO(UUID.randomUUID(), List.of(), UUID.randomUUID()));
         adapter.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
-                UUID.randomUUID(), UUID.randomUUID(), "SALUD", "Justificacion", UUID.randomUUID(),
+                UUID.randomUUID(), UUID.randomUUID(), "SALUD", "Justificacion", java.util.List.of(UUID.randomUUID()),
                 UUID.randomUUID()));
         adapter.resolverSolicitudRevisionAsistencia(new ResolverSolicitudRevisionAsistenciaRepositoryDTO(
                 UUID.randomUUID(), UUID.randomUUID(), "APROBAR", "Aceptada", UUID.randomUUID()));

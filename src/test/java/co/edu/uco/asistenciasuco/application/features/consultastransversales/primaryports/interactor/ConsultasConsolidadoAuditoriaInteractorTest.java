@@ -91,13 +91,15 @@ class ConsultasConsolidadoAuditoriaInteractorTest {
     @Test
     void T_005_INT_01_categorias_mapea_codigo_nombre_y_descripcion() {
         when(useCase.consultarCategoriasJustificacion()).thenReturn(List.of(
-                new CategoriaJustificacionProjection(ID, "FMA", "Fuerza Mayor", "Hecho imprevisible")));
+                new CategoriaJustificacionProjection(ID, "FMA", "Fuerza Mayor", "Hecho imprevisible", true)));
 
         final var categoria = interactor.consultarCategoriasJustificacion().getFirst();
 
         assertEquals(ID, categoria.id());
         assertEquals("FMA", categoria.codigo());
         assertEquals("Fuerza Mayor", categoria.nombre());
+        // CULM-001 D.2 (CONTRACT D 3.3): GET /categorias-justificacion + requiereSoporte
+        assertEquals(true, categoria.requiereSoporte());
         assertEquals("Hecho imprevisible", categoria.descripcion());
     }
 }

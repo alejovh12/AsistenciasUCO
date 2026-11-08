@@ -6,6 +6,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.ParameterizedTest;
 import co.edu.uco.asistenciasuco.application.features.asistencia.exception.AsistenciaErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.primaryports.RegistrarAsistenciaInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.primaryports.dto.RegistrarAsistenciaDTO;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.RegistrarAsistenciasSesionInputPort;
@@ -23,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -42,6 +44,7 @@ class AsistenciaControllerContractTest {
     private static final UUID GROUP = UUID.randomUUID();
     private static final UUID SESSION = UUID.randomUUID();
     private static final UUID SUPPORT = UUID.randomUUID();
+    private static final UUID SUPPORT_2 = UUID.randomUUID();
     private final RegistrarAsistenciaInputPort register = mock(RegistrarAsistenciaInputPort.class);
     private final RegistrarAsistenciasSesionInputPort registerBatch = mock(RegistrarAsistenciasSesionInputPort.class);
     private final SolicitarRevisionAsistenciaInputPort review = mock(SolicitarRevisionAsistenciaInputPort.class);
@@ -83,7 +86,85 @@ class AsistenciaControllerContractTest {
         assertEquals("SALUD", captor.getValue().getCategoria());
         assertEquals("Cita médica", captor.getValue().getJustificacion());
         // El unico dato de soporte que viaja a Application es el fileId; soporteNombre/soporteUrl legacy se ignoran.
-        assertEquals(SUPPORT, captor.getValue().getSoporteArchivoId());
+        assertEquals(List.of(SUPPORT), captor.getValue().getSoportes());
+    }
+
+    // ---- CULM-001 D.2 (CONTRACT D 3.3, HU014/HU015): soporteArchivoIds (0..N); soporteArchivoId (legado) = lista de uno ----
+
+    @Test
+    void reviewAcceptsSeveralSupportsInOrder() throws Exception {
+        mvc.perform(post("/api/v1/asistencias/revisiones").contentType("application/json")
+                        .content("""
+                                {"sesionId":"%s","categoria":"MED","justificacion":"Cita médica",
+                                 "soporteArchivoIds":["%s","%s"]}
+                                """.formatted(SESSION, SUPPORT, SUPPORT_2)))
+                .andExpect(status().isAccepted());
+        final var captor = ArgumentCaptor.forClass(SolicitarRevisionAsistenciaDTO.class);
+        verify(review).execute(captor.capture());
+        assertEquals(List.of(SUPPORT, SUPPORT_2), captor.getValue().getSoportes());
+        assertEquals("MED", captor.getValue().getCategoria());
+    }
+
+    @Test
+    void reviewWithoutSupportsSendsAnEmptyList() throws Exception {
+        mvc.perform(post("/api/v1/asistencias/revisiones").contentType("application/json")
+                        .content("""
+                                {"sesionId":"%s","categoria":"CAL","justificacion":"Calamidad"}
+                                """.formatted(SESSION)))
+                .andExpect(status().isAccepted());
+        final var captor = ArgumentCaptor.forClass(SolicitarRevisionAsistenciaDTO.class);
+        verify(review).execute(captor.capture());
+        assertEquals(List.of(), captor.getValue().getSoportes());
+    }
+
+    @Test
+    void reviewRejectsTheLegacyAndTheNewSupportFieldAtTheSameTime() throws Exception {
+        mvc.perform(post("/api/v1/asistencias/revisiones").contentType("application/json")
+                        .content("""
+                                {"sesionId":"%s","categoria":"MED","justificacion":"Cita médica",
+                                 "soporteArchivoId":"%s","soporteArchivoIds":["%s"]}
+                                """.formatted(SESSION, SUPPORT, SUPPORT_2)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details[0].field").value("soporteArchivoIds"))
+                .andExpect(jsonPath("$.details[0].code").value("FIELD_INVALID_VALUE"));
+        verifyNoInteractions(review);
+    }
+
+    @Test
+    void reviewRejectsANullElementInTheSupportList() throws Exception {
+        mvc.perform(post("/api/v1/asistencias/revisiones").contentType("application/json")
+                        .content("""
+                                {"sesionId":"%s","categoria":"MED","justificacion":"Cita médica","soporteArchivoIds":["%s",null]}
+                                """.formatted(SESSION, SUPPORT)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details[0].field").value("soporteArchivoIds"));
+        verifyNoInteractions(review);
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = AsistenciaErrorCode.class, names = {"ERR_CATEGORIA_JUSTIFICACION_INVALIDA", "ERR_SOPORTE_OBLIGATORIO_CATEGORIA",
+            "ERR_MAXIMO_SOPORTES_RECLAMO", "ERR_SOPORTE_RECLAMO_DUPLICADO"})
+    void reviewRejectionsOfTheCategoryAndTheSupportsAreBadRequestWithThePublicCode(final AsistenciaErrorCode code) throws Exception {
+        doThrow(new ValidationException(code)).when(review).execute(any());
+
+        mvc.perform(post("/api/v1/asistencias/revisiones").contentType("application/json")
+                        .content("""
+                                {"sesionId":"%s","categoria":"MED","justificacion":"Cita médica","soporteArchivoIds":["%s"]}
+                                """.formatted(SESSION, SUPPORT)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(code.code()));
+    }
+
+    @Test
+    void reviewAfterTheDeadlineIsConflictWithThePublicCode() throws Exception {
+        doThrow(new ConflictException(AsistenciaErrorCode.ERR_PLAZO_JUSTIFICACION_VENCIDO)).when(review).execute(any());
+
+        mvc.perform(post("/api/v1/asistencias/revisiones").contentType("application/json")
+                        .content("""
+                                {"sesionId":"%s","categoria":"CAL","justificacion":"Calamidad"}
+                                """.formatted(SESSION)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("ERR_PLAZO_JUSTIFICACION_VENCIDO"));
     }
 
     @Test

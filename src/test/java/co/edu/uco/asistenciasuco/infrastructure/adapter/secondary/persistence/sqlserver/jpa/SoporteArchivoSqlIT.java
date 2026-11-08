@@ -271,8 +271,8 @@ class SoporteArchivoSqlIT {
         final UUID fileId = registrar(usuarioA, "sesion.pdf", 5L);
 
         assertThrows(RuntimeException.class, () -> asistenciaPort.solicitarRevisionAsistencia(
-                new SolicitarRevisionAsistenciaRepositoryDTO(estudianteA, UUID.randomUUID(), "NOTA",
-                        JUSTIFICACION_PREFIX + "sesion-inexistente", fileId, usuarioA)));
+                new SolicitarRevisionAsistenciaRepositoryDTO(estudianteA, UUID.randomUUID(), "CAL",
+                        JUSTIFICACION_PREFIX + "sesion-inexistente", java.util.List.of(fileId), usuarioA)));
 
         assertEquals("DRAFT", jdbc.queryForObject("SELECT estado FROM dbo.ArchivoSoporte WHERE id = ?", String.class, fileId.toString()));
         assertEquals(0, solicitudesConJustificacion("sesion-inexistente"));
@@ -301,7 +301,7 @@ class SoporteArchivoSqlIT {
     private void radicar(final UUID estudiante, final UUID ejecutor, final UUID soporte, final String marca) {
         CorrelationIdContext.set(UUID.randomUUID());
         asistenciaPort.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
-                estudiante, sesion, "NOTA", JUSTIFICACION_PREFIX + marca, soporte, ejecutor));
+                estudiante, sesion, "CAL", JUSTIFICACION_PREFIX + marca, soporte == null ? java.util.List.of() : java.util.List.of(soporte), ejecutor));
     }
 
     private int solicitudesConJustificacion(final String marca) {
