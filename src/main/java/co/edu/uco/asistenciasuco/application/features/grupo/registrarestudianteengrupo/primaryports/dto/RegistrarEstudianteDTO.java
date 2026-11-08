@@ -18,6 +18,7 @@ public final class RegistrarEstudianteDTO {
     private String password;
     private UUID grupoId;
     private UUID usuarioEjecutor;
+    private UUID idPrograma;   // CULM-001 B2NM (S3): obligatorio solo si el grupo tiene varios programas
 
     public RegistrarEstudianteDTO() {
         super();
@@ -142,6 +143,14 @@ public final class RegistrarEstudianteDTO {
 
     public void setGrupoId(final UUID grupoId) {
         this.grupoId = grupoId;
+    }
+
+    public UUID getIdPrograma() {
+        return idPrograma;
+    }
+
+    public void setIdPrograma(final UUID idPrograma) {
+        this.idPrograma = idPrograma;
     }
 
     public UUID getUsuarioEjecutor() {

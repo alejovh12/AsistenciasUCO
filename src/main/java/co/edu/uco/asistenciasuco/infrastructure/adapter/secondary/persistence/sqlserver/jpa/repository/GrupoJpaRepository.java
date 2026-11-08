@@ -76,7 +76,8 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
                  @password = :password,
                  @idCorrelacion = :idCorrelacion,
                  @idUsuarioEjecutor = :idUsuarioEjecutor,
-                 @idTipoIdIdentificacion = :idTipoIdIdentificacion
+                 @idTipoIdIdentificacion = :idTipoIdIdentificacion,
+                 @idPrograma = :idPrograma
             """;
 
     // CULM-001 A.2-2: listado con ambito (uv_auth_grupo + SESSION_CONTEXT) paginado de 100 en 100 hasta totalRegistros.
@@ -371,6 +372,7 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
         parametros.put("idCorrelacion", correlationId);
         parametros.put("idUsuarioEjecutor", dto.getUsuarioEjecutor());
         parametros.put("idTipoIdIdentificacion", dto.getTipoIdentificacionId());
+        parametros.put("idPrograma", dto.getIdPrograma());   // CULM-001 B2NM (S3): opcional
 
         return procedureExecutor.execute(OP_REGISTRAR_ESTUDIANTE, SQL_REGISTRAR_ESTUDIANTE, parametros, correlationId);
     }

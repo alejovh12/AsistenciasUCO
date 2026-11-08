@@ -60,9 +60,10 @@ public final class GrupoMatriculaQrController {
 
     @PostMapping
     @AuditableOperation(action = "ABRIR_VENTANA_MATRICULA_QR", resourceType = "GRUPO", resourceIdPathVariable = "grupoId")
-    public ResponseEntity<ApiDataResponse<VentanaMatriculaResponse>> abrir(@PathVariable final UUID grupoId) {
+    public ResponseEntity<ApiDataResponse<VentanaMatriculaResponse>> abrir(@PathVariable final UUID grupoId,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) final UUID programaId) {
         final var resultado = abrirVentana.execute(
-                new AbrirVentanaMatriculaInputPort.Comando(grupoId, authenticatedUserResolver.requireAuthenticatedUserId()));
+                new AbrirVentanaMatriculaInputPort.Comando(grupoId, authenticatedUserResolver.requireAuthenticatedUserId(), programaId));
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiDataResponse<>(true, VentanaMatriculaResponse.de(resultado)));
     }
 

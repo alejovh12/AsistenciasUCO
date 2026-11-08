@@ -22,7 +22,7 @@ public final class RegistrarEstudianteHttpMapper {
         Objects.requireNonNull(grupoId, "El identificador del grupo es obligatorio para realizar el mapping.");
         Objects.requireNonNull(request, "El request HTTP para registrar estudiante en grupo es obligatorio.");
         Objects.requireNonNull(usuarioEjecutor, "El usuario ejecutor autenticado es obligatorio para realizar el mapping.");
-        return new RegistrarEstudianteDTO(
+        final RegistrarEstudianteDTO dto = new RegistrarEstudianteDTO(
                 request.getEstudianteId(),
                 request.getTipoIdentificacionId(),
                 request.getNumeroIdentificacion(),
@@ -35,5 +35,7 @@ public final class RegistrarEstudianteHttpMapper {
                 grupoId,
                 usuarioEjecutor
         );
+        dto.setIdPrograma(request.getIdPrograma());
+        return dto;
     }
 }
