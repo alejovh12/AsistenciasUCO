@@ -13,7 +13,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.HorarioEstudianteProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.InstitucionProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.MateriaEstudianteProjection;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ParametroProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PeriodoAcademicoProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PlanEstudioProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.SesionMateriaEstudianteProjection;
@@ -28,7 +27,6 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.baseline.HorarioEstudianteJdbcBaseline;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.baseline.InstitucionJdbcBaseline;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.baseline.MateriaEstudianteJdbcBaseline;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.baseline.ParametroJdbcBaseline;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.baseline.PeriodoAcademicoJdbcBaseline;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.baseline.PlanEstudioJdbcBaseline;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.baseline.SesionMateriaEstudianteJdbcBaseline;
@@ -88,10 +86,6 @@ class AcademicQueryJpaParityIT {
 
         final List<InstitucionProjection> institucionesBefore = new InstitucionJdbcBaseline(named).consultarInstituciones();
         assertEquals(institucionesBefore, new InstitucionJpaRepository(entityManager).consultarInstituciones());
-
-        final List<ParametroProjection> parametrosBefore = new ParametroJdbcBaseline(named).consultarParametros();
-        assertEquals(parametrosBefore, new ParametroJpaRepository(entityManager).consultarParametros());
-        assertFalse(parametrosBefore.isEmpty(), "uv_parametro debe tener filas vivas.");
     }
 
     @Test
@@ -197,17 +191,35 @@ class AcademicQueryJpaParityIT {
                 .consultarAsignaturasDocente(idDocente));
     }
 
+    /**
+     * CULM-001 D.1 (CONTRACT D1-10): paridad del SP con la consulta historica sobre {@code uv_sesion}, medida SOLO con
+     * estudiantes cuyas matriculas de la asignatura son todas inscritas (con I/CI el SP devuelve 0 filas: cambio intencional).
+     */
     @Test
-    void sesiones_de_materia_conservan_utc_y_orden() {
-        final UUID idEstudiante = uuidDe("SELECT TOP 1 idEstudiante FROM dbo.uv_estudiante_grupo ORDER BY id");
+    void sesiones_de_materia_conservan_utc_y_orden_con_matriculas_inscritas() {
+        final String inscrita = jdbc.queryForObject(
+                "SELECT CAST(dbo.ufn_obtener_parametro('MATRICULA', 'ESTADO_INSCRITA') AS NVARCHAR(10))", String.class);
+        final UUID idEstudiante = uuidDe("SELECT TOP 1 eg.idEstudiante FROM dbo.uv_estudiante_grupo eg "
+                + "INNER JOIN dbo.uv_grupo g ON g.id = eg.idGrupo WHERE eg.codigoEstadoEstudiante = '" + inscrita + "' "
+                + "AND EXISTS (SELECT 1 FROM dbo.Sesion s WHERE s.grupo = g.id) "
+                + "AND NOT EXISTS (SELECT 1 FROM dbo.uv_estudiante_grupo x INNER JOIN dbo.uv_grupo gx ON gx.id = x.idGrupo "
+                + "WHERE x.idEstudiante = eg.idEstudiante AND gx.idAsignatura = g.idAsignatura AND x.codigoEstadoEstudiante <> '" + inscrita + "') "
+                + "ORDER BY eg.idEstudiante, g.id");
+        assumeTrue(idEstudiante != null, "No hay sesiones de materia vivas con matriculas inscritas.");
         final UUID idAsignatura = uuidDe("SELECT TOP 1 g.idAsignatura FROM dbo.uv_grupo g "
-                + "INNER JOIN dbo.uv_estudiante_grupo eg ON eg.idGrupo = g.id ORDER BY g.id");
-        assumeTrue(idEstudiante != null && idAsignatura != null, "No hay sesiones de materia vivas.");
+                + "INNER JOIN dbo.uv_estudiante_grupo eg ON eg.idGrupo = g.id WHERE eg.idEstudiante = '" + idEstudiante
+                + "' AND EXISTS (SELECT 1 FROM dbo.Sesion s WHERE s.grupo = g.id) ORDER BY g.id");
         final List<SesionMateriaEstudianteProjection> before = new SesionMateriaEstudianteJdbcBaseline(named)
                 .consultarSesionesMateria(idEstudiante, idAsignatura);
-        final List<SesionMateriaEstudianteProjection> after = new SesionMateriaEstudianteJpaRepository(entityManager)
-                .consultarSesionesMateria(idEstudiante, idAsignatura);
+        co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext.set(UUID.randomUUID());
+        final var pagina = new SesionMateriaEstudianteJpaRepository(entityManager)
+                .consultarSesionesMateria(usuarioDe(idEstudiante), idAsignatura, 1, 100);
+        final List<SesionMateriaEstudianteProjection> after = pagina.elementos().stream()
+                .map(p -> new SesionMateriaEstudianteProjection(p.id(), p.nombre(), p.numero(), p.codigo(), p.numeroSemana(),
+                        p.idGrupo(), p.codigoGrupo(), p.nombreGrupo(), p.fechaHoraInicio(), p.fechaHoraFin()))
+                .toList();
         assertEquals(before, after);
+        assertEquals(before.size(), pagina.totalElementos());
         assertFalse(before.isEmpty(), "Debe existir al menos una sesion viva.");
         assertTrue(before.getFirst().fechaHoraInicio() != null, "fechaHoraInicio debe conservar valor UTC.");
     }

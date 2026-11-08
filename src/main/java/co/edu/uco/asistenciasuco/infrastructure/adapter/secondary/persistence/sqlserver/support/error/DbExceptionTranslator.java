@@ -1,8 +1,10 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error;
 
 import co.edu.uco.asistenciasuco.application.features.asistencia.exception.AsistenciaErrorCode;
+import co.edu.uco.asistenciasuco.application.features.admin.exception.AdmisionEstudianteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.CatalogoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.DecanoErrorCode;
+import co.edu.uco.asistenciasuco.application.features.admin.exception.ParametroErrorCode;
 import co.edu.uco.asistenciasuco.application.features.decano.exception.CoordinadorErrorCode;
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
@@ -42,7 +44,9 @@ public final class DbExceptionTranslator {
             AsistenciaErrorCode.ERR_ESTUDIANTE_NO_PERTENECE_SESION,
             SecurityErrorCode.FORBIDDEN,
             AsistenciaQrErrorCode.AQR_002,
-            AsistenciaQrErrorCode.AQR_004
+            AsistenciaQrErrorCode.AQR_004,
+            ParametroErrorCode.PRM_003,
+            AdmisionEstudianteErrorCode.ADS_003
     );
     private static final Set<ErrorDefinition> NOT_FOUND_CODES = Set.of(
             UsuarioErrorCode.ERR_USUARIO_NO_EXISTE,
@@ -57,6 +61,7 @@ public final class DbExceptionTranslator {
             CatalogoErrorCode.TPR_001,
             CatalogoErrorCode.ARE_001,
             FestivoErrorCode.FES_007,
+            ParametroErrorCode.PRM_002,
             TomaAsistenciaErrorCode.TOM_001,
             AsistenciaQrErrorCode.AQR_001,
             AsistenciaQrErrorCode.AQR_010,
@@ -75,6 +80,9 @@ public final class DbExceptionTranslator {
             AsistenciaErrorCode.ERR_RECLAMO_YA_RESUELTO,
             AsistenciaErrorCode.ERR_RECLAMO_ASISTENCIA_NO_JUSTIFICABLE,
             AsistenciaErrorCode.ERR_RECLAMO_SIN_DETALLE_ASISTENCIA,
+            AdmisionEstudianteErrorCode.ADS_002,
+            AdmisionEstudianteErrorCode.ADS_004,
+            AsistenciaErrorCode.ERR_PLAZO_JUSTIFICACION_VENCIDO,
             UsuarioErrorCode.ERR_USUARIO_INACTIVO,
             EstudianteErrorCode.ERR_ESTUDIANTE_INACTIVO,
             DocenteErrorCode.ERR_DOCENTE_INACTIVO,
@@ -99,6 +107,10 @@ public final class DbExceptionTranslator {
             AsistenciaQrErrorCode.AQR_003,
             AsistenciaQrErrorCode.AQR_005,
             AsistenciaQrErrorCode.AQR_006,
+            ParametroErrorCode.PRM_008,
+            ParametroErrorCode.PRM_010,
+            ParametroErrorCode.PRM_012,
+            ParametroErrorCode.AUD_001,
             CommonErrorCode.CONFLICT
     );
     private static final Set<ErrorDefinition> VALIDATION_CODES = Set.of(
@@ -120,6 +132,14 @@ public final class DbExceptionTranslator {
             FestivoErrorCode.FES_006,
             TomaAsistenciaErrorCode.TOM_002,
             AsistenciaQrErrorCode.AQR_007,
+            ParametroErrorCode.PRM_004,
+            ParametroErrorCode.PRM_005,
+            ParametroErrorCode.PRM_006,
+            ParametroErrorCode.PRM_007,
+            ParametroErrorCode.PRM_009,
+            ParametroErrorCode.AUD_002,
+            AdmisionEstudianteErrorCode.ADS_005,
+            AdmisionEstudianteErrorCode.ADS_006,
             CommonErrorCode.VALIDATION_ERROR
     );
 
@@ -171,13 +191,42 @@ public final class DbExceptionTranslator {
             throw new FeatureUnavailableException(code.defaultMessage());
         }
 
+        // CULM-001 D.1: el mensaje de usuario de REV_020 lleva la ultima fecha local admitida (parametro del catalogo); se
+        // conserva el texto institucional que armo la DB en lugar del texto fijo del codigo.
+        final ErrorDefinition efectivo = conMensajeDeUsuario(code, userMessage);
         for (final Map.Entry<Set<ErrorDefinition>, ExceptionFactory> entry : EXCEPTION_BY_CODES.entrySet()) {
             if (entry.getKey().contains(code)) {
-                throw entry.getValue().create(code);
+                throw entry.getValue().create(efectivo);
             }
         }
 
         throw new DatabaseOperationException(code);
+    }
+
+    private static ErrorDefinition conMensajeDeUsuario(final ErrorDefinition code, final String userMessage) {
+        if (!AsistenciaErrorCode.ERR_PLAZO_JUSTIFICACION_VENCIDO.equals(code) || TextHelper.isNullOrBlank(userMessage)) {
+            return code;
+        }
+        return new MensajeDeUsuarioDefinition(code, userMessage.strip());
+    }
+
+    /** Mismo codigo y tipo que {@code base}, con el mensaje institucional que resolvio la DB para esta solicitud. */
+    private record MensajeDeUsuarioDefinition(ErrorDefinition base, String mensaje) implements ErrorDefinition {
+
+        @Override
+        public String code() {
+            return base.code();
+        }
+
+        @Override
+        public String defaultMessage() {
+            return mensaje;
+        }
+
+        @Override
+        public co.edu.uco.asistenciasuco.crosscutting.exception.ErrorKind kind() {
+            return base.kind();
+        }
     }
 
     private static void logFailedResult(
