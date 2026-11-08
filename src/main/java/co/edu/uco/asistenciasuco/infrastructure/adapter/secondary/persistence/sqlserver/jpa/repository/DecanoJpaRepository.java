@@ -37,7 +37,8 @@ public class DecanoJpaRepository implements DecanoQueryPort, DecanoCommandPort {
                  @nombreFacultad = :nombreFacultad,
                  @password = :password,
                  @idCorrelacion = :idCorrelacion,
-                 @idUsuarioEjecutor = :idUsuarioEjecutor
+                 @idUsuarioEjecutor = :idUsuarioEjecutor,
+                 @idTipoIdIdentificacion = :idTipoIdIdentificacion
             """;
 
     static final String HQL_LISTAR = """
@@ -148,6 +149,7 @@ public class DecanoJpaRepository implements DecanoQueryPort, DecanoCommandPort {
         parametros.put("password", command.password());
         parametros.put("idCorrelacion", correlationId);
         parametros.put("idUsuarioEjecutor", command.usuarioEjecutor());
+        parametros.put("idTipoIdIdentificacion", command.tipoIdentificacionId());
 
         return procedureExecutor.execute(OP_CREAR_DECANO, SQL_CREAR_DECANO, parametros, correlationId);
     }
