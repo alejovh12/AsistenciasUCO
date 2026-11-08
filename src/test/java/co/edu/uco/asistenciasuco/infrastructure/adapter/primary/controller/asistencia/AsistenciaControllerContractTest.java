@@ -51,20 +51,15 @@ class AsistenciaControllerContractTest {
     private final JsonMapper json = JsonMapper.builder().build();
 
     @Test
-    void registrationPreservesBodyFieldsAndReturnsCreated() throws Exception {
+    void individualRegistrationEndpointIsRetiredAndAnswersNotFound() throws Exception {
+        // CULM-001 D.7 (TD-009, HU027/HU033): POST /api/v1/asistencias ya no existe; el registro es por lote o por toma.
         mvc.perform(post("/api/v1/asistencias").contentType("application/json")
                         .content("""
                                 {"estudiante":"%s","grupo":"%s","sesion":"%s",
                                  "presente":false,"observacion":"Excusa médica"}
                                 """.formatted(STUDENT, GROUP, SESSION)))
-                .andExpect(status().isCreated()).andExpect(jsonPath("$.exitoso").value(true));
-        final var captor = ArgumentCaptor.forClass(RegistrarAsistenciaDTO.class);
-        verify(register).execute(captor.capture());
-        assertEquals(STUDENT, captor.getValue().getEstudiante());
-        assertEquals(GROUP, captor.getValue().getGrupo());
-        assertEquals(SESSION, captor.getValue().getSesion());
-        assertEquals(false, captor.getValue().getPresente());
-        assertEquals("Excusa médica", captor.getValue().getObservacion());
+                .andExpect(status().isNotFound());
+        verifyNoInteractions(register);
     }
 
     @Test
@@ -119,8 +114,6 @@ class AsistenciaControllerContractTest {
 
     @Test
     void invalidRequestsAreRejectedBeforePorts() throws Exception {
-        mvc.perform(post("/api/v1/asistencias").contentType("application/json").content("{}"))
-                .andExpect(status().isBadRequest());
         mvc.perform(post("/api/v1/asistencias/revisiones").contentType("application/json").content("{}"))
                 .andExpect(status().isBadRequest());
         verifyNoInteractions(register, review);
