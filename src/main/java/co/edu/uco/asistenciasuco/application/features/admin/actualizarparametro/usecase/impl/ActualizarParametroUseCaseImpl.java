@@ -6,6 +6,8 @@ import co.edu.uco.asistenciasuco.application.features.admin.actualizarparametro.
 import co.edu.uco.asistenciasuco.application.features.admin.exception.ParametroErrorCode;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.CatalogInvalidationPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParametroEdicionCapacidadPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimeEvent;
+import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.ParametroAdminRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.ParametroAdminRepositoryPort.ParametroActualizado;
 import org.slf4j.Logger;
@@ -13,13 +15,15 @@ import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Map;
 import java.util.Objects;
 
 /**
  * CULM-001 D.3 (HU168): forma del comando -> capacidad del proveedor de parametros ({@code PRM_010}, [SUPUESTO-D-06]) ->
  * {@code usp_actualizar_parametro} (lista blanca, tipo, rango, reglas cruzadas, motivo y version los valida la DB) -> si
  * el valor cambio, invalida el parametro en la cache. Un fallo al invalidar se registra y no revierte el cambio.
- * El evento {@code PARAMETER_UPDATED} se publica cuando C este mezclado (diferible, CONTRACT v2 §1.2).
+ * Tras un cambio real publica {@code PARAMETER_UPDATED {grupo, clave}} (CULM-001 D.9-c, CONTRACT §4.5; audiencia ADMINISTRADOR
+ * por la politica de tiempo real) sin valores. Un fallo de la publicacion tampoco revierte el cambio.
  */
 public final class ActualizarParametroUseCaseImpl implements ActualizarParametroUseCase {
 
@@ -28,13 +32,16 @@ public final class ActualizarParametroUseCaseImpl implements ActualizarParametro
     private final ParametroAdminRepositoryPort repositorio;
     private final ParametroEdicionCapacidadPort capacidad;
     private final CatalogInvalidationPort invalidacion;
+    private final RealtimePublisherPort publicador;
 
     public ActualizarParametroUseCaseImpl(final ParametroAdminRepositoryPort repositorio,
                                           final ParametroEdicionCapacidadPort capacidad,
-                                          final CatalogInvalidationPort invalidacion) {
+                                          final CatalogInvalidationPort invalidacion,
+                                          final RealtimePublisherPort publicador) {
         this.repositorio = Objects.requireNonNull(repositorio, "ParametroAdminRepositoryPort es obligatorio.");
         this.capacidad = Objects.requireNonNull(capacidad, "ParametroEdicionCapacidadPort es obligatorio.");
         this.invalidacion = Objects.requireNonNull(invalidacion, "CatalogInvalidationPort es obligatorio.");
+        this.publicador = Objects.requireNonNull(publicador, "RealtimePublisherPort es obligatorio.");
     }
 
     @Override
@@ -53,9 +60,19 @@ public final class ActualizarParametroUseCaseImpl implements ActualizarParametro
         final boolean sinCambios = Objects.equals(actualizado.valorAnterior(), actualizado.valorNuevo());
         if (!sinCambios) {
             invalidar(actualizado);
+            publicar(actualizado);
         }
         return new Resultado(actualizado.id(), actualizado.grupo(), actualizado.clave(), actualizado.valorAnterior(),
                 actualizado.valorNuevo(), actualizado.fechaModificacion().toInstant(ZoneOffset.UTC), sinCambios);
+    }
+
+    private void publicar(final ParametroActualizado actualizado) {
+        try {
+            publicador.publish(RealtimeEvent.of("PARAMETER_UPDATED", Map.of("grupo", actualizado.grupo(), "clave", actualizado.clave())));
+        } catch (final RuntimeException exception) {
+            LOGGER.warn("No fue posible publicar PARAMETER_UPDATED del parametro {}/{}: {}", actualizado.grupo(), actualizado.clave(),
+                    exception.getClass().getSimpleName());
+        }
     }
 
     private void invalidar(final ParametroActualizado actualizado) {
