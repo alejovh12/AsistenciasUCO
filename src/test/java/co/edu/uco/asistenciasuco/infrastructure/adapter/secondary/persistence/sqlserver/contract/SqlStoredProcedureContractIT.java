@@ -450,9 +450,71 @@ class SqlStoredProcedureContractIT {
                         input("@numeroPagina", "int"),
                         input("@tamanoPagina", "int")
                 )),
+                Arguments.of("usp_actualizar_parametro", List.of(
+                        input("@idParametro", "uniqueidentifier"),
+                        input("@valor", "nvarchar"),
+                        input("@fechaModificacionEsperada", "datetime"),
+                        input("@motivo", "nvarchar"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_parametros_paginado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int"),
+                        input("@grupo", "varchar"),
+                        input("@texto", "nvarchar"),
+                        input("@soloEditables", "bit")
+                )),
+                Arguments.of("usp_consultar_cambios_parametro_paginado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idParametro", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int")
+                )),
+                Arguments.of("usp_consultar_auditoria_eventos_paginado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int"),
+                        input("@desdeUtc", "datetimeoffset"),
+                        input("@hastaUtc", "datetimeoffset"),
+                        input("@accion", "varchar"),
+                        input("@tipoRecurso", "varchar"),
+                        input("@idRecurso", "nvarchar"),
+                        input("@idUsuarioActor", "uniqueidentifier"),
+                        input("@resultado", "varchar"),
+                        input("@soloAsistencia", "bit"),
+                        input("@idCorrelacionEvento", "uniqueidentifier"),
+                        input("@soloAdministracion", "bit")
+                )),
                 Arguments.of("usp_consultar_resumen_asistencia_estudiante", List.of(
                         input("@idUsuarioEjecutor", "uniqueidentifier"),
                         input("@idCorrelacion", "uniqueidentifier")
+                )),
+                // CULM-001 D.4 (HU156, CONTRACT §5.2)
+                Arguments.of("usp_admitir_estudiante", List.of(
+                        input("@idTipoIdIdentificacion", "uniqueidentifier"),
+                        input("@numeroIdentificacion", "int"),
+                        input("@primerNombre", "nvarchar"),
+                        input("@segundoNombre", "nvarchar"),
+                        input("@primerApellido", "nvarchar"),
+                        input("@segundoApellido", "nvarchar"),
+                        input("@correo", "nvarchar"),
+                        input("@password", "nvarchar"),
+                        input("@idPrograma", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_programas_institucion_paginado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int"),
+                        input("@texto", "nvarchar"),
+                        input("@idFacultad", "uniqueidentifier")
                 )),
                 // CULM-001 D.1 (HU026B, CONTRACT §2.2): sesiones de la materia del estudiante con la fecha limite de excusa.
                 Arguments.of("usp_consultar_sesiones_materia_estudiante", List.of(
