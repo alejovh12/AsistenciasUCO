@@ -37,12 +37,12 @@ public class AsistenciaJpaRepository implements AsistenciaRepositoryPort {
             """;
 
     private static final String SQL_RADICAR_SOLICITUD_REVISION = """
-            EXEC dbo.usp_radicar_solicitud_revision_asistencia_v2
+            EXEC dbo.usp_radicar_solicitud_revision_asistencia_v3
                  @idEstudiante = :idEstudiante,
                  @idSesion = :idSesion,
                  @categoria = :categoria,
                  @justificacion = :justificacion,
-                 @idArchivoSoporte = :idArchivoSoporte,
+                 @idsArchivoSoporte = :idsArchivoSoporte,
                  @idCorrelacion = :idCorrelacion,
                  @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
@@ -69,6 +69,9 @@ public class AsistenciaJpaRepository implements AsistenciaRepositoryPort {
                  @idCorrelacion = :idCorrelacion,
                  @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
+
+    /** idSolicitudRevision y totalSoportes, despues de las 4 columnas canonicas de usp_radicar_solicitud_revision_asistencia_v3. */
+    private static final int COLUMNAS_EXTRA_RADICACION = 2;
 
     private static final String PARAM_GRUPO = "idGrupo";
     private static final String PARAM_SESION = "idSesion";
@@ -132,13 +135,15 @@ public class AsistenciaJpaRepository implements AsistenciaRepositoryPort {
         parametros.put("idSesion", dto.sesion());
         parametros.put("categoria", dto.categoria());
         parametros.put("justificacion", dto.justificacion());
-        // El soporte es opcional. Un UUID nulo sin tipo no tiene JdbcType resoluble en Hibernate; la cadena
-        // (o NULL) se convierte a uniqueidentifier en SQL Server de forma implicita y sin ambiguedad.
-        parametros.put("idArchivoSoporte", dto.soporteArchivoId() == null ? null : dto.soporteArchivoId().toString());
+        // CULM-001 D.2: los soportes viajan como arreglo JSON de GUID; sin soportes el parametro es NULL (un String nulo tiene
+        // JdbcType resoluble en Hibernate; un UUID nulo sin tipo no).
+        parametros.put("idsArchivoSoporte", serializarSoportes(dto.soportes()));
         parametros.put("idCorrelacion", correlationId);
         parametros.put("idUsuarioEjecutor", dto.usuarioEjecutor());
 
-        procedureExecutor.execute(OP_SOLICITAR_REVISION_ASISTENCIA, SQL_RADICAR_SOLICITUD_REVISION, parametros, correlationId);
+        // v3 devuelve las 4 columnas canonicas mas idSolicitudRevision y totalSoportes.
+        procedureExecutor.executeWithExtras(
+                OP_SOLICITAR_REVISION_ASISTENCIA, SQL_RADICAR_SOLICITUD_REVISION, parametros, correlationId, COLUMNAS_EXTRA_RADICACION);
     }
 
     @Override
@@ -208,6 +213,14 @@ public class AsistenciaJpaRepository implements AsistenciaRepositoryPort {
     }
 
     // PRIVATE HELPERS
+
+    /** Arreglo JSON de GUID en el orden recibido; {@code null} sin soportes. */
+    private static String serializarSoportes(final List<UUID> soportes) {
+        if (soportes == null || soportes.isEmpty()) {
+            return null;
+        }
+        return OBJECT_MAPPER.writeValueAsString(soportes.stream().map(UUID::toString).toList());
+    }
 
     /**
      * CULM-001 B.2 ([SUPUESTO-B-15], contrato 3.2.9): con varias tomas el SP del ambito devuelve un detalle por toma; el

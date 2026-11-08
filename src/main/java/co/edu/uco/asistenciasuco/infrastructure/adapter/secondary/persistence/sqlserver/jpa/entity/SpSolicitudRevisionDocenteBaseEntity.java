@@ -42,6 +42,9 @@ public abstract class SpSolicitudRevisionDocenteBaseEntity {
     @Column(name = "tamanioSoporteBytes") private Long tamanioSoporteBytes;
     @JdbcType(LocalDateTimeJdbcType.class)
     @Column(name = "fechaRegistroSoporteUtc") private LocalDateTime fechaRegistroSoporteUtc;
+    // CULM-001 D.2: categoria persistida del reclamo (nula en reclamos anteriores)
+    @Column(name = "codigoCategoria") private String codigoCategoria;
+    @Column(name = "nombreCategoria") private String nombreCategoria;
 
     public UUID idSolicitudRevisionAsistencia() { return idSolicitudRevisionAsistencia; }
     public String nombreSolicitud() { return nombreSolicitud; }
@@ -67,4 +70,6 @@ public abstract class SpSolicitudRevisionDocenteBaseEntity {
     public String tipoContenidoSoporte() { return tipoContenidoSoporte; }
     public Long tamanioSoporteBytes() { return tamanioSoporteBytes; }
     public LocalDateTime fechaRegistroSoporteUtc() { return fechaRegistroSoporteUtc; }
+    public String codigoCategoria() { return codigoCategoria; }
+    public String nombreCategoria() { return nombreCategoria; }
 }

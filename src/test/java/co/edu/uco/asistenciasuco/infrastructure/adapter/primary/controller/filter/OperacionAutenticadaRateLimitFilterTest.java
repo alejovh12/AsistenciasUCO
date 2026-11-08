@@ -80,6 +80,29 @@ class OperacionAutenticadaRateLimitFilterTest {
         verify(writer).write(tercera, respuesta, HttpStatus.TOO_MANY_REQUESTS, SecurityErrorCode.TOO_MANY_REQUESTS);
     }
 
+    // CULM-001 D.2 (CONTRACT D 3.3, DEC-044 (7)): un reclamo admite varios soportes, cada uno es una subida; ARCHIVOS/LIMITE_SUBIDAS_POR_MINUTO
+    // subidas seguidas del mismo estudiante pasan, la siguiente en el mismo minuto responde 429 y otro estudiante no queda afectado.
+    @Test
+    void subidas_seguidas_de_varios_soportes_hasta_el_limite_pasan_la_siguiente_responde_429_y_otro_estudiante_no_se_afecta() throws Exception {
+        final int limite = 3;
+        final OperacionAutenticadaRateLimitFilter f = filtro(limite, 50, 50);
+        for (int i = 0; i < limite; i++) {
+            assertEquals(true, pasa(f, peticion(OperacionAutenticadaRateLimitFilter.RUTA_SUBIR_ARCHIVO, "POST", "10.0.1." + i, "est-1")),
+                    "La subida " + (i + 1) + " de " + limite + " debe pasar");
+        }
+        final MockHttpServletRequest siguiente = peticion(OperacionAutenticadaRateLimitFilter.RUTA_SUBIR_ARCHIVO, "POST", "10.0.1.9", "est-1");
+        final MockHttpServletResponse respuesta = new MockHttpServletResponse();
+        final MockFilterChain cadena = new MockFilterChain();
+        f.doFilter(siguiente, respuesta, cadena);
+
+        assertNull(cadena.getRequest());
+        verify(writer).write(siguiente, respuesta, HttpStatus.TOO_MANY_REQUESTS, SecurityErrorCode.TOO_MANY_REQUESTS);
+        // Otro estudiante, desde otra IP, sigue subiendo sus soportes
+        for (int i = 0; i < limite; i++) {
+            assertEquals(true, pasa(f, peticion(OperacionAutenticadaRateLimitFilter.RUTA_SUBIR_ARCHIVO, "POST", "10.0.2." + i, "est-2")));
+        }
+    }
+
     @Test
     void subidas_por_ip_con_usuarios_distintos_responde_429() throws Exception {
         final OperacionAutenticadaRateLimitFilter f = filtro(2, 50, 50);

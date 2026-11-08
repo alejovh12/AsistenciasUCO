@@ -167,6 +167,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/v2/sesiones/**").hasRole(ROLE_DOCENTE)
                 .requestMatchers(HttpMethod.POST, "/api/v1/asistencias/lote").hasRole(ROLE_DOCENTE)
                 .requestMatchers(HttpMethod.POST, "/api/v1/asistencias/revisiones").hasRole(ROLE_ESTUDIANTE)
+                // CULM-001 D.2 (CONTRACT D 3.3): configuracion del formulario de reclamos (tope de soportes, tamano y tipos de archivo, limite
+                // de subidas, dias del plazo). El estudiante la usa para armar el formulario y el docente ve los mismos limites; la DB valida el rol.
+                .requestMatchers(HttpMethod.GET, "/api/v1/configuracion/reclamos").hasAnyRole(ROLE_ESTUDIANTE, ROLE_DOCENTE)
                 // Subida de soportes de revision: unicamente el estudiante propietario sube en su
                 // propio nombre (OWNERSHIP_DECISION.md: DOCENTE upload = OUT_OF_SCOPE, sin
                 // capability). La descarga GET /api/v1/archivos/{fileId} queda en la regla

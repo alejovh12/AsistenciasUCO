@@ -41,7 +41,7 @@ class SolicitarRevisionAsistenciaAvisoTest {
             new SolicitarRevisionAsistenciaUseCaseImpl(repository, scope, notificacionPort, destinatariosPort);
 
     private static SolicitarRevisionAsistenciaDomain domain() {
-        return new SolicitarRevisionAsistenciaDomain(SESION, "MED", "Incapacidad medica", null, USUARIO);
+        return new SolicitarRevisionAsistenciaDomain(SESION, "MED", "Incapacidad medica", List.of(), USUARIO);
     }
 
     private static DestinatarioReclamoProjection destinatario(final String rol, final String grupo, final String fecha) {

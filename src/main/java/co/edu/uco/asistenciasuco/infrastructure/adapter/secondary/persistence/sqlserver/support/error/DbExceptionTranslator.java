@@ -120,6 +120,11 @@ public final class DbExceptionTranslator {
             VerificacionCorreoErrorCode.VCE_002,
             AsistenciaErrorCode.ERR_ESTADO_ASISTENCIA_INVALIDO,
             AsistenciaErrorCode.ERR_ACCION_REVISION_INVALIDA,
+            // CULM-001 D.2: categoria y soportes del reclamo (REV_021..REV_024)
+            AsistenciaErrorCode.ERR_CATEGORIA_JUSTIFICACION_INVALIDA,
+            AsistenciaErrorCode.ERR_SOPORTE_OBLIGATORIO_CATEGORIA,
+            AsistenciaErrorCode.ERR_MAXIMO_SOPORTES_RECLAMO,
+            AsistenciaErrorCode.ERR_SOPORTE_RECLAMO_DUPLICADO,
             DocenteErrorCode.ERR_TIPO_VINCULACION_INVALIDO,
             DocenteErrorCode.ERR_MODO_VINCULACION_INVALIDO,
             DocenteErrorCode.ERR_BUSQUEDA_CANDIDATOS_CORTA,
@@ -141,6 +146,13 @@ public final class DbExceptionTranslator {
             AdmisionEstudianteErrorCode.ADS_005,
             AdmisionEstudianteErrorCode.ADS_006,
             CommonErrorCode.VALIDATION_ERROR
+    );
+
+    /** Codigos cuyo mensaje de usuario trae parametros del catalogo (fecha limite, categoria, maximo de soportes). */
+    private static final Set<ErrorDefinition> CODIGOS_CON_MENSAJE_DE_LA_DB = Set.of(
+            AsistenciaErrorCode.ERR_PLAZO_JUSTIFICACION_VENCIDO,
+            AsistenciaErrorCode.ERR_SOPORTE_OBLIGATORIO_CATEGORIA,
+            AsistenciaErrorCode.ERR_MAXIMO_SOPORTES_RECLAMO
     );
 
     private static final Map<Set<ErrorDefinition>, ExceptionFactory> EXCEPTION_BY_CODES = Map.of(
@@ -191,8 +203,8 @@ public final class DbExceptionTranslator {
             throw new FeatureUnavailableException(code.defaultMessage());
         }
 
-        // CULM-001 D.1: el mensaje de usuario de REV_020 lleva la ultima fecha local admitida (parametro del catalogo); se
-        // conserva el texto institucional que armo la DB en lugar del texto fijo del codigo.
+        // CULM-001 D.1/D.2: el mensaje de usuario de REV_020 (ultima fecha local admitida), REV_022 (categoria) y REV_023 (maximo)
+        // lleva parametros del catalogo; se conserva el texto institucional que armo la DB en lugar del texto fijo del codigo.
         final ErrorDefinition efectivo = conMensajeDeUsuario(code, userMessage);
         for (final Map.Entry<Set<ErrorDefinition>, ExceptionFactory> entry : EXCEPTION_BY_CODES.entrySet()) {
             if (entry.getKey().contains(code)) {
@@ -204,7 +216,7 @@ public final class DbExceptionTranslator {
     }
 
     private static ErrorDefinition conMensajeDeUsuario(final ErrorDefinition code, final String userMessage) {
-        if (!AsistenciaErrorCode.ERR_PLAZO_JUSTIFICACION_VENCIDO.equals(code) || TextHelper.isNullOrBlank(userMessage)) {
+        if (!CODIGOS_CON_MENSAJE_DE_LA_DB.contains(code) || TextHelper.isNullOrBlank(userMessage)) {
             return code;
         }
         return new MensajeDeUsuarioDefinition(code, userMessage.strip());

@@ -6,6 +6,9 @@ import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclam
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.primaryports.dto.ReclamoEstudianteDTO;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.primaryports.interactor.ConsultarReclamosEstudianteInteractor;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.SolicitudRevisionEstudianteQueryPort;
+import co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.CategoriaReclamoDTO;
+import co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.SoporteReclamoDTO;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.SoporteReclamoProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.SolicitudRevisionEstudianteProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import org.junit.jupiter.api.BeforeEach;
@@ -137,6 +140,39 @@ class ConsultarReclamosEstudianteUseCaseImplTest {
                 "Cita medica", "", UUID.randomUUID(), 3, SESION_UTC, "UTC_V2", UUID.randomUUID(), 1, "Grupo 1",
                 UUID.randomUUID(), "MAT-1", "Calculo", archivo, archivo == null ? null : "incapacidad.pdf",
                 archivo == null ? null : "application/pdf", archivo == null ? null : 2048L,
-                archivo == null ? null : SOPORTE_UTC, total);
+                archivo == null ? null : SOPORTE_UTC, total, null, null, List.of());
+    }
+
+    // ---- CULM-001 D.2 (CONTRACT D 3.3, HU015): categoria y lista de soportes en cada reclamo del estudiante ----
+
+    @Test
+    void UC08_expone_la_categoria_y_todos_los_soportes_en_orden() {
+        final UUID otro = UUID.randomUUID();
+        final var fila = new SolicitudRevisionEstudianteProjection(SOLICITUD, "RAD-1", LocalDate.of(2026, 10, 20), "P", "Pendiente",
+                "Cita medica", "", UUID.randomUUID(), 3, SESION_UTC, "UTC_V2", UUID.randomUUID(), 1, "Grupo 1",
+                UUID.randomUUID(), "MAT-1", "Calculo", ARCHIVO, "uno.pdf", "application/pdf", 10L, SOPORTE_UTC, 1,
+                "MED", "Medico / Salud", List.of(new SoporteReclamoProjection(ARCHIVO, "uno.pdf", "application/pdf", 10L),
+                new SoporteReclamoProjection(otro, "dos.png", "image/png", 20L)));
+        when(queryPort.consultarSolicitudesEstudiante(USUARIO, null, 1, 10)).thenReturn(List.of(fila));
+
+        final ReclamoEstudianteDTO reclamo = interactor.execute(new ConsultarReclamosEstudianteDTO(USUARIO, null, null, null))
+                .reclamos().getFirst();
+
+        assertEquals(new CategoriaReclamoDTO("MED", "Medico / Salud"), reclamo.categoria());
+        assertEquals(List.of(new SoporteReclamoDTO(ARCHIVO, "uno.pdf", "application/pdf", 10L),
+                new SoporteReclamoDTO(otro, "dos.png", "image/png", 20L)), reclamo.soportes());
+        // El soporte unico anterior se conserva una version (primer soporte)
+        assertEquals(ARCHIVO, reclamo.soporteAdjunto().fileId());
+    }
+
+    @Test
+    void UC09_sin_categoria_y_sin_soportes_la_categoria_es_nula_y_la_lista_vacia() {
+        when(queryPort.consultarSolicitudesEstudiante(USUARIO, null, 1, 10)).thenReturn(List.of(fila(SOLICITUD, null, 1)));
+
+        final ReclamoEstudianteDTO reclamo = interactor.execute(new ConsultarReclamosEstudianteDTO(USUARIO, null, null, null))
+                .reclamos().getFirst();
+
+        assertNull(reclamo.categoria());
+        assertEquals(List.of(), reclamo.soportes());
     }
 }
