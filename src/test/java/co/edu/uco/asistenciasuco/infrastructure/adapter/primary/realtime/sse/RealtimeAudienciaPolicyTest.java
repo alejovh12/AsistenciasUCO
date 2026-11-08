@@ -87,4 +87,24 @@ class RealtimeAudienciaPolicyTest {
         assertEquals(Set.of(RealtimeAudienciaPolicy.Audiencia.DOCENTE_TITULAR), policy.audienciasDe("asistencia_qr.rotado"));
         assertEquals(Set.of(RealtimeAudienciaPolicy.Audiencia.DOCENTE_TITULAR), policy.audienciasDe("ASISTENCIA_QR_ROTADO_X"));
     }
+
+    // CULM-001 D.9-c / D.3 (CONTRACT §4.5): PARAMETER_UPDATED es de configuracion y solo del ADMINISTRADOR; nunca llega por el
+    // canal de grupo, cuyos suscriptores no tienen esa audiencia.
+    @Test
+    void parameter_updated_es_un_tipo_del_catalogo_solo_para_la_audiencia_administrador() {
+        assertEquals(Set.of(RealtimeAudienciaPolicy.Audiencia.ADMINISTRADOR), policy.audienciasDe("PARAMETER_UPDATED"));
+        assertTrue(policy.tiposConocidos().contains("PARAMETER_UPDATED"));
+        for (final RealtimeAudienciaPolicy.Audiencia deGrupo : new RealtimeAudienciaPolicy.Audiencia[]{
+                RealtimeAudienciaPolicy.Audiencia.DOCENTE_TITULAR, RealtimeAudienciaPolicy.Audiencia.ESTUDIANTE_GRUPO,
+                RealtimeAudienciaPolicy.Audiencia.AMBITO_GRUPO}) {
+            assertFalse(policy.entrega("PARAMETER_UPDATED", Set.of(deGrupo), UUID.randomUUID(), Set.of()));
+        }
+    }
+
+    @Test
+    void tiposConocidos_lista_los_tipos_de_la_tabla_y_es_inmutable() {
+        assertTrue(policy.tiposConocidos().containsAll(Set.of("SESION_CANCELADA", "ALERTA_INASISTENCIA", "TOMA_ABIERTA", "ASISTENCIA_QR_REGISTRADA")));
+        assertFalse(policy.tiposConocidos().contains("NO_EXISTE"));
+        assertThrows(UnsupportedOperationException.class, () -> policy.tiposConocidos().add("X"));
+    }
 }

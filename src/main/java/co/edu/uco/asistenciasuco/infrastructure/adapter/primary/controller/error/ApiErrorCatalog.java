@@ -67,6 +67,15 @@ final class ApiErrorCatalog {
         );
     }
 
+    /** CULM-001 D.9-c (F-TRX-019): el {@code Accept} del cliente no admite ningun formato que el endpoint produce. */
+    static ApiErrorDescriptor notAcceptable() {
+        return new ApiErrorDescriptor(
+                CommonErrorCode.INVALID_REQUEST.code(),
+                "El formato de respuesta solicitado no esta disponible para este recurso.",
+                HttpStatus.NOT_ACCEPTABLE
+        );
+    }
+
     static ApiErrorDescriptor malformedMultipart() {
         return new ApiErrorDescriptor(
                 CommonErrorCode.INVALID_REQUEST.code(),

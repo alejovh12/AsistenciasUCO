@@ -226,6 +226,8 @@ public class SecurityConfig {
                 // un rol funcional propio; se restringe a ADMINISTRADOR hasta que Realtime
                 // tenga su propio Port (ver documentación).
                 .requestMatchers(HttpMethod.POST, "/api/v1/realtime/emit").hasRole(ROLE_ADMINISTRADOR)
+                // CULM-001 D.9-c (F-TRX-016): el diagnostico del canal tambien es solo del ADMINISTRADOR.
+                .requestMatchers(HttpMethod.GET, "/api/v1/realtime/status").hasRole(ROLE_ADMINISTRADOR)
                 .requestMatchers("/api/v1/realtime/**").authenticated()
                 .requestMatchers("/api/v1/**").authenticated()
                 .anyRequest().authenticated()
