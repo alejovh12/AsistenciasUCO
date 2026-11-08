@@ -626,7 +626,7 @@ class DbExceptionTranslatorTest {
                 () -> translateFailure("irrelevante", "DBCODE=FAC_002|detalle", OPERATION)
         );
 
-        assertEquals("CONFLICT", exception.getCode());
+        assertEquals("FAC_002", exception.getCode());
     }
 
     private void translateFailure(final String userMessage, final String operation) {

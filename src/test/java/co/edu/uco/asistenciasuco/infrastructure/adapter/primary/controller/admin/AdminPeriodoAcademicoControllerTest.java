@@ -39,8 +39,9 @@ class AdminPeriodoAcademicoControllerTest {
 
     @Test
     void crear_y_actualizar_mapean_cuerpo_ruta_y_actor() throws Exception {
+        // F-ADM-S20: creacion de periodos academicos debe responder HTTP 201 Created
         mvc.perform(post("/api/v1/admin/periodos-academicos").contentType("application/json").content(BODY))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.exitoso").value(true));
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.exitoso").value(true));
         mvc.perform(put("/api/v1/admin/periodos-academicos/{id}", PERIODO).contentType("application/json").content(BODY))
                 .andExpect(status().isOk());
 

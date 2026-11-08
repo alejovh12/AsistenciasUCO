@@ -6,6 +6,7 @@ import co.edu.uco.asistenciasuco.application.features.admin.gestionarperiodoacad
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin.request.GuardarPeriodoAcademicoRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,7 +43,7 @@ public final class AdminPeriodoAcademicoController {
     @PostMapping
     public ResponseEntity<ApiDataResponse<Void>> crear(@RequestBody final GuardarPeriodoAcademicoRequest request) {
         gestionarPeriodoAcademicoInputPort.crear(toDTO(null, request));
-        return ResponseEntity.ok(new ApiDataResponse<>(true, null));
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiDataResponse<>(true, null));
     }
 
     @AuditableOperation(action = "ACTUALIZAR_PERIODO_ACADEMICO", resourceType = "PERIODO_ACADEMICO", resourceIdPathVariable = "id", metadataRequestFields = {"nombre"})

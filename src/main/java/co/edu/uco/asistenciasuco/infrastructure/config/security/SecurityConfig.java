@@ -100,6 +100,8 @@ public class SecurityConfig {
                 // CULM-001 A.2-5: un error lanzado en un filtro se despacha a /error; ese despacho muestra el estado real (y el
                 // PEP ya exime /error, SecurityPublicEndpoints.ERROR_VIEW) en vez de un 401 falso por no estar autenticado.
                 .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
+                // F-EST-S14: solo el preflight CORS de las dos rutas publicas de matricula QR admite OPTIONS sin token.
+                .requestMatchers(HttpMethod.OPTIONS, SecurityPublicEndpoints.MATRICULA_QR_VALIDAR, SecurityPublicEndpoints.MATRICULA_QR_REGISTRO).permitAll()
                 .requestMatchers(SecurityPublicEndpoints.ACTUATOR).permitAll()
                 // permitAll de AUTORIZACION: la autenticacion la exige AzureEventGridAuthFilter (header
                 // aeg-sas-token, fail-closed). No equivale a un endpoint sin autenticacion.

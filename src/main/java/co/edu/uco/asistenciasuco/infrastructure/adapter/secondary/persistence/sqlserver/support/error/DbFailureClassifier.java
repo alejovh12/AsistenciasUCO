@@ -10,6 +10,7 @@ import co.edu.uco.asistenciasuco.application.features.tomaasistencia.exception.T
 import co.edu.uco.asistenciasuco.application.features.admin.exception.AdmisionEstudianteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.CatalogoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.DecanoErrorCode;
+import co.edu.uco.asistenciasuco.application.features.admin.exception.FacultadErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.ParametroErrorCode;
 import co.edu.uco.asistenciasuco.application.features.decano.exception.CoordinadorErrorCode;
 import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
@@ -118,8 +119,8 @@ final class DbFailureClassifier {
             case "VCE_002" -> VerificacionCorreoErrorCode.VCE_002;
             case "VCE_005" -> VerificacionCorreoErrorCode.VCE_005;
             case "VCE_007" -> VerificacionCorreoErrorCode.VCE_007;
-            // FAC_002: el decano ya es titular de otra facultad activa (HU117/HU111).
-            case "FAC_002" -> CommonErrorCode.CONFLICT;
+            // FAC_002: el decano ya es titular de otra facultad activa (HU117/HU111, F-ADM-S05).
+            case "FAC_002" -> FacultadErrorCode.FAC_002;
             case "VAL_007" -> classifyVal007(operation);
             // SES-04: resolucion del reclamo. Accion fuera del contrato 400; ya resuelto con otra decision, asistencia
             // presente o sin detalle 409; solicitud inexistente 404.
