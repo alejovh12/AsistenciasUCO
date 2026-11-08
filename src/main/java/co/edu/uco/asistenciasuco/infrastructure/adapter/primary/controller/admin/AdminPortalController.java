@@ -21,6 +21,7 @@ import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryp
 import co.edu.uco.asistenciasuco.application.features.admin.crearfacultad.primaryports.CrearFacultadInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.crearfacultad.primaryports.dto.CrearFacultadDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarhistorialcierres.primaryports.ConsultarHistorialCierresMasivosInputPort;
+import co.edu.uco.asistenciasuco.application.features.admin.consultarhistorialcierres.primaryports.dto.CierrePeriodoReporteDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.primaryports.EjecutarCierreMasivoInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.primaryports.dto.EjecutarCierreMasivoDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
@@ -141,6 +142,15 @@ public final class AdminPortalController {
                 authenticatedUserResolver.requireAuthenticatedUserId()
         ));
         return ResponseEntity.ok(new ApiMessageResponse(true, "Cierre masivo solicitado correctamente."));
+    }
+
+    /** F-ADM-006: historial de reportes de cierre masivo de periodo academico. */
+    @GetMapping("/cierre-masivo/historial")
+    public ResponseEntity<ApiListResponse<CierrePeriodoReporteDTO>> consultarHistorialCierre() {
+        final var reportes = consultarHistorialCierresMasivosInputPort != null
+                ? consultarHistorialCierresMasivosInputPort.execute()
+                : java.util.List.<CierrePeriodoReporteDTO>of();
+        return ResponseEntity.ok(new ApiListResponse<>(true, reportes, reportes.size()));
     }
 
     @GetMapping("/instituciones")

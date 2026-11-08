@@ -8,9 +8,9 @@ import co.edu.uco.asistenciasuco.crosscutting.validation.Validator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.identidad.request.CorregirIdentidadRequest;
 
 /**
- * Validacion de forma de la correccion de identidad (HU159): primer nombre y primer apellido obligatorios, longitudes y
- * caracteres de nombres, documento opcional y motivo obligatorio. Jerarquia, unicidad e interruptor del documento los
- * decide la base de datos.
+ * Validacion de forma de la correccion de identidad (HU159, F-ADM-S12): primer nombre y primer apellido obligatorios,
+ * longitudes y caracteres de nombres con mensajes amigables al usuario (sin exponer nombres tecnicos de campo en camelCase),
+ * documento opcional y motivo obligatorio. Jerarquia, unicidad e interruptor del documento los decide la base de datos.
  */
 public final class CorregirIdentidadRequestValidator implements Validator<CorregirIdentidadRequest> {
 
@@ -32,13 +32,24 @@ public final class CorregirIdentidadRequestValidator implements Validator<Correg
 
     private static void nombre(final ValidationResultBuilder builder, final String campo, final String valor,
                                final boolean obligatorio) {
+        final String etiqueta = etiquetaCampo(campo);
         if (obligatorio && !ValidationHelper.hasText(valor)) {
-            builder.add(campo, ValidationErrorType.REQUIRED, "El campo " + campo + " es obligatorio.");
+            builder.add(campo, ValidationErrorType.REQUIRED, "El " + etiqueta + " es obligatorio.");
             return;
         }
         builder.addIf(valor != null && valor.trim().length() > MAX_NOMBRE, campo, ValidationErrorType.INVALID_LENGTH,
-                "El campo " + campo + " no puede superar " + MAX_NOMBRE + " caracteres.");
+                "El " + etiqueta + " no puede superar " + MAX_NOMBRE + " caracteres.");
         builder.addIf(!ValidationHelper.isValidPersonName(valor), campo, ValidationErrorType.INVALID_FORMAT,
-                "El campo " + campo + " contiene caracteres no permitidos.");
+                "El " + etiqueta + " contiene caracteres no permitidos.");
+    }
+
+    private static String etiquetaCampo(final String campo) {
+        return switch (campo) {
+            case "primerNombre" -> "primer nombre";
+            case "primerApellido" -> "primer apellido";
+            case "segundoNombre" -> "segundo nombre";
+            case "segundoApellido" -> "segundo apellido";
+            default -> campo;
+        };
     }
 }

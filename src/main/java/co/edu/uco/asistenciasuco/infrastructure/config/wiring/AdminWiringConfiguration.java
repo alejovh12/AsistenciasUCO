@@ -41,6 +41,11 @@ import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo
 import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.primaryports.interactor.EjecutarCierreMasivoInteractor;
 import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.usecase.EjecutarCierreMasivoUseCase;
 import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.usecase.impl.EjecutarCierreMasivoUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.admin.consultarhistorialcierres.primaryports.ConsultarHistorialCierresMasivosInputPort;
+import co.edu.uco.asistenciasuco.application.features.admin.consultarhistorialcierres.primaryports.interactor.ConsultarHistorialCierresMasivosInteractor;
+import co.edu.uco.asistenciasuco.application.features.admin.consultarhistorialcierres.usecase.ConsultarHistorialCierresMasivosUseCase;
+import co.edu.uco.asistenciasuco.application.features.admin.consultarhistorialcierres.usecase.impl.ConsultarHistorialCierresMasivosUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.HistorialCierrePeriodoQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AreaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.CierrePeriodoCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DecanoCommandPort;
@@ -110,6 +115,16 @@ public class AdminWiringConfiguration {
     }
 
     @Bean EjecutarCierreMasivoInputPort ejecutarCierreMasivoInputPort(final EjecutarCierreMasivoUseCase useCase) { return new EjecutarCierreMasivoInteractor(useCase); }
+
+    @Bean
+    ConsultarHistorialCierresMasivosUseCase consultarHistorialCierresMasivosUseCase(final HistorialCierrePeriodoQueryPort port) {
+        return new ConsultarHistorialCierresMasivosUseCaseImpl(port);
+    }
+
+    @Bean
+    ConsultarHistorialCierresMasivosInputPort consultarHistorialCierresMasivosInputPort(final ConsultarHistorialCierresMasivosUseCase useCase) {
+        return new ConsultarHistorialCierresMasivosInteractor(useCase);
+    }
     // HU096-HU098: el periodo es unico por institucion; solo lo gestiona el ADMINISTRADOR.
     @Bean GestionarPeriodoAcademicoUseCase gestionarPeriodoAcademicoUseCase(final PeriodoAcademicoCommandPort commandPort) { return new GestionarPeriodoAcademicoUseCaseImpl(commandPort); }
     @Bean GestionarPeriodoAcademicoInputPort gestionarPeriodoAcademicoInputPort(final GestionarPeriodoAcademicoUseCase useCase) { return new GestionarPeriodoAcademicoInteractor(useCase); }

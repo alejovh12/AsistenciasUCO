@@ -20,6 +20,7 @@
     {"method": "GET", "path": "/api/v1/admin/asignaturas", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": "HU143: asignaturas de la institucion del administrador; el ambito lo fuerza el procedimiento almacenado."},
     {"method": "GET", "path": "/api/v1/admin/auditoria", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": "HU172: rastro de auditoria de la institucion; solo lectura, rango maximo de 90 dias; el procedimiento almacenado exige el perfil ADMINISTRADOR."},
     {"method": "POST", "path": "/api/v1/admin/cierre-masivo", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": null},
+    {"method": "GET", "path": "/api/v1/admin/cierre-masivo/historial", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": null},
     {"method": "GET", "path": "/api/v1/admin/comparativa-facultades", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": null},
     {"method": "GET", "path": "/api/v1/admin/decanos", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": null},
     {"method": "POST", "path": "/api/v1/admin/estudiantes/admision", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": "CULM-001 D.4 (HU156): el administrador admite estudiantes en un programa de su institucion sin matricularlos; usp_admitir_estudiante valida RBAC, ambito, unicidad, correo institucional y clave inicial."},

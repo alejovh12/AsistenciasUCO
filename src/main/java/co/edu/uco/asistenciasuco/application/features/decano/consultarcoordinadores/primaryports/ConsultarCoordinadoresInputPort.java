@@ -6,10 +6,11 @@ import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinado
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Puerto primario para la consulta de coordinadores del decano (F-DEC-004: paginacion con ApiPageResponse).
+ */
 public interface ConsultarCoordinadoresInputPort {
     List<CoordinadorDTO> execute(UUID actorUsuarioId);
 
-    default PaginaResultado<CoordinadorDTO> execute(UUID actorUsuarioId, Integer pagina, Integer tamano) {
-        return null;
-    }
+    PaginaResultado<CoordinadorDTO> execute(UUID actorUsuarioId, Integer pagina, Integer tamano);
 }
