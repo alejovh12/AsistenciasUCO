@@ -14,6 +14,8 @@ public class SpPuntoTendenciaEntity {
     @Column(name = "sesionesEjecutadas") private Integer sesionesEjecutadas;
     @Column(name = "faltasSinJustaCausa") private Integer faltasSinJustaCausa;
     @Column(name = "porcentajeAusentismo") private BigDecimal porcentajeAusentismo;
+    @Column(name = "horasDictadasEstudiante") private BigDecimal horasDictadasEstudiante;
+    @Column(name = "horasFalta") private BigDecimal horasFalta;
 
     protected SpPuntoTendenciaEntity() {
     }
@@ -36,5 +38,13 @@ public class SpPuntoTendenciaEntity {
 
     public BigDecimal porcentajeAusentismo() {
         return porcentajeAusentismo;
+    }
+
+    public BigDecimal horasDictadasEstudiante() {
+        return horasDictadasEstudiante;
+    }
+
+    public BigDecimal horasFalta() {
+        return horasFalta;
     }
 }

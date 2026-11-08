@@ -143,6 +143,8 @@ class DecanoIndicadoresJpaRepositoryTest {
         when(p1.sesionesEjecutadas()).thenReturn(33);
         when(p1.faltasSinJustaCausa()).thenReturn(5);
         when(p1.porcentajeAusentismo()).thenReturn(new BigDecimal("15.15"));
+        when(p1.horasDictadas()).thenReturn(new BigDecimal("120.00"));
+        when(p1.horasFalta()).thenReturn(new BigDecimal("18.00"));
         final SpComparativaProgramaEntity p4 = mock(SpComparativaProgramaEntity.class);
         when(p4.idPrograma()).thenReturn(UUID.randomUUID());
         when(p4.nombrePrograma()).thenReturn("Programa 4");
@@ -155,6 +157,8 @@ class DecanoIndicadoresJpaRepositoryTest {
         verify(query).setParameter("idPeriodoAcademico", PERIODO);
         assertEquals(2, r.size());
         assertEquals(new BigDecimal("15.15"), r.get(0).porcentajeAusentismo());
+        assertEquals(new BigDecimal("120.00"), r.get(0).horasDictadas());
+        assertEquals(new BigDecimal("18.00"), r.get(0).horasFalta());
         assertEquals(33, r.get(0).sesionesEjecutadas());
         assertTrue(r.get(0).estaActivoPrograma());
         assertNull(r.get(1).tasaRetencion());

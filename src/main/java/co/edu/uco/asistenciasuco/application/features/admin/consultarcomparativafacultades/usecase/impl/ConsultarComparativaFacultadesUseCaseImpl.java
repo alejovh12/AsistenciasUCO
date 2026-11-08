@@ -23,7 +23,7 @@ public final class ConsultarComparativaFacultadesUseCaseImpl implements Consulta
             throw new ValidationException("Los datos de la consulta son obligatorios.");
         }
         return queryPort.consultarComparativa(domain.actorUsuarioId(), domain.idPeriodoAcademico()).stream()
-                .map(p -> new ComparativaFacultadDomain(p.idFacultad(), p.nombreFacultad(), p.estaActivaFacultad(), p.totalProgramas(), p.totalEstudiantes(), p.estudiantesRiesgo(), p.estudiantesPerdida(), p.tasaRetencion(), p.sesionesEjecutadas(), p.faltasSinJustaCausa(), p.porcentajeAusentismo()))
+                .map(p -> new ComparativaFacultadDomain(p.idFacultad(), p.nombreFacultad(), p.estaActivaFacultad(), p.totalProgramas(), p.totalEstudiantes(), p.estudiantesRiesgo(), p.estudiantesPerdida(), p.tasaRetencion(), p.sesionesEjecutadas(), p.faltasSinJustaCausa(), p.porcentajeAusentismo(), p.horasDictadas(), p.horasFalta()))
                 .toList();
     }
 }

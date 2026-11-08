@@ -31,9 +31,9 @@ class ConsultarTendenciaAusentismoUseCaseImplTest {
 
     private static List<PuntoTendenciaProjection> puntos() {
         return List.of(
-                new PuntoTendenciaProjection(LocalDate.of(2026, 3, 2), LocalDate.of(2026, 3, 8), 20, 3, new BigDecimal("15.00")),
-                new PuntoTendenciaProjection(LocalDate.of(2026, 3, 9), LocalDate.of(2026, 3, 15), 5, 0, new BigDecimal("0.00")),
-                new PuntoTendenciaProjection(LocalDate.of(2026, 3, 16), LocalDate.of(2026, 3, 22), 0, 0, null));
+                new PuntoTendenciaProjection(LocalDate.of(2026, 3, 2), LocalDate.of(2026, 3, 8), 20, 3, new BigDecimal("15.00"), new BigDecimal("100.00"), new BigDecimal("15.00")),
+                new PuntoTendenciaProjection(LocalDate.of(2026, 3, 9), LocalDate.of(2026, 3, 15), 5, 0, new BigDecimal("0.00"), new BigDecimal("100.00"), new BigDecimal("15.00")),
+                new PuntoTendenciaProjection(LocalDate.of(2026, 3, 16), LocalDate.of(2026, 3, 22), 0, 0, null, new BigDecimal("100.00"), new BigDecimal("15.00")));
     }
 
     @Test
@@ -48,6 +48,8 @@ class ConsultarTendenciaAusentismoUseCaseImplTest {
         assertEquals(20, r.get(0).sesionesEjecutadas());
         assertEquals(3, r.get(0).faltasSinJustaCausa());
         assertEquals(new BigDecimal("15.00"), r.get(0).porcentajeAusentismo());
+        assertEquals(new BigDecimal("100.00"), r.get(0).horasDictadasEstudiante());
+        assertEquals(new BigDecimal("15.00"), r.get(0).horasFalta());
         assertEquals(new BigDecimal("0.00"), r.get(1).porcentajeAusentismo());
     }
 

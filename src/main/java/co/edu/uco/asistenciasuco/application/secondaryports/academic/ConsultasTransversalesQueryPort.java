@@ -70,7 +70,9 @@ public interface ConsultasTransversalesQueryPort {
                                       UUID idAsignatura, String nombreAsignatura, UUID idDocente, String nombreDocente,
                                       int estudiantesActivos, int sesionesEjecutadas, int asistencias,
                                       int faltasSinJustaCausa, int excusas, BigDecimal porcentajeAsistencia,
-                                      BigDecimal porcentajeInasistencia, int estudiantesRiesgo, int estudiantesPerdida) {
+                                      BigDecimal porcentajeInasistencia, int estudiantesRiesgo, int estudiantesPerdida,
+                                      BigDecimal horasDictadas, BigDecimal porcentajeExcusa,
+                                      BigDecimal porcentajeSinRegistro) {
     }
 
     record FiltroAuditoria(OffsetDateTime desde, OffsetDateTime hasta, String accion, String tipoRecurso,

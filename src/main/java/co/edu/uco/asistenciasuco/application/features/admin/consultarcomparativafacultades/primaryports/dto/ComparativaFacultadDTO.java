@@ -14,6 +14,8 @@ public record ComparativaFacultadDTO(
         BigDecimal tasaRetencion,
         int sesionesEjecutadas,
         int faltasSinJustaCausa,
-        BigDecimal porcentajeAusentismo
+        BigDecimal porcentajeAusentismo,
+        BigDecimal horasDictadas,
+        BigDecimal horasFalta
 ) {
 }
