@@ -888,6 +888,8 @@ GOLDEN PATH EFFECT:         NONE
 - **Resolución esperada y condición de cierre:** decisión del owner DB. Opciones: (a) reemplazar el índice filtrado por otro mecanismo de unicidad que no rompa la verificación de la FK; (b) aplicar un CU o trace flag que corrija el optimizador, si existe; (c) cambiar el orden o la forma del borrado en los SP. Se cierra cuando un `DELETE` por `id` funcione con la FK habilitada y el fixture MAINT-003G cargue.
 - **Bloquea línea base:** no bloquea HU035/HU036 (solo lectura). Bloquea el verde completo de `-Pintegration` local y las HU de eliminación de reclamos. **Estado:** **OPEN / HIGH / DB_OWNER / PREEXISTING (LB-004D)**. **Work item:** [HU035-HU036](../work-items/HU035-HU036-bandeja-detalle-reclamos-docente/VALIDATION.md).
 
+- **Actualización CULM-001 D.2 (2026-11-08) — CLOSED:** `UX_ArchivoSoporte_Solicitud` (índice único filtrado) se reemplazó por `IX_ArchivoSoporte_Solicitud` (no único, no filtrado; [SUPUESTO-D-02]/DEC-042). Con la FK `FK_ArchivoSoporte_SolicitudRevisionAsistencia` habilitada, `DELETE FROM dbo.SolicitudRevisionAsistencia WHERE id = ...` funciona con `QUOTED_IDENTIFIER` ON y OFF (prueba D2-14 de `test_culm001_d2_soportes_categoria.sql`). Los fixtures ya pueden borrar solicitudes sin `NOCHECK`. Estado vigente: **CLOSED**.
+
 ## TD-060
 
 - **Fecha / responsable:** 2026-10-21 / fullstack-team (HU035-HU036, análisis AS-IS). **Clasificación:** `DATA_LOSS_CONTRACT_GAP`. **Prioridad:** MEDIA.
@@ -899,12 +901,16 @@ GOLDEN PATH EFFECT:         NONE
 - **Avance (2026-11-05):** HU005/HU016 creó el catálogo `CategoriaJustificacion` (6 categorías, solo consulta) y el formulario ya lo usa. Falta la FK y la persistencia en el SP v2: el diseño está en `docs/work-items/HU005-HU016-categorias-justificacion/DISENO_CAMBIO_COORDINADO.md` del repo de BD, junto con el plazo de HU026B y el soporte obligatorio por categoría.
 - **Bloquea línea base:** no. **Estado:** **OPEN / MEDIUM / DB_OWNER**. **Work item:** [HU035-HU036](../work-items/HU035-HU036-bandeja-detalle-reclamos-docente/PLAN.md).
 
+- **Actualización CULM-001 D.2 (2026-11-08) — CLOSED:** `SolicitudRevisionAsistencia.categoriaJustificacion` (FK a `CategoriaJustificacion`, sin backfill) la guarda `usp_radicar_solicitud_revision_asistencia_v2/_v3` (por código o nombre; `REV_021` si no existe) y la exponen el detalle del docente y `GET /api/v1/estudiante/reclamos` como `categoria {codigo, nombre}`. MED, ACA y LAB exigen al menos un soporte (`CategoriaJustificacion.requiereSoporte`, `REV_022`): HU014 queda desbloqueada. Los reclamos anteriores conservan categoría nula. Estado vigente: **CLOSED**.
+
 ## TD-061
 
 - **Fecha / responsable:** 2026-10-21 / fullstack-team. **Clasificación:** `HARDCODED_STATE_LITERAL`. **Prioridad:** BAJA.
 - **Descripción:** `usp_consultar_solicitudes_revision_docente` (R2), `usp_consultar_archivo_soporte_autorizado` y `usp_radicar_solicitud_revision_asistencia_v2` comparan contra los literales `'ATTACHED'` y `'DRAFT'`, lo que contradice la regla "Cero Datos Quemados". HU035/HU036 creó el parámetro `ARCHIVO.ESTADO_ADJUNTO` y lo usa en el SP nuevo.
 - **Resolución esperada:** que los SP de LB-004D lean los estados desde parámetros o catálogo, con alineación del manifiesto LB-004D.
 - **Bloquea línea base:** no. **Estado:** **OPEN / LOW / DB_OWNER**. **Work item:** [HU035-HU036](../work-items/HU035-HU036-bandeja-detalle-reclamos-docente/CONTRACT.md).
+
+- **Actualización CULM-001 D.2 (2026-11-08) — CLOSED:** `usp_consultar_archivo_soporte_autorizado`, `usp_consultar_solicitudes_revision_docente` y la radicación (`usp_internal_radicar_solicitud_revision`, v2 y v3) leen `ARCHIVO/ESTADO_BORRADOR` y `ARCHIVO/ESTADO_ADJUNTO`; ya no comparan contra los literales `DRAFT`/`ATTACHED` (prueba D2-10 sobre `sys.sql_modules`). Estado vigente: **CLOSED**.
 
 ## TD-062
 
