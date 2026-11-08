@@ -26,7 +26,7 @@ public final class ConsultarKpisCoordinadorUseCaseImpl implements ConsultarKpisC
             throw new ValidationException("Los datos de la consulta son obligatorios.");
         }
         IndicadoresRules.programaDelCoordinador(scopePort, domain.actorUsuarioId());
-        final KpisCoordinadorProjection p = queryPort.consultarKpis(domain.actorUsuarioId(), domain.idPeriodoAcademico());
+        final KpisCoordinadorProjection p = queryPort.consultarKpis(domain.actorUsuarioId(), domain.idPeriodoAcademico(), domain.idPrograma());
         return new KpisCoordinadorDomain(p.idPrograma(), p.nombrePrograma(), p.idPeriodoAcademico(), p.nombrePeriodoAcademico(), p.totalEstudiantes(), p.estudiantesRegulares(), p.estudiantesRiesgo(), p.estudiantesPerdida(), p.tasaPermanencia(), p.sesionesProgramadas(), p.sesionesVencidas(), p.sesionesEjecutadas(), p.sesionesVencidasSinRegistro(), p.sesionesSinProcedenciaTemporal(), p.porcentajeCumplimiento(), p.porcentajeProgresoCalendario(), p.umbralAdvertencia(), p.umbralPerdida());
     }
 }

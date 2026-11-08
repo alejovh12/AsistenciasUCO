@@ -100,11 +100,16 @@ final class AcademicUserParityFixture {
         final UUID id = UUID.randomUUID();
         final Semilla s = semilla();
         jdbc.update("""
-                INSERT INTO dbo.Asignatura (id, codigo, nombre, credito, area, componente, semestrePlanEstudio, estado)
-                SELECT ?, ?, ?, 3, TOP_AREA.id, TOP_COMP.id, ?, ?
+                INSERT INTO dbo.Asignatura (id, codigo, nombre, credito, area, componente, estado)
+                SELECT ?, ?, ?, 3, TOP_AREA.id, TOP_COMP.id, ?
                 FROM (SELECT TOP 1 id FROM dbo.Area ORDER BY id) TOP_AREA
                 CROSS JOIN (SELECT TOP 1 id FROM dbo.Componente ORDER BY id) TOP_COMP
-                """, id.toString(), codigo, "Asignatura fixture", s.semestrePlanEstudio().toString(), estadoActivo ? 1 : 0);
+                """, id.toString(), codigo, "Asignatura fixture", estadoActivo ? 1 : 0);
+        // CULM-001 B2NM (DEC-019): el vinculo asignatura-plan vive en AsignaturaPlanEstudio (caracter OBL por codigo)
+        jdbc.update("""
+                INSERT INTO dbo.AsignaturaPlanEstudio (id, asignatura, semestrePlanEstudio, caracter, estaActivo, fechaVinculacionUtc)
+                SELECT NEWID(), ?, ?, c.id, 1, '2000-01-01' FROM dbo.CaracterAsignaturaPlan c WHERE c.codigo = N'OBL'
+                """, id.toString(), s.semestrePlanEstudio().toString());
         asignaturas.add(id.toString());
         return id;
     }
@@ -188,7 +193,7 @@ final class AcademicUserParityFixture {
                 SELECT codigo, nombre, credito,
                        CASE WHEN area IS NULL THEN 'NULL' ELSE 'OK' END,
                        CASE WHEN componente IS NULL THEN 'NULL' ELSE 'OK' END,
-                       CASE WHEN semestrePlanEstudio = ? THEN 'SEED_SPE' ELSE 'OTRA_SPE' END,
+                       CASE WHEN EXISTS (SELECT 1 FROM dbo.AsignaturaPlanEstudio ape WHERE ape.asignatura = dbo.Asignatura.id AND ape.semestrePlanEstudio = ?) THEN 'SEED_SPE' ELSE 'OTRA_SPE' END,
                        estado
                 FROM dbo.Asignatura WHERE id = ?
                 """, (rs, n) -> String.join("|",
@@ -348,6 +353,7 @@ final class AcademicUserParityFixture {
         jdbc.update("DELETE FROM dbo.Usuario WHERE correo LIKE ?", IT_EMAIL_PREFIX + "%" + IT_EMAIL_DOMAIN);
         usuariosCreados.clear();
 
+        jdbc.update("DELETE FROM dbo.AsignaturaPlanEstudio WHERE asignatura IN (SELECT id FROM dbo.Asignatura WHERE codigo LIKE ?)", IT_PREFIX + "%");
         jdbc.update("DELETE FROM dbo.Asignatura WHERE codigo LIKE ?", IT_PREFIX + "%");
         asignaturas.clear();
     }

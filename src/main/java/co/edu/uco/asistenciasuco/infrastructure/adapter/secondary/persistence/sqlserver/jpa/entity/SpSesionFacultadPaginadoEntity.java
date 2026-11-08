@@ -20,8 +20,6 @@ public class SpSesionFacultadPaginadoEntity {
     @Column(name = "nombreGrupo") private String nombreGrupo;
     @Column(name = "idAsignatura") private UUID idAsignatura;
     @Column(name = "nombreAsignatura") private String nombreAsignatura;
-    @Column(name = "idPrograma") private UUID idPrograma;
-    @Column(name = "nombrePrograma") private String nombrePrograma;
     @Column(name = "totalRegistros") private Integer totalRegistros;
 
     protected SpSesionFacultadPaginadoEntity() {
@@ -69,14 +67,6 @@ public class SpSesionFacultadPaginadoEntity {
 
     public String nombreAsignatura() {
         return nombreAsignatura;
-    }
-
-    public UUID idPrograma() {
-        return idPrograma;
-    }
-
-    public String nombrePrograma() {
-        return nombrePrograma;
     }
 
     public Integer totalRegistros() {

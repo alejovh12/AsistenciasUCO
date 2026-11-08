@@ -44,7 +44,7 @@ class ConsultarOfertaGruposUseCaseImplTest {
     private static GrupoOfertaEstudianteProjection grupo(final boolean matriculado) {
         return new GrupoOfertaEstudianteProjection(UUID.randomUUID(), 7, "Grupo 7", UUID.randomUUID(), "MAT1", "Algebra", "Ana Perez",
                 UUID.randomUUID(), "2026-2", LocalDate.of(2026, 7, 20), LocalDate.of(2026, 12, 10), "VIGENTE",
-                "Lunes 08:00-10:00", 30, 25, 5, matriculado, "ESP");
+                "Lunes 08:00-10:00", 30, 25, 5, matriculado, "ESP", "OBL", "Obligatoria");
     }
 
     @Test
@@ -107,7 +107,7 @@ class ConsultarOfertaGruposUseCaseImplTest {
 
     private static GrupoOfertaEstudianteProjection conComponente(final String componente) {
         return new GrupoOfertaEstudianteProjection(UUID.randomUUID(), 1, "Grupo 1", UUID.randomUUID(), "C1", "Asignatura", "Doc",
-                UUID.randomUUID(), "2026-2", null, null, "VIGENTE", null, 10, 0, 10, false, componente);
+                UUID.randomUUID(), "2026-2", null, null, "VIGENTE", null, 10, 0, 10, false, componente, null, null);
     }
 
     @Test

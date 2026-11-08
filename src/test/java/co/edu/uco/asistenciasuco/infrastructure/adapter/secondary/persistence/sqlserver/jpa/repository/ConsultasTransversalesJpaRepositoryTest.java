@@ -95,14 +95,16 @@ class ConsultasTransversalesJpaRepositoryTest {
     }
 
     @Test
-    void T_143_PAT_01_asignaturas_mapea_programa_y_facultad() {
+    void T_143_PAT_01_asignaturas_mapea_planes_y_total_planes() {
+        // CULM-001 B2NM (CONTRACT B2 fila 114): 1 fila por asignatura con planes y totalPlanes
         when(query.getResultList()).thenReturn(filas(fila(ID, "CAL1", "Calculo", 3, "Ciencias", "Basico",
-                "S1", ID, 2024, ID, "Sistemas", ID, "Ingenieria", true, 1)));
+                "Sistemas · Plan 2024 · S1", 1, true, 1)));
 
         final var pagina = repository.buscarAsignaturas(EJECUTOR, new FiltroConsulta(null, null, null), 1, 10);
 
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_buscar_asignaturas_paginado"));
-        assertEquals("Ingenieria", pagina.elementos().getFirst().nombreFacultad());
+        assertEquals("Sistemas · Plan 2024 · S1", pagina.elementos().getFirst().planes());
+        assertEquals(1, pagina.elementos().getFirst().totalPlanes());
         assertEquals(3, pagina.elementos().getFirst().creditos());
         assertEquals(1, pagina.total());
     }

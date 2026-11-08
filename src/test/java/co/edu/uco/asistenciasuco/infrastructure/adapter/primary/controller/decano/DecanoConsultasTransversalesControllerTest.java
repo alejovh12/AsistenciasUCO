@@ -86,13 +86,15 @@ class DecanoConsultasTransversalesControllerTest {
     @Test
     void T_143_01_get_asignaturas_de_la_facultad_sin_filtro_de_facultad() throws Exception {
         when(inputPort.buscarAsignaturas(ACTOR, "CAL", null, true, null, null)).thenReturn(new PaginaDTO<>(List.of(
-                new AsignaturaInstitucionDTO(ID, "CAL1", "Calculo", 3, "Ciencias", "Basico", "S1", ID, 2024, ID,
-                        "Sistemas", ID, "Ingenieria", true)), 1));
+                new AsignaturaInstitucionDTO(ID, "CAL1", "Calculo", 3, "Ciencias", "Basico",
+                        "Sistemas · Plan 2024 · S1", 1, true)), 1));
 
         mvc.perform(get("/api/v1/decano/asignaturas").param("busqueda", "CAL").param("estaActiva", "true"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.datos[0].codigo").value("CAL1"))
-                .andExpect(jsonPath("$.datos[0].creditos").value(3));
+                .andExpect(jsonPath("$.datos[0].creditos").value(3))
+                .andExpect(jsonPath("$.datos[0].planes").value("Sistemas · Plan 2024 · S1"))
+                .andExpect(jsonPath("$.datos[0].totalPlanes").value(1));
     }
 
     @Test

@@ -43,7 +43,7 @@ public final class ConsultarAforoGruposUseCaseImpl implements ConsultarAforoGrup
         final PaginaAforoGruposProjection resultado = queryPort.consultarAforo(domain.actorUsuarioId(), domain.idPeriodoAcademico(),
                 domain.idPrograma(), soloHabilitados, pagina, tamano);
         final List<AforoGrupoDomain> grupos = resultado.grupos().stream()
-                .map(p -> new AforoGrupoDomain(p.idGrupo(), p.codigoGrupo(), p.idAsignatura(), p.nombreAsignatura(), p.idPrograma(), p.nombrePrograma(), p.cupoMaximo(), p.matriculadosActivos(), p.cuposDisponibles(), p.tasaAforo(), p.grupoEstaHabilitado()))
+                .map(p -> new AforoGrupoDomain(p.idGrupo(), p.codigoGrupo(), p.idAsignatura(), p.nombreAsignatura(), p.programas(), p.cupoMaximo(), p.matriculadosActivos(), p.cuposDisponibles(), p.tasaAforo(), p.grupoEstaHabilitado()))
                 .toList();
         return new AforoGruposPaginaDomain(grupos, resultado.totalRegistros());
     }

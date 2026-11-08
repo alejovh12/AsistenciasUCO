@@ -128,6 +128,8 @@ public class SecurityConfig {
                 // Unica excepcion: el catalogo de periodos lo consume la pantalla del administrador (admin-periodos, admin-system).
                 .requestMatchers(HttpMethod.GET, "/api/v1/coordinador/periodos-academicos")
                     .hasAnyRole(ROLE_DECANO, ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
+                // CULM-001 B2NM: asociar es una operacion del coordinador; el decano solo consulta la malla.
+                .requestMatchers(HttpMethod.GET, "/api/v1/coordinador/planes-estudio/*/asignaturas-asociables").hasRole(ROLE_COORDINADOR)
                 .requestMatchers(HttpMethod.GET, "/api/v1/coordinador/planes-estudio", "/api/v1/coordinador/planes-estudio/**", "/api/v1/coordinador/periodos-academicos/**", "/api/v1/coordinador/asignaturas", "/api/v1/coordinador/asignaturas/**")
                     .hasAnyRole(ROLE_DECANO, ROLE_COORDINADOR)
                 .requestMatchers("/api/v1/coordinador/**").hasRole(ROLE_COORDINADOR)
@@ -192,6 +194,9 @@ public class SecurityConfig {
                 // los necesita, pero scopeados a su propio grupo en Application via
                 // InstitutionalScopePort (ver ConsultarEstudiantesGrupoUseCaseImpl /
                 // ConsultarAsistenciasPorGrupoUseCaseImpl).
+                // CULM-001 B2NM (S3 minimo): programas de un grupo para el selector de matricula; el ambito lo valida el SP.
+                .requestMatchers(HttpMethod.GET, "/api/v1/grupos/*/programas")
+                    .hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR, ROLE_DECANO)
                 .requestMatchers(HttpMethod.GET, "/api/v1/grupos/**")
                     .hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
                 // F-COO-004 (CULM-001 A): matricula solo del DOCENTE titular (la DB valida titularidad, SEC_002).

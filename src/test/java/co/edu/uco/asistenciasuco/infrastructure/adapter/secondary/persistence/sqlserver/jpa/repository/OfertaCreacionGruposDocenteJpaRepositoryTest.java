@@ -51,7 +51,7 @@ class OfertaCreacionGruposDocenteJpaRepositoryTest {
         final UUID asignatura = UUID.randomUUID();
         final UUID programa = UUID.randomUUID();
         when(query.getResultList()).thenReturn(java.util.Collections.singletonList(
-                new Object[]{docente, asignatura, "MAT1 ", "Algebra", programa, "Ingenieria de Sistemas "}));
+                new Object[]{docente, asignatura, "MAT1 ", "Algebra", "Ingenieria de Sistemas "}));
 
         final var oferta = repository.consultarOferta(ACTOR);
 
@@ -62,8 +62,7 @@ class OfertaCreacionGruposDocenteJpaRepositoryTest {
         assertEquals(asignatura, oferta.getFirst().idAsignatura());
         assertEquals("MAT1", oferta.getFirst().codigoAsignatura());
         assertEquals("Algebra", oferta.getFirst().nombreAsignatura());
-        assertEquals(programa, oferta.getFirst().idPrograma());
-        assertEquals("Ingenieria de Sistemas", oferta.getFirst().nombrePrograma());
+        assertEquals(java.util.List.of("Ingenieria de Sistemas"), oferta.getFirst().programas());
     }
 
     @Test

@@ -170,8 +170,7 @@ class DecanoIndicadoresJpaRepositoryTest {
         when(g1.codigoGrupo()).thenReturn(931001);
         when(g1.idAsignatura()).thenReturn(ASIGNATURA);
         when(g1.nombreAsignatura()).thenReturn("Asignatura Uno");
-        when(g1.idPrograma()).thenReturn(PROGRAMA);
-        when(g1.nombrePrograma()).thenReturn("Programa 1");
+        when(g1.programas()).thenReturn("Programa 1");   // CULM-001 B2NM: aforo 1 fila por grupo con programas
         when(g1.cupoMaximo()).thenReturn(10);
         when(g1.matriculadosActivos()).thenReturn(5);
         when(g1.cuposDisponibles()).thenReturn(5);

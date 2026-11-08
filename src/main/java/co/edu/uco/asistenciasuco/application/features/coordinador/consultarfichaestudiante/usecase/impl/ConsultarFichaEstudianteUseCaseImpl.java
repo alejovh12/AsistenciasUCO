@@ -30,8 +30,8 @@ public final class ConsultarFichaEstudianteUseCaseImpl implements ConsultarFicha
         }
         IndicadoresRules.requerido(domain.idEstudiante(), "El identificador del estudiante es obligatorio.");
         IndicadoresRules.programaDelCoordinador(scopePort, domain.actorUsuarioId());
-        final FichaEstudianteProjection f = queryPort.consultarFicha(domain.actorUsuarioId(), domain.idEstudiante());
-        final List<ResumenAsignaturaDomain> resumen = queryPort.consultarResumenAsistencia(domain.actorUsuarioId(), domain.idEstudiante(), domain.idPeriodoAcademico()).stream()
+        final FichaEstudianteProjection f = queryPort.consultarFicha(domain.actorUsuarioId(), domain.idEstudiante(), domain.idPrograma());
+        final List<ResumenAsignaturaDomain> resumen = queryPort.consultarResumenAsistencia(domain.actorUsuarioId(), domain.idEstudiante(), domain.idPeriodoAcademico(), domain.idPrograma()).stream()
                 .map(r -> new ResumenAsignaturaDomain(r.idGrupo(), r.codigoGrupo(), r.idAsignatura(), r.nombreAsignatura(), r.codigoEstadoEstudiante(), r.nombreEstadoEstudiante(), r.sesionesEjecutadas(), r.asistencias(), r.faltasSinJustaCausa(), r.excusas(), r.porcentajeInasistencia(), r.codigoPermanencia())).toList();
         return new FichaEstudianteDomain(f.idEstudiante(), f.tipoIdentificacion(), f.numeroIdentificacion(), f.primerNombre(), f.segundoNombre(), f.primerApellido(), f.segundoApellido(), f.nombreCompleto(), f.correo(), f.estaActivoUsuario(), f.idPrograma(), f.nombrePrograma(), resumen);
     }

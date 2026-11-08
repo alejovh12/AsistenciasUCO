@@ -18,7 +18,7 @@ public final class ConsultarAforoGruposMapper {
 
     public static AforoGruposPaginaDTO toDto(final AforoGruposPaginaDomain d) {
         final List<AforoGrupoDTO> grupos = d.grupos().stream()
-                .map(g -> new AforoGrupoDTO(g.idGrupo(), g.codigoGrupo(), g.idAsignatura(), g.nombreAsignatura(), g.idPrograma(), g.nombrePrograma(), g.cupoMaximo(), g.matriculadosActivos(), g.cuposDisponibles(), g.tasaAforo(), g.grupoEstaHabilitado()))
+                .map(g -> new AforoGrupoDTO(g.idGrupo(), g.codigoGrupo(), g.idAsignatura(), g.nombreAsignatura(), g.programas(), g.cupoMaximo(), g.matriculadosActivos(), g.cuposDisponibles(), g.tasaAforo(), g.grupoEstaHabilitado()))
                 .toList();
         return new AforoGruposPaginaDTO(grupos, d.totalRegistros());
     }

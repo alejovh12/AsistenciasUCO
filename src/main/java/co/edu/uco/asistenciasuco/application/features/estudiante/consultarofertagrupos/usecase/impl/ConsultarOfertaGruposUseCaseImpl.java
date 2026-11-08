@@ -67,6 +67,7 @@ public final class ConsultarOfertaGruposUseCaseImpl implements ConsultarOfertaGr
                 g.fechaFinPeriodo(), g.estadoPeriodo(), g.horario(), g.capacidadMaxima(), g.estudiantesActivos(), g.cuposDisponibles(),
                 g.matriculado(),
                 g.codigoComponente() == null ? null : TIPO_ASIGNATURA.getOrDefault(g.codigoComponente(), g.codigoComponente()),
-                "BAS".equals(g.codigoComponente()) || "INS".equals(g.codigoComponente()));
+                "BAS".equals(g.codigoComponente()) || "INS".equals(g.codigoComponente()),
+                g.codigoCaracter(), g.nombreCaracter());
     }
 }

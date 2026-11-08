@@ -15,7 +15,7 @@ public final class ConsultarBitacoraEstudianteMapper {
     }
 
     public static ConsultarBitacoraEstudianteDomain toDomain(final ConsultarBitacoraEstudianteDTO dto) {
-        return new ConsultarBitacoraEstudianteDomain(dto.actorUsuarioId(), dto.idEstudiante(), dto.idPeriodoAcademico(), dto.pagina(), dto.tamano());
+        return new ConsultarBitacoraEstudianteDomain(dto.actorUsuarioId(), dto.idEstudiante(), dto.idPeriodoAcademico(), dto.pagina(), dto.tamano(), dto.idPrograma());
     }
 
     public static BitacoraPaginaDTO toDto(final BitacoraPaginaDomain d) {

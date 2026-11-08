@@ -7,6 +7,7 @@ import java.util.UUID;
  */
 public final class RegistrarEstudianteRequest {
 
+    private UUID idPrograma;   // CULM-001 B2NM (S3): opcional; EST_005 si el grupo tiene varios programas y no se envia
     private UUID estudianteId;
 
     private UUID tipoIdentificacionId;
@@ -24,6 +25,14 @@ public final class RegistrarEstudianteRequest {
     private String correo;
 
     private String password;
+
+    public UUID getIdPrograma() {
+        return idPrograma;
+    }
+
+    public void setIdPrograma(final UUID idPrograma) {
+        this.idPrograma = idPrograma;
+    }
 
     public UUID getEstudianteId() {
         return estudianteId;

@@ -105,7 +105,7 @@ class IndicadoresDecanoPrimaryPortsTest {
         final UUID grupo = UUID.randomUUID();
         final UUID asignatura = UUID.randomUUID();
         when(useCase.execute(any())).thenReturn(new AforoGruposPaginaDomain(List.of(
-                new AforoGrupoDomain(grupo, 931001, asignatura, "Asignatura Uno", PROGRAMA, "Programa 1", 10, 5, 5, new BigDecimal("50.00"), true)), 12));
+                new AforoGrupoDomain(grupo, 931001, asignatura, "Asignatura Uno", List.of("Programa 1", "Programa 2"), 10, 5, 5, new BigDecimal("50.00"), true)), 12));
 
         final AforoGruposPaginaDTO dto = new ConsultarAforoGruposInteractor(useCase)
                 .execute(new ConsultarAforoGruposDTO(ACTOR, PERIODO, PROGRAMA, false, 2, 5));
@@ -123,8 +123,7 @@ class IndicadoresDecanoPrimaryPortsTest {
         assertEquals(931001, dto.grupos().get(0).codigoGrupo());
         assertEquals(asignatura, dto.grupos().get(0).idAsignatura());
         assertEquals("Asignatura Uno", dto.grupos().get(0).nombreAsignatura());
-        assertEquals(PROGRAMA, dto.grupos().get(0).idPrograma());
-        assertEquals("Programa 1", dto.grupos().get(0).nombrePrograma());
+        assertEquals(List.of("Programa 1", "Programa 2"), dto.grupos().get(0).programas());
         assertEquals(10, dto.grupos().get(0).cupoMaximo());
         assertEquals(5, dto.grupos().get(0).matriculadosActivos());
         assertEquals(5, dto.grupos().get(0).cuposDisponibles());

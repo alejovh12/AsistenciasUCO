@@ -38,6 +38,11 @@ public final class EstudianteProgramaJdbcBaseline implements EstudianteProgramaQ
                 JdbcBaselineValueMapper.toString(rs.getObject("nombrePrograma"))
         ));
     }
+
+    /** El baseline JDBC es previo al directorio paginado por SP (CULM-001 B2NM); solo sirve de oraculo de paridad de la consulta por programa. */
+    @Override
+    public co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PaginaEstudiantesProgramaProjection consultarDirectorioPrograma(
+            final UUID actorUsuarioId, final UUID idPrograma, final String busqueda, final Boolean estaActivo, final int pagina, final int tamano) {
+        throw new UnsupportedOperationException("El baseline JDBC no implementa el directorio paginado.");
+    }
 }
-
-

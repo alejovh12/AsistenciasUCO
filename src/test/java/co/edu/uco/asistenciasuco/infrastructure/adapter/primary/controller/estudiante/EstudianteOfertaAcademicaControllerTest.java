@@ -44,7 +44,7 @@ class EstudianteOfertaAcademicaControllerTest {
     private static GrupoOfertaDTO grupo() {
         return new GrupoOfertaDTO(UUID.randomUUID(), 7, "Grupo 7", UUID.randomUUID(), "MAT1", "Algebra", "Ana Perez", UUID.randomUUID(),
                 "2026-2", LocalDate.of(2026, 7, 20), LocalDate.of(2026, 12, 10), "PROXIMO", "Lunes 08:00-10:00", 30, 25, 5, false,
-                "INSTITUCIONAL", true);
+                "INSTITUCIONAL", true, "OPT", "Optativa");
     }
 
     @Test

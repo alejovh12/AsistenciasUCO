@@ -35,7 +35,8 @@ public class CoordinadorIndicadoresJpaRepository implements CoordinadorIndicador
             EXEC dbo.usp_consultar_kpis_coordinador
                  @idUsuarioEjecutor = :idUsuarioEjecutor,
                  @idCorrelacion = :idCorrelacion,
-                 @idPeriodoAcademico = :idPeriodoAcademico
+                 @idPeriodoAcademico = :idPeriodoAcademico,
+                 @idPrograma = :idPrograma
             """;
 
     static final String SQL_ALERTAS = """
@@ -46,7 +47,8 @@ public class CoordinadorIndicadoresJpaRepository implements CoordinadorIndicador
                  @tamanoPagina = :tamanoPagina,
                  @idPeriodoAcademico = :idPeriodoAcademico,
                  @semaforo = :semaforo,
-                 @filtroTexto = :filtroTexto
+                 @filtroTexto = :filtroTexto,
+                 @idPrograma = :idPrograma
             """;
 
     static final String SQL_BITACORA = """
@@ -56,14 +58,16 @@ public class CoordinadorIndicadoresJpaRepository implements CoordinadorIndicador
                  @idEstudiante = :idEstudiante,
                  @numeroPagina = :numeroPagina,
                  @tamanoPagina = :tamanoPagina,
-                 @idPeriodoAcademico = :idPeriodoAcademico
+                 @idPeriodoAcademico = :idPeriodoAcademico,
+                 @idPrograma = :idPrograma
             """;
 
     static final String SQL_FICHA = """
             EXEC dbo.usp_consultar_ficha_estudiante_programa
                  @idUsuarioEjecutor = :idUsuarioEjecutor,
                  @idCorrelacion = :idCorrelacion,
-                 @idEstudiante = :idEstudiante
+                 @idEstudiante = :idEstudiante,
+                 @idPrograma = :idPrograma
             """;
 
     static final String SQL_RESUMEN = """
@@ -71,7 +75,8 @@ public class CoordinadorIndicadoresJpaRepository implements CoordinadorIndicador
                  @idUsuarioEjecutor = :idUsuarioEjecutor,
                  @idCorrelacion = :idCorrelacion,
                  @idEstudiante = :idEstudiante,
-                 @idPeriodoAcademico = :idPeriodoAcademico
+                 @idPeriodoAcademico = :idPeriodoAcademico,
+                 @idPrograma = :idPrograma
             """;
 
     private final EntityManager entityManager;
@@ -81,12 +86,12 @@ public class CoordinadorIndicadoresJpaRepository implements CoordinadorIndicador
     }
 
     @Override
-    public KpisCoordinadorProjection consultarKpis(final UUID actorUsuarioId, final UUID idPeriodoAcademico) {
+    public KpisCoordinadorProjection consultarKpis(final UUID actorUsuarioId, final UUID idPeriodoAcademico, final UUID idPrograma) {
         final UUID correlationId = CorrelationIdContext.require();
         return JpaQueryExecutor.execute("consultarKpisCoordinador", "No fue posible consultar los indicadores del programa desde base de datos.",
                 () -> {
                     final List<SpKpisCoordinadorEntity> filas = ejecutar(SQL_KPIS, SpKpisCoordinadorEntity.class, correlationId, actorUsuarioId,
-                            Map.of(), idPeriodoAcademico);
+                            extra(idPrograma), idPeriodoAcademico);
                     if (filas.isEmpty()) {
                         throw new IllegalStateException("usp_consultar_kpis_coordinador no devolvio fila.");
                     }
@@ -97,7 +102,7 @@ public class CoordinadorIndicadoresJpaRepository implements CoordinadorIndicador
 
     @Override
     public PaginaAlertasProjection consultarAlertas(final UUID actorUsuarioId, final UUID idPeriodoAcademico, final String semaforo, final String nombre,
-                                                    final int pagina, final int tamano) {
+                                                    final int pagina, final int tamano, final UUID idPrograma) {
         final UUID correlationId = CorrelationIdContext.require();
         return JpaQueryExecutor.execute("consultarAlertaTemprana", "No fue posible consultar las alertas tempranas desde base de datos.",
                 () -> {
@@ -106,6 +111,7 @@ public class CoordinadorIndicadoresJpaRepository implements CoordinadorIndicador
                     extra.put("tamanoPagina", tamano);
                     extra.put("semaforo", semaforo);
                     extra.put("filtroTexto", nombre);
+                    extra.put("idPrograma", idPrograma);
                     final List<SpAlertaTempranaEntity> filas = ejecutar(SQL_ALERTAS, SpAlertaTempranaEntity.class, correlationId, actorUsuarioId, extra, idPeriodoAcademico);
                     final int total = filas.isEmpty() ? 0 : cero(filas.getFirst().totalRegistros());
                     return new PaginaAlertasProjection(filas.stream().map(e -> new AlertaTempranaProjection(e.idEstudiante(), e.nombreCompleto(), e.numeroIdentificacion(), e.correo(), cero(e.totalMatriculasActivas()), e.porcentajeInasistencia(), cero(e.faltasSinJustaCausa()), e.codigoPermanencia(), e.semaforo())).toList(), total);
@@ -114,12 +120,13 @@ public class CoordinadorIndicadoresJpaRepository implements CoordinadorIndicador
 
     @Override
     public PaginaBitacoraProjection consultarBitacora(final UUID actorUsuarioId, final UUID idEstudiante, final UUID idPeriodoAcademico,
-                                                      final int pagina, final int tamano) {
+                                                      final int pagina, final int tamano, final UUID idPrograma) {
         final UUID correlationId = CorrelationIdContext.require();
         return JpaQueryExecutor.execute("consultarBitacoraEstudiante", "No fue posible consultar la bitacora del estudiante desde base de datos.",
                 () -> {
                     final Map<String, Object> extra = new LinkedHashMap<>();
                     extra.put("idEstudiante", idEstudiante);
+                    extra.put("idPrograma", idPrograma);
                     extra.put("numeroPagina", pagina);
                     extra.put("tamanoPagina", tamano);
                     final List<SpBitacoraSesionEntity> filas = ejecutar(SQL_BITACORA, SpBitacoraSesionEntity.class, correlationId, actorUsuarioId, extra, idPeriodoAcademico);
@@ -129,12 +136,12 @@ public class CoordinadorIndicadoresJpaRepository implements CoordinadorIndicador
     }
 
     @Override
-    public FichaEstudianteProjection consultarFicha(final UUID actorUsuarioId, final UUID idEstudiante) {
+    public FichaEstudianteProjection consultarFicha(final UUID actorUsuarioId, final UUID idEstudiante, final UUID idPrograma) {
         final UUID correlationId = CorrelationIdContext.require();
         return JpaQueryExecutor.execute("consultarFichaEstudiante", "No fue posible consultar la ficha del estudiante desde base de datos.",
                 () -> {
                     final List<SpFichaEstudianteEntity> filas = ejecutar(SQL_FICHA, SpFichaEstudianteEntity.class, correlationId, actorUsuarioId,
-                            Map.of("idEstudiante", idEstudiante), null, false);
+                            extra(idPrograma, "idEstudiante", idEstudiante), null, false);
                     if (filas.isEmpty()) {
                         throw new IllegalStateException("usp_consultar_ficha_estudiante_programa no devolvio fila.");
                     }
@@ -144,10 +151,10 @@ public class CoordinadorIndicadoresJpaRepository implements CoordinadorIndicador
     }
 
     @Override
-    public List<ResumenAsignaturaProjection> consultarResumenAsistencia(final UUID actorUsuarioId, final UUID idEstudiante, final UUID idPeriodoAcademico) {
+    public List<ResumenAsignaturaProjection> consultarResumenAsistencia(final UUID actorUsuarioId, final UUID idEstudiante, final UUID idPeriodoAcademico, final UUID idPrograma) {
         final UUID correlationId = CorrelationIdContext.require();
         return JpaQueryExecutor.execute("consultarResumenAsistenciaEstudiante", "No fue posible consultar el resumen de asistencia desde base de datos.",
-                () -> ejecutar(SQL_RESUMEN, SpResumenAsignaturaEntity.class, correlationId, actorUsuarioId, Map.of("idEstudiante", idEstudiante), idPeriodoAcademico).stream()
+                () -> ejecutar(SQL_RESUMEN, SpResumenAsignaturaEntity.class, correlationId, actorUsuarioId, extra(idPrograma, "idEstudiante", idEstudiante), idPeriodoAcademico).stream()
                         .map(e -> new ResumenAsignaturaProjection(e.idGrupo(), cero(e.codigoGrupo()), e.idAsignatura(), e.nombreAsignatura(), e.codigoEstadoEstudiante(), e.nombreEstadoEstudiante(), cero(e.sesionesEjecutadas()), cero(e.asistencias()), cero(e.faltasSinJustaCausa()), cero(e.excusas()), e.porcentajeInasistencia(), e.codigoPermanencia())).toList());
     }
 
@@ -172,6 +179,16 @@ public class CoordinadorIndicadoresJpaRepository implements CoordinadorIndicador
         } catch (final PersistenceException exception) {
             throw DbCodeTranslator.traducir(exception);
         }
+    }
+
+    /** Parametros extra del SP: el programa solicitado (S4) viaja siempre; NULL = todos los programas del coordinador. */
+    private static Map<String, Object> extra(final UUID idPrograma, final Object... pares) {
+        final Map<String, Object> mapa = new LinkedHashMap<>();
+        for (int i = 0; i + 1 < pares.length; i += 2) {
+            mapa.put((String) pares[i], pares[i + 1]);
+        }
+        mapa.put("idPrograma", idPrograma);
+        return mapa;
     }
 
     private static int cero(final Integer valor) {

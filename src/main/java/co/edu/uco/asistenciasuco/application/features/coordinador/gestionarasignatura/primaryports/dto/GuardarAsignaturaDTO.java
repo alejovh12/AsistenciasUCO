@@ -11,6 +11,7 @@ public record GuardarAsignaturaDTO(
         Integer semestreNumero,
         String nombreArea,
         String nombreComponente,
+        String codigoCaracter,
         UUID usuarioEjecutor
 ) {
 }

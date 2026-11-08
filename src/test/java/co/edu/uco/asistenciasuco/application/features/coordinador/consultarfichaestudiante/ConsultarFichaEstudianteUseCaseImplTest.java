@@ -32,8 +32,8 @@ class ConsultarFichaEstudianteUseCaseImplTest {
     @BeforeEach
     void programaDelCoordinador() {
         when(scopePort.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.of(PROGRAMA));
-        when(queryPort.consultarFicha(ACTOR, ESTUDIANTE)).thenReturn(ficha());
-        when(queryPort.consultarResumenAsistencia(ACTOR, ESTUDIANTE, PERIODO)).thenReturn(List.of(resumen()));
+        when(queryPort.consultarFicha(ACTOR, ESTUDIANTE, null)).thenReturn(ficha());
+        when(queryPort.consultarResumenAsistencia(ACTOR, ESTUDIANTE, PERIODO, null)).thenReturn(List.of(resumen()));
     }
 
     @Test
@@ -53,11 +53,11 @@ class ConsultarFichaEstudianteUseCaseImplTest {
 
     @Test
     void consulta_el_resumen_con_el_periodo_indicado_o_nulo() {
-        when(queryPort.consultarResumenAsistencia(ACTOR, ESTUDIANTE, null)).thenReturn(List.of());
+        when(queryPort.consultarResumenAsistencia(ACTOR, ESTUDIANTE, null, null)).thenReturn(List.of());
 
         final FichaEstudianteDomain result = useCase.execute(new ConsultarFichaEstudianteDomain(ACTOR, ESTUDIANTE, null));
 
-        verify(queryPort).consultarResumenAsistencia(ACTOR, ESTUDIANTE, null);
+        verify(queryPort).consultarResumenAsistencia(ACTOR, ESTUDIANTE, null, null);
         assertEquals(0, result.resumenPorAsignatura().size());
     }
 
@@ -65,7 +65,7 @@ class ConsultarFichaEstudianteUseCaseImplTest {
     void T_BE_02_valida_la_forma_antes_de_llamar_al_puerto() {
         assertThrows(ValidationException.class, () -> useCase.execute(null));
         assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarFichaEstudianteDomain(ACTOR, null, null)));
-        verify(queryPort, never()).consultarFicha(ACTOR, null);
+        verify(queryPort, never()).consultarFicha(ACTOR, null, null);
     }
 
     @Test
@@ -81,5 +81,16 @@ class ConsultarFichaEstudianteUseCaseImplTest {
     void los_puertos_son_obligatorios() {
         assertThrows(NullPointerException.class, () -> new ConsultarFichaEstudianteUseCaseImpl(null, queryPort));
         assertThrows(NullPointerException.class, () -> new ConsultarFichaEstudianteUseCaseImpl(scopePort, null));
+    }
+
+    @Test
+    void B2NM_S4_coordinador_con_varios_programas_traslada_el_programa_elegido_al_puerto() {
+        final java.util.UUID elegido = java.util.UUID.randomUUID();
+        when(queryPort.consultarFicha(ACTOR, ESTUDIANTE, elegido)).thenReturn(ficha());
+        when(queryPort.consultarResumenAsistencia(ACTOR, ESTUDIANTE, null, elegido)).thenReturn(List.of());
+
+        useCase.execute(new ConsultarFichaEstudianteDomain(ACTOR, ESTUDIANTE, null, elegido));
+
+        verify(queryPort).consultarFicha(ACTOR, ESTUDIANTE, elegido);
     }
 }

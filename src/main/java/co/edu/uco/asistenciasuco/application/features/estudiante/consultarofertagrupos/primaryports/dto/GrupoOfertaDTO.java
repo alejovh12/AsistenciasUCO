@@ -22,6 +22,8 @@ public record GrupoOfertaDTO(
         int cuposDisponibles,
         boolean matriculado,
         String tipoAsignatura,
-        boolean transversal
+        boolean transversal,
+        String codigoCaracter,
+        String nombreCaracter
 ) {
 }

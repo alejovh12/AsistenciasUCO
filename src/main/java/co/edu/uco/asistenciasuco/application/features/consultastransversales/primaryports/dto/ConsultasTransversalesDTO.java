@@ -36,9 +36,7 @@ public final class ConsultasTransversalesDTO {
     }
 
     public record AsignaturaInstitucionDTO(UUID idAsignatura, String codigo, String nombre, Integer creditos,
-                                           String nombreArea, String nombreComponente, String codigoSemestre,
-                                           UUID idPlanEstudio, Integer inpPlanEstudio, UUID idPrograma,
-                                           String nombrePrograma, UUID idFacultad, String nombreFacultad,
+                                           String nombreArea, String nombreComponente, String planes, Integer totalPlanes,
                                            boolean activa) {
     }
 
