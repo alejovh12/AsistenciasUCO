@@ -11,13 +11,13 @@ import java.util.UUID;
 /** Consultas de KPIs, alerta temprana, bitacora y ficha del coordinador: el calculo y el ambito viven en la DB. */
 public interface CoordinadorIndicadoresQueryPort {
 
-    KpisCoordinadorProjection consultarKpis(UUID actorUsuarioId, UUID idPeriodoAcademico);
+    KpisCoordinadorProjection consultarKpis(UUID actorUsuarioId, UUID idPeriodoAcademico, UUID idPrograma);
 
-    PaginaAlertasProjection consultarAlertas(UUID actorUsuarioId, UUID idPeriodoAcademico, String semaforo, String nombre, int pagina, int tamano);
+    PaginaAlertasProjection consultarAlertas(UUID actorUsuarioId, UUID idPeriodoAcademico, String semaforo, String nombre, int pagina, int tamano, UUID idPrograma);
 
-    PaginaBitacoraProjection consultarBitacora(UUID actorUsuarioId, UUID idEstudiante, UUID idPeriodoAcademico, int pagina, int tamano);
+    PaginaBitacoraProjection consultarBitacora(UUID actorUsuarioId, UUID idEstudiante, UUID idPeriodoAcademico, int pagina, int tamano, UUID idPrograma);
 
-    FichaEstudianteProjection consultarFicha(UUID actorUsuarioId, UUID idEstudiante);
+    FichaEstudianteProjection consultarFicha(UUID actorUsuarioId, UUID idEstudiante, UUID idPrograma);
 
-    List<ResumenAsignaturaProjection> consultarResumenAsistencia(UUID actorUsuarioId, UUID idEstudiante, UUID idPeriodoAcademico);
+    List<ResumenAsignaturaProjection> consultarResumenAsistencia(UUID actorUsuarioId, UUID idEstudiante, UUID idPeriodoAcademico, UUID idPrograma);
 }

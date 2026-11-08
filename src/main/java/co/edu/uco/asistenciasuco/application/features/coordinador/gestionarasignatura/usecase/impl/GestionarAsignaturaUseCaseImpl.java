@@ -37,7 +37,7 @@ public final class GestionarAsignaturaUseCaseImpl implements GestionarAsignatura
         final UUID programa = resolverPrograma(domain.usuarioEjecutor());
         validarPlanDelPrograma(domain.idPlanEstudio(), programa);
         commandPort.crearAsignatura(UUID.randomUUID(), domain.codigo(), domain.nombre(), domain.creditos(), domain.idPlanEstudio(),
-                domain.semestreNumero(), domain.nombreArea(), domain.nombreComponente(), domain.usuarioEjecutor());
+                domain.semestreNumero(), domain.nombreArea(), domain.nombreComponente(), domain.codigoCaracter(), domain.usuarioEjecutor());
     }
 
     @Override
@@ -52,7 +52,7 @@ public final class GestionarAsignaturaUseCaseImpl implements GestionarAsignatura
             throw new ForbiddenException("La asignatura no pertenece al programa del coordinador autenticado.");
         }
         commandPort.actualizarAsignatura(domain.idAsignatura(), domain.codigo(), domain.nombre(), domain.creditos(), domain.idPlanEstudio(),
-                domain.semestreNumero(), domain.nombreArea(), domain.nombreComponente(), domain.usuarioEjecutor());
+                domain.semestreNumero(), domain.nombreArea(), domain.nombreComponente(), domain.codigoCaracter(), domain.usuarioEjecutor());
     }
 
     @Override

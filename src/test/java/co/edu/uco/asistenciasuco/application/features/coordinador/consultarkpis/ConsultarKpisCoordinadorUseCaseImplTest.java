@@ -35,7 +35,7 @@ class ConsultarKpisCoordinadorUseCaseImplTest {
 
     @Test
     void T_KPI_01_devuelve_las_cifras_del_puerto_sin_recalcular() {
-        when(queryPort.consultarKpis(ACTOR, PERIODO)).thenReturn(kpis());
+        when(queryPort.consultarKpis(ACTOR, PERIODO, null)).thenReturn(kpis());
 
         final KpisCoordinadorDomain result = useCase.execute(new ConsultarKpisCoordinadorDomain(ACTOR, PERIODO));
 
@@ -60,7 +60,7 @@ class ConsultarKpisCoordinadorUseCaseImplTest {
     void T_BE_04_conserva_los_nulos_en_vez_de_inventar_valores() {
         final var sinDatos = new co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.KpisCoordinadorProjection(
                 PROGRAMA, "Programa", null, null, 0, 0, 0, 0, null, 0, 0, 0, 0, 0, null, null, new BigDecimal("15.00"), new BigDecimal("20.00"));
-        when(queryPort.consultarKpis(ACTOR, null)).thenReturn(sinDatos);
+        when(queryPort.consultarKpis(ACTOR, null, null)).thenReturn(sinDatos);
 
         final KpisCoordinadorDomain result = useCase.execute(new ConsultarKpisCoordinadorDomain(ACTOR, null));
 
@@ -86,16 +86,26 @@ class ConsultarKpisCoordinadorUseCaseImplTest {
 
     @Test
     void consulta_con_el_actor_y_el_periodo_indicados() {
-        when(queryPort.consultarKpis(ACTOR, PERIODO)).thenReturn(kpis());
+        when(queryPort.consultarKpis(ACTOR, PERIODO, null)).thenReturn(kpis());
 
         useCase.execute(new ConsultarKpisCoordinadorDomain(ACTOR, PERIODO));
 
-        verify(queryPort).consultarKpis(ACTOR, PERIODO);
+        verify(queryPort).consultarKpis(ACTOR, PERIODO, null);
     }
 
     @Test
     void los_puertos_son_obligatorios() {
         assertThrows(NullPointerException.class, () -> new ConsultarKpisCoordinadorUseCaseImpl(null, queryPort));
         assertThrows(NullPointerException.class, () -> new ConsultarKpisCoordinadorUseCaseImpl(scopePort, null));
+    }
+
+    @Test
+    void B2NM_S4_coordinador_con_varios_programas_traslada_el_programa_elegido_al_puerto() {
+        final java.util.UUID elegido = java.util.UUID.randomUUID();
+        when(queryPort.consultarKpis(ACTOR, PERIODO, elegido)).thenReturn(kpis());
+
+        useCase.execute(new ConsultarKpisCoordinadorDomain(ACTOR, PERIODO, elegido));
+
+        verify(queryPort).consultarKpis(ACTOR, PERIODO, elegido);
     }
 }

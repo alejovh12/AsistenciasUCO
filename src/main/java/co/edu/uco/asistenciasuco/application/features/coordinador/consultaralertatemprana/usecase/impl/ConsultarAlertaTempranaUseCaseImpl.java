@@ -35,7 +35,7 @@ public final class ConsultarAlertaTempranaUseCaseImpl implements ConsultarAlerta
         }
         IndicadoresRules.programaDelCoordinador(scopePort, domain.actorUsuarioId());
         final PaginaAlertasProjection resultado = queryPort.consultarAlertas(domain.actorUsuarioId(), domain.idPeriodoAcademico(), semaforo,
-                IndicadoresRules.textoOpcional(domain.nombre()), pagina, tamano);
+                IndicadoresRules.textoOpcional(domain.nombre()), pagina, tamano, domain.idPrograma());
         return new AlertasPaginaDomain(
                 resultado.alertas().stream().map(a -> new AlertaTempranaDomain(a.idEstudiante(), a.nombreCompleto(), a.numeroIdentificacion(), a.correo(), a.totalMatriculasActivas(), a.porcentajeInasistencia(), a.faltasSinJustaCausa(), a.codigoPermanencia(), a.semaforo())).toList(),
                 resultado.totalRegistros());

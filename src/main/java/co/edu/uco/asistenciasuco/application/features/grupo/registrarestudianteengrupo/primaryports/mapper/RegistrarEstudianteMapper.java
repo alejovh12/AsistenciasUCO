@@ -26,7 +26,7 @@ public final class RegistrarEstudianteMapper {
         if (TextHelper.isNullOrBlank(dto.getCorreo())) {
             return RegistrarEstudianteDomain.pendienteDeResolverPorDocumento(
                     dto.getTipoIdentificacionId(), dto.getNumeroIdentificacion(), dto.getPassword(), dto.getGrupoId(),
-                    dto.getUsuarioEjecutor());
+                    dto.getUsuarioEjecutor()).conIdPrograma(dto.getIdPrograma());
         }
         return new RegistrarEstudianteDomain(
                 dto.getTipoIdentificacionId(),
@@ -39,7 +39,7 @@ public final class RegistrarEstudianteMapper {
                 dto.getPassword(),
                 dto.getGrupoId(),
                 dto.getUsuarioEjecutor()
-        );
+        ).conIdPrograma(dto.getIdPrograma());
     }
 
     public static RegistrarEstudianteResultadoDTO toDTO(final RegistrarEstudianteResultadoEntity entity) {

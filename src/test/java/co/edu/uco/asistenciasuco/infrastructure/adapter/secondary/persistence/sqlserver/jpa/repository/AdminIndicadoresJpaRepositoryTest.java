@@ -162,6 +162,8 @@ class AdminIndicadoresJpaRepositoryTest {
         when(f1.sesionesEjecutadas()).thenReturn(35);
         when(f1.faltasSinJustaCausa()).thenReturn(6);
         when(f1.porcentajeAusentismo()).thenReturn(new BigDecimal("17.14"));
+        when(f1.horasDictadas()).thenReturn(new BigDecimal("120.00"));
+        when(f1.horasFalta()).thenReturn(new BigDecimal("18.00"));
         final SpComparativaFacultadEntity f3 = mock(SpComparativaFacultadEntity.class);
         when(f3.idFacultad()).thenReturn(UUID.randomUUID());
         when(f3.nombreFacultad()).thenReturn("Cerrada");
@@ -173,6 +175,8 @@ class AdminIndicadoresJpaRepositoryTest {
         verify(query).setParameter("idPeriodoAcademico", PERIODO);
         assertEquals(2, r.size());
         assertEquals(new BigDecimal("17.14"), r.get(0).porcentajeAusentismo());
+        assertEquals(new BigDecimal("120.00"), r.get(0).horasDictadas());
+        assertEquals(new BigDecimal("18.00"), r.get(0).horasFalta());
         assertEquals(35, r.get(0).sesionesEjecutadas());
         assertTrue(r.get(0).estaActivaFacultad());
         assertNull(r.get(1).tasaRetencion());
@@ -189,6 +193,8 @@ class AdminIndicadoresJpaRepositoryTest {
         when(p1.sesionesEjecutadas()).thenReturn(20);
         when(p1.faltasSinJustaCausa()).thenReturn(3);
         when(p1.porcentajeAusentismo()).thenReturn(new BigDecimal("15.00"));
+        when(p1.horasDictadasEstudiante()).thenReturn(new BigDecimal("100.00"));
+        when(p1.horasFalta()).thenReturn(new BigDecimal("15.00"));
         final SpPuntoTendenciaEntity p2 = mock(SpPuntoTendenciaEntity.class);
         when(p2.inicioIntervalo()).thenReturn(LocalDate.of(2026, 3, 9));
         when(query.getResultList()).thenReturn(List.of(p1, p2));
@@ -204,6 +210,8 @@ class AdminIndicadoresJpaRepositoryTest {
         assertEquals(20, r.get(0).sesionesEjecutadas());
         assertEquals(3, r.get(0).faltasSinJustaCausa());
         assertEquals(new BigDecimal("15.00"), r.get(0).porcentajeAusentismo());
+        assertEquals(new BigDecimal("100.00"), r.get(0).horasDictadasEstudiante());
+        assertEquals(new BigDecimal("15.00"), r.get(0).horasFalta());
         assertNull(r.get(1).porcentajeAusentismo());
         assertEquals(0, r.get(1).sesionesEjecutadas());
     }

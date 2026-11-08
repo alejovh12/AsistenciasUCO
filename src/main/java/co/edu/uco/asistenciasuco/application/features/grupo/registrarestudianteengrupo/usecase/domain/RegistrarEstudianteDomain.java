@@ -16,6 +16,7 @@ public final class RegistrarEstudianteDomain {
     private final UsuarioRegistroDomain usuarioRegistro;
     private final UUID grupoId;
     private final UUID usuarioEjecutor;
+    private UUID idPrograma;   // CULM-001 B2NM (S3)
     private final UUID tipoIdentificacionPendiente;
     private final Integer numeroIdentificacionPendiente;
     private final String passwordPendiente;
@@ -64,7 +65,7 @@ public final class RegistrarEstudianteDomain {
             final String segundoNombre
     ) {
         return new RegistrarEstudianteDomain(getTipoIdentificacionId(), getNumeroIdentificacion(), primerApellido, segundoApellido,
-                primerNombre, segundoNombre, correo, getPassword(), grupoId, usuarioEjecutor);
+                primerNombre, segundoNombre, correo, getPassword(), grupoId, usuarioEjecutor).conIdPrograma(idPrograma);
     }
 
     public RegistrarEstudianteDomain(
@@ -140,6 +141,15 @@ public final class RegistrarEstudianteDomain {
 
     public UUID getGrupoId() {
         return grupoId;
+    }
+
+    public UUID getIdPrograma() {
+        return idPrograma;
+    }
+
+    public RegistrarEstudianteDomain conIdPrograma(final UUID idPrograma) {
+        this.idPrograma = idPrograma;
+        return this;
     }
 
     public UUID getUsuarioEjecutor() {

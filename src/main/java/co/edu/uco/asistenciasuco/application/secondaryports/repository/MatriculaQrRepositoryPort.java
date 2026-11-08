@@ -50,7 +50,12 @@ public interface MatriculaQrRepositoryPort {
     ) {
     }
 
-    VentanaAbierta abrirVentana(UUID grupoId, String token, String pin, UUID usuarioEjecutor);
+    default VentanaAbierta abrirVentana(UUID grupoId, String token, String pin, UUID usuarioEjecutor) {
+        return abrirVentana(grupoId, token, pin, usuarioEjecutor, null);
+    }
+
+    /** CULM-001 B2NM (S3 minimo): {@code programaId} se guarda como programaPorDefecto de la ventana. */
+    VentanaAbierta abrirVentana(UUID grupoId, String token, String pin, UUID usuarioEjecutor, UUID programaId);
 
     void cerrarVentana(UUID grupoId, UUID usuarioEjecutor);
 

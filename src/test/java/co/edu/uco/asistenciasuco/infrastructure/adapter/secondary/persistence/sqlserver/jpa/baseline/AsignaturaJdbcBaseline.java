@@ -45,10 +45,11 @@ public final class AsignaturaJdbcBaseline implements AsignaturaQueryPort, Asigna
             final Integer semestreNumero,
             final String nombreArea,
             final String nombreComponente,
+            final String codigoCaracter,
             final UUID usuarioEjecutor
     ) {
         commands.crearAsignatura(idAsignatura, codigo, nombre, creditos, idPlanEstudio, semestreNumero,
-                nombreArea, nombreComponente, usuarioEjecutor);
+                nombreArea, nombreComponente, codigoCaracter, usuarioEjecutor);
     }
 
     @Override
@@ -61,10 +62,11 @@ public final class AsignaturaJdbcBaseline implements AsignaturaQueryPort, Asigna
             final Integer semestreNumero,
             final String nombreArea,
             final String nombreComponente,
+            final String codigoCaracter,
             final UUID usuarioEjecutor
     ) {
         commands.actualizarAsignatura(idAsignatura, codigo, nombre, creditos, idPlanEstudio, semestreNumero,
-                nombreArea, nombreComponente, usuarioEjecutor);
+                nombreArea, nombreComponente, codigoCaracter, usuarioEjecutor);
     }
 
     @Override
@@ -75,42 +77,39 @@ public final class AsignaturaJdbcBaseline implements AsignaturaQueryPort, Asigna
     @Override
     public List<AsignaturaProjection> consultarAsignaturasPorFacultad(final UUID idFacultad) {
         return jdbcOperations.query("""
-                SELECT a.id, a.codigo, a.nombre, a.credito, a.idArea, a.nombreArea,
-                       a.idComponente, a.nombreComponente, a.idSemestrePlanEstudio,
-                       sp.idPlanEstudio, sp.idPrograma, a.nombrePrograma, a.codigoSemestre,
-                       a.estaActivaAsignatura, a.estaActivaTextoAsignatura
-                FROM dbo.uv_asignatura a
-                INNER JOIN dbo.uv_semestre_plan_estudio sp ON sp.id = a.idSemestrePlanEstudio
-                WHERE sp.idPrograma IN (SELECT id FROM dbo.uv_programa WHERE idFacultad = :idFacultad)
-                ORDER BY nombrePrograma, nombre, codigo, id
+                SELECT v.idAsignatura AS id, v.codigoAsignatura AS codigo, v.nombreAsignatura AS nombre, v.credito, v.idArea, v.nombreArea,
+                       v.idComponente, v.nombreComponente, v.idSemestrePlanEstudio,
+                       v.idPlanEstudio, v.idPrograma, v.nombrePrograma, v.codigoSemestre,
+                       v.estaActivaAsignatura, CASE WHEN v.estaActivaAsignatura = 1 THEN 'SI' ELSE 'NO' END AS estaActivaTextoAsignatura
+                FROM dbo.uv_asignatura_plan_estudio v
+                WHERE v.estaActivoVinculo = 1 AND v.idFacultad = :idFacultad
+                ORDER BY v.nombrePrograma, v.nombreAsignatura, v.codigoAsignatura, v.idAsignatura
                 """, new MapSqlParameterSource("idFacultad", idFacultad), (rs, rowNum) -> mapAsignatura(rs));
     }
 
     @Override
     public List<AsignaturaProjection> consultarAsignaturasPorPrograma(final UUID idPrograma) {
         return jdbcOperations.query("""
-                SELECT a.id, a.codigo, a.nombre, a.credito, a.idArea, a.nombreArea,
-                       a.idComponente, a.nombreComponente, a.idSemestrePlanEstudio,
-                       sp.idPlanEstudio, sp.idPrograma, a.nombrePrograma, a.codigoSemestre,
-                       a.estaActivaAsignatura, a.estaActivaTextoAsignatura
-                FROM dbo.uv_asignatura a
-                INNER JOIN dbo.uv_semestre_plan_estudio sp ON sp.id = a.idSemestrePlanEstudio
-                WHERE sp.idPrograma = :idPrograma
-                ORDER BY nombre, codigo, id
+                SELECT v.idAsignatura AS id, v.codigoAsignatura AS codigo, v.nombreAsignatura AS nombre, v.credito, v.idArea, v.nombreArea,
+                       v.idComponente, v.nombreComponente, v.idSemestrePlanEstudio,
+                       v.idPlanEstudio, v.idPrograma, v.nombrePrograma, v.codigoSemestre,
+                       v.estaActivaAsignatura, CASE WHEN v.estaActivaAsignatura = 1 THEN 'SI' ELSE 'NO' END AS estaActivaTextoAsignatura
+                FROM dbo.uv_asignatura_plan_estudio v
+                WHERE v.estaActivoVinculo = 1 AND v.idPrograma = :idPrograma
+                ORDER BY v.nombreAsignatura, v.codigoAsignatura, v.idAsignatura
                 """, new MapSqlParameterSource("idPrograma", idPrograma), (rs, rowNum) -> mapAsignatura(rs));
     }
 
     @Override
     public List<AsignaturaProjection> consultarAsignaturasPorPlan(final UUID idPlanEstudio) {
         return jdbcOperations.query("""
-                SELECT a.id, a.codigo, a.nombre, a.credito, a.idArea, a.nombreArea,
-                       a.idComponente, a.nombreComponente, a.idSemestrePlanEstudio,
-                       sp.idPlanEstudio, sp.idPrograma, a.nombrePrograma, a.codigoSemestre,
-                       a.estaActivaAsignatura, a.estaActivaTextoAsignatura
-                FROM dbo.uv_asignatura a
-                INNER JOIN dbo.uv_semestre_plan_estudio sp ON sp.id = a.idSemestrePlanEstudio
-                WHERE sp.idPlanEstudio = :idPlanEstudio
-                ORDER BY a.codigoSemestre, a.nombre, a.codigo, a.id
+                SELECT v.idAsignatura AS id, v.codigoAsignatura AS codigo, v.nombreAsignatura AS nombre, v.credito, v.idArea, v.nombreArea,
+                       v.idComponente, v.nombreComponente, v.idSemestrePlanEstudio,
+                       v.idPlanEstudio, v.idPrograma, v.nombrePrograma, v.codigoSemestre,
+                       v.estaActivaAsignatura, CASE WHEN v.estaActivaAsignatura = 1 THEN 'SI' ELSE 'NO' END AS estaActivaTextoAsignatura
+                FROM dbo.uv_asignatura_plan_estudio v
+                WHERE v.estaActivoVinculo = 1 AND v.idPlanEstudio = :idPlanEstudio
+                ORDER BY v.codigoSemestre, v.nombreAsignatura, v.codigoAsignatura, v.idAsignatura
                 """, new MapSqlParameterSource("idPlanEstudio", idPlanEstudio), (rs, rowNum) -> mapAsignatura(rs));
     }
 

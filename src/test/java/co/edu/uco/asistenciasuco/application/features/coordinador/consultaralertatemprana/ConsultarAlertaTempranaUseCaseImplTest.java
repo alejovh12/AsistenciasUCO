@@ -37,14 +37,14 @@ class ConsultarAlertaTempranaUseCaseImplTest {
     @BeforeEach
     void programaDelCoordinador() {
         when(scopePort.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.of(PROGRAMA));
-        when(queryPort.consultarAlertas(any(), any(), any(), any(), anyInt(), anyInt())).thenReturn(new PaginaAlertasProjection(List.of(alerta()), 5));
+        when(queryPort.consultarAlertas(any(), any(), any(), any(), anyInt(), anyInt(), any())).thenReturn(new PaginaAlertasProjection(List.of(alerta()), 5));
     }
 
     @Test
     void T_ALT_01_devuelve_la_pagina_con_el_total_y_las_cifras_del_puerto() {
         final AlertasPaginaDomain result = useCase.execute(new ConsultarAlertaTempranaDomain(ACTOR, PERIODO, "ROJO", " Ana ", 2, 5));
 
-        verify(queryPort).consultarAlertas(ACTOR, PERIODO, "ROJO", "Ana", 2, 5);
+        verify(queryPort).consultarAlertas(ACTOR, PERIODO, "ROJO", "Ana", 2, 5, null);
         assertEquals(5, result.totalRegistros());
         assertEquals(1, result.alertas().size());
         assertEquals(ESTUDIANTE, result.alertas().getFirst().idEstudiante());
@@ -58,7 +58,7 @@ class ConsultarAlertaTempranaUseCaseImplTest {
     void aplica_pagina_1_y_tamano_10_por_defecto_y_normaliza_filtros_vacios() {
         useCase.execute(new ConsultarAlertaTempranaDomain(ACTOR, null, null, "   ", null, null));
 
-        verify(queryPort).consultarAlertas(ACTOR, null, null, null, 1, 10);
+        verify(queryPort).consultarAlertas(ACTOR, null, null, null, 1, 10, null);
     }
 
     @ParameterizedTest
@@ -66,7 +66,7 @@ class ConsultarAlertaTempranaUseCaseImplTest {
     void acepta_los_tres_semaforos(final String semaforo) {
         useCase.execute(new ConsultarAlertaTempranaDomain(ACTOR, null, semaforo, null, 1, 10));
 
-        verify(queryPort).consultarAlertas(ACTOR, null, semaforo, null, 1, 10);
+        verify(queryPort).consultarAlertas(ACTOR, null, semaforo, null, 1, 10, null);
     }
 
     @Test
@@ -76,7 +76,7 @@ class ConsultarAlertaTempranaUseCaseImplTest {
         assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarAlertaTempranaDomain(ACTOR, null, null, null, 0, 10)));
         assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarAlertaTempranaDomain(ACTOR, null, null, null, 1, 0)));
         assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarAlertaTempranaDomain(ACTOR, null, null, null, -3, -1)));
-        verify(queryPort, never()).consultarAlertas(any(), any(), any(), any(), anyInt(), anyInt());
+        verify(queryPort, never()).consultarAlertas(any(), any(), any(), any(), anyInt(), anyInt(), any());
     }
 
     @Test
@@ -92,5 +92,15 @@ class ConsultarAlertaTempranaUseCaseImplTest {
     void los_puertos_son_obligatorios() {
         assertThrows(NullPointerException.class, () -> new ConsultarAlertaTempranaUseCaseImpl(null, queryPort));
         assertThrows(NullPointerException.class, () -> new ConsultarAlertaTempranaUseCaseImpl(scopePort, null));
+    }
+
+    @Test
+    void B2NM_S4_coordinador_con_varios_programas_traslada_el_programa_elegido_al_puerto() {
+        final java.util.UUID elegido = java.util.UUID.randomUUID();
+        when(queryPort.consultarAlertas(any(), any(), any(), any(), anyInt(), anyInt(), any())).thenReturn(new PaginaAlertasProjection(List.of(alerta()), 1));
+
+        useCase.execute(new ConsultarAlertaTempranaDomain(ACTOR, null, null, null, 1, 10, elegido));
+
+        verify(queryPort).consultarAlertas(ACTOR, null, null, null, 1, 10, elegido);
     }
 }

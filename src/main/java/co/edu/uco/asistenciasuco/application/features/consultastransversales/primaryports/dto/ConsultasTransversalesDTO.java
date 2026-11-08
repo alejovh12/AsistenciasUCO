@@ -36,9 +36,7 @@ public final class ConsultasTransversalesDTO {
     }
 
     public record AsignaturaInstitucionDTO(UUID idAsignatura, String codigo, String nombre, Integer creditos,
-                                           String nombreArea, String nombreComponente, String codigoSemestre,
-                                           UUID idPlanEstudio, Integer inpPlanEstudio, UUID idPrograma,
-                                           String nombrePrograma, UUID idFacultad, String nombreFacultad,
+                                           String nombreArea, String nombreComponente, String planes, Integer totalPlanes,
                                            boolean activa) {
     }
 
@@ -71,7 +69,8 @@ public final class ConsultasTransversalesDTO {
                                       String nombreDocente, int estudiantesActivos, int sesionesEjecutadas,
                                       int asistencias, int faltasSinJustaCausa, int excusas,
                                       BigDecimal porcentajeAsistencia, BigDecimal porcentajeInasistencia,
-                                      int estudiantesRiesgo, int estudiantesPerdida) {
+                                      int estudiantesRiesgo, int estudiantesPerdida, BigDecimal horasDictadas,
+                                      BigDecimal porcentajeExcusa, BigDecimal porcentajeSinRegistro) {
     }
 
     public record EventoAuditoriaDTO(UUID id, OffsetDateTime ocurridoEn, String idActor, String tipoActor,

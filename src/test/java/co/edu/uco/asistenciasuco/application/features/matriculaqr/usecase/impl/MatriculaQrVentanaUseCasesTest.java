@@ -36,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -91,7 +92,7 @@ class MatriculaQrVentanaUseCasesTest {
 
     @Test
     void T01_abrir_devuelve_pin_url_con_token_y_qr_generado_por_el_backend() {
-        when(repositorio.abrirVentana(eq(GRUPO), anyString(), anyString(), eq(DOCENTE)))
+        when(repositorio.abrirVentana(eq(GRUPO), anyString(), anyString(), eq(DOCENTE), isNull()))
                 .thenReturn(new MatriculaQrRepositoryPort.VentanaAbierta(VENTANA, FIN));
 
         final AbrirVentanaMatriculaInputPort.Resultado resultado =
@@ -105,7 +106,7 @@ class MatriculaQrVentanaUseCasesTest {
         verify(qr).generarPng("https://asistencia.uco.test/matricula/qr?t=token-1", 320);
         assertEquals(AHORA, resultado.fechaRotacionUtc());
         assertEquals(FIN, resultado.fechaExpiracionUtc());
-        verify(repositorio).abrirVentana(GRUPO, "token-1", "000001", DOCENTE);
+        verify(repositorio).abrirVentana(GRUPO, "token-1", "000001", DOCENTE, null);
     }
 
     @Test
@@ -116,7 +117,7 @@ class MatriculaQrVentanaUseCasesTest {
 
         assertThrows(ForbiddenException.class, () -> useCase.execute(comando));
 
-        verify(repositorio, never()).abrirVentana(any(), any(), any(), any());
+        verify(repositorio, never()).abrirVentana(any(), any(), any(), any(), any());
         verify(generador, never()).generarToken();
     }
 
@@ -131,12 +132,12 @@ class MatriculaQrVentanaUseCasesTest {
         when(parametros.getParameter("MATRICULA_QR", "HABILITADA")).thenReturn(Optional.empty());
         assertThrows(ResourceNotFoundException.class, () -> useCase.execute(comando));
 
-        verify(repositorio, never()).abrirVentana(any(), any(), any(), any());
+        verify(repositorio, never()).abrirVentana(any(), any(), any(), any(), any());
     }
 
     @Test
     void T09_reintenta_con_otro_pin_cuando_la_db_informa_mqr_006() {
-        when(repositorio.abrirVentana(eq(GRUPO), anyString(), anyString(), eq(DOCENTE)))
+        when(repositorio.abrirVentana(eq(GRUPO), anyString(), anyString(), eq(DOCENTE), isNull()))
                 .thenThrow(new ConflictException(MatriculaQrErrorCode.MQR_006))
                 .thenThrow(new ConflictException(MatriculaQrErrorCode.MQR_006))
                 .thenReturn(new MatriculaQrRepositoryPort.VentanaAbierta(VENTANA, FIN));
@@ -144,12 +145,12 @@ class MatriculaQrVentanaUseCasesTest {
         final var resultado = abrir().execute(new AbrirVentanaMatriculaInputPort.Comando(GRUPO, DOCENTE));
 
         assertEquals("https://asistencia.uco.test/matricula/qr?t=token-3", resultado.urlMatricula());
-        verify(repositorio, times(3)).abrirVentana(eq(GRUPO), anyString(), anyString(), eq(DOCENTE));
+        verify(repositorio, times(3)).abrirVentana(eq(GRUPO), anyString(), anyString(), eq(DOCENTE), isNull());
     }
 
     @Test
     void T09_al_quinto_intento_fallido_propaga_el_error_controlado() {
-        when(repositorio.abrirVentana(any(), anyString(), anyString(), any()))
+        when(repositorio.abrirVentana(any(), anyString(), anyString(), any(), any()))
                 .thenThrow(new ConflictException(MatriculaQrErrorCode.MQR_006));
         final AbrirVentanaMatriculaUseCaseImpl useCase = abrir();
         final var comando = new AbrirVentanaMatriculaInputPort.Comando(GRUPO, DOCENTE);
@@ -157,19 +158,19 @@ class MatriculaQrVentanaUseCasesTest {
         final ConflictException error = assertThrows(ConflictException.class, () -> useCase.execute(comando));
 
         assertEquals("MQR_006", error.getCode());
-        verify(repositorio, times(MatriculaQrCredencialesEmisor.MAX_INTENTOS)).abrirVentana(any(), anyString(), anyString(), any());
+        verify(repositorio, times(MatriculaQrCredencialesEmisor.MAX_INTENTOS)).abrirVentana(any(), anyString(), anyString(), any(), any());
     }
 
     @Test
     void otros_errores_de_negocio_no_se_reintentan() {
-        when(repositorio.abrirVentana(any(), anyString(), anyString(), any()))
+        when(repositorio.abrirVentana(any(), anyString(), anyString(), any(), any()))
                 .thenThrow(new ConflictException(MatriculaQrErrorCode.MQR_004));
         final AbrirVentanaMatriculaUseCaseImpl useCase = abrir();
         final var comando = new AbrirVentanaMatriculaInputPort.Comando(GRUPO, DOCENTE);
 
         assertThrows(ConflictException.class, () -> useCase.execute(comando));
 
-        verify(repositorio, times(1)).abrirVentana(any(), anyString(), anyString(), any());
+        verify(repositorio, times(1)).abrirVentana(any(), anyString(), anyString(), any(), any());
     }
 
     @Test
@@ -218,7 +219,7 @@ class MatriculaQrVentanaUseCasesTest {
 
     @Test
     void el_hash_del_token_no_lo_calcula_la_aplicacion_ni_el_token_se_loguea_en_el_resultado() {
-        when(repositorio.abrirVentana(eq(GRUPO), anyString(), anyString(), eq(DOCENTE)))
+        when(repositorio.abrirVentana(eq(GRUPO), anyString(), anyString(), eq(DOCENTE), isNull()))
                 .thenReturn(new MatriculaQrRepositoryPort.VentanaAbierta(VENTANA, FIN));
 
         final var resultado = abrir().execute(new AbrirVentanaMatriculaInputPort.Comando(GRUPO, DOCENTE));

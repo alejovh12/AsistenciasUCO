@@ -61,7 +61,7 @@ class AsignaturaJpaCommandPatternTest {
 
     @Test
     void ASG_PAT_001_crear_asignatura_usa_native_query_exec_con_binding_nombrado() {
-        command.crearAsignatura(ASIGNATURA, "MAT-1", "Calculo", 4, PLAN, 1, "CIENCIAS", "BASICO", EJECUTOR);
+        command.crearAsignatura(ASIGNATURA, "MAT-1", "Calculo", 4, PLAN, 1, "CIENCIAS", "BASICO", null, EJECUTOR);
 
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_crear_asignatura"));
         verify(query).setParameter("idAsignatura", ASIGNATURA);
@@ -80,7 +80,7 @@ class AsignaturaJpaCommandPatternTest {
 
     @Test
     void ASG_PAT_002_actualizar_asignatura_envia_usuario_ejecutor() {
-        command.actualizarAsignatura(ASIGNATURA, "MAT-1", "Calculo", 4, PLAN, 1, "CIENCIAS", "BASICO", EJECUTOR);
+        command.actualizarAsignatura(ASIGNATURA, "MAT-1", "Calculo", 4, PLAN, 1, "CIENCIAS", "BASICO", null, EJECUTOR);
 
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_actualizar_asignatura"));
         verify(entityManager).createNativeQuery(contains("@idUsuarioEjecutor = :idUsuarioEjecutor"));

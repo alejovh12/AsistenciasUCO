@@ -15,7 +15,7 @@ public final class ConsultarFichaEstudianteMapper {
     }
 
     public static ConsultarFichaEstudianteDomain toDomain(final ConsultarFichaEstudianteDTO dto) {
-        return new ConsultarFichaEstudianteDomain(dto.actorUsuarioId(), dto.idEstudiante(), dto.idPeriodoAcademico());
+        return new ConsultarFichaEstudianteDomain(dto.actorUsuarioId(), dto.idEstudiante(), dto.idPeriodoAcademico(), dto.idPrograma());
     }
 
     public static FichaEstudianteDTO toDto(final FichaEstudianteDomain d) {

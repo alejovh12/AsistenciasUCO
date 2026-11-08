@@ -119,7 +119,7 @@ class AcademicUserCommandsSuccessParityIT {
         nuevaCorrelacion();
         final List<Long> antesJpa = fixture.conteos();
         final String resultadoJpa = exitoJpa(() -> new AsignaturaJpaRepository(entityManager, new JpaProcedureExecutor(entityManager)).crearAsignatura(idJpa,
-                tokenJpa, "Asignatura fixture", 4, s.planEstudio(), s.semestreNumero(), "", "", s.ejecutorCoordinador()));
+                tokenJpa, "Asignatura fixture", 4, s.planEstudio(), s.semestreNumero(), "", "", null, s.ejecutorCoordinador()));
         final String efectosJpa = fixture.asignaturaPorId(idJpa, tokenJpa) + "#"
                 + fixture.deltaConteos(antesJpa, fixture.conteos());
 
@@ -148,7 +148,7 @@ class AcademicUserCommandsSuccessParityIT {
 
         nuevaCorrelacion();
         final String resultadoJpa = exitoJpa(() -> new AsignaturaJpaRepository(entityManager, new JpaProcedureExecutor(entityManager)).actualizarAsignatura(idJpa,
-                tokenJpa + "-NEW", "Nombre actualizado", 5, s.planEstudio(), s.semestreNumero(), "", "", s.ejecutorCoordinador()));
+                tokenJpa + "-NEW", "Nombre actualizado", 5, s.planEstudio(), s.semestreNumero(), "", "", null, s.ejecutorCoordinador()));
         final String efectosJpa = fixture.asignaturaPorId(idJpa, tokenJpa);
 
         assertTrue(jdbc.getEstadoResultado(), "El camino de exito JDBC debe producir estadoResultado = 1");

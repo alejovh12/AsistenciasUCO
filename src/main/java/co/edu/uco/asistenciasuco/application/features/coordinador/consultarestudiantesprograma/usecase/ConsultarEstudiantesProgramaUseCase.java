@@ -1,7 +1,8 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.usecase;
 
-import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.usecase.domain.EstudianteProgramaDomain;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.usecase.domain.ConsultarEstudiantesProgramaDomain;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.usecase.domain.PaginaEstudiantesProgramaDomain;
 
-import java.util.List; import java.util.UUID;
-
-public interface ConsultarEstudiantesProgramaUseCase { List<EstudianteProgramaDomain> execute(UUID actorUsuarioId); }
+public interface ConsultarEstudiantesProgramaUseCase {
+    PaginaEstudiantesProgramaDomain execute(ConsultarEstudiantesProgramaDomain consulta);
+}

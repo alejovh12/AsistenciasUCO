@@ -164,11 +164,11 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
     public Pagina<AsignaturaProjection> buscarAsignaturas(final UUID idUsuarioEjecutor, final FiltroConsulta filtro,
                                                           final int pagina, final int tamano) {
         return pagina("buscarAsignaturas", "No fue posible buscar las asignaturas.", SQL_ASIGNATURAS,
-                idUsuarioEjecutor, q -> filtrar(paginar(q, pagina, tamano), filtro), 14,
+                idUsuarioEjecutor, q -> filtrar(paginar(q, pagina, tamano), filtro), 9,
+                // CULM-001 B2NM (DEC-019): una fila por asignatura; columnas del SP: idAsignatura, codigo, nombre, credito, nombreArea,
+                // nombreComponente, planes, totalPlanes, estaActivaAsignatura. `planes` viaja en nombrePrograma (lista legible de planes).
                 f -> new AsignaturaProjection(NativeRowValues.uuid(f[0]), texto(f[1]), texto(f[2]), entero(f[3]),
-                        texto(f[4]), texto(f[5]), texto(f[6]), NativeRowValues.uuid(f[7]), entero(f[8]),
-                        NativeRowValues.uuid(f[9]), texto(f[10]), NativeRowValues.uuid(f[11]), texto(f[12]),
-                        verdadero(f[13])));
+                        texto(f[4]), texto(f[5]), texto(f[6]), entero(f[7]), verdadero(f[8])));
     }
 
     @Override
@@ -203,7 +203,7 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
                         NativeRowValues.uuid(f[3]), texto(f[4]), NativeRowValues.uuid(f[5]), texto(f[6]),
                         NativeRowValues.uuid(f[7]), texto(f[8]), NativeRowValues.uuid(f[9]), texto(f[10]),
                         cero(f[11]), cero(f[12]), cero(f[13]), cero(f[14]), cero(f[15]), decimal(f[16]),
-                        decimal(f[17]), cero(f[18]), cero(f[19])));
+                        decimal(f[17]), cero(f[18]), cero(f[19]), decimal(f[21]), decimal(f[22]), decimal(f[23])));
     }
 
     @Override

@@ -13,8 +13,7 @@ public class SpAforoGrupoEntity {
     @Column(name = "codigoGrupo") private Integer codigoGrupo;
     @Column(name = "idAsignatura") private UUID idAsignatura;
     @Column(name = "nombreAsignatura") private String nombreAsignatura;
-    @Column(name = "idPrograma") private UUID idPrograma;
-    @Column(name = "nombrePrograma") private String nombrePrograma;
+    @Column(name = "programas") private String programas;   // CULM-001 B2NM: 1 fila por grupo, nombres de sus programas
     @Column(name = "cupoMaximo") private Integer cupoMaximo;
     @Column(name = "matriculadosActivos") private Integer matriculadosActivos;
     @Column(name = "cuposDisponibles") private Integer cuposDisponibles;
@@ -41,12 +40,8 @@ public class SpAforoGrupoEntity {
         return nombreAsignatura;
     }
 
-    public UUID idPrograma() {
-        return idPrograma;
-    }
-
-    public String nombrePrograma() {
-        return nombrePrograma;
+    public String programas() {
+        return programas;
     }
 
     public Integer cupoMaximo() {

@@ -13,6 +13,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.respo
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiPageResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
+import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -50,8 +51,8 @@ public final class AdminAdmisionEstudianteController {
         this.authenticatedUserResolver = Objects.requireNonNull(authenticatedUserResolver, "AuthenticatedUserResolver es obligatorio.");
     }
 
-    @AuditableOperation(action = "ADMITIR_ESTUDIANTE", resourceType = "ESTUDIANTE", resourceIdResponseField = "idEstudiante")
     @PostMapping("/api/v1/admin/estudiantes/admision")
+    @AuditableOperation(action = "ADMITIR_ESTUDIANTE", resourceType = "ESTUDIANTE", resourceIdResponseField = "idEstudiante", metadataRequestFields = {"idPrograma"})
     public ResponseEntity<ApiDataResponse<AdmisionEstudianteDTO>> admitir(@RequestBody final AdmitirEstudianteRequest request) {
         RequestValidationGuard.validate(VALIDATOR.validate(request));
         final AdmisionEstudianteDTO resultado = admitirEstudianteInputPort.execute(new AdmitirEstudianteCommandDTO(

@@ -19,6 +19,7 @@ public final class CrearCoordinadorMapper {
         }
 
         return new CrearCoordinadorDomain(
+                dto.tipoIdentificacionId(),
                 dto.numeroIdentificacion(),
                 dto.primerNombre(),
                 dto.segundoNombre(),

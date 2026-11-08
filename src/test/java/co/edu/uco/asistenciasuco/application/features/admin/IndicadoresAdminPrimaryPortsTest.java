@@ -85,8 +85,8 @@ class IndicadoresAdminPrimaryPortsTest {
     void comparativa_mapea_cada_fila() {
         final ConsultarComparativaFacultadesUseCase useCase = mock(ConsultarComparativaFacultadesUseCase.class);
         when(useCase.execute(any())).thenReturn(List.of(
-                new ComparativaFacultadDomain(FACULTAD, "Ingenieria", true, 3, 6, 1, 3, new BigDecimal("50.00"), 35, 6, new BigDecimal("17.14")),
-                new ComparativaFacultadDomain(UUID.randomUUID(), "Cerrada", false, 0, 0, 0, 0, null, 0, 0, null)));
+                new ComparativaFacultadDomain(FACULTAD, "Ingenieria", true, 3, 6, 1, 3, new BigDecimal("50.00"), 35, 6, new BigDecimal("17.14"), new BigDecimal("120.00"), new BigDecimal("18.00")),
+                new ComparativaFacultadDomain(UUID.randomUUID(), "Cerrada", false, 0, 0, 0, 0, null, 0, 0, null, new BigDecimal("120.00"), new BigDecimal("18.00"))));
 
         final List<ComparativaFacultadDTO> dto = new ConsultarComparativaFacultadesInteractor(useCase)
                 .execute(new ConsultarComparativaFacultadesDTO(ACTOR, PERIODO));
@@ -106,6 +106,8 @@ class IndicadoresAdminPrimaryPortsTest {
         assertEquals(35, dto.get(0).sesionesEjecutadas());
         assertEquals(6, dto.get(0).faltasSinJustaCausa());
         assertEquals(new BigDecimal("17.14"), dto.get(0).porcentajeAusentismo());
+        assertEquals(new BigDecimal("120.00"), dto.get(0).horasDictadas());
+        assertEquals(new BigDecimal("18.00"), dto.get(0).horasFalta());
         assertNull(dto.get(1).porcentajeAusentismo());
         assertThrows(NullPointerException.class, () -> new ConsultarComparativaFacultadesInteractor(null));
     }
@@ -114,8 +116,8 @@ class IndicadoresAdminPrimaryPortsTest {
     void tendencia_mapea_filtros_y_puntos() {
         final ConsultarTendenciaAusentismoUseCase useCase = mock(ConsultarTendenciaAusentismoUseCase.class);
         when(useCase.execute(any())).thenReturn(List.of(
-                new PuntoTendenciaDomain(LocalDate.of(2026, 3, 2), LocalDate.of(2026, 3, 8), 20, 3, new BigDecimal("15.00")),
-                new PuntoTendenciaDomain(LocalDate.of(2026, 3, 9), LocalDate.of(2026, 3, 15), 0, 0, null)));
+                new PuntoTendenciaDomain(LocalDate.of(2026, 3, 2), LocalDate.of(2026, 3, 8), 20, 3, new BigDecimal("15.00"), new BigDecimal("100.00"), new BigDecimal("15.00")),
+                new PuntoTendenciaDomain(LocalDate.of(2026, 3, 9), LocalDate.of(2026, 3, 15), 0, 0, null, new BigDecimal("100.00"), new BigDecimal("15.00"))));
 
         final List<PuntoTendenciaDTO> dto = new ConsultarTendenciaAusentismoInteractor(useCase)
                 .execute(new ConsultarTendenciaAusentismoDTO(ACTOR, PERIODO, "MES"));
@@ -131,6 +133,8 @@ class IndicadoresAdminPrimaryPortsTest {
         assertEquals(20, dto.get(0).sesionesEjecutadas());
         assertEquals(3, dto.get(0).faltasSinJustaCausa());
         assertEquals(new BigDecimal("15.00"), dto.get(0).porcentajeAusentismo());
+        assertEquals(new BigDecimal("100.00"), dto.get(0).horasDictadasEstudiante());
+        assertEquals(new BigDecimal("15.00"), dto.get(0).horasFalta());
         assertNull(dto.get(1).porcentajeAusentismo());
         assertThrows(NullPointerException.class, () -> new ConsultarTendenciaAusentismoInteractor(null));
     }

@@ -27,7 +27,7 @@ public final class ConsultarComparativaProgramasUseCaseImpl implements Consultar
         }
         DecanoIndicadoresRules.facultadDelDecano(scopePort, domain.actorUsuarioId());
         return queryPort.consultarComparativa(domain.actorUsuarioId(), domain.idPeriodoAcademico()).stream()
-                .map(p -> new ComparativaProgramaDomain(p.idPrograma(), p.nombrePrograma(), p.estaActivoPrograma(), p.totalEstudiantes(), p.estudiantesRiesgo(), p.estudiantesPerdida(), p.tasaRetencion(), p.sesionesEjecutadas(), p.faltasSinJustaCausa(), p.porcentajeAusentismo()))
+                .map(p -> new ComparativaProgramaDomain(p.idPrograma(), p.nombrePrograma(), p.estaActivoPrograma(), p.totalEstudiantes(), p.estudiantesRiesgo(), p.estudiantesPerdida(), p.tasaRetencion(), p.sesionesEjecutadas(), p.faltasSinJustaCausa(), p.porcentajeAusentismo(), p.horasDictadas(), p.horasFalta()))
                 .toList();
     }
 }

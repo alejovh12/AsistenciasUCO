@@ -5,6 +5,7 @@ import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteE
 import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.festivos.exception.FestivoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.asistenciaqr.exception.AsistenciaQrErrorCode;
+import co.edu.uco.asistenciasuco.application.features.cargamasiva.exception.CargaMasivaErrorCode;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.exception.TomaAsistenciaErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.AdmisionEstudianteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.CatalogoErrorCode;
@@ -61,7 +62,11 @@ final class DbFailureClassifier {
 
     private static ErrorDefinition classifyDbCode(final String code, final String operation) {
         return switch (code) {
-            case "SEC_001", "SEC_002", "EST_004" -> SecurityErrorCode.FORBIDDEN;
+            case "SEC_001", "SEC_002", "EST_004", "COO_003" -> SecurityErrorCode.FORBIDDEN;
+            // CULM-001 B2NM (DEC-019/DEC-020, CONTRACT 2.8.1): asignaturas por plan, matricula con programa y ambito de coordinacion.
+            case "ASI_002", "ASI_003", "ASI_005", "ASI_006", "MQR_008" -> CommonErrorCode.CONFLICT;
+            case "ASI_004" -> CommonErrorCode.RESOURCE_NOT_FOUND;
+            case "ASI_007", "EST_005", "EST_006", "COO_002" -> CommonErrorCode.VALIDATION_ERROR;
             case "ATT_001", "ATT_002", "ATT_003", "GEN_002", "RC_001", "SES_004", "PLA_001",
                  "VAL_001", "VAL_002", "VAL_003", "VAL_004", "VAL_005" -> CommonErrorCode.VALIDATION_ERROR;
             case "VAL_006" -> CommonErrorCode.CONFLICT;
@@ -133,6 +138,21 @@ final class DbFailureClassifier {
             case "ADS_004" -> AdmisionEstudianteErrorCode.ADS_004;
             case "ADS_005" -> AdmisionEstudianteErrorCode.ADS_005;
             case "ADS_006" -> AdmisionEstudianteErrorCode.ADS_006;
+            // CULM-001 D.5 (HU171): Carga masiva por CSV de usuarios
+            case "CMA_001" -> CargaMasivaErrorCode.CMA_001;
+            case "CMA_002" -> CargaMasivaErrorCode.CMA_002;
+            case "CMA_003" -> CargaMasivaErrorCode.CMA_003;
+            case "CMA_004" -> CargaMasivaErrorCode.CMA_004;
+            case "CMA_005" -> CargaMasivaErrorCode.CMA_005;
+            case "CMA_006" -> CargaMasivaErrorCode.CMA_006;
+            case "CMA_007" -> CargaMasivaErrorCode.CMA_007;
+            case "CMA_008" -> CargaMasivaErrorCode.CMA_008;
+            case "CMA_009" -> CargaMasivaErrorCode.CMA_009;
+            case "CMA_010" -> CargaMasivaErrorCode.CMA_010;
+            case "CMA_011" -> CargaMasivaErrorCode.CMA_011;
+            case "CMA_012" -> CargaMasivaErrorCode.CMA_012;
+            case "CMA_013" -> CargaMasivaErrorCode.CMA_013;
+            case "CMA_014" -> CargaMasivaErrorCode.CMA_014;
             // CULM-001 D.1 (HU026B): plazo de excusas vencido (409) o sin parametros para validarlo (500, fallo de configuracion).
             case "REV_020" -> AsistenciaErrorCode.ERR_PLAZO_JUSTIFICACION_VENCIDO;
             case "REV_025" -> AsistenciaErrorCode.ERR_CONFIGURACION_PLAZO_JUSTIFICACION;

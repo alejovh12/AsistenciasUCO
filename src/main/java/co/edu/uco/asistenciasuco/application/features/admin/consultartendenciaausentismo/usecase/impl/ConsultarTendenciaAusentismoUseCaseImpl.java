@@ -32,7 +32,7 @@ public final class ConsultarTendenciaAusentismoUseCaseImpl implements ConsultarT
             throw new ValidationException("La granularidad debe ser SEMANA o MES.");
         }
         return queryPort.consultarTendencia(domain.actorUsuarioId(), domain.idPeriodoAcademico(), granularidad).stream()
-                .map(p -> new PuntoTendenciaDomain(p.inicioIntervalo(), p.finIntervalo(), p.sesionesEjecutadas(), p.faltasSinJustaCausa(), p.porcentajeAusentismo()))
+                .map(p -> new PuntoTendenciaDomain(p.inicioIntervalo(), p.finIntervalo(), p.sesionesEjecutadas(), p.faltasSinJustaCausa(), p.porcentajeAusentismo(), p.horasDictadasEstudiante(), p.horasFalta()))
                 .toList();
     }
 }

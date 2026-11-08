@@ -9,7 +9,11 @@ import java.util.UUID;
 public interface AbrirVentanaMatriculaInputPort
         extends InteractorWithReturn<AbrirVentanaMatriculaInputPort.Comando, AbrirVentanaMatriculaInputPort.Resultado> {
 
-    record Comando(UUID grupoId, UUID usuarioEjecutor) {
+    /** programaId (CULM-001 B2NM, S3 minimo): obligatorio solo si el grupo pertenece a varios programas (EST_005/EST_006). */
+    record Comando(UUID grupoId, UUID usuarioEjecutor, UUID programaId) {
+        public Comando(final UUID grupoId, final UUID usuarioEjecutor) {
+            this(grupoId, usuarioEjecutor, null);
+        }
     }
 
     /** El token en claro solo existe dentro de {@code urlMatricula} y del QR; no se vuelve a consultar. */

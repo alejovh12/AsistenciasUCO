@@ -42,7 +42,7 @@ class ConsolidadoAsistenciaControllerTest {
         when(inputPort.consultarConsolidadoAsistencia(ACTOR, new FiltroConsolidadoDTO(ID, null, null, ID), 1, 20))
                 .thenReturn(new PaginaDTO<>(List.of(new ConsolidadoGrupoDTO(ID, 1, "G1", ID, "2026-2", ID,
                         "Sistemas", ID, "Calculo", ID, "Ana", 20, 8, 150, 10, 0, new BigDecimal("93.75"),
-                        new BigDecimal("6.25"), 2, 1)), 1));
+                        new BigDecimal("6.25"), 2, 1, new BigDecimal("12.00"), new BigDecimal("8.50"), new BigDecimal("16.25"))), 1));
 
         for (final String ruta : List.of("/api/v1/coordinador/consolidado-asistencia",
                 "/api/v1/decano/consolidado-asistencia")) {
@@ -51,7 +51,10 @@ class ConsolidadoAsistenciaControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.total").value(1))
                     .andExpect(jsonPath("$.datos[0].porcentajeInasistencia").value(6.25))
-                    .andExpect(jsonPath("$.datos[0].estudiantesRiesgo").value(2));
+                    .andExpect(jsonPath("$.datos[0].estudiantesRiesgo").value(2))
+                    .andExpect(jsonPath("$.datos[0].horasDictadas").value(12.0))
+                    .andExpect(jsonPath("$.datos[0].porcentajeExcusa").value(8.5))
+                    .andExpect(jsonPath("$.datos[0].porcentajeSinRegistro").value(16.25));
         }
     }
 

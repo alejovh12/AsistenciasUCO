@@ -7,6 +7,10 @@ public record ConsultarBitacoraEstudianteDomain(
         UUID idEstudiante,
         UUID idPeriodoAcademico,
         Integer pagina,
-        Integer tamano
+        Integer tamano,
+        UUID idPrograma   // CULM-001 B2NM (S4): opcional; obligatorio de hecho si el coordinador tiene varios programas (COO_002)
 ) {
+    public ConsultarBitacoraEstudianteDomain(final UUID actorUsuarioId, final UUID idEstudiante, final UUID idPeriodoAcademico, final Integer pagina, final Integer tamano) {
+        this(actorUsuarioId, idEstudiante, idPeriodoAcademico, pagina, tamano, null);
+    }
 }

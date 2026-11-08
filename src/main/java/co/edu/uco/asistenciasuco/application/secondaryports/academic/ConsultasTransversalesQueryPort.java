@@ -70,7 +70,9 @@ public interface ConsultasTransversalesQueryPort {
                                       UUID idAsignatura, String nombreAsignatura, UUID idDocente, String nombreDocente,
                                       int estudiantesActivos, int sesionesEjecutadas, int asistencias,
                                       int faltasSinJustaCausa, int excusas, BigDecimal porcentajeAsistencia,
-                                      BigDecimal porcentajeInasistencia, int estudiantesRiesgo, int estudiantesPerdida) {
+                                      BigDecimal porcentajeInasistencia, int estudiantesRiesgo, int estudiantesPerdida,
+                                      BigDecimal horasDictadas, BigDecimal porcentajeExcusa,
+                                      BigDecimal porcentajeSinRegistro) {
     }
 
     record FiltroAuditoria(OffsetDateTime desde, OffsetDateTime hasta, String accion, String tipoRecurso,
@@ -114,9 +116,7 @@ public interface ConsultasTransversalesQueryPort {
     }
 
     record AsignaturaProjection(UUID idAsignatura, String codigo, String nombre, Integer creditos, String nombreArea,
-                                String nombreComponente, String codigoSemestre, UUID idPlanEstudio,
-                                Integer inpPlanEstudio, UUID idPrograma, String nombrePrograma, UUID idFacultad,
-                                String nombreFacultad, boolean activa) {
+                                String nombreComponente, String planes, Integer totalPlanes, boolean activa) {
     }
 
     record EstudianteInstitucionProjection(UUID idEstudiante, String numeroIdentificacion, String nombreCompleto,

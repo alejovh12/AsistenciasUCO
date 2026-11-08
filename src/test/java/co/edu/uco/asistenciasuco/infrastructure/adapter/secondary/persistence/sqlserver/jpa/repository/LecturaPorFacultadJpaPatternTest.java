@@ -65,7 +65,7 @@ class LecturaPorFacultadJpaPatternTest {
 
         verify(entityManager).createQuery(AsignaturaJpaRepository.HQL_POR_FACULTAD, AsignaturaQueryRow.class);
         verify(typedQuery).setParameter("idFacultad", FACULTAD);
-        assertTrue(AsignaturaJpaRepository.HQL_POR_FACULTAD.contains("UvProgramaEntity"));
+        assertTrue(AsignaturaJpaRepository.HQL_POR_FACULTAD.contains("UvAsignaturaPlanEstudioEntity"));
         assertTrue(AsignaturaJpaRepository.HQL_POR_FACULTAD.contains(":idFacultad"));
     }
 
@@ -78,7 +78,7 @@ class LecturaPorFacultadJpaPatternTest {
 
         verify(entityManager).createQuery(GrupoJpaRepository.HQL_GRUPOS_POR_FACULTAD, UvGrupoEntity.class);
         verify(typedQuery).setParameter("idFacultad", FACULTAD);
-        assertTrue(GrupoJpaRepository.HQL_GRUPOS_POR_FACULTAD.contains("UvProgramaEntity"));
+        assertTrue(GrupoJpaRepository.HQL_GRUPOS_POR_FACULTAD.contains("UvAsignaturaPlanEstudioEntity"));
         assertTrue(GrupoJpaRepository.HQL_GRUPOS_POR_FACULTAD.contains(":idFacultad"));
     }
 

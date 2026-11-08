@@ -44,8 +44,8 @@ class ConsultarAforoGruposUseCaseImplTest {
 
     private static PaginaAforoGruposProjection pagina() {
         return new PaginaAforoGruposProjection(List.of(
-                new AforoGrupoProjection(GRUPO, 931001, ASIGNATURA, "Asignatura Uno", PROGRAMA, "Programa 1", 10, 5, 5, new BigDecimal("50.00"), true),
-                new AforoGrupoProjection(UUID.randomUUID(), 931002, ASIGNATURA, "Asignatura Dos", PROGRAMA, "Programa 1", 0, 0, 0, null, false)), 12);
+                new AforoGrupoProjection(GRUPO, 931001, ASIGNATURA, "Asignatura Uno", List.of("Programa 1", "Programa 2"), 10, 5, 5, new BigDecimal("50.00"), true),
+                new AforoGrupoProjection(UUID.randomUUID(), 931002, ASIGNATURA, "Asignatura Dos", List.of("Programa 1"), 0, 0, 0, null, false)), 12);
     }
 
     @Test
