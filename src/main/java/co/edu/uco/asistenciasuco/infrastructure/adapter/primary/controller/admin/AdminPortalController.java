@@ -27,6 +27,7 @@ import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiMessageResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin.validation.CierreMasivoRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin.validation.CrearDecanoRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin.validation.FacultadRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
@@ -50,6 +51,7 @@ import java.util.UUID;
 public final class AdminPortalController {
 
     private static final CrearDecanoRequestValidator CREAR_DECANO_VALIDATOR = new CrearDecanoRequestValidator();
+    private static final CierreMasivoRequestValidator CIERRE_MASIVO_VALIDATOR = new CierreMasivoRequestValidator();
     private static final FacultadRequestValidator FACULTAD_VALIDATOR = new FacultadRequestValidator();
 
     private final ConsultarDecanosInputPort consultarDecanosInputPort;
@@ -146,6 +148,7 @@ public final class AdminPortalController {
     @AuditableOperation(action = "CIERRE_MASIVO_PERIODO", resourceType = "PERIODO_ACADEMICO", resourceIdRequestField = "idPeriodoAcademico")
     @PostMapping("/cierre-masivo")
     public ResponseEntity<ApiMessageResponse> ejecutarCierreMasivo(@RequestBody final CierreMasivoRequest request) {
+        RequestValidationGuard.validate(CIERRE_MASIVO_VALIDATOR.validate(request));
         ejecutarCierreMasivoInputPort.execute(new EjecutarCierreMasivoDTO(
                 request.idPeriodoAcademico(),
                 authenticatedUserResolver.requireAuthenticatedUserId()
