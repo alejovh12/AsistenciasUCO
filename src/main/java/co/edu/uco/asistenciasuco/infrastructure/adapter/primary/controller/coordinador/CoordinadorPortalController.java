@@ -1,14 +1,9 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador;
 
-import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.AsignaturaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.primaryports.dto.EstudianteProgramaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarperiodosacademicos.primaryports.dto.PeriodoAcademicoDTO;
-import co.edu.uco.asistenciasuco.application.features.coordinador.consultarplanesestudio.primaryports.dto.PlanEstudioDTO;
-import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasignaturas.primaryports.ConsultarAsignaturasInputPort;
-import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasignaturasplan.primaryports.ConsultarAsignaturasPlanInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.primaryports.ConsultarEstudiantesProgramaInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarperiodosacademicos.primaryports.ConsultarPeriodosAcademicosInputPort;
-import co.edu.uco.asistenciasuco.application.features.coordinador.consultarplanesestudio.primaryports.ConsultarPlanesEstudioInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.primaryports.GestionarAsignaturaInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.primaryports.dto.GuardarAsignaturaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarplanestudio.primaryports.GestionarPlanEstudioInputPort;
@@ -37,9 +32,6 @@ import java.util.UUID;
 @RequestMapping("/api/v1/coordinador")
 public final class CoordinadorPortalController {
 
-    private final ConsultarPlanesEstudioInputPort consultarPlanesEstudioInputPort;
-    private final ConsultarAsignaturasPlanInputPort consultarAsignaturasPlanInputPort;
-    private final ConsultarAsignaturasInputPort consultarAsignaturasInputPort;
     private final ConsultarPeriodosAcademicosInputPort consultarPeriodosAcademicosInputPort;
     private final ConsultarEstudiantesProgramaInputPort consultarEstudiantesProgramaInputPort;
     private final GestionarPlanEstudioInputPort gestionarPlanEstudioInputPort;
@@ -47,18 +39,12 @@ public final class CoordinadorPortalController {
     private final AuthenticatedUserResolver authenticatedUserResolver;
 
     public CoordinadorPortalController(
-            final ConsultarPlanesEstudioInputPort consultarPlanesEstudioInputPort,
-            final ConsultarAsignaturasPlanInputPort consultarAsignaturasPlanInputPort,
-            final ConsultarAsignaturasInputPort consultarAsignaturasInputPort,
             final ConsultarPeriodosAcademicosInputPort consultarPeriodosAcademicosInputPort,
             final ConsultarEstudiantesProgramaInputPort consultarEstudiantesProgramaInputPort,
             final GestionarPlanEstudioInputPort gestionarPlanEstudioInputPort,
             final GestionarAsignaturaInputPort gestionarAsignaturaInputPort,
             final AuthenticatedUserResolver authenticatedUserResolver
     ) {
-        this.consultarPlanesEstudioInputPort = consultarPlanesEstudioInputPort;
-        this.consultarAsignaturasPlanInputPort = consultarAsignaturasPlanInputPort;
-        this.consultarAsignaturasInputPort = consultarAsignaturasInputPort;
         this.consultarPeriodosAcademicosInputPort = consultarPeriodosAcademicosInputPort;
         this.consultarEstudiantesProgramaInputPort = consultarEstudiantesProgramaInputPort;
         this.gestionarPlanEstudioInputPort = gestionarPlanEstudioInputPort;

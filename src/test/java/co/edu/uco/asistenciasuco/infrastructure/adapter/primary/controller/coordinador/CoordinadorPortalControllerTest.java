@@ -3,17 +3,12 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coor
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
-import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.AsignaturaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.primaryports.dto.ConsultarEstudiantesProgramaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.primaryports.dto.EstudianteProgramaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.primaryports.dto.PaginaEstudiantesProgramaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarperiodosacademicos.primaryports.dto.PeriodoAcademicoDTO;
-import co.edu.uco.asistenciasuco.application.features.coordinador.consultarplanesestudio.primaryports.dto.PlanEstudioDTO;
-import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasignaturas.primaryports.ConsultarAsignaturasInputPort;
-import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasignaturasplan.primaryports.ConsultarAsignaturasPlanInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.primaryports.ConsultarEstudiantesProgramaInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarperiodosacademicos.primaryports.ConsultarPeriodosAcademicosInputPort;
-import co.edu.uco.asistenciasuco.application.features.coordinador.consultarplanesestudio.primaryports.ConsultarPlanesEstudioInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.primaryports.GestionarAsignaturaInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.primaryports.dto.GuardarAsignaturaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarplanestudio.primaryports.GestionarPlanEstudioInputPort;
@@ -62,16 +57,13 @@ class CoordinadorPortalControllerTest {
     private static final UUID PLAN = UUID.randomUUID();
     private static final UUID SUBJECT = UUID.randomUUID();
 
-    private final ConsultarPlanesEstudioInputPort plans = mock(ConsultarPlanesEstudioInputPort.class);
-    private final ConsultarAsignaturasPlanInputPort planSubjects = mock(ConsultarAsignaturasPlanInputPort.class);
-    private final ConsultarAsignaturasInputPort subjects = mock(ConsultarAsignaturasInputPort.class);
     private final ConsultarPeriodosAcademicosInputPort periods = mock(ConsultarPeriodosAcademicosInputPort.class);
     private final ConsultarEstudiantesProgramaInputPort students = mock(ConsultarEstudiantesProgramaInputPort.class);
     private final GestionarPlanEstudioInputPort managePlans = mock(GestionarPlanEstudioInputPort.class);
     private final GestionarAsignaturaInputPort manageSubjects = mock(GestionarAsignaturaInputPort.class);
     private final AuthenticatedUserResolver identity = () -> ACTOR;
-    private final CoordinadorPortalController controller = new CoordinadorPortalController(plans, planSubjects,
-            subjects, periods, students, managePlans, manageSubjects, identity);
+    private final CoordinadorPortalController controller = new CoordinadorPortalController(
+            periods, students, managePlans, manageSubjects, identity);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
             .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
 
@@ -238,11 +230,5 @@ class CoordinadorPortalControllerTest {
                         Optional.ofNullable(metodo.getAnnotation(DeleteMapping.class)).map(DeleteMapping::value))
                 .flatMap(Optional::stream)
                 .flatMap(Arrays::stream);
-    }
-
-    private static AsignaturaDTO subject() {
-        return new AsignaturaDTO(SUBJECT, "A01", "Álgebra", 3, UUID.randomUUID(), "Matemáticas",
-                UUID.randomUUID(), "Básico", UUID.randomUUID(), PLAN, UUID.randomUUID(), "Ingeniería",
-                "2", true, "Activa");
     }
 }
