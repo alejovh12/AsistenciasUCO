@@ -59,7 +59,6 @@
     {"method": "GET", "path": "/api/v1/admin/tipos-programa", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": null},
     {"method": "POST", "path": "/api/v1/archivos/subir", "roles": ["ESTUDIANTE"], "access": "ROLES", "ownership": "Propietario del soporte: un no propietario recibe 404 (resuelto en Application)."},
     {"method": "GET", "path": "/api/v1/archivos/{fileId}", "roles": ["ADMINISTRADOR", "DECANO", "COORDINADOR", "DOCENTE", "ESTUDIANTE"], "access": "AUTHENTICATED", "ownership": "Propietario del soporte: un no propietario recibe 404 (resuelto en Application)."},
-    {"method": "POST", "path": "/api/v1/asistencias", "roles": ["DOCENTE"], "access": "ROLES", "ownership": "Docente titular del grupo de la sesion; el estudiante solo sus propias asistencias/revisiones."},
     {"method": "POST", "path": "/api/v1/asistencias/consultas/grupo", "roles": ["ADMINISTRADOR", "COORDINADOR", "DOCENTE"], "access": "ROLES", "ownership": "Docente titular del grupo de la sesion; el estudiante solo sus propias asistencias/revisiones."},
     {"method": "POST", "path": "/api/v1/asistencias/lote", "roles": ["DOCENTE"], "access": "ROLES", "ownership": "Docente titular del grupo de la sesion; el estudiante solo sus propias asistencias/revisiones."},
     {"method": "POST", "path": "/api/v1/asistencias/revisiones", "roles": ["ESTUDIANTE"], "access": "ROLES", "ownership": "Docente titular del grupo de la sesion; el estudiante solo sus propias asistencias/revisiones."},

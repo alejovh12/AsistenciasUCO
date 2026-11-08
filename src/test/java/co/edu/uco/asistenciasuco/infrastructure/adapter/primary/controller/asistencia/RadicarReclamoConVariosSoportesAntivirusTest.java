@@ -4,14 +4,12 @@ import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFound
 import co.edu.uco.asistenciasuco.application.features.archivo.descargararchivo.primaryports.DescargarArchivoInputPort;
 import co.edu.uco.asistenciasuco.application.features.archivo.subirarchivo.primaryports.interactor.SubirArchivoInteractor;
 import co.edu.uco.asistenciasuco.application.features.archivo.subirarchivo.usecase.impl.SubirArchivoUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.primaryports.RegistrarAsistenciaInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.RegistrarAsistenciasSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.primaryports.interactor.SolicitarRevisionAsistenciaInteractor;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.usecase.impl.SolicitarRevisionAsistenciaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.malwarescan.MalwareScanPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarAsistenciasPorGrupoRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciaRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciasSesionRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ResolverSolicitudRevisionAsistenciaRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.SolicitarRevisionAsistenciaRepositoryDTO;
@@ -77,7 +75,7 @@ class RadicarReclamoConVariosSoportesAntivirusTest {
                 new SubirArchivoInteractor(new SubirArchivoUseCaseImpl(almacen, clamAv, metadata)),
                 mock(DescargarArchivoInputPort.class), identidad);
         final AsistenciaController asistencias = new AsistenciaController(
-                mock(RegistrarAsistenciaInputPort.class), mock(RegistrarAsistenciasSesionInputPort.class),
+                mock(RegistrarAsistenciasSesionInputPort.class),
                 new SolicitarRevisionAsistenciaInteractor(new SolicitarRevisionAsistenciaUseCaseImpl(repositorio, alcance)),
                 identidad);
         return MockMvcBuilders.standaloneSetup(archivos, asistencias)
@@ -227,11 +225,6 @@ class RadicarReclamoConVariosSoportesAntivirusTest {
             dto.soportes().forEach(metadata.borradores::remove);
             ultimaSolicitud = dto;
             assertFalse(dto.soportes().isEmpty());
-        }
-
-        @Override
-        public void registrarAsistencia(final RegistrarAsistenciaRepositoryDTO dto) {
-            throw new UnsupportedOperationException();
         }
 
         @Override

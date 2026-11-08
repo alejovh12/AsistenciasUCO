@@ -1,9 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
-import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarAsistenciasPorGrupoRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciaRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciasSesionRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ResolverSolicitudRevisionAsistenciaRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.SolicitarRevisionAsistenciaRepositoryDTO;
@@ -179,11 +177,6 @@ public class AsistenciaJpaRepository implements AsistenciaRepositoryPort {
         parametros.put("idUsuarioEjecutor", usuarioEjecutor);
         return procedureExecutor.execute(OP_RETIRAR_SOLICITUD_REVISION, SQL_RETIRAR_SOLICITUD_REVISION, parametros, correlationId)
                 .getMensajeUsuarioResultado();
-    }
-
-    @Override
-    public void registrarAsistencia(final RegistrarAsistenciaRepositoryDTO dto) {
-        throw new FeatureUnavailableException("El registro individual docente requiere contrato DB inequívoco para mapear idEstadoAsistencia.");
     }
 
     // QUERIES

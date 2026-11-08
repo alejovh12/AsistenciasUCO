@@ -1,12 +1,10 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.mapper;
 
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.primaryports.dto.ConsultarAsistenciasPorGrupoDTO;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.primaryports.dto.RegistrarAsistenciaDTO;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.dto.RegistrarAsistenciasSesionDTO;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.dto.RegistroAsistenciaSesionDTO;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.primaryports.dto.SolicitarRevisionAsistenciaDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.request.ConsultarAsistenciasPorGrupoRequest;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.request.RegistrarAsistenciaRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.request.RegistrarAsistenciasSesionRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.request.SolicitarRevisionAsistenciaRequest;
 
@@ -17,17 +15,6 @@ import java.util.UUID;
 public final class AsistenciaHttpMapper {
 
     private AsistenciaHttpMapper() {
-    }
-
-    public static RegistrarAsistenciaDTO toApplicationDTO(final RegistrarAsistenciaRequest request) {
-        Objects.requireNonNull(request, "El request HTTP para registrar asistencia es obligatorio.");
-        return new RegistrarAsistenciaDTO(
-                request.getEstudiante(),
-                request.getGrupo(),
-                request.getSesion(),
-                request.getPresente(),
-                request.getObservacion()
-        );
     }
 
     public static ConsultarAsistenciasPorGrupoDTO toApplicationDTO(

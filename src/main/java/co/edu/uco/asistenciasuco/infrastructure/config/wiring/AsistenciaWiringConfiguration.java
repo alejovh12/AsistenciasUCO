@@ -8,10 +8,6 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasiste
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.primaryports.interactor.ConsultarAsistenciasPorGrupoInteractor;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.ConsultarAsistenciasPorGrupoUseCase;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.impl.ConsultarAsistenciasPorGrupoUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.primaryports.RegistrarAsistenciaInputPort;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.primaryports.interactor.RegistrarAsistenciaInteractor;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.usecase.RegistrarAsistenciaUseCase;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.usecase.impl.RegistrarAsistenciaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.RegistrarAsistenciasSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.interactor.RegistrarAsistenciasSesionInteractor;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.usecase.RegistrarAsistenciasSesionUseCase;
@@ -35,21 +31,6 @@ import java.time.Clock;
 
 @Configuration(proxyBeanMethods = false)
 public class AsistenciaWiringConfiguration {
-
-    @Bean
-    public RegistrarAsistenciaUseCase registrarAsistenciaUseCase(
-            final AsistenciaRepositoryPort asistenciaRepositoryPort,
-            final RealtimePublisherPort realtimePublisherPort
-    ) {
-        return new RegistrarAsistenciaUseCaseImpl(asistenciaRepositoryPort, realtimePublisherPort);
-    }
-
-    @Bean
-    public RegistrarAsistenciaInputPort registrarAsistenciaInputPort(
-            final RegistrarAsistenciaUseCase registrarAsistenciaUseCase
-    ) {
-        return new RegistrarAsistenciaInteractor(registrarAsistenciaUseCase);
-    }
 
     @Bean
     public ConsultarAsistenciasPorGrupoUseCase consultarAsistenciasPorGrupoUseCase(

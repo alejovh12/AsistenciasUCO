@@ -1,7 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.testdouble;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarAsistenciasPorGrupoRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciaRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciasSesionRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ResolverSolicitudRevisionAsistenciaRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.SolicitarRevisionAsistenciaRepositoryDTO;
@@ -23,7 +22,6 @@ class AsistenciaRepositoryMockAdapterTest {
 
     @Test
     void metodos_de_comando_rechazan_dto_nulo() {
-        assertThrows(CrosscuttingException.class, () -> adapter.registrarAsistencia(null));
         assertThrows(CrosscuttingException.class, () -> adapter.registrarAsistenciasSesion(null));
         assertThrows(CrosscuttingException.class, () -> adapter.solicitarRevisionAsistencia(null));
         assertThrows(CrosscuttingException.class, () -> adapter.resolverSolicitudRevisionAsistencia(null));
@@ -31,8 +29,6 @@ class AsistenciaRepositoryMockAdapterTest {
 
     @Test
     void metodos_de_comando_aceptan_dto_valido_sin_lanzar() {
-        adapter.registrarAsistencia(new RegistrarAsistenciaRepositoryDTO(
-                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), true, "A tiempo"));
         adapter.registrarAsistenciasSesion(new RegistrarAsistenciasSesionRepositoryDTO(UUID.randomUUID(), List.of(), UUID.randomUUID()));
         adapter.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
                 UUID.randomUUID(), UUID.randomUUID(), "SALUD", "Justificacion", java.util.List.of(UUID.randomUUID()),

@@ -175,7 +175,6 @@ public class SecurityConfig {
                 // catch-all authenticated() de abajo: el ownership real (404 para no-propietario,
                 // incluido cualquier rol) se resuelve en Application, no aqui.
                 .requestMatchers(HttpMethod.POST, "/api/v1/archivos/subir").hasRole(ROLE_ESTUDIANTE)
-                .requestMatchers(HttpMethod.POST, "/api/v1/asistencias").hasRole(ROLE_DOCENTE)
                 // Consulta de asistencias por grupo (ruta legacy vía POST): mismo criterio que
                 // GET /api/v1/grupos/{grupoId}/asistencias.
                 .requestMatchers(HttpMethod.POST, "/api/v1/asistencias/consultas/grupo")

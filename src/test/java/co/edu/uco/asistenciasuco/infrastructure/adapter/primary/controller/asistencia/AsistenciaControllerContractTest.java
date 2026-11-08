@@ -7,8 +7,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import co.edu.uco.asistenciasuco.application.features.asistencia.exception.AsistenciaErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.primaryports.RegistrarAsistenciaInputPort;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.primaryports.dto.RegistrarAsistenciaDTO;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.RegistrarAsistenciasSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.dto.RegistrarAsistenciasSesionDTO;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.primaryports.SolicitarRevisionAsistenciaInputPort;
@@ -28,6 +26,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -45,29 +44,25 @@ class AsistenciaControllerContractTest {
     private static final UUID SESSION = UUID.randomUUID();
     private static final UUID SUPPORT = UUID.randomUUID();
     private static final UUID SUPPORT_2 = UUID.randomUUID();
-    private final RegistrarAsistenciaInputPort register = mock(RegistrarAsistenciaInputPort.class);
     private final RegistrarAsistenciasSesionInputPort registerBatch = mock(RegistrarAsistenciasSesionInputPort.class);
     private final SolicitarRevisionAsistenciaInputPort review = mock(SolicitarRevisionAsistenciaInputPort.class);
     private final AuthenticatedUserResolver identity = () -> ACTOR;
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(new AsistenciaController(
-            register, registerBatch, review, identity)).setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
+            registerBatch, review, identity)).setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
     private final JsonMapper json = JsonMapper.builder().build();
 
     @Test
-    void registrationPreservesBodyFieldsAndReturnsCreated() throws Exception {
+    void individualRegistrationEndpointIsRetiredAndHasNoHandler() throws Exception {
+        // CULM-001 D.7 (TD-009, HU027/HU033): POST /api/v1/asistencias ya no existe; el registro es por lote o por toma.
         mvc.perform(post("/api/v1/asistencias").contentType("application/json")
                         .content("""
                                 {"estudiante":"%s","grupo":"%s","sesion":"%s",
                                  "presente":false,"observacion":"Excusa médica"}
                                 """.formatted(STUDENT, GROUP, SESSION)))
-                .andExpect(status().isCreated()).andExpect(jsonPath("$.exitoso").value(true));
-        final var captor = ArgumentCaptor.forClass(RegistrarAsistenciaDTO.class);
-        verify(register).execute(captor.capture());
-        assertEquals(STUDENT, captor.getValue().getEstudiante());
-        assertEquals(GROUP, captor.getValue().getGrupo());
-        assertEquals(SESSION, captor.getValue().getSesion());
-        assertEquals(false, captor.getValue().getPresente());
-        assertEquals("Excusa médica", captor.getValue().getObservacion());
+                // Montaje standalone: sin handler no hay NoResourceFoundException (el 404 HTTP real lo fija
+                // RutaRegistroIndividualRetiradaWebMvcTest); aqui se comprueba que ningun handler atiende la ruta.
+                .andExpect(result -> assertNull(result.getHandler()));
+        verifyNoInteractions(registerBatch, review);
     }
 
     @Test
@@ -200,11 +195,9 @@ class AsistenciaControllerContractTest {
 
     @Test
     void invalidRequestsAreRejectedBeforePorts() throws Exception {
-        mvc.perform(post("/api/v1/asistencias").contentType("application/json").content("{}"))
-                .andExpect(status().isBadRequest());
         mvc.perform(post("/api/v1/asistencias/revisiones").contentType("application/json").content("{}"))
                 .andExpect(status().isBadRequest());
-        verifyNoInteractions(register, review);
+        verifyNoInteractions(review);
     }
 
     @Test

@@ -257,13 +257,6 @@ class SqlStoredProcedureContractIT {
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@idUsuarioEjecutor", "uniqueidentifier")
                 )),
-                Arguments.of("usp_registrar_asistencia_estudiante_autonomo", List.of(
-                        input("@idEstudiante", "uniqueidentifier"),
-                        input("@idSesion", "uniqueidentifier"),
-                        input("@codigoVerificacion", "nvarchar"),
-                        input("@idCorrelacion", "uniqueidentifier"),
-                        input("@idUsuarioEjecutor", "uniqueidentifier")
-                )),
                 Arguments.of("usp_radicar_solicitud_revision_asistencia", List.of(
                         input("@idEstudiante", "uniqueidentifier"),
                         input("@idSesion", "uniqueidentifier"),
