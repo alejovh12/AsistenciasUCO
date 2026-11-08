@@ -48,10 +48,10 @@ class AdminConsultasTransversalesControllerTest {
         mvc.perform(get("/api/v1/admin/asignaturas").param("busqueda", "cal").param("idFacultad", ID.toString())
                         .param("pagina", "2").param("tamano", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.total").value(15))
-                .andExpect(jsonPath("$.datos[0].planes").value("Sistemas · Plan 2024 · S1"))
-                .andExpect(jsonPath("$.datos[0].totalPlanes").value(1))
-                .andExpect(jsonPath("$.datos[0].nombrePrograma").doesNotExist());
+                .andExpect(jsonPath("$.totalElementos").value(15))
+                .andExpect(jsonPath("$.elementos[0].planes").value("Sistemas · Plan 2024 · S1"))
+                .andExpect(jsonPath("$.elementos[0].totalPlanes").value(1))
+                .andExpect(jsonPath("$.elementos[0].nombrePrograma").doesNotExist());
     }
 
     @Test
@@ -67,11 +67,11 @@ class AdminConsultasTransversalesControllerTest {
                         .param("hasta", "2026-11-04T05:00:00Z").param("accion", "CREAR_SESION")
                         .param("soloAsistencia", "false").param("pagina", "1").param("tamano", "25"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.total").value(1))
-                .andExpect(jsonPath("$.datos[0].nombreActor").value("Ana"))
-                .andExpect(jsonPath("$.datos[0].accionAsistencia").value(true))
-                .andExpect(jsonPath("$.datos[0].idTraza").value(ID.toString()))
-                .andExpect(jsonPath("$.datos[0].idCorrelacion").value(ID.toString()));
+                .andExpect(jsonPath("$.totalElementos").value(1))
+                .andExpect(jsonPath("$.elementos[0].nombreActor").value("Ana"))
+                .andExpect(jsonPath("$.elementos[0].accionAsistencia").value(true))
+                .andExpect(jsonPath("$.elementos[0].idTraza").value(ID.toString()))
+                .andExpect(jsonPath("$.elementos[0].idCorrelacion").value(ID.toString()));
     }
 
     @Test
@@ -82,8 +82,8 @@ class AdminConsultasTransversalesControllerTest {
 
         mvc.perform(get("/api/v1/admin/estudiantes").param("busqueda", "101").param("estaActivo", "true"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.datos[0].facultades").value("Ingenieria"))
-                .andExpect(jsonPath("$.datos[0].totalGrupos").value(2));
+                .andExpect(jsonPath("$.elementos[0].facultades").value("Ingenieria"))
+                .andExpect(jsonPath("$.elementos[0].totalGrupos").value(2));
     }
 
     @Test
@@ -128,7 +128,56 @@ class AdminConsultasTransversalesControllerTest {
                         .param("idPrograma", ID.toString()).param("estaActivo", "true").param("estadoVinculo", "SIN_VINCULO")
                         .param("pagina", "2").param("tamano", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.total").value(1))
-                .andExpect(jsonPath("$.datos[0].programas").value("Sistemas"));
+                .andExpect(jsonPath("$.totalElementos").value(1))
+                .andExpect(jsonPath("$.elementos[0].programas").value("Sistemas"));
+    }
+
+    /** CULM-001 D.9-a (F-ADM-023): sobre ApiPageResponse y 400 PAG_001 en los cuatro listados paginados del administrador. */
+    @Test
+    void culm001_d9_estudiantes_responde_api_page_response_con_metadatos() throws Exception {
+        when(inputPort.buscarEstudiantes(ACTOR, null, null, null, 3, 2)).thenReturn(new PaginaDTO<>(List.of(
+                new EstudianteInstitucionDTO(ID, "101", "Ana", "ana@uco.edu.co", true, "Ingenieria", "Sistemas", 2)), 5));
+
+        mvc.perform(get("/api/v1/admin/estudiantes").param("pagina", "3").param("tamano", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exitoso").value(true))
+                .andExpect(jsonPath("$.elementos[0].facultades").value("Ingenieria"))
+                .andExpect(jsonPath("$.numeroPagina").value(3))
+                .andExpect(jsonPath("$.tamanoPagina").value(2))
+                .andExpect(jsonPath("$.totalElementos").value(5))
+                .andExpect(jsonPath("$.totalPaginas").value(3))
+                .andExpect(jsonPath("$.datos").doesNotExist());
+    }
+
+    @Test
+    void culm001_d9_sin_parametros_usa_pagina_1_y_tamano_10_en_el_sobre() throws Exception {
+        when(inputPort.consultarDocentesInstitucion(ACTOR, null, null, null, null, null, null, null))
+                .thenReturn(new PaginaDTO<>(List.of(), 0));
+
+        mvc.perform(get("/api/v1/admin/docentes"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.numeroPagina").value(1))
+                .andExpect(jsonPath("$.tamanoPagina").value(10))
+                .andExpect(jsonPath("$.totalElementos").value(0))
+                .andExpect(jsonPath("$.totalPaginas").value(0));
+    }
+
+    @Test
+    void culm001_d9_paginacion_invalida_es_400_pag_001_en_cada_listado() throws Exception {
+        for (final String ruta : new String[]{"/api/v1/admin/estudiantes", "/api/v1/admin/docentes", "/api/v1/admin/asignaturas",
+                "/api/v1/admin/auditoria"}) {
+            mvc.perform(get(ruta).param("pagina", "0"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("PAG_001"))
+                    .andExpect(jsonPath("$.details[0].field").value("pagina"));
+            mvc.perform(get(ruta).param("pagina", "1").param("tamano", "100000"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("PAG_001"))
+                    .andExpect(jsonPath("$.details[0].field").value("tamano"));
+            mvc.perform(get(ruta).param("pagina", "-1"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("PAG_001"));
+        }
+        org.mockito.Mockito.verifyNoInteractions(inputPort);
     }
 }

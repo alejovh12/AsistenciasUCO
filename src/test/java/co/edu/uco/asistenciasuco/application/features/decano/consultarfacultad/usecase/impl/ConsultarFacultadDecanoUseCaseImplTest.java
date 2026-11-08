@@ -90,7 +90,7 @@ class ConsultarFacultadDecanoUseCaseImplTest {
 
         assertThrows(ForbiddenException.class, () -> useCase.consultarEstudiantes(otro, null, null, null, 1, 10));
         assertThrows(ForbiddenException.class, () -> useCase.consultarEstructura(null));
-        assertThrows(ForbiddenException.class, () -> useCase.consultarSesiones(otro, null, null, null, 1, 10));
+        assertThrows(ForbiddenException.class, () -> useCase.consultarSesiones(otro, null, null, null, null, 1, 10));
         assertThrows(ForbiddenException.class, () -> useCase.consultarDetalleEstudiante(otro, ESTUDIANTE));
         verifyNoInteractions(queryPort);
     }
@@ -99,7 +99,7 @@ class ConsultarFacultadDecanoUseCaseImplTest {
     void T_104_04_paginacion_fuera_de_rango_es_400() {
         assertThrows(ValidationException.class, () -> useCase.consultarEstudiantes(DECANO, null, null, null, 0, 10));
         assertThrows(ValidationException.class, () -> useCase.consultarEstudiantes(DECANO, null, null, null, 1, 0));
-        assertThrows(ValidationException.class, () -> useCase.consultarSesiones(DECANO, null, null, null, 1, 101));
+        assertThrows(ValidationException.class, () -> useCase.consultarSesiones(DECANO, null, null, null, null, 1, 101));
         verifyNoInteractions(queryPort);
     }
 
@@ -115,14 +115,14 @@ class ConsultarFacultadDecanoUseCaseImplTest {
     void T_145_01_sesiones_valida_rango_y_envia_filtros() {
         final LocalDate desde = LocalDate.of(2026, 2, 1);
         final LocalDate hasta = LocalDate.of(2026, 2, 28);
-        when(queryPort.consultarSesiones(DECANO, desde, hasta, PROGRAMA, 1, 100))
+        when(queryPort.consultarSesiones(DECANO, desde, hasta, PROGRAMA, null, 1, 100))
                 .thenReturn(new Pagina<>(List.of(sesion()), 1));
-        when(queryPort.consultarSesiones(DECANO, desde, null, null, 1, 10)).thenReturn(new Pagina<>(List.of(), 0));
+        when(queryPort.consultarSesiones(DECANO, desde, null, null, null, 1, 10)).thenReturn(new Pagina<>(List.of(), 0));
 
-        assertEquals(1, useCase.consultarSesiones(DECANO, desde, hasta, PROGRAMA, 1, 100).total());
-        assertThrows(ValidationException.class, () -> useCase.consultarSesiones(DECANO, hasta, desde, null, 1, 10));
-        useCase.consultarSesiones(DECANO, desde, null, null, null, null);
-        verify(queryPort).consultarSesiones(DECANO, desde, null, null, 1, 10);
+        assertEquals(1, useCase.consultarSesiones(DECANO, desde, hasta, PROGRAMA, null, 1, 100).total());
+        assertThrows(ValidationException.class, () -> useCase.consultarSesiones(DECANO, hasta, desde, null, null, 1, 10));
+        useCase.consultarSesiones(DECANO, desde, null, null, null, null, null);
+        verify(queryPort).consultarSesiones(DECANO, desde, null, null, null, 1, 10);
     }
 
     @Test
@@ -130,7 +130,7 @@ class ConsultarFacultadDecanoUseCaseImplTest {
         final SesionFacultadProjection confirmada = sesion();
         final SesionFacultadProjection antigua = sesion(confirmada.idGrupo());
         final SesionFacultadProjection otroGrupo = sesion();
-        when(queryPort.consultarSesiones(DECANO, null, null, null, 1, 10))
+        when(queryPort.consultarSesiones(DECANO, null, null, null, null, 1, 10))
                 .thenReturn(new Pagina<>(List.of(confirmada, antigua, otroGrupo), 3));
         when(procedenciaPort.consultarSesionesPorGrupo(confirmada.idGrupo())).thenReturn(List.of(
                 procedencia(confirmada, confirmada.idGrupo(), "UTC_V2"),
@@ -139,7 +139,7 @@ class ConsultarFacultadDecanoUseCaseImplTest {
         when(procedenciaPort.consultarSesionesPorGrupo(otroGrupo.idGrupo()))
                 .thenReturn(List.of(procedencia(otroGrupo, UUID.randomUUID(), "UTC_V2")));
 
-        final var resultado = useCase.consultarSesiones(DECANO, null, null, null, null, null);
+        final var resultado = useCase.consultarSesiones(DECANO, null, null, null, null, null, null);
 
         assertEquals(3, resultado.total());
         final var primera = resultado.elementos().getFirst();
@@ -155,9 +155,9 @@ class ConsultarFacultadDecanoUseCaseImplTest {
 
     @Test
     void T_145_03_pagina_vacia_no_consulta_procedencia() {
-        when(queryPort.consultarSesiones(DECANO, null, null, null, 1, 10)).thenReturn(new Pagina<>(List.of(), 0));
+        when(queryPort.consultarSesiones(DECANO, null, null, null, null, 1, 10)).thenReturn(new Pagina<>(List.of(), 0));
 
-        assertTrue(useCase.consultarSesiones(DECANO, null, null, null, null, null).elementos().isEmpty());
+        assertTrue(useCase.consultarSesiones(DECANO, null, null, null, null, null, null).elementos().isEmpty());
         verifyNoInteractions(procedenciaPort);
     }
 
@@ -186,7 +186,7 @@ class ConsultarFacultadDecanoUseCaseImplTest {
                 .thenReturn(new Pagina<>(List.of(estudiante()), 7));
         when(queryPort.consultarDetalleEstudiante(DECANO, ESTUDIANTE)).thenReturn(List.of(
                 matricula(UUID.randomUUID(), false), matricula(UUID.randomUUID(), true)));
-        when(queryPort.consultarSesiones(DECANO, null, null, null, 1, 10)).thenReturn(new Pagina<>(List.of(sesion()), 1));
+        when(queryPort.consultarSesiones(DECANO, null, null, null, null, 1, 10)).thenReturn(new Pagina<>(List.of(sesion()), 1));
 
         final var estudiantes = interactor.consultarEstudiantes(DECANO, null, null, null, null, null);
         assertEquals(7, estudiantes.total());
@@ -197,7 +197,7 @@ class ConsultarFacultadDecanoUseCaseImplTest {
         assertTrue(ficha.activo());
         assertEquals(2, ficha.matriculas().size());
 
-        final var sesiones = interactor.consultarSesiones(DECANO, null, null, null, null, null);
+        final var sesiones = interactor.consultarSesiones(DECANO, null, null, null, null, null, null);
         assertEquals("S-01", sesiones.elementos().getFirst().codigo());
         assertEquals("Sistemas", sesiones.elementos().getFirst().nombrePrograma());
         assertEquals("INDETERMINADA", sesiones.elementos().getFirst().estadoTemporal());
@@ -244,7 +244,7 @@ class ConsultarFacultadDecanoUseCaseImplTest {
         final ConsultarFacultadDecanoInteractor interactor = new ConsultarFacultadDecanoInteractor(useCase);
         final SesionFacultadProjection cancelada = sesion();
         final SesionFacultadProjection programada = sesion();
-        when(queryPort.consultarSesiones(DECANO, null, null, null, 1, 10))
+        when(queryPort.consultarSesiones(DECANO, null, null, null, null, 1, 10))
                 .thenReturn(new Pagina<>(List.of(cancelada, programada), 2));
         when(procedenciaPort.consultarSesionesPorGrupo(cancelada.idGrupo())).thenReturn(List.of(
                 new SesionProcedenciaRepositoryProjection(cancelada.id(), cancelada.idGrupo(), cancelada.nombre(), 1,
@@ -252,7 +252,7 @@ class ConsultarFacultadDecanoUseCaseImplTest {
                         cancelada.fechaHoraFin(), "UTC_V2",
                         new CancelacionSesionProjection("DOCENTE", "Calamidad domestica", null, LocalDateTime.of(2026, 2, 1, 9, 0)))));
 
-        final var sesiones = interactor.consultarSesiones(DECANO, null, null, null, null, null).elementos();
+        final var sesiones = interactor.consultarSesiones(DECANO, null, null, null, null, null, null).elementos();
 
         assertEquals("CANCELADA", sesiones.getFirst().estado());
         assertEquals("DOCENTE", sesiones.getFirst().cancelacion().tipo());

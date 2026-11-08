@@ -56,9 +56,9 @@ class DecanoFacultadConsultaControllerTest {
                         .param("estaActivo", "true").param("pagina", "2").param("tamano", "5"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exitoso").value(true))
-                .andExpect(jsonPath("$.total").value(12))
-                .andExpect(jsonPath("$.datos[0].programas").value("Sistemas"))
-                .andExpect(jsonPath("$.datos[0].totalGrupos").value(3));
+                .andExpect(jsonPath("$.totalElementos").value(12))
+                .andExpect(jsonPath("$.elementos[0].programas").value("Sistemas"))
+                .andExpect(jsonPath("$.elementos[0].totalGrupos").value(3));
     }
 
     @Test
@@ -104,23 +104,23 @@ class DecanoFacultadConsultaControllerTest {
 
     @Test
     void T_145_01_get_sesiones_con_rango() throws Exception {
-        when(inputPort.consultarSesiones(ACTOR, LocalDate.of(2026, 2, 1), LocalDate.of(2026, 2, 28), null, null, null))
+        when(inputPort.consultarSesiones(ACTOR, LocalDate.of(2026, 2, 1), LocalDate.of(2026, 2, 28), null, null, null, null))
                 .thenReturn(new PaginaDTO<>(List.of(new SesionFacultadDTO(UUID.randomUUID(), "Sesion 1", "S-01", 2,
                         LocalDateTime.of(2026, 2, 3, 7, 0), LocalDateTime.of(2026, 2, 3, 9, 0), UUID.randomUUID(), 1,
                         "Grupo 1", UUID.randomUUID(), "Calculo", PROGRAMA, "Sistemas")), 1));
 
         mvc.perform(get("/api/v1/decano/sesiones").param("desde", "2026-02-01").param("hasta", "2026-02-28"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.datos[0].codigo").value("S-01"))
-                .andExpect(jsonPath("$.datos[0].nombrePrograma").doesNotExist())
-                .andExpect(jsonPath("$.datos[0].idPrograma").doesNotExist())
-                .andExpect(jsonPath("$.datos[0].estadoTemporal").value("INDETERMINADA"))
-                .andExpect(jsonPath("$.datos[0].fechaHoraInicioUtc").doesNotExist());
+                .andExpect(jsonPath("$.elementos[0].codigo").value("S-01"))
+                .andExpect(jsonPath("$.elementos[0].nombrePrograma").doesNotExist())
+                .andExpect(jsonPath("$.elementos[0].idPrograma").doesNotExist())
+                .andExpect(jsonPath("$.elementos[0].estadoTemporal").value("INDETERMINADA"))
+                .andExpect(jsonPath("$.elementos[0].fechaHoraInicioUtc").doesNotExist());
     }
 
     @Test
     void T_145_01b_sesion_confirmada_expone_instantes_utc() throws Exception {
-        when(inputPort.consultarSesiones(ACTOR, null, null, null, null, null))
+        when(inputPort.consultarSesiones(ACTOR, null, null, null, null, null, null))
                 .thenReturn(new PaginaDTO<>(List.of(new SesionFacultadDTO(UUID.randomUUID(), "Sesion 1", "S-01", 2,
                         LocalDateTime.of(2026, 2, 3, 13, 0), LocalDateTime.of(2026, 2, 3, 15, 0), UUID.randomUUID(), 1,
                         "Grupo 1", UUID.randomUUID(), "Calculo", PROGRAMA, "Sistemas",
@@ -128,18 +128,51 @@ class DecanoFacultadConsultaControllerTest {
 
         mvc.perform(get("/api/v1/decano/sesiones"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.datos[0].estadoTemporal").value("CONFIRMADA"))
-                .andExpect(jsonPath("$.datos[0].fechaHoraInicioUtc").value(org.hamcrest.Matchers.endsWith("Z")))
-                .andExpect(jsonPath("$.datos[0].fechaHoraInicioUtc").value(org.hamcrest.Matchers.startsWith("2026-02-03T13:00:00")))
-                .andExpect(jsonPath("$.datos[0].fechaHoraFinUtc").value(org.hamcrest.Matchers.endsWith("Z")));
+                .andExpect(jsonPath("$.elementos[0].estadoTemporal").value("CONFIRMADA"))
+                .andExpect(jsonPath("$.elementos[0].fechaHoraInicioUtc").value(org.hamcrest.Matchers.endsWith("Z")))
+                .andExpect(jsonPath("$.elementos[0].fechaHoraInicioUtc").value(org.hamcrest.Matchers.startsWith("2026-02-03T13:00:00")))
+                .andExpect(jsonPath("$.elementos[0].fechaHoraFinUtc").value(org.hamcrest.Matchers.endsWith("Z")));
     }
 
     @Test
     void T_145_02_rango_invalido_es_400() throws Exception {
-        when(inputPort.consultarSesiones(any(), any(), any(), any(), any(), any()))
+        when(inputPort.consultarSesiones(any(), any(), any(), any(), any(), any(), any()))
                 .thenThrow(new ValidationException("La fecha desde no puede ser posterior a la fecha hasta."));
 
         mvc.perform(get("/api/v1/decano/sesiones").param("desde", "2026-03-01").param("hasta", "2026-02-01"))
                 .andExpect(status().isBadRequest());
+    }
+
+    /** CULM-001 D.9-a (F-ADM-023, F-DEC-014): sobre ApiPageResponse, filtro por grupo y rechazo PAG_001. */
+    @Test
+    void culm001_d9_sesiones_responde_api_page_response_y_pasa_idGrupo() throws Exception {
+        final UUID grupo = UUID.randomUUID();
+        when(inputPort.consultarSesiones(ACTOR, null, null, null, grupo, 2, 5))
+                .thenReturn(new PaginaDTO<>(List.of(new SesionFacultadDTO(UUID.randomUUID(), "Sesion 1", "S-01", 2,
+                        LocalDateTime.of(2026, 2, 3, 7, 0), LocalDateTime.of(2026, 2, 3, 9, 0), grupo, 1,
+                        "Grupo 1", UUID.randomUUID(), "Calculo", PROGRAMA, "Sistemas")), 11));
+
+        mvc.perform(get("/api/v1/decano/sesiones").param("idGrupo", grupo.toString()).param("pagina", "2").param("tamano", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exitoso").value(true))
+                .andExpect(jsonPath("$.elementos[0].codigo").value("S-01"))
+                .andExpect(jsonPath("$.numeroPagina").value(2))
+                .andExpect(jsonPath("$.tamanoPagina").value(5))
+                .andExpect(jsonPath("$.totalElementos").value(11))
+                .andExpect(jsonPath("$.totalPaginas").value(3))
+                .andExpect(jsonPath("$.datos").doesNotExist());
+    }
+
+    @Test
+    void culm001_d9_paginacion_invalida_es_400_pag_001_con_details() throws Exception {
+        mvc.perform(get("/api/v1/decano/sesiones").param("pagina", "0").param("tamano", "100000"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("PAG_001"))
+                .andExpect(jsonPath("$.details[0].field").value("pagina"))
+                .andExpect(jsonPath("$.details[1].field").value("tamano"));
+        mvc.perform(get("/api/v1/decano/estudiantes").param("pagina", "-1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("PAG_001"));
+        org.mockito.Mockito.verifyNoInteractions(inputPort);
     }
 }

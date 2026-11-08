@@ -15,6 +15,7 @@ import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclam
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.estudiante.mapper.ReclamoEstudianteHttpMapper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.estudiante.response.ReclamoEstudianteResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.PaginacionRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -90,6 +91,8 @@ public final class EstudiantePortalController {
             @RequestParam(name = "pagina", required = false) final Integer pagina,
             @RequestParam(name = "tamano", required = false) final Integer tamano
     ) {
+        // CULM-001 D.9-a (F-ADM-023, F-EST-022): pagina < 1 o tamano fuera de 1..100 es 400 PAG_001, no se acota en silencio.
+        PaginacionRequestValidator.resolver(pagina, tamano);
         final ReclamosEstudiantePaginaDTO resultado = consultarReclamosEstudianteInputPort.execute(
                 new ConsultarReclamosEstudianteDTO(authenticatedUserResolver.requireAuthenticatedUserId(), estado, pagina, tamano));
         return ResponseEntity.ok(new ApiListResponse<>(

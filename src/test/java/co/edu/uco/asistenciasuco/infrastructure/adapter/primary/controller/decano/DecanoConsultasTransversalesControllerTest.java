@@ -51,9 +51,9 @@ class DecanoConsultasTransversalesControllerTest {
         mvc.perform(get("/api/v1/decano/programas-creditos").param("busqueda", "sis").param("estaActivo", "true")
                         .param("pagina", "1").param("tamano", "20"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.total").value(3))
-                .andExpect(jsonPath("$.datos[0].totalCreditos").value(160))
-                .andExpect(jsonPath("$.datos[0].inpPlanEstudio").value(2024));
+                .andExpect(jsonPath("$.totalElementos").value(3))
+                .andExpect(jsonPath("$.elementos[0].totalCreditos").value(160))
+                .andExpect(jsonPath("$.elementos[0].inpPlanEstudio").value(2024));
     }
 
     @Test
@@ -71,8 +71,8 @@ class DecanoConsultasTransversalesControllerTest {
 
         mvc.perform(get("/api/v1/decano/docentes").param("idPrograma", ID.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.datos[0].programas").value("Sistemas"))
-                .andExpect(jsonPath("$.datos[0].totalGrupos").value(4));
+                .andExpect(jsonPath("$.elementos[0].programas").value("Sistemas"))
+                .andExpect(jsonPath("$.elementos[0].totalGrupos").value(4));
     }
 
     @Test
@@ -91,10 +91,10 @@ class DecanoConsultasTransversalesControllerTest {
 
         mvc.perform(get("/api/v1/decano/asignaturas").param("busqueda", "CAL").param("estaActiva", "true"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.datos[0].codigo").value("CAL1"))
-                .andExpect(jsonPath("$.datos[0].creditos").value(3))
-                .andExpect(jsonPath("$.datos[0].planes").value("Sistemas · Plan 2024 · S1"))
-                .andExpect(jsonPath("$.datos[0].totalPlanes").value(1));
+                .andExpect(jsonPath("$.elementos[0].codigo").value("CAL1"))
+                .andExpect(jsonPath("$.elementos[0].creditos").value(3))
+                .andExpect(jsonPath("$.elementos[0].planes").value("Sistemas · Plan 2024 · S1"))
+                .andExpect(jsonPath("$.elementos[0].totalPlanes").value(1));
     }
 
     @Test
@@ -116,5 +116,35 @@ class DecanoConsultasTransversalesControllerTest {
                 .thenThrow(new ResourceNotFoundException("El estudiante no existe en su ambito."));
 
         mvc.perform(get("/api/v1/decano/estudiantes/{id}/historial", ID)).andExpect(status().isNotFound());
+    }
+
+    /** CULM-001 D.9-a (F-ADM-023): sobre ApiPageResponse y 400 PAG_001 en los tres listados del decano. */
+    @Test
+    void culm001_d9_docentes_responde_api_page_response_con_metadatos() throws Exception {
+        when(inputPort.consultarDocentes(ACTOR, null, null, null, 1, 4)).thenReturn(new PaginaDTO<>(List.of(), 9));
+
+        mvc.perform(get("/api/v1/decano/docentes").param("pagina", "1").param("tamano", "4"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.elementos").isArray())
+                .andExpect(jsonPath("$.numeroPagina").value(1))
+                .andExpect(jsonPath("$.tamanoPagina").value(4))
+                .andExpect(jsonPath("$.totalElementos").value(9))
+                .andExpect(jsonPath("$.totalPaginas").value(3))
+                .andExpect(jsonPath("$.datos").doesNotExist());
+    }
+
+    @Test
+    void culm001_d9_paginacion_invalida_es_400_pag_001_en_cada_listado() throws Exception {
+        for (final String ruta : new String[]{"/api/v1/decano/programas-creditos", "/api/v1/decano/docentes", "/api/v1/decano/asignaturas"}) {
+            mvc.perform(get(ruta).param("pagina", "0"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("PAG_001"))
+                    .andExpect(jsonPath("$.details[0].field").value("pagina"));
+            mvc.perform(get(ruta).param("tamano", "100000"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("PAG_001"))
+                    .andExpect(jsonPath("$.details[0].field").value("tamano"));
+        }
+        org.mockito.Mockito.verifyNoInteractions(inputPort);
     }
 }

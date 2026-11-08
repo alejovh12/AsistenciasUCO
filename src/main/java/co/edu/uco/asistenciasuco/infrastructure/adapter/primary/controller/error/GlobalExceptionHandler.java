@@ -145,7 +145,9 @@ public final class GlobalExceptionHandler {
             final RequestValidationException exception,
             final HttpServletRequest request
     ) {
-        final ApiErrorDescriptor descriptor = ApiErrorCatalog.requestValidationError();
+        final ApiErrorDescriptor descriptor = exception.getErrorCode() == null
+                ? ApiErrorCatalog.requestValidationError()
+                : ApiErrorCatalog.validationWithCode(exception.getErrorCode());
         logRequestValidation(descriptor, exception, request);
         return buildResponse(
                 descriptor,
