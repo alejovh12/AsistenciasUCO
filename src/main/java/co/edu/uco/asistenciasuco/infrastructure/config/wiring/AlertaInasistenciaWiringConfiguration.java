@@ -27,18 +27,14 @@ import java.time.Duration;
 @Configuration(proxyBeanMethods = false)
 public class AlertaInasistenciaWiringConfiguration {
 
+    /** Unico bean del evaluador (un solo candidato para los casos de uso que lo reciben). */
     @Bean
-    public AvisoAlertasInasistenciaService avisoAlertasInasistenciaService(
+    public EvaluadorAlertasInasistencia evaluadorAlertasInasistencia(
             final AlertaInasistenciaRepositoryPort repositorio,
             final NotificacionPort notificacionPort,
             final RealtimePublisherPort realtimePublisherPort
     ) {
         return new AvisoAlertasInasistenciaService(repositorio, notificacionPort, realtimePublisherPort);
-    }
-
-    @Bean
-    public EvaluadorAlertasInasistencia evaluadorAlertasInasistencia(final AvisoAlertasInasistenciaService servicio) {
-        return servicio;
     }
 
     @Bean
