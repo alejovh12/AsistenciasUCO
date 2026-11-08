@@ -85,7 +85,7 @@ public class PeriodoAcademicoJpaRepository implements PeriodoAcademicoQueryPort 
         if (valor instanceof java.time.LocalDate fecha) {
             return fecha;
         }
-        return valor == null ? null : java.sql.Date.valueOf(valor.toString().substring(0, 10)).toLocalDate();
+        return valor == null ? null : java.time.LocalDate.parse(valor.toString().substring(0, 10));
     }
 
     @Override

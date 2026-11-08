@@ -53,7 +53,7 @@ class PeriodoAcademicoAdminJpaRepositoryTest {
     @Test
     void mapea_las_filas_con_esVigente_y_el_total() {
         when(query.getResultList()).thenReturn(List.<Object>of(
-                new Object[]{PERIODO, INSTITUCION, "UCO", "2026-2", 20262, java.sql.Date.valueOf("2026-08-01"),
+                new Object[]{PERIODO, INSTITUCION, "UCO", "2026-2", 20262, "2026-08-01 00:00:00",
                         LocalDate.of(2026, 12, 15), 2026, Boolean.TRUE, 2},
                 new Object[]{UUID.randomUUID(), INSTITUCION, "UCO", "2026-1", 20261, "2026-02-01", "2026-06-30", 2026, 0, 2}));
 
