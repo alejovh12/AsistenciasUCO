@@ -148,7 +148,10 @@ class SecurityBaselinePepWiringTest {
         final List<Integer> pepIndexes = indexesOf(filters, SecurityPepEnforcementFilter.class);
         assertEquals(1, pepIndexes.size(), "el filtro PEP debe registrarse exactamente una vez");
         final int pep = pepIndexes.getFirst();
-        assertEquals(indexesOf(filters, BearerTokenAuthenticationFilter.class).getFirst() + 1, pep);
+        // CULM-001 D.9-a (CONTRACT §11.1, F-EST-024, OBS-17): UnmappedRouteFilter va justo despues del Bearer y el PEP justo despues de el.
+        final int bearer = indexesOf(filters, BearerTokenAuthenticationFilter.class).getFirst();
+        assertEquals(bearer + 1, indexesOf(filters, co.edu.uco.asistenciasuco.infrastructure.config.security.UnmappedRouteFilter.class).getFirst());
+        assertEquals(bearer + 2, pep);
         assertTrue(pep < indexesOf(filters, AuthorizationFilter.class).getFirst());
     }
 

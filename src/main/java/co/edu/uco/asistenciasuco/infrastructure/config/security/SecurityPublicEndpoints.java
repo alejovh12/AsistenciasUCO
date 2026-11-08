@@ -12,7 +12,8 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
  */
 public final class SecurityPublicEndpoints {
 
-    public static final String ACTUATOR = "/actuator/**";
+    /** CULM-001 D.9-a (F-TRX-020): solo health es publico; Prometheus vive en el puerto de gestion (loopback), no en el de la API. */
+    public static final String ACTUATOR = "/actuator/health/**";
     /** IDENT-001: verificacion publica del correo; su credencial es el token de un solo uso del enlace. */
     public static final String VERIFICAR_CORREO = "/api/v1/public/verificar-correo";
     /** HU176B: validacion y alta publicas de la matricula por QR/PIN; su credencial es el token/PIN rotativo. */
