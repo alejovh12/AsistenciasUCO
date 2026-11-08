@@ -10,7 +10,14 @@ public interface CoordinadorCommandPort {
 
     void crearCoordinador(UUID idCoordinador, String numeroIdentificacion, String primerNombre, String segundoNombre,
                           String primerApellido, String segundoApellido, String correo, UUID idPrograma,
-                          UUID idFacultad, String password, UUID usuarioEjecutor);
+                          UUID idFacultad, String password, UUID usuarioEjecutor, UUID idTipoIdIdentificacion);
+
+    default void crearCoordinador(UUID idCoordinador, String numeroIdentificacion, String primerNombre, String segundoNombre,
+                                  String primerApellido, String segundoApellido, String correo, UUID idPrograma,
+                                  UUID idFacultad, String password, UUID usuarioEjecutor) {
+        crearCoordinador(idCoordinador, numeroIdentificacion, primerNombre, segundoNombre, primerApellido, segundoApellido,
+                correo, idPrograma, idFacultad, password, usuarioEjecutor, null);
+    }
 
     /**
      * HU121: edita nombres, apellidos y correo; HU159: corrige el documento si {@code documento} lo pide. Devuelve el

@@ -20,6 +20,8 @@ public class SpComparativaFacultadEntity {
     @Column(name = "sesionesEjecutadas") private Integer sesionesEjecutadas;
     @Column(name = "faltasSinJustaCausa") private Integer faltasSinJustaCausa;
     @Column(name = "porcentajeAusentismo") private BigDecimal porcentajeAusentismo;
+    @Column(name = "horasDictadas") private BigDecimal horasDictadas;
+    @Column(name = "horasFalta") private BigDecimal horasFalta;
 
     protected SpComparativaFacultadEntity() {
     }
@@ -66,5 +68,13 @@ public class SpComparativaFacultadEntity {
 
     public BigDecimal porcentajeAusentismo() {
         return porcentajeAusentismo;
+    }
+
+    public BigDecimal horasDictadas() {
+        return horasDictadas;
+    }
+
+    public BigDecimal horasFalta() {
+        return horasFalta;
     }
 }

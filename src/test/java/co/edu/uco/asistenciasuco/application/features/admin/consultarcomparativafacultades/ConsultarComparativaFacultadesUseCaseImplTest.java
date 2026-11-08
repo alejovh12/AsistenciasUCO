@@ -33,9 +33,9 @@ class ConsultarComparativaFacultadesUseCaseImplTest {
     @Test
     void T_BE_01_conserva_filas_orden_y_cifras_del_puerto() {
         when(queryPort.consultarComparativa(ACTOR, PERIODO)).thenReturn(List.of(
-                new ComparativaFacultadProjection(F1, "Ingenieria", true, 3, 6, 1, 3, new BigDecimal("50.00"), 35, 6, new BigDecimal("17.14")),
-                new ComparativaFacultadProjection(F2, "Derecho", true, 1, 0, 0, 0, null, 0, 0, null),
-                new ComparativaFacultadProjection(F3, "Cerrada", false, 0, 0, 0, 0, null, 0, 0, null)));
+                new ComparativaFacultadProjection(F1, "Ingenieria", true, 3, 6, 1, 3, new BigDecimal("50.00"), 35, 6, new BigDecimal("17.14"), new BigDecimal("120.00"), new BigDecimal("18.00")),
+                new ComparativaFacultadProjection(F2, "Derecho", true, 1, 0, 0, 0, null, 0, 0, null, new BigDecimal("120.00"), new BigDecimal("18.00")),
+                new ComparativaFacultadProjection(F3, "Cerrada", false, 0, 0, 0, 0, null, 0, 0, null, new BigDecimal("120.00"), new BigDecimal("18.00"))));
 
         final List<ComparativaFacultadDomain> r = useCase.execute(new ConsultarComparativaFacultadesDomain(ACTOR, PERIODO));
 
@@ -50,13 +50,15 @@ class ConsultarComparativaFacultadesUseCaseImplTest {
         assertEquals(35, r.get(0).sesionesEjecutadas());
         assertEquals(6, r.get(0).faltasSinJustaCausa());
         assertEquals(new BigDecimal("17.14"), r.get(0).porcentajeAusentismo());
+        assertEquals(new BigDecimal("120.00"), r.get(0).horasDictadas());
+        assertEquals(new BigDecimal("18.00"), r.get(0).horasFalta());
         assertFalse(r.get(2).estaActivaFacultad());
     }
 
     @Test
     void T_BE_03_una_facultad_sin_datos_conserva_nulos_y_no_se_oculta() {
         when(queryPort.consultarComparativa(ACTOR, null)).thenReturn(List.of(
-                new ComparativaFacultadProjection(F2, "Derecho", true, 1, 0, 0, 0, null, 0, 0, null)));
+                new ComparativaFacultadProjection(F2, "Derecho", true, 1, 0, 0, 0, null, 0, 0, null, new BigDecimal("120.00"), new BigDecimal("18.00"))));
 
         final List<ComparativaFacultadDomain> r = useCase.execute(new ConsultarComparativaFacultadesDomain(ACTOR, null));
 

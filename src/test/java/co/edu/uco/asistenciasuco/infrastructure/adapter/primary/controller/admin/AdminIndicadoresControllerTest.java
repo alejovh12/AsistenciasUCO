@@ -103,8 +103,8 @@ class AdminIndicadoresControllerTest {
     @Test
     void T_E2E_get_comparativa_devuelve_una_fila_por_facultad_con_nulos() throws Exception {
         when(comparativa.execute(any())).thenReturn(List.of(
-                new ComparativaFacultadDTO(FACULTAD, "Ingenieria", true, 3, 6, 1, 3, new BigDecimal("50.00"), 35, 6, new BigDecimal("17.14")),
-                new ComparativaFacultadDTO(UUID.randomUUID(), "Cerrada", false, 0, 0, 0, 0, null, 0, 0, null)));
+                new ComparativaFacultadDTO(FACULTAD, "Ingenieria", true, 3, 6, 1, 3, new BigDecimal("50.00"), 35, 6, new BigDecimal("17.14"), new BigDecimal("120.00"), new BigDecimal("18.00")),
+                new ComparativaFacultadDTO(UUID.randomUUID(), "Cerrada", false, 0, 0, 0, 0, null, 0, 0, null, new BigDecimal("120.00"), new BigDecimal("18.00"))));
 
         mvc.perform(get("/api/v1/admin/comparativa-facultades").param("idPeriodoAcademico", PERIODO.toString()))
                 .andExpect(status().isOk())
@@ -112,6 +112,8 @@ class AdminIndicadoresControllerTest {
                 .andExpect(jsonPath("$.datos.length()").value(2))
                 .andExpect(jsonPath("$.datos[0].nombreFacultad").value("Ingenieria"))
                 .andExpect(jsonPath("$.datos[0].porcentajeAusentismo").value(17.14))
+                .andExpect(jsonPath("$.datos[0].horasDictadas").value(120.0))
+                .andExpect(jsonPath("$.datos[0].horasFalta").value(18.0))
                 .andExpect(jsonPath("$.datos[0].estaActivaFacultad").value(true))
                 .andExpect(jsonPath("$.datos[1].estaActivaFacultad").value(false))
                 .andExpect(jsonPath("$.datos[1].porcentajeAusentismo").doesNotExist());
@@ -132,8 +134,8 @@ class AdminIndicadoresControllerTest {
     @Test
     void T_E2E_get_tendencia_devuelve_los_puntos_con_fechas_iso_y_delega_la_granularidad() throws Exception {
         when(tendencia.execute(any())).thenReturn(List.of(
-                new PuntoTendenciaDTO(LocalDate.of(2026, 3, 2), LocalDate.of(2026, 3, 8), 20, 3, new BigDecimal("15.00")),
-                new PuntoTendenciaDTO(LocalDate.of(2026, 3, 9), LocalDate.of(2026, 3, 15), 0, 0, null)));
+                new PuntoTendenciaDTO(LocalDate.of(2026, 3, 2), LocalDate.of(2026, 3, 8), 20, 3, new BigDecimal("15.00"), new BigDecimal("100.00"), new BigDecimal("15.00")),
+                new PuntoTendenciaDTO(LocalDate.of(2026, 3, 9), LocalDate.of(2026, 3, 15), 0, 0, null, new BigDecimal("100.00"), new BigDecimal("15.00"))));
 
         mvc.perform(get("/api/v1/admin/tendencia-ausentismo").param("granularidad", "MES").param("idPeriodoAcademico", PERIODO.toString()))
                 .andExpect(status().isOk())
@@ -142,6 +144,8 @@ class AdminIndicadoresControllerTest {
                 .andExpect(jsonPath("$.datos[0].finIntervalo").value("2026-03-08"))
                 .andExpect(jsonPath("$.datos[0].sesionesEjecutadas").value(20))
                 .andExpect(jsonPath("$.datos[0].porcentajeAusentismo").value(15.0))
+                .andExpect(jsonPath("$.datos[0].horasDictadasEstudiante").value(100.0))
+                .andExpect(jsonPath("$.datos[0].horasFalta").value(15.0))
                 .andExpect(jsonPath("$.datos[1].porcentajeAusentismo").doesNotExist());
 
         final ArgumentCaptor<ConsultarTendenciaAusentismoDTO> captor = ArgumentCaptor.forClass(ConsultarTendenciaAusentismoDTO.class);

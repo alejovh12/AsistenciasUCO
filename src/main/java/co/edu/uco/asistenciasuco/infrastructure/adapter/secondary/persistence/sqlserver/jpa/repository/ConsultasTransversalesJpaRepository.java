@@ -203,7 +203,7 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
                         NativeRowValues.uuid(f[3]), texto(f[4]), NativeRowValues.uuid(f[5]), texto(f[6]),
                         NativeRowValues.uuid(f[7]), texto(f[8]), NativeRowValues.uuid(f[9]), texto(f[10]),
                         cero(f[11]), cero(f[12]), cero(f[13]), cero(f[14]), cero(f[15]), decimal(f[16]),
-                        decimal(f[17]), cero(f[18]), cero(f[19])));
+                        decimal(f[17]), cero(f[18]), cero(f[19]), decimal(f[21]), decimal(f[22]), decimal(f[23])));
     }
 
     @Override

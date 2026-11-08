@@ -224,6 +224,7 @@ class OpenApiGoldenPathConformanceTest {
                 Set.of("timestamp", "status", "error", "code", "message", "path", "correlationId"));
     }
 
+    // CULM-001 B2NM (CONTRACT 3.4, DEC-032): golden path 1.4.0, solo descripciones.
     // CULM-001 B (CONTRACT 3.10.1, DEC-032): golden path 1.3.0, Sesion recibe estado y cancelacion (SesionConsultadaDTO).
     @Test
     void criticalOpenApiSchemasMatchProviderDtoPropertyShapes() {

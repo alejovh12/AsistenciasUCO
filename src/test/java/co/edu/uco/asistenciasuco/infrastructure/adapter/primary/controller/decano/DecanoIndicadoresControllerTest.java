@@ -100,8 +100,8 @@ class DecanoIndicadoresControllerTest {
     @Test
     void T_E2E_get_comparativa_devuelve_una_fila_por_programa_con_nulos() throws Exception {
         when(comparativa.execute(any())).thenReturn(List.of(
-                new ComparativaProgramaDTO(PROGRAMA, "Programa 1", true, 5, 1, 2, new BigDecimal("60.00"), 33, 5, new BigDecimal("15.15")),
-                new ComparativaProgramaDTO(UUID.randomUUID(), "Programa 4", false, 0, 0, 0, null, 0, 0, null)));
+                new ComparativaProgramaDTO(PROGRAMA, "Programa 1", true, 5, 1, 2, new BigDecimal("60.00"), 33, 5, new BigDecimal("15.15"), new BigDecimal("120.00"), new BigDecimal("18.00")),
+                new ComparativaProgramaDTO(UUID.randomUUID(), "Programa 4", false, 0, 0, 0, null, 0, 0, null, new BigDecimal("120.00"), new BigDecimal("18.00"))));
 
         mvc.perform(get("/api/v1/decano/comparativa-programas").param("idPeriodoAcademico", PERIODO.toString()))
                 .andExpect(status().isOk())
@@ -109,6 +109,8 @@ class DecanoIndicadoresControllerTest {
                 .andExpect(jsonPath("$.datos.length()").value(2))
                 .andExpect(jsonPath("$.datos[0].nombrePrograma").value("Programa 1"))
                 .andExpect(jsonPath("$.datos[0].porcentajeAusentismo").value(15.15))
+                .andExpect(jsonPath("$.datos[0].horasDictadas").value(120.0))
+                .andExpect(jsonPath("$.datos[0].horasFalta").value(18.0))
                 .andExpect(jsonPath("$.datos[0].estaActivoPrograma").value(true))
                 .andExpect(jsonPath("$.datos[1].estaActivoPrograma").value(false))
                 .andExpect(jsonPath("$.datos[1].porcentajeAusentismo").doesNotExist());

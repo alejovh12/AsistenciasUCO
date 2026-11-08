@@ -73,9 +73,15 @@ public final class CrearCoordinadorUseCaseImpl implements CrearCoordinadorUseCas
             passwordParaPersistir = passwordEncoderPort.encode(credencialInicial);
         }
 
-        commandPort.crearCoordinador(UUID.randomUUID(), domain.getNumeroIdentificacion(), domain.getPrimerNombre(),
-                domain.getSegundoNombre(), domain.getPrimerApellido(), domain.getSegundoApellido(), domain.getCorreo(),
-                domain.getIdPrograma(), facultad, passwordParaPersistir, domain.getUsuario());
+        if (domain.getTipoIdentificacionId() != null) {
+            commandPort.crearCoordinador(UUID.randomUUID(), domain.getNumeroIdentificacion(), domain.getPrimerNombre(),
+                    domain.getSegundoNombre(), domain.getPrimerApellido(), domain.getSegundoApellido(), domain.getCorreo(),
+                    domain.getIdPrograma(), facultad, passwordParaPersistir, domain.getUsuario(), domain.getTipoIdentificacionId());
+        } else {
+            commandPort.crearCoordinador(UUID.randomUUID(), domain.getNumeroIdentificacion(), domain.getPrimerNombre(),
+                    domain.getSegundoNombre(), domain.getPrimerApellido(), domain.getSegundoApellido(), domain.getCorreo(),
+                    domain.getIdPrograma(), facultad, passwordParaPersistir, domain.getUsuario());
+        }
 
         if (identityProviderPort != null && usuarioRepositoryPort != null) {
             final UsuarioIdentidadRepositoryProjection u = resolverUsuarioPostCommand(domain, usuarioPreexistente);

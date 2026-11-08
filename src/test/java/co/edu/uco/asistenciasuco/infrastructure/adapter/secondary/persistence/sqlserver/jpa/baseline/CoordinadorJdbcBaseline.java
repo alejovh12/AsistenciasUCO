@@ -47,10 +47,11 @@ public final class CoordinadorJdbcBaseline implements CoordinadorQueryPort, Coor
             final UUID idPrograma,
             final UUID idFacultad,
             final String password,
-            final UUID usuarioEjecutor
+            final UUID usuarioEjecutor,
+            final UUID idTipoIdIdentificacion
     ) {
         commands.crearCoordinador(idCoordinador, numeroIdentificacion, primerNombre, segundoNombre, primerApellido,
-                segundoApellido, correo, idPrograma, idFacultad, password, usuarioEjecutor);
+                segundoApellido, correo, idPrograma, idFacultad, password, usuarioEjecutor, idTipoIdIdentificacion);
     }
 
     // HU121/HU122: los comandos nuevos tambien delegan en el command JPA (no existe baseline JDBC de ellos).
