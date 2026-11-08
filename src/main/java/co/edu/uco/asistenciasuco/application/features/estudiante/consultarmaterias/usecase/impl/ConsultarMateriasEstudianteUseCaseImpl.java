@@ -55,7 +55,7 @@ public final class ConsultarMateriasEstudianteUseCaseImpl implements ConsultarMa
                 : IndicadoresAsistenciaDTO.sinSesiones(referencia.umbralAdvertencia(), referencia.umbralPerdida());
         return materias.stream()
                 .map(materia -> new MateriaEstudianteDomain(materia.idAsignatura(), materia.nombreAsignatura(),
-                        materia.idGrupo(), materia.nombreGrupo(), porGrupo.getOrDefault(materia.idGrupo(), vacio)))
+                        materia.idGrupo(), materia.nombreGrupo(), porGrupo.getOrDefault(materia.idGrupo(), vacio), materia.creditos()))
                 .toList();
     }
 }

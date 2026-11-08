@@ -187,7 +187,7 @@ class Culm001AJpaRepositoriesTest {
     void materias_del_estudiante_por_sp_con_el_usuario_ejecutor() {
         final UUID asignatura = UUID.randomUUID();
         final UUID grupo = UUID.randomUUID();
-        when(query.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(new Object[]{asignatura, "Algebra ", grupo.toString(), "G1"}));
+        when(query.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(new Object[]{asignatura, "Algebra ", grupo.toString(), "G1", 3}));
 
         final var materias = new MateriaEstudianteJpaRepository(manager).consultarMateriasEstudiante(ACTOR);
 
@@ -199,6 +199,7 @@ class Culm001AJpaRepositoriesTest {
         assertEquals(asignatura, materias.getFirst().idAsignatura());
         assertEquals("Algebra", materias.getFirst().nombreAsignatura());
         assertEquals(grupo, materias.getFirst().idGrupo());
+        assertEquals(3, materias.getFirst().creditos());  // CULM-001 D.9-a F-EST-006 (CONTRACT §11.1): quinta columna
     }
 
     @Test

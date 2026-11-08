@@ -26,7 +26,7 @@ public class MateriaEstudianteJpaRepository implements MateriaEstudianteQueryPor
                  @idUsuarioEjecutor = :idUsuarioEjecutor,
                  @idCorrelacion = :idCorrelacion
             """;
-    static final int COLUMNAS_MATERIAS = 4;
+    static final int COLUMNAS_MATERIAS = 5;
 
     private final EntityManager entityManager;
 
@@ -59,7 +59,8 @@ public class MateriaEstudianteJpaRepository implements MateriaEstudianteQueryPor
             throw new IllegalStateException("Las materias del estudiante devolvieron " + f.length + " columnas; se esperaban "
                     + COLUMNAS_MATERIAS + ".");
         }
-        return new MateriaEstudianteProjection(NativeRowValues.uuid(f[0]), texto(f[1]), NativeRowValues.uuid(f[2]), texto(f[3]));
+        return new MateriaEstudianteProjection(NativeRowValues.uuid(f[0]), texto(f[1]), NativeRowValues.uuid(f[2]), texto(f[3]),
+                f[4] == null ? null : NativeRowValues.entero(f[4]));
     }
 
     private static String texto(final Object valor) {
