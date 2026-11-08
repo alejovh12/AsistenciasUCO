@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.usecase.mapper;
 
+import co.edu.uco.asistenciasuco.application.features.asistencia.common.mapper.SoporteReclamoMapper;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.usecase.domain.ReclamoEstudianteDomain;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.SolicitudRevisionEstudianteProjection;
 
@@ -15,6 +16,6 @@ public final class ConsultarReclamosEstudianteRepositoryMapper {
                 p.fechaHoraInicioSesionUtc(), p.procedenciaTemporalSesion(), p.idGrupo(), p.codigoGrupo(),
                 p.nombreGrupo(), p.idAsignatura(), p.codigoAsignatura(), p.nombreAsignatura(),
                 p.idArchivoSoporte(), p.nombreSoporte(), p.tipoContenidoSoporte(), p.tamanioSoporteBytes(),
-                p.fechaRegistroSoporteUtc());
+                p.fechaRegistroSoporteUtc(), p.codigoCategoria(), p.nombreCategoria(), SoporteReclamoMapper.toDomain(p.soportes()));
     }
 }

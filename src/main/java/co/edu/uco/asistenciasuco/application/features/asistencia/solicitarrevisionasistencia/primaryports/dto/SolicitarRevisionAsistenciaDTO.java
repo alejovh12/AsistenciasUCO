@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.primaryports.dto;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -10,7 +11,7 @@ public final class SolicitarRevisionAsistenciaDTO {
     private UUID sesion;
     private String categoria;
     private String justificacion;
-    private UUID soporteArchivoId;
+    private List<UUID> soportes;
     private UUID usuario;
 
     public SolicitarRevisionAsistenciaDTO() {
@@ -21,13 +22,13 @@ public final class SolicitarRevisionAsistenciaDTO {
             final UUID sesion,
             final String categoria,
             final String justificacion,
-            final UUID soporteArchivoId,
+            final List<UUID> soportes,
             final UUID usuario
     ) {
         setSesion(sesion);
         setCategoria(categoria);
         setJustificacion(justificacion);
-        setSoporteArchivoId(soporteArchivoId);
+        setSoportes(soportes);
         setUsuario(usuario);
     }
 
@@ -55,13 +56,16 @@ public final class SolicitarRevisionAsistenciaDTO {
         this.justificacion = justificacion;
     }
 
-    /** Identificador opaco (fileId) del soporte ya subido; opcional. Nunca una URL ni un nombre de archivo. */
-    public UUID getSoporteArchivoId() {
-        return soporteArchivoId;
+    /**
+     * CULM-001 D.2 (CONTRACT D 3.3): identificadores opacos (fileId) de 0 a N soportes ya subidos, en el orden recibido. Nunca una
+     * URL ni un nombre de archivo. Nulo equivale a ningun soporte.
+     */
+    public List<UUID> getSoportes() {
+        return soportes;
     }
 
-    public void setSoporteArchivoId(final UUID soporteArchivoId) {
-        this.soporteArchivoId = soporteArchivoId;
+    public void setSoportes(final List<UUID> soportes) {
+        this.soportes = soportes;
     }
 
     public UUID getUsuario() {

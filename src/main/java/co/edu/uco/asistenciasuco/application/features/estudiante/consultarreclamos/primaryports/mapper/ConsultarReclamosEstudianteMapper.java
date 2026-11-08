@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.primaryports.mapper;
 
+import co.edu.uco.asistenciasuco.application.features.asistencia.common.mapper.SoporteReclamoMapper;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.primaryports.dto.ConsultarReclamosEstudianteDTO;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.primaryports.dto.ReclamoEstudianteDTO;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.primaryports.dto.ReclamosEstudiantePaginaDTO;
@@ -46,7 +47,9 @@ public final class ConsultarReclamosEstudianteMapper {
                 p.idAsignatura(),
                 p.codigoAsignatura(),
                 p.nombreAsignatura(),
-                soporte(p));
+                soporte(p),
+                SoporteReclamoMapper.categoria(p.codigoCategoria(), p.nombreCategoria()),
+                SoporteReclamoMapper.toDTO(p.soportes()));
     }
 
     /** Soporte adjunto con URL relativa autenticada; nulo sin archivo vinculado. */

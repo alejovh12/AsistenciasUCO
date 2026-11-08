@@ -1,5 +1,9 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.asistencia.consultarconfiguracionreclamos.primaryports.ConsultarConfiguracionReclamosInputPort;
+import co.edu.uco.asistenciasuco.application.features.asistencia.consultarconfiguracionreclamos.primaryports.interactor.ConsultarConfiguracionReclamosInteractor;
+import co.edu.uco.asistenciasuco.application.features.asistencia.consultarconfiguracionreclamos.usecase.ConsultarConfiguracionReclamosUseCase;
+import co.edu.uco.asistenciasuco.application.features.asistencia.consultarconfiguracionreclamos.usecase.impl.ConsultarConfiguracionReclamosUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.primaryports.ConsultarAsistenciasPorGrupoInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.primaryports.interactor.ConsultarAsistenciasPorGrupoInteractor;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.ConsultarAsistenciasPorGrupoUseCase;
@@ -87,6 +91,21 @@ public class AsistenciaWiringConfiguration {
             final SolicitarRevisionAsistenciaUseCase solicitarRevisionAsistenciaUseCase
     ) {
         return new SolicitarRevisionAsistenciaInteractor(solicitarRevisionAsistenciaUseCase);
+    }
+
+    /** CULM-001 D.2: configuracion del formulario de reclamos (ESTUDIANTE y DOCENTE; el rol lo valida la base de datos). */
+    @Bean
+    public ConsultarConfiguracionReclamosUseCase consultarConfiguracionReclamosUseCase(
+            final co.edu.uco.asistenciasuco.application.secondaryports.academic.ConfiguracionReclamosQueryPort configuracionReclamosQueryPort
+    ) {
+        return new ConsultarConfiguracionReclamosUseCaseImpl(configuracionReclamosQueryPort);
+    }
+
+    @Bean
+    public ConsultarConfiguracionReclamosInputPort consultarConfiguracionReclamosInputPort(
+            final ConsultarConfiguracionReclamosUseCase consultarConfiguracionReclamosUseCase
+    ) {
+        return new ConsultarConfiguracionReclamosInteractor(consultarConfiguracionReclamosUseCase);
     }
 
     @Bean

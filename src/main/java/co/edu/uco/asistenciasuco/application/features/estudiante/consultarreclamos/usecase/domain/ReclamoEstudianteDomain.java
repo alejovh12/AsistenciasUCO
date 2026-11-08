@@ -1,7 +1,10 @@
 package co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.usecase.domain;
 
+import co.edu.uco.asistenciasuco.application.features.asistencia.common.domain.SoporteReclamoDomain;
+
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 /** Solicitud de revision propia del estudiante (los instantes son UTC; nulos si no hay procedencia verificable). */
@@ -26,6 +29,9 @@ public record ReclamoEstudianteDomain(
         String nombreSoporte,
         String tipoContenidoSoporte,
         Long tamanioSoporteBytes,
-        Instant fechaRegistroSoporteUtc
+        Instant fechaRegistroSoporteUtc,
+        String codigoCategoria,
+        String nombreCategoria,
+        List<SoporteReclamoDomain> soportes
 ) {
 }
