@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.cargamasiva.primaryports.dto;
 
+import co.edu.uco.asistenciasuco.application.features.cargamasiva.usecase.domain.EstadoFilaValidacion;
+
 import java.util.List;
 
 public record FilaValidacionCargaDTO(

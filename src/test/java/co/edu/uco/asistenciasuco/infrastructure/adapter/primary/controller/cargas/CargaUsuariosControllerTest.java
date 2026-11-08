@@ -6,13 +6,13 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import co.edu.uco.asistenciasuco.application.features.cargamasiva.primaryports.EjecutarCargaUsuariosInputPort;
 import co.edu.uco.asistenciasuco.application.features.cargamasiva.primaryports.ValidarCargaUsuariosInputPort;
-import co.edu.uco.asistenciasuco.application.features.cargamasiva.primaryports.dto.EstadoFilaResultado;
-import co.edu.uco.asistenciasuco.application.features.cargamasiva.primaryports.dto.EstadoFilaValidacion;
 import co.edu.uco.asistenciasuco.application.features.cargamasiva.primaryports.dto.FilaResultadoCargaDTO;
 import co.edu.uco.asistenciasuco.application.features.cargamasiva.primaryports.dto.FilaValidacionCargaDTO;
-import co.edu.uco.asistenciasuco.application.features.cargamasiva.primaryports.dto.PerfilDestinoCarga;
 import co.edu.uco.asistenciasuco.application.features.cargamasiva.primaryports.dto.ResultadoCargaDTO;
 import co.edu.uco.asistenciasuco.application.features.cargamasiva.primaryports.dto.ResultadoValidacionCargaDTO;
+import co.edu.uco.asistenciasuco.application.features.cargamasiva.usecase.domain.EstadoFilaResultado;
+import co.edu.uco.asistenciasuco.application.features.cargamasiva.usecase.domain.EstadoFilaValidacion;
+import co.edu.uco.asistenciasuco.application.features.cargamasiva.usecase.domain.PerfilDestinoCarga;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
@@ -176,7 +176,7 @@ class CargaUsuariosControllerTest {
         // Peticion 4 es rechazada con 429 CMA_014
         mvcAdmin.perform(multipart("/api/v1/admin/cargas/validacion").file(archivo))
                 .andExpect(status().isTooManyRequests())
-                .andExpect(jsonPath("$.codigo").value("CMA_014"));
+                .andExpect(jsonPath("$.code").value("CMA_014"));
     }
 
     @Test

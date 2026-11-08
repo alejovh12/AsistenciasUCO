@@ -2,7 +2,8 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.carg
 
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.cargamasiva.exception.CargaMasivaErrorCode;
-import co.edu.uco.asistenciasuco.application.features.cargamasiva.primaryports.dto.PerfilDestinoCarga;
+import co.edu.uco.asistenciasuco.application.features.cargamasiva.usecase.domain.FilaCsvParseada;
+import co.edu.uco.asistenciasuco.application.features.cargamasiva.usecase.domain.PerfilDestinoCarga;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

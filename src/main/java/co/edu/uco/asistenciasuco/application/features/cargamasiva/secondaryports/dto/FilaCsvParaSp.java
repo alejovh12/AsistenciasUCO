@@ -1,6 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.cargamasiva.secondaryports.dto;
 
-public record FilaCsvParaSpDTO(
+public record FilaCsvParaSp(
         int numeroFila,
         String tipoDocumento,
         String numeroDocumento,

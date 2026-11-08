@@ -1,8 +1,8 @@
 package co.edu.uco.asistenciasuco.application.features.cargamasiva.usecase;
 
-import co.edu.uco.asistenciasuco.application.features.cargamasiva.primaryports.dto.EjecutarCargaUsuariosCommand;
-import co.edu.uco.asistenciasuco.application.features.cargamasiva.primaryports.dto.ResultadoCargaDTO;
+import co.edu.uco.asistenciasuco.application.features.cargamasiva.usecase.domain.EjecutarCargaUsuariosDomain;
+import co.edu.uco.asistenciasuco.application.features.cargamasiva.usecase.domain.ResultadoCargaDomain;
 
 public interface EjecutarCargaUsuariosUseCase {
-    ResultadoCargaDTO execute(EjecutarCargaUsuariosCommand command);
+    ResultadoCargaDomain execute(EjecutarCargaUsuariosDomain domain);
 }

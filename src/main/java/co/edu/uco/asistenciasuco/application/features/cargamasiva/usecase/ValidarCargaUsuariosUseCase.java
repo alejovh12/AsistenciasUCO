@@ -1,8 +1,8 @@
 package co.edu.uco.asistenciasuco.application.features.cargamasiva.usecase;
 
-import co.edu.uco.asistenciasuco.application.features.cargamasiva.primaryports.dto.ResultadoValidacionCargaDTO;
-import co.edu.uco.asistenciasuco.application.features.cargamasiva.primaryports.dto.ValidarCargaUsuariosCommand;
+import co.edu.uco.asistenciasuco.application.features.cargamasiva.usecase.domain.ResultadoValidacionCargaDomain;
+import co.edu.uco.asistenciasuco.application.features.cargamasiva.usecase.domain.ValidarCargaUsuariosDomain;
 
 public interface ValidarCargaUsuariosUseCase {
-    ResultadoValidacionCargaDTO execute(ValidarCargaUsuariosCommand command);
+    ResultadoValidacionCargaDomain execute(ValidarCargaUsuariosDomain domain);
 }

@@ -1,11 +1,12 @@
 package co.edu.uco.asistenciasuco.application.features.cargamasiva.usecase.impl;
 
-import co.edu.uco.asistenciasuco.application.features.cargamasiva.primaryports.dto.EstadoFilaValidacion;
-import co.edu.uco.asistenciasuco.application.features.cargamasiva.primaryports.dto.PerfilDestinoCarga;
-import co.edu.uco.asistenciasuco.application.features.cargamasiva.primaryports.dto.ResultadoValidacionCargaDTO;
-import co.edu.uco.asistenciasuco.application.features.cargamasiva.primaryports.dto.ValidarCargaUsuariosCommand;
 import co.edu.uco.asistenciasuco.application.features.cargamasiva.secondaryports.CargaUsuariosValidacionPort;
 import co.edu.uco.asistenciasuco.application.features.cargamasiva.secondaryports.dto.FilaValidacionDbProjection;
+import co.edu.uco.asistenciasuco.application.features.cargamasiva.usecase.domain.EstadoFilaValidacion;
+import co.edu.uco.asistenciasuco.application.features.cargamasiva.usecase.domain.PerfilDestinoCarga;
+import co.edu.uco.asistenciasuco.application.features.cargamasiva.usecase.domain.ResultadoValidacionCargaDomain;
+import co.edu.uco.asistenciasuco.application.features.cargamasiva.usecase.domain.ValidarCargaUsuariosDomain;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.cargas.CsvCargaUsuariosParser;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -26,7 +27,7 @@ import static org.mockito.Mockito.when;
 class ValidarCargaUsuariosUseCaseImplTest {
 
     private final CargaUsuariosValidacionPort validacionPort = mock(CargaUsuariosValidacionPort.class);
-    private final ValidarCargaUsuariosUseCaseImpl useCase = new ValidarCargaUsuariosUseCaseImpl(validacionPort);
+    private final ValidarCargaUsuariosUseCaseImpl useCase = new ValidarCargaUsuariosUseCaseImpl(validacionPort, new CsvCargaUsuariosParser());
 
     @Test
     @DisplayName("D5-V01: Validacion sin comandos de mutacion y mapeo de estados de fila")
@@ -53,18 +54,18 @@ class ValidarCargaUsuariosUseCaseImplTest {
                         new FilaValidacionDbProjection(4, false, false, "CMA_007", "OTRO no esta en tu ambito", null, null, null, null, null)
                 ));
 
-        final ValidarCargaUsuariosCommand command = new ValidarCargaUsuariosCommand(
-                ejecutor, PerfilDestinoCarga.DOCENTE, "docentes.csv", bytes
+        final ValidarCargaUsuariosDomain domain = new ValidarCargaUsuariosDomain(
+                ejecutor, PerfilDestinoCarga.DOCENTE, bytes
         );
 
-        final ResultadoValidacionCargaDTO resultado = useCase.execute(command);
+        final ResultadoValidacionCargaDomain resultado = useCase.execute(domain);
 
         assertNotNull(resultado.huella());
         assertEquals(PerfilDestinoCarga.DOCENTE, resultado.perfilDestino());
         assertEquals(3, resultado.totalFilas());
-        assertEquals(1, resultado.filasValidas());
-        assertEquals(1, resultado.filasYaExistentes());
-        assertEquals(1, resultado.filasConError());
+        assertEquals(1, resultado.validas());
+        assertEquals(1, resultado.yaExistentes());
+        assertEquals(1, resultado.conError());
 
         assertEquals(EstadoFilaValidacion.VALIDA, resultado.filas().get(0).estado());
         assertEquals(EstadoFilaValidacion.YA_EXISTE, resultado.filas().get(1).estado());
@@ -87,11 +88,11 @@ class ValidarCargaUsuariosUseCaseImplTest {
                 new FilaValidacionDbProjection(2, true, false, null, null, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), null, null)
         ));
 
-        final ValidarCargaUsuariosCommand command = new ValidarCargaUsuariosCommand(
-                ejecutor, PerfilDestinoCarga.DOCENTE, "duplicados.csv", bytes
+        final ValidarCargaUsuariosDomain domain = new ValidarCargaUsuariosDomain(
+                ejecutor, PerfilDestinoCarga.DOCENTE, bytes
         );
 
-        final ResultadoValidacionCargaDTO resultado = useCase.execute(command);
+        final ResultadoValidacionCargaDomain resultado = useCase.execute(domain);
 
         assertEquals(2, resultado.totalFilas());
         assertEquals(EstadoFilaValidacion.VALIDA, resultado.filas().get(0).estado());

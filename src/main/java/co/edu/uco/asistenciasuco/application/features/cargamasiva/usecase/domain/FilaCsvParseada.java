@@ -1,6 +1,4 @@
-package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.cargas;
-
-import co.edu.uco.asistenciasuco.application.features.cargamasiva.primaryports.dto.ErrorFilaCargaDTO;
+package co.edu.uco.asistenciasuco.application.features.cargamasiva.usecase.domain;
 
 import java.util.List;
 
@@ -13,13 +11,10 @@ public record FilaCsvParseada(
         String primerApellido,
         String segundoApellido,
         String correo,
-        String claveInicial,
         String codigoTipoVinculacion,
         String codigoPrograma,
         String codigoFacultad,
-        List<ErrorFilaCargaDTO> erroresLocales
+        String claveInicial,
+        List<ErrorFilaCargaDomain> erroresLocales
 ) {
-    public FilaCsvParseada {
-        erroresLocales = erroresLocales == null ? List.of() : List.copyOf(erroresLocales);
-    }
 }
