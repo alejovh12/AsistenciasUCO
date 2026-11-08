@@ -102,8 +102,8 @@ public class DecanoIndicadoresJpaRepository implements DecanoIndicadoresQueryPor
                     final List<SpAforoGrupoEntity> filas = ejecutar(SQL_AFORO, SpAforoGrupoEntity.class, correlationId, actorUsuarioId, extra, idPeriodoAcademico);
                     final int total = filas.isEmpty() ? 0 : cero(filas.getFirst().totalRegistros());
                     return new PaginaAforoGruposProjection(filas.stream()
-                            .map(e -> new AforoGrupoProjection(e.idGrupo(), cero(e.codigoGrupo()), e.idAsignatura(), e.nombreAsignatura(), e.idPrograma(),
-                                    e.nombrePrograma(), cero(e.cupoMaximo()), cero(e.matriculadosActivos()), cero(e.cuposDisponibles()), e.tasaAforo(),
+                            .map(e -> new AforoGrupoProjection(e.idGrupo(), cero(e.codigoGrupo()), e.idAsignatura(), e.nombreAsignatura(), null,
+                                    e.programas(), cero(e.cupoMaximo()), cero(e.matriculadosActivos()), cero(e.cuposDisponibles()), e.tasaAforo(),
                                     verdadero(e.grupoEstaHabilitado())))
                             .toList(), total);
                 });

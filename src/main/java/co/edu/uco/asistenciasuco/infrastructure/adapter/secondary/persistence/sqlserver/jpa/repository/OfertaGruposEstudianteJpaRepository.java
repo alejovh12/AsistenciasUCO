@@ -39,9 +39,9 @@ public class OfertaGruposEstudianteJpaRepository implements OfertaGruposEstudian
      * Columnas del resultset posicional de usp_consultar_oferta_grupos_estudiante (CULM-001 A.1: 19, sin las columnas de
      * solicitud de ingreso). Un desfase entre BD y backend falla de forma visible en vez de desordenar campos.
      */
-    static final int COLUMNAS_OFERTA = 19;
+    static final int COLUMNAS_OFERTA = 21;
     private static final int COLUMNA_COMPONENTE = 17;
-    private static final int COLUMNA_TOTAL = 18;
+    private static final int COLUMNA_TOTAL = 20;
 
     private final EntityManager entityManager;
 
@@ -80,7 +80,7 @@ public class OfertaGruposEstudianteJpaRepository implements OfertaGruposEstudian
         return new GrupoOfertaEstudianteProjection(
                 NativeRowValues.uuid(f[0]), entero(f[1]), texto(f[2]), NativeRowValues.uuid(f[3]), texto(f[4]), texto(f[5]), texto(f[6]), NativeRowValues.uuid(f[7]),
                 texto(f[8]), fecha(f[9]), fecha(f[10]), texto(f[11]), texto(f[12]), valor(f[13]), valor(f[14]), valor(f[15]),
-                Boolean.TRUE.equals(f[16]), texto(f[COLUMNA_COMPONENTE]));
+                Boolean.TRUE.equals(f[16]), texto(f[COLUMNA_COMPONENTE]), texto(f[18]), texto(f[19]));
     }
 
     private static Object[] validarColumnas(final Object[] fila) {

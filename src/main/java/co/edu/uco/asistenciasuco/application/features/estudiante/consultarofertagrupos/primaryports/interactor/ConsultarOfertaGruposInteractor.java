@@ -27,7 +27,7 @@ public class ConsultarOfertaGruposInteractor implements ConsultarOfertaGruposInp
                         g.nombreAsignatura(), g.nombreDocente(), g.idPeriodoAcademico(), g.nombrePeriodoAcademico(),
                         g.fechaInicioPeriodo(), g.fechaFinPeriodo(), g.estadoPeriodo(), g.horario(), g.capacidadMaxima(),
                         g.estudiantesActivos(), g.cuposDisponibles(), g.matriculado(),
-                        g.tipoAsignatura(), g.transversal()))
+                        g.tipoAsignatura(), g.transversal(), g.codigoCaracter(), g.nombreCaracter()))
                 .toList(), pagina.total());
     }
 }
