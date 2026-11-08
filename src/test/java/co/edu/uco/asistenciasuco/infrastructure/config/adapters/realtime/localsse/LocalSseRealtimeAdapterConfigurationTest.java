@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.adapters.realtime.localsse;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
+import co.edu.uco.asistenciasuco.application.features.realtime.resolveraudiencia.primaryports.ResolverAudienciaRealtimeInputPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.contract.RealtimeStreamGateway;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.realtime.localsse.ReactorRealtimeAdapter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -18,7 +18,7 @@ class LocalSseRealtimeAdapterConfigurationTest {
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withUserConfiguration(LocalSseRealtimeAdapterConfiguration.class)
             .withBean(MeterRegistry.class, SimpleMeterRegistry::new)
-            .withBean(InstitutionalScopePort.class, () -> mock(InstitutionalScopePort.class));
+            .withBean(ResolverAudienciaRealtimeInputPort.class, () -> mock(ResolverAudienciaRealtimeInputPort.class));
 
     @Test
     void provider_local_sse_registra_un_publisher_y_un_gateway() {
