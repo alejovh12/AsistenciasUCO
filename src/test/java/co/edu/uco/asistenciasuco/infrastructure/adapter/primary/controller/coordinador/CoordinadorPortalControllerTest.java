@@ -4,7 +4,9 @@ import co.edu.uco.asistenciasuco.application.exception.business.ConflictExceptio
 import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.AsignaturaDTO;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.primaryports.dto.ConsultarEstudiantesProgramaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.primaryports.dto.EstudianteProgramaDTO;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.primaryports.dto.PaginaEstudiantesProgramaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarperiodosacademicos.primaryports.dto.PeriodoAcademicoDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarplanesestudio.primaryports.dto.PlanEstudioDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasignaturas.primaryports.ConsultarAsignaturasInputPort;
@@ -75,29 +77,53 @@ class CoordinadorPortalControllerTest {
 
     @Test
     void queryEndpointsPassActorAndSerializePortResults() throws Exception {
-        when(plans.execute(ACTOR)).thenReturn(List.of(new PlanEstudioDTO(PLAN, UUID.randomUUID(), "Ingeniería", "INP",
-                true, "Activo", null)));
-        when(planSubjects.execute(ACTOR, PLAN)).thenReturn(List.of(subject()));
-        when(subjects.execute(ACTOR)).thenReturn(List.of(subject()));
         when(periods.execute()).thenReturn(List.of(new PeriodoAcademicoDTO(UUID.randomUUID(), UUID.randomUUID(),
                 "UCO", "2026-1", "2026-1", LocalDate.of(2026, 1, 1), LocalDate.of(2026, 6, 1), 2026)));
-        when(students.execute(ACTOR)).thenReturn(List.of(new EstudianteProgramaDTO(UUID.randomUUID(), UUID.randomUUID(),
-                "123456", "Ana", "ana@example.com", UUID.randomUUID(), "Ingeniería")));
+        final UUID programa = UUID.randomUUID();
+        when(students.execute(any())).thenReturn(new PaginaEstudiantesProgramaDTO(List.of(new EstudianteProgramaDTO(
+                UUID.randomUUID(), UUID.randomUUID(), "123456", "Ana", "ana@example.com", programa, "Ingeniería")), 41));
 
-        mvc.perform(get("/api/v1/coordinador/planes-estudio"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(1))
-                .andExpect(jsonPath("$.datos[0].id").value(PLAN.toString()));
-        mvc.perform(get("/api/v1/coordinador/planes-estudio/{id}/asignaturas", PLAN))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.datos[0].id").value(SUBJECT.toString()));
-        mvc.perform(get("/api/v1/coordinador/asignaturas"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(1));
         mvc.perform(get("/api/v1/coordinador/periodos-academicos"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.datos[0].nombre").value("2026-1"));
-        mvc.perform(get("/api/v1/coordinador/estudiantes"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.datos[0].nombreCompleto").value("Ana"));
-        verify(planSubjects).execute(ACTOR, PLAN);
-        verify(subjects).execute(ACTOR);
-        verify(students).execute(ACTOR);
+        // CULM-001 B2NM (S4, O2-B2): estudiantes paginado por el SP de directorio; programaId opcional
+        mvc.perform(get("/api/v1/coordinador/estudiantes").param("programaId", programa.toString())
+                        .param("busqueda", "ana").param("estaActivo", "true").param("pagina", "2").param("tamano", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exitoso").value(true))
+                .andExpect(jsonPath("$.totalElementos").value(41))
+                .andExpect(jsonPath("$.numeroPagina").value(2))
+                .andExpect(jsonPath("$.tamanoPagina").value(10))
+                .andExpect(jsonPath("$.elementos[0].nombreCompleto").value("Ana"))
+                .andExpect(jsonPath("$.elementos[0].idPrograma").value(programa.toString()));
+        final var captor = ArgumentCaptor.forClass(ConsultarEstudiantesProgramaDTO.class);
+        verify(students).execute(captor.capture());
+        assertEquals(ACTOR, captor.getValue().actorUsuarioId());
+        assertEquals(programa, captor.getValue().programaId());
+        assertEquals("ana", captor.getValue().busqueda());
+        assertEquals(Boolean.TRUE, captor.getValue().estaActivo());
+        assertEquals(2, captor.getValue().pagina());
+        assertEquals(10, captor.getValue().tamano());
+    }
+
+    @Test
+    void estudiantesSinFiltrosUsaPaginaUnoYTamanoVeinte() throws Exception {
+        when(students.execute(any())).thenReturn(new PaginaEstudiantesProgramaDTO(List.of(), 0));
+
+        mvc.perform(get("/api/v1/coordinador/estudiantes")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElementos").value(0)).andExpect(jsonPath("$.elementos").isEmpty());
+        final var captor = ArgumentCaptor.forClass(ConsultarEstudiantesProgramaDTO.class);
+        verify(students).execute(captor.capture());
+        assertNull(captor.getValue().programaId());
+        assertEquals(1, captor.getValue().pagina());
+        assertEquals(20, captor.getValue().tamano());
+    }
+
+    @Test
+    void estudiantesDeProgramaAjenoEs403() throws Exception {
+        when(students.execute(any())).thenThrow(new co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException("COO_003"));
+
+        mvc.perform(get("/api/v1/coordinador/estudiantes").param("programaId", UUID.randomUUID().toString()))
+                .andExpect(status().isForbidden());
     }
 
     @Test

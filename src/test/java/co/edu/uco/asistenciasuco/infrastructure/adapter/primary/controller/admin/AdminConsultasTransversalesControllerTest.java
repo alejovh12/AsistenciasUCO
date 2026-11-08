@@ -42,14 +42,16 @@ class AdminConsultasTransversalesControllerTest {
     @Test
     void T_143_02_get_asignaturas_de_la_institucion_con_facultad() throws Exception {
         when(inputPort.buscarAsignaturas(ACTOR, "cal", ID, null, 2, 10)).thenReturn(new PaginaDTO<>(List.of(
-                new AsignaturaInstitucionDTO(ID, "CAL1", "Calculo", 3, "Ciencias", "Basico", "S1", ID, 2024, ID,
-                        "Sistemas", ID, "Ingenieria", true)), 15));
+                new AsignaturaInstitucionDTO(ID, "CAL1", "Calculo", 3, "Ciencias", "Basico",
+                        "Sistemas · Plan 2024 · S1", 1, true)), 15));
 
         mvc.perform(get("/api/v1/admin/asignaturas").param("busqueda", "cal").param("idFacultad", ID.toString())
                         .param("pagina", "2").param("tamano", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total").value(15))
-                .andExpect(jsonPath("$.datos[0].nombreFacultad").value("Ingenieria"));
+                .andExpect(jsonPath("$.datos[0].planes").value("Sistemas · Plan 2024 · S1"))
+                .andExpect(jsonPath("$.datos[0].totalPlanes").value(1))
+                .andExpect(jsonPath("$.datos[0].nombrePrograma").doesNotExist());
     }
 
     @Test

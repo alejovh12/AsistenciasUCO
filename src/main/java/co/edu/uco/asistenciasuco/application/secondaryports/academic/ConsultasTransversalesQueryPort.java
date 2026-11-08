@@ -113,9 +113,7 @@ public interface ConsultasTransversalesQueryPort {
     }
 
     record AsignaturaProjection(UUID idAsignatura, String codigo, String nombre, Integer creditos, String nombreArea,
-                                String nombreComponente, String codigoSemestre, UUID idPlanEstudio,
-                                Integer inpPlanEstudio, UUID idPrograma, String nombrePrograma, UUID idFacultad,
-                                String nombreFacultad, boolean activa) {
+                                String nombreComponente, String planes, Integer totalPlanes, boolean activa) {
     }
 
     record EstudianteInstitucionProjection(UUID idEstudiante, String numeroIdentificacion, String nombreCompleto,

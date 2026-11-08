@@ -15,7 +15,7 @@ public final class ConsultarAlertaTempranaMapper {
     }
 
     public static ConsultarAlertaTempranaDomain toDomain(final ConsultarAlertaTempranaDTO dto) {
-        return new ConsultarAlertaTempranaDomain(dto.actorUsuarioId(), dto.idPeriodoAcademico(), dto.semaforo(), dto.nombre(), dto.pagina(), dto.tamano());
+        return new ConsultarAlertaTempranaDomain(dto.actorUsuarioId(), dto.idPeriodoAcademico(), dto.semaforo(), dto.nombre(), dto.pagina(), dto.tamano(), dto.idPrograma());
     }
 
     public static AlertasPaginaDTO toDto(final AlertasPaginaDomain d) {

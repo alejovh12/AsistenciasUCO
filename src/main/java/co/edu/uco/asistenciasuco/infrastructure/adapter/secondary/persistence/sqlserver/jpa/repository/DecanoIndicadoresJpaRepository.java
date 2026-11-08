@@ -102,8 +102,8 @@ public class DecanoIndicadoresJpaRepository implements DecanoIndicadoresQueryPor
                     final List<SpAforoGrupoEntity> filas = ejecutar(SQL_AFORO, SpAforoGrupoEntity.class, correlationId, actorUsuarioId, extra, idPeriodoAcademico);
                     final int total = filas.isEmpty() ? 0 : cero(filas.getFirst().totalRegistros());
                     return new PaginaAforoGruposProjection(filas.stream()
-                            .map(e -> new AforoGrupoProjection(e.idGrupo(), cero(e.codigoGrupo()), e.idAsignatura(), e.nombreAsignatura(), null,
-                                    e.programas(), cero(e.cupoMaximo()), cero(e.matriculadosActivos()), cero(e.cuposDisponibles()), e.tasaAforo(),
+                            .map(e -> new AforoGrupoProjection(e.idGrupo(), cero(e.codigoGrupo()), e.idAsignatura(), e.nombreAsignatura(),
+                                    nombres(e.programas()), cero(e.cupoMaximo()), cero(e.matriculadosActivos()), cero(e.cuposDisponibles()), e.tasaAforo(),
                                     verdadero(e.grupoEstaHabilitado())))
                             .toList(), total);
                 });
@@ -123,6 +123,11 @@ public class DecanoIndicadoresJpaRepository implements DecanoIndicadoresQueryPor
         } catch (final PersistenceException exception) {
             throw DbCodeTranslator.traducir(exception, ENTIDAD_NO_ENCONTRADA);
         }
+    }
+
+    private static java.util.List<String> nombres(final String texto) {
+        return texto == null || texto.isBlank() ? java.util.List.of()
+                : java.util.Arrays.stream(texto.split(",")).map(String::strip).filter(x -> !x.isEmpty()).toList();
     }
 
     private static int cero(final Integer valor) {

@@ -11,4 +11,8 @@ public interface AsignaturaPlanInputPort {
     PaginaAsignaturasAsociablesDTO consultarAsociables(UUID idUsuarioEjecutor, UUID idPlanEstudio, String busqueda, int pagina, int tamano);
     List<CaracterAsignaturaDTO> consultarCaracteres();
     List<ProgramaResumenDTO> consultarProgramasGrupo(UUID idUsuarioEjecutor, UUID idGrupo);
+    PaginaAsignaturasPlanDTO consultarMalla(UUID idUsuarioEjecutor, UUID idPlanEstudio, Integer numeroSemestre, String codigoCaracter, String busqueda, int pagina, int tamano);
+    PaginaAsignaturasPlanDTO consultarAsignaturasCoordinador(UUID idUsuarioEjecutor, UUID idPrograma, String busqueda, Boolean estaActiva, int pagina, int tamano);
+    PaginaPlanesEstudioDTO consultarPlanes(UUID idUsuarioEjecutor, UUID idPrograma, Boolean estaActivo, int pagina, int tamano);
+    PaginaGruposFacultadDTO consultarGruposFacultad(UUID idUsuarioEjecutor, UUID idPeriodoAcademico, UUID idPrograma, String busqueda, int pagina, int tamano);
 }

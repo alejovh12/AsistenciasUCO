@@ -129,7 +129,7 @@ class DecanoIndicadoresControllerTest {
     @Test
     void T_E2E_get_aforo_devuelve_la_pagina_con_total_y_delega_filtros() throws Exception {
         when(aforo.execute(any())).thenReturn(new AforoGruposPaginaDTO(List.of(
-                new AforoGrupoDTO(GRUPO, 931001, UUID.randomUUID(), "Asignatura Uno", PROGRAMA, "Programa 1", 10, 5, 5, new BigDecimal("50.00"), true)), 12));
+                new AforoGrupoDTO(GRUPO, 931001, UUID.randomUUID(), "Asignatura Uno", List.of("Programa 1", "Programa 2"), 10, 5, 5, new BigDecimal("50.00"), true)), 12));
 
         mvc.perform(get("/api/v1/decano/aforo-grupos")
                         .param("pagina", "2").param("tamano", "5").param("idPrograma", PROGRAMA.toString())
@@ -138,6 +138,9 @@ class DecanoIndicadoresControllerTest {
                 .andExpect(jsonPath("$.exitoso").value(true))
                 .andExpect(jsonPath("$.total").value(12))
                 .andExpect(jsonPath("$.datos[0].cupoMaximo").value(10))
+                .andExpect(jsonPath("$.datos[0].programas[0]").value("Programa 1"))
+                .andExpect(jsonPath("$.datos[0].programas[1]").value("Programa 2"))
+                .andExpect(jsonPath("$.datos[0].nombrePrograma").doesNotExist())
                 .andExpect(jsonPath("$.datos[0].tasaAforo").value(50.0))
                 .andExpect(jsonPath("$.datos[0].grupoEstaHabilitado").value(true));
 

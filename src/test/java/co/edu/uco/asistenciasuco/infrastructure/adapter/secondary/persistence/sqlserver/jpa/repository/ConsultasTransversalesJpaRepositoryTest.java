@@ -103,7 +103,8 @@ class ConsultasTransversalesJpaRepositoryTest {
         final var pagina = repository.buscarAsignaturas(EJECUTOR, new FiltroConsulta(null, null, null), 1, 10);
 
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_buscar_asignaturas_paginado"));
-        assertEquals("Sistemas · Plan 2024 · S1", pagina.elementos().getFirst().nombrePrograma());
+        assertEquals("Sistemas · Plan 2024 · S1", pagina.elementos().getFirst().planes());
+        assertEquals(1, pagina.elementos().getFirst().totalPlanes());
         assertEquals(3, pagina.elementos().getFirst().creditos());
         assertEquals(1, pagina.total());
     }

@@ -35,14 +35,14 @@ class ConsultarBitacoraEstudianteUseCaseImplTest {
     @BeforeEach
     void programaDelCoordinador() {
         when(scopePort.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.of(PROGRAMA));
-        when(queryPort.consultarBitacora(any(), any(), any(), anyInt(), anyInt())).thenReturn(new PaginaBitacoraProjection(List.of(bitacora()), 25));
+        when(queryPort.consultarBitacora(any(), any(), any(), anyInt(), anyInt(), any())).thenReturn(new PaginaBitacoraProjection(List.of(bitacora()), 25));
     }
 
     @Test
     void T_BIT_01_devuelve_la_pagina_y_conserva_asistio_nulo() {
         final BitacoraPaginaDomain result = useCase.execute(new ConsultarBitacoraEstudianteDomain(ACTOR, ESTUDIANTE, PERIODO, 3, 10));
 
-        verify(queryPort).consultarBitacora(ACTOR, ESTUDIANTE, PERIODO, 3, 10);
+        verify(queryPort).consultarBitacora(ACTOR, ESTUDIANTE, PERIODO, 3, 10, null);
         assertEquals(25, result.totalRegistros());
         assertEquals(7, result.sesiones().getFirst().numeroSesion());
         assertEquals(GRUPO, result.sesiones().getFirst().idGrupo());
@@ -54,7 +54,7 @@ class ConsultarBitacoraEstudianteUseCaseImplTest {
     void aplica_pagina_1_y_tamano_10_por_defecto() {
         useCase.execute(new ConsultarBitacoraEstudianteDomain(ACTOR, ESTUDIANTE, null, null, null));
 
-        verify(queryPort).consultarBitacora(ACTOR, ESTUDIANTE, null, 1, 10);
+        verify(queryPort).consultarBitacora(ACTOR, ESTUDIANTE, null, 1, 10, null);
     }
 
     @Test
@@ -63,7 +63,7 @@ class ConsultarBitacoraEstudianteUseCaseImplTest {
         assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarBitacoraEstudianteDomain(ACTOR, null, null, 1, 10)));
         assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarBitacoraEstudianteDomain(ACTOR, ESTUDIANTE, null, 0, 10)));
         assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarBitacoraEstudianteDomain(ACTOR, ESTUDIANTE, null, 1, 0)));
-        verify(queryPort, never()).consultarBitacora(any(), any(), any(), anyInt(), anyInt());
+        verify(queryPort, never()).consultarBitacora(any(), any(), any(), anyInt(), anyInt(), any());
     }
 
     @Test
@@ -79,5 +79,15 @@ class ConsultarBitacoraEstudianteUseCaseImplTest {
     void los_puertos_son_obligatorios() {
         assertThrows(NullPointerException.class, () -> new ConsultarBitacoraEstudianteUseCaseImpl(null, queryPort));
         assertThrows(NullPointerException.class, () -> new ConsultarBitacoraEstudianteUseCaseImpl(scopePort, null));
+    }
+
+    @Test
+    void B2NM_S4_coordinador_con_varios_programas_traslada_el_programa_elegido_al_puerto() {
+        final java.util.UUID elegido = java.util.UUID.randomUUID();
+        when(queryPort.consultarBitacora(any(), any(), any(), anyInt(), anyInt(), any())).thenReturn(new PaginaBitacoraProjection(List.of(bitacora()), 1));
+
+        useCase.execute(new ConsultarBitacoraEstudianteDomain(ACTOR, ESTUDIANTE, null, 1, 10, elegido));
+
+        verify(queryPort).consultarBitacora(ACTOR, ESTUDIANTE, null, 1, 10, elegido);
     }
 }

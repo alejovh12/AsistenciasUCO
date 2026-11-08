@@ -112,7 +112,8 @@ class DecanoFacultadConsultaControllerTest {
         mvc.perform(get("/api/v1/decano/sesiones").param("desde", "2026-02-01").param("hasta", "2026-02-28"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.datos[0].codigo").value("S-01"))
-                .andExpect(jsonPath("$.datos[0].nombrePrograma").value("Sistemas"))
+                .andExpect(jsonPath("$.datos[0].nombrePrograma").doesNotExist())
+                .andExpect(jsonPath("$.datos[0].idPrograma").doesNotExist())
                 .andExpect(jsonPath("$.datos[0].estadoTemporal").value("INDETERMINADA"))
                 .andExpect(jsonPath("$.datos[0].fechaHoraInicioUtc").doesNotExist());
     }

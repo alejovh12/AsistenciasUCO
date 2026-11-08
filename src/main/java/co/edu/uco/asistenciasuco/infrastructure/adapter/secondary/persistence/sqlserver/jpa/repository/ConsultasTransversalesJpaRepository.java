@@ -166,7 +166,7 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
                 // CULM-001 B2NM (DEC-019): una fila por asignatura; columnas del SP: idAsignatura, codigo, nombre, credito, nombreArea,
                 // nombreComponente, planes, totalPlanes, estaActivaAsignatura. `planes` viaja en nombrePrograma (lista legible de planes).
                 f -> new AsignaturaProjection(NativeRowValues.uuid(f[0]), texto(f[1]), texto(f[2]), entero(f[3]),
-                        texto(f[4]), texto(f[5]), null, null, null, null, texto(f[6]), null, null, verdadero(f[8])));
+                        texto(f[4]), texto(f[5]), texto(f[6]), entero(f[7]), verdadero(f[8])));
     }
 
     @Override

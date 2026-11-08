@@ -1,13 +1,24 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.primaryports.interactor;
 
-import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.primaryports.dto.EstudianteProgramaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.primaryports.ConsultarEstudiantesProgramaInputPort;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.primaryports.dto.ConsultarEstudiantesProgramaDTO;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.primaryports.dto.PaginaEstudiantesProgramaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.primaryports.mapper.ConsultarEstudiantesProgramaMapper;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.usecase.ConsultarEstudiantesProgramaUseCase;
-import java.util.List; import java.util.Objects; import java.util.UUID;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.usecase.domain.ConsultarEstudiantesProgramaDomain;
+import java.util.Objects;
 
 public final class ConsultarEstudiantesProgramaInteractor implements ConsultarEstudiantesProgramaInputPort {
+
     private final ConsultarEstudiantesProgramaUseCase useCase;
-    public ConsultarEstudiantesProgramaInteractor(final ConsultarEstudiantesProgramaUseCase useCase) { this.useCase = Objects.requireNonNull(useCase); }
-    @Override public List<EstudianteProgramaDTO> execute(final UUID actorUsuarioId) { return useCase.execute(actorUsuarioId).stream().map(ConsultarEstudiantesProgramaMapper::toDTO).toList(); }
+
+    public ConsultarEstudiantesProgramaInteractor(final ConsultarEstudiantesProgramaUseCase useCase) {
+        this.useCase = Objects.requireNonNull(useCase);
+    }
+
+    @Override
+    public PaginaEstudiantesProgramaDTO execute(final ConsultarEstudiantesProgramaDTO c) {
+        final var pagina = useCase.execute(new ConsultarEstudiantesProgramaDomain(c.actorUsuarioId(), c.programaId(), c.busqueda(), c.estaActivo(), c.pagina(), c.tamano()));
+        return new PaginaEstudiantesProgramaDTO(pagina.elementos().stream().map(ConsultarEstudiantesProgramaMapper::toDTO).toList(), pagina.total());
+    }
 }

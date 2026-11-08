@@ -50,6 +50,33 @@ public class AsignaturaPlanEstudioJpaRepository implements AsignaturaPlanPort {
                  @idGrupo = :idGrupo
             """;
     static final String SQL_CARACTERES = "select codigo, nombre, orden from dbo.uv_caracter_asignatura_plan where estaActivo = 1 order by orden";
+    static final String SQL_MALLA = """
+            EXEC dbo.usp_consultar_asignaturas_plan_paginado
+                 @idUsuarioEjecutor = :idUsuarioEjecutor, @idCorrelacion = :idCorrelacion, @idPlanEstudio = :idPlanEstudio,
+                 @numeroPagina = :numeroPagina, @tamanoPagina = :tamanoPagina,
+                 @numeroSemestre = :numeroSemestre, @codigoCaracter = :codigoCaracter, @busqueda = :busqueda
+            """;
+    static final String SQL_ASIGNATURAS_COORDINADOR = """
+            EXEC dbo.usp_consultar_asignaturas_coordinador_paginado
+                 @idUsuarioEjecutor = :idUsuarioEjecutor, @idCorrelacion = :idCorrelacion,
+                 @numeroPagina = :numeroPagina, @tamanoPagina = :tamanoPagina,
+                 @idPrograma = :idPrograma, @busqueda = :busqueda, @estaActiva = :estaActiva
+            """;
+    static final String SQL_PLANES = """
+            EXEC dbo.usp_consultar_planes_estudio_programa_paginado
+                 @idUsuarioEjecutor = :idUsuarioEjecutor, @idCorrelacion = :idCorrelacion,
+                 @numeroPagina = :numeroPagina, @tamanoPagina = :tamanoPagina,
+                 @idPrograma = :idPrograma, @estaActivo = :estaActivo
+            """;
+    static final String SQL_GRUPOS_FACULTAD = """
+            EXEC dbo.usp_consultar_grupos_facultad_paginado
+                 @idUsuarioEjecutor = :idUsuarioEjecutor, @idCorrelacion = :idCorrelacion,
+                 @numeroPagina = :numeroPagina, @tamanoPagina = :tamanoPagina,
+                 @idPeriodoAcademico = :idPeriodoAcademico, @idPrograma = :idPrograma, @busqueda = :busqueda
+            """;
+    static final int COLUMNAS_ASIGNATURA_PLAN = 21;
+    static final int COLUMNAS_PLAN = 11;
+    static final int COLUMNAS_GRUPO_FACULTAD = 13;
     static final String OP_ASOCIAR = "asociarAsignaturaPlan";
     static final String OP_DESVINCULAR = "desvincularAsignaturaPlan";
 
@@ -118,6 +145,113 @@ public class AsignaturaPlanEstudioJpaRepository implements AsignaturaPlanPort {
             final List<?> filas = consulta(SQL_PROGRAMAS_GRUPO, Map.of("idUsuarioEjecutor", idUsuarioEjecutor, "idCorrelacion", correlationId, "idGrupo", idGrupo), null);
             return filas.stream().map(f -> (Object[]) f).map(c -> new ProgramaGrupoProjection(uuid(c[0]), (String) c[1], uuid(c[2]), entero(c[3]))).toList();
         });
+    }
+
+    @Override
+    public PaginaAsignaturasPlanProjection consultarMalla(final UUID idUsuarioEjecutor, final UUID idPlanEstudio, final Integer numeroSemestre,
+                                                          final String codigoCaracter, final String busqueda, final int pagina, final int tamano) {
+        final Map<String, Object> p = paginado(idUsuarioEjecutor, pagina, tamano);
+        p.put("idPlanEstudio", idPlanEstudio);
+        p.put("numeroSemestre", numeroSemestre);
+        p.put("codigoCaracter", codigoCaracter);
+        p.put("busqueda", busqueda);
+        return JpaQueryExecutor.execute("consultarMallaPlan", "No fue posible consultar la malla del plan.", () -> asignaturasPlan(SQL_MALLA, p));
+    }
+
+    @Override
+    public PaginaAsignaturasPlanProjection consultarAsignaturasCoordinador(final UUID idUsuarioEjecutor, final UUID idPrograma, final String busqueda,
+                                                                           final Boolean estaActiva, final int pagina, final int tamano) {
+        final Map<String, Object> p = paginado(idUsuarioEjecutor, pagina, tamano);
+        p.put("idPrograma", idPrograma);
+        p.put("busqueda", busqueda);
+        p.put("estaActiva", estaActiva);
+        return JpaQueryExecutor.execute("consultarAsignaturasCoordinador", "No fue posible consultar las asignaturas del coordinador.", () -> asignaturasPlan(SQL_ASIGNATURAS_COORDINADOR, p));
+    }
+
+    @Override
+    public PaginaPlanesEstudioProjection consultarPlanes(final UUID idUsuarioEjecutor, final UUID idPrograma, final Boolean estaActivo, final int pagina, final int tamano) {
+        final Map<String, Object> p = paginado(idUsuarioEjecutor, pagina, tamano);
+        p.put("idPrograma", idPrograma);
+        p.put("estaActivo", estaActivo);
+        return JpaQueryExecutor.execute("consultarPlanesEstudioPrograma", "No fue posible consultar los planes de estudio.", () -> {
+            long total = 0;
+            final List<PlanEstudioProjection> lista = new java.util.ArrayList<>();
+            for (final Object fila : consulta(SQL_PLANES, p)) {
+                final Object[] c = exigirColumnas((Object[]) fila, COLUMNAS_PLAN, "usp_consultar_planes_estudio_programa_paginado");
+                lista.add(new PlanEstudioProjection(uuid(c[0]), uuid(c[1]), (String) c[2], c[3] == null ? null : c[3].toString(), bool(c[4]), (String) c[5], (String) c[6],
+                        entero(c[7]), entero(c[8]), entero(c[9])));
+                total = ((Number) c[10]).longValue();
+            }
+            return new PaginaPlanesEstudioProjection(lista, total);
+        });
+    }
+
+    @Override
+    public PaginaGruposFacultadProjection consultarGruposFacultad(final UUID idUsuarioEjecutor, final UUID idPeriodoAcademico, final UUID idPrograma,
+                                                                  final String busqueda, final int pagina, final int tamano) {
+        final Map<String, Object> p = paginado(idUsuarioEjecutor, pagina, tamano);
+        p.put("idPeriodoAcademico", idPeriodoAcademico);
+        p.put("idPrograma", idPrograma);
+        p.put("busqueda", busqueda);
+        return JpaQueryExecutor.execute("consultarGruposFacultad", "No fue posible consultar los grupos de la facultad.", () -> {
+            long total = 0;
+            final List<GrupoFacultadProjection> lista = new java.util.ArrayList<>();
+            for (final Object fila : consulta(SQL_GRUPOS_FACULTAD, p)) {
+                final Object[] c = exigirColumnas((Object[]) fila, COLUMNAS_GRUPO_FACULTAD, "usp_consultar_grupos_facultad_paginado");
+                lista.add(new GrupoFacultadProjection(uuid(c[0]), entero(c[1]), (String) c[2], uuid(c[3]), uuid(c[4]), (String) c[5], uuid(c[6]), entero(c[7]),
+                        entero(c[8]), entero(c[9]), bool(c[10]), nombres((String) c[11])));
+                total = ((Number) c[12]).longValue();
+            }
+            return new PaginaGruposFacultadProjection(lista, total);
+        });
+    }
+
+    private PaginaAsignaturasPlanProjection asignaturasPlan(final String sql, final Map<String, Object> parametros) {
+        long total = 0;
+        final List<AsignaturaPlanProjection> lista = new java.util.ArrayList<>();
+        for (final Object fila : consulta(sql, parametros)) {
+            final Object[] c = exigirColumnas((Object[]) fila, COLUMNAS_ASIGNATURA_PLAN, "consulta de asignaturas por plan");
+            lista.add(new AsignaturaPlanProjection(uuid(c[0]), (String) c[1], (String) c[2], entero(c[3]), uuid(c[4]), (String) c[5], uuid(c[6]), (String) c[7],
+                    uuid(c[8]), entero(c[9]), uuid(c[10]), (String) c[11], uuid(c[12]), entero(c[13]), (String) c[14], (String) c[15], (String) c[16],
+                    bool(c[17]), bool(c[18]), bool(c[19])));
+            total = ((Number) c[20]).longValue();
+        }
+        return new PaginaAsignaturasPlanProjection(lista, total);
+    }
+
+    private static Map<String, Object> paginado(final UUID idUsuarioEjecutor, final int pagina, final int tamano) {
+        final Map<String, Object> p = new LinkedHashMap<>();
+        p.put("idUsuarioEjecutor", idUsuarioEjecutor);
+        p.put("idCorrelacion", CorrelationIdContext.require());
+        p.put("numeroPagina", pagina);
+        p.put("tamanoPagina", tamano);
+        return p;
+    }
+
+    private List<?> consulta(final String sql, final Map<String, Object> parametros) {
+        try {
+            final var query = entityManager.createNativeQuery(sql);
+            parametros.forEach(query::setParameter);
+            return query.getResultList();
+        } catch (final PersistenceException exception) {
+            throw DbCodeTranslator.traducir(exception);
+        }
+    }
+
+    private static Object[] exigirColumnas(final Object[] fila, final int esperadas, final String origen) {
+        if (fila.length != esperadas) {
+            throw new IllegalStateException(origen + " debe devolver " + esperadas + " columnas y devolvio " + fila.length + ".");
+        }
+        return fila;
+    }
+
+    private static boolean bool(final Object valor) {
+        return valor instanceof Boolean b ? b : valor != null && Integer.parseInt(valor.toString()) != 0;
+    }
+
+    private static List<String> nombres(final String texto) {
+        return texto == null || texto.isBlank() ? List.of()
+                : java.util.Arrays.stream(texto.split(",")).map(String::strip).filter(x -> !x.isEmpty()).toList();
     }
 
     private List<?> consulta(final String sql, final Map<String, Object> parametros, final String busqueda) {
