@@ -31,6 +31,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin.validation.FacultadRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -83,6 +84,7 @@ public final class AdminPortalController {
                 cambiarEstadoDecanoInputPort, authenticatedUserResolver, null);
     }
 
+    @Autowired // dos constructores publicos (el corto lo usan las pruebas): Spring debe usar el completo
     public AdminPortalController(
             final ConsultarDecanosInputPort consultarDecanosInputPort,
             final CrearDecanoInputPort crearDecanoInputPort,
