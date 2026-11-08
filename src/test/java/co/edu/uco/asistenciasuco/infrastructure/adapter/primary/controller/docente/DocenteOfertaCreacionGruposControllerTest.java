@@ -36,7 +36,7 @@ class DocenteOfertaCreacionGruposControllerTest {
         final UUID asignatura = UUID.randomUUID();
         final UUID programa = UUID.randomUUID();
         when(inputPort.execute(ACTOR)).thenReturn(new OfertaCreacionGruposDocenteDTO(docente, List.of(
-                new AsignaturaOfertaDocenteDTO(asignatura, "MAT1", "Algebra", programa, "Ingenieria de Sistemas"))));
+                new AsignaturaOfertaDocenteDTO(asignatura, "MAT1", "Algebra", java.util.List.of("Ingenieria de Sistemas")))));
 
         mvc.perform(get("/api/v1/docente/oferta-creacion-grupos"))
                 .andExpect(status().isOk())
@@ -44,7 +44,7 @@ class DocenteOfertaCreacionGruposControllerTest {
                 .andExpect(jsonPath("$.datos.idDocente").value(docente.toString()))
                 .andExpect(jsonPath("$.datos.asignaturas[0].idAsignatura").value(asignatura.toString()))
                 .andExpect(jsonPath("$.datos.asignaturas[0].nombreAsignatura").value("Algebra"))
-                .andExpect(jsonPath("$.datos.asignaturas[0].nombrePrograma").value("Ingenieria de Sistemas"));
+                .andExpect(jsonPath("$.datos.asignaturas[0].programas[0]").value("Ingenieria de Sistemas"));
 
         verify(inputPort).execute(ACTOR);
     }

@@ -59,7 +59,7 @@ public interface ConsultasTransversalesQueryPort {
     /** HU005/HU016: categorias de justificacion de una inasistencia (catalogo base de solo consulta). */
     List<CategoriaJustificacionProjection> consultarCategoriasJustificacion();
 
-    record CategoriaJustificacionProjection(UUID id, String codigo, String nombre, String descripcion) {
+    record CategoriaJustificacionProjection(UUID id, String codigo, String nombre, String descripcion, boolean requiereSoporte) {
     }
 
     record FiltroConsolidado(UUID idPeriodoAcademico, UUID idPrograma, UUID idAsignatura, UUID idDocente) {
@@ -114,9 +114,7 @@ public interface ConsultasTransversalesQueryPort {
     }
 
     record AsignaturaProjection(UUID idAsignatura, String codigo, String nombre, Integer creditos, String nombreArea,
-                                String nombreComponente, String codigoSemestre, UUID idPlanEstudio,
-                                Integer inpPlanEstudio, UUID idPrograma, String nombrePrograma, UUID idFacultad,
-                                String nombreFacultad, boolean activa) {
+                                String nombreComponente, String planes, Integer totalPlanes, boolean activa) {
     }
 
     record EstudianteInstitucionProjection(UUID idEstudiante, String numeroIdentificacion, String nombreCompleto,

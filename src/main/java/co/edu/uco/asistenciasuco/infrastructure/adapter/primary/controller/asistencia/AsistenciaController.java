@@ -1,16 +1,12 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia;
 
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.primaryports.RegistrarAsistenciaInputPort;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.primaryports.dto.RegistrarAsistenciaDTO;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.RegistrarAsistenciasSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.dto.RegistrarAsistenciasSesionDTO;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.primaryports.SolicitarRevisionAsistenciaInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.primaryports.dto.SolicitarRevisionAsistenciaDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.mapper.AsistenciaHttpMapper;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.request.RegistrarAsistenciaRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.request.RegistrarAsistenciasSesionRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.request.SolicitarRevisionAsistenciaRequest;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.validation.RegistrarAsistenciaRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.validation.SolicitarRevisionAsistenciaRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiMessageResponse;
@@ -27,46 +23,31 @@ import java.util.Objects;
 
 /**
  * Adaptador primario REST para operaciones relacionadas con asistencias.
+ *
+ * <p>CULM-001 D.7 (TD-009): {@code POST /api/v1/asistencias} (registro individual) se retiro; la asistencia se registra
+ * con {@code POST /asistencias/lote} o por toma ({@code POST /tomas/{id}/asistencias}).</p>
  */
 @RestController
 @RequestMapping("/api/v1/asistencias")
 public final class AsistenciaController {
 
-    private static final RegistrarAsistenciaRequestValidator REGISTER_ATTENDANCE_VALIDATOR = new RegistrarAsistenciaRequestValidator();
     private static final SolicitarRevisionAsistenciaRequestValidator REQUEST_REVISION_VALIDATOR = new SolicitarRevisionAsistenciaRequestValidator();
 
-    private final RegistrarAsistenciaInputPort registrarAsistenciaInputPort;
     private final RegistrarAsistenciasSesionInputPort registrarAsistenciasSesionInputPort;
     private final SolicitarRevisionAsistenciaInputPort solicitarRevisionAsistenciaInputPort;
     private final AuthenticatedUserResolver authenticatedUserResolver;
 
     public AsistenciaController(
-            final RegistrarAsistenciaInputPort registrarAsistenciaInputPort,
             final RegistrarAsistenciasSesionInputPort registrarAsistenciasSesionInputPort,
             final SolicitarRevisionAsistenciaInputPort solicitarRevisionAsistenciaInputPort,
             final AuthenticatedUserResolver authenticatedUserResolver
     ) {
-        this.registrarAsistenciaInputPort = Objects.requireNonNull(registrarAsistenciaInputPort,
-                "RegistrarAsistenciaInputPort es obligatorio.");
         this.registrarAsistenciasSesionInputPort = Objects.requireNonNull(registrarAsistenciasSesionInputPort,
                 "RegistrarAsistenciasSesionInputPort es obligatorio.");
         this.solicitarRevisionAsistenciaInputPort = Objects.requireNonNull(solicitarRevisionAsistenciaInputPort,
                 "SolicitarRevisionAsistenciaInputPort es obligatorio.");
         this.authenticatedUserResolver = Objects.requireNonNull(authenticatedUserResolver,
                 "AuthenticatedUserResolver es obligatorio.");
-    }
-
-    @PostMapping
-    @AuditableOperation(action = "REGISTRAR_ASISTENCIA", resourceType = "SESION", resourceIdRequestField = "sesion")
-    public ResponseEntity<ApiMessageResponse> registrarAsistencia(
-            @RequestBody final RegistrarAsistenciaRequest request
-    ) {
-        RequestValidationGuard.validate(REGISTER_ATTENDANCE_VALIDATOR.validate(request));
-        final RegistrarAsistenciaDTO dto = AsistenciaHttpMapper.toApplicationDTO(request);
-        registrarAsistenciaInputPort.execute(dto);
-
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ApiMessageResponse(true, "Asistencia registrada correctamente."));
     }
 
     @PostMapping("/revisiones")

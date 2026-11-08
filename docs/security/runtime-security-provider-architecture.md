@@ -542,7 +542,6 @@ Estado vigente de las familias revisadas:
 | `POST/PUT/DELETE /api/v1/grupos/**` (resto) | `COORDINADOR` o `ADMINISTRADOR` |
 | `POST/PUT/PATCH /api/v1/sesiones/**` | `DOCENTE` |
 | `GET /api/v1/sesiones/*/qr-token` | `DOCENTE` |
-| `POST /api/v1/asistencias` | `DOCENTE` |
 | `POST /api/v1/asistencias/lote` | `DOCENTE` |
 | `POST /api/v1/asistencias/revisiones` | `ESTUDIANTE` |
 | `POST /api/v1/asistencias/consultas/grupo` | `DOCENTE`, `COORDINADOR` o `ADMINISTRADOR` |

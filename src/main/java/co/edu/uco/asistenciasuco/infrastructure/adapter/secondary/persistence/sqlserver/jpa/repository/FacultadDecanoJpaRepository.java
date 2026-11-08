@@ -117,7 +117,7 @@ public class FacultadDecanoJpaRepository implements FacultadDecanoQueryPort {
                         .setParameter("idPrograma", idPrograma));
         return new Pagina<>(filas.stream().map(e -> new SesionFacultadProjection(e.id(), e.nombre(), e.codigo(),
                 e.numeroSemana(), e.fechaHoraInicio(), e.fechaHoraFin(), e.idGrupo(), e.codigoGrupo(),
-                e.nombreGrupo(), e.idAsignatura(), e.nombreAsignatura(), e.idPrograma(), e.nombrePrograma()))
+                e.nombreGrupo(), e.idAsignatura(), e.nombreAsignatura(), null, null))
                 .toList(), total(filas.isEmpty() ? null : filas.getFirst().totalRegistros()));
     }
 

@@ -78,9 +78,7 @@ public final class ConsultasTransversalesInteractor implements ConsultasTransver
         return pagina(useCase.buscarAsignaturas(usuario, new FiltroConsulta(busqueda, idFacultad, estaActiva), pagina,
                         tamano),
                 a -> new AsignaturaInstitucionDTO(a.idAsignatura(), a.codigo(), a.nombre(), a.creditos(),
-                        a.nombreArea(), a.nombreComponente(), a.codigoSemestre(), a.idPlanEstudio(),
-                        a.inpPlanEstudio(), a.idPrograma(), a.nombrePrograma(), a.idFacultad(), a.nombreFacultad(),
-                        a.activa()));
+                        a.nombreArea(), a.nombreComponente(), a.planes(), a.totalPlanes(), a.activa()));
     }
 
     @Override
@@ -156,7 +154,7 @@ public final class ConsultasTransversalesInteractor implements ConsultasTransver
     @Override
     public List<CategoriaJustificacionDTO> consultarCategoriasJustificacion() {
         return useCase.consultarCategoriasJustificacion().stream()
-                .map(c -> new CategoriaJustificacionDTO(c.id(), c.codigo(), c.nombre(), c.descripcion()))
+                .map(c -> new CategoriaJustificacionDTO(c.id(), c.codigo(), c.nombre(), c.descripcion(), c.requiereSoporte()))
                 .toList();
     }
 

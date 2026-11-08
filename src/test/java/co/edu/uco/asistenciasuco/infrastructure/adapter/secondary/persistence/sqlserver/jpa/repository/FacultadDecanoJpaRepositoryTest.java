@@ -104,7 +104,7 @@ class FacultadDecanoJpaRepositoryTest {
         final UUID grupo = UUID.randomUUID();
         when(query.getResultList()).thenReturn(List.of(entidad(SpMatriculaEstudianteFacultadEntity.class, Map.of(
                 "idGrupo", grupo, "idEstudiante", ESTUDIANTE, "numeroIdentificacion", 1017000111,
-                "nombrePrograma", "Sistemas", "inpPlanEstudio", 20241, "estaActivoEstudiante", true))));
+                "inpPlanEstudio", 20241, "estaActivoEstudiante", true))));
 
         final var matriculas = repository.consultarDetalleEstudiante(EJECUTOR, ESTUDIANTE);
 
@@ -139,7 +139,7 @@ class FacultadDecanoJpaRepositoryTest {
         final LocalDate desde = LocalDate.of(2026, 2, 1);
         final LocalDate hasta = LocalDate.of(2026, 2, 28);
         when(query.getResultList()).thenReturn(List.of(entidad(SpSesionFacultadPaginadoEntity.class, Map.of(
-                "id", UUID.randomUUID(), "codigo", "S-01", "nombrePrograma", "Sistemas",
+                "id", UUID.randomUUID(), "codigo", "S-01",
                 "fechaHoraInicio", LocalDateTime.of(2026, 2, 3, 7, 0), "totalRegistros", 4))));
 
         final var pagina = repository.consultarSesiones(EJECUTOR, desde, hasta, PROGRAMA, 1, 20);

@@ -28,7 +28,7 @@ public final class SolicitarRevisionAsistenciaRepositoryMapper {
                 domain.getSesion(),
                 domain.getCategoria(),
                 domain.getJustificacion(),
-                domain.getSoporteArchivoId(),
+                domain.getSoportes(),
                 domain.getUsuario()
         );
     }

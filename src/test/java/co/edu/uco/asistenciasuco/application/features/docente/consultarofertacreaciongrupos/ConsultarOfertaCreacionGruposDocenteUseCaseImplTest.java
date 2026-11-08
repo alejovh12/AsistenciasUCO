@@ -38,14 +38,14 @@ class ConsultarOfertaCreacionGruposDocenteUseCaseImplTest {
         final UUID programa = UUID.randomUUID();
         when(scope.findDocenteIdByUsuario(ACTOR)).thenReturn(Optional.of(docente));
         when(port.consultarOferta(ACTOR)).thenReturn(List.of(
-                new AsignaturaOfertaDocenteProjection(asignatura, "MAT1", "Algebra", programa, "Sistemas")));
+                new AsignaturaOfertaDocenteProjection(asignatura, "MAT1", "Algebra", java.util.List.of("Sistemas"))));
 
         final OfertaCreacionGruposDocenteDomain oferta = useCase.execute(ACTOR);
 
         assertEquals(docente, oferta.idDocente());
         assertEquals(1, oferta.asignaturas().size());
         assertEquals("Algebra", oferta.asignaturas().getFirst().nombreAsignatura());
-        assertEquals(programa, oferta.asignaturas().getFirst().idPrograma());
+        assertEquals(java.util.List.of("Sistemas"), oferta.asignaturas().getFirst().programas());
     }
 
     @Test
@@ -74,7 +74,7 @@ class ConsultarOfertaCreacionGruposDocenteUseCaseImplTest {
         final UUID docente = UUID.randomUUID();
         when(scope.findDocenteIdByUsuario(ACTOR)).thenReturn(Optional.of(docente));
         when(port.consultarOferta(ACTOR)).thenReturn(List.of(
-                new AsignaturaOfertaDocenteProjection(UUID.randomUUID(), "MAT1", "Algebra", UUID.randomUUID(), "Sistemas")));
+                new AsignaturaOfertaDocenteProjection(UUID.randomUUID(), "MAT1", "Algebra", java.util.List.of("Sistemas"))));
 
         final OfertaCreacionGruposDocenteDTO dto = new ConsultarOfertaCreacionGruposDocenteInteractor(useCase).execute(ACTOR);
 

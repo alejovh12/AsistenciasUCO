@@ -160,7 +160,8 @@ class SqlStoredProcedureContractIT {
                         input("@nombreArea", "nvarchar"),
                         input("@nombreComponente", "nvarchar"),
                         input("@idCorrelacion", "uniqueidentifier"),
-                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@codigoCaracter", "nvarchar")   // CULM-001 B2NM (DEC-019, CONTRACT B2 2.7.2)
                 )),
                 Arguments.of("usp_actualizar_asignatura", List.of(
                         input("@idAsignatura", "uniqueidentifier"),
@@ -172,7 +173,8 @@ class SqlStoredProcedureContractIT {
                         input("@nombreArea", "nvarchar"),
                         input("@nombreComponente", "nvarchar"),
                         input("@idCorrelacion", "uniqueidentifier"),
-                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@codigoCaracter", "nvarchar")   // CULM-001 B2NM (DEC-019, CONTRACT B2 2.7.2)
                 )),
                 Arguments.of("usp_toggle_estado_asignatura", List.of(
                         input("@idAsignatura", "uniqueidentifier"),
@@ -227,7 +229,8 @@ class SqlStoredProcedureContractIT {
                         input("@password", "nvarchar"),
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@idUsuarioEjecutor", "uniqueidentifier"),
-                        input("@idTipoIdIdentificacion", "uniqueidentifier")
+                        input("@idTipoIdIdentificacion", "uniqueidentifier"),
+                        input("@idPrograma", "uniqueidentifier")   // CULM-001 B2NM (DEC-020, S3): programa elegido en grupos con varios programas
                 )),
                 Arguments.of("usp_crear_sesion", List.of(
                         input("@idGrupo", "uniqueidentifier"),
@@ -254,13 +257,6 @@ class SqlStoredProcedureContractIT {
                 Arguments.of("usp_registrar_asistencias_sesion", List.of(
                         input("@idSesion", "uniqueidentifier"),
                         input("@asistenciaJSON", "nvarchar"),
-                        input("@idCorrelacion", "uniqueidentifier"),
-                        input("@idUsuarioEjecutor", "uniqueidentifier")
-                )),
-                Arguments.of("usp_registrar_asistencia_estudiante_autonomo", List.of(
-                        input("@idEstudiante", "uniqueidentifier"),
-                        input("@idSesion", "uniqueidentifier"),
-                        input("@codigoVerificacion", "nvarchar"),
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@idUsuarioEjecutor", "uniqueidentifier")
                 )),
@@ -300,6 +296,20 @@ class SqlStoredProcedureContractIT {
                         input("@idArchivoSoporte", "uniqueidentifier"),
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                // CULM-001 D.2 (HU014/HU015): radicacion con categoria y varios soportes (arreglo JSON de GUID) y configuracion de reclamos.
+                Arguments.of("usp_radicar_solicitud_revision_asistencia_v3", List.of(
+                        input("@idEstudiante", "uniqueidentifier"),
+                        input("@idSesion", "uniqueidentifier"),
+                        input("@categoria", "nvarchar"),
+                        input("@justificacion", "nvarchar"),
+                        input("@idsArchivoSoporte", "nvarchar"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_configuracion_reclamos", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier")
                 )),
                 Arguments.of("usp_consultar_archivo_soporte_autorizado", List.of(
                         input("@idArchivoSoporte", "uniqueidentifier"),

@@ -40,19 +40,21 @@ public final class CoordinadorFichaEstudianteController {
             @PathVariable("idEstudiante") final UUID idEstudiante,
             @RequestParam(name = "pagina", required = false) final Integer pagina,
             @RequestParam(name = "tamano", required = false) final Integer tamano,
-            @RequestParam(name = "idPeriodoAcademico", required = false) final UUID idPeriodoAcademico
+            @RequestParam(name = "idPeriodoAcademico", required = false) final UUID idPeriodoAcademico,
+            @RequestParam(name = "programaId", required = false) final UUID programaId
     ) {
         final BitacoraPaginaDTO resultado = bitacora.execute(new ConsultarBitacoraEstudianteDTO(
-                authenticatedUserResolver.requireAuthenticatedUserId(), idEstudiante, idPeriodoAcademico, pagina, tamano));
+                authenticatedUserResolver.requireAuthenticatedUserId(), idEstudiante, idPeriodoAcademico, pagina, tamano, programaId));
         return ResponseEntity.ok(new ApiListResponse<>(true, resultado.sesiones(), resultado.totalRegistros()));
     }
 
     @GetMapping("/{idEstudiante}/ficha")
     public ResponseEntity<ApiDataResponse<FichaEstudianteDTO>> consultarFicha(
             @PathVariable("idEstudiante") final UUID idEstudiante,
-            @RequestParam(name = "idPeriodoAcademico", required = false) final UUID idPeriodoAcademico
+            @RequestParam(name = "idPeriodoAcademico", required = false) final UUID idPeriodoAcademico,
+            @RequestParam(name = "programaId", required = false) final UUID programaId
     ) {
         return ResponseEntity.ok(new ApiDataResponse<>(true,
-                ficha.execute(new ConsultarFichaEstudianteDTO(authenticatedUserResolver.requireAuthenticatedUserId(), idEstudiante, idPeriodoAcademico))));
+                ficha.execute(new ConsultarFichaEstudianteDTO(authenticatedUserResolver.requireAuthenticatedUserId(), idEstudiante, idPeriodoAcademico, programaId))));
     }
 }

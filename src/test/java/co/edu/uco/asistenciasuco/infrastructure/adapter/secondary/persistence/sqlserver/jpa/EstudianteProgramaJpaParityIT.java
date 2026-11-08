@@ -46,7 +46,7 @@ class EstudianteProgramaJpaParityIT {
 
     @Test
     void consulta_jpa_por_programa_coincide_con_baseline_jdbc_y_expone_una_fila_por_estudiante_programa() {
-        final List<String> estudiantes = jdbc.queryForList("SELECT TOP 1 CAST(id AS NVARCHAR(40)) FROM dbo.Estudiante ORDER BY id", String.class);
+        final List<String> estudiantes = jdbc.queryForList("SELECT TOP 1 CAST(e.id AS NVARCHAR(40)) FROM dbo.Estudiante e WHERE NOT EXISTS (SELECT 1 FROM dbo.EstudiantePrograma ep INNER JOIN (SELECT TOP 1 id FROM dbo.uv_programa ORDER BY id) p ON p.id = ep.programa WHERE ep.estudiante = e.id) ORDER BY e.id", String.class);   // CULM-001 B2NM: UX_EstudiantePrograma_estudiante_programa exige un par nuevo
         final List<String> programas = jdbc.queryForList("SELECT TOP 1 CAST(id AS NVARCHAR(40)) FROM dbo.uv_programa ORDER BY id", String.class);
         assumeTrue(!estudiantes.isEmpty() && !programas.isEmpty(), "Se requiere al menos un estudiante y un programa vivos.");
 

@@ -13,7 +13,7 @@ public final class ConsultarKpisCoordinadorMapper {
     }
 
     public static ConsultarKpisCoordinadorDomain toDomain(final ConsultarKpisCoordinadorDTO dto) {
-        return new ConsultarKpisCoordinadorDomain(dto.actorUsuarioId(), dto.idPeriodoAcademico());
+        return new ConsultarKpisCoordinadorDomain(dto.actorUsuarioId(), dto.idPeriodoAcademico(), dto.idPrograma());
     }
 
     public static KpisCoordinadorDTO toDto(final KpisCoordinadorDomain d) {

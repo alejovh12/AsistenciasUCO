@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.request;
 
+import java.util.List;
 import java.util.UUID;
 
 public final class SolicitarRevisionAsistenciaRequest {
@@ -9,7 +10,10 @@ public final class SolicitarRevisionAsistenciaRequest {
     private String categoria;
     private String justificacion;
     private String motivo;
+    /** Legado (una version): equivale a {@code soporteArchivoIds} con un solo elemento. No se admite junto con {@code soporteArchivoIds}. */
     private UUID soporteArchivoId;
+    /** CULM-001 D.2 (CONTRACT D 3.3): fileId de 0 a N soportes ya subidos, en el orden de adjuncion. */
+    private List<UUID> soporteArchivoIds;
     /** Legacy (DEPRECATED): se acepta por compatibilidad de forma pero NUNCA se usa como fuente de verdad. */
     private String soporteNombre;
     /** Legacy (DEPRECATED): ver soporteNombre. */
@@ -57,6 +61,14 @@ public final class SolicitarRevisionAsistenciaRequest {
 
     public void setSoporteArchivoId(final UUID soporteArchivoId) {
         this.soporteArchivoId = soporteArchivoId;
+    }
+
+    public List<UUID> getSoporteArchivoIds() {
+        return soporteArchivoIds;
+    }
+
+    public void setSoporteArchivoIds(final List<UUID> soporteArchivoIds) {
+        this.soporteArchivoIds = soporteArchivoIds;
     }
 
     public String getSoporteNombre() {

@@ -45,7 +45,7 @@ public class MatriculaQrJpaRepository implements MatriculaQrRepositoryPort {
     static final String SQL_ABRIR = """
             EXEC dbo.usp_abrir_ventana_matricula_grupo
                  @idGrupo = :idGrupo, @tokenHash = :tokenHash, @pin = :pin,
-                 @idCorrelacion = :idCorrelacion, @idUsuarioEjecutor = :idUsuarioEjecutor
+                 @idCorrelacion = :idCorrelacion, @idUsuarioEjecutor = :idUsuarioEjecutor, @idPrograma = :idPrograma
             """;
     static final String SQL_CERRAR = """
             EXEC dbo.usp_cerrar_ventana_matricula_grupo
@@ -95,7 +95,8 @@ public class MatriculaQrJpaRepository implements MatriculaQrRepositoryPort {
     }
 
     @Override
-    public VentanaAbierta abrirVentana(final UUID grupoId, final String token, final String pin, final UUID usuarioEjecutor) {
+    public VentanaAbierta abrirVentana(final UUID grupoId, final String token, final String pin, final UUID usuarioEjecutor,
+                                       final UUID programaId) {
         final UUID correlationId = CorrelationIdContext.require();
         final Map<String, Object> parametros = new LinkedHashMap<>();
         parametros.put(P_ID_GRUPO, grupoId);
@@ -103,6 +104,7 @@ public class MatriculaQrJpaRepository implements MatriculaQrRepositoryPort {
         parametros.put(P_PIN, pin);
         parametros.put(P_ID_CORRELACION, correlationId);
         parametros.put(P_ID_USUARIO_EJECUTOR, usuarioEjecutor);
+        parametros.put("idPrograma", programaId);
         final ProcedureRow fila = procedureExecutor.executeWithExtras("abrirVentanaMatriculaGrupo", SQL_ABRIR, parametros, correlationId, 2);
         return new VentanaAbierta(aUuid(fila.extras().get(0)), aInstante(fila.extras().get(1)));
     }

@@ -36,10 +36,11 @@ public final class CoordinadorIndicadoresController {
 
     @GetMapping("/indicadores")
     public ResponseEntity<ApiDataResponse<KpisCoordinadorDTO>> consultarKpis(
-            @RequestParam(name = "idPeriodoAcademico", required = false) final UUID idPeriodoAcademico
+            @RequestParam(name = "idPeriodoAcademico", required = false) final UUID idPeriodoAcademico,
+            @RequestParam(name = "programaId", required = false) final UUID programaId
     ) {
         return ResponseEntity.ok(new ApiDataResponse<>(true,
-                kpis.execute(new ConsultarKpisCoordinadorDTO(authenticatedUserResolver.requireAuthenticatedUserId(), idPeriodoAcademico))));
+                kpis.execute(new ConsultarKpisCoordinadorDTO(authenticatedUserResolver.requireAuthenticatedUserId(), idPeriodoAcademico, programaId))));
     }
 
     @GetMapping("/alertas-tempranas")
@@ -48,10 +49,11 @@ public final class CoordinadorIndicadoresController {
             @RequestParam(name = "tamano", required = false) final Integer tamano,
             @RequestParam(name = "semaforo", required = false) final String semaforo,
             @RequestParam(name = "nombre", required = false) final String nombre,
-            @RequestParam(name = "idPeriodoAcademico", required = false) final UUID idPeriodoAcademico
+            @RequestParam(name = "idPeriodoAcademico", required = false) final UUID idPeriodoAcademico,
+            @RequestParam(name = "programaId", required = false) final UUID programaId
     ) {
         final AlertasPaginaDTO resultado = alertas.execute(new ConsultarAlertaTempranaDTO(
-                authenticatedUserResolver.requireAuthenticatedUserId(), idPeriodoAcademico, semaforo, nombre, pagina, tamano));
+                authenticatedUserResolver.requireAuthenticatedUserId(), idPeriodoAcademico, semaforo, nombre, pagina, tamano, programaId));
         return ResponseEntity.ok(new ApiListResponse<>(true, resultado.alertas(), resultado.totalRegistros()));
     }
 }

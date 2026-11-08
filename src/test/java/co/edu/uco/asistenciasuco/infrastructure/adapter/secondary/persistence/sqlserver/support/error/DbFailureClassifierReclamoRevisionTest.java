@@ -89,4 +89,39 @@ class DbFailureClassifierReclamoRevisionTest {
         assertInstanceOf(ConflictException.class, DbExceptionTranslator.translateDbCode("REV_020", "consultar").orElseThrow());
         assertTrue(DbExceptionTranslator.translateDbCode("REV_025", "consultar").isEmpty());
     }
+
+    // ---- CULM-001 D.2 (HU014/HU015): categoria invalida, soporte obligatorio, maximo de soportes y soporte repetido (400) ----
+
+    @ParameterizedTest
+    @CsvSource({
+            "REV_021, ERR_CATEGORIA_JUSTIFICACION_INVALIDA",
+            "REV_022, ERR_SOPORTE_OBLIGATORIO_CATEGORIA",
+            "REV_023, ERR_MAXIMO_SOPORTES_RECLAMO",
+            "REV_024, ERR_SOPORTE_RECLAMO_DUPLICADO"
+    })
+    void rechazos_de_categoria_y_soportes_son_400_con_el_codigo_publico(final String codigoDb, final AsistenciaErrorCode esperado) {
+        assertEquals(esperado, DbFailureClassifier.classify(
+                "mensaje", "DBCODE=" + codigoDb + "|detalle", "solicitarRevisionAsistencia"));
+        assertEquals(ErrorKind.VALIDATION, esperado.kind());
+
+        final ApplicationException exception = assertThrows(ApplicationException.class, () -> DbExceptionTranslator.throwIfFailed(
+                false, " ", "DBCODE=" + codigoDb + "|detalle", "corr", "solicitarRevisionAsistencia"));
+        assertInstanceOf(ValidationException.class, exception);
+        assertEquals(esperado.code(), exception.getCode());
+        assertEquals(esperado.defaultMessage(), exception.getMessage());
+        assertInstanceOf(ValidationException.class, DbExceptionTranslator.translateDbCode(codigoDb, "consultar").orElseThrow());
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "REV_022|La categoría «Médico / Salud» exige adjuntar al menos un soporte.",
+            "REV_023|Puedes adjuntar como máximo 3 soportes."
+    })
+    void el_mensaje_con_la_categoria_o_el_maximo_es_el_del_catalogo_de_la_db(final String codigoDb, final String mensajeDb) {
+        final ApplicationException exception = assertThrows(ApplicationException.class, () -> DbExceptionTranslator.throwIfFailed(
+                false, mensajeDb, "DBCODE=" + codigoDb + "|detalle", "corr", "solicitarRevisionAsistencia"));
+
+        assertInstanceOf(ValidationException.class, exception);
+        assertEquals(mensajeDb, exception.getMessage());
+    }
 }

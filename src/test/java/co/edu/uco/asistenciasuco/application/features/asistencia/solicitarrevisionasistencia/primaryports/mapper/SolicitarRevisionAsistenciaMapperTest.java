@@ -5,6 +5,7 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisi
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,14 +23,15 @@ class SolicitarRevisionAsistenciaMapperTest {
         final UUID sesion = UUID.randomUUID();
         final UUID usuario = UUID.randomUUID();
         final UUID soporte = UUID.randomUUID();
+        final UUID soporte2 = UUID.randomUUID();
         final SolicitarRevisionAsistenciaDTO dto = new SolicitarRevisionAsistenciaDTO(
-                sesion, "SALUD", "Justificacion valida", soporte, usuario);
+                sesion, "SALUD", "Justificacion valida", List.of(soporte, soporte2), usuario);
 
         final SolicitarRevisionAsistenciaDomain domain = SolicitarRevisionAsistenciaMapper.toDomain(dto);
 
         assertEquals(sesion, domain.getSesion());
         assertEquals("SALUD", domain.getCategoria());
         assertEquals(usuario, domain.getUsuario());
-        assertEquals(soporte, domain.getSoporteArchivoId());
+        assertEquals(List.of(soporte, soporte2), domain.getSoportes());
     }
 }

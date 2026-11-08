@@ -167,6 +167,22 @@ class DriftTest(unittest.TestCase):
         self.assertEqual(diff["orphan_resources"], [("POST", "/api/v1/ruta-retirada")])
         self.assertFalse(P.is_clean(diff))
 
+    def test_pdp_route_with_other_parameter_names_matches_catalog_template(self):
+        """El PDP trata `/x/{id}` y `/x/{planId}` como la misma plantilla (409 al registrar): un recurso ya registrado
+        con otros nombres de parámetro no es huérfano ni faltante, y sus concesiones cuentan para el catálogo."""
+        catalog = P.load_catalog()
+        pair = next(p for p in sorted(P.catalog_pairs(catalog)) if "{" in p[1])
+        renamed = (pair[0], P._plantilla(pair[1]).replace("{}", "{otroNombre}", 1))
+        self.assertNotEqual(renamed, pair)
+        canon = {(m, P._plantilla(path)): (m, path) for (m, path) in P.catalog_pairs(catalog)}
+        self.assertEqual(P._canonizar(renamed, canon), pair)
+        self.assertEqual(P._canonizar(("GET", "/api/v1/ruta-desconocida/{x}"), canon), ("GET", "/api/v1/ruta-desconocida/{x}"))
+        state = self.state(catalog)
+        state["resources"] = {(P._canonizar(k, canon) if k != pair else renamed): v for k, v in state["resources"].items()}
+        diff = P.diff_state(catalog, {**state, "resources": {P._canonizar(k, canon): v for k, v in state["resources"].items()}})
+        self.assertEqual(diff["missing_resources"], [])
+        self.assertEqual(diff["orphan_resources"], [])
+
     def test_orphan_resource_alone_does_not_open_access_and_is_not_a_failure(self):
         catalog = P.load_catalog()
         state = self.state(catalog)

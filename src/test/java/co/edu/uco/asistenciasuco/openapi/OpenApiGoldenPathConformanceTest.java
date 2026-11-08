@@ -2,7 +2,6 @@ package co.edu.uco.asistenciasuco.openapi;
 
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.primaryports.ConsultarAsistenciasPorGrupoInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.primaryports.dto.AsistenciaConsultadaDTO;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.primaryports.RegistrarAsistenciaInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.RegistrarAsistenciasSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.primaryports.SolicitarRevisionAsistenciaInputPort;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignaturas.primaryports.ConsultarAsignaturasDocenteInputPort;
@@ -225,6 +224,7 @@ class OpenApiGoldenPathConformanceTest {
                 Set.of("timestamp", "status", "error", "code", "message", "path", "correlationId"));
     }
 
+    // CULM-001 B2NM (CONTRACT 3.4, DEC-032): golden path 1.4.0, solo descripciones.
     // CULM-001 B (CONTRACT 3.10.1, DEC-032): golden path 1.3.0, Sesion recibe estado y cancelacion (SesionConsultadaDTO).
     @Test
     void criticalOpenApiSchemasMatchProviderDtoPropertyShapes() {
@@ -394,7 +394,6 @@ class OpenApiGoldenPathConformanceTest {
         when(attendanceQuery.execute(any())).thenReturn(List.of());
         final AsistenciaQueryController asistenciaQuery = new AsistenciaQueryController(attendanceQuery, identity);
         final AsistenciaController asistencia = new AsistenciaController(
-                mock(RegistrarAsistenciaInputPort.class),
                 mock(RegistrarAsistenciasSesionInputPort.class),
                 mock(SolicitarRevisionAsistenciaInputPort.class),
                 identity

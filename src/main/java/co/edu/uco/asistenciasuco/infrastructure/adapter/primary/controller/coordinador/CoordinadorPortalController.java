@@ -1,14 +1,9 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador;
 
-import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.AsignaturaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.primaryports.dto.EstudianteProgramaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarperiodosacademicos.primaryports.dto.PeriodoAcademicoDTO;
-import co.edu.uco.asistenciasuco.application.features.coordinador.consultarplanesestudio.primaryports.dto.PlanEstudioDTO;
-import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasignaturas.primaryports.ConsultarAsignaturasInputPort;
-import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasignaturasplan.primaryports.ConsultarAsignaturasPlanInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.primaryports.ConsultarEstudiantesProgramaInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarperiodosacademicos.primaryports.ConsultarPeriodosAcademicosInputPort;
-import co.edu.uco.asistenciasuco.application.features.coordinador.consultarplanesestudio.primaryports.ConsultarPlanesEstudioInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.primaryports.GestionarAsignaturaInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.primaryports.dto.GuardarAsignaturaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarplanestudio.primaryports.GestionarPlanEstudioInputPort;
@@ -17,6 +12,8 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coord
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador.request.GuardarPlanEstudioRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiPageResponse;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.primaryports.dto.ConsultarEstudiantesProgramaDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -35,9 +32,6 @@ import java.util.UUID;
 @RequestMapping("/api/v1/coordinador")
 public final class CoordinadorPortalController {
 
-    private final ConsultarPlanesEstudioInputPort consultarPlanesEstudioInputPort;
-    private final ConsultarAsignaturasPlanInputPort consultarAsignaturasPlanInputPort;
-    private final ConsultarAsignaturasInputPort consultarAsignaturasInputPort;
     private final ConsultarPeriodosAcademicosInputPort consultarPeriodosAcademicosInputPort;
     private final ConsultarEstudiantesProgramaInputPort consultarEstudiantesProgramaInputPort;
     private final GestionarPlanEstudioInputPort gestionarPlanEstudioInputPort;
@@ -45,18 +39,12 @@ public final class CoordinadorPortalController {
     private final AuthenticatedUserResolver authenticatedUserResolver;
 
     public CoordinadorPortalController(
-            final ConsultarPlanesEstudioInputPort consultarPlanesEstudioInputPort,
-            final ConsultarAsignaturasPlanInputPort consultarAsignaturasPlanInputPort,
-            final ConsultarAsignaturasInputPort consultarAsignaturasInputPort,
             final ConsultarPeriodosAcademicosInputPort consultarPeriodosAcademicosInputPort,
             final ConsultarEstudiantesProgramaInputPort consultarEstudiantesProgramaInputPort,
             final GestionarPlanEstudioInputPort gestionarPlanEstudioInputPort,
             final GestionarAsignaturaInputPort gestionarAsignaturaInputPort,
             final AuthenticatedUserResolver authenticatedUserResolver
     ) {
-        this.consultarPlanesEstudioInputPort = consultarPlanesEstudioInputPort;
-        this.consultarAsignaturasPlanInputPort = consultarAsignaturasPlanInputPort;
-        this.consultarAsignaturasInputPort = consultarAsignaturasInputPort;
         this.consultarPeriodosAcademicosInputPort = consultarPeriodosAcademicosInputPort;
         this.consultarEstudiantesProgramaInputPort = consultarEstudiantesProgramaInputPort;
         this.gestionarPlanEstudioInputPort = gestionarPlanEstudioInputPort;
@@ -65,11 +53,6 @@ public final class CoordinadorPortalController {
     }
 
 
-    @GetMapping("/planes-estudio")
-    public ResponseEntity<ApiListResponse<PlanEstudioDTO>> consultarPlanesEstudio() {
-        final var data = consultarPlanesEstudioInputPort.execute(authenticatedUserResolver.requireAuthenticatedUserId());
-        return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
-    }
     @PostMapping("/planes-estudio")
     public ResponseEntity<ApiDataResponse<Void>> crearPlanEstudio(@RequestBody final GuardarPlanEstudioRequest request) {
         gestionarPlanEstudioInputPort.guardar(new GuardarPlanEstudioDTO(
@@ -107,11 +90,6 @@ public final class CoordinadorPortalController {
         return ResponseEntity.ok(new ApiDataResponse<>(true, null));
     }
 
-    @GetMapping("/planes-estudio/{id}/asignaturas")
-    public ResponseEntity<ApiListResponse<AsignaturaDTO>> consultarAsignaturasPlan(@PathVariable final UUID id) {
-        final var data = consultarAsignaturasPlanInputPort.execute(authenticatedUserResolver.requireAuthenticatedUserId(), id);
-        return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
-    }
     @PostMapping("/planes-estudio/{id}/asignaturas")
     public ResponseEntity<ApiDataResponse<Void>> crearAsignaturaPlan(
             @PathVariable final UUID id,
@@ -135,11 +113,6 @@ public final class CoordinadorPortalController {
     // CULM-001 A.2-14: el stub 501 DELETE /planes-estudio/{planId}/asignaturas/{asigId} se retira; B2 la recrea con
     // usp_desvincular_asignatura_plan.
 
-    @GetMapping("/asignaturas")
-    public ResponseEntity<ApiListResponse<AsignaturaDTO>> listarTodasAsignaturas() {
-        final var data = consultarAsignaturasInputPort.execute(authenticatedUserResolver.requireAuthenticatedUserId());
-        return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
-    }
     @PatchMapping("/asignaturas/{id}/estado")
     public ResponseEntity<ApiDataResponse<Void>> toggleEstadoAsignatura(@PathVariable final UUID id) {
         gestionarAsignaturaInputPort.toggleEstado(id, authenticatedUserResolver.requireAuthenticatedUserId());
@@ -156,9 +129,15 @@ public final class CoordinadorPortalController {
     // stub 501 PATCH /periodos-academicos/{id}/estado se retira).
 
     @GetMapping("/estudiantes")
-    public ResponseEntity<ApiListResponse<EstudianteProgramaDTO>> consultarEstudiantesPrograma() {
-        final var data = consultarEstudiantesProgramaInputPort.execute(authenticatedUserResolver.requireAuthenticatedUserId());
-        return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
+    public ResponseEntity<ApiPageResponse<EstudianteProgramaDTO>> consultarEstudiantesPrograma(
+            @org.springframework.web.bind.annotation.RequestParam(name = "programaId", required = false) final UUID programaId,
+            @org.springframework.web.bind.annotation.RequestParam(name = "busqueda", required = false) final String busqueda,
+            @org.springframework.web.bind.annotation.RequestParam(name = "estaActivo", required = false) final Boolean estaActivo,
+            @org.springframework.web.bind.annotation.RequestParam(name = "pagina", defaultValue = "1") final int pagina,
+            @org.springframework.web.bind.annotation.RequestParam(name = "tamano", defaultValue = "20") final int tamano) {
+        final var resultado = consultarEstudiantesProgramaInputPort.execute(new ConsultarEstudiantesProgramaDTO(
+                authenticatedUserResolver.requireAuthenticatedUserId(), programaId, busqueda, estaActivo, pagina, tamano));
+        return ResponseEntity.ok(ApiPageResponse.of(resultado.elementos(), pagina, tamano, resultado.total()));
     }
 
     private static GuardarAsignaturaDTO toAsignaturaDTO(
@@ -176,6 +155,7 @@ public final class CoordinadorPortalController {
                 request == null ? null : request.getSemestreNumero(),
                 request == null ? null : request.getNombreArea(),
                 request == null ? null : request.getNombreComponente(),
+                request == null ? null : request.getCodigoCaracter(),
                 usuarioEjecutor
         );
     }

@@ -1,15 +1,20 @@
 package co.edu.uco.asistenciasuco.application.features.docente.consultardetallereclamo.primaryports.dto;
 
+import co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.CategoriaReclamoDTO;
+import co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.SoporteReclamoDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarreclamos.primaryports.dto.ReclamoDocenteDTO;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 /**
  * Detalle de una solicitud de revision para el docente titular (HU036). {@code fechaSesionUtc} es un instante UTC
  * (nulo si la hora historica de la sesion no tiene procedencia verificable). {@code causalInasistencia} es nula si
  * la asistencia no tiene detalle registrado; {@code soporteAdjunto} es nulo si no hay archivo adjunto.
+ * CULM-001 D.2: {@code categoria} (nula en reclamos anteriores a la categoria persistida) y {@code soportes} (todos, en orden de
+ * adjuncion). {@code soporteAdjunto} (el primero) queda deprecado una version.
  */
 public record DetalleReclamoDocenteDTO(
         UUID id,
@@ -33,7 +38,9 @@ public record DetalleReclamoDocenteDTO(
         String materiaCodigo,
         String materiaNombre,
         CausalInasistenciaDTO causalInasistencia,
-        ReclamoDocenteDTO.SoporteAdjuntoDTO soporteAdjunto
+        ReclamoDocenteDTO.SoporteAdjuntoDTO soporteAdjunto,
+        CategoriaReclamoDTO categoria,
+        List<SoporteReclamoDTO> soportes
 ) {
 
     /** Causa registrada de la inasistencia ({@code RazonCausa}) y si el estudiante figura como asistente. */

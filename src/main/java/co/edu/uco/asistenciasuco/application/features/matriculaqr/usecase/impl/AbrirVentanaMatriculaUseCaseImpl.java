@@ -49,7 +49,7 @@ public final class AbrirVentanaMatriculaUseCaseImpl implements AbrirVentanaMatri
         }
         return emisor.emitir(credenciales -> {
             final MatriculaQrRepositoryPort.VentanaAbierta ventana = repositorio.abrirVentana(
-                    comando.grupoId(), credenciales.token(), credenciales.pin(), comando.usuarioEjecutor());
+                    comando.grupoId(), credenciales.token(), credenciales.pin(), comando.usuarioEjecutor(), comando.programaId());
             final MatriculaQrPresentador.Presentacion presentacion = presentador.presentar(credenciales.token());
             return new Resultado(
                     ventana.idVentana(), credenciales.pin(), presentacion.urlMatricula(), presentacion.qrPngBase64(),

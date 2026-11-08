@@ -18,6 +18,16 @@ public final class RegistrarEstudianteRepositoryDTO {
     private UUID grupoId;
     private UUID usuarioEjecutor;
 
+    private UUID idPrograma;   // CULM-001 B2NM (S3)
+
+    public UUID getIdPrograma() {
+        return idPrograma;
+    }
+
+    public void setIdPrograma(final UUID idPrograma) {
+        this.idPrograma = idPrograma;
+    }
+
     public RegistrarEstudianteRepositoryDTO() {
         super();
     }

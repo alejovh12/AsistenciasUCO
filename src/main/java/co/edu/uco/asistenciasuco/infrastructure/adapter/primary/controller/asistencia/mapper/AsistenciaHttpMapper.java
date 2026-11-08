@@ -1,12 +1,10 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.mapper;
 
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.primaryports.dto.ConsultarAsistenciasPorGrupoDTO;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.primaryports.dto.RegistrarAsistenciaDTO;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.dto.RegistrarAsistenciasSesionDTO;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.dto.RegistroAsistenciaSesionDTO;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.primaryports.dto.SolicitarRevisionAsistenciaDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.request.ConsultarAsistenciasPorGrupoRequest;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.request.RegistrarAsistenciaRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.request.RegistrarAsistenciasSesionRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.request.SolicitarRevisionAsistenciaRequest;
 
@@ -19,23 +17,23 @@ public final class AsistenciaHttpMapper {
     private AsistenciaHttpMapper() {
     }
 
-    public static RegistrarAsistenciaDTO toApplicationDTO(final RegistrarAsistenciaRequest request) {
-        Objects.requireNonNull(request, "El request HTTP para registrar asistencia es obligatorio.");
-        return new RegistrarAsistenciaDTO(
-                request.getEstudiante(),
-                request.getGrupo(),
-                request.getSesion(),
-                request.getPresente(),
-                request.getObservacion()
-        );
-    }
-
     public static ConsultarAsistenciasPorGrupoDTO toApplicationDTO(
             final ConsultarAsistenciasPorGrupoRequest request,
             final UUID usuarioEjecutor
     ) {
         Objects.requireNonNull(request, "El request HTTP para consultar asistencias por grupo es obligatorio.");
         return new ConsultarAsistenciasPorGrupoDTO(request.getGrupo(), request.getSesion(), usuarioEjecutor);
+    }
+
+    /**
+     * CULM-001 D.2: {@code soporteArchivoIds} (0..N) o, por compatibilidad, {@code soporteArchivoId} como lista de uno. El validador
+     * del controlador ya rechazo el caso de ambos a la vez.
+     */
+    private static List<UUID> soportesDe(final SolicitarRevisionAsistenciaRequest request) {
+        if (request.getSoporteArchivoIds() != null) {
+            return request.getSoporteArchivoIds();
+        }
+        return request.getSoporteArchivoId() == null ? List.of() : List.of(request.getSoporteArchivoId());
     }
 
     public static SolicitarRevisionAsistenciaDTO toApplicationDTO(
@@ -47,7 +45,7 @@ public final class AsistenciaHttpMapper {
                 request.getSesionId(),
                 request.getCategoria(),
                 request.getJustificacion(),
-                request.getSoporteArchivoId(),
+                soportesDe(request),
                 usuarioId
         );
     }

@@ -54,7 +54,7 @@ class CoordinadorWiringConfigurationTest {
                 config.consultarPeriodosAcademicosInputPort(consultarPeriodosAcademicosUseCase));
 
         final var consultarEstudiantesProgramaUseCase =
-                config.consultarEstudiantesProgramaUseCase(scopePort, mock(EstudianteProgramaQueryPort.class));
+                config.consultarEstudiantesProgramaUseCase(mock(EstudianteProgramaQueryPort.class));
         assertInstanceOf(ConsultarEstudiantesProgramaUseCaseImpl.class, consultarEstudiantesProgramaUseCase);
         assertInstanceOf(ConsultarEstudiantesProgramaInteractor.class,
                 config.consultarEstudiantesProgramaInputPort(consultarEstudiantesProgramaUseCase));
