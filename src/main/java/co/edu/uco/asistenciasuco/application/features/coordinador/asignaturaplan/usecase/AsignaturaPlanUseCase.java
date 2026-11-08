@@ -15,4 +15,6 @@ public interface AsignaturaPlanUseCase {
     PaginaAsignaturasPlanProjection consultarAsignaturasCoordinador(UUID idUsuarioEjecutor, UUID idPrograma, String busqueda, Boolean estaActiva, int pagina, int tamano);
     PaginaPlanesEstudioProjection consultarPlanes(UUID idUsuarioEjecutor, UUID idPrograma, Boolean estaActivo, int pagina, int tamano);
     PaginaGruposFacultadProjection consultarGruposFacultad(UUID idUsuarioEjecutor, UUID idPeriodoAcademico, UUID idPrograma, String busqueda, int pagina, int tamano);
+
+    GrupoFacultadProjection consultarGrupoFacultad(UUID idUsuarioEjecutor, UUID idGrupo);
 }

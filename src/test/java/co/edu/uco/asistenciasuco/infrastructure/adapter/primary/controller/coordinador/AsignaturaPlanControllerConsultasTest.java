@@ -123,4 +123,26 @@ class AsignaturaPlanControllerConsultasTest {
                 .andExpect(jsonPath("$.elementos[0].programas[1]").value("Industrial"))
                 .andExpect(jsonPath("$.elementos[0].nombrePrograma").doesNotExist());
     }
+
+    /** CULM-001 D.9-a (F-DEC-003): detalle del grupo de la facultad del decano; inexistente o ajeno es 403. */
+    @Test
+    void culm001_d9_detalle_del_grupo_del_decano_responde_200() throws Exception {
+        when(inputPort.consultarGrupoFacultad(ACTOR, ID)).thenReturn(
+                new GrupoFacultadDTO(ID, 931001, "G1", PERIODO, ID, "Calculo", ID, 30, 12, 18, true, List.of("Sistemas")));
+
+        mvc.perform(get("/api/v1/decano/grupos/{grupoId}", ID))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exitoso").value(true))
+                .andExpect(jsonPath("$.datos.idGrupo").value(ID.toString()))
+                .andExpect(jsonPath("$.datos.nombreAsignatura").value("Calculo"))
+                .andExpect(jsonPath("$.datos.programas[0]").value("Sistemas"));
+    }
+
+    @Test
+    void culm001_d9_detalle_del_grupo_ajeno_o_inexistente_responde_403() throws Exception {
+        when(inputPort.consultarGrupoFacultad(ACTOR, ID)).thenThrow(
+                new co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException("SEC_002", "Sin autorizacion."));
+
+        mvc.perform(get("/api/v1/decano/grupos/{grupoId}", ID)).andExpect(status().isForbidden());
+    }
 }

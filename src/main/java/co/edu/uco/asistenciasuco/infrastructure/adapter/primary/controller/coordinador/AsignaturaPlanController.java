@@ -93,6 +93,13 @@ public final class AsignaturaPlanController {
         return ResponseEntity.ok(ApiPageResponse.of(page.elementos(), pagina, tamano, page.total()));
     }
 
+    /** CULM-001 D.9-a (F-DEC-003): detalle de un grupo de la facultad del decano. Inexistente o ajeno: 403 (SEC_002). */
+    @GetMapping("/decano/grupos/{grupoId}")
+    public ResponseEntity<ApiDataResponse<GrupoFacultadDTO>> grupoFacultad(@PathVariable final UUID grupoId) {
+        return ResponseEntity.ok(new ApiDataResponse<>(true,
+                inputPort.consultarGrupoFacultad(authenticatedUserResolver.requireAuthenticatedUserId(), grupoId)));
+    }
+
     @GetMapping("/decano/grupos")
     public ResponseEntity<ApiPageResponse<GrupoFacultadDTO>> gruposFacultad(
             @RequestParam(name = "idPeriodoAcademico", required = false) final UUID idPeriodoAcademico,

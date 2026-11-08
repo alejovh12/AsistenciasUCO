@@ -82,6 +82,13 @@ public final class AsignaturaPlanUseCaseImpl implements AsignaturaPlanUseCase {
         return port.consultarGruposFacultad(idUsuarioEjecutor, idPeriodoAcademico, idPrograma, busqueda, acotarPagina(pagina), acotarTamano(tamano));
     }
 
+    @Override
+    public GrupoFacultadProjection consultarGrupoFacultad(final UUID idUsuarioEjecutor, final UUID idGrupo) {
+        exigir(idUsuarioEjecutor, "El usuario ejecutor es obligatorio.");
+        exigir(idGrupo, "El grupo es obligatorio.");
+        return port.consultarGrupoFacultad(idUsuarioEjecutor, idGrupo);
+    }
+
     private static int acotarPagina(final int pagina) {
         return Math.max(pagina, 1);
     }
