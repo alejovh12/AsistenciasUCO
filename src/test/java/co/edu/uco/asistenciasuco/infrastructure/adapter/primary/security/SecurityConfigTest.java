@@ -53,6 +53,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
@@ -192,6 +193,15 @@ class SecurityConfigTest {
         assertTrue(configuration.getAllowedMethods().contains(HttpMethod.OPTIONS.name()));
         assertTrue(configuration.getAllowedHeaders().contains(HttpHeaders.AUTHORIZATION));
         assertTrue(configuration.getExposedHeaders().contains(CorrelationIdFilter.HEADER_NAME));
+    }
+
+    @Test
+    void cors_rechaza_un_origen_que_no_esta_en_la_lista_configurada() {
+        final CorsConfiguration configuration = corsConfigurationSource.getCorsConfiguration(corsRequest("https://sitio-ajeno.example"));
+
+        assertNull(configuration.checkOrigin("https://sitio-ajeno.example"));
+        assertNull(configuration.checkOrigin("null"));
+        assertFalse(configuration.getAllowedOrigins().contains("*"));
     }
 
     @Test

@@ -22,4 +22,25 @@ public record ValidarCargaUsuariosCommand(
     public byte[] contenidoBytes() {
         return Arrays.copyOf(contenidoBytes, contenidoBytes.length);
     }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (!(other instanceof ValidarCargaUsuariosCommand that)) {
+            return false;
+        }
+        return Objects.equals(usuarioEjecutor, that.usuarioEjecutor) && Objects.equals(perfilDestino, that.perfilDestino) && Objects.equals(nombreArchivo, that.nombreArchivo) && Arrays.equals(contenidoBytes, that.contenidoBytes);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(usuarioEjecutor, perfilDestino, nombreArchivo) * 31 + Arrays.hashCode(contenidoBytes);
+    }
+
+    @Override
+    public String toString() {
+        return "ValidarCargaUsuariosCommand[usuarioEjecutor=" + usuarioEjecutor + ", perfilDestino=" + perfilDestino + ", nombreArchivo=" + nombreArchivo + ", contenidoBytes=" + (contenidoBytes == null ? 0 : contenidoBytes.length) + " bytes]";
+    }
 }

@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -68,6 +69,7 @@ public final class DecanoRevisionCancelacionController {
             @RequestBody(required = false) final DecisionRevisionCancelacionRequest request
     ) {
         RequestValidationGuard.validate(VALIDATOR.validate(request));
+        Objects.requireNonNull(request, "La decision es obligatoria.");
         final var resultado = resolver.execute(new ResolverRevisionCancelacionInputPort.Comando(
                 revisionId, request.getDecision(), request.getMotivo(), authenticatedUserResolver.requireAuthenticatedUserId()));
         return ResponseEntity.ok(new ApiDataResponse<>(true, RevisionCancelacionHttpMapper.toResponse(resultado)));

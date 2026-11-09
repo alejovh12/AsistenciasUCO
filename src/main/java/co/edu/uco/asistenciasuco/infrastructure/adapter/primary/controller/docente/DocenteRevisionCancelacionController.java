@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Objects;
 import java.util.UUID;
 
 /** CULM-001 C.1 (HU026C): el docente titular mantiene o propone la cancelacion de un estudiante en perdida. La bandeja del docente es C.2. */
@@ -40,6 +41,7 @@ public final class DocenteRevisionCancelacionController {
             @RequestBody(required = false) final DecisionRevisionCancelacionRequest request
     ) {
         RequestValidationGuard.validate(VALIDATOR.validate(request));
+        Objects.requireNonNull(request, "La decision es obligatoria.");
         final var resultado = decidir.execute(new DecidirRevisionCancelacionInputPort.Comando(
                 revisionId, request.getDecision(), request.getMotivo(), authenticatedUserResolver.requireAuthenticatedUserId()));
         return ResponseEntity.ok(new ApiDataResponse<>(true, RevisionCancelacionHttpMapper.toResponse(resultado)));
