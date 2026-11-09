@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.application.secondaryports.repository;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.SesionProcedenciaRepositoryProjection;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -15,4 +16,7 @@ public interface SesionProcedenciaQueryPort {
     Optional<SesionProcedenciaRepositoryProjection> consultarSesion(UUID sesionId);
 
     List<SesionProcedenciaRepositoryProjection> consultarSesionesPorGrupo(UUID grupoId);
+
+    /** Procedencia de solo las sesiones indicadas (p. ej. las de una pagina), sin leer el resto del grupo. */
+    List<SesionProcedenciaRepositoryProjection> consultarSesionesPorIds(Collection<UUID> sesionIds);
 }
