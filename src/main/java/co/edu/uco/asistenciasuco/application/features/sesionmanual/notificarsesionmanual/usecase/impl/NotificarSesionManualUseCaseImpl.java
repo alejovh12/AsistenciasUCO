@@ -103,7 +103,7 @@ public final class NotificarSesionManualUseCaseImpl implements NotificarSesionMa
 
     private static boolean mismoInstante(final LocalDateTime esperado, final LocalDateTime guardado) {
         if (esperado == null || guardado == null) {
-            return esperado == guardado;
+            return esperado == null && guardado == null; // Sonar S8696: sin == entre tipos de valor
         }
         return esperado.truncatedTo(ChronoUnit.MICROS).equals(guardado.truncatedTo(ChronoUnit.MICROS));
     }
