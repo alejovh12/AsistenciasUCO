@@ -136,7 +136,7 @@ class ConsultarAsistenciaProgramaUseCaseImplTest {
         final LocalDateTime finUtc = LocalDateTime.of(2026, 11, 3, 17, 0);
         when(queryPort.consultarSesionesGrupo(COORDINADOR, GRUPO, null, null, 1, 10))
                 .thenReturn(new Pagina<>(List.of(sesion()), 1));
-        when(procedenciaPort.consultarSesionesPorGrupo(GRUPO))
+        when(procedenciaPort.consultarSesionesPorIds(any()))
                 .thenReturn(List.of(procedencia(SESION, GRUPO, inicioUtc, finUtc, "UTC_V2")));
 
         final var sesion = useCase.consultarSesionesGrupo(COORDINADOR, GRUPO, null, null, null, null)
@@ -154,7 +154,7 @@ class ConsultarAsistenciaProgramaUseCaseImplTest {
         final UUID sinFila = UUID.randomUUID();
         when(queryPort.consultarSesionesGrupo(COORDINADOR, GRUPO, null, null, 1, 10))
                 .thenReturn(new Pagina<>(List.of(sesion(legado), sesion(sinFila)), 2));
-        when(procedenciaPort.consultarSesionesPorGrupo(GRUPO)).thenReturn(List.of(
+        when(procedenciaPort.consultarSesionesPorIds(any())).thenReturn(List.of(
                 procedencia(legado, GRUPO, LocalDateTime.of(2026, 2, 3, 12, 0), LocalDateTime.of(2026, 2, 3, 14, 0),
                         null)));
 
@@ -172,7 +172,7 @@ class ConsultarAsistenciaProgramaUseCaseImplTest {
     void T_APP04_03_procedencia_de_otro_grupo_no_se_usa() {
         when(queryPort.consultarSesionesGrupo(COORDINADOR, GRUPO, null, null, 1, 10))
                 .thenReturn(new Pagina<>(List.of(sesion()), 1));
-        when(procedenciaPort.consultarSesionesPorGrupo(GRUPO)).thenReturn(List.of(procedencia(SESION,
+        when(procedenciaPort.consultarSesionesPorIds(any())).thenReturn(List.of(procedencia(SESION,
                 UUID.randomUUID(), LocalDateTime.of(2026, 2, 3, 12, 0), LocalDateTime.of(2026, 2, 3, 14, 0), "UTC_V2")));
 
         final var sesion = useCase.consultarSesionesGrupo(COORDINADOR, GRUPO, null, null, null, null)
@@ -228,7 +228,7 @@ class ConsultarAsistenciaProgramaUseCaseImplTest {
     @Test
     void interactor_mapea_proyecciones_a_dto_con_pagina_y_tamano() {
         final ConsultarAsistenciaProgramaInteractor interactor = new ConsultarAsistenciaProgramaInteractor(useCase);
-        when(procedenciaPort.consultarSesionesPorGrupo(GRUPO)).thenReturn(List.of(procedencia(SESION, GRUPO,
+        when(procedenciaPort.consultarSesionesPorIds(any())).thenReturn(List.of(procedencia(SESION, GRUPO,
                 LocalDateTime.of(2026, 2, 3, 12, 0), LocalDateTime.of(2026, 2, 3, 14, 0), "UTC_GENERADOR")));
         when(queryPort.consultarGrupos(COORDINADOR, null, null, 1, 10)).thenReturn(new Pagina<>(List.of(grupo()), 7));
         when(queryPort.consultarSesionesGrupo(COORDINADOR, GRUPO, null, null, 2, 5))
@@ -262,7 +262,7 @@ class ConsultarAsistenciaProgramaUseCaseImplTest {
         final ConsultarAsistenciaProgramaInteractor interactor = new ConsultarAsistenciaProgramaInteractor(useCase);
         when(queryPort.consultarSesionesGrupo(COORDINADOR, GRUPO, null, null, 1, 10))
                 .thenReturn(new Pagina<>(List.of(sesion()), 1));
-        when(procedenciaPort.consultarSesionesPorGrupo(GRUPO)).thenReturn(List.of(new SesionProcedenciaRepositoryProjection(
+        when(procedenciaPort.consultarSesionesPorIds(any())).thenReturn(List.of(new SesionProcedenciaRepositoryProjection(
                 SESION, GRUPO, "Sesion 1", 1, "S-01", 2, "1", "Grupo 1", LocalDateTime.of(2026, 2, 3, 12, 0),
                 LocalDateTime.of(2026, 2, 3, 14, 0), "UTC_V2",
                 new CancelacionSesionProjection("FESTIVO", "Dia festivo: San Jose", "San Jose", LocalDateTime.of(2026, 1, 2, 5, 0)))));
@@ -280,7 +280,7 @@ class ConsultarAsistenciaProgramaUseCaseImplTest {
         final ConsultarAsistenciaProgramaInteractor interactor = new ConsultarAsistenciaProgramaInteractor(useCase);
         when(queryPort.consultarSesionesGrupo(COORDINADOR, GRUPO, null, null, 1, 10))
                 .thenReturn(new Pagina<>(List.of(sesion()), 1));
-        when(procedenciaPort.consultarSesionesPorGrupo(GRUPO)).thenReturn(List.of());
+        when(procedenciaPort.consultarSesionesPorIds(any())).thenReturn(List.of());
 
         final var sesion = interactor.consultarSesionesGrupo(COORDINADOR, GRUPO, null, null, null, null).elementos().getFirst();
 
