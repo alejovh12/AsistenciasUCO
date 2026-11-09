@@ -140,12 +140,8 @@ class ConsultarAsistenciaProgramaSesionesAcotadasTest {
         });
         paginaDe(List.of(sesion(a), sesion(null)), 2);
 
-        try {
-            consultar();
-        } catch (final NullPointerException invarianteDelDominio) {
-            // SesionGrupoHorarioDomain exige id: construir la fila sin id puede fallar; lo observable aqui es el puerto.
-            assertNotNull(invarianteDelDominio);
-        }
+        // SesionGrupoHorarioDomain exige id: la fila sin id falla al construirse, despues de pedir la procedencia.
+        assertThrows(NullPointerException.class, this::consultar);
 
         assertNotNull(recibidos.get(), "se debe consultar la procedencia de los ids validos de la pagina");
         assertEquals(List.of(a), recibidos.get());
