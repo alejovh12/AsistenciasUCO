@@ -23,6 +23,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -30,7 +31,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -132,12 +136,12 @@ class ConsultarFacultadDecanoUseCaseImplTest {
         final SesionFacultadProjection otroGrupo = sesion();
         when(queryPort.consultarSesiones(DECANO, null, null, null, 1, 10))
                 .thenReturn(new Pagina<>(List.of(confirmada, antigua, otroGrupo), 3));
-        when(procedenciaPort.consultarSesionesPorGrupo(confirmada.idGrupo())).thenReturn(List.of(
+        // PAG-DEC-SESIONES: una sola lectura acotada a los ids de la pagina (ya no una por grupo).
+        // La fila de otro grupo con el mismo id de sesion nunca se aplica (defensa en profundidad).
+        when(procedenciaPort.consultarSesionesPorIds(any())).thenReturn(List.of(
                 procedencia(confirmada, confirmada.idGrupo(), "UTC_V2"),
-                procedencia(antigua, confirmada.idGrupo(), null)));
-        // Fila de otro grupo con el mismo id: nunca se aplica (defensa en profundidad).
-        when(procedenciaPort.consultarSesionesPorGrupo(otroGrupo.idGrupo()))
-                .thenReturn(List.of(procedencia(otroGrupo, UUID.randomUUID(), "UTC_V2")));
+                procedencia(antigua, confirmada.idGrupo(), null),
+                procedencia(otroGrupo, UUID.randomUUID(), "UTC_V2")));
 
         final var resultado = useCase.consultarSesiones(DECANO, null, null, null, null, null);
 
@@ -150,7 +154,10 @@ class ConsultarFacultadDecanoUseCaseImplTest {
         assertNull(resultado.elementos().get(1).fechaHoraInicioUtc());
         assertEquals(EstadoHorarioSesion.INDETERMINADA, resultado.elementos().get(2).estadoTemporal());
         assertNull(resultado.elementos().get(2).fechaHoraFinUtc());
-        verify(procedenciaPort, times(1)).consultarSesionesPorGrupo(confirmada.idGrupo());
+        verify(procedenciaPort, times(1)).consultarSesionesPorIds(
+                argThat(ids -> ids.size() == 3 && Set.copyOf(ids)
+                        .equals(Set.of(confirmada.id(), antigua.id(), otroGrupo.id()))));
+        verify(procedenciaPort, never()).consultarSesionesPorGrupo(any());
     }
 
     @Test
@@ -246,7 +253,7 @@ class ConsultarFacultadDecanoUseCaseImplTest {
         final SesionFacultadProjection programada = sesion();
         when(queryPort.consultarSesiones(DECANO, null, null, null, 1, 10))
                 .thenReturn(new Pagina<>(List.of(cancelada, programada), 2));
-        when(procedenciaPort.consultarSesionesPorGrupo(cancelada.idGrupo())).thenReturn(List.of(
+        when(procedenciaPort.consultarSesionesPorIds(any())).thenReturn(List.of(
                 new SesionProcedenciaRepositoryProjection(cancelada.id(), cancelada.idGrupo(), cancelada.nombre(), 1,
                         cancelada.codigo(), cancelada.numeroSemana(), "1", cancelada.nombreGrupo(), cancelada.fechaHoraInicio(),
                         cancelada.fechaHoraFin(), "UTC_V2",
