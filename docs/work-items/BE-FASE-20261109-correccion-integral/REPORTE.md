@@ -96,6 +96,13 @@ Coordinador `uco-coordinador`: el ámbito de programa se resuelve por `uv_coordi
 
 Ver `VALIDACION.md` en esta carpeta (se completa con los comandos y resultados reales).
 
+## Seguimiento de PR y ajustes de Sonar (2026-11-09)
+
+- [PR #117](https://github.com/alejovh12/AsistenciasUCO/pull/117): configuracion SMTP; dos issues de fiabilidad `java:S9352` corregidas en la rama, test de contexto Spring añadido y correccion posterior de comentario `java:S1135` (`32a3414f`). Nuevos CI/Sonar por verificar.
+- [PR #118](https://github.com/alejovh12/AsistenciasUCO/pull/118): sesiones del estudiante acotadas; ajustes posteriores de Mockito `java:S6068` (`404f49ca`) y comentario `java:S1135` (`a1046b26`). Nuevos CI/Sonar por verificar.
+- [PR #119](https://github.com/alejovh12/AsistenciasUCO/pull/119): documentacion; fusionar solo con la secuencia y evidencia compatibles.
+- Ninguno de estos ajustes de mantenibilidad equivale a validacion HTTP autenticada o despliegue en 8080; ambos siguen `NOT_RUN`.
+
 ## 7. Transferencias y decisiones pendientes
 
 - DB (responsable DB): detalles 6352/6353; sesión 9/12/2026 y registros SJC de sesiones no iniciadas; cuerpo y ámbito de `usp_consultar_sesiones_materia_estudiante`/SP de ámbito para evidencia; definición de `uv_resumen_asistencia_estudiante_grupo` ante combinaciones fuera de contrato.
