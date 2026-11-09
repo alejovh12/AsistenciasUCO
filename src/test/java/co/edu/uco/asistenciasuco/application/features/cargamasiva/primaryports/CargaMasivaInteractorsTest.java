@@ -114,7 +114,7 @@ class CargaMasivaInteractorsTest {
         assertNotEquals(a, new EjecutarCargaUsuariosCommand(ACTOR, PerfilDestinoCarga.DOCENTE, "d.csv", new byte[]{1, 2, 4}, "huella-secreta"));
         assertNotEquals(a, new EjecutarCargaUsuariosCommand(ACTOR, PerfilDestinoCarga.DOCENTE, "d.csv", new byte[]{1, 2, 3}, "otra"));
         assertNotEquals(a, new EjecutarCargaUsuariosCommand(ACTOR, PerfilDestinoCarga.COORDINADOR, "d.csv", new byte[]{1, 2, 3}, "huella-secreta"));
-        assertNotEquals(a, "otro tipo");
+        assertFalse(a.equals("otro tipo")); // Sonar S5845: comparar con otro tipo se expresa con equals directo
         assertTrue(a.equals(a));
         assertTrue(a.toString().contains("3 bytes"));
         assertFalse(a.toString().contains("huella-secreta"));
@@ -134,7 +134,7 @@ class CargaMasivaInteractorsTest {
         assertNotEquals(a, new ValidarCargaUsuariosCommand(ACTOR, PerfilDestinoCarga.DECANO, "d.csv", new byte[]{5, 7}));
         assertNotEquals(a, new ValidarCargaUsuariosCommand(ACTOR, PerfilDestinoCarga.DECANO, "otro.csv", new byte[]{5, 6}));
         assertNotEquals(a, null);
-        assertNotEquals(a, "otro tipo");
+        assertFalse(a.equals("otro tipo")); // Sonar S5845: comparar con otro tipo se expresa con equals directo
         assertTrue(a.toString().contains("2 bytes"));
         a.contenidoBytes()[0] = 0;
         assertArrayEquals(new byte[]{5, 6}, a.contenidoBytes());
@@ -151,7 +151,7 @@ class CargaMasivaInteractorsTest {
         assertEquals(a.hashCode(), b.hashCode());
         assertNotEquals(a, new EjecutarCargaUsuariosDomain(ACTOR, PerfilDestinoCarga.DOCENTE, new byte[]{1, 3}, "h"));
         assertNotEquals(a, new EjecutarCargaUsuariosDomain(ACTOR, PerfilDestinoCarga.DOCENTE, new byte[]{1, 2}, "x"));
-        assertNotEquals(a, "otro tipo");
+        assertFalse(a.equals("otro tipo")); // Sonar S5845: comparar con otro tipo se expresa con equals directo
         assertTrue(a.equals(a));
         assertFalse(a.toString().contains("\"h\""));
         assertTrue(a.toString().contains("2 bytes"));
@@ -162,7 +162,7 @@ class CargaMasivaInteractorsTest {
         assertEquals(v.hashCode(), new ValidarCargaUsuariosDomain(ACTOR, PerfilDestinoCarga.DOCENTE, new byte[]{1, 2}).hashCode());
         assertNotEquals(v, new ValidarCargaUsuariosDomain(ACTOR, PerfilDestinoCarga.DOCENTE, new byte[]{2, 2}));
         assertNotEquals(v, new ValidarCargaUsuariosDomain(UUID.randomUUID(), PerfilDestinoCarga.DOCENTE, new byte[]{1, 2}));
-        assertNotEquals(v, "otro tipo");
+        assertFalse(v.equals("otro tipo")); // Sonar S5845: comparar con otro tipo se expresa con equals directo
         assertTrue(v.equals(v));
         assertTrue(v.toString().contains("2 bytes"));
         assertTrue(new ValidarCargaUsuariosDomain(ACTOR, PerfilDestinoCarga.DOCENTE, null).toString().contains("0 bytes"));
