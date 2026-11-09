@@ -24,4 +24,6 @@ Limitaciones:
 - La IT usa datos vivos y no escribe; no se levantó una base alternativa ni se sembraron datos.
 - No se midió el número de sentencias SQL ni el tiempo; la acotación se demuestra por filas recuperadas (menos que la lectura completa) y por la forma del HQL (`in :idsSesion`, sin `idGrupo`).
 - Validación HTTP real, despliegue en 8080, CI remoto y SonarCloud: `NOT_RUN` (ver REPORTE.md §1 y §6). Ningún endpoint se certifica por HTTP real en esta fase.
-- Los SHA de las ramas no han sido publicados.
+- Las ramas funcionales estan publicadas en los PR #117 (SMTP) y #118 (sesiones), ambos hacia `develop`; el PR documental es #119. En los SHA originales se observaron CI verdes, pero los nuevos commits correctivos requieren una nueva corrida.
+- Ajustes posteriores a SonarCloud (2026-11-09): PR #117 commit `32a3414f` cambia el comentario del test de reflexion que activaba `java:S1135`; PR #118 commit `404f49ca` simplifica dos stubs Mockito (`java:S6068`) y commit `a1046b26` reformula un comentario que activaba `java:S1135`. Son cambios puntuales sin modificacion deliberada de reglas academicas ni contratos. Las comprobaciones remotas de estos nuevos SHA estaban EN EJECUCION al actualizar este documento, por lo que no se declaran PASS.
+- Validacion HTTP real, despliegue en 8080 e integracion visual Angular: todavia `NOT_RUN`.
