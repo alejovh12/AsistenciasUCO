@@ -38,8 +38,8 @@ class SesionesEstudianteAcotadasJpaTest {
     private TypedQuery<AsistenciaSesionEstudianteQueryRow> consultaAsistencia() {
         final TypedQuery<AsistenciaSesionEstudianteQueryRow> query = mock(TypedQuery.class, RETURNS_SELF);
         when(query.getResultList()).thenReturn(List.of());
-        when(manager.createQuery(eq(AsistenciaSesionEstudianteJpaRepository.HQL_POR_ESTUDIANTE_ASIGNATURA_Y_SESIONES),
-                eq(AsistenciaSesionEstudianteQueryRow.class))).thenReturn(query);
+        when(manager.createQuery(AsistenciaSesionEstudianteJpaRepository.HQL_POR_ESTUDIANTE_ASIGNATURA_Y_SESIONES,
+                AsistenciaSesionEstudianteQueryRow.class)).thenReturn(query);
         return query;
     }
 
@@ -108,7 +108,7 @@ class SesionesEstudianteAcotadasJpaTest {
 
         final TypedQuery<Object[]> query = mock(TypedQuery.class, RETURNS_SELF);
         when(query.getResultList()).thenReturn(List.of());
-        when(manager.createQuery(eq(SesionProcedenciaJpaRepository.HQL_POR_IDS), eq(Object[].class))).thenReturn(query);
+        when(manager.createQuery(SesionProcedenciaJpaRepository.HQL_POR_IDS, Object[].class)).thenReturn(query);
         final var repo = new SesionProcedenciaJpaRepository(manager);
 
         assertTrue(repo.consultarSesionesPorIds(List.of()).isEmpty());
