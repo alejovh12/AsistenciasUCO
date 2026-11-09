@@ -66,7 +66,7 @@ public class AdminCargasController {
     ) {
         final UUID actorId = requireActorConRateLimit();
         final byte[] bytes = extraerBytes(archivo);
-        final String nombreArchivo = archivo != null ? archivo.getOriginalFilename() : "decanos.csv";
+        final String nombreArchivo = Objects.requireNonNullElse(archivo.getOriginalFilename(), "decanos.csv");
         final ValidarCargaUsuariosCommand command = new ValidarCargaUsuariosCommand(
                 actorId, PerfilDestinoCarga.DECANO, nombreArchivo, bytes
         );
@@ -82,7 +82,7 @@ public class AdminCargasController {
     ) {
         final UUID actorId = requireActorConRateLimit();
         final byte[] bytes = extraerBytes(archivo);
-        final String nombreArchivo = archivo != null ? archivo.getOriginalFilename() : "decanos.csv";
+        final String nombreArchivo = Objects.requireNonNullElse(archivo.getOriginalFilename(), "decanos.csv");
         final EjecutarCargaUsuariosCommand command = new EjecutarCargaUsuariosCommand(
                 actorId, PerfilDestinoCarga.DECANO, nombreArchivo, bytes, huella
         );

@@ -66,7 +66,7 @@ public class DecanoCargasController {
     ) {
         final UUID actorId = requireActorConRateLimit();
         final byte[] bytes = extraerBytes(archivo);
-        final String nombreArchivo = archivo != null ? archivo.getOriginalFilename() : "coordinadores.csv";
+        final String nombreArchivo = Objects.requireNonNullElse(archivo.getOriginalFilename(), "coordinadores.csv");
         final ValidarCargaUsuariosCommand command = new ValidarCargaUsuariosCommand(
                 actorId, PerfilDestinoCarga.COORDINADOR, nombreArchivo, bytes
         );
@@ -82,7 +82,7 @@ public class DecanoCargasController {
     ) {
         final UUID actorId = requireActorConRateLimit();
         final byte[] bytes = extraerBytes(archivo);
-        final String nombreArchivo = archivo != null ? archivo.getOriginalFilename() : "coordinadores.csv";
+        final String nombreArchivo = Objects.requireNonNullElse(archivo.getOriginalFilename(), "coordinadores.csv");
         final EjecutarCargaUsuariosCommand command = new EjecutarCargaUsuariosCommand(
                 actorId, PerfilDestinoCarga.COORDINADOR, nombreArchivo, bytes, huella
         );
