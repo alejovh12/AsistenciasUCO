@@ -17,12 +17,13 @@ import co.edu.uco.asistenciasuco.application.secondaryports.security.Institution
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * HU064/HU060/HU061. Exige un coordinador con programa (403 si no lo tiene) y valida paginacion y filtros; el
@@ -70,19 +71,24 @@ public final class ConsultarAsistenciaProgramaUseCaseImpl implements ConsultarAs
     }
 
     /**
-     * APP-04: la pagina ya viene aislada por programa (provider DB); la procedencia temporal solo se consulta si hay
-     * sesiones y solo se aplica a filas del mismo grupo e id. Sin procedencia CONFIRMADA no se ofrecen instantes.
+     * APP-04: la pagina ya viene aislada por programa (provider DB); la procedencia temporal se consulta una sola vez,
+     * solo para los ids de las sesiones de la pagina y solo si hay sesiones, y unicamente se aplica a filas del mismo
+     * grupo e id. Sin procedencia CONFIRMADA no se ofrecen instantes.
      */
     private List<SesionGrupoHorarioDomain> conHorario(final UUID idGrupo,
                                                       final Pagina<SesionGrupoProjection> sesiones) {
         if (sesiones.elementos().isEmpty()) {
             return List.of();
         }
-        final Map<UUID, SesionProcedenciaEntity> procedencias = procedenciaPort.consultarSesionesPorGrupo(idGrupo)
-                .stream()
-                .map(SesionProcedenciaMapper::toEntity)
-                .filter(p -> idGrupo.equals(p.grupo()))
-                .collect(Collectors.toMap(SesionProcedenciaEntity::sesion, Function.identity(), (a, b) -> a));
+        final Set<UUID> ids = new LinkedHashSet<>();
+        sesiones.elementos().stream().map(SesionGrupoProjection::id).filter(Objects::nonNull).forEach(ids::add);
+        final Map<UUID, SesionProcedenciaEntity> procedencias = new HashMap<>();
+        if (!ids.isEmpty()) {
+            procedenciaPort.consultarSesionesPorIds(ids).stream()
+                    .map(SesionProcedenciaMapper::toEntity)
+                    .filter(p -> p.grupo() != null && p.grupo().equals(idGrupo))
+                    .forEach(p -> procedencias.putIfAbsent(p.sesion(), p));
+        }
         return sesiones.elementos().stream().map(s -> conHorario(s, procedencias.get(s.id()))).toList();
     }
 

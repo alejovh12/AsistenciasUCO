@@ -23,11 +23,14 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Sesiones de una materia del estudiante autenticado, con su estado real de asistencia.
@@ -71,10 +74,6 @@ public final class ConsultarSesionesMateriaEstudianteUseCaseImpl implements Cons
                                                                  final Integer pagina, final Integer tamano) {
         final UUID idEstudiante = scopePort.findEstudianteIdByUsuario(actorUsuarioId)
                 .orElseThrow(() -> new ForbiddenException("No fue posible resolver el estudiante autenticado."));
-        final Map<UUID, List<AsistenciaSesionEstudianteProjection>> hechosPorSesion = new HashMap<>();
-        for (final var hecho : asistenciaPort.consultarAsistenciaSesiones(idEstudiante, idAsignatura)) {
-            hechosPorSesion.computeIfAbsent(hecho.idSesion(), k -> new ArrayList<>()).add(hecho);
-        }
         final int numeroPagina = pagina == null ? 1 : pagina;
         final int tamanoPagina = tamano == null ? tamanoPorDefecto() : tamano;
         final PaginaResultado<SesionMateriaEstudianteProjection> resultado =
@@ -85,7 +84,19 @@ public final class ConsultarSesionesMateriaEstudianteUseCaseImpl implements Cons
                     idAsignatura, resultado.totalElementos(), tamanoPagina);
         }
         final List<SesionMateriaEstudianteProjection> sesiones = resultado.elementos();
-        final Map<UUID, SesionProcedenciaEntity> procedencias = procedencias(sesiones);
+        if (sesiones.isEmpty()) {
+            return List.of();
+        }
+        // Lecturas complementarias limitadas a las sesiones de la pagina, sin consultar la materia ni el grupo completos.
+        final Set<UUID> idsPagina = sesiones.stream().map(SesionMateriaEstudianteProjection::id)
+                .filter(Objects::nonNull).collect(Collectors.toCollection(LinkedHashSet::new));
+        final Map<UUID, List<AsistenciaSesionEstudianteProjection>> hechosPorSesion = new HashMap<>();
+        for (final var hecho : asistenciaPort.consultarAsistenciaSesiones(idEstudiante, idAsignatura, idsPagina)) {
+            if (idsPagina.contains(hecho.idSesion())) {
+                hechosPorSesion.computeIfAbsent(hecho.idSesion(), k -> new ArrayList<>()).add(hecho);
+            }
+        }
+        final Map<UUID, SesionProcedenciaEntity> procedencias = procedencias(sesiones, idsPagina);
         return sesiones.stream()
                 .map(sesion -> {
                     final var hechos = hechosPorSesion.getOrDefault(sesion.id(), List.of());
@@ -114,16 +125,23 @@ public final class ConsultarSesionesMateriaEstudianteUseCaseImpl implements Cons
 
     /**
      * APP-04: misma regla que HU060 coordinador. Las sesiones ya vienen aisladas por estudiante/asignatura; la
-     * procedencia se consulta una vez por grupo y solo se aplica a filas del mismo grupo e id. Sin procedencia
-     * CONFIRMADA no se ofrecen instantes UTC (estadoTemporal INDETERMINADA).
+     * procedencia se consulta una sola vez, solo para las sesiones de la pagina, y se aplica unicamente a filas con el
+     * mismo id y el mismo grupo que la sesion de la pagina. Sin procedencia CONFIRMADA no se ofrecen instantes UTC
+     * (estadoTemporal INDETERMINADA).
      */
-    private Map<UUID, SesionProcedenciaEntity> procedencias(final List<SesionMateriaEstudianteProjection> sesiones) {
+    private Map<UUID, SesionProcedenciaEntity> procedencias(final List<SesionMateriaEstudianteProjection> sesiones,
+                                                            final Set<UUID> idsPagina) {
+        final Map<UUID, UUID> grupoPorSesion = new HashMap<>();
+        sesiones.stream().filter(sesion -> sesion.id() != null && sesion.idGrupo() != null)
+                .forEach(sesion -> grupoPorSesion.putIfAbsent(sesion.id(), sesion.idGrupo()));
         final Map<UUID, SesionProcedenciaEntity> resultado = new HashMap<>();
-        sesiones.stream().map(SesionMateriaEstudianteProjection::idGrupo).filter(Objects::nonNull).distinct()
-                .forEach(idGrupo -> procedenciaPort.consultarSesionesPorGrupo(idGrupo).stream()
-                        .map(SesionProcedenciaMapper::toEntity)
-                        .filter(p -> idGrupo.equals(p.grupo()))
-                        .forEach(p -> resultado.putIfAbsent(p.sesion(), p)));
+        if (grupoPorSesion.isEmpty()) {
+            return resultado;
+        }
+        procedenciaPort.consultarSesionesPorIds(idsPagina).stream()
+                .map(SesionProcedenciaMapper::toEntity)
+                .filter(p -> p.grupo() != null && p.grupo().equals(grupoPorSesion.get(p.sesion())))
+                .forEach(p -> resultado.putIfAbsent(p.sesion(), p));
         return resultado;
     }
 

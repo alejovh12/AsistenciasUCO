@@ -25,6 +25,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 import java.security.SecureRandom;
 import java.time.Clock;
@@ -44,6 +45,7 @@ import java.time.Clock;
 public class SmtpNotificacionAdapterConfiguration {
 
     @Bean
+    @Primary
     @ConditionalOnMissingBean(PlantillaNotificacionRepository.class)
     public PlantillaNotificacionRepository plantillaNotificacionRepository(
             final EntityManager entityManager,
@@ -57,12 +59,14 @@ public class SmtpNotificacionAdapterConfiguration {
     }
 
     @Bean
+    @Primary
     @ConditionalOnMissingBean(PlantillaPorDefectoCatalogo.class)
     public PlantillaPorDefectoCatalogo plantillaPorDefectoCatalogo() {
         return new PlantillaPorDefectoCatalogo();
     }
 
     @Bean
+    @Primary
     @ConditionalOnMissingBean(PlantillaRenderer.class)
     public PlantillaRenderer plantillaRenderer(
             final PlantillaNotificacionRepository plantillaRepository,

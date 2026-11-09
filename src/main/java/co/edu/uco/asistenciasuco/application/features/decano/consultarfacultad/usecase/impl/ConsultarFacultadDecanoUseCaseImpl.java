@@ -90,20 +90,20 @@ public final class ConsultarFacultadDecanoUseCaseImpl implements ConsultarFacult
     }
 
     /**
-     * La pagina ya viene aislada por facultad (provider DB). La procedencia se consulta una vez por grupo de la pagina
-     * y solo se aplica a la sesion del mismo grupo e id; sin procedencia CONFIRMADA no se ofrecen instantes UTC.
+     * La pagina ya viene aislada por facultad (provider DB). La procedencia se consulta una sola vez por pagina, solo
+     * para los ids de sus sesiones, y unicamente se aplica a la fila del mismo id y del mismo grupo; sin procedencia
+     * CONFIRMADA no se ofrecen instantes UTC.
      */
     private List<SesionFacultadHorarioDomain> conHorario(final List<SesionFacultadProjection> sesiones) {
         if (sesiones.isEmpty()) {
             return List.of();
         }
-        final Set<UUID> grupos = new LinkedHashSet<>();
-        sesiones.stream().map(SesionFacultadProjection::idGrupo).filter(Objects::nonNull).forEach(grupos::add);
+        final Set<UUID> ids = new LinkedHashSet<>();
+        sesiones.stream().map(SesionFacultadProjection::id).filter(Objects::nonNull).forEach(ids::add);
         final Map<UUID, SesionProcedenciaEntity> procedencias = new HashMap<>();
-        for (final UUID grupo : grupos) {
-            procedenciaPort.consultarSesionesPorGrupo(grupo).stream()
+        if (!ids.isEmpty()) {
+            procedenciaPort.consultarSesionesPorIds(ids).stream()
                     .map(SesionProcedenciaMapper::toEntity)
-                    .filter(p -> grupo.equals(p.grupo()))
                     .forEach(p -> procedencias.putIfAbsent(p.sesion(), p));
         }
         return sesiones.stream().map(s -> conHorario(s, procedencias.get(s.id()))).toList();
@@ -111,7 +111,8 @@ public final class ConsultarFacultadDecanoUseCaseImpl implements ConsultarFacult
 
     private static SesionFacultadHorarioDomain conHorario(final SesionFacultadProjection sesion,
                                                           final SesionProcedenciaEntity procedencia) {
-        final boolean aplica = procedencia != null && Objects.equals(procedencia.grupo(), sesion.idGrupo());
+        final boolean aplica = procedencia != null && procedencia.grupo() != null
+                && procedencia.grupo().equals(sesion.idGrupo());
         return new SesionFacultadHorarioDomain(sesion.id(), sesion.nombre(), sesion.codigo(), sesion.numeroSemana(),
                 sesion.fechaHoraInicio(), sesion.fechaHoraFin(), sesion.idGrupo(), sesion.codigoGrupo(),
                 sesion.nombreGrupo(), sesion.idAsignatura(), sesion.nombreAsignatura(), sesion.idPrograma(),
