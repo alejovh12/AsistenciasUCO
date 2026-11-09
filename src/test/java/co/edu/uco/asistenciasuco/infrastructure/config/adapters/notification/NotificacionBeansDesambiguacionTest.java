@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * QUALITY-SONAR-RELIABILITY (java:S9352): cuando dos Composition Roots declaran beans del mismo tipo
- * (Admin y Smtp), todo punto de inyeccion de la configuracion SMTP debe resolverse sin ambiguedad,
+ * (Admin y Smtp), cada punto de inyeccion de la configuracion SMTP debe resolverse sin ambiguedad,
  * es decir, exactamente un candidato marcado {@code @Primary}.
  */
 class NotificacionBeansDesambiguacionTest {
