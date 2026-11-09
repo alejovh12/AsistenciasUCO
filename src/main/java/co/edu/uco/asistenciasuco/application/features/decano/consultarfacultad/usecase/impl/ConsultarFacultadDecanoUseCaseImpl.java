@@ -79,12 +79,12 @@ public final class ConsultarFacultadDecanoUseCaseImpl implements ConsultarFacult
     @Override
     public Pagina<SesionFacultadHorarioDomain> consultarSesiones(final UUID usuario, final LocalDate desde,
                                                                  final LocalDate hasta, final UUID idPrograma,
-                                                                 final Integer pagina, final Integer tamano) {
+                                                                 final UUID idGrupo, final Integer pagina, final Integer tamano) {
         exigirDecano(usuario);
         if (!ObjectHelper.isNull(desde) && !ObjectHelper.isNull(hasta) && desde.isAfter(hasta)) {
             throw new ValidationException("La fecha desde no puede ser posterior a la fecha hasta.");
         }
-        final Pagina<SesionFacultadProjection> sesiones = queryPort.consultarSesiones(usuario, desde, hasta, idPrograma,
+        final Pagina<SesionFacultadProjection> sesiones = queryPort.consultarSesiones(usuario, desde, hasta, idPrograma, idGrupo,
                 ConsultaPaginadaRules.pagina(pagina), ConsultaPaginadaRules.tamano(tamano));
         return new Pagina<>(conHorario(sesiones.elementos()), sesiones.total());
     }

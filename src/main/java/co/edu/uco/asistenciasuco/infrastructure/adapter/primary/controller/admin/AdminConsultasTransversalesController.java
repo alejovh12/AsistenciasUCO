@@ -9,8 +9,11 @@ import co.edu.uco.asistenciasuco.application.features.consultastransversales.pri
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.FichaUnificadaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.FiltroAuditoriaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.PaginaDTO;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin.response.EventoAuditoriaResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiPageResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.PaginacionRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -44,19 +47,20 @@ public final class AdminConsultasTransversalesController {
     }
 
     @GetMapping("/asignaturas")
-    public ResponseEntity<ApiListResponse<AsignaturaInstitucionDTO>> buscarAsignaturas(
+    public ResponseEntity<ApiPageResponse<AsignaturaInstitucionDTO>> buscarAsignaturas(
             @RequestParam(name = "busqueda", required = false) final String busqueda,
             @RequestParam(name = "idFacultad", required = false) final UUID idFacultad,
             @RequestParam(name = "estaActiva", required = false) final Boolean estaActiva,
             @RequestParam(name = "pagina", required = false) final Integer pagina,
             @RequestParam(name = "tamano", required = false) final Integer tamano
     ) {
-        return lista(inputPort.buscarAsignaturas(usuario(), busqueda, idFacultad, estaActiva, pagina, tamano));
+        final PaginacionRequestValidator.Pagina solicitada = PaginacionRequestValidator.resolver(pagina, tamano);
+        return paginaDe(inputPort.buscarAsignaturas(usuario(), busqueda, idFacultad, estaActiva, pagina, tamano), solicitada);
     }
 
     /** HU136: docentes de la institucion del administrador (solo consulta). */
     @GetMapping("/docentes")
-    public ResponseEntity<ApiListResponse<DocenteFacultadDTO>> consultarDocentes(
+    public ResponseEntity<ApiPageResponse<DocenteFacultadDTO>> consultarDocentes(
             @RequestParam(name = "busqueda", required = false) final String busqueda,
             @RequestParam(name = "idFacultad", required = false) final UUID idFacultad,
             @RequestParam(name = "idPrograma", required = false) final UUID idPrograma,
@@ -65,19 +69,21 @@ public final class AdminConsultasTransversalesController {
             @RequestParam(name = "pagina", required = false) final Integer pagina,
             @RequestParam(name = "tamano", required = false) final Integer tamano
     ) {
-        return lista(inputPort.consultarDocentesInstitucion(usuario(), busqueda, idFacultad, idPrograma, estaActivo,
-                estadoVinculo, pagina, tamano));
+        final PaginacionRequestValidator.Pagina solicitada = PaginacionRequestValidator.resolver(pagina, tamano);
+        return paginaDe(inputPort.consultarDocentesInstitucion(usuario(), busqueda, idFacultad, idPrograma, estaActivo,
+                estadoVinculo, pagina, tamano), solicitada);
     }
 
     @GetMapping("/estudiantes")
-    public ResponseEntity<ApiListResponse<EstudianteInstitucionDTO>> buscarEstudiantes(
+    public ResponseEntity<ApiPageResponse<EstudianteInstitucionDTO>> buscarEstudiantes(
             @RequestParam(name = "busqueda", required = false) final String busqueda,
             @RequestParam(name = "idFacultad", required = false) final UUID idFacultad,
             @RequestParam(name = "estaActivo", required = false) final Boolean estaActivo,
             @RequestParam(name = "pagina", required = false) final Integer pagina,
             @RequestParam(name = "tamano", required = false) final Integer tamano
     ) {
-        return lista(inputPort.buscarEstudiantes(usuario(), busqueda, idFacultad, estaActivo, pagina, tamano));
+        final PaginacionRequestValidator.Pagina solicitada = PaginacionRequestValidator.resolver(pagina, tamano);
+        return paginaDe(inputPort.buscarEstudiantes(usuario(), busqueda, idFacultad, estaActivo, pagina, tamano), solicitada);
     }
 
     @GetMapping("/estudiantes/{estudianteId}/historial")
@@ -95,7 +101,7 @@ public final class AdminConsultasTransversalesController {
 
     /** HU172: rastro de auditoria; sin rango se consultan los ultimos 7 dias (maximo 90). */
     @GetMapping("/auditoria")
-    public ResponseEntity<ApiListResponse<EventoAuditoriaDTO>> consultarAuditoria(
+    public ResponseEntity<ApiPageResponse<EventoAuditoriaResponse>> consultarAuditoria(
             @RequestParam(name = "desde", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) final OffsetDateTime desde,
             @RequestParam(name = "hasta", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) final OffsetDateTime hasta,
             @RequestParam(name = "accion", required = false) final String accion,
@@ -104,18 +110,23 @@ public final class AdminConsultasTransversalesController {
             @RequestParam(name = "idUsuarioActor", required = false) final UUID idUsuarioActor,
             @RequestParam(name = "resultado", required = false) final String resultado,
             @RequestParam(name = "soloAsistencia", required = false) final Boolean soloAsistencia,
+            @RequestParam(name = "idCorrelacion", required = false) final UUID idCorrelacion,
+            @RequestParam(name = "soloAdministracion", required = false) final Boolean soloAdministracion,
             @RequestParam(name = "pagina", required = false) final Integer pagina,
             @RequestParam(name = "tamano", required = false) final Integer tamano
     ) {
-        return lista(inputPort.consultarAuditoria(usuario(), new FiltroAuditoriaDTO(desde, hasta, accion, tipoRecurso,
-                idRecurso, idUsuarioActor, resultado, soloAsistencia), pagina, tamano));
+        final PaginacionRequestValidator.Pagina solicitada = PaginacionRequestValidator.resolver(pagina, tamano);
+        final PaginaDTO<EventoAuditoriaDTO> eventos = inputPort.consultarAuditoria(usuario(), new FiltroAuditoriaDTO(desde, hasta, accion, tipoRecurso,
+                idRecurso, idUsuarioActor, resultado, soloAsistencia, idCorrelacion, soloAdministracion), pagina, tamano);
+        return paginaDe(new PaginaDTO<>(eventos.elementos().stream().map(EventoAuditoriaResponse::from).toList(), eventos.total()), solicitada);
     }
 
     private UUID usuario() {
         return authenticatedUserResolver.requireAuthenticatedUserId();
     }
 
-    private static <T> ResponseEntity<ApiListResponse<T>> lista(final PaginaDTO<T> pagina) {
-        return ResponseEntity.ok(new ApiListResponse<>(true, pagina.elementos(), pagina.total()));
+    private static <T> ResponseEntity<ApiPageResponse<T>> paginaDe(final PaginaDTO<T> pagina,
+                                                                   final PaginacionRequestValidator.Pagina solicitada) {
+        return ResponseEntity.ok(ApiPageResponse.of(pagina.elementos(), solicitada.numero(), solicitada.tamano(), pagina.total()));
     }
 }

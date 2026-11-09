@@ -33,6 +33,14 @@ public record Notificacion(
     public static final String TIPO_CIERRE_MASIVO_PERIODO_EJECUTADO = "CIERRE_MASIVO_PERIODO_EJECUTADO";
     /** CULM-001 B.1 (HU047): el docente titular cancelo una sesion (aviso a cada estudiante activo del grupo). */
     public static final String TIPO_SESION_CANCELADA = "SESION_CANCELADA";
+    /** CULM-001 C.1 (HU026C): se creo la revision de cancelacion por inasistencia (aviso al docente titular). */
+    public static final String TIPO_REVISION_CANCELACION_PENDIENTE = "REVISION_CANCELACION_PENDIENTE";
+    /** CULM-001 C.1: el docente propone cancelar (aviso al coordinador o, por escalamiento, al decano). */
+    public static final String TIPO_PROPUESTA_CANCELACION = "PROPUESTA_CANCELACION";
+    /** CULM-001 C.1: el resolutor aprobo la cancelacion (aviso al estudiante y al docente). */
+    public static final String TIPO_CANCELACION_APROBADA = "CANCELACION_APROBADA";
+    /** CULM-001 C.1: el resolutor rechazo la cancelacion (aviso al docente). */
+    public static final String TIPO_CANCELACION_RECHAZADA = "CANCELACION_RECHAZADA";
 
     public Notificacion {
         Objects.requireNonNull(tipo, "El tipo de notificacion es obligatorio.");

@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.application.secondaryports.repository;
 
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.PaginaResultado;
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.IndicadoresAsistenciaDTO;
+import co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.MarcaInasistenciaDTO;
 
 import java.util.List;
 import java.util.UUID;
@@ -14,7 +15,13 @@ import java.util.UUID;
 public interface ResumenAsistenciaQueryPort {
 
     record FilaResumen(UUID idGrupo, UUID idEstudiante, String nombreCompleto, String codigoEstadoEstudiante,
-                       IndicadoresAsistenciaDTO indicadores) {
+                       IndicadoresAsistenciaDTO indicadores, MarcaInasistenciaDTO marca) {
+
+        /** Fila sin marca de inasistencia (resumen del estudiante). */
+        public FilaResumen(final UUID idGrupo, final UUID idEstudiante, final String nombreCompleto, final String codigoEstadoEstudiante,
+                           final IndicadoresAsistenciaDTO indicadores) {
+            this(idGrupo, idEstudiante, nombreCompleto, codigoEstadoEstudiante, indicadores, null);
+        }
     }
 
     PaginaResultado<FilaResumen> consultarResumenGrupoDocente(UUID grupoId, int numeroPagina, int tamanoPagina, UUID usuarioEjecutor);

@@ -102,7 +102,9 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
                  @idRecurso = :idRecurso,
                  @idUsuarioActor = :idUsuarioActor,
                  @resultado = :resultado,
-                 @soloAsistencia = :soloAsistencia
+                 @soloAsistencia = :soloAsistencia,
+                 @idCorrelacionEvento = :idCorrelacionEvento,
+                 @soloAdministracion = :soloAdministracion
             """;
     static final String SQL_COMPONENTES = """
             EXEC dbo.usp_consultar_componentes_formacion
@@ -118,7 +120,7 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
             """;
     /** HU005/HU016: lectura directa de la vista del catalogo (sin SP: no hay ambito ni escritura). */
     static final String SQL_CATEGORIAS_JUSTIFICACION = """
-            SELECT c.id, c.codigo, c.nombre, c.descripcion FROM dbo.uv_categoria_justificacion c ORDER BY c.nombre
+            SELECT c.id, c.codigo, c.nombre, c.descripcion, c.requiereSoporte FROM dbo.uv_categoria_justificacion c ORDER BY c.nombre
             """;
     private static final DateTimeFormatter FORMATO_DATETIMEOFFSET = new DateTimeFormatterBuilder()
             .appendPattern("yyyy-MM-dd HH:mm:ss")
@@ -162,11 +164,11 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
     public Pagina<AsignaturaProjection> buscarAsignaturas(final UUID idUsuarioEjecutor, final FiltroConsulta filtro,
                                                           final int pagina, final int tamano) {
         return pagina("buscarAsignaturas", "No fue posible buscar las asignaturas.", SQL_ASIGNATURAS,
-                idUsuarioEjecutor, q -> filtrar(paginar(q, pagina, tamano), filtro), 14,
+                idUsuarioEjecutor, q -> filtrar(paginar(q, pagina, tamano), filtro), 9,
+                // CULM-001 B2NM (DEC-019): una fila por asignatura; columnas del SP: idAsignatura, codigo, nombre, credito, nombreArea,
+                // nombreComponente, planes, totalPlanes, estaActivaAsignatura. `planes` viaja en nombrePrograma (lista legible de planes).
                 f -> new AsignaturaProjection(NativeRowValues.uuid(f[0]), texto(f[1]), texto(f[2]), entero(f[3]),
-                        texto(f[4]), texto(f[5]), texto(f[6]), NativeRowValues.uuid(f[7]), entero(f[8]),
-                        NativeRowValues.uuid(f[9]), texto(f[10]), NativeRowValues.uuid(f[11]), texto(f[12]),
-                        verdadero(f[13])));
+                        texto(f[4]), texto(f[5]), texto(f[6]), entero(f[7]), verdadero(f[8])));
     }
 
     @Override
@@ -201,7 +203,7 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
                         NativeRowValues.uuid(f[3]), texto(f[4]), NativeRowValues.uuid(f[5]), texto(f[6]),
                         NativeRowValues.uuid(f[7]), texto(f[8]), NativeRowValues.uuid(f[9]), texto(f[10]),
                         cero(f[11]), cero(f[12]), cero(f[13]), cero(f[14]), cero(f[15]), decimal(f[16]),
-                        decimal(f[17]), cero(f[18]), cero(f[19])));
+                        decimal(f[17]), cero(f[18]), cero(f[19]), decimal(f[21]), decimal(f[22]), decimal(f[23])));
     }
 
     @Override
@@ -217,7 +219,9 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
                         .setParameter("idRecurso", filtro.idRecurso())
                         .setParameter("idUsuarioActor", filtro.idUsuarioActor())
                         .setParameter("resultado", filtro.resultado())
-                        .setParameter("soloAsistencia", filtro.soloAsistencia()), 17,
+                        .setParameter("soloAsistencia", filtro.soloAsistencia())
+                        .setParameter("idCorrelacionEvento", filtro.idTraza())
+                        .setParameter("soloAdministracion", filtro.soloAdministracion()), 17,
                 f -> new EventoAuditoriaProjection(NativeRowValues.uuid(f[0]), fechaHora(f[1]), texto(f[2]),
                         texto(f[3]), texto(f[4]), texto(f[5]), texto(f[6]), texto(f[7]), texto(f[8]),
                         NativeRowValues.uuid(f[9]), texto(f[10]), texto(f[11]), entero(f[12]), texto(f[13]),
@@ -250,7 +254,7 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
                 () -> ((List<?>) entityManager.createNativeQuery(SQL_CATEGORIAS_JUSTIFICACION).getResultList()).stream()
                         .map(Object[].class::cast)
                         .map(f -> new CategoriaJustificacionProjection(NativeRowValues.uuid(f[0]), texto(f[1]), texto(f[2]),
-                                texto(f[3])))
+                                texto(f[3]), NativeRowValues.bit(f[4])))
                         .toList());
     }
 

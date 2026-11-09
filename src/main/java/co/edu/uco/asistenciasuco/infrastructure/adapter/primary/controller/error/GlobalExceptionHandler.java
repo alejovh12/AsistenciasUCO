@@ -19,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -115,6 +116,16 @@ public final class GlobalExceptionHandler {
         return buildResponse(descriptor, request);
     }
 
+    @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
+    public ResponseEntity<ApiErrorResponse> handleNotAcceptable(
+            final HttpMediaTypeNotAcceptableException exception,
+            final HttpServletRequest request
+    ) {
+        final ApiErrorDescriptor descriptor = ApiErrorCatalog.notAcceptable();
+        logFrameworkBadRequest(descriptor, exception, request);
+        return buildResponse(descriptor, request);
+    }
+
     @ExceptionHandler(MultipartException.class)
     public ResponseEntity<ApiErrorResponse> handleMalformedMultipart(
             final MultipartException exception,
@@ -145,7 +156,9 @@ public final class GlobalExceptionHandler {
             final RequestValidationException exception,
             final HttpServletRequest request
     ) {
-        final ApiErrorDescriptor descriptor = ApiErrorCatalog.requestValidationError();
+        final ApiErrorDescriptor descriptor = exception.getErrorCode() == null
+                ? ApiErrorCatalog.requestValidationError()
+                : ApiErrorCatalog.validationWithCode(exception.getErrorCode());
         logRequestValidation(descriptor, exception, request);
         return buildResponse(
                 descriptor,

@@ -22,7 +22,7 @@ public final class SolicitarRevisionAsistenciaMapper {
                 dto.getSesion(),
                 dto.getCategoria(),
                 dto.getJustificacion(),
-                dto.getSoporteArchivoId(),
+                dto.getSoportes(),
                 dto.getUsuario()
         );
     }

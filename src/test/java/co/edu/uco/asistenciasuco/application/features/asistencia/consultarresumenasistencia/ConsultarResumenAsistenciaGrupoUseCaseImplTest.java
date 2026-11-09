@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.application.features.asistencia.consultarresum
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.PaginaResultado;
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.IndicadoresAsistenciaDTO;
+import co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.MarcaInasistenciaDTO;
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.ResumenAsistenciaEstudianteDTO;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarresumenasistencia.primaryports.ConsultarResumenAsistenciaGrupoInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarresumenasistencia.usecase.impl.ConsultarResumenAsistenciaGrupoUseCaseImpl;
@@ -51,6 +52,20 @@ class ConsultarResumenAsistenciaGrupoUseCaseImplTest {
 
         assertEquals(31, pagina.totalElementos());
         assertEquals(new ResumenAsistenciaEstudianteDTO(estudiante, "Ana Perez", "A", indicadores()), pagina.elementos().getFirst());
+    }
+
+    @Test
+    void la_marca_de_inasistencia_de_la_fila_llega_al_resumen() {
+        final UUID estudiante = UUID.randomUUID();
+        final MarcaInasistenciaDTO marca = new MarcaInasistenciaDTO(true, java.time.Instant.parse("2026-11-01T10:00:00Z"), false, null, null);
+        when(scope.canDocenteAccessGrupo(USUARIO, GRUPO)).thenReturn(true);
+        when(resumen.consultarResumenGrupoDocente(GRUPO, 1, 50, USUARIO)).thenReturn(new PaginaResultado<>(List.of(
+                new ResumenAsistenciaQueryPort.FilaResumen(GRUPO, estudiante, "Ana Perez", "A", indicadores(), marca)), 1, 50, 1));
+
+        final ResumenAsistenciaEstudianteDTO fila = useCase.execute(
+                new ConsultarResumenAsistenciaGrupoInputPort.Consulta(GRUPO, null, null, USUARIO)).elementos().getFirst();
+
+        assertEquals(marca, fila.marca());
     }
 
     @Test

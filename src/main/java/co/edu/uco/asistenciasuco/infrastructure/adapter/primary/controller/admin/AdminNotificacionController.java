@@ -1,12 +1,13 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin;
 
+import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
 import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationResultBuilder;
 import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationResult;
 import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationErrorType;
 import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationHelper;
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.primaryports.AdministrarNotificacionesInputPort;
-import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.EstadoCanalNotificacionProjection;
+import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.EstadoCanalPublicoProjection;
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.NotificacionSalienteAdminProjection;
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.PaginaColaNotificacionProjection;
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.ResumenColaNotificacionProjection;
@@ -63,29 +64,11 @@ public class AdminNotificacionController {
 
     @GetMapping("/estado-canal")
     public ResponseEntity<ApiDataResponse<EstadoCanalNotificacionResponse>> consultarEstadoCanal() {
-        final EstadoCanalNotificacionProjection p = administracionPort.consultarEstadoCanal();
-        final EstadoCanalNotificacionResponse resp = new EstadoCanalNotificacionResponse(
-                p.provider(),
-                p.sender(),
-                p.dispatcherEnabled(),
-                p.disponible(),
-                p.host(),
-                p.port(),
-                p.username(),
-                p.tienePasswordConfigurado(),
-                p.fromAddress(),
-                p.fromName(),
-                p.starttls(),
-                p.ssl(),
-                p.maxBcc(),
-                p.ratePerMinute(),
-                p.ratePerDay(),
-                p.requireConfirmedEmail(),
-                p.platformUrl(),
-                p.testModeEnabled(),
-                p.testModeRedirectCount()
-        );
-        return ResponseEntity.ok(new ApiDataResponse<>(true, resp));
+        // CULM-001 D.9-a (F-ADM-029): nunca se expone host, puerto ni usuario de la cuenta tecnica del canal.
+        final EstadoCanalPublicoProjection p = administracionPort.consultarEstadoCanalPublico(
+                authenticatedUserResolver.requireAuthenticatedUserId());
+        return ResponseEntity.ok(new ApiDataResponse<>(true,
+                new EstadoCanalNotificacionResponse(p.canalActivo(), p.ultimoEnvioUtc(), p.ultimoError())));
     }
 
     @GetMapping("/plantillas")
@@ -100,6 +83,7 @@ public class AdminNotificacionController {
         return ResponseEntity.ok(new ApiListResponse<>(true, responses, responses.size()));
     }
 
+    @AuditableOperation(action = "CREAR_VERSION_PLANTILLA", resourceType = "PLANTILLA_NOTIFICACION", resourceIdPathVariable = "tipo")
     @PostMapping("/plantillas/{tipo}/versiones")
     public ResponseEntity<ApiDataResponse<VersionPlantillaResponse>> crearVersion(
             @PathVariable final String tipo,
@@ -127,6 +111,7 @@ public class AdminNotificacionController {
         return builder.build();
     }
 
+    @AuditableOperation(action = "ACTIVAR_VERSION_PLANTILLA", resourceType = "PLANTILLA_NOTIFICACION", resourceIdPathVariable = "tipo")
     @PatchMapping("/plantillas/{tipo}/versiones/{version}/activar")
     public ResponseEntity<ApiMessageResponse> activarVersion(
             @PathVariable final String tipo,
@@ -190,6 +175,7 @@ public class AdminNotificacionController {
         return ResponseEntity.ok(new ApiDataResponse<>(true, response));
     }
 
+    @AuditableOperation(action = "REINTENTAR_NOTIFICACION", resourceType = "NOTIFICACION", resourceIdPathVariable = "id")
     @PostMapping("/cola/{id}/reintentar")
     public ResponseEntity<ApiMessageResponse> reintentar(
             @PathVariable final UUID id
@@ -199,6 +185,7 @@ public class AdminNotificacionController {
         return ResponseEntity.ok(new ApiMessageResponse(true, "Notificación encolada para reintento inmediato."));
     }
 
+    @AuditableOperation(action = "ENVIAR_NOTIFICACION_PRUEBA", resourceType = "NOTIFICACION", metadataRequestFields = {"tipo"})
     @PostMapping("/prueba")
     public ResponseEntity<ApiMessageResponse> enviarPrueba(
             @RequestBody(required = false) final EnviarCorreoPruebaRequest request

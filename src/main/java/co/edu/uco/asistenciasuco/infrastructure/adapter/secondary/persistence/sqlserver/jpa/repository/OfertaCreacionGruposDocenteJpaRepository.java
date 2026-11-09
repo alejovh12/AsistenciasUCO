@@ -51,10 +51,16 @@ public class OfertaCreacionGruposDocenteJpaRepository implements OfertaCreacionG
         );
     }
 
-    /** Columnas del SP: idDocente, idAsignatura, codigoAsignatura, nombreAsignatura, idPrograma, nombrePrograma. */
+    /** Columnas del SP: idDocente, idAsignatura, codigoAsignatura, nombreAsignatura, programas (nombres separados por coma). */
     private static AsignaturaOfertaDocenteProjection toProjection(final Object[] f) {
         return new AsignaturaOfertaDocenteProjection(
-                NativeRowValues.uuid(f[1]), texto(f[2]), texto(f[3]), NativeRowValues.uuid(f[4]), texto(f[5]));
+                NativeRowValues.uuid(f[1]), texto(f[2]), texto(f[3]), programas(f[4]));
+    }
+
+    private static java.util.List<String> programas(final Object valor) {
+        final String t = texto(valor);
+        return t == null || t.isBlank() ? java.util.List.of()
+                : java.util.Arrays.stream(t.split(",")).map(String::strip).filter(p -> !p.isEmpty()).toList();
     }
 
     private static String texto(final Object valor) {

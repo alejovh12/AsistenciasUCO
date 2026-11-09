@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.tomaasistencia.cerrartomasvencidas.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.features.alertainasistencia.common.EvaluadorAlertasInasistencia;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.cerrartomasvencidas.usecase.CerrarTomasVencidasUseCase;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.TomaAsistenciaEventos;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.TomaAsistenciaResumen;
@@ -20,8 +21,16 @@ public final class CerrarTomasVencidasUseCaseImpl implements CerrarTomasVencidas
 
     private final TomaAsistenciaRepositoryPort repositorio;
     private final TomaAsistenciaEventos eventos;
+    private final EvaluadorAlertasInasistencia evaluador;
 
     public CerrarTomasVencidasUseCaseImpl(final TomaAsistenciaRepositoryPort repositorio, final TomaAsistenciaEventos eventos) {
+        this(repositorio, eventos, EvaluadorAlertasInasistencia.NINGUNO);
+    }
+
+    /** CULM-001 C.1: con evaluador, cada grupo con tomas cerradas se evalua una vez (SUPUESTO-C-04). */
+    public CerrarTomasVencidasUseCaseImpl(final TomaAsistenciaRepositoryPort repositorio, final TomaAsistenciaEventos eventos,
+                                          final EvaluadorAlertasInasistencia evaluador) {
+        this.evaluador = Objects.requireNonNull(evaluador, "EvaluadorAlertasInasistencia es obligatorio.");
         this.repositorio = Objects.requireNonNull(repositorio, "TomaAsistenciaRepositoryPort es obligatorio.");
         this.eventos = Objects.requireNonNull(eventos, "TomaAsistenciaEventos es obligatorio.");
     }
@@ -39,6 +48,8 @@ public final class CerrarTomasVencidasUseCaseImpl implements CerrarTomasVencidas
             payload.put("automatico", true);
             eventos.publicar(TomaAsistenciaEventos.TOMA_CERRADA, payload);
         }
+        cerradas.stream().map(TomaAsistenciaRepositoryPort.TomaCerradaAutomaticamente::idGrupo).distinct()
+                .forEach(grupo -> evaluador.evaluarYAvisar(grupo, null));
         return cerradas.size();
     }
 

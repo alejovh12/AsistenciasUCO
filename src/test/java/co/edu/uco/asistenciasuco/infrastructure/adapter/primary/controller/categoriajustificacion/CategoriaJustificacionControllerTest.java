@@ -30,14 +30,16 @@ class CategoriaJustificacionControllerTest {
     @Test
     void T_005_01_get_categorias_de_justificacion() throws Exception {
         when(inputPort.consultarCategoriasJustificacion()).thenReturn(List.of(
-                new CategoriaJustificacionDTO(UUID.randomUUID(), "LAB", "Laboral", "Obligacion laboral"),
-                new CategoriaJustificacionDTO(UUID.randomUUID(), "OTR", "Otro", null)));
+                new CategoriaJustificacionDTO(UUID.randomUUID(), "LAB", "Laboral", "Obligacion laboral", true),
+                new CategoriaJustificacionDTO(UUID.randomUUID(), "OTR", "Otro", null, false)));
 
         mvc.perform(get("/api/v1/categorias-justificacion"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total").value(2))
                 .andExpect(jsonPath("$.datos[0].codigo").value("LAB"))
                 .andExpect(jsonPath("$.datos[0].descripcion").value("Obligacion laboral"))
+                .andExpect(jsonPath("$.datos[0].requiereSoporte").value(true))
+                .andExpect(jsonPath("$.datos[1].requiereSoporte").value(false))
                 .andExpect(jsonPath("$.datos[1].nombre").value("Otro"));
     }
 

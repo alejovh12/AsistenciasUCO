@@ -38,7 +38,7 @@ class ConsultasConsolidadoAuditoriaInteractorTest {
         when(useCase.consultarConsolidadoAsistencia(USUARIO, new FiltroConsolidado(ID, null, null, null), 1, 10))
                 .thenReturn(new Pagina<>(List.of(new ConsolidadoGrupoProjection(ID, 1, "G1", ID, "2026-2", ID,
                         "Sistemas", ID, "Calculo", ID, "Ana", 20, 8, 150, 10, 0, new BigDecimal("93.75"),
-                        new BigDecimal("6.25"), 2, 1)), 1));
+                        new BigDecimal("6.25"), 2, 1, new BigDecimal("12.00"), new BigDecimal("8.50"), new BigDecimal("16.25"))), 1));
         when(useCase.consultarConsolidadoAsistencia(USUARIO, null, null, null)).thenReturn(new Pagina<>(List.of(), 0));
 
         final var grupo = interactor.consultarConsolidadoAsistencia(USUARIO, new FiltroConsolidadoDTO(ID, null, null,
@@ -46,19 +46,22 @@ class ConsultasConsolidadoAuditoriaInteractorTest {
 
         assertEquals("Calculo", grupo.nombreAsignatura());
         assertEquals(new BigDecimal("6.25"), grupo.porcentajeInasistencia());
+        assertEquals(new BigDecimal("12.00"), grupo.horasDictadas());
+        assertEquals(new BigDecimal("8.50"), grupo.porcentajeExcusa());
+        assertEquals(new BigDecimal("16.25"), grupo.porcentajeSinRegistro());
         assertEquals(0, interactor.consultarConsolidadoAsistencia(USUARIO, null, null, null).total());
     }
 
     @Test
     void T_172_INT_01_auditoria_solo_asistencia_nulo_es_true_y_mapea_evento() {
         when(useCase.consultarAuditoria(USUARIO, new FiltroAuditoria(null, AHORA, "CREAR_SESION", null, null, null,
-                null, true), 1, 10)).thenReturn(new Pagina<>(List.of(new EventoAuditoriaProjection(ID, AHORA,
+                null, true, null, false), 1, 10)).thenReturn(new Pagina<>(List.of(new EventoAuditoriaProjection(ID, AHORA,
                 USUARIO.toString(), "USER", "Ana", "CREAR_SESION", "SESION", "S1", "SUCCESS", ID, "POST",
                 "/api/v1/sesiones", 201, null, null, null, true)), 1));
         when(useCase.consultarAuditoria(USUARIO, null, null, null)).thenReturn(new Pagina<>(List.of(), 0));
 
         final var evento = interactor.consultarAuditoria(USUARIO, new FiltroAuditoriaDTO(null, AHORA, "CREAR_SESION",
-                null, null, null, null, null), 1, 10).elementos().getFirst();
+                null, null, null, null, null, null, null), 1, 10).elementos().getFirst();
 
         assertEquals("Ana", evento.nombreActor());
         assertTrue(evento.accionAsistencia());
@@ -91,13 +94,15 @@ class ConsultasConsolidadoAuditoriaInteractorTest {
     @Test
     void T_005_INT_01_categorias_mapea_codigo_nombre_y_descripcion() {
         when(useCase.consultarCategoriasJustificacion()).thenReturn(List.of(
-                new CategoriaJustificacionProjection(ID, "FMA", "Fuerza Mayor", "Hecho imprevisible")));
+                new CategoriaJustificacionProjection(ID, "FMA", "Fuerza Mayor", "Hecho imprevisible", true)));
 
         final var categoria = interactor.consultarCategoriasJustificacion().getFirst();
 
         assertEquals(ID, categoria.id());
         assertEquals("FMA", categoria.codigo());
         assertEquals("Fuerza Mayor", categoria.nombre());
+        // CULM-001 D.2 (CONTRACT D 3.3): GET /categorias-justificacion + requiereSoporte
+        assertEquals(true, categoria.requiereSoporte());
         assertEquals("Hecho imprevisible", categoria.descripcion());
     }
 }

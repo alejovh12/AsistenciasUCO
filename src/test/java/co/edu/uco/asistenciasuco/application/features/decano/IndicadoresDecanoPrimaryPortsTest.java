@@ -78,8 +78,8 @@ class IndicadoresDecanoPrimaryPortsTest {
     void comparativa_mapea_cada_fila() {
         final ConsultarComparativaProgramasUseCase useCase = mock(ConsultarComparativaProgramasUseCase.class);
         when(useCase.execute(any())).thenReturn(List.of(
-                new ComparativaProgramaDomain(PROGRAMA, "Programa 1", true, 5, 1, 2, new BigDecimal("60.00"), 33, 5, new BigDecimal("15.15")),
-                new ComparativaProgramaDomain(UUID.randomUUID(), "Programa 4", false, 0, 0, 0, null, 0, 0, null)));
+                new ComparativaProgramaDomain(PROGRAMA, "Programa 1", true, 5, 1, 2, new BigDecimal("60.00"), 33, 5, new BigDecimal("15.15"), new BigDecimal("120.00"), new BigDecimal("18.00")),
+                new ComparativaProgramaDomain(UUID.randomUUID(), "Programa 4", false, 0, 0, 0, null, 0, 0, null, new BigDecimal("120.00"), new BigDecimal("18.00"))));
 
         final List<ComparativaProgramaDTO> dto = new ConsultarComparativaProgramasInteractor(useCase)
                 .execute(new ConsultarComparativaProgramasDTO(ACTOR, PERIODO));
@@ -95,6 +95,8 @@ class IndicadoresDecanoPrimaryPortsTest {
         assertEquals(33, dto.get(0).sesionesEjecutadas());
         assertEquals(5, dto.get(0).faltasSinJustaCausa());
         assertEquals(new BigDecimal("15.15"), dto.get(0).porcentajeAusentismo());
+        assertEquals(new BigDecimal("120.00"), dto.get(0).horasDictadas());
+        assertEquals(new BigDecimal("18.00"), dto.get(0).horasFalta());
         assertNull(dto.get(1).porcentajeAusentismo());
         assertThrows(NullPointerException.class, () -> new ConsultarComparativaProgramasInteractor(null));
     }
@@ -105,7 +107,7 @@ class IndicadoresDecanoPrimaryPortsTest {
         final UUID grupo = UUID.randomUUID();
         final UUID asignatura = UUID.randomUUID();
         when(useCase.execute(any())).thenReturn(new AforoGruposPaginaDomain(List.of(
-                new AforoGrupoDomain(grupo, 931001, asignatura, "Asignatura Uno", PROGRAMA, "Programa 1", 10, 5, 5, new BigDecimal("50.00"), true)), 12));
+                new AforoGrupoDomain(grupo, 931001, asignatura, "Asignatura Uno", List.of("Programa 1", "Programa 2"), 10, 5, 5, new BigDecimal("50.00"), true)), 12));
 
         final AforoGruposPaginaDTO dto = new ConsultarAforoGruposInteractor(useCase)
                 .execute(new ConsultarAforoGruposDTO(ACTOR, PERIODO, PROGRAMA, false, 2, 5));
@@ -123,8 +125,7 @@ class IndicadoresDecanoPrimaryPortsTest {
         assertEquals(931001, dto.grupos().get(0).codigoGrupo());
         assertEquals(asignatura, dto.grupos().get(0).idAsignatura());
         assertEquals("Asignatura Uno", dto.grupos().get(0).nombreAsignatura());
-        assertEquals(PROGRAMA, dto.grupos().get(0).idPrograma());
-        assertEquals("Programa 1", dto.grupos().get(0).nombrePrograma());
+        assertEquals(List.of("Programa 1", "Programa 2"), dto.grupos().get(0).programas());
         assertEquals(10, dto.grupos().get(0).cupoMaximo());
         assertEquals(5, dto.grupos().get(0).matriculadosActivos());
         assertEquals(5, dto.grupos().get(0).cuposDisponibles());

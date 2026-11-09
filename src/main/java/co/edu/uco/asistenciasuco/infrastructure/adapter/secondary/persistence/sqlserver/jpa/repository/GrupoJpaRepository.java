@@ -76,7 +76,8 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
                  @password = :password,
                  @idCorrelacion = :idCorrelacion,
                  @idUsuarioEjecutor = :idUsuarioEjecutor,
-                 @idTipoIdIdentificacion = :idTipoIdIdentificacion
+                 @idTipoIdIdentificacion = :idTipoIdIdentificacion,
+                 @idPrograma = :idPrograma
             """;
 
     // CULM-001 A.2-2: listado con ambito (uv_auth_grupo + SESSION_CONTEXT) paginado de 100 en 100 hasta totalRegistros.
@@ -94,10 +95,9 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
     static final int COLUMNAS_GRUPOS = 13;
     static final String HQL_GRUPOS_POR_FACULTAD = """
             select g
-            from UvGrupoEntity g, UvAsignaturaEntity a, UvSemestrePlanEstudioEntity sp
-            where a.id = g.idAsignatura
-              and sp.id = a.idSemestrePlanEstudio
-              and sp.idPrograma in (select pr.id from UvProgramaEntity pr where pr.idFacultad = :idFacultad)
+            from UvGrupoEntity g
+            where exists (select 1 from UvAsignaturaPlanEstudioEntity v
+                          where v.idAsignatura = g.idAsignatura and v.estaActivoVinculo = true and v.idFacultad = :idFacultad)
             order by g.nombreAsignatura, g.codigo, g.nombre, g.id
             """;
     // CULM-001 A.2-2: estudiantes del grupo en todos los estados (DR-007) con ambito validado por el SP; lista completa
@@ -376,6 +376,7 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
         parametros.put(P_CORRELACION, correlationId);
         parametros.put(P_USUARIO, dto.getUsuarioEjecutor());
         parametros.put("idTipoIdIdentificacion", dto.getTipoIdentificacionId());
+        parametros.put("idPrograma", dto.getIdPrograma());   // CULM-001 B2NM (S3): opcional
 
         return procedureExecutor.execute(OP_REGISTRAR_ESTUDIANTE, SQL_REGISTRAR_ESTUDIANTE, parametros, correlationId);
     }

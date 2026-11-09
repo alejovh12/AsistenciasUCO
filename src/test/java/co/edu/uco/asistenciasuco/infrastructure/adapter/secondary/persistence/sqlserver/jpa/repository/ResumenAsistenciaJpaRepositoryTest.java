@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.PaginaResultado;
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.IndicadoresAsistenciaDTO;
+import co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.MarcaInasistenciaDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.ResumenAsistenciaQueryPort;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import jakarta.persistence.EntityManager;
@@ -18,6 +19,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import java.time.Instant;
+import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -90,6 +94,66 @@ class ResumenAsistenciaJpaRepositoryTest {
 
         when(query.getResultList()).thenReturn(List.of());
         assertEquals(0, repository.consultarResumenGrupoDocente(GRUPO, 1, 50, USUARIO).totalElementos());
+    }
+
+    private ResumenAsistenciaQueryPort.FilaResumen filaDelGrupo(final Map<String, Object> extra) {
+        final Map<String, Object> f = fila();
+        f.put("nombreCompletoEstudiante", "Ana Perez");
+        f.put("totalRegistros", 1);
+        f.putAll(extra);
+        when(query.getResultList()).thenReturn(List.of(TomaAsistenciaJpaRepositoryTest.tupla(f)));
+        return repository.consultarResumenGrupoDocente(GRUPO, 1, 50, USUARIO).elementos().getFirst();
+    }
+
+    @Test
+    void la_marca_es_null_sin_alertas_ni_revision() {
+        assertNull(filaDelGrupo(Map.of("tieneAdvertenciaVigente", false, "tienePerdidaVigente", false)).marca());
+        assertNull(filaDelGrupo(Map.of()).marca());
+    }
+
+    @Test
+    void la_marca_mapea_alertas_y_revision_con_sus_acciones() {
+        final UUID revision = UUID.randomUUID();
+        final Map<String, Object> extra = new HashMap<>();
+        extra.put("tieneAdvertenciaVigente", true);
+        extra.put("fechaAdvertenciaUtc", LocalDateTime.parse("2026-11-01T10:15:30"));
+        extra.put("tienePerdidaVigente", 1);
+        extra.put("fechaPerdidaUtc", LocalDateTime.parse("2026-11-05T08:00:00"));
+        extra.put("idRevisionCancelacion", revision.toString());
+        extra.put("codigoEstadoRevision", "PENDIENTE_DOCENTE");
+        extra.put("nombreEstadoRevision", "Pendiente del docente");
+        extra.put("requiereAccionDocente", true);
+        extra.put("codigoPerfilResolutorActual", "COORDINADOR");
+        extra.put("accionesPermitidasRevision", "MANTENER, PROPONER");
+
+        assertEquals(new MarcaInasistenciaDTO(true, Instant.parse("2026-11-01T10:15:30Z"), true, Instant.parse("2026-11-05T08:00:00Z"),
+                new MarcaInasistenciaDTO.RevisionMarcaDTO(revision, "PENDIENTE_DOCENTE", "Pendiente del docente", true, "COORDINADOR",
+                        List.of("MANTENER", "PROPONER"))), filaDelGrupo(extra).marca());
+    }
+
+    @Test
+    void la_marca_con_solo_advertencia_no_tiene_revision_y_con_revision_sin_acciones_las_deja_vacias() {
+        final Map<String, Object> soloAdvertencia = new HashMap<>();
+        soloAdvertencia.put("tieneAdvertenciaVigente", true);
+        soloAdvertencia.put("fechaAdvertenciaUtc", LocalDateTime.parse("2026-11-01T10:15:30"));
+        final MarcaInasistenciaDTO marca = filaDelGrupo(soloAdvertencia).marca();
+        assertEquals(true, marca.advertenciaVigente());
+        assertEquals(false, marca.perdidaVigente());
+        assertNull(marca.fechaPerdidaUtc());
+        assertNull(marca.revision());
+
+        final Map<String, Object> sinAcciones = new HashMap<>();
+        sinAcciones.put("idRevisionCancelacion", UUID.randomUUID());
+        sinAcciones.put("codigoEstadoRevision", "PROPUESTA");
+        sinAcciones.put("accionesPermitidasRevision", "");
+        final MarcaInasistenciaDTO.RevisionMarcaDTO revision = filaDelGrupo(sinAcciones).marca().revision();
+        assertEquals(List.of(), revision.accionesPermitidas());
+        assertEquals(false, revision.requiereAccionDocente());
+        assertNull(revision.perfilResolutorActual());
+
+        final Map<String, Object> accionesNulas = new HashMap<>();
+        accionesNulas.put("idRevisionCancelacion", UUID.randomUUID());
+        assertEquals(List.of(), filaDelGrupo(accionesNulas).marca().revision().accionesPermitidas());
     }
 
     @Test

@@ -23,7 +23,7 @@ class GestionarAsignaturaMapperTest {
         final UUID plan = UUID.randomUUID();
         final UUID usuarioEjecutor = UUID.randomUUID();
         final GuardarAsignaturaDTO dto = new GuardarAsignaturaDTO(
-                id, plan, "COD1", "Calculo", 3, 1, "Area", "Componente", usuarioEjecutor
+                id, plan, "COD1", "Calculo", 3, 1, "Area", "Componente", "OPT", usuarioEjecutor
         );
 
         final AsignaturaDomain domain = GestionarAsignaturaMapper.toDomain(dto);

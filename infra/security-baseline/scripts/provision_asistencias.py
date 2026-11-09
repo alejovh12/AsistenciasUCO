@@ -347,16 +347,29 @@ def ensure_application(pdp, env, evidence):
     return app_id
 
 
-def read_pdp_state(pdp, app_id):
-    """Estado actual del PDP para la aplicación: recursos, roles institucionales, concesiones y perfiles."""
+def _plantilla(path):
+    """Plantilla de ruta sin nombres de parámetro: el PDP considera iguales `/x/{id}` y `/x/{planId}` (409
+    PROTECTED_RESOURCE_ALREADY_EXISTS), así que la comparación catálogo ↔ PDP se hace por plantilla."""
+    return re.sub(r"\{[^}]*\}", "{}", path)
+
+
+def _canonizar(pair, canon):
+    """Devuelve el par (método, ruta) del catálogo que corresponde a un recurso del PDP, o el par tal cual."""
+    return canon.get((pair[0], _plantilla(pair[1])), pair)
+
+
+def read_pdp_state(pdp, app_id, catalog=None):
+    """Estado actual del PDP para la aplicación: recursos, roles institucionales, concesiones y perfiles.
+    Con `catalog`, las rutas del PDP se expresan con los nombres de parámetro del catálogo (misma plantilla)."""
+    canon = {(m, _plantilla(p)): (m, p) for (m, p) in catalog_pairs(catalog)} if catalog else {}
     _, res = pdp.call("GET", f"/api/v1/applications/{app_id}/resources")
-    resources = {(r["method"], r["path"]): r["id"] for r in (res.get("data") or [])}
+    resources = {_canonizar((r["method"], r["path"]), canon): r["id"] for r in (res.get("data") or [])}
     roles = {r["name"]: r["id"] for r in pdp.paged(f"/api/v1/applications/{app_id}/security/roles")}
     grants = {}
     for name in ROLES:
         if name in roles:
             rows = pdp.paged(f"/api/v1/applications/{app_id}/security/roles/{roles[name]}/resources")
-            grants[name] = {(x["method"], x["path"]) for x in rows}
+            grants[name] = {_canonizar((x["method"], x["path"]), canon) for x in rows}
     profiles = {p["name"]: p["id"] for p in pdp.paged(f"/api/v1/applications/{app_id}/security/profiles")}
     profile_roles = {}
     for name, profile_id in profiles.items():
@@ -416,7 +429,7 @@ def provision_pdp(env, prune=False):
     evidence = {}
     app_id = ensure_application(pdp, env, evidence)
 
-    state = read_pdp_state(pdp, app_id)
+    state = read_pdp_state(pdp, app_id, catalog)
     before = diff_state(catalog, state)
     evidence["before"] = summarize_diff(before)
 
@@ -463,7 +476,7 @@ def provision_pdp(env, prune=False):
                 if status != 200:
                     raise SystemExit(f"rol {role} en perfil {profile['name']}: HTTP {status} {body.get('code')}")
     evidence["applied"] = applied
-    after = diff_state(catalog, read_pdp_state(pdp, app_id))
+    after = diff_state(catalog, read_pdp_state(pdp, app_id, catalog))
     evidence["after"] = summarize_diff(after)
     evidence["catalog"] = {"endpoints": len(catalog["endpoints"]), "exempt": len(catalog.get("exempt", [])),
                            "profiles": len(catalog.get("profiles", []))}
@@ -483,7 +496,7 @@ def verify_pdp(env):
     require_complete_inventory(catalog)
     pdp = Pdp(env)
     app_id = env["ASISTENCIAS_PDP_APPLICATION_ID"]
-    diff = diff_state(catalog, read_pdp_state(pdp, app_id))
+    diff = diff_state(catalog, read_pdp_state(pdp, app_id, catalog))
     report = summarize_diff(diff)
     for role, rows in diff["extra_grants"].items():
         for method, path in rows:

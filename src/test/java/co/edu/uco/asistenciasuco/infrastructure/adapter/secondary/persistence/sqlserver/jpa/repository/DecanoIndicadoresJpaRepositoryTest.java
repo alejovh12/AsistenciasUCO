@@ -143,6 +143,8 @@ class DecanoIndicadoresJpaRepositoryTest {
         when(p1.sesionesEjecutadas()).thenReturn(33);
         when(p1.faltasSinJustaCausa()).thenReturn(5);
         when(p1.porcentajeAusentismo()).thenReturn(new BigDecimal("15.15"));
+        when(p1.horasDictadas()).thenReturn(new BigDecimal("120.00"));
+        when(p1.horasFalta()).thenReturn(new BigDecimal("18.00"));
         final SpComparativaProgramaEntity p4 = mock(SpComparativaProgramaEntity.class);
         when(p4.idPrograma()).thenReturn(UUID.randomUUID());
         when(p4.nombrePrograma()).thenReturn("Programa 4");
@@ -155,6 +157,8 @@ class DecanoIndicadoresJpaRepositoryTest {
         verify(query).setParameter("idPeriodoAcademico", PERIODO);
         assertEquals(2, r.size());
         assertEquals(new BigDecimal("15.15"), r.get(0).porcentajeAusentismo());
+        assertEquals(new BigDecimal("120.00"), r.get(0).horasDictadas());
+        assertEquals(new BigDecimal("18.00"), r.get(0).horasFalta());
         assertEquals(33, r.get(0).sesionesEjecutadas());
         assertTrue(r.get(0).estaActivoPrograma());
         assertNull(r.get(1).tasaRetencion());
@@ -170,8 +174,7 @@ class DecanoIndicadoresJpaRepositoryTest {
         when(g1.codigoGrupo()).thenReturn(931001);
         when(g1.idAsignatura()).thenReturn(ASIGNATURA);
         when(g1.nombreAsignatura()).thenReturn("Asignatura Uno");
-        when(g1.idPrograma()).thenReturn(PROGRAMA);
-        when(g1.nombrePrograma()).thenReturn("Programa 1");
+        when(g1.programas()).thenReturn("Programa 1");   // CULM-001 B2NM: aforo 1 fila por grupo con programas
         when(g1.cupoMaximo()).thenReturn(10);
         when(g1.matriculadosActivos()).thenReturn(5);
         when(g1.cuposDisponibles()).thenReturn(5);

@@ -55,12 +55,12 @@ class ConsultarFacultadDecanoSesionesAcotadasTest {
 
     private void paginaConSesiones(final List<SesionFacultadProjection> sesiones, final int total) {
         when(scopePort.findFacultadIdByDecanoUsuario(DECANO)).thenReturn(Optional.of(UUID.randomUUID()));
-        when(queryPort.consultarSesiones(DECANO, null, null, null, 1, TAMANO_MAXIMO))
+        when(queryPort.consultarSesiones(DECANO, null, null, null, null, 1, TAMANO_MAXIMO))
                 .thenReturn(new Pagina<>(sesiones, total));
     }
 
     private List<SesionFacultadHorarioDomain> consultar() {
-        return useCase.consultarSesiones(DECANO, null, null, null, 1, TAMANO_MAXIMO).elementos();
+        return useCase.consultarSesiones(DECANO, null, null, null, null, 1, TAMANO_MAXIMO).elementos();
     }
 
     private static SesionFacultadProjection sesion(final UUID id, final UUID grupo) {
@@ -213,7 +213,7 @@ class ConsultarFacultadDecanoSesionesAcotadasTest {
         assertNull(resultado.get(1).cancelacion());
 
         final var dtos = new ConsultarFacultadDecanoInteractor(useCase)
-                .consultarSesiones(DECANO, null, null, null, 1, TAMANO_MAXIMO).elementos();
+                .consultarSesiones(DECANO, null, null, null, null, 1, TAMANO_MAXIMO).elementos();
         assertEquals("CANCELADA", dtos.get(0).estado());
         assertEquals("FESTIVO", dtos.get(0).cancelacion().tipo());
         assertEquals("PROGRAMADA", dtos.get(1).estado());
@@ -248,7 +248,7 @@ class ConsultarFacultadDecanoSesionesAcotadasTest {
         paginaConSesiones(List.of(a, b), 57);
         when(procedenciaPort.consultarSesionesPorIds(any())).thenReturn(List.of(procedencia(a.id(), a.idGrupo(), 1)));
 
-        final var pagina = useCase.consultarSesiones(DECANO, null, null, null, 1, TAMANO_MAXIMO);
+        final var pagina = useCase.consultarSesiones(DECANO, null, null, null, null, 1, TAMANO_MAXIMO);
 
         assertEquals(57, pagina.total());
         assertEquals(2, pagina.elementos().size());

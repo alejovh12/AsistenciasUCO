@@ -13,7 +13,7 @@ import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.excepti
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DecanoCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadQueryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
+import co.edu.uco.asistenciasuco.application.features.identidad.asegurarcuenta.AsegurarCuentaIdentidadService;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.UsuarioIdentidadRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
@@ -28,20 +28,20 @@ public final class CrearDecanoUseCaseImpl implements CrearDecanoUseCase {
     private final DecanoCommandPort decanoCommandPort;
     private final UsuarioRepositoryPort usuarioRepositoryPort;
     private final PasswordEncoderPort passwordEncoderPort;
-    private final IdentityProviderPort identityProviderPort;
+    private final AsegurarCuentaIdentidadService cuentas;
 
     public CrearDecanoUseCaseImpl(
             final FacultadQueryPort facultadQueryPort,
             final DecanoCommandPort decanoCommandPort,
             final UsuarioRepositoryPort usuarioRepositoryPort,
             final PasswordEncoderPort passwordEncoderPort,
-            final IdentityProviderPort identityProviderPort
+            final AsegurarCuentaIdentidadService cuentas
     ) {
         this.facultadQueryPort = Objects.requireNonNull(facultadQueryPort, "FacultadQueryPort es obligatorio.");
         this.decanoCommandPort = Objects.requireNonNull(decanoCommandPort, "DecanoCommandPort es obligatorio.");
         this.usuarioRepositoryPort = Objects.requireNonNull(usuarioRepositoryPort, "UsuarioRepositoryPort es obligatorio.");
         this.passwordEncoderPort = Objects.requireNonNull(passwordEncoderPort, "PasswordEncoderPort es obligatorio.");
-        this.identityProviderPort = Objects.requireNonNull(identityProviderPort, "IdentityProviderPort es obligatorio.");
+        this.cuentas = Objects.requireNonNull(cuentas, "AsegurarCuentaIdentidadService es obligatorio.");
     }
 
     @Override
@@ -66,13 +66,9 @@ public final class CrearDecanoUseCaseImpl implements CrearDecanoUseCase {
         ));
 
         final UsuarioIdentidadRepositoryProjection usuarioCanonico = resolverUsuarioPostCommand(domain, idUsuarioPreexistente);
-        try {
-            identityProviderPort.crearCuenta(CrearDecanoIdentityMapper.toCrearCuentaIdentidadDTO(domain, usuarioCanonico));
-        } catch (final IdentityProviderPort.IdentityProviderException exception) {
-            throw new InternalApplicationException(
-                    "No fue posible completar el aprovisionamiento de identidad del decano registrado.", exception
-            );
-        }
+        // CULM-001 D.9-a (F-ADM-024): la base de datos ya confirmo el alta; un fallo del proveedor de identidad deja la cuenta
+        // PENDIENTE_SINCRONIZACION (desfase registrado) en lugar de un 500, y repetir el alta ya no reporta exito (DEC_020).
+        cuentas.asegurar(CrearDecanoIdentityMapper.toSolicitudCuentaIdentidad(domain, usuarioCanonico));
     }
 
     private Optional<UUID> resolverUsuarioPreexistente(final CrearDecanoDomain domain) {

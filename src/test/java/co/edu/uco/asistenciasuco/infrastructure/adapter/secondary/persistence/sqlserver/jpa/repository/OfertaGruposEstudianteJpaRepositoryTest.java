@@ -60,7 +60,7 @@ class OfertaGruposEstudianteJpaRepositoryTest {
 
     private static Object[] fila(final UUID grupo, final Object inicio, final Object matriculado) {
         return new Object[]{grupo, 7, "Grupo 7 ", UUID.randomUUID(), "MAT1", "Algebra", "Ana Perez", UUID.randomUUID(), "2026-2",
-                inicio, LocalDate.of(2026, 12, 10), "VIGENTE", "Lunes 08:00-10:00", 30, 25, 5, matriculado, "INS", 3};
+                inicio, LocalDate.of(2026, 12, 10), "VIGENTE", "Lunes 08:00-10:00", 30, 25, 5, matriculado, "INS", "OPT", "Optativa", 3};
     }
 
     @Test
@@ -168,25 +168,27 @@ class OfertaGruposEstudianteJpaRepositoryTest {
     }
 
     @Test
-    void OR08_fila_de_19_columnas_mapea_componente_en_17_y_total_en_18() {
+    void OR08_fila_de_21_columnas_mapea_componente_en_17_caracter_en_18_19_y_total_en_20() {
         final Object[] fila = fila(UUID.randomUUID(), LocalDate.of(2026, 7, 20), true);
         fila[17] = "ESP";
-        fila[18] = 41;
+        fila[20] = 41;
         when(query.getResultList()).thenReturn(Collections.singletonList(fila));
 
         final var pagina = repository.consultarOferta(ACTOR, null, 1, 10);
 
-        assertEquals(19, OfertaGruposEstudianteJpaRepository.COLUMNAS_OFERTA);
+        // CULM-001 B2NM (CONTRACT B2 fila 113 / B-RED-04): 21 posiciones, codigoCaracter en 18, nombreCaracter en 19 y total en 20
+        assertEquals(21, OfertaGruposEstudianteJpaRepository.COLUMNAS_OFERTA);
         assertEquals("ESP", pagina.grupos().getFirst().codigoComponente());
+        assertEquals("OPT", pagina.grupos().getFirst().codigoCaracter());
+        assertEquals("Optativa", pagina.grupos().getFirst().nombreCaracter());
         assertEquals(41, pagina.total());
         assertTrue(pagina.grupos().getFirst().matriculado());
     }
 
     @Test
     void OR09_fila_con_longitud_distinta_falla() {
-        final Object[] fila21 = new Object[21];
-        System.arraycopy(fila(UUID.randomUUID(), LocalDate.of(2026, 7, 20), false), 0, fila21, 0, 19);
-        when(query.getResultList()).thenReturn(Collections.singletonList(fila21));
+        final Object[] fila19 = java.util.Arrays.copyOf(fila(UUID.randomUUID(), LocalDate.of(2026, 7, 20), false), 19);   // OR09: rechaza 19
+        when(query.getResultList()).thenReturn(Collections.singletonList(fila19));
 
         final DatabaseOperationException error = assertThrows(DatabaseOperationException.class,
                 () -> repository.consultarOferta(ACTOR, null, 1, 10));

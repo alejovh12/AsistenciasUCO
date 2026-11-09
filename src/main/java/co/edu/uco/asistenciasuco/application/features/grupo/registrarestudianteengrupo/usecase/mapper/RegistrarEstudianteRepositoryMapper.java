@@ -35,7 +35,7 @@ public final class RegistrarEstudianteRepositoryMapper {
             throw new CrosscuttingException("El dominio para registrar estudiante en grupo es obligatorio.");
         }
 
-        return new RegistrarEstudianteRepositoryDTO(
+        final RegistrarEstudianteRepositoryDTO repositoryDto = new RegistrarEstudianteRepositoryDTO(
                 domain.getTipoIdentificacionId(),
                 domain.getNumeroIdentificacion(),
                 domain.getPrimerApellido(),
@@ -47,6 +47,8 @@ public final class RegistrarEstudianteRepositoryMapper {
                 domain.getGrupoId(),
                 domain.getUsuarioEjecutor()
         );
+        repositoryDto.setIdPrograma(domain.getIdPrograma());
+        return repositoryDto;
     }
 
     public static RegistrarEstudianteResultadoEntity toUseCaseEntity(

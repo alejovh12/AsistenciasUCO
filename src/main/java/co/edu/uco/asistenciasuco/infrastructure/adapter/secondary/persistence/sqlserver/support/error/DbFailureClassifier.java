@@ -1,13 +1,19 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error;
 
+import co.edu.uco.asistenciasuco.application.features.alertainasistencia.exception.AlertaInasistenciaErrorCode;
+import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.exception.RevisionCancelacionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.asistencia.exception.AsistenciaErrorCode;
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.festivos.exception.FestivoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.asistenciaqr.exception.AsistenciaQrErrorCode;
+import co.edu.uco.asistenciasuco.application.features.cargamasiva.exception.CargaMasivaErrorCode;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.exception.TomaAsistenciaErrorCode;
+import co.edu.uco.asistenciasuco.application.features.admin.exception.AdmisionEstudianteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.CatalogoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.DecanoErrorCode;
+import co.edu.uco.asistenciasuco.application.features.admin.exception.FacultadErrorCode;
+import co.edu.uco.asistenciasuco.application.features.admin.exception.ParametroErrorCode;
 import co.edu.uco.asistenciasuco.application.features.decano.exception.CoordinadorErrorCode;
 import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
@@ -36,7 +42,6 @@ final class DbFailureClassifier {
     // Operaciones reales de los repositories JPA (OP_* en UsuarioJpaRepository / AsistenciaJpaRepository).
     private static final String OPERATION_CREAR_USUARIO = "crearUsuario";
     private static final String OPERATION_SINCRONIZAR_USUARIO = "sincronizarUsuario";
-    private static final String OPERATION_REGISTRAR_ASISTENCIA_AUTONOMA = "registrarAsistenciaAutonoma";
     private static final String OPERATION_RESOLVER_SOLICITUD_REVISION = "resolverSolicitudRevisionAsistencia";
     // P5 (2026-11-04): OP_* de AsignaturaJpaRepository.
     private static final String OPERATION_CREAR_ASIGNATURA = "crearAsignatura";
@@ -59,7 +64,11 @@ final class DbFailureClassifier {
 
     private static ErrorDefinition classifyDbCode(final String code, final String operation) {
         return switch (code) {
-            case "SEC_001", "SEC_002", "EST_004" -> SecurityErrorCode.FORBIDDEN;
+            case "SEC_001", "SEC_002", "EST_004", "COO_003" -> SecurityErrorCode.FORBIDDEN;
+            // CULM-001 B2NM (DEC-019/DEC-020, CONTRACT 2.8.1): asignaturas por plan, matricula con programa y ambito de coordinacion.
+            case "ASI_002", "ASI_003", "ASI_005", "ASI_006", "MQR_008" -> CommonErrorCode.CONFLICT;
+            case "ASI_004" -> CommonErrorCode.RESOURCE_NOT_FOUND;
+            case "ASI_007", "EST_005", "EST_006", "COO_002" -> CommonErrorCode.VALIDATION_ERROR;
             case "ATT_001", "ATT_002", "ATT_003", "GEN_002", "RC_001", "SES_004", "PLA_001",
                  "VAL_001", "VAL_002", "VAL_003", "VAL_004", "VAL_005" -> CommonErrorCode.VALIDATION_ERROR;
             case "VAL_006" -> CommonErrorCode.CONFLICT;
@@ -97,6 +106,9 @@ final class DbFailureClassifier {
             case "NTF_004" -> CommonErrorCode.VALIDATION_ERROR;
             // CULM-001 A.2-6: NTF_002 notificacion inexistente al reintentar desde la cola (antes ERR_DB_UNCLASSIFIED, 500).
             case "NTF_002", "NTF_005" -> CommonErrorCode.RESOURCE_NOT_FOUND;
+            // CULM-001 D.9-a (F-ADM-027): NTF_020 reintento de una notificacion inexistente y NTF_021 vista previa de un tipo de plantilla
+            // inexistente: 404 (antes ERR_DB_UNCLASSIFIED, 500, o un 200 con asunto vacio).
+            case "NTF_020", "NTF_021" -> CommonErrorCode.RESOURCE_NOT_FOUND;
             case "NTF_008" -> CommonErrorCode.CONFLICT;
             case "IDE_001" -> CommonErrorCode.VALIDATION_ERROR;
             case "IDE_003" -> CommonErrorCode.CONFLICT;
@@ -112,8 +124,8 @@ final class DbFailureClassifier {
             case "VCE_002" -> VerificacionCorreoErrorCode.VCE_002;
             case "VCE_005" -> VerificacionCorreoErrorCode.VCE_005;
             case "VCE_007" -> VerificacionCorreoErrorCode.VCE_007;
-            // FAC_002: el decano ya es titular de otra facultad activa (HU117/HU111).
-            case "FAC_002" -> CommonErrorCode.CONFLICT;
+            // FAC_002: el decano ya es titular de otra facultad activa (HU117/HU111, F-ADM-S05).
+            case "FAC_002" -> FacultadErrorCode.FAC_002;
             case "VAL_007" -> classifyVal007(operation);
             // SES-04: resolucion del reclamo. Accion fuera del contrato 400; ya resuelto con otra decision, asistencia
             // presente o sin detalle 409; solicitud inexistente 404.
@@ -125,12 +137,40 @@ final class DbFailureClassifier {
             // CULM-001 A.2-7: retiro del reclamo propio. REV_006 inexistente o ajeno (indistinguibles); REV_007 no pendiente.
             case "REV_006" -> CommonErrorCode.RESOURCE_NOT_FOUND;
             case "REV_007" -> CommonErrorCode.CONFLICT;
+            // CULM-001 D.4 (HU156): admision de estudiantes. Codigos propios para que el usuario reciba el texto institucional.
+            case "ADS_002" -> AdmisionEstudianteErrorCode.ADS_002;
+            case "ADS_003" -> AdmisionEstudianteErrorCode.ADS_003;
+            case "ADS_004" -> AdmisionEstudianteErrorCode.ADS_004;
+            case "ADS_005" -> AdmisionEstudianteErrorCode.ADS_005;
+            case "ADS_006" -> AdmisionEstudianteErrorCode.ADS_006;
+            // CULM-001 D.5 (HU171): Carga masiva por CSV de usuarios
+            case "CMA_001" -> CargaMasivaErrorCode.CMA_001;
+            case "CMA_002" -> CargaMasivaErrorCode.CMA_002;
+            case "CMA_003" -> CargaMasivaErrorCode.CMA_003;
+            case "CMA_004" -> CargaMasivaErrorCode.CMA_004;
+            case "CMA_005" -> CargaMasivaErrorCode.CMA_005;
+            case "CMA_006" -> CargaMasivaErrorCode.CMA_006;
+            case "CMA_007" -> CargaMasivaErrorCode.CMA_007;
+            case "CMA_008" -> CargaMasivaErrorCode.CMA_008;
+            case "CMA_009" -> CargaMasivaErrorCode.CMA_009;
+            case "CMA_010" -> CargaMasivaErrorCode.CMA_010;
+            case "CMA_011" -> CargaMasivaErrorCode.CMA_011;
+            case "CMA_012" -> CargaMasivaErrorCode.CMA_012;
+            case "CMA_013" -> CargaMasivaErrorCode.CMA_013;
+            case "CMA_014" -> CargaMasivaErrorCode.CMA_014;
             // CULM-001 D.1 (HU026B): plazo de excusas vencido (409) o sin parametros para validarlo (500, fallo de configuracion).
             case "REV_020" -> AsistenciaErrorCode.ERR_PLAZO_JUSTIFICACION_VENCIDO;
             case "REV_025" -> AsistenciaErrorCode.ERR_CONFIGURACION_PLAZO_JUSTIFICACION;
+            // CULM-001 D.2 (HU014/HU015): categoria inexistente, soporte obligatorio por categoria, maximo de soportes y soporte repetido (400).
+            case "REV_021" -> AsistenciaErrorCode.ERR_CATEGORIA_JUSTIFICACION_INVALIDA;
+            case "REV_022" -> AsistenciaErrorCode.ERR_SOPORTE_OBLIGATORIO_CATEGORIA;
+            case "REV_023" -> AsistenciaErrorCode.ERR_MAXIMO_SOPORTES_RECLAMO;
+            case "REV_024" -> AsistenciaErrorCode.ERR_SOPORTE_RECLAMO_DUPLICADO;
             // CULM-001 A.2-8: no se desactiva al decano de una facultad con programas activos. 409 con su codigo de
             // catalogo (como COO_001) para que el usuario reciba el texto institucional (F-A-S02).
             case "DEC_002" -> DecanoErrorCode.DEC_002;
+            // CULM-001 D.9-a (F-ADM-024): alta repetida de un decano activo. 409 con su codigo de catalogo.
+            case "DEC_020" -> DecanoErrorCode.DEC_020;
             // CULM-001 A.2-10: sesion solapada en el grupo o con otro grupo del docente. 400 como SES_004: el OpenAPI de
             // POST/PATCH/PUT /api/v1/sesiones y POST /api/v2/sesiones declara 400 y no 409 (§8.1 del contrato). Con su
             // codigo de catalogo para que el formulario muestre el texto del solape (A2-F-09, N11, F-A-S04).
@@ -178,7 +218,7 @@ final class DbFailureClassifier {
             // Combinacion Programa/Facultad invalida enviada a la operacion.
             case "ERR_PROGRAMA_FACULTAD_INCONSISTENTE" -> CommonErrorCode.VALIDATION_ERROR;
             case "SES_003" -> DatabaseErrorCode.FEATURE_UNAVAILABLE;
-            // SES-01: ventana de registro de asistencia (lote y autonomo). La DB la repite bajo bloqueo con su reloj UTC:
+            // SES-01: ventana de registro de asistencia (lote, toma y token). La DB la repite bajo bloqueo con su reloj UTC:
             // sesion no iniciada, cerrada (sin tolerancia) o con procedencia temporal indeterminada son conflictos de estado.
             case "SES_007" -> AsistenciaErrorCode.ERR_SESION_NO_INICIADA;
             case "SES_008" -> AsistenciaErrorCode.ERR_SESION_CERRADA;
@@ -192,6 +232,18 @@ final class DbFailureClassifier {
             case "SES_016" -> SesionErrorCode.SES_016;
             // CULM-001 B.1: festivos (carga, aplicacion y consultas del administrador).
             // CULM-001 B.2: tomas de asistencia y QR de asistencia (el codigo de la DB se expone tal cual).
+            // CULM-001 C.1: revision de cancelacion por inasistencia (el codigo de la DB se expone tal cual).
+            case "RCN_001" -> RevisionCancelacionErrorCode.RCN_001;
+            case "RCN_002" -> RevisionCancelacionErrorCode.RCN_002;
+            case "RCN_003" -> RevisionCancelacionErrorCode.RCN_003;
+            case "RCN_004" -> RevisionCancelacionErrorCode.RCN_004;
+            case "RCN_005" -> RevisionCancelacionErrorCode.RCN_005;
+            case "RCN_006" -> RevisionCancelacionErrorCode.RCN_006;
+            case "RCN_012" -> RevisionCancelacionErrorCode.RCN_012;
+            case "RCN_013" -> RevisionCancelacionErrorCode.RCN_013;
+            case "RCN_014" -> RevisionCancelacionErrorCode.RCN_014;
+            case "ALR_004" -> AlertaInasistenciaErrorCode.ALR_004;
+            case "ALR_006" -> AlertaInasistenciaErrorCode.ALR_006;
             case "TOM_001" -> TomaAsistenciaErrorCode.TOM_001;
             case "TOM_002" -> TomaAsistenciaErrorCode.TOM_002;
             case "TOM_003" -> TomaAsistenciaErrorCode.TOM_003;
@@ -204,6 +256,19 @@ final class DbFailureClassifier {
             case "AQR_006" -> AsistenciaQrErrorCode.AQR_006;
             case "AQR_007" -> AsistenciaQrErrorCode.AQR_007;
             case "AQR_010" -> AsistenciaQrErrorCode.AQR_010;
+            // CULM-001 D.3/D.6: edicion de parametros (HU168) y consulta de auditoria (HU172); el codigo de la DB se expone tal cual.
+            case "PRM_002" -> ParametroErrorCode.PRM_002;
+            case "PRM_003" -> ParametroErrorCode.PRM_003;
+            case "PRM_004" -> ParametroErrorCode.PRM_004;
+            case "PRM_005" -> ParametroErrorCode.PRM_005;
+            case "PRM_006" -> ParametroErrorCode.PRM_006;
+            case "PRM_007" -> ParametroErrorCode.PRM_007;
+            case "PRM_008" -> ParametroErrorCode.PRM_008;
+            case "PRM_009" -> ParametroErrorCode.PRM_009;
+            case "PRM_010" -> ParametroErrorCode.PRM_010;
+            case "PRM_012" -> ParametroErrorCode.PRM_012;
+            case "AUD_001" -> ParametroErrorCode.AUD_001;
+            case "AUD_002" -> ParametroErrorCode.AUD_002;
             case "FES_001" -> FestivoErrorCode.FES_001;
             case "FES_002" -> FestivoErrorCode.FES_002;
             case "FES_003" -> FestivoErrorCode.FES_003;
@@ -246,9 +311,6 @@ final class DbFailureClassifier {
     private static ErrorDefinition classifyVal007(final String operation) {
         if (OPERATION_CREAR_USUARIO.equals(operation) || OPERATION_SINCRONIZAR_USUARIO.equals(operation)) {
             return UsuarioErrorCode.ERR_PASSWORD_POLITICA_INVALIDA;
-        }
-        if (OPERATION_REGISTRAR_ASISTENCIA_AUTONOMA.equals(operation)) {
-            return CommonErrorCode.VALIDATION_ERROR;
         }
         if (OPERATION_RESOLVER_SOLICITUD_REVISION.equals(operation)) {
             return SecurityErrorCode.FORBIDDEN;

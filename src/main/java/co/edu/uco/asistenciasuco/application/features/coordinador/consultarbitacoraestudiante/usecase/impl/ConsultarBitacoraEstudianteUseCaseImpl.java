@@ -31,7 +31,7 @@ public final class ConsultarBitacoraEstudianteUseCaseImpl implements ConsultarBi
         final int pagina = IndicadoresRules.pagina(domain.pagina());
         final int tamano = IndicadoresRules.tamano(domain.tamano());
         IndicadoresRules.programaDelCoordinador(scopePort, domain.actorUsuarioId());
-        final PaginaBitacoraProjection resultado = queryPort.consultarBitacora(domain.actorUsuarioId(), domain.idEstudiante(), domain.idPeriodoAcademico(), pagina, tamano);
+        final PaginaBitacoraProjection resultado = queryPort.consultarBitacora(domain.actorUsuarioId(), domain.idEstudiante(), domain.idPeriodoAcademico(), pagina, tamano, domain.idPrograma());
         return new BitacoraPaginaDomain(
                 resultado.sesiones().stream().map(s -> new BitacoraSesionDomain(s.idSesion(), s.numeroSesion(), s.nombreSesion(), s.fechaHoraInicio(), s.fechaHoraFin(), s.idGrupo(), s.codigoGrupo(), s.idAsignatura(), s.nombreAsignatura(), s.asistio(), s.codigoRazonCausa(), s.nombreRazonCausa())).toList(),
                 resultado.totalRegistros());

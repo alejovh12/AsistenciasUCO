@@ -25,6 +25,8 @@ public record GrupoOfertaEstudianteProjection(
         int estudiantesActivos,
         int cuposDisponibles,
         boolean matriculado,
-        String codigoComponente
+        String codigoComponente,
+        String codigoCaracter,
+        String nombreCaracter
 ) {
 }

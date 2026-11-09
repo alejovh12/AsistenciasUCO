@@ -12,7 +12,8 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
  */
 public final class SecurityPublicEndpoints {
 
-    public static final String ACTUATOR = "/actuator/**";
+    /** CULM-001 D.9-a (F-TRX-020): solo health es publico; Prometheus vive en el puerto de gestion (loopback), no en el de la API. */
+    public static final String ACTUATOR = "/actuator/health/**";
     /** IDENT-001: verificacion publica del correo; su credencial es el token de un solo uso del enlace. */
     public static final String VERIFICAR_CORREO = "/api/v1/public/verificar-correo";
     /** HU176B: validacion y alta publicas de la matricula por QR/PIN; su credencial es el token/PIN rotativo. */
@@ -46,7 +47,9 @@ public final class SecurityPublicEndpoints {
                 paths.matcher(AzureEventGridAuthFilter.WEBHOOK_PATH),
                 paths.matcher(HttpMethod.POST, VERIFICAR_CORREO),
                 paths.matcher(HttpMethod.POST, MATRICULA_QR_VALIDAR),
+                paths.matcher(HttpMethod.OPTIONS, MATRICULA_QR_VALIDAR),
                 paths.matcher(HttpMethod.POST, MATRICULA_QR_REGISTRO),
+                paths.matcher(HttpMethod.OPTIONS, MATRICULA_QR_REGISTRO),
                 paths.matcher(ERROR_VIEW),
                 new OrRequestMatcher(documentation)
         );

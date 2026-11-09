@@ -2,8 +2,6 @@ package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.primaryports.interactor.ConsultarAsistenciasPorGrupoInteractor;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.impl.ConsultarAsistenciasPorGrupoUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.primaryports.interactor.RegistrarAsistenciaInteractor;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.usecase.impl.RegistrarAsistenciaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.interactor.RegistrarAsistenciasSesionInteractor;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.usecase.impl.RegistrarAsistenciasSesionUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicitudrevisionasistencia.primaryports.interactor.ResolverSolicitudRevisionAsistenciaInteractor;
@@ -29,17 +27,13 @@ class AsistenciaWiringConfigurationTest {
 
     @Test
     void todos_los_beans_se_construyen_con_el_adapter_esperado() {
-        final var registrarAsistenciaUseCase = config.registrarAsistenciaUseCase(asistenciaRepositoryPort, realtimePublisherPort);
-        assertInstanceOf(RegistrarAsistenciaUseCaseImpl.class, registrarAsistenciaUseCase);
-        assertInstanceOf(RegistrarAsistenciaInteractor.class, config.registrarAsistenciaInputPort(registrarAsistenciaUseCase));
-
         final var consultarAsistenciasPorGrupoUseCase = config.consultarAsistenciasPorGrupoUseCase(asistenciaRepositoryPort, scopePort);
         assertInstanceOf(ConsultarAsistenciasPorGrupoUseCaseImpl.class, consultarAsistenciasPorGrupoUseCase);
         assertInstanceOf(ConsultarAsistenciasPorGrupoInteractor.class,
                 config.consultarAsistenciasPorGrupoInputPort(consultarAsistenciasPorGrupoUseCase));
 
         final var registrarAsistenciasSesionUseCase = config.registrarAsistenciasSesionUseCase(
-                asistenciaRepositoryPort, sesionProcedenciaQueryPort, scopePort, realtimePublisherPort);
+                asistenciaRepositoryPort, sesionProcedenciaQueryPort, scopePort, realtimePublisherPort, co.edu.uco.asistenciasuco.application.features.alertainasistencia.common.EvaluadorAlertasInasistencia.NINGUNO);
         assertInstanceOf(RegistrarAsistenciasSesionUseCaseImpl.class, registrarAsistenciasSesionUseCase);
         assertInstanceOf(RegistrarAsistenciasSesionInteractor.class,
                 config.registrarAsistenciasSesionInputPort(registrarAsistenciasSesionUseCase));
@@ -49,7 +43,7 @@ class AsistenciaWiringConfigurationTest {
         assertInstanceOf(SolicitarRevisionAsistenciaInteractor.class,
                 config.solicitarRevisionAsistenciaInputPort(solicitarRevisionAsistenciaUseCase));
 
-        final var resolverSolicitudUseCase = config.resolverSolicitudRevisionAsistenciaUseCase(asistenciaRepositoryPort, scopePort, providerVacio(), providerVacio());
+        final var resolverSolicitudUseCase = config.resolverSolicitudRevisionAsistenciaUseCase(asistenciaRepositoryPort, scopePort, providerVacio(), providerVacio(), co.edu.uco.asistenciasuco.application.features.alertainasistencia.common.EvaluadorAlertasInasistencia.NINGUNO);
         assertInstanceOf(ResolverSolicitudRevisionAsistenciaUseCaseImpl.class, resolverSolicitudUseCase);
         assertInstanceOf(ResolverSolicitudRevisionAsistenciaInteractor.class,
                 config.resolverSolicitudRevisionAsistenciaInputPort(resolverSolicitudUseCase));

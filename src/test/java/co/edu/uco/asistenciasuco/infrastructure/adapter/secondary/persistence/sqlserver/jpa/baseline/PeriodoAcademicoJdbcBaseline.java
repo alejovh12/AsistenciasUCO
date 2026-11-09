@@ -29,6 +29,12 @@ public final class PeriodoAcademicoJdbcBaseline implements PeriodoAcademicoQuery
     }
 
     @Override
+    public co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PaginaPeriodosAdminProjection consultarPeriodosAdministrador(
+            final UUID idUsuarioEjecutor, final int pagina, final int tamano) {
+        throw new UnsupportedOperationException("El baseline JDBC no cubre la consulta paginada del administrador (CULM-001 D.9-a).");
+    }
+
+    @Override
     public Optional<PeriodoAcademicoProjection> consultarPeriodoAcademicoPorId(final UUID idPeriodoAcademico) {
         final List<PeriodoAcademicoProjection> result = jdbcOperations.query("""
                 SELECT id, idInstitucion, nombreInstitucion, nombre, codigo, fechaInicio, fechaFin, anio

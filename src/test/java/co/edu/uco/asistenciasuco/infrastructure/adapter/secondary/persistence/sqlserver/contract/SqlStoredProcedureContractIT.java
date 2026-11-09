@@ -107,7 +107,8 @@ class SqlStoredProcedureContractIT {
      * Inventario completo de los 19 stored procedures publicos realmente invocados por los
      * adapters SQL Server del backend (ver auditoria de esta microfase). Cada entrada refleja el
      * contrato vigente en la DB real, incluyendo los procedimientos donde {@code @idUsuarioEjecutor}
-     * fue agregado y, en {@code usp_crear_decano}, donde {@code @idTipoIdIdentificacion} fue retirado.
+     * fue agregado y, en {@code usp_crear_decano} y {@code usp_crear_coordinador}, donde CULM-001 D.5 agrego
+     * {@code @idTipoIdIdentificacion} al final (CONTRACT D v2 §6.3, OBS-10).
      */
     private static Stream<Arguments> contratosEsperados() {
         return Stream.of(
@@ -134,7 +135,8 @@ class SqlStoredProcedureContractIT {
                         input("@nombreFacultad", "nvarchar"),
                         input("@password", "nvarchar"),
                         input("@idCorrelacion", "uniqueidentifier"),
-                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idTipoIdIdentificacion", "uniqueidentifier") // CULM-001 D.5 (CONTRACT D v2 §6.3, OBS-10)
                 )),
                 Arguments.of("usp_crear_coordinador", List.of(
                         input("@idCoordinador", "uniqueidentifier"),
@@ -148,7 +150,8 @@ class SqlStoredProcedureContractIT {
                         input("@idFacultad", "uniqueidentifier"),
                         input("@password", "nvarchar"),
                         input("@idCorrelacion", "uniqueidentifier"),
-                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idTipoIdIdentificacion", "uniqueidentifier") // CULM-001 D.5 (CONTRACT D v2 §6.3, OBS-10)
                 )),
                 Arguments.of("usp_crear_asignatura", List.of(
                         input("@idAsignatura", "uniqueidentifier"),
@@ -160,7 +163,8 @@ class SqlStoredProcedureContractIT {
                         input("@nombreArea", "nvarchar"),
                         input("@nombreComponente", "nvarchar"),
                         input("@idCorrelacion", "uniqueidentifier"),
-                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@codigoCaracter", "nvarchar")   // CULM-001 B2NM (DEC-019, CONTRACT B2 2.7.2)
                 )),
                 Arguments.of("usp_actualizar_asignatura", List.of(
                         input("@idAsignatura", "uniqueidentifier"),
@@ -172,7 +176,8 @@ class SqlStoredProcedureContractIT {
                         input("@nombreArea", "nvarchar"),
                         input("@nombreComponente", "nvarchar"),
                         input("@idCorrelacion", "uniqueidentifier"),
-                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@codigoCaracter", "nvarchar")   // CULM-001 B2NM (DEC-019, CONTRACT B2 2.7.2)
                 )),
                 Arguments.of("usp_toggle_estado_asignatura", List.of(
                         input("@idAsignatura", "uniqueidentifier"),
@@ -227,7 +232,8 @@ class SqlStoredProcedureContractIT {
                         input("@password", "nvarchar"),
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@idUsuarioEjecutor", "uniqueidentifier"),
-                        input("@idTipoIdIdentificacion", "uniqueidentifier")
+                        input("@idTipoIdIdentificacion", "uniqueidentifier"),
+                        input("@idPrograma", "uniqueidentifier")   // CULM-001 B2NM (DEC-020, S3): programa elegido en grupos con varios programas
                 )),
                 Arguments.of("usp_crear_sesion", List.of(
                         input("@idGrupo", "uniqueidentifier"),
@@ -254,13 +260,6 @@ class SqlStoredProcedureContractIT {
                 Arguments.of("usp_registrar_asistencias_sesion", List.of(
                         input("@idSesion", "uniqueidentifier"),
                         input("@asistenciaJSON", "nvarchar"),
-                        input("@idCorrelacion", "uniqueidentifier"),
-                        input("@idUsuarioEjecutor", "uniqueidentifier")
-                )),
-                Arguments.of("usp_registrar_asistencia_estudiante_autonomo", List.of(
-                        input("@idEstudiante", "uniqueidentifier"),
-                        input("@idSesion", "uniqueidentifier"),
-                        input("@codigoVerificacion", "nvarchar"),
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@idUsuarioEjecutor", "uniqueidentifier")
                 )),
@@ -301,6 +300,20 @@ class SqlStoredProcedureContractIT {
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@idUsuarioEjecutor", "uniqueidentifier")
                 )),
+                // CULM-001 D.2 (HU014/HU015): radicacion con categoria y varios soportes (arreglo JSON de GUID) y configuracion de reclamos.
+                Arguments.of("usp_radicar_solicitud_revision_asistencia_v3", List.of(
+                        input("@idEstudiante", "uniqueidentifier"),
+                        input("@idSesion", "uniqueidentifier"),
+                        input("@categoria", "nvarchar"),
+                        input("@justificacion", "nvarchar"),
+                        input("@idsArchivoSoporte", "nvarchar"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_configuracion_reclamos", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier")
+                )),
                 Arguments.of("usp_consultar_archivo_soporte_autorizado", List.of(
                         input("@idArchivoSoporte", "uniqueidentifier"),
                         input("@idCorrelacion", "uniqueidentifier"),
@@ -312,6 +325,73 @@ class SqlStoredProcedureContractIT {
                         input("@codigoEstado", "nvarchar"),
                         input("@numeroPagina", "int"),
                         input("@tamanoPagina", "int")
+                )),
+                // CULM-001 C.1: alertas de inasistencia, revision de cancelacion y audiencias del SSE.
+                Arguments.of("usp_evaluar_alertas_inasistencia_grupo", List.of(
+                        input("@idGrupo", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idEstudianteGrupo", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_grupos_pendientes_evaluacion_alertas", List.of(
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@tamanoLote", "int"),
+                        input("@idPeriodoAcademico", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_alertas_estudiante", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int"),
+                        input("@soloNoLeidas", "bit"),
+                        input("@soloVigentes", "bit"),
+                        input("@idGrupo", "uniqueidentifier")
+                )),
+                Arguments.of("usp_decidir_revision_cancelacion", List.of(
+                        input("@idRevision", "uniqueidentifier"),
+                        input("@codigoDecision", "nvarchar"),
+                        input("@motivo", "nvarchar"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_resolver_revision_cancelacion", List.of(
+                        input("@idRevision", "uniqueidentifier"),
+                        input("@codigoDecision", "nvarchar"),
+                        input("@motivo", "nvarchar"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_revisiones_cancelacion_coordinador_paginado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int"),
+                        input("@soloPendientes", "bit"),
+                        input("@codigoEstado", "nvarchar"),
+                        input("@idPrograma", "uniqueidentifier"),
+                        input("@idGrupo", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_revisiones_cancelacion_decano_paginado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int"),
+                        input("@soloPendientes", "bit"),
+                        input("@codigoEstado", "nvarchar"),
+                        input("@idPrograma", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_destinatarios_revision_cancelacion", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idRevision", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_audiencias_realtime_grupo", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idGrupo", "uniqueidentifier")
+                )),
+                Arguments.of("usp_actualizar_resolutores_revisiones_cancelacion", List.of(
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@tamanoLote", "int")
                 )),
                 // CULM-001 B.1: cancelacion de sesion (HU047), festivos y generacion v2 que invoca el backend.
                 Arguments.of("usp_cancelar_sesion", List.of(
@@ -457,9 +537,71 @@ class SqlStoredProcedureContractIT {
                         input("@numeroPagina", "int"),
                         input("@tamanoPagina", "int")
                 )),
+                Arguments.of("usp_actualizar_parametro", List.of(
+                        input("@idParametro", "uniqueidentifier"),
+                        input("@valor", "nvarchar"),
+                        input("@fechaModificacionEsperada", "datetime"),
+                        input("@motivo", "nvarchar"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_parametros_paginado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int"),
+                        input("@grupo", "varchar"),
+                        input("@texto", "nvarchar"),
+                        input("@soloEditables", "bit")
+                )),
+                Arguments.of("usp_consultar_cambios_parametro_paginado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idParametro", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int")
+                )),
+                Arguments.of("usp_consultar_auditoria_eventos_paginado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int"),
+                        input("@desdeUtc", "datetimeoffset"),
+                        input("@hastaUtc", "datetimeoffset"),
+                        input("@accion", "varchar"),
+                        input("@tipoRecurso", "varchar"),
+                        input("@idRecurso", "nvarchar"),
+                        input("@idUsuarioActor", "uniqueidentifier"),
+                        input("@resultado", "varchar"),
+                        input("@soloAsistencia", "bit"),
+                        input("@idCorrelacionEvento", "uniqueidentifier"),
+                        input("@soloAdministracion", "bit")
+                )),
                 Arguments.of("usp_consultar_resumen_asistencia_estudiante", List.of(
                         input("@idUsuarioEjecutor", "uniqueidentifier"),
                         input("@idCorrelacion", "uniqueidentifier")
+                )),
+                // CULM-001 D.4 (HU156, CONTRACT §5.2)
+                Arguments.of("usp_admitir_estudiante", List.of(
+                        input("@idTipoIdIdentificacion", "uniqueidentifier"),
+                        input("@numeroIdentificacion", "int"),
+                        input("@primerNombre", "nvarchar"),
+                        input("@segundoNombre", "nvarchar"),
+                        input("@primerApellido", "nvarchar"),
+                        input("@segundoApellido", "nvarchar"),
+                        input("@correo", "nvarchar"),
+                        input("@password", "nvarchar"),
+                        input("@idPrograma", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_programas_institucion_paginado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int"),
+                        input("@texto", "nvarchar"),
+                        input("@idFacultad", "uniqueidentifier")
                 )),
                 // CULM-001 D.1 (HU026B, CONTRACT §2.2): sesiones de la materia del estudiante con la fecha limite de excusa.
                 Arguments.of("usp_consultar_sesiones_materia_estudiante", List.of(

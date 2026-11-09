@@ -78,9 +78,7 @@ public final class ConsultasTransversalesInteractor implements ConsultasTransver
         return pagina(useCase.buscarAsignaturas(usuario, new FiltroConsulta(busqueda, idFacultad, estaActiva), pagina,
                         tamano),
                 a -> new AsignaturaInstitucionDTO(a.idAsignatura(), a.codigo(), a.nombre(), a.creditos(),
-                        a.nombreArea(), a.nombreComponente(), a.codigoSemestre(), a.idPlanEstudio(),
-                        a.inpPlanEstudio(), a.idPrograma(), a.nombrePrograma(), a.idFacultad(), a.nombreFacultad(),
-                        a.activa()));
+                        a.nombreArea(), a.nombreComponente(), a.planes(), a.totalPlanes(), a.activa()));
     }
 
     @Override
@@ -115,7 +113,7 @@ public final class ConsultasTransversalesInteractor implements ConsultasTransver
                         c.nombreAsignatura(), c.idDocente(), c.nombreDocente(), c.estudiantesActivos(),
                         c.sesionesEjecutadas(), c.asistencias(), c.faltasSinJustaCausa(), c.excusas(),
                         c.porcentajeAsistencia(), c.porcentajeInasistencia(), c.estudiantesRiesgo(),
-                        c.estudiantesPerdida()));
+                        c.estudiantesPerdida(), c.horasDictadas(), c.porcentajeExcusa(), c.porcentajeSinRegistro()));
     }
 
     @Override
@@ -123,12 +121,20 @@ public final class ConsultasTransversalesInteractor implements ConsultasTransver
                                                             final Integer pagina, final Integer tamano) {
         final FiltroAuditoria consulta = filtro == null ? null : new FiltroAuditoria(filtro.desde(), filtro.hasta(),
                 filtro.accion(), filtro.tipoRecurso(), filtro.idRecurso(), filtro.idUsuarioActor(), filtro.resultado(),
-                !Boolean.FALSE.equals(filtro.soloAsistencia()));
+                soloAsistencia(filtro), filtro.idTraza(), Boolean.TRUE.equals(filtro.soloAdministracion()));
         return pagina(useCase.consultarAuditoria(usuario, consulta, pagina, tamano),
                 e -> new EventoAuditoriaDTO(e.id(), e.ocurridoEn(), e.idActor(), e.tipoActor(), e.nombreActor(),
                         e.accion(), e.tipoRecurso(), e.idRecurso(), e.resultado(), e.idTraza(), e.metodoHttp(),
                         e.ruta(), e.estadoHttp(), e.ipCliente(), e.codigoError(), e.metadatos(),
                         e.accionAsistencia()));
+    }
+
+    /** Sin {@code soloAsistencia} explicito vale true, salvo con {@code soloAdministracion} (excluyentes, D.6). */
+    private static boolean soloAsistencia(final FiltroAuditoriaDTO filtro) {
+        if (filtro.soloAsistencia() == null) {
+            return !Boolean.TRUE.equals(filtro.soloAdministracion());
+        }
+        return filtro.soloAsistencia();
     }
 
     @Override
@@ -148,7 +154,7 @@ public final class ConsultasTransversalesInteractor implements ConsultasTransver
     @Override
     public List<CategoriaJustificacionDTO> consultarCategoriasJustificacion() {
         return useCase.consultarCategoriasJustificacion().stream()
-                .map(c -> new CategoriaJustificacionDTO(c.id(), c.codigo(), c.nombre(), c.descripcion()))
+                .map(c -> new CategoriaJustificacionDTO(c.id(), c.codigo(), c.nombre(), c.descripcion(), c.requiereSoporte()))
                 .toList();
     }
 

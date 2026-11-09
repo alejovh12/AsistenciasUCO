@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.PaginaResultado;
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.IndicadoresAsistenciaDTO;
+import co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.MarcaInasistenciaDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.ResumenAsistenciaQueryPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.NativeRowValues;
@@ -49,7 +50,7 @@ public class ResumenAsistenciaJpaRepository implements ResumenAsistenciaQueryPor
                     final List<Tuple> filas = tuplas(SQL_GRUPO_DOCENTE, Map.of("idUsuarioEjecutor", usuarioEjecutor,
                             "idCorrelacion", correlacion, "idGrupo", grupoId, "numeroPagina", numeroPagina, "tamanoPagina", tamanoPagina));
                     final long total = filas.isEmpty() ? 0 : NativeRowValues.entero(filas.getFirst().get("totalRegistros"));
-                    return new PaginaResultado<>(filas.stream().map(f -> aFila(f, NativeRowValues.texto(f.get("nombreCompletoEstudiante"))))
+                    return new PaginaResultado<>(filas.stream().map(f -> aFila(f, NativeRowValues.texto(f.get("nombreCompletoEstudiante")), aMarca(f)))
                             .toList(), numeroPagina, tamanoPagina, total);
                 }, excepcion -> DbCodeTranslator.traducir(excepcion, "grupo"));
     }
@@ -61,7 +62,7 @@ public class ResumenAsistenciaJpaRepository implements ResumenAsistenciaQueryPor
                 "No fue posible consultar el resumen de asistencia del estudiante.", () -> {
                     final List<FilaResumen> resultado = new ArrayList<>();
                     for (final Tuple f : tuplas(SQL_ESTUDIANTE, Map.of("idUsuarioEjecutor", usuarioEjecutor, "idCorrelacion", correlacion))) {
-                        resultado.add(aFila(f, null));
+                        resultado.add(aFila(f, null, null));
                     }
                     return resultado;
                 }, DbCodeTranslator::traducir);
@@ -74,7 +75,7 @@ public class ResumenAsistenciaJpaRepository implements ResumenAsistenciaQueryPor
         return (List<Tuple>) consulta.getResultList();
     }
 
-    static FilaResumen aFila(final Tuple f, final String nombreCompleto) {
+    static FilaResumen aFila(final Tuple f, final String nombreCompleto, final MarcaInasistenciaDTO marca) {
         return new FilaResumen(NativeRowValues.uuid(f.get("idGrupo")), NativeRowValues.uuid(f.get("idEstudiante")), nombreCompleto,
                 NativeRowValues.texto(f.get("codigoEstadoEstudiante")), new IndicadoresAsistenciaDTO(
                 NativeRowValues.entero(f.get("sesionesEjecutadas")),
@@ -87,6 +88,30 @@ public class ResumenAsistenciaJpaRepository implements ResumenAsistenciaQueryPor
                 NativeRowValues.decimal2(f.get("porcentajeAsistenciaHoras")),
                 NativeRowValues.texto(f.get("codigoPermanencia")),
                 NativeRowValues.decimal2(f.get("umbralAdvertencia")),
-                NativeRowValues.decimal2(f.get("umbralPerdida"))));
+                NativeRowValues.decimal2(f.get("umbralPerdida"))), marca);
+    }
+
+    /**
+     * CULM-001 C.1: marca de inasistencia (columnas al final del SP del docente); {@code null} sin alertas ni revision.
+     * {@code accionesPermitidasRevision} llega como texto separado por comas (vacio si no hay acciones).
+     */
+    static MarcaInasistenciaDTO aMarca(final Tuple f) {
+        final boolean advertencia = NativeRowValues.bit(f.get("tieneAdvertenciaVigente"));
+        final boolean perdida = NativeRowValues.bit(f.get("tienePerdidaVigente"));
+        final UUID idRevision = NativeRowValues.uuid(f.get("idRevisionCancelacion"));
+        if (!advertencia && !perdida && idRevision == null) {
+            return null;
+        }
+        final MarcaInasistenciaDTO.RevisionMarcaDTO revision = idRevision == null ? null : new MarcaInasistenciaDTO.RevisionMarcaDTO(
+                idRevision, NativeRowValues.texto(f.get("codigoEstadoRevision")), NativeRowValues.texto(f.get("nombreEstadoRevision")),
+                NativeRowValues.bit(f.get("requiereAccionDocente")), NativeRowValues.texto(f.get("codigoPerfilResolutorActual")),
+                acciones(NativeRowValues.texto(f.get("accionesPermitidasRevision"))));
+        return new MarcaInasistenciaDTO(advertencia, NativeRowValues.instanteUtc(f.get("fechaAdvertenciaUtc")), perdida,
+                NativeRowValues.instanteUtc(f.get("fechaPerdidaUtc")), revision);
+    }
+
+    private static List<String> acciones(final String texto) {
+        return texto == null || texto.isBlank() ? List.of()
+                : java.util.Arrays.stream(texto.split(",")).map(String::strip).filter(a -> !a.isEmpty()).toList();
     }
 }

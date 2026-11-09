@@ -49,6 +49,11 @@ asistencias:
     enabled: ${ASISTENCIAS_SWAGGER_UI_ENABLED:false}
 
 management:
+  # CULM-001 D.9-a (F-TRX-020): Actuator y Prometheus salen por un puerto de gestion propio, solo en loopback; el puerto de la
+  # API ya no responde /actuator/prometheus (la recoleccion de Prometheus apunta a 127.0.0.1:${MANAGEMENT_SERVER_PORT:8090}).
+  server:
+    port: ${MANAGEMENT_SERVER_PORT:8090}
+    address: 127.0.0.1
   endpoints:
     web:
       exposure:

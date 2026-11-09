@@ -15,7 +15,10 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -39,8 +42,13 @@ class AdminPeriodoAcademicoControllerTest {
 
     @Test
     void crear_y_actualizar_mapean_cuerpo_ruta_y_actor() throws Exception {
+        // CULM-001 D.9-a (F-ADM-030, CONTRACT §11.1): el alta responde 201 con el periodo creado (antes 200 con datos nulos).
+        when(periodos.crear(any())).thenReturn(PERIODO);
         mvc.perform(post("/api/v1/admin/periodos-academicos").contentType("application/json").content(BODY))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.exitoso").value(true));
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.exitoso").value(true))
+                .andExpect(jsonPath("$.datos.id").value(PERIODO.toString()))
+                .andExpect(jsonPath("$.datos.nombre").value("2027-1"))
+                .andExpect(jsonPath("$.datos.fechaInicio").value("2027-02-01"));
         mvc.perform(put("/api/v1/admin/periodos-academicos/{id}", PERIODO).contentType("application/json").content(BODY))
                 .andExpect(status().isOk());
 
@@ -74,5 +82,33 @@ class AdminPeriodoAcademicoControllerTest {
     void cuerpo_ausente_responde_400() throws Exception {
         mvc.perform(post("/api/v1/admin/periodos-academicos").contentType("application/json"))
                 .andExpect(status().isBadRequest());
+    }
+
+    /** CULM-001 D.9-a (F-ADM-030): GET paginado del administrador con esVigente y rechazo PAG_001. */
+    @Test
+    void culm001_d9_consultar_responde_api_page_response_con_esVigente() throws Exception {
+        when(periodos.consultar(ACTOR, 1, 5)).thenReturn(new co.edu.uco.asistenciasuco.application.features.admin.gestionarperiodoacademico.primaryports.dto.PaginaPeriodosAdminDTO(
+                java.util.List.of(new co.edu.uco.asistenciasuco.application.features.admin.gestionarperiodoacademico.primaryports.dto.PeriodoAdminDTO(
+                        PERIODO, UUID.randomUUID(), "UCO", "2026-2", "20262", LocalDate.of(2026, 8, 1), LocalDate.of(2026, 12, 15), 2026, true)), 6));
+
+        mvc.perform(get("/api/v1/admin/periodos-academicos").param("pagina", "1").param("tamano", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.elementos[0].esVigente").value(true))
+                .andExpect(jsonPath("$.elementos[0].nombre").value("2026-2"))
+                .andExpect(jsonPath("$.numeroPagina").value(1))
+                .andExpect(jsonPath("$.tamanoPagina").value(5))
+                .andExpect(jsonPath("$.totalElementos").value(6))
+                .andExpect(jsonPath("$.totalPaginas").value(2));
+    }
+
+    @Test
+    void culm001_d9_consultar_con_paginacion_invalida_es_400_pag_001() throws Exception {
+        mvc.perform(get("/api/v1/admin/periodos-academicos").param("pagina", "0"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("PAG_001"));
+        mvc.perform(get("/api/v1/admin/periodos-academicos").param("tamano", "100000"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("PAG_001"));
+        org.mockito.Mockito.verifyNoInteractions(periodos);
     }
 }

@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * SES-01: la DB repite la ventana de registro (defensa en profundidad bajo bloqueo). Sus rechazos SES_007/008/009
- * se traducen al mismo codigo 409 que la validacion previa de Application, en el lote y en el registro autonomo.
+ * se traducen al mismo codigo 409 que la validacion previa de Application en el lote (y, tras B.2, en la toma y el token).
  */
 class DbFailureClassifierVentanaAsistenciaTest {
 
@@ -20,10 +20,7 @@ class DbFailureClassifierVentanaAsistenciaTest {
     @CsvSource({
             "SES_007, registrarAsistenciasSesion, ERR_SESION_NO_INICIADA",
             "SES_008, registrarAsistenciasSesion, ERR_SESION_CERRADA",
-            "SES_009, registrarAsistenciasSesion, ERR_SESION_HORARIO_INDETERMINADO",
-            "SES_007, registrarAsistenciaAutonoma, ERR_SESION_NO_INICIADA",
-            "SES_008, registrarAsistenciaAutonoma, ERR_SESION_CERRADA",
-            "SES_009, registrarAsistenciaAutonoma, ERR_SESION_HORARIO_INDETERMINADO"
+            "SES_009, registrarAsistenciasSesion, ERR_SESION_HORARIO_INDETERMINADO"
     })
     void rechazo_de_ventana_de_la_db_responde_409_con_el_codigo_de_application(
             final String codigoDb, final String operacion, final AsistenciaErrorCode esperado) {

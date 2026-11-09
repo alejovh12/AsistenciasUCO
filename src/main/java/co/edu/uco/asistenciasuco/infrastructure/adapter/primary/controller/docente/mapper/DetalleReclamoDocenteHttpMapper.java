@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.doce
 
 import co.edu.uco.asistenciasuco.application.features.docente.consultardetallereclamo.primaryports.dto.DetalleReclamoDocenteDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.response.DetalleReclamoDocenteResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.mapper.ReclamoCategoriaSoportesHttpMapper;
 
 /** Adapta el DTO de detalle de Application a HTTP, codificando los instantes UTC con el codec UTC v2. */
 public final class DetalleReclamoDocenteHttpMapper {
@@ -34,7 +35,9 @@ public final class DetalleReclamoDocenteHttpMapper {
                 dto.materiaNombre(),
                 causal == null ? null : new DetalleReclamoDocenteResponse.CausalInasistenciaResponse(
                         causal.codigo(), causal.nombre(), causal.asistio()),
-                ReclamoDocenteHttpMapper.soporte(dto.soporteAdjunto())
+                ReclamoDocenteHttpMapper.soporte(dto.soporteAdjunto()),
+                ReclamoCategoriaSoportesHttpMapper.categoria(dto.categoria()),
+                ReclamoCategoriaSoportesHttpMapper.soportes(dto.soportes())
         );
     }
 }

@@ -8,8 +8,7 @@ public record AforoGrupoDomain(
         int codigoGrupo,
         UUID idAsignatura,
         String nombreAsignatura,
-        UUID idPrograma,
-        String nombrePrograma,
+        java.util.List<String> programas,   // CULM-001 B2NM: 1 fila por grupo con los nombres de sus programas
         int cupoMaximo,
         int matriculadosActivos,
         int cuposDisponibles,

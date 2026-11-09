@@ -61,7 +61,7 @@ class ConsultasConsolidadoAuditoriaJpaRepositoryTest {
     void T_061_PAT_01_consolidado_enlaza_filtros_y_mapea_metricas() {
         when(query.getResultList()).thenReturn(filas(new Object[]{ID.toString(), 1, "G1", ID, "2026-2", ID,
                 "Sistemas", ID, "Calculo", ID, "Ana Docente", 20, 8, 150, 10, 0, new BigDecimal("93.75"), 6.25,
-                2, 1, 12}));
+                2, 1, 12, new BigDecimal("15.00"), new BigDecimal("0.00"), new BigDecimal("6.25")}));
 
         final var pagina = repository.consultarConsolidadoAsistencia(EJECUTOR, new FiltroConsolidado(ID, null, ID, null),
                 1, 10);
@@ -78,6 +78,9 @@ class ConsultasConsolidadoAuditoriaJpaRepositoryTest {
         assertEquals(new BigDecimal("93.75"), fila.porcentajeAsistencia());
         assertEquals(new BigDecimal("6.25"), fila.porcentajeInasistencia());
         assertEquals(1, fila.estudiantesPerdida());
+        assertEquals(new BigDecimal("15.00"), fila.horasDictadas());
+        assertEquals(new BigDecimal("0.00"), fila.porcentajeExcusa());
+        assertEquals(new BigDecimal("6.25"), fila.porcentajeSinRegistro());
     }
 
     @Test
@@ -87,7 +90,7 @@ class ConsultasConsolidadoAuditoriaJpaRepositoryTest {
                 (short) 201, null, null, null, true, 1}));
 
         final var pagina = repository.consultarAuditoria(EJECUTOR, new FiltroAuditoria(DESDE, HASTA, "CREAR_SESION",
-                null, null, null, "SUCCESS", true), 1, 10);
+                null, null, null, "SUCCESS", true, null, false), 1, 10);
 
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_consultar_auditoria_eventos_paginado"));
         verify(query).setParameter("desdeUtc", DESDE);
@@ -131,7 +134,7 @@ class ConsultasConsolidadoAuditoriaJpaRepositoryTest {
         when(query.getResultList()).thenThrow(new PersistenceException("DBCODE=SEC_001|perfil requerido"));
 
         assertThrows(ForbiddenException.class, () -> repository.consultarAuditoria(EJECUTOR,
-                new FiltroAuditoria(DESDE, HASTA, null, null, null, null, null, true), 1, 10));
+                new FiltroAuditoria(DESDE, HASTA, null, null, null, null, null, true, null, false), 1, 10));
     }
 
     private static List<Object> filas(final Object[]... filas) {
@@ -153,8 +156,8 @@ class ConsultasConsolidadoAuditoriaJpaRepositoryTest {
 
     @Test
     void T_005_PAT_01_categorias_leen_la_vista_del_catalogo() {
-        when(query.getResultList()).thenReturn(filas(new Object[]{ID.toString(), "MED", "Médico / Salud", "Enfermedad"},
-                new Object[]{ID, "OTR ", "Otro", null}));
+        when(query.getResultList()).thenReturn(filas(new Object[]{ID.toString(), "MED", "Médico / Salud", "Enfermedad", true},
+                new Object[]{ID, "OTR ", "Otro", null, false}));
 
         final var categorias = repository.consultarCategoriasJustificacion();
 
@@ -164,5 +167,7 @@ class ConsultasConsolidadoAuditoriaJpaRepositoryTest {
         assertEquals("Médico / Salud", categorias.getFirst().nombre());
         assertEquals("OTR", categorias.get(1).codigo());
         assertEquals(null, categorias.get(1).descripcion());
+        assertEquals(true, categorias.getFirst().requiereSoporte());
+        assertEquals(false, categorias.get(1).requiereSoporte());
     }
 }

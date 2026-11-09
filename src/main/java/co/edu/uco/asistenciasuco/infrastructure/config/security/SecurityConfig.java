@@ -64,7 +64,9 @@ public class SecurityConfig {
             final InstitutionalJwtAuthenticationConverter institutionalJwtAuthenticationConverter,
             final AuthenticationEntryPoint authenticationEntryPoint,
             final AccessDeniedHandler accessDeniedHandler,
-            final ObjectProvider<SecurityPepEnforcementFilter> securityPepEnforcementFilter
+            final ObjectProvider<SecurityPepEnforcementFilter> securityPepEnforcementFilter,
+            final ObjectProvider<org.springframework.web.servlet.handler.HandlerMappingIntrospector> handlerMappingIntrospector,
+            final ObjectProvider<co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.handler.SecurityErrorResponseWriter> errorResponseWriter
     ) throws Exception {
         http
             .cors(Customizer.withDefaults())
@@ -100,6 +102,8 @@ public class SecurityConfig {
                 // CULM-001 A.2-5: un error lanzado en un filtro se despacha a /error; ese despacho muestra el estado real (y el
                 // PEP ya exime /error, SecurityPublicEndpoints.ERROR_VIEW) en vez de un 401 falso por no estar autenticado.
                 .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
+                // F-EST-S14: solo el preflight CORS de las dos rutas publicas de matricula QR admite OPTIONS sin token.
+                .requestMatchers(HttpMethod.OPTIONS, SecurityPublicEndpoints.MATRICULA_QR_VALIDAR, SecurityPublicEndpoints.MATRICULA_QR_REGISTRO).permitAll()
                 .requestMatchers(SecurityPublicEndpoints.ACTUATOR).permitAll()
                 // permitAll de AUTORIZACION: la autenticacion la exige AzureEventGridAuthFilter (header
                 // aeg-sas-token, fail-closed). No equivale a un endpoint sin autenticacion.
@@ -128,6 +132,8 @@ public class SecurityConfig {
                 // Unica excepcion: el catalogo de periodos lo consume la pantalla del administrador (admin-periodos, admin-system).
                 .requestMatchers(HttpMethod.GET, "/api/v1/coordinador/periodos-academicos")
                     .hasAnyRole(ROLE_DECANO, ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
+                // CULM-001 B2NM: asociar es una operacion del coordinador; el decano solo consulta la malla.
+                .requestMatchers(HttpMethod.GET, "/api/v1/coordinador/planes-estudio/*/asignaturas-asociables").hasRole(ROLE_COORDINADOR)
                 .requestMatchers(HttpMethod.GET, "/api/v1/coordinador/planes-estudio", "/api/v1/coordinador/planes-estudio/**", "/api/v1/coordinador/periodos-academicos/**", "/api/v1/coordinador/asignaturas", "/api/v1/coordinador/asignaturas/**")
                     .hasAnyRole(ROLE_DECANO, ROLE_COORDINADOR)
                 .requestMatchers("/api/v1/coordinador/**").hasRole(ROLE_COORDINADOR)
@@ -166,13 +172,15 @@ public class SecurityConfig {
                 .requestMatchers("/api/v2/sesiones/**").hasRole(ROLE_DOCENTE)
                 .requestMatchers(HttpMethod.POST, "/api/v1/asistencias/lote").hasRole(ROLE_DOCENTE)
                 .requestMatchers(HttpMethod.POST, "/api/v1/asistencias/revisiones").hasRole(ROLE_ESTUDIANTE)
+                // CULM-001 D.2 (CONTRACT D 3.3): configuracion del formulario de reclamos (tope de soportes, tamano y tipos de archivo, limite
+                // de subidas, dias del plazo). El estudiante la usa para armar el formulario y el docente ve los mismos limites; la DB valida el rol.
+                .requestMatchers(HttpMethod.GET, "/api/v1/configuracion/reclamos").hasAnyRole(ROLE_ESTUDIANTE, ROLE_DOCENTE)
                 // Subida de soportes de revision: unicamente el estudiante propietario sube en su
                 // propio nombre (OWNERSHIP_DECISION.md: DOCENTE upload = OUT_OF_SCOPE, sin
                 // capability). La descarga GET /api/v1/archivos/{fileId} queda en la regla
                 // catch-all authenticated() de abajo: el ownership real (404 para no-propietario,
                 // incluido cualquier rol) se resuelve en Application, no aqui.
                 .requestMatchers(HttpMethod.POST, "/api/v1/archivos/subir").hasRole(ROLE_ESTUDIANTE)
-                .requestMatchers(HttpMethod.POST, "/api/v1/asistencias").hasRole(ROLE_DOCENTE)
                 // Consulta de asistencias por grupo (ruta legacy vía POST): mismo criterio que
                 // GET /api/v1/grupos/{grupoId}/asistencias.
                 .requestMatchers(HttpMethod.POST, "/api/v1/asistencias/consultas/grupo")
@@ -190,6 +198,9 @@ public class SecurityConfig {
                 // los necesita, pero scopeados a su propio grupo en Application via
                 // InstitutionalScopePort (ver ConsultarEstudiantesGrupoUseCaseImpl /
                 // ConsultarAsistenciasPorGrupoUseCaseImpl).
+                // CULM-001 B2NM (S3 minimo): programas de un grupo para el selector de matricula; el ambito lo valida el SP.
+                .requestMatchers(HttpMethod.GET, "/api/v1/grupos/*/programas")
+                    .hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR, ROLE_DECANO)
                 .requestMatchers(HttpMethod.GET, "/api/v1/grupos/**")
                     .hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
                 // F-COO-004 (CULM-001 A): matricula solo del DOCENTE titular (la DB valida titularidad, SEC_002).
@@ -215,6 +226,8 @@ public class SecurityConfig {
                 // un rol funcional propio; se restringe a ADMINISTRADOR hasta que Realtime
                 // tenga su propio Port (ver documentación).
                 .requestMatchers(HttpMethod.POST, "/api/v1/realtime/emit").hasRole(ROLE_ADMINISTRADOR)
+                // CULM-001 D.9-c (F-TRX-016): el diagnostico del canal tambien es solo del ADMINISTRADOR.
+                .requestMatchers(HttpMethod.GET, "/api/v1/realtime/status").hasRole(ROLE_ADMINISTRADOR)
                 .requestMatchers("/api/v1/realtime/**").authenticated()
                 .requestMatchers("/api/v1/**").authenticated()
                 .anyRequest().authenticated()
@@ -230,11 +243,20 @@ public class SecurityConfig {
 
         // SEC-BASELINE-001: unico punto de registro del filtro PEP (su FilterRegistrationBean servlet
         // esta deshabilitado). Despues de autenticar el Bearer y antes de AuthorizationFilter.
-        securityPepEnforcementFilter.ifAvailable(filter ->
+        // CULM-001 D.9-a (F-EST-024, OBS-17): en modo baseline, una ruta sin handler responde 404 sin consultar al PDP; ese filtro se
+        // registra justo ANTES del PEP (ambos despues de BearerTokenAuthenticationFilter, en orden de registro).
+        securityPepEnforcementFilter.ifAvailable(filter -> {
+            if (handlerMappingIntrospector.getIfAvailable() != null && errorResponseWriter.getIfAvailable() != null) {
                 http.addFilterAfter(
-                        filter,
+                        new UnmappedRouteFilter(handlerMappingIntrospector.getObject(), errorResponseWriter.getObject()),
                         org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class
-                ));
+                );
+            }
+            http.addFilterAfter(
+                    filter,
+                    org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class
+            );
+        });
 
         return http.build();
     }

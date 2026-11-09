@@ -249,16 +249,6 @@ class DbExceptionTranslatorTest {
     }
 
     @Test
-    void val_007_en_asistencia_autonoma_es_validation_error() {
-        final ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> translateFailure("irrelevante", "DBCODE=VAL_007|detalle", "registrarAsistenciaAutonoma")
-        );
-
-        assertEquals("VALIDATION_ERROR", exception.getCode());
-    }
-
-    @Test
     void val_007_en_resolver_solicitud_revision_es_forbidden() {
         final ForbiddenException exception = assertThrows(
                 ForbiddenException.class,
@@ -636,7 +626,7 @@ class DbExceptionTranslatorTest {
                 () -> translateFailure("irrelevante", "DBCODE=FAC_002|detalle", OPERATION)
         );
 
-        assertEquals("CONFLICT", exception.getCode());
+        assertEquals("FAC_002", exception.getCode());
     }
 
     private void translateFailure(final String userMessage, final String operation) {

@@ -27,7 +27,36 @@ class GestionarPeriodoAcademicoUseCaseImplTest {
     private static final LocalDate FIN = LocalDate.of(2027, 6, 30);
 
     private final PeriodoAcademicoCommandPort commandPort = mock(PeriodoAcademicoCommandPort.class);
-    private final GestionarPeriodoAcademicoUseCaseImpl useCase = new GestionarPeriodoAcademicoUseCaseImpl(commandPort);
+    private final co.edu.uco.asistenciasuco.application.secondaryports.academic.PeriodoAcademicoQueryPort queryPort =
+            mock(co.edu.uco.asistenciasuco.application.secondaryports.academic.PeriodoAcademicoQueryPort.class);
+    private final GestionarPeriodoAcademicoUseCaseImpl useCase = new GestionarPeriodoAcademicoUseCaseImpl(commandPort, queryPort);
+
+    /** CULM-001 D.9-a (F-ADM-030): crear devuelve el id generado y consultar aplica los limites de pagina. */
+    @Test
+    void culm001_d9_crear_devuelve_el_id_que_envia_a_la_base_de_datos() {
+        final UUID usuario = UUID.randomUUID();
+
+        final UUID creado = useCase.crear(new PeriodoAcademicoDomain(null, "2027-1", INICIO, FIN, usuario));
+
+        final ArgumentCaptor<UUID> id = ArgumentCaptor.forClass(UUID.class);
+        verify(commandPort).crearPeriodoAcademico(id.capture(), eq("2027-1"), eq(INICIO), eq(FIN), eq(usuario));
+        org.junit.jupiter.api.Assertions.assertEquals(id.getValue(), creado);
+    }
+
+    @Test
+    void culm001_d9_consultar_usa_pagina_1_y_tamano_10_por_defecto_y_exige_usuario() {
+        final UUID usuario = UUID.randomUUID();
+        final var pagina = new co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PaginaPeriodosAdminProjection(java.util.List.of(), 0);
+        org.mockito.Mockito.when(queryPort.consultarPeriodosAdministrador(usuario, 1, 10)).thenReturn(pagina);
+
+        org.junit.jupiter.api.Assertions.assertSame(pagina, useCase.consultar(usuario, null, null));
+        org.junit.jupiter.api.Assertions.assertThrows(co.edu.uco.asistenciasuco.application.exception.validation.ValidationException.class,
+                () -> useCase.consultar(null, 1, 10));
+        org.junit.jupiter.api.Assertions.assertThrows(co.edu.uco.asistenciasuco.application.exception.validation.ValidationException.class,
+                () -> useCase.consultar(usuario, 0, 10));
+        org.junit.jupiter.api.Assertions.assertThrows(co.edu.uco.asistenciasuco.application.exception.validation.ValidationException.class,
+                () -> useCase.consultar(usuario, 1, 101));
+    }
 
     @Test
     void crear_genera_id_recorta_el_nombre_y_propaga_el_ejecutor() {

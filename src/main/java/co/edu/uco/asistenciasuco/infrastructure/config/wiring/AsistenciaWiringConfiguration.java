@@ -1,13 +1,14 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.alertainasistencia.common.EvaluadorAlertasInasistencia;
+import co.edu.uco.asistenciasuco.application.features.asistencia.consultarconfiguracionreclamos.primaryports.ConsultarConfiguracionReclamosInputPort;
+import co.edu.uco.asistenciasuco.application.features.asistencia.consultarconfiguracionreclamos.primaryports.interactor.ConsultarConfiguracionReclamosInteractor;
+import co.edu.uco.asistenciasuco.application.features.asistencia.consultarconfiguracionreclamos.usecase.ConsultarConfiguracionReclamosUseCase;
+import co.edu.uco.asistenciasuco.application.features.asistencia.consultarconfiguracionreclamos.usecase.impl.ConsultarConfiguracionReclamosUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.primaryports.ConsultarAsistenciasPorGrupoInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.primaryports.interactor.ConsultarAsistenciasPorGrupoInteractor;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.ConsultarAsistenciasPorGrupoUseCase;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.impl.ConsultarAsistenciasPorGrupoUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.primaryports.RegistrarAsistenciaInputPort;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.primaryports.interactor.RegistrarAsistenciaInteractor;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.usecase.RegistrarAsistenciaUseCase;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.usecase.impl.RegistrarAsistenciaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.RegistrarAsistenciasSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.interactor.RegistrarAsistenciasSesionInteractor;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.usecase.RegistrarAsistenciasSesionUseCase;
@@ -33,21 +34,6 @@ import java.time.Clock;
 public class AsistenciaWiringConfiguration {
 
     @Bean
-    public RegistrarAsistenciaUseCase registrarAsistenciaUseCase(
-            final AsistenciaRepositoryPort asistenciaRepositoryPort,
-            final RealtimePublisherPort realtimePublisherPort
-    ) {
-        return new RegistrarAsistenciaUseCaseImpl(asistenciaRepositoryPort, realtimePublisherPort);
-    }
-
-    @Bean
-    public RegistrarAsistenciaInputPort registrarAsistenciaInputPort(
-            final RegistrarAsistenciaUseCase registrarAsistenciaUseCase
-    ) {
-        return new RegistrarAsistenciaInteractor(registrarAsistenciaUseCase);
-    }
-
-    @Bean
     public ConsultarAsistenciasPorGrupoUseCase consultarAsistenciasPorGrupoUseCase(
             final AsistenciaRepositoryPort asistenciaRepositoryPort,
             final InstitutionalScopePort institutionalScopePort
@@ -67,7 +53,8 @@ public class AsistenciaWiringConfiguration {
             final AsistenciaRepositoryPort asistenciaRepositoryPort,
             final SesionProcedenciaQueryPort sesionProcedenciaQueryPort,
             final InstitutionalScopePort institutionalScopePort,
-            final RealtimePublisherPort realtimePublisherPort
+            final RealtimePublisherPort realtimePublisherPort,
+            final EvaluadorAlertasInasistencia evaluadorAlertasInasistencia
     ) {
         // SES-01: el reloj autoritativo de la ventana de registro es el del servidor en UTC.
         return new RegistrarAsistenciasSesionUseCaseImpl(
@@ -75,7 +62,8 @@ public class AsistenciaWiringConfiguration {
                 sesionProcedenciaQueryPort,
                 institutionalScopePort,
                 realtimePublisherPort,
-                Clock.systemUTC()
+                Clock.systemUTC(),
+                evaluadorAlertasInasistencia
         );
     }
 
@@ -108,18 +96,35 @@ public class AsistenciaWiringConfiguration {
         return new SolicitarRevisionAsistenciaInteractor(solicitarRevisionAsistenciaUseCase);
     }
 
+    /** CULM-001 D.2: configuracion del formulario de reclamos (ESTUDIANTE y DOCENTE; el rol lo valida la base de datos). */
+    @Bean
+    public ConsultarConfiguracionReclamosUseCase consultarConfiguracionReclamosUseCase(
+            final co.edu.uco.asistenciasuco.application.secondaryports.academic.ConfiguracionReclamosQueryPort configuracionReclamosQueryPort
+    ) {
+        return new ConsultarConfiguracionReclamosUseCaseImpl(configuracionReclamosQueryPort);
+    }
+
+    @Bean
+    public ConsultarConfiguracionReclamosInputPort consultarConfiguracionReclamosInputPort(
+            final ConsultarConfiguracionReclamosUseCase consultarConfiguracionReclamosUseCase
+    ) {
+        return new ConsultarConfiguracionReclamosInteractor(consultarConfiguracionReclamosUseCase);
+    }
+
     @Bean
     public ResolverSolicitudRevisionAsistenciaUseCase resolverSolicitudRevisionAsistenciaUseCase(
             final AsistenciaRepositoryPort asistenciaRepositoryPort,
             final InstitutionalScopePort institutionalScopePort,
             final org.springframework.beans.factory.ObjectProvider<co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort> notificacionPortProvider,
-            final org.springframework.beans.factory.ObjectProvider<co.edu.uco.asistenciasuco.application.secondaryports.academic.DestinatariosReclamoPort> destinatariosPortProvider
+            final org.springframework.beans.factory.ObjectProvider<co.edu.uco.asistenciasuco.application.secondaryports.academic.DestinatariosReclamoPort> destinatariosPortProvider,
+            final EvaluadorAlertasInasistencia evaluadorAlertasInasistencia
     ) {
         return new ResolverSolicitudRevisionAsistenciaUseCaseImpl(
                 asistenciaRepositoryPort,
                 institutionalScopePort,
                 notificacionPortProvider.getIfAvailable(() -> notificacion -> {}),
-                destinatariosPortProvider.getIfAvailable(() -> null)
+                destinatariosPortProvider.getIfAvailable(() -> null),
+                evaluadorAlertasInasistencia
         );
     }
 

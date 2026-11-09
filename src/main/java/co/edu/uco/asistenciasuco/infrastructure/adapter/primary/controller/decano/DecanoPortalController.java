@@ -6,16 +6,20 @@ import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.pr
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.primaryports.dto.CrearCoordinadorDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.decano.request.CrearCoordinadorRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiPageResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.PaginacionRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-
+/**
+ * Portal del decano (F-DEC-004: paginacion en servidor con ApiPageResponse en /coordinadores).
+ */
 @RestController
 @RequestMapping("/api/v1/decano")
 public final class DecanoPortalController {
@@ -35,9 +39,20 @@ public final class DecanoPortalController {
     }
 
     @GetMapping("/coordinadores")
-    public ResponseEntity<ApiListResponse<CoordinadorDTO>> consultarCoordinadores() {
-        final var data = consultarCoordinadoresInputPort.execute(authenticatedUserResolver.requireAuthenticatedUserId());
-        return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
+    public ResponseEntity<ApiPageResponse<CoordinadorDTO>> consultarCoordinadores(
+            @RequestParam(name = "pagina", required = false) final Integer pagina,
+            @RequestParam(name = "tamano", required = false) final Integer tamano
+    ) {
+        // Una sola regla de paginacion (CULM-001 D.9-a): 400 PAG_001 con details[] (PaginacionRequestValidator).
+        final PaginacionRequestValidator.Pagina solicitada = PaginacionRequestValidator.resolver(pagina, tamano);
+        final var resultado = consultarCoordinadoresInputPort.execute(
+                authenticatedUserResolver.requireAuthenticatedUserId(), solicitada.numero(), solicitada.tamano());
+        return ResponseEntity.ok(ApiPageResponse.of(
+                resultado.elementos(),
+                resultado.numeroPagina(),
+                resultado.tamanoPagina(),
+                resultado.totalElementos()
+        ));
     }
 
     @PostMapping("/coordinadores")

@@ -27,8 +27,6 @@ public record SesionFacultadDecanoResponse(
         String nombreGrupo,
         UUID idAsignatura,
         String nombreAsignatura,
-        UUID idPrograma,
-        String nombrePrograma,
         String fechaHoraInicioUtc,
         String fechaHoraFinUtc,
         String estadoTemporal,
@@ -39,7 +37,7 @@ public record SesionFacultadDecanoResponse(
     public static SesionFacultadDecanoResponse from(final SesionFacultadDTO dto) {
         return new SesionFacultadDecanoResponse(dto.id(), dto.nombre(), dto.codigo(), dto.numeroSemana(),
                 dto.fechaHoraInicio(), dto.fechaHoraFin(), dto.idGrupo(), dto.codigoGrupo(), dto.nombreGrupo(),
-                dto.idAsignatura(), dto.nombreAsignatura(), dto.idPrograma(), dto.nombrePrograma(),
+                dto.idAsignatura(), dto.nombreAsignatura(),
                 utc(dto.fechaHoraInicioUtc()), utc(dto.fechaHoraFinUtc()), dto.estadoTemporal(), dto.estado(),
                 CancelacionSesionResponse.from(dto.cancelacion()));
     }

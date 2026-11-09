@@ -23,6 +23,7 @@ public interface ConsultarFacultadDecanoInputPort {
 
     List<FacultadNodoDTO> consultarEstructura(UUID usuario);
 
+    /** {@code idGrupo} (opcional, CULM-001 D.9-a F-DEC-014) filtra en el SP; un grupo ajeno o inexistente es 403. */
     PaginaDTO<SesionFacultadDTO> consultarSesiones(UUID usuario, LocalDate desde, LocalDate hasta, UUID idPrograma,
-                                                   Integer pagina, Integer tamano);
+                                                   UUID idGrupo, Integer pagina, Integer tamano);
 }

@@ -94,7 +94,7 @@ class CoordinadorIndicadoresJpaRepositoryTest {
         when(fila.umbralPerdida()).thenReturn(new BigDecimal("20.00"));
         when(query.getResultList()).thenReturn(List.of(fila));
 
-        final KpisCoordinadorProjection kpis = repository.consultarKpis(ACTOR, PERIODO);
+        final KpisCoordinadorProjection kpis = repository.consultarKpis(ACTOR, PERIODO, null);
 
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_consultar_kpis_coordinador"), eq(SpKpisCoordinadorEntity.class));
         verify(query).setParameter("idUsuarioEjecutor", ACTOR);
@@ -113,7 +113,7 @@ class CoordinadorIndicadoresJpaRepositoryTest {
         when(fila.idPrograma()).thenReturn(PROGRAMA);
         when(query.getResultList()).thenReturn(List.of(fila));
 
-        final KpisCoordinadorProjection kpis = repository.consultarKpis(ACTOR, null);
+        final KpisCoordinadorProjection kpis = repository.consultarKpis(ACTOR, null, null);
 
         assertNull(kpis.tasaPermanencia());
         assertNull(kpis.porcentajeCumplimiento());
@@ -126,7 +126,7 @@ class CoordinadorIndicadoresJpaRepositoryTest {
     void consultar_kpis_sin_filas_es_un_error_tecnico() {
         when(query.getResultList()).thenReturn(List.of());
 
-        assertThrows(DatabaseOperationException.class, () -> repository.consultarKpis(ACTOR, null));
+        assertThrows(DatabaseOperationException.class, () -> repository.consultarKpis(ACTOR, null, null));
     }
 
     @Test
@@ -144,7 +144,7 @@ class CoordinadorIndicadoresJpaRepositoryTest {
         when(fila.totalRegistros()).thenReturn(12);
         when(query.getResultList()).thenReturn(List.of(fila));
 
-        final PaginaAlertasProjection pagina = repository.consultarAlertas(ACTOR, PERIODO, "ROJO", "Ana", 2, 5);
+        final PaginaAlertasProjection pagina = repository.consultarAlertas(ACTOR, PERIODO, "ROJO", "Ana", 2, 5, null);
 
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_consultar_alerta_temprana_programa"), eq(SpAlertaTempranaEntity.class));
         verify(query).setParameter("numeroPagina", 2);
@@ -164,7 +164,7 @@ class CoordinadorIndicadoresJpaRepositoryTest {
     void consultar_alertas_sin_filas_devuelve_pagina_vacia_con_total_cero() {
         when(query.getResultList()).thenReturn(List.of());
 
-        final PaginaAlertasProjection pagina = repository.consultarAlertas(ACTOR, null, null, null, 1, 10);
+        final PaginaAlertasProjection pagina = repository.consultarAlertas(ACTOR, null, null, null, 1, 10, null);
 
         assertTrue(pagina.alertas().isEmpty());
         assertEquals(0, pagina.totalRegistros());
@@ -186,7 +186,7 @@ class CoordinadorIndicadoresJpaRepositoryTest {
         when(fila.totalRegistros()).thenReturn(25);
         when(query.getResultList()).thenReturn(List.of(fila));
 
-        final PaginaBitacoraProjection pagina = repository.consultarBitacora(ACTOR, ESTUDIANTE, PERIODO, 3, 10);
+        final PaginaBitacoraProjection pagina = repository.consultarBitacora(ACTOR, ESTUDIANTE, PERIODO, 3, 10, null);
 
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_consultar_bitacora_estudiante_programa"), eq(SpBitacoraSesionEntity.class));
         verify(query).setParameter("idEstudiante", ESTUDIANTE);
@@ -211,14 +211,14 @@ class CoordinadorIndicadoresJpaRepositoryTest {
         when(fila.nombrePrograma()).thenReturn("Sistemas");
         when(query.getResultList()).thenReturn(List.of(fila));
 
-        final FichaEstudianteProjection ficha = repository.consultarFicha(ACTOR, ESTUDIANTE);
+        final FichaEstudianteProjection ficha = repository.consultarFicha(ACTOR, ESTUDIANTE, null);
 
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_consultar_ficha_estudiante_programa"), eq(SpFichaEstudianteEntity.class));
         assertEquals("ana@uco.edu.co", ficha.correo());
         assertTrue(ficha.estaActivoUsuario());
 
         when(query.getResultList()).thenReturn(List.of());
-        assertThrows(DatabaseOperationException.class, () -> repository.consultarFicha(ACTOR, ESTUDIANTE));
+        assertThrows(DatabaseOperationException.class, () -> repository.consultarFicha(ACTOR, ESTUDIANTE, null));
     }
 
     @Test
@@ -238,7 +238,7 @@ class CoordinadorIndicadoresJpaRepositoryTest {
         when(fila.codigoPermanencia()).thenReturn("PERDIDA");
         when(query.getResultList()).thenReturn(List.of(fila));
 
-        final List<ResumenAsignaturaProjection> resumen = repository.consultarResumenAsistencia(ACTOR, ESTUDIANTE, null);
+        final List<ResumenAsignaturaProjection> resumen = repository.consultarResumenAsistencia(ACTOR, ESTUDIANTE, null, null);
 
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_consultar_resumen_asistencia_estudiante_programa"), eq(SpResumenAsignaturaEntity.class));
         assertEquals(1, resumen.size());
@@ -260,7 +260,20 @@ class CoordinadorIndicadoresJpaRepositoryTest {
 
     private void fallaCon(final String mensaje) {
         Mockito.doThrow(new PersistenceException("x", new RuntimeException(mensaje))).when(query).getResultList();
-        repository.consultarAlertas(ACTOR, null, null, null, 1, 10);
+        repository.consultarAlertas(ACTOR, null, null, null, 1, 10, null);
+    }
+
+    @Test
+    void B2NM_S4_el_programa_elegido_viaja_a_cada_sp_del_coordinador() {
+        final SpKpisCoordinadorEntity kpi = mock(SpKpisCoordinadorEntity.class);
+        when(query.getResultList()).thenReturn(List.of(kpi));
+        repository.consultarKpis(ACTOR, null, PROGRAMA);
+        when(query.getResultList()).thenReturn(List.of());
+        repository.consultarAlertas(ACTOR, null, null, null, 1, 10, PROGRAMA);
+        repository.consultarBitacora(ACTOR, ESTUDIANTE, null, 1, 10, PROGRAMA);
+        repository.consultarResumenAsistencia(ACTOR, ESTUDIANTE, null, PROGRAMA);
+
+        verify(query, org.mockito.Mockito.times(4)).setParameter("idPrograma", PROGRAMA);
     }
 
     @Test

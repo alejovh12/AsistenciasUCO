@@ -54,7 +54,8 @@ public class FacultadDecanoJpaRepository implements FacultadDecanoQueryPort {
                  @tamanoPagina = :tamanoPagina,
                  @fechaDesde = :fechaDesde,
                  @fechaHasta = :fechaHasta,
-                 @idPrograma = :idPrograma
+                 @idPrograma = :idPrograma,
+                 @idGrupo = :idGrupo
             """;
     static final String MENSAJE_PAGINACION_INVALIDA = "Los parametros de paginacion no son validos.";
 
@@ -108,16 +109,16 @@ public class FacultadDecanoJpaRepository implements FacultadDecanoQueryPort {
     @Override
     public Pagina<SesionFacultadProjection> consultarSesiones(final UUID idUsuarioEjecutor, final LocalDate desde,
                                                               final LocalDate hasta, final UUID idPrograma,
-                                                              final int pagina, final int tamano) {
+                                                              final UUID idGrupo, final int pagina, final int tamano) {
         final List<SpSesionFacultadPaginadoEntity> filas = ejecutar("consultarSesionesFacultad",
                 "No fue posible consultar el cronograma de sesiones de la facultad.", SQL_SESIONES,
                 SpSesionFacultadPaginadoEntity.class, idUsuarioEjecutor,
                 q -> q.setParameter("numeroPagina", pagina).setParameter("tamanoPagina", tamano)
                         .setParameter("fechaDesde", desde).setParameter("fechaHasta", hasta)
-                        .setParameter("idPrograma", idPrograma));
+                        .setParameter("idPrograma", idPrograma).setParameter("idGrupo", idGrupo));
         return new Pagina<>(filas.stream().map(e -> new SesionFacultadProjection(e.id(), e.nombre(), e.codigo(),
                 e.numeroSemana(), e.fechaHoraInicio(), e.fechaHoraFin(), e.idGrupo(), e.codigoGrupo(),
-                e.nombreGrupo(), e.idAsignatura(), e.nombreAsignatura(), e.idPrograma(), e.nombrePrograma()))
+                e.nombreGrupo(), e.idAsignatura(), e.nombreAsignatura(), null, null))
                 .toList(), total(filas.isEmpty() ? null : filas.getFirst().totalRegistros()));
     }
 
@@ -139,7 +140,7 @@ public class FacultadDecanoJpaRepository implements FacultadDecanoQueryPort {
                 throw exception;
             }
             return filas.stream().map(tipo::cast).toList();
-        });
+        }, DbCodeTranslator::traducir);
     }
 
     private static int total(final Integer totalRegistros) {

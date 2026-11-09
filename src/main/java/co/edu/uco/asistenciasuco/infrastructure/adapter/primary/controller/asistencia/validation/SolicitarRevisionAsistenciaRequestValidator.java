@@ -30,6 +30,19 @@ public final class SolicitarRevisionAsistenciaRequestValidator implements Valida
                     "La justificacion debe tener entre 1 y 300 caracteres."
             );
         }
+        // CULM-001 D.2 (CONTRACT D 3.3): el campo legado y la lista nueva no se admiten a la vez; la lista no admite elementos nulos.
+        builder.addIf(
+                request.getSoporteArchivoId() != null && request.getSoporteArchivoIds() != null,
+                "soporteArchivoIds",
+                ValidationErrorType.INVALID_VALUE,
+                "Use soporteArchivoIds o soporteArchivoId, no ambos."
+        );
+        builder.addIf(
+                request.getSoporteArchivoIds() != null && request.getSoporteArchivoIds().stream().anyMatch(java.util.Objects::isNull),
+                "soporteArchivoIds",
+                ValidationErrorType.INVALID_VALUE,
+                "La lista de soportes no puede contener elementos vacios."
+        );
         return builder.build();
     }
 }

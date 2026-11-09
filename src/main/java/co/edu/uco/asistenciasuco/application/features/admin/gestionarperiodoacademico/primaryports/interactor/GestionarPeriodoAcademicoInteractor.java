@@ -6,6 +6,8 @@ import co.edu.uco.asistenciasuco.application.features.admin.gestionarperiodoacad
 import co.edu.uco.asistenciasuco.application.features.admin.gestionarperiodoacademico.usecase.GestionarPeriodoAcademicoUseCase;
 
 import java.util.Objects;
+import co.edu.uco.asistenciasuco.application.features.admin.gestionarperiodoacademico.primaryports.dto.PaginaPeriodosAdminDTO;
+import co.edu.uco.asistenciasuco.application.features.admin.gestionarperiodoacademico.primaryports.dto.PeriodoAdminDTO;
 import java.util.UUID;
 
 public final class GestionarPeriodoAcademicoInteractor implements GestionarPeriodoAcademicoInputPort {
@@ -17,8 +19,17 @@ public final class GestionarPeriodoAcademicoInteractor implements GestionarPerio
     }
 
     @Override
-    public void crear(final GuardarPeriodoAcademicoDTO dto) {
-        useCase.crear(GestionarPeriodoAcademicoMapper.toDomain(dto));
+    public UUID crear(final GuardarPeriodoAcademicoDTO dto) {
+        return useCase.crear(GestionarPeriodoAcademicoMapper.toDomain(dto));
+    }
+
+    @Override
+    public PaginaPeriodosAdminDTO consultar(final UUID usuario, final Integer pagina, final Integer tamano) {
+        final var resultado = useCase.consultar(usuario, pagina, tamano);
+        return new PaginaPeriodosAdminDTO(resultado.elementos().stream()
+                .map(p -> new PeriodoAdminDTO(p.id(), p.idInstitucion(), p.nombreInstitucion(), p.nombre(), p.codigo(),
+                        p.fechaInicio(), p.fechaFin(), p.anio(), p.esVigente()))
+                .toList(), resultado.total());
     }
 
     @Override

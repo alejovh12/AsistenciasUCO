@@ -36,9 +36,7 @@ public final class ConsultasTransversalesDTO {
     }
 
     public record AsignaturaInstitucionDTO(UUID idAsignatura, String codigo, String nombre, Integer creditos,
-                                           String nombreArea, String nombreComponente, String codigoSemestre,
-                                           UUID idPlanEstudio, Integer inpPlanEstudio, UUID idPrograma,
-                                           String nombrePrograma, UUID idFacultad, String nombreFacultad,
+                                           String nombreArea, String nombreComponente, String planes, Integer totalPlanes,
                                            boolean activa) {
     }
 
@@ -71,7 +69,8 @@ public final class ConsultasTransversalesDTO {
                                       String nombreDocente, int estudiantesActivos, int sesionesEjecutadas,
                                       int asistencias, int faltasSinJustaCausa, int excusas,
                                       BigDecimal porcentajeAsistencia, BigDecimal porcentajeInasistencia,
-                                      int estudiantesRiesgo, int estudiantesPerdida) {
+                                      int estudiantesRiesgo, int estudiantesPerdida, BigDecimal horasDictadas,
+                                      BigDecimal porcentajeExcusa, BigDecimal porcentajeSinRegistro) {
     }
 
     public record EventoAuditoriaDTO(UUID id, OffsetDateTime ocurridoEn, String idActor, String tipoActor,
@@ -85,10 +84,13 @@ public final class ConsultasTransversalesDTO {
     public record FiltroConsolidadoDTO(UUID idPeriodoAcademico, UUID idPrograma, UUID idAsignatura, UUID idDocente) {
     }
 
-    /** Filtros de HU172; {@code soloAsistencia} nulo equivale a true (solo acciones de asistencia). */
+    /**
+     * Filtros de HU172; {@code soloAsistencia} nulo equivale a true (solo acciones de asistencia), salvo con
+     * {@code soloAdministracion} (CULM-001 D.6: solo rutas administrativas, excluyente con {@code soloAsistencia = true}).
+     */
     public record FiltroAuditoriaDTO(OffsetDateTime desde, OffsetDateTime hasta, String accion, String tipoRecurso,
                                      String idRecurso, UUID idUsuarioActor, String resultado,
-                                     Boolean soloAsistencia) {
+                                     Boolean soloAsistencia, UUID idTraza, Boolean soloAdministracion) {
     }
 
     /** HU155: estado de un catalogo de negocio; {@code catalogo} es SOLICITUD o ESTUDIANTE_GRUPO. */
@@ -96,7 +98,7 @@ public final class ConsultasTransversalesDTO {
     }
 
     /** HU005/HU016: categoria de justificacion; el formulario de reclamo envia {@code nombre} como categoria. */
-    public record CategoriaJustificacionDTO(UUID id, String codigo, String nombre, String descripcion) {
+    public record CategoriaJustificacionDTO(UUID id, String codigo, String nombre, String descripcion, boolean requiereSoporte) {
     }
 
     public record ComponenteFormacionDTO(UUID idComponente, String codigo, String nombre, int totalAsignaturas) {

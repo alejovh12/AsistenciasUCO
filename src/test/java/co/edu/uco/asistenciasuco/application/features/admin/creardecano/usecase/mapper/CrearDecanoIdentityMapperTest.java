@@ -18,7 +18,7 @@ class CrearDecanoIdentityMapperTest {
                 UUID.randomUUID(), 123456789, "Ana", "Maria", "Perez", "Gomez", "nuevo@uco.edu.co", "Clave123!",
                 UUID.randomUUID(), UUID.randomUUID()
         );
-        final var dto = CrearDecanoIdentityMapper.toCrearCuentaIdentidadDTO(
+        final var dto = CrearDecanoIdentityMapper.toSolicitudCuentaIdentidad(
                 domain, new UsuarioIdentidadRepositoryProjection(
                         idUsuario, UUID.randomUUID(), 111111111, "JOSE", "ROJAS", "viejo@uco.edu.co"
                 )
@@ -30,6 +30,7 @@ class CrearDecanoIdentityMapperTest {
         assertEquals("JOSE", dto.primerNombre());
         assertEquals("ROJAS", dto.primerApellido());
         assertEquals("Clave123!", dto.passwordInicial());
-        assertEquals(InstitutionalRole.DECANO, dto.rolInstitucional());
+        assertEquals(InstitutionalRole.DECANO, dto.rol());
+        assertEquals(false, dto.requiereVerificacionCorreo());
     }
 }

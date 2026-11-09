@@ -98,6 +98,33 @@ class SolicitudRevisionEstudianteJpaRepositoryTest {
         assertNull(filas.get(1).idArchivoSoporte());
     }
 
+    // ---- CULM-001 D.2 (CONTRACT D 3.2/3.3): categoria y soportes de la lista del estudiante ----
+
+    @Test
+    void RP05_mapea_la_categoria_y_la_lista_de_soportes_del_json() {
+        final UUID uno = UUID.randomUUID();
+        final UUID dos = UUID.randomUUID();
+        final String json = "[{\"idArchivo\":\"" + uno + "\",\"nombreOriginal\":\"uno.pdf\",\"tipoContenido\":\"application/pdf\",\"tamanioBytes\":10},"
+                + "{\"idArchivo\":\"" + dos + "\",\"nombreOriginal\":\"dos.png\",\"tipoContenido\":\"image/png\",\"tamanioBytes\":20}]";
+        when(query.getResultList()).thenReturn(List.of(
+                fila(Map.of("idSolicitudRevisionAsistencia", UUID.randomUUID(), "codigoCategoria", "MED",
+                        "nombreCategoria", "Medico / Salud", "soportesJson", json)),
+                fila(Map.of("idSolicitudRevisionAsistencia", UUID.randomUUID(), "soportesJson", "[]")),
+                fila(Map.of("idSolicitudRevisionAsistencia", UUID.randomUUID()))));
+
+        final var filas = repository.consultarSolicitudesEstudiante(EJECUTOR, null, 1, 10);
+
+        assertEquals("MED", filas.getFirst().codigoCategoria());
+        assertEquals("Medico / Salud", filas.getFirst().nombreCategoria());
+        assertEquals(2, filas.getFirst().soportes().size());
+        assertEquals(uno, filas.getFirst().soportes().getFirst().fileId());
+        assertEquals("dos.png", filas.getFirst().soportes().get(1).nombre());
+        assertEquals(20L, filas.getFirst().soportes().get(1).tamanioBytes());
+        assertNull(filas.get(1).codigoCategoria(), "Un reclamo anterior a la categoria persistida no tiene categoria");
+        assertEquals(List.of(), filas.get(1).soportes());
+        assertEquals(List.of(), filas.get(2).soportes(), "Sin JSON la lista de soportes es vacia");
+    }
+
     @Test
     void RP03_total_nulo_se_lee_como_cero() {
         when(query.getResultList()).thenReturn(List.of(fila(Map.of("idSolicitudRevisionAsistencia", UUID.randomUUID()))));

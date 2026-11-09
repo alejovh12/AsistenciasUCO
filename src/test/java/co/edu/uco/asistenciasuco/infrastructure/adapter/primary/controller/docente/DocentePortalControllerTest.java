@@ -97,6 +97,7 @@ class DocentePortalControllerTest {
     @Test
     void consultarDetalleReclamo_devuelve_api_data_response_con_causal_y_soporte() throws Exception {
         final UUID soporte = UUID.randomUUID();
+        final UUID otroSoporte = UUID.randomUUID();
         final DetalleReclamoDocenteDTO detalle = new DetalleReclamoDocenteDTO(RECLAMO, "REV-1",
                 java.time.LocalDate.of(2026, 10, 15), "P", "PENDIENTE", "pendiente", "Cita medica", "",
                 UUID.randomUUID(), "Ana Perez", UUID.randomUUID(), 4,
@@ -104,7 +105,11 @@ class DocentePortalControllerTest {
                 UUID.randomUUID(), "MAT101", "Calculo I",
                 new DetalleReclamoDocenteDTO.CausalInasistenciaDTO("SJC", "sin justa causa", Boolean.FALSE),
                 new ReclamoDocenteDTO.SoporteAdjuntoDTO(soporte, "incapacidad.pdf", "application/pdf", 2048L,
-                        java.time.Instant.parse("2026-10-15T10:00:00Z"), "/api/v1/archivos/" + soporte));
+                        java.time.Instant.parse("2026-10-15T10:00:00Z"), "/api/v1/archivos/" + soporte),
+                new co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.CategoriaReclamoDTO("MED", "Medico / Salud"),
+                java.util.List.of(
+                        new co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.SoporteReclamoDTO(soporte, "incapacidad.pdf", "application/pdf", 2048L),
+                        new co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.SoporteReclamoDTO(otroSoporte, "foto.png", "image/png", 4096L)));
         when(detalleReclamo.execute(new ConsultarDetalleReclamoDocenteDTO(RECLAMO, ACTOR))).thenReturn(detalle);
 
         mvc.perform(get("/api/v1/docente/reclamos/{id}", RECLAMO))
@@ -122,6 +127,16 @@ class DocentePortalControllerTest {
                 .andExpect(jsonPath("$.datos.soporteAdjunto.fileId").value(soporte.toString()))
                 .andExpect(jsonPath("$.datos.soporteAdjunto.fechaSubidaUtc").value("2026-10-15T10:00:00Z"))
                 .andExpect(jsonPath("$.datos.soporteAdjunto.url").value("/api/v1/archivos/" + soporte))
+                // CULM-001 D.2 (CONTRACT D 3.3): categoria {codigo, nombre} y soportes[{fileId, nombre, tipoContenido, tamanioBytes}]
+                .andExpect(jsonPath("$.datos.categoria.codigo").value("MED"))
+                .andExpect(jsonPath("$.datos.categoria.nombre").value("Medico / Salud"))
+                .andExpect(jsonPath("$.datos.soportes.length()").value(2))
+                .andExpect(jsonPath("$.datos.soportes[0].fileId").value(soporte.toString()))
+                .andExpect(jsonPath("$.datos.soportes[0].nombre").value("incapacidad.pdf"))
+                .andExpect(jsonPath("$.datos.soportes[0].tipoContenido").value("application/pdf"))
+                .andExpect(jsonPath("$.datos.soportes[0].tamanioBytes").value(2048))
+                .andExpect(jsonPath("$.datos.soportes[1].fileId").value(otroSoporte.toString()))
+                .andExpect(jsonPath("$.datos.soportes[1].tipoContenido").value("image/png"))
                 .andExpect(jsonPath("$.total").doesNotExist());
     }
 
@@ -130,7 +145,7 @@ class DocentePortalControllerTest {
         final DetalleReclamoDocenteDTO detalle = new DetalleReclamoDocenteDTO(RECLAMO, "REV-1",
                 java.time.LocalDate.of(2026, 10, 15), "R", "RECHAZADA", "rechazada", "Cita medica", "No procede",
                 UUID.randomUUID(), "Ana Perez", UUID.randomUUID(), 4, null, null, UUID.randomUUID(), 1, "Grupo 1",
-                UUID.randomUUID(), "MAT101", "Calculo I", null, null);
+                UUID.randomUUID(), "MAT101", "Calculo I", null, null, null, java.util.List.of());
         when(detalleReclamo.execute(new ConsultarDetalleReclamoDocenteDTO(RECLAMO, ACTOR))).thenReturn(detalle);
 
         mvc.perform(get("/api/v1/docente/reclamos/{id}", RECLAMO))
@@ -139,7 +154,9 @@ class DocentePortalControllerTest {
                 .andExpect(jsonPath("$.datos.justificacionRespuesta").value("No procede"))
                 .andExpect(jsonPath("$.datos.fechaSesionUtc").value(org.hamcrest.Matchers.nullValue()))
                 .andExpect(jsonPath("$.datos.causalInasistencia").value(org.hamcrest.Matchers.nullValue()))
-                .andExpect(jsonPath("$.datos.soporteAdjunto").value(org.hamcrest.Matchers.nullValue()));
+                .andExpect(jsonPath("$.datos.soporteAdjunto").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.datos.categoria").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.datos.soportes.length()").value(0));
     }
 
     // CT-02 (AC-05): id con formato no UUID -> 400, sin invocar el caso de uso.
@@ -298,5 +315,22 @@ class DocentePortalControllerTest {
 
         request.setRespuestaDocente("Directa");
         assertEquals("Directa", request.getRespuestaDocente());
+    }
+
+    /** CULM-001 D.9-a (F-ADM-023, F-EST-022): pagina < 1 o tamano fuera de 1..100 es 400 PAG_001 y no llega al caso de uso. */
+    @Test
+    void culm001_d9_reclamos_con_paginacion_invalida_es_400_pag_001() throws Exception {
+        mvc.perform(get("/api/v1/docente/reclamos").param("pagina", "0").param("tamano", "10"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("PAG_001"))
+                .andExpect(jsonPath("$.details[0].field").value("pagina"));
+        mvc.perform(get("/api/v1/docente/reclamos").param("pagina", "1").param("tamano", "100000"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("PAG_001"))
+                .andExpect(jsonPath("$.details[0].field").value("tamano"));
+        mvc.perform(get("/api/v1/docente/reclamos").param("pagina", "-1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("PAG_001"));
+        org.mockito.Mockito.verifyNoInteractions(reclamos);
     }
 }

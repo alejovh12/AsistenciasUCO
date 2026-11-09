@@ -9,6 +9,6 @@ public final class ConsultarOfertaCreacionGruposDocenteRepositoryMapper {
 
     public static AsignaturaOfertaDocenteDomain toDomain(final AsignaturaOfertaDocenteProjection projection) {
         return new AsignaturaOfertaDocenteDomain(projection.idAsignatura(), projection.codigoAsignatura(),
-                projection.nombreAsignatura(), projection.idPrograma(), projection.nombrePrograma());
+                projection.nombreAsignatura(), projection.programas());
     }
 }

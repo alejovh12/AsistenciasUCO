@@ -100,8 +100,8 @@ class DecanoIndicadoresControllerTest {
     @Test
     void T_E2E_get_comparativa_devuelve_una_fila_por_programa_con_nulos() throws Exception {
         when(comparativa.execute(any())).thenReturn(List.of(
-                new ComparativaProgramaDTO(PROGRAMA, "Programa 1", true, 5, 1, 2, new BigDecimal("60.00"), 33, 5, new BigDecimal("15.15")),
-                new ComparativaProgramaDTO(UUID.randomUUID(), "Programa 4", false, 0, 0, 0, null, 0, 0, null)));
+                new ComparativaProgramaDTO(PROGRAMA, "Programa 1", true, 5, 1, 2, new BigDecimal("60.00"), 33, 5, new BigDecimal("15.15"), new BigDecimal("120.00"), new BigDecimal("18.00")),
+                new ComparativaProgramaDTO(UUID.randomUUID(), "Programa 4", false, 0, 0, 0, null, 0, 0, null, new BigDecimal("120.00"), new BigDecimal("18.00"))));
 
         mvc.perform(get("/api/v1/decano/comparativa-programas").param("idPeriodoAcademico", PERIODO.toString()))
                 .andExpect(status().isOk())
@@ -109,6 +109,8 @@ class DecanoIndicadoresControllerTest {
                 .andExpect(jsonPath("$.datos.length()").value(2))
                 .andExpect(jsonPath("$.datos[0].nombrePrograma").value("Programa 1"))
                 .andExpect(jsonPath("$.datos[0].porcentajeAusentismo").value(15.15))
+                .andExpect(jsonPath("$.datos[0].horasDictadas").value(120.0))
+                .andExpect(jsonPath("$.datos[0].horasFalta").value(18.0))
                 .andExpect(jsonPath("$.datos[0].estaActivoPrograma").value(true))
                 .andExpect(jsonPath("$.datos[1].estaActivoPrograma").value(false))
                 .andExpect(jsonPath("$.datos[1].porcentajeAusentismo").doesNotExist());
@@ -129,7 +131,7 @@ class DecanoIndicadoresControllerTest {
     @Test
     void T_E2E_get_aforo_devuelve_la_pagina_con_total_y_delega_filtros() throws Exception {
         when(aforo.execute(any())).thenReturn(new AforoGruposPaginaDTO(List.of(
-                new AforoGrupoDTO(GRUPO, 931001, UUID.randomUUID(), "Asignatura Uno", PROGRAMA, "Programa 1", 10, 5, 5, new BigDecimal("50.00"), true)), 12));
+                new AforoGrupoDTO(GRUPO, 931001, UUID.randomUUID(), "Asignatura Uno", List.of("Programa 1", "Programa 2"), 10, 5, 5, new BigDecimal("50.00"), true)), 12));
 
         mvc.perform(get("/api/v1/decano/aforo-grupos")
                         .param("pagina", "2").param("tamano", "5").param("idPrograma", PROGRAMA.toString())
@@ -138,6 +140,9 @@ class DecanoIndicadoresControllerTest {
                 .andExpect(jsonPath("$.exitoso").value(true))
                 .andExpect(jsonPath("$.total").value(12))
                 .andExpect(jsonPath("$.datos[0].cupoMaximo").value(10))
+                .andExpect(jsonPath("$.datos[0].programas[0]").value("Programa 1"))
+                .andExpect(jsonPath("$.datos[0].programas[1]").value("Programa 2"))
+                .andExpect(jsonPath("$.datos[0].nombrePrograma").doesNotExist())
                 .andExpect(jsonPath("$.datos[0].tasaAforo").value(50.0))
                 .andExpect(jsonPath("$.datos[0].grupoEstaHabilitado").value(true));
 

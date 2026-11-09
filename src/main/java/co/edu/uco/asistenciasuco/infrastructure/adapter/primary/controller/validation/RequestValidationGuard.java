@@ -11,9 +11,14 @@ public final class RequestValidationGuard {
     }
 
     public static void validate(final ValidationResult validationResult) {
+        validate(validationResult, null);
+    }
+
+    /** Como {@link #validate(ValidationResult)} pero el 400 lleva el codigo de catalogo indicado (p. ej. {@code PAG_001}). */
+    public static void validate(final ValidationResult validationResult, final String errorCode) {
         Objects.requireNonNull(validationResult, "El resultado de validacion es obligatorio.");
         if (validationResult.hasErrors()) {
-            throw new RequestValidationException(validationResult);
+            throw new RequestValidationException(validationResult, errorCode);
         }
     }
 }

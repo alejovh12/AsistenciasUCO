@@ -57,21 +57,22 @@ public class PeriodoAcademicoCommandJpaRepository implements PeriodoAcademicoCom
     @Override
     public void crearPeriodoAcademico(final UUID idPeriodo, final String nombre, final LocalDate fechaInicio,
                                       final LocalDate fechaFin, final UUID idUsuarioEjecutor) {
-        ejecutar(OP_CREAR_PERIODO, SQL_CREAR_PERIODO, datosPeriodo(idPeriodo, nombre, fechaInicio, fechaFin), idUsuarioEjecutor);
+        // CULM-001 D.9-a (F-ADM-030): usp_crear_periodo_academico agrega idPeriodo como quinta columna del resultset.
+        ejecutar(OP_CREAR_PERIODO, SQL_CREAR_PERIODO, datosPeriodo(idPeriodo, nombre, fechaInicio, fechaFin), idUsuarioEjecutor, 1);
     }
 
     @Override
     public void actualizarPeriodoAcademico(final UUID idPeriodo, final String nombre, final LocalDate fechaInicio,
                                            final LocalDate fechaFin, final UUID idUsuarioEjecutor) {
         ejecutar(OP_ACTUALIZAR_PERIODO, SQL_ACTUALIZAR_PERIODO, datosPeriodo(idPeriodo, nombre, fechaInicio, fechaFin),
-                idUsuarioEjecutor);
+                idUsuarioEjecutor, 0);
     }
 
     @Override
     public void eliminarPeriodoAcademico(final UUID idPeriodo, final UUID idUsuarioEjecutor) {
         final Map<String, Object> parametros = new LinkedHashMap<>();
         parametros.put("idPeriodo", idPeriodo);
-        ejecutar(OP_ELIMINAR_PERIODO, SQL_ELIMINAR_PERIODO, parametros, idUsuarioEjecutor);
+        ejecutar(OP_ELIMINAR_PERIODO, SQL_ELIMINAR_PERIODO, parametros, idUsuarioEjecutor, 0);
     }
 
     private static Map<String, Object> datosPeriodo(final UUID idPeriodo, final String nombre,
@@ -85,13 +86,17 @@ public class PeriodoAcademicoCommandJpaRepository implements PeriodoAcademicoCom
     }
 
     private void ejecutar(final String operacion, final String sql, final Map<String, Object> parametros,
-                          final UUID idUsuarioEjecutor) {
+                          final UUID idUsuarioEjecutor, final int columnasExtra) {
         if (ObjectHelper.isNull(idUsuarioEjecutor)) {
             throw new CrosscuttingException("El usuario ejecutor del periodo academico es obligatorio.");
         }
         final UUID correlationId = CorrelationIdContext.require();
         parametros.put("idCorrelacion", correlationId);
         parametros.put("idUsuarioEjecutor", idUsuarioEjecutor);
-        procedureExecutor.execute(operacion, sql, parametros, correlationId);
+        if (columnasExtra == 0) {
+            procedureExecutor.execute(operacion, sql, parametros, correlationId);
+        } else {
+            procedureExecutor.executeWithExtras(operacion, sql, parametros, correlationId, columnasExtra);
+        }
     }
 }

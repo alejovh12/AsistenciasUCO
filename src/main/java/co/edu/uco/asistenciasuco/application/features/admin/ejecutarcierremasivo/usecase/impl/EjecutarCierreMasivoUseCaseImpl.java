@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.features.alertainasistencia.common.EvaluadorAlertasInasistencia;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.usecase.EjecutarCierreMasivoUseCase;
 import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.usecase.domain.EjecutarCierreMasivoDomain;
@@ -22,6 +23,7 @@ public final class EjecutarCierreMasivoUseCaseImpl implements EjecutarCierreMasi
     private final PeriodoAcademicoQueryPort periodoAcademicoQueryPort;
     private final CierrePeriodoCommandPort cierrePeriodoCommandPort;
     private final NotificacionPort notificacionPort;
+    private final EvaluadorAlertasInasistencia evaluador;
 
     public EjecutarCierreMasivoUseCaseImpl(
             final PeriodoAcademicoQueryPort periodoAcademicoQueryPort,
@@ -35,6 +37,17 @@ public final class EjecutarCierreMasivoUseCaseImpl implements EjecutarCierreMasi
             final CierrePeriodoCommandPort cierrePeriodoCommandPort,
             final NotificacionPort notificacionPort
     ) {
+        this(periodoAcademicoQueryPort, cierrePeriodoCommandPort, notificacionPort, EvaluadorAlertasInasistencia.NINGUNO);
+    }
+
+    /** CULM-001 C.1 (N-1): con evaluador, los grupos del periodo se evaluan con aviso ANTES del SP (que no evalua ni crea revisiones). */
+    public EjecutarCierreMasivoUseCaseImpl(
+            final PeriodoAcademicoQueryPort periodoAcademicoQueryPort,
+            final CierrePeriodoCommandPort cierrePeriodoCommandPort,
+            final NotificacionPort notificacionPort,
+            final EvaluadorAlertasInasistencia evaluador
+    ) {
+        this.evaluador = Objects.requireNonNull(evaluador, "EvaluadorAlertasInasistencia es obligatorio.");
         this.periodoAcademicoQueryPort = Objects.requireNonNull(periodoAcademicoQueryPort);
         this.cierrePeriodoCommandPort = Objects.requireNonNull(cierrePeriodoCommandPort);
         this.notificacionPort = notificacionPort != null ? notificacionPort : notificacion -> {};
@@ -45,6 +58,7 @@ public final class EjecutarCierreMasivoUseCaseImpl implements EjecutarCierreMasi
         final var periodo = periodoAcademicoQueryPort.consultarPeriodoAcademicoPorId(domain.getIdPeriodoAcademico())
                 .orElseThrow(() -> new ResourceNotFoundException("El periodo academico indicado no existe."));
         final String codigoPeriodo = EjecutarCierreMasivoRepositoryMapper.toCodigoPeriodo(periodo);
+        evaluador.evaluarPeriodoYAvisar(domain.getIdPeriodoAcademico());
         cierrePeriodoCommandPort.ejecutarCierreMasivoPeriodo(
                 codigoPeriodo,
                 domain.getActorUsuarioId().toString(),

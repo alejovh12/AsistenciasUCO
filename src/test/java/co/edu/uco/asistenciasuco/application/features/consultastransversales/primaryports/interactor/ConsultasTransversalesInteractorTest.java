@@ -63,14 +63,15 @@ class ConsultasTransversalesInteractorTest {
     @Test
     void T_143_INT_01_mapea_asignaturas_con_la_facultad_como_filtro() {
         when(useCase.buscarAsignaturas(USUARIO, new FiltroConsulta("CAL", ID, true), null, null)).thenReturn(
-                new Pagina<>(List.of(new AsignaturaProjection(ID, "CAL1", "Calculo", 3, "Ciencias", "Basico", "S1", ID,
-                        2024, ID, "Sistemas", ID, "Ingenieria", true)), 1));
+                new Pagina<>(List.of(new AsignaturaProjection(ID, "CAL1", "Calculo", 3, "Ciencias", "Basico",
+                        "Sistemas · Plan 2024 · S1", 1, true)), 1));
 
         final var asignatura = interactor.buscarAsignaturas(USUARIO, "CAL", ID, true, null, null).elementos()
                 .getFirst();
 
         assertEquals("CAL1", asignatura.codigo());
-        assertEquals("Ingenieria", asignatura.nombreFacultad());
+        assertEquals("Sistemas · Plan 2024 · S1", asignatura.planes());
+        assertEquals(1, asignatura.totalPlanes());
         assertTrue(asignatura.activa());
     }
 

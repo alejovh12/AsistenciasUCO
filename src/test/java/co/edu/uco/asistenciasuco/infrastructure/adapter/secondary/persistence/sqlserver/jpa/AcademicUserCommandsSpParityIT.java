@@ -65,7 +65,7 @@ class AcademicUserCommandsSpParityIT {
     void asignatura_crear_con_plan_inexistente_produce_el_mismo_resultado() {
         registrar("ASG_01_CREAR_PLAN_INEXISTENTE", () -> {
             asignaturaCommandPort.crearAsignatura(UUID.randomUUID(), PREFIJO + "A1", "Asignatura prueba",
-                    3, UUID.randomUUID(), 1, "AREA-NO-EXISTE", "COMPONENTE-NO-EXISTE", UUID.randomUUID());
+                    3, UUID.randomUUID(), 1, "AREA-NO-EXISTE", "COMPONENTE-NO-EXISTE", null, UUID.randomUUID());
             return "OK";
         });
     }
@@ -74,7 +74,7 @@ class AcademicUserCommandsSpParityIT {
     void asignatura_actualizar_inexistente_produce_el_mismo_resultado() {
         registrar("ASG_02_ACTUALIZAR_INEXISTENTE", () -> {
             asignaturaCommandPort.actualizarAsignatura(UUID.randomUUID(), PREFIJO + "A2", "Asignatura prueba",
-                    3, UUID.randomUUID(), 1, "AREA-NO-EXISTE", "COMPONENTE-NO-EXISTE", UUID.randomUUID());
+                    3, UUID.randomUUID(), 1, "AREA-NO-EXISTE", "COMPONENTE-NO-EXISTE", null, UUID.randomUUID());
             return "OK";
         });
     }

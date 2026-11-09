@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.tomaasistencia.cerrartoma.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.features.alertainasistencia.common.EvaluadorAlertasInasistencia;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.cerrartoma.usecase.CerrarTomaAsistenciaUseCase;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.TomaAsistenciaAcceso;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.TomaAsistenciaEventos;
@@ -19,12 +20,24 @@ public final class CerrarTomaAsistenciaUseCaseImpl implements CerrarTomaAsistenc
     private final TomaAsistenciaAcceso acceso;
     private final TomaAsistenciaRepositoryPort repositorio;
     private final TomaAsistenciaEventos eventos;
+    private final EvaluadorAlertasInasistencia evaluador;
 
     public CerrarTomaAsistenciaUseCaseImpl(
             final TomaAsistenciaAcceso acceso,
             final TomaAsistenciaRepositoryPort repositorio,
             final TomaAsistenciaEventos eventos
     ) {
+        this(acceso, repositorio, eventos, EvaluadorAlertasInasistencia.NINGUNO);
+    }
+
+    /** CULM-001 C.1: con evaluador, el cierre (que puede marcar ausentes) evalua las alertas del grupo (SUPUESTO-C-04). */
+    public CerrarTomaAsistenciaUseCaseImpl(
+            final TomaAsistenciaAcceso acceso,
+            final TomaAsistenciaRepositoryPort repositorio,
+            final TomaAsistenciaEventos eventos,
+            final EvaluadorAlertasInasistencia evaluador
+    ) {
+        this.evaluador = Objects.requireNonNull(evaluador, "EvaluadorAlertasInasistencia es obligatorio.");
         this.acceso = Objects.requireNonNull(acceso, "TomaAsistenciaAcceso es obligatorio.");
         this.repositorio = Objects.requireNonNull(repositorio, "TomaAsistenciaRepositoryPort es obligatorio.");
         this.eventos = Objects.requireNonNull(eventos, "TomaAsistenciaEventos es obligatorio.");
@@ -54,6 +67,7 @@ public final class CerrarTomaAsistenciaUseCaseImpl implements CerrarTomaAsistenc
                         "toma", toma.idToma().toString(),
                         "totalRegistros", toma.totalRegistros()));
             }
+            evaluador.evaluarYAvisar(toma.idGrupo(), null);
         }
         return new Resultado(toma, cierre.totalAusentesMarcados(), cierre.totalFaltantes(), cierre.yaEstabaCerrada());
     }

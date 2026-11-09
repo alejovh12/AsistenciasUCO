@@ -36,7 +36,7 @@ public final class ConsultarResumenAsistenciaGrupoUseCaseImpl implements Consult
         return new PaginaResultado<>(
                 pagina.elementos().stream()
                         .map(fila -> new ResumenAsistenciaEstudianteDTO(fila.idEstudiante(), fila.nombreCompleto(),
-                                fila.codigoEstadoEstudiante(), fila.indicadores()))
+                                fila.codigoEstadoEstudiante(), fila.indicadores(), fila.marca()))
                         .toList(),
                 pagina.numeroPagina(), pagina.tamanoPagina(), pagina.totalElementos());
     }

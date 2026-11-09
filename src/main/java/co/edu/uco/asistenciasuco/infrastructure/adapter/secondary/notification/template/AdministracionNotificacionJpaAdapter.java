@@ -52,6 +52,7 @@ public class AdministracionNotificacionJpaAdapter implements AdministracionNotif
     private static final String SP_ACTIVAR_VERSION = "dbo.usp_activar_version_plantilla_notificacion";
     private static final String SP_CONSULTAR_COLA = "dbo.usp_consultar_notificaciones_salientes_admin";
     private static final String SP_REINTENTAR_COLA = "dbo.usp_reintentar_notificacion_saliente";
+    private static final String SP_PLANTILLA_ACTIVA = "dbo.usp_consultar_plantilla_notificacion_activa";
 
     private static final String PARAM_IDIOMA = "idioma";
     private static final String PARAM_ID_CORRELACION = "idCorrelacion";
@@ -414,6 +415,7 @@ public class AdministracionNotificacionJpaAdapter implements AdministracionNotif
     ) {
         final String tipoNorm = tipo == null ? "" : tipo.trim();
         final String idiomaNorm = (idioma == null || idioma.isBlank()) ? "es" : idioma.trim();
+        validarTipoPlantillaExistente(tipoNorm, idiomaNorm);
 
         final Map<String, String> datosMuestra = new LinkedHashMap<>();
         final Optional<PlantillaNotificacion> defectoOpt = catalogoDefecto.obtener(tipoNorm, idiomaNorm);
@@ -432,6 +434,41 @@ public class AdministracionNotificacionJpaAdapter implements AdministracionNotif
                 renderizado.html(),
                 renderizado.origen()
         );
+    }
+
+    /**
+     * CULM-001 D.9-a (F-ADM-027): la vista previa de un tipo de plantilla que no existe responde 404 NTF_021 en lugar de un 200 con
+     * asunto vacio. La existencia la decide la base de datos ({@code @validarExistencia = 1}); el despachador de correos usa el mismo SP
+     * sin ese indicador y conserva su plantilla por defecto.
+     */
+    private void validarTipoPlantillaExistente(final String tipo, final String idioma) {
+        final UUID corrId = resolveCorrelationId();
+        final EntityManager emDedicado = abrirEntityManagerDedicado();
+        final EntityManager em = emDedicado != null ? emDedicado : entityManager;
+        try {
+            final StoredProcedureQuery sp = em.createStoredProcedureQuery(SP_PLANTILLA_ACTIVA);
+            sp.registerStoredProcedureParameter("tipo", String.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter("idioma", String.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter(PARAM_ID_CORRELACION, UUID.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter("validarExistencia", Boolean.class, ParameterMode.IN);
+            sp.setParameter("tipo", tipo);
+            sp.setParameter("idioma", idioma);
+            sp.setParameter(PARAM_ID_CORRELACION, corrId);
+            sp.setParameter("validarExistencia", Boolean.TRUE);
+            sp.execute();
+            final ProcedureResult canonical = ProcedureResultMapper.mapSingle(sp.getResultList());
+            ProcedureResultValidator.validate(canonical, canonical.getIdCorrelacion(), "consultar_plantilla_notificacion_activa");
+        } catch (final DatabaseOperationException e) {
+            throw e;
+        } catch (final PersistenceException | IllegalStateException | IllegalArgumentException e) {
+            throw new DatabaseOperationException(
+                    DatabaseErrorCode.DATABASE_OPERATION_ERROR,
+                    "No fue posible validar el tipo de plantilla de notificacion.",
+                    e
+            );
+        } finally {
+            cerrarEntityManagerDedicado(emDedicado);
+        }
     }
 
     @Override

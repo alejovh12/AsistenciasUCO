@@ -102,6 +102,41 @@ class CoordinadorIndicadoresControllerTest {
     }
 
     @Test
+    void B2NM_S4_programaId_viaja_a_indicadores_alertas_y_bitacora_de_un_coordinador_de_varios_programas() throws Exception {
+        when(kpis.execute(any())).thenReturn(new KpisCoordinadorDTO(PROGRAMA, "Sistemas", null, null, 0, 0, 0, 0, null, 0, 0, 0, 0, 0, null, null,
+                new BigDecimal("15.00"), new BigDecimal("20.00")));
+        when(alertas.execute(any())).thenReturn(new AlertasPaginaDTO(List.of(), 0));
+        when(bitacora.execute(any())).thenReturn(new BitacoraPaginaDTO(List.of(), 0));
+
+        mvc.perform(get("/api/v1/coordinador/indicadores").param("programaId", PROGRAMA.toString())).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/coordinador/alertas-tempranas").param("programaId", PROGRAMA.toString())).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/coordinador/estudiantes/{id}/bitacora", ESTUDIANTE).param("programaId", PROGRAMA.toString())).andExpect(status().isOk());
+
+        final var k = ArgumentCaptor.forClass(ConsultarKpisCoordinadorDTO.class);
+        verify(kpis).execute(k.capture());
+        assertEquals(PROGRAMA, k.getValue().idPrograma());
+        final var a = ArgumentCaptor.forClass(ConsultarAlertaTempranaDTO.class);
+        verify(alertas).execute(a.capture());
+        assertEquals(PROGRAMA, a.getValue().idPrograma());
+        final var b = ArgumentCaptor.forClass(ConsultarBitacoraEstudianteDTO.class);
+        verify(bitacora).execute(b.capture());
+        assertEquals(PROGRAMA, b.getValue().idPrograma());
+    }
+
+    @Test
+    void B2NM_S4_ficha_traslada_programaId_y_el_error_de_ambito_responde_403() throws Exception {
+        when(ficha.execute(any())).thenThrow(new ForbiddenException("COO_002"));
+
+        mvc.perform(get("/api/v1/coordinador/estudiantes/{id}/ficha", ESTUDIANTE)).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/coordinador/estudiantes/{id}/ficha", ESTUDIANTE).param("programaId", PROGRAMA.toString())).andExpect(status().isForbidden());
+
+        final var f = ArgumentCaptor.forClass(ConsultarFichaEstudianteDTO.class);
+        verify(ficha, org.mockito.Mockito.times(2)).execute(f.capture());
+        assertNull(f.getAllValues().get(0).idPrograma());
+        assertEquals(PROGRAMA, f.getAllValues().get(1).idPrograma());
+    }
+
+    @Test
     void T_ALT_01_get_alertas_devuelve_la_pagina_con_total() throws Exception {
         when(alertas.execute(any())).thenReturn(new AlertasPaginaDTO(List.of(new AlertaTempranaDTO(ESTUDIANTE, "Ana Perez", 1017000001, "ana@uco.edu.co",
                 2, new BigDecimal("66.67"), 2, "PERDIDA", "ROJO")), 12));

@@ -40,7 +40,8 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
                  @idFacultad = :idFacultad,
                  @password = :password,
                  @idCorrelacion = :idCorrelacion,
-                 @idUsuarioEjecutor = :idUsuarioEjecutor
+                 @idUsuarioEjecutor = :idUsuarioEjecutor,
+                 @idTipoIdIdentificacion = :idTipoIdIdentificacion
             """;
 
     static final String SQL_ACTUALIZAR_COORDINADOR = """
@@ -120,9 +121,9 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
                                  final String primerNombre, final String segundoNombre,
                                  final String primerApellido, final String segundoApellido, final String correo,
                                  final UUID idPrograma, final UUID idFacultad, final String password,
-                                 final UUID usuarioEjecutor) {
+                                 final UUID usuarioEjecutor, final UUID idTipoIdIdentificacion) {
         ejecutarCrearCoordinador(idCoordinador, numeroIdentificacion, primerNombre, segundoNombre,
-                primerApellido, segundoApellido, correo, idPrograma, idFacultad, password, usuarioEjecutor);
+                primerApellido, segundoApellido, correo, idPrograma, idFacultad, password, usuarioEjecutor, idTipoIdIdentificacion);
     }
 
     @Override
@@ -279,7 +280,8 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
             final UUID idPrograma,
             final UUID idFacultad,
             final String password,
-            final UUID usuarioEjecutor
+            final UUID usuarioEjecutor,
+            final UUID idTipoIdIdentificacion
     ) {
         final UUID correlationId = CorrelationIdContext.require();
 
@@ -296,6 +298,7 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
         parametros.put("password", password);
         parametros.put("idCorrelacion", correlationId);
         parametros.put("idUsuarioEjecutor", usuarioEjecutor);
+        parametros.put("idTipoIdIdentificacion", idTipoIdIdentificacion);
 
         return procedureExecutor.execute(OP_CREAR_COORDINADOR, SQL_CREAR_COORDINADOR, parametros, correlationId);
     }

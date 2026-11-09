@@ -195,7 +195,7 @@ class SolicitudRevisionDocenteDetalleSqlIT {
     private UUID radicar(final String marca, final UUID soporte) {
         CorrelationIdContext.set(UUID.randomUUID());
         asistenciaPort.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
-                estudiante, sesion, "NOTA", JUSTIFICACION_PREFIX + marca, soporte, usuarioEstudiante));
+                estudiante, sesion, "CAL", JUSTIFICACION_PREFIX + marca, soporte == null ? java.util.List.of() : java.util.List.of(soporte), usuarioEstudiante));
         return UUID.fromString(jdbc.queryForObject(
                 "SELECT id FROM dbo.SolicitudRevisionAsistencia WHERE justificacionSolicitud = ?",
                 String.class, JUSTIFICACION_PREFIX + marca));
