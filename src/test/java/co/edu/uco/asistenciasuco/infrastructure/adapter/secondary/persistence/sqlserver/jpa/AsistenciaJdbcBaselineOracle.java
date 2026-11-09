@@ -97,6 +97,7 @@ public final class AsistenciaJdbcBaselineOracle implements AsistenciaRepositoryP
                     ON eg.id = a.idEstudianteGrupo
             WHERE eg.idGrupo = :idGrupo
               AND (:idSesion IS NULL OR a.idSesion = :idSesion)
+            ORDER BY a.idSesion ASC, eg.idEstudiante ASC, da.id ASC
             """;
 
     private final NamedParameterJdbcOperations jdbcOperations;
@@ -138,7 +139,7 @@ public final class AsistenciaJdbcBaselineOracle implements AsistenciaRepositoryP
         }
 
         try {
-            return jdbcOperations.query(
+            return consolidarPorSesion(jdbcOperations.query(
                     SQL_CONSULTAR_ASISTENCIAS,
                     new MapSqlParameterSource()
                             .addValue(PARAM_ID_GRUPO, dto.getGrupo())
@@ -152,7 +153,7 @@ public final class AsistenciaJdbcBaselineOracle implements AsistenciaRepositoryP
                             JdbcBaselineValueMapper.toString(rs.getObject("estado")),
                             JdbcBaselineValueMapper.toString(rs.getObject("observacion"))
                     )
-            );
+            ));
         } catch (DataAccessException exception) {
             LOGGER.error(
                     "SQL operation failed. operation=consultarAsistenciasPorGrupo, correlationId={}",
@@ -160,6 +161,32 @@ public final class AsistenciaJdbcBaselineOracle implements AsistenciaRepositoryP
             );
             throw new DatabaseOperationException("No fue posible consultar las asistencias de base de datos.", exception);
         }
+    }
+
+    /**
+     * CULM-001 (B-tomas-qr-sesiones/CONTRACT.md [SUPUESTO-B-15] y fila 3.2.9): el oraculo consolida a una fila
+     * por (estudiante, sesion) con prioridad SJC > EX > AN, como exige el contrato vigente. El SQL baseline
+     * conserva una fila por toma; la consolidacion es independiente de la del adaptador JPA.
+     */
+    private static List<AsistenciaRepositoryProjection> consolidarPorSesion(final List<AsistenciaRepositoryProjection> filas) {
+        final Map<List<java.util.UUID>, AsistenciaRepositoryProjection> porSesion = new java.util.LinkedHashMap<>();
+        for (final AsistenciaRepositoryProjection fila : filas) {
+            porSesion.merge(java.util.Arrays.asList(fila.getEstudiante(), fila.getSesion()), fila, (a, b) -> {
+                final String estado = rango(b.getEstado()) > rango(a.getEstado()) ? b.getEstado() : a.getEstado();
+                return new AsistenciaRepositoryProjection(a.getAsistencia(), a.getEstudiante(), a.getGrupo(),
+                        a.getSesion(), "AN".equals(estado), estado, a.getObservacion());
+            });
+        }
+        return List.copyOf(porSesion.values());
+    }
+
+    private static int rango(final String estado) {
+        return switch (estado == null ? "" : estado.strip()) {
+            case "SJC" -> 3;
+            case "EX" -> 2;
+            case "AN" -> 1;
+            default -> 0;
+        };
     }
 
     @Override
