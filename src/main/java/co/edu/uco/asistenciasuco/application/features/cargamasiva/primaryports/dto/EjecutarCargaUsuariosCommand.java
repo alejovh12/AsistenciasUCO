@@ -24,4 +24,25 @@ public record EjecutarCargaUsuariosCommand(
     public byte[] contenidoBytes() {
         return Arrays.copyOf(contenidoBytes, contenidoBytes.length);
     }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (!(other instanceof EjecutarCargaUsuariosCommand that)) {
+            return false;
+        }
+        return Objects.equals(usuarioEjecutor, that.usuarioEjecutor) && Objects.equals(perfilDestino, that.perfilDestino) && Objects.equals(nombreArchivo, that.nombreArchivo) && Objects.equals(huella, that.huella) && Arrays.equals(contenidoBytes, that.contenidoBytes);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(usuarioEjecutor, perfilDestino, nombreArchivo, huella) * 31 + Arrays.hashCode(contenidoBytes);
+    }
+
+    @Override
+    public String toString() {
+        return "EjecutarCargaUsuariosCommand[usuarioEjecutor=" + usuarioEjecutor + ", perfilDestino=" + perfilDestino + ", nombreArchivo=" + nombreArchivo + ", contenidoBytes=" + (contenidoBytes == null ? 0 : contenidoBytes.length) + " bytes]";
+    }
 }
