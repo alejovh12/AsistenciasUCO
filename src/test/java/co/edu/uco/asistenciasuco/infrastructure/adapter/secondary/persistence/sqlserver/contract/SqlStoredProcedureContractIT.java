@@ -405,6 +405,23 @@ class SqlStoredProcedureContractIT {
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@idSesion", "uniqueidentifier")
                 )),
+                // CULM-001 / DEC-064: sesiones manuales (aviso, cancelacion por el coordinador y catalogo de motivos).
+                Arguments.of("usp_cancelar_sesion_coordinador", List.of(
+                        input("@idSesion", "uniqueidentifier"),
+                        input("@codigoMotivo", "nvarchar"),
+                        input("@observacion", "nvarchar"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_destinatarios_sesion_manual", List.of(
+                        input("@idSesion", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_motivos_cancelacion_sesion", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier")
+                )),
                 Arguments.of("usp_cargar_dias_festivos", List.of(
                         input("@anio", "int"),
                         input("@festivosJSON", "nvarchar"),

@@ -105,6 +105,7 @@ public final class DbExceptionTranslator {
             SesionErrorCode.SES_011,
             SesionErrorCode.SES_012,
             SesionErrorCode.SES_016,
+            SesionErrorCode.SES_018,
             TomaAsistenciaErrorCode.TOM_003,
             TomaAsistenciaErrorCode.TOM_004,
             AsistenciaQrErrorCode.AQR_003,
@@ -134,6 +135,8 @@ public final class DbExceptionTranslator {
             SesionErrorCode.SES_017,
             // CULM-001 B.1: motivo de cancelacion y datos de festivos.
             SesionErrorCode.SES_013,
+            SesionErrorCode.SES_019,
+            SesionErrorCode.SES_021,
             FestivoErrorCode.FES_001,
             FestivoErrorCode.FES_002,
             FestivoErrorCode.FES_004,

@@ -42,6 +42,11 @@ public record Notificacion(
     /** CULM-001 C.1: el resolutor rechazo la cancelacion (aviso al docente). */
     public static final String TIPO_CANCELACION_RECHAZADA = "CANCELACION_RECHAZADA";
 
+    /** CULM-001 / DEC-064 (HU047): el docente creo una sesion manualmente (aviso a cada estudiante activo del grupo). */
+    public static final String TIPO_SESION_MANUAL_CREADA_ESTUDIANTE = "SESION_MANUAL_CREADA_ESTUDIANTE";
+    /** CULM-001 / DEC-064 (HU047): el docente creo una sesion manualmente (aviso al coordinador del programa). */
+    public static final String TIPO_SESION_MANUAL_CREADA_COORDINADOR = "SESION_MANUAL_CREADA_COORDINADOR";
+
     public Notificacion {
         Objects.requireNonNull(tipo, "El tipo de notificacion es obligatorio.");
         destinatarios = destinatarios == null ? List.of() : List.copyOf(destinatarios);

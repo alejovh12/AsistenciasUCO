@@ -230,6 +230,10 @@ final class DbFailureClassifier {
             case "SES_012" -> SesionErrorCode.SES_012;
             case "SES_013" -> SesionErrorCode.SES_013;
             case "SES_016" -> SesionErrorCode.SES_016;
+            // CULM-001 / DEC-064: cancelacion de sesion manual por el coordinador (codigos de la DB tal cual).
+            case "SES_018" -> SesionErrorCode.SES_018;
+            case "SES_019" -> SesionErrorCode.SES_019;
+            case "SES_021" -> SesionErrorCode.SES_021;
             // CULM-001 B.1: festivos (carga, aplicacion y consultas del administrador).
             // CULM-001 B.2: tomas de asistencia y QR de asistencia (el codigo de la DB se expone tal cual).
             // CULM-001 C.1: revision de cancelacion por inasistencia (el codigo de la DB se expone tal cual).
