@@ -131,6 +131,17 @@ class RevisionCancelacionControllersTest {
     }
 
     @Test
+    void un_cuerpo_ausente_es_validation_error_400_en_los_tres_perfiles_sin_llegar_al_caso_de_uso() throws Exception {
+        // java:S2259: request puede ser null (@RequestBody(required = false)); se valida antes de leer decision y motivo.
+        for (final String ruta : new String[]{"docente", "coordinador", "decano"}) {
+            mvc().perform(patch("/api/v1/" + ruta + "/revisiones-cancelacion/" + REVISION))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+        }
+        verifyNoInteractions(decidir, resolver);
+    }
+
+    @Test
     void coordinador_y_decano_consultan_y_resuelven_con_el_mismo_caso_de_uso() throws Exception {
         when(coordinador.execute(new ConsultarRevisionesCoordinadorInputPort.Comando(USUARIO, 1, 20, true, "PROPUESTA", null, GRUPO)))
                 .thenReturn(new PaginaRevisiones(List.of(fila(true)), 1));
