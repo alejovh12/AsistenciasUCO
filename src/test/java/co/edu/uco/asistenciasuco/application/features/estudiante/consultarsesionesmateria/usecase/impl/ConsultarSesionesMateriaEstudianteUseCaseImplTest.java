@@ -28,6 +28,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -70,7 +72,7 @@ class ConsultarSesionesMateriaEstudianteUseCaseImplTest {
         when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.of(estudiante));
         when(queryPort.consultarSesionesMateria(actor, asignatura, 1, 100))
                 .thenReturn(new PaginaResultado<>(sesiones, 1, 100, sesiones.size()));
-        when(asistenciaPort.consultarAsistenciaSesiones(estudiante, asignatura)).thenReturn(hechos);
+        when(asistenciaPort.consultarAsistenciaSesiones(eq(estudiante), eq(asignatura), any())).thenReturn(hechos);
     }
 
     @Test
@@ -79,7 +81,7 @@ class ConsultarSesionesMateriaEstudianteUseCaseImplTest {
 
         assertThrows(ForbiddenException.class, () -> useCase.execute(actor, asignatura));
         verify(queryPort, never()).consultarSesionesMateria(any(), any(), anyInt(), anyInt());
-        verify(asistenciaPort, never()).consultarAsistenciaSesiones(any(), any());
+        verify(asistenciaPort, never()).consultarAsistenciaSesiones(any(), any(), any());
     }
 
     @Test
@@ -89,7 +91,8 @@ class ConsultarSesionesMateriaEstudianteUseCaseImplTest {
         useCase.execute(actor, asignatura);
 
         verify(scopePort).findEstudianteIdByUsuario(actor);
-        verify(asistenciaPort).consultarAsistenciaSesiones(estudiante, asignatura);
+        verify(asistenciaPort).consultarAsistenciaSesiones(eq(estudiante), eq(asignatura), argThat(ids -> ids.contains(sesion1)));
+        verify(asistenciaPort, never()).consultarAsistenciaSesiones(estudiante, asignatura);
     }
 
     @Test
@@ -250,7 +253,7 @@ class ConsultarSesionesMateriaEstudianteUseCaseImplTest {
     void sesion_cancelada_es_no_disponible_no_reclamable_y_trae_su_cancelacion() {
         final UUID grupo = UUID.randomUUID();
         dado(List.of(sesion(sesion1, 1, grupo)), List.of(hecho(sesion1, 1, Boolean.FALSE, "SJC")));
-        when(procedenciaPort.consultarSesionesPorGrupo(grupo)).thenReturn(List.of(new SesionProcedenciaRepositoryProjection(
+        when(procedenciaPort.consultarSesionesPorIds(any())).thenReturn(List.of(new SesionProcedenciaRepositoryProjection(
                 sesion1, grupo, "Sesion", 1, "SES", 1, "1", "Grupo 001", LocalDateTime.of(2026, 8, 17, 13, 0),
                 LocalDateTime.of(2026, 8, 17, 15, 0), "UTC_V2",
                 new co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.CancelacionSesionProjection(
@@ -271,7 +274,7 @@ class ConsultarSesionesMateriaEstudianteUseCaseImplTest {
     void app04_sesion_con_procedencia_confirmada_expone_instantes_utc() {
         final UUID grupo = UUID.randomUUID();
         dado(List.of(sesion(sesion1, 1, grupo)), List.of());
-        when(procedenciaPort.consultarSesionesPorGrupo(grupo)).thenReturn(List.of(procedencia(sesion1, grupo, "UTC_V2")));
+        when(procedenciaPort.consultarSesionesPorIds(any())).thenReturn(List.of(procedencia(sesion1, grupo, "UTC_V2")));
 
         final SesionMateriaEstudianteDomain result = useCase.execute(actor, asignatura).getFirst();
 
@@ -285,7 +288,7 @@ class ConsultarSesionesMateriaEstudianteUseCaseImplTest {
     void app04_procedencia_indeterminada_o_ausente_no_ofrece_instantes() {
         final UUID grupo = UUID.randomUUID();
         dado(List.of(sesion(sesion1, 1, grupo), sesion(sesion2, 2, grupo)), List.of());
-        when(procedenciaPort.consultarSesionesPorGrupo(grupo)).thenReturn(List.of(procedencia(sesion1, grupo, null)));
+        when(procedenciaPort.consultarSesionesPorIds(any())).thenReturn(List.of(procedencia(sesion1, grupo, null)));
 
         final List<SesionMateriaEstudianteDomain> result = useCase.execute(actor, asignatura);
 
@@ -301,14 +304,14 @@ class ConsultarSesionesMateriaEstudianteUseCaseImplTest {
         final UUID grupoA = UUID.randomUUID();
         final UUID grupoB = UUID.randomUUID();
         dado(List.of(sesion(sesion1, 1, grupoA), sesion(sesion2, 2, grupoA)), List.of());
-        when(procedenciaPort.consultarSesionesPorGrupo(grupoA))
+        when(procedenciaPort.consultarSesionesPorIds(any()))
                 .thenReturn(List.of(procedencia(sesion1, grupoB, "UTC_V2"), procedencia(sesion2, grupoA, "UTC_V2")));
 
         final List<SesionMateriaEstudianteDomain> result = useCase.execute(actor, asignatura);
 
         assertEquals(EstadoHorarioSesion.INDETERMINADA, result.get(0).estadoTemporal());
         assertEquals(EstadoHorarioSesion.CONFIRMADA, result.get(1).estadoTemporal());
-        verify(procedenciaPort, times(1)).consultarSesionesPorGrupo(grupoA);
+        verify(procedenciaPort, times(1)).consultarSesionesPorIds(any());
     }
 
     @Test
@@ -316,7 +319,7 @@ class ConsultarSesionesMateriaEstudianteUseCaseImplTest {
         dado(List.of(), List.of());
 
         assertTrue(useCase.execute(actor, asignatura).isEmpty());
-        verify(procedenciaPort, never()).consultarSesionesPorGrupo(any());
+        verify(procedenciaPort, never()).consultarSesionesPorIds(any());
     }
 
     // ---- CULM-001 D.1 (HU026B): pagina, tamano por defecto, usuario ejecutor y fecha limite ----
@@ -392,7 +395,7 @@ class ConsultarSesionesMateriaEstudianteUseCaseImplTest {
         when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.of(estudiante));
         when(queryPort.consultarSesionesMateria(actor, asignatura, 1, 100))
                 .thenReturn(new PaginaResultado<>(List.of(primera), 1, 100, 250));
-        when(asistenciaPort.consultarAsistenciaSesiones(estudiante, asignatura)).thenReturn(List.of());
+        when(asistenciaPort.consultarAsistenciaSesiones(eq(estudiante), eq(asignatura), any())).thenReturn(List.of());
 
         final List<SesionMateriaEstudianteDomain> result = useCase.execute(actor, asignatura);
 
@@ -418,7 +421,7 @@ class ConsultarSesionesMateriaEstudianteUseCaseImplTest {
         final var segunda = sesion(sesion2, 2, UUID.randomUUID());
         when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.of(estudiante));
         when(queryPort.consultarSesionesMateria(actor, asignatura, 2, 1)).thenReturn(new PaginaResultado<>(List.of(segunda), 2, 1, 5));
-        when(asistenciaPort.consultarAsistenciaSesiones(estudiante, asignatura)).thenReturn(List.of());
+        when(asistenciaPort.consultarAsistenciaSesiones(eq(estudiante), eq(asignatura), any())).thenReturn(List.of());
 
         final List<SesionMateriaEstudianteDomain> result = useCase.execute(actor, asignatura, 2, 1);
 

@@ -11,6 +11,8 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -33,6 +35,11 @@ public class SesionProcedenciaJpaRepository implements SesionProcedenciaQueryPor
     // Mismo orden que v1 (uv_sesion), con id como desempate estable para filas sin numero distinto.
     static final String HQL_POR_GRUPO = SELECT_ROW
             + " where s.idGrupo = :idGrupo order by s.fechaHoraInicio, s.numero, s.id";
+
+    // Solo las sesiones indicadas, mismo orden que por grupo; los bloques respetan el tope de parametros de SQL Server.
+    static final String HQL_POR_IDS = SELECT_ROW
+            + " where s.id in :idsSesion order by s.fechaHoraInicio, s.numero, s.id";
+    static final int TAMANO_BLOQUE_IN = 1000;
 
     private final EntityManager entityManager;
 
@@ -66,6 +73,29 @@ public class SesionProcedenciaJpaRepository implements SesionProcedenciaQueryPor
                         .getResultList().stream()
                         .map(SesionProcedenciaJpaRepository::toProjection)
                         .toList()
+        );
+    }
+
+    @Override
+    public List<SesionProcedenciaRepositoryProjection> consultarSesionesPorIds(final Collection<UUID> sesionIds) {
+        if (sesionIds == null || sesionIds.isEmpty()) {
+            return List.of();
+        }
+        final List<UUID> ids = sesionIds.stream().filter(Objects::nonNull).distinct().toList();
+        return JpaQueryExecutor.execute(
+                "consultarSesionesPorIdsV2",
+                "No fue posible consultar las sesiones v2 por identificador desde base de datos.",
+                () -> {
+                    final List<SesionProcedenciaRepositoryProjection> resultado = new ArrayList<>();
+                    for (int desde = 0; desde < ids.size(); desde += TAMANO_BLOQUE_IN) {
+                        final List<UUID> bloque = ids.subList(desde, Math.min(ids.size(), desde + TAMANO_BLOQUE_IN));
+                        entityManager.createQuery(HQL_POR_IDS, Object[].class)
+                                .setParameter("idsSesion", bloque)
+                                .getResultList()
+                                .forEach(fila -> resultado.add(toProjection(fila)));
+                    }
+                    return List.copyOf(resultado);
+                }
         );
     }
 

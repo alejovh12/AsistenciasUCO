@@ -24,8 +24,9 @@ public final class ConsultarAsignaturasPlanUseCaseImpl implements ConsultarAsign
                 .map(ConsultarAsignaturasPlanRepositoryMapper::toDomain).toList();
         final boolean fueraDeAmbito = idPrograma
                 .map(programa -> asignaturas.stream().anyMatch(a -> !programa.equals(a.idPrograma())))
-                .orElseGet(() -> asignaturas.stream()
-                        .anyMatch(a -> !scopePort.canDecanoAccessPrograma(actorUsuarioId, a.idPrograma())));
+                // Una validacion de ambito por programa distinto (no por asignatura); corta en el primero denegado.
+                .orElseGet(() -> asignaturas.stream().map(AsignaturaDomain::idPrograma).distinct()
+                        .anyMatch(programa -> !scopePort.canDecanoAccessPrograma(actorUsuarioId, programa)));
         if (fueraDeAmbito) {
             throw new ForbiddenException("El plan de estudio solicitado no pertenece al ambito del usuario autenticado.");
         }

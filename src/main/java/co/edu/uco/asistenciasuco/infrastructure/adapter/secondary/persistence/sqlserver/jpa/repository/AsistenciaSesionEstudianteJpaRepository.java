@@ -7,6 +7,8 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -33,6 +35,13 @@ public class AsistenciaSesionEstudianteJpaRepository implements AsistenciaSesion
               and g.idAsignatura = :idAsignatura
             """;
 
+    /** Misma proyeccion y mismo aislamiento por estudiante/asignatura, acotada a las sesiones de la pagina. */
+    static final String HQL_POR_ESTUDIANTE_ASIGNATURA_Y_SESIONES = HQL_POR_ESTUDIANTE_Y_ASIGNATURA
+            + "  and a.idSesion in :idsSesion\n";
+
+    /** Tope de parametros por sentencia (SQL Server admite 2100); una pagina normal cabe en un solo bloque. */
+    static final int TAMANO_BLOQUE_IN = 1000;
+
     private final EntityManager entityManager;
 
     public AsistenciaSesionEstudianteJpaRepository(final EntityManager entityManager) {
@@ -54,6 +63,35 @@ public class AsistenciaSesionEstudianteJpaRepository implements AsistenciaSesion
                                 row.asistio(), row.codigoRazonCausa(), row.idSolicitud(), row.estadoSolicitud(),
                                 row.fechaSolicitud()))
                         .toList()
+        );
+    }
+
+    @Override
+    public List<AsistenciaSesionEstudianteProjection> consultarAsistenciaSesiones(final UUID idEstudiante,
+                                                                                  final UUID idAsignatura,
+                                                                                  final Collection<UUID> idsSesion) {
+        if (idsSesion == null || idsSesion.isEmpty()) {
+            return List.of();
+        }
+        final List<UUID> ids = idsSesion.stream().filter(Objects::nonNull).distinct().toList();
+        return JpaQueryExecutor.execute(
+                "consultarAsistenciaSesionesEstudianteAcotada",
+                "No fue posible consultar la asistencia de las sesiones desde base de datos.",
+                () -> {
+                    final List<AsistenciaSesionEstudianteProjection> resultado = new ArrayList<>();
+                    for (int desde = 0; desde < ids.size(); desde += TAMANO_BLOQUE_IN) {
+                        final List<UUID> bloque = ids.subList(desde, Math.min(ids.size(), desde + TAMANO_BLOQUE_IN));
+                        entityManager.createQuery(HQL_POR_ESTUDIANTE_ASIGNATURA_Y_SESIONES, AsistenciaSesionEstudianteQueryRow.class)
+                                .setParameter("idEstudiante", idEstudiante)
+                                .setParameter("idAsignatura", idAsignatura)
+                                .setParameter("idsSesion", bloque)
+                                .getResultList()
+                                .forEach(row -> resultado.add(new AsistenciaSesionEstudianteProjection(row.idSesion(),
+                                        row.codigoDetalle(), row.asistio(), row.codigoRazonCausa(), row.idSolicitud(),
+                                        row.estadoSolicitud(), row.fechaSolicitud())));
+                    }
+                    return List.copyOf(resultado);
+                }
         );
     }
 }
