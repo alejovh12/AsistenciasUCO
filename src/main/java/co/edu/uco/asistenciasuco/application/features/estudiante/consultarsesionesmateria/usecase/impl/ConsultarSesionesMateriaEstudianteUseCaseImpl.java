@@ -87,7 +87,7 @@ public final class ConsultarSesionesMateriaEstudianteUseCaseImpl implements Cons
         if (sesiones.isEmpty()) {
             return List.of();
         }
-        // Lecturas complementarias acotadas a las sesiones de la pagina: nunca toda la materia ni todo el grupo.
+        // Lecturas complementarias limitadas a las sesiones de la pagina, sin consultar la materia ni el grupo completos.
         final Set<UUID> idsPagina = sesiones.stream().map(SesionMateriaEstudianteProjection::id)
                 .filter(Objects::nonNull).collect(Collectors.toCollection(LinkedHashSet::new));
         final Map<UUID, List<AsistenciaSesionEstudianteProjection>> hechosPorSesion = new HashMap<>();
