@@ -38,6 +38,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -329,5 +330,21 @@ class MatriculaQrControllersTest {
         final MockHttpServletRequest request = new MockHttpServletRequest(metodo, uri);
         request.setRemoteAddr("10.1.2.3");
         return request;
+    }
+
+    @Test
+    void la_ruta_publica_no_abre_cors_a_cualquier_origen_f_est_s14() throws Exception {
+        // java:S5122: el controlador no declara @CrossOrigin (que sin argumentos admite "*"); el CORS lo gobierna solo la configuracion
+        // global con los origenes de app.security.cors.allowed-origins.
+        assertNull(MatriculaQrPublicaController.class.getAnnotation(org.springframework.web.bind.annotation.CrossOrigin.class));
+
+        when(validar.execute(new ValidarTokenMatriculaInputPort.Comando(TOKEN, null, "127.0.0.1")))
+                .thenReturn(new ValidarTokenMatriculaInputPort.Resultado(GRUPO, "Calculo", "G1", "Maria Perez",
+                        Instant.parse("2026-11-04T16:00:00Z"), 7));
+
+        mvc.perform(post("/api/v1/public/matricula-qr/validar").header("Origin", "https://sitio-ajeno.example")
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"token\":\"" + TOKEN + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
     }
 }
