@@ -106,7 +106,7 @@ PR abiertos: **Backend #96** (HU156, `dac9a189`), **Frontend #55** y **DB #105**
 
 - **Inventario de 113 hallazgos y guiones `SCREEN-TESTS-*` de CULM-001: no están en ningún repositorio ni en disco** (búsqueda en refs de los tres repos y en Downloads/Desktop/Documents/OneDrive). Parecen vivir fuera de git (orquestador de CULM-001). `BLOCKED_BY_MISSING_EVIDENCE`: hace falta que el responsable los aporte (ruta o rama). Hasta entonces el registro por ID solo cubre los IDs de este reporte y de [BE-FASE-20261109](../BE-FASE-20261109-correccion-integral/REPORTE.md).
 - Infra (`AsistenciasUCO-Infra`) no está clonada en disco; solo se dispone del directorio `infra/` del Backend.
-- Backend 8080 y Angular 4200 **no estaban en escucha** al iniciar (SQL Server, MinIO, ClamAV, PDP/PEP, Keycloak, GreenMail y observabilidad sí). Despliegue, HTTP real con los cinco usuarios y certificación por navegador: **NOT_RUN**. El ámbito de `uco-coordinador` (relación programa/grupo y claim del token) tampoco se revalidó.
+- Despliegue local, HTTP real GET por rol y navegador: ver §8 (el inicio de sesión en pantalla de los cinco roles sigue `NOT_RUN`).
 
 ## 7. Estado por ítem
 
@@ -121,4 +121,23 @@ PR abiertos: **Backend #96** (HU156, `dac9a189`), **Frontend #55** y **DB #105**
 | B3, B4, B5, A1c, H1, H5, H6 | `BLOQUEADO_POR_CONTRATO` |
 | H2, H4, 6352/6353, sesión futura, ventana de reclamo, vistas de horas | `BLOQUEADO_POR_CONTRATO` / `BLOCKED_BY_MISSING_EVIDENCE` (DB/Producto) |
 | B9 | `PENDIENTE` (baja prioridad) |
-| Navegador, 5 roles | `PENDIENTE_E2E` |
+| HTTP real GET por rol (5 roles, local) | ver §8 |
+| Navegador, 5 roles | `PENDIENTE_E2E` (login en pantalla pendiente del usuario) |
+
+## 8. Despliegue local y HTTP real (2026-11-09, autorizado por el usuario)
+
+**Despliegue.** Rama local no publicada `chore/despliegue-local-cierre-20261109` = `origin/develop` + merge local de las tres ramas del §2 y de esta rama documental (sin conflictos). `mvnw -DskipTests package` → jar copiado a `backend-run/AsistenciasUCO-20261109042500-8080.jar` (SHA-256 idéntico al de `target/`). Se detuvo solo el PID del Backend anterior (jar del 08/11) que ocupaba 8080 y se arrancó el nuevo con `start-backend-baseline.ps1` (provider baseline): `/actuator/health` = UP, `/api/v1/auth/me` sin token = 401. Keycloak, SQL Server, MinIO, ClamAV, PDP/PEP y GreenMail no se tocaron. Angular: el `ng serve` existente en 4200 (mismo repo Frontend, observa el árbol de trabajo) sirve la rama `fix/listados-error-carga-decano-admin` (el bundle contiene «Funcionalidad no disponible»); `env.js`: `USE_MOCKS=false`, API `:8080/api/v1`. La SPA carga la pantalla de login sin errores de consola.
+
+**GET real con token PKCE por rol** (lab, solo lectura, sin imprimir claves ni datos personales):
+
+| Rol | Resultado |
+|---|---|
+| `uco-coordinador` | `/auth/me` 200; **ámbito corregido**: `/coordinador/grupos` 200 con 7 grupos; `/coordinador/grupos/{id}/sesiones` (B7b) 200, 3 sesiones, las 3 `CONFIRMADA`; `/coordinador/estudiantes` 200, 5007. `GET /docentes` 200 (H1 sigue expuesto: sin ámbito) |
+| `uco-decano` | `/auth/me` 200; `/decano/sesiones` y `/decano/estructura` → **403 FORBIDDEN** (`exigirDecano`: el usuario de laboratorio **no tiene facultad asignada**); `/decano/docentes` y `/decano/asignaturas` 200 con 0 filas. **B7 y B8 no se pudieron ejercitar por HTTP** (`BLOQUEADO_POR_ENTORNO`: requiere asignar facultad al decano de laboratorio o credenciales de un decano con facultad) |
+| `uco-administrador` | `/admin/auditoria` 200 (10 de 18); `/admin/estudiantes` 200 (10 de 5007, 4,0 s) |
+| `uco-docente` | `/auth/me` 200; `/docente/horarios` 200 (3 filas) |
+| `uco-estudiante` | `/auth/me` 200; `/estudiante/reclamos` 200 (6); **`/estudiante/materias` 200 pero tarda ~64-68 s** (3 mediciones, `durationMs` 67845/64600/64505) |
+
+**Hallazgo PERF-EST-MATERIAS (DB, no Backend).** Ejecutando por separado en la BD (solo lectura, mismo usuario): `usp_consultar_materias_estudiante` 31 ms; **`usp_consultar_resumen_asistencia_estudiante` 63 774 ms** (1 fila). El caso de uso `ConsultarMateriasEstudianteUseCaseImpl` hace una sola llamada a cada SP; la latencia es del SP/vista de resumen (con 5007 estudiantes). Transferencia al responsable DB: revisar plan de ejecución y las vistas que usa el resumen por estudiante. Una pantalla que lo llame supera cualquier timeout razonable del cliente. Estado: `BLOQUEADO_POR_ENTORNO`/DB.
+
+Tampoco se verificó por HTTP la rama del Decano ni el flujo con página >1 de B7; los casos se cubren con unitarias, ArchUnit e IT del adaptador. El inicio de sesión en pantalla de los cinco roles, responsive, teclado/foco, SSE, QR/PIN, formularios y los guiones `SCREEN-TESTS-*` (no localizados) siguen `NOT_RUN`.
