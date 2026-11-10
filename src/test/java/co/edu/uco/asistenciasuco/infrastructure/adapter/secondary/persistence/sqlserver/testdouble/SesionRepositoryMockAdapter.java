@@ -23,10 +23,11 @@ public final class SesionRepositoryMockAdapter implements SesionRepositoryPort {
     private static final UUID GRUPO_1 = UUID.fromString("00000000-0000-0000-0000-000000000401");
 
     @Override
-    public void crearSesion(final CrearSesionRepositoryDTO dto) {
+    public String crearSesion(final CrearSesionRepositoryDTO dto) {
         if (ObjectHelper.isNull(dto)) {
             throw new CrosscuttingException("El dominio para crear sesion es obligatorio.");
         }
+        return null;
     }
 
     @Override

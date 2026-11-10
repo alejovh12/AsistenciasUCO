@@ -33,6 +33,8 @@ import co.edu.uco.asistenciasuco.application.features.realtime.resolveraudiencia
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.common.AvisoRevisionCancelacionService;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionescoordinador.primaryports.ConsultarRevisionesCoordinadorInputPort;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionescoordinador.usecase.impl.ConsultarRevisionesCoordinadorUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionesdocente.primaryports.ConsultarRevisionesDocenteInputPort;
+import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionesdocente.usecase.impl.ConsultarRevisionesDocenteUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionesdecano.primaryports.ConsultarRevisionesDecanoInputPort;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionesdecano.usecase.impl.ConsultarRevisionesDecanoUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.decidirrevision.primaryports.DecidirRevisionCancelacionInputPort;
@@ -130,11 +132,14 @@ class Culm001WiringConfigurationsTest {
         final ResolverRevisionCancelacionInputPort resolver = config.resolverRevisionCancelacionInputPort(repositorio, avisos);
         final ConsultarRevisionesCoordinadorInputPort coordinador = config.consultarRevisionesCoordinadorInputPort(repositorio);
         final ConsultarRevisionesDecanoInputPort decano = config.consultarRevisionesDecanoInputPort(repositorio);
+        final ConsultarRevisionesDocenteInputPort docente = config.consultarRevisionesDocenteInputPort(repositorio);
 
         assertInstanceOf(DecidirRevisionCancelacionUseCaseImpl.class, decidir);
         assertInstanceOf(ResolverRevisionCancelacionUseCaseImpl.class, resolver);
         assertInstanceOf(ConsultarRevisionesCoordinadorUseCaseImpl.class, coordinador);
         assertInstanceOf(ConsultarRevisionesDecanoUseCaseImpl.class, decano);
+        assertInstanceOf(ConsultarRevisionesDocenteUseCaseImpl.class, docente);
+        assertThrows(NullPointerException.class, () -> config.consultarRevisionesDocenteInputPort(null));
         assertThrows(NullPointerException.class, () -> config.consultarRevisionesDecanoInputPort(null));
     }
 

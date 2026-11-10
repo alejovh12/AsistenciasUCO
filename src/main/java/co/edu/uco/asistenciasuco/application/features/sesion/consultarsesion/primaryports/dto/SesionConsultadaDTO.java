@@ -21,6 +21,8 @@ public final class SesionConsultadaDTO {
     private LocalDateTime fechaHoraInicio;
     private LocalDateTime fechaHoraFin;
     private CancelacionSesionDTO cancelacion;
+    private String estadoSolicitud;
+    private boolean pendienteAprobacion;
 
     public SesionConsultadaDTO() {
         super();
@@ -66,6 +68,27 @@ public final class SesionConsultadaDTO {
     ) {
         this(sesion, grupo, nombre, numero, codigo, numeroSemana, codigoGrupo, nombreGrupo, fechaHoraInicio, fechaHoraFin);
         setCancelacion(cancelacion);
+    }
+
+    /** DEC-065 (2): ademas, el estado de la solicitud de sesion extraordinaria ({@code null} si no nacio como solicitud). */
+    public SesionConsultadaDTO(
+            final UUID sesion,
+            final UUID grupo,
+            final String nombre,
+            final Integer numero,
+            final String codigo,
+            final Integer numeroSemana,
+            final String codigoGrupo,
+            final String nombreGrupo,
+            final LocalDateTime fechaHoraInicio,
+            final LocalDateTime fechaHoraFin,
+            final CancelacionSesionDTO cancelacion,
+            final String estadoSolicitud,
+            final boolean pendienteAprobacion
+    ) {
+        this(sesion, grupo, nombre, numero, codigo, numeroSemana, codigoGrupo, nombreGrupo, fechaHoraInicio, fechaHoraFin, cancelacion);
+        setEstadoSolicitud(estadoSolicitud);
+        setPendienteAprobacion(pendienteAprobacion);
     }
 
     public UUID getSesion() {
@@ -159,5 +182,21 @@ public final class SesionConsultadaDTO {
 
     public void setCancelacion(final CancelacionSesionDTO cancelacion) {
         this.cancelacion = cancelacion;
+    }
+
+    public String getEstadoSolicitud() {
+        return estadoSolicitud;
+    }
+
+    public void setEstadoSolicitud(final String estadoSolicitud) {
+        this.estadoSolicitud = estadoSolicitud;
+    }
+
+    public boolean isPendienteAprobacion() {
+        return pendienteAprobacion;
+    }
+
+    public void setPendienteAprobacion(final boolean pendienteAprobacion) {
+        this.pendienteAprobacion = pendienteAprobacion;
     }
 }

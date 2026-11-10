@@ -72,6 +72,17 @@ class SesionManualSimpleUseCasesTest {
     }
 
     @Test
+    void el_decorador_devuelve_el_mensaje_del_sp_aunque_el_aviso_falle() {
+        final CrearSesionInputPort crear = mock(CrearSesionInputPort.class);
+        final NotificarSesionManualInputPort notificar = mock(NotificarSesionManualInputPort.class);
+        when(crear.execute(any())).thenReturn("La sesión extraordinaria quedó registrada como solicitud pendiente.");
+        when(notificar.execute(any())).thenThrow(new IllegalStateException("smtp"));
+
+        assertEquals("La sesión extraordinaria quedó registrada como solicitud pendiente.",
+                new CrearSesionConAvisoInteractor(crear, notificar).execute(dto()));
+    }
+
+    @Test
     void si_la_creacion_falla_no_avisa_y_el_error_se_propaga() {
         final CrearSesionInputPort crear = mock(CrearSesionInputPort.class);
         final NotificarSesionManualInputPort notificar = mock(NotificarSesionManualInputPort.class);

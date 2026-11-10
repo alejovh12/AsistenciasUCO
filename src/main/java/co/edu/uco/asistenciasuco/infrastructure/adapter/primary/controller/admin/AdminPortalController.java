@@ -18,6 +18,8 @@ import co.edu.uco.asistenciasuco.application.features.admin.consultarinstitucion
 import co.edu.uco.asistenciasuco.application.features.admin.consultarinstituciones.primaryports.dto.InstitucionDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.CrearDecanoInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.dto.CrearDecanoDTO;
+import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.dto.FacultadNuevaDTO;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin.response.CrearDecanoResponse;
 import co.edu.uco.asistenciasuco.application.features.admin.crearfacultad.primaryports.CrearFacultadInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.crearfacultad.primaryports.dto.CrearFacultadDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarhistorialcierres.primaryports.ConsultarHistorialCierresMasivosInputPort;
@@ -123,14 +125,19 @@ public final class AdminPortalController {
 
     @AuditableOperation(action = "CREAR_DECANO", resourceType = "DECANO", metadataRequestFields = {"idFacultad"})
     @PostMapping("/decanos")
-    public ResponseEntity<ApiMessageResponse> crearDecano(@RequestBody final CrearDecanoRequest request) {
+    public ResponseEntity<ApiDataResponse<CrearDecanoResponse>> crearDecano(@RequestBody final CrearDecanoRequest request) {
         RequestValidationGuard.validate(CREAR_DECANO_VALIDATOR.validate(request));
-        crearDecanoInputPort.execute(new CrearDecanoDTO(
+        final var facultadNueva = request.facultadNueva();
+        final var resultado = crearDecanoInputPort.execute(new CrearDecanoDTO(
                 request.tipoIdentificacionId(), request.numeroIdentificacion(), request.primerNombre(),
                 request.segundoNombre(), request.primerApellido(), request.segundoApellido(), request.correo(),
-                request.password(), request.idFacultad(), authenticatedUserResolver.requireAuthenticatedUserId()
+                request.password(), request.idFacultad(), authenticatedUserResolver.requireAuthenticatedUserId(),
+                facultadNueva == null ? null : new FacultadNuevaDTO(
+                        facultadNueva.nombre(), facultadNueva.codigo(), facultadNueva.idInstitucion())
         ));
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiMessageResponse(true, "Decano creado correctamente."));
+        // DEC-065 (5): 201 con el decano y la facultad (existente vinculada o recien creada) en una sola respuesta.
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiDataResponse<>(true,
+                new CrearDecanoResponse(resultado.idDecano(), resultado.idFacultad(), resultado.nombreFacultad())));
     }
 
     /** CULM-001 A.2-8 (F-ADM-002): 200 con la fila del decano y su estado nuevo; 409 DEC_002; 404 DEC_001. */
@@ -254,7 +261,11 @@ public final class AdminPortalController {
 
     public record CrearDecanoRequest(UUID tipoIdentificacionId, Integer numeroIdentificacion, String primerNombre,
                                      String segundoNombre, String primerApellido, String segundoApellido, String correo,
-                                     String password, UUID idFacultad) {
+                                     String password, UUID idFacultad, FacultadNuevaRequest facultadNueva) {
+    }
+
+    /** Facultad que se crea junto con el decano (DEC-065 (5)); excluyente con {@code idFacultad}. */
+    public record FacultadNuevaRequest(String nombre, String codigo, UUID idInstitucion) {
     }
 
     public record CrearFacultadRequest(String nombre, String codigo, UUID idInstitucion, UUID idDecano) {

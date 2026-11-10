@@ -2,6 +2,8 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller;
 
 import co.edu.uco.asistenciasuco.application.features.alertainasistencia.consultaralertasestudiante.primaryports.ConsultarAlertasEstudianteInputPort;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionescoordinador.primaryports.ConsultarRevisionesCoordinadorInputPort;
+import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionesdocente.primaryports.ConsultarRevisionesDocenteInputPort;
+import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionesdecano.primaryports.ConsultarRevisionesDecanoInputPort;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.decidirrevision.primaryports.DecidirRevisionCancelacionInputPort;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.exception.RevisionCancelacionErrorCode;
@@ -54,10 +56,11 @@ class RevisionCancelacionControllersTest {
     private final ResolverRevisionCancelacionInputPort resolver = mock(ResolverRevisionCancelacionInputPort.class);
     private final ConsultarRevisionesCoordinadorInputPort coordinador = mock(ConsultarRevisionesCoordinadorInputPort.class);
     private final ConsultarRevisionesDecanoInputPort decano = mock(ConsultarRevisionesDecanoInputPort.class);
+    private final ConsultarRevisionesDocenteInputPort docente = mock(ConsultarRevisionesDocenteInputPort.class);
 
     private MockMvc mvc() {
         return MockMvcBuilders.standaloneSetup(new EstudianteAlertasController(alertas, identity),
-                new DocenteRevisionCancelacionController(decidir, identity),
+                new DocenteRevisionCancelacionController(decidir, docente, identity),
                 new CoordinadorRevisionCancelacionController(coordinador, resolver, identity),
                 new DecanoRevisionCancelacionController(decano, resolver, identity)).setControllerAdvice(advice).build();
     }
@@ -162,13 +165,42 @@ class RevisionCancelacionControllersTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.elementos[0].programa").doesNotExist())
                 .andExpect(jsonPath("$.elementos[0].resolutor.perfil").value("DECANO"));
-        for (final String ruta : new String[]{"coordinador", "decano"}) {
-            mvc().perform(patch("/api/v1/" + ruta + "/revisiones-cancelacion/" + REVISION).contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"decision\":\"APROBAR\",\"motivo\":\"motivo suficiente\"}"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.datos.cambioMatricula").value(true))
-                    .andExpect(jsonPath("$.datos.estado").value("APROBADA"));
-        }
+        mvc().perform(patch("/api/v1/coordinador/revisiones-cancelacion/" + REVISION).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"decision\":\"APROBAR\",\"motivo\":\"motivo suficiente\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.datos.cambioMatricula").value(true))
+                .andExpect(jsonPath("$.datos.estado").value("APROBADA"));
+    }
+
+    @Test
+    void dec_065_el_decano_no_resuelve_y_recibe_403_con_el_mensaje_del_catalogo() throws Exception {
+        // DEC-065 (1): la DB responde RCN_016 al decano que intenta resolver; el backend lo expone como 403.
+        when(resolver.execute(any())).thenThrow(new ForbiddenException(RevisionCancelacionErrorCode.RCN_016));
+        mvc().perform(patch("/api/v1/decano/revisiones-cancelacion/" + REVISION).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"decision\":\"APROBAR\",\"motivo\":\"motivo suficiente\"}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("RCN_016"));
+    }
+
+    @Test
+    void dec_065_docente_consulta_sus_revisiones_con_los_valores_por_defecto_y_el_mismo_item_del_coordinador() throws Exception {
+        when(docente.execute(new ConsultarRevisionesDocenteInputPort.Comando(USUARIO, 1, 20, true, null, null)))
+                .thenReturn(new PaginaRevisiones(List.of(fila(true)), 1));
+        when(docente.execute(new ConsultarRevisionesDocenteInputPort.Comando(USUARIO, 2, 1, false, "PROPUESTA", GRUPO)))
+                .thenReturn(new PaginaRevisiones(List.of(fila(true), fila(true)), 2));
+
+        mvc().perform(get("/api/v1/docente/revisiones-cancelacion"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.elementos[0].id").value(REVISION.toString()))
+                .andExpect(jsonPath("$.elementos[0].accionesPermitidas[0]").value("APROBAR"))
+                .andExpect(jsonPath("$.elementos[0].programa.nombre").value("Ingeniería"))
+                .andExpect(jsonPath("$.elementos[0].docente.nombreCompleto").value("Doc Uno"))
+                .andExpect(jsonPath("$.totalElementos").value(1));
+        mvc().perform(get("/api/v1/docente/revisiones-cancelacion").param("soloPendientes", "false").param("estado", "PROPUESTA")
+                        .param("grupoId", GRUPO.toString()).param("pagina", "2").param("tamano", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.numeroPagina").value(2))
+                .andExpect(jsonPath("$.totalPaginas").value(2));
     }
 
     @Test

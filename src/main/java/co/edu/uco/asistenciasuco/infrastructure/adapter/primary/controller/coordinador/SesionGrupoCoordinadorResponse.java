@@ -13,6 +13,7 @@ import java.util.UUID;
  * ({@code fechaHoraInicio}/{@code fechaHoraFin}: {@code LocalDateTime} sin zona). APP-04 agrega, de forma aditiva,
  * {@code fechaHoraInicioUtc}/{@code fechaHoraFinUtc} con sufijo {@code Z} y la misma precision DATETIME2(7) que el
  * contrato v2, solo si {@code estadoTemporal = CONFIRMADA}; en otro caso se serializan como {@code null} explicito.
+ * DEC-065 (2): {@code estadoSolicitud} y {@code pendienteAprobacion} de la solicitud de sesion extraordinaria.
  */
 @JsonInclude(JsonInclude.Include.ALWAYS)
 public record SesionGrupoCoordinadorResponse(
@@ -30,14 +31,17 @@ public record SesionGrupoCoordinadorResponse(
         String fechaHoraFinUtc,
         String estadoTemporal,
         String estado,
-        CancelacionSesionResponse cancelacion
+        CancelacionSesionResponse cancelacion,
+        String estadoSolicitud,
+        boolean pendienteAprobacion
 ) {
 
     public static SesionGrupoCoordinadorResponse from(final SesionGrupoDTO dto) {
         return new SesionGrupoCoordinadorResponse(dto.id(), dto.idGrupo(), dto.codigoGrupo(), dto.nombreGrupo(),
                 dto.nombre(), dto.numero(), dto.codigo(), dto.numeroSemana(), dto.fechaHoraInicio(),
                 dto.fechaHoraFin(), utc(dto.fechaHoraInicioUtc()), utc(dto.fechaHoraFinUtc()), dto.estadoTemporal(),
-                dto.estado(), CancelacionSesionResponse.from(dto.cancelacion()));
+                dto.estado(), CancelacionSesionResponse.from(dto.cancelacion()), dto.estadoSolicitud(),
+                dto.pendienteAprobacion());
     }
 
     private static String utc(final LocalDateTime value) {

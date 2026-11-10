@@ -5,6 +5,8 @@ import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consul
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionescoordinador.usecase.impl.ConsultarRevisionesCoordinadorUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionesdecano.primaryports.ConsultarRevisionesDecanoInputPort;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionesdecano.usecase.impl.ConsultarRevisionesDecanoUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionesdocente.primaryports.ConsultarRevisionesDocenteInputPort;
+import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionesdocente.usecase.impl.ConsultarRevisionesDocenteUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.decidirrevision.primaryports.DecidirRevisionCancelacionInputPort;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.decidirrevision.usecase.impl.DecidirRevisionCancelacionUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.resolverrevision.primaryports.ResolverRevisionCancelacionInputPort;
@@ -28,6 +30,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
@@ -102,20 +105,22 @@ class RevisionCancelacionUseCasesTest {
         verify(notificaciones).notificar(aviso.capture());
         assertEquals(Notificacion.TIPO_PROPUESTA_CANCELACION, aviso.getValue().tipo());
         assertEquals(RESOLUTOR, aviso.getValue().destinatarios().getFirst().idUsuario());
-        assertEquals("", aviso.getValue().datos().get("escalamiento"));
+        assertFalse(aviso.getValue().datos().containsKey("escalamiento"));
         final ArgumentCaptor<RealtimeEvent> evento = ArgumentCaptor.forClass(RealtimeEvent.class);
         verify(realtime).publish(evento.capture());
         assertEquals(Set.of(DOCENTE, RESOLUTOR), evento.getValue().destinatariosUsuario());
     }
 
     @Test
-    void proponer_con_escalamiento_informa_el_texto_del_decano() {
+    void proponer_nunca_informa_escalamiento_al_decano_dec_065() {
+        // DEC-065 (1): se retira el escalamiento; aunque la DB (compatibilidad) devolviera el indicador, el aviso no lo menciona.
         when(repositorio.decidir(REVISION, "PROPONER", "motivo valido", DOCENTE)).thenReturn(decision(Notificacion.TIPO_PROPUESTA_CANCELACION, false, true));
         new DecidirRevisionCancelacionUseCaseImpl(repositorio, avisos)
                 .execute(new DecidirRevisionCancelacionInputPort.Comando(REVISION, "PROPONER", "motivo valido", DOCENTE));
         final ArgumentCaptor<Notificacion> aviso = ArgumentCaptor.forClass(Notificacion.class);
         verify(notificaciones).notificar(aviso.capture());
-        assertEquals("Se le asigna porque el programa no tiene coordinador disponible.", aviso.getValue().datos().get("escalamiento"));
+        assertFalse(aviso.getValue().datos().containsKey("escalamiento"));
+        assertFalse(aviso.getValue().mensaje().contains("coordinador disponible"));
     }
 
     @Test
@@ -202,5 +207,19 @@ class RevisionCancelacionUseCasesTest {
         assertThrows(NullPointerException.class, () -> decano.execute(null));
         assertThrows(NullPointerException.class, () -> new ConsultarRevisionesCoordinadorUseCaseImpl(null));
         assertThrows(NullPointerException.class, () -> new ConsultarRevisionesDecanoUseCaseImpl(null));
+    }
+
+    @Test
+    void docente_consulta_sus_revisiones_con_pagina_y_tamano_por_defecto() {
+        // DEC-065 (1): la bandeja del docente reutiliza la normalizacion de la del coordinador (pagina 1, tamano 20).
+        final PaginaRevisiones pagina = new PaginaRevisiones(List.of(), 0);
+        when(repositorio.consultarDocente(DOCENTE, 1, 20, true, null, null)).thenReturn(pagina);
+        when(repositorio.consultarDocente(DOCENTE, 2, 10, false, "PROPUESTA", GRUPO)).thenReturn(pagina);
+        final ConsultarRevisionesDocenteUseCaseImpl docente = new ConsultarRevisionesDocenteUseCaseImpl(repositorio);
+
+        assertEquals(pagina, docente.execute(new ConsultarRevisionesDocenteInputPort.Comando(DOCENTE, null, null, true, null, null)));
+        assertEquals(pagina, docente.execute(new ConsultarRevisionesDocenteInputPort.Comando(DOCENTE, 2, 10, false, "PROPUESTA", GRUPO)));
+        assertThrows(NullPointerException.class, () -> docente.execute(null));
+        assertThrows(NullPointerException.class, () -> new ConsultarRevisionesDocenteUseCaseImpl(null));
     }
 }

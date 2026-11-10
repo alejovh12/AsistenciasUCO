@@ -107,7 +107,8 @@ public class SesionProcedenciaJpaRepository implements SesionProcedenciaQueryPor
         return new SesionProcedenciaRepositoryProjection(
                 row.id(), row.idGrupo(), row.nombre(), row.numero(), row.codigo(), row.numeroSemana(),
                 row.codigoGrupo() == null ? null : String.valueOf(row.codigoGrupo()), row.nombreGrupo(),
-                row.fechaHoraInicio(), row.fechaHoraFin(), row.procedenciaTemporal(), cancelacion(estado)
+                row.fechaHoraInicio(), row.fechaHoraFin(), row.procedenciaTemporal(), cancelacion(estado),
+                estado == null ? null : estado.estadoSolicitud(), estado != null && estado.pendienteAprobacion()
         );
     }
 

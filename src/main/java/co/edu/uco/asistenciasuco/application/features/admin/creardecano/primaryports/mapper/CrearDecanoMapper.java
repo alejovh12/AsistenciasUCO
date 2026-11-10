@@ -1,7 +1,10 @@
 package co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.mapper;
 
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.dto.CrearDecanoDTO;
+import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.dto.CrearDecanoResultadoDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.domain.CrearDecanoDomain;
+import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.domain.CrearDecanoResultado;
+import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.domain.FacultadNuevaDomain;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.exception.TipoIdentificacionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
@@ -37,7 +40,13 @@ public final class CrearDecanoMapper {
                 dto.correo(),
                 dto.password(),
                 dto.idFacultad(),
-                dto.usuarioEjecutor()
+                dto.usuarioEjecutor(),
+                dto.facultadNueva() == null ? null : new FacultadNuevaDomain(
+                        dto.facultadNueva().nombre(), dto.facultadNueva().codigo(), dto.facultadNueva().idInstitucion())
         );
+    }
+
+    public static CrearDecanoResultadoDTO toResultadoDto(final CrearDecanoResultado resultado) {
+        return new CrearDecanoResultadoDTO(resultado.idDecano(), resultado.idFacultad(), resultado.nombreFacultad());
     }
 }

@@ -203,11 +203,11 @@ class AlertaInasistenciaUseCasesTest {
         final EvaluadorAlertasInasistencia evaluador = mock(EvaluadorAlertasInasistencia.class);
         final EvaluarAlertasInasistenciaAutomaticoUseCaseImpl useCase = new EvaluarAlertasInasistenciaAutomaticoUseCaseImpl(repositorio, evaluador, avisos);
         final UUID revision = UUID.randomUUID();
-        final NovedadResolutores novedad = new NovedadResolutores(revision, GRUPO, "G01", "Bases", EG, "DECANO", "ESCALAR", new BigDecimal("22"),
+        final NovedadResolutores novedad = new NovedadResolutores(revision, GRUPO, "G01", "Bases", EG, "COORDINADOR", "REASIGNAR", new BigDecimal("22"),
                 new BigDecimal("20"), "motivo", "Est", "Doc", USUARIO_DOC, USUARIO_EST,
-                List.of(new Resolutor(UUID.randomUUID(), "Decano", "d@x.co", "DECANO", true)));
+                List.of(new Resolutor(UUID.randomUUID(), "Coord", "c@x.co", "COORDINADOR", false)));
         when(repositorio.consultarGruposPendientes(null, null)).thenReturn(List.of(GRUPO, UUID.randomUUID()));
-        when(repositorio.actualizarResolutores(null)).thenReturn(new ResultadoResolutores(0, 1, 0, List.of(novedad)));
+        when(repositorio.actualizarResolutores(null)).thenReturn(new ResultadoResolutores(1, 0, 0, List.of(novedad)));
         when(revisiones.consultarDestinatarios(any(), any())).thenReturn(List.of());
 
         assertEquals(2, useCase.execute());
@@ -215,7 +215,8 @@ class AlertaInasistenciaUseCasesTest {
         final ArgumentCaptor<Notificacion> aviso = ArgumentCaptor.forClass(Notificacion.class);
         verify(notificaciones).notificar(aviso.capture());
         assertEquals(Notificacion.TIPO_PROPUESTA_CANCELACION, aviso.getValue().tipo());
-        assertEquals("Se le asigna porque el programa no tiene coordinador disponible.", aviso.getValue().datos().get("escalamiento"));
+        // DEC-065 (1): la reasignacion es siempre a otro coordinador; ya no hay texto de escalamiento al decano.
+        assertEquals(false, aviso.getValue().datos().containsKey("escalamiento"));
         verify(realtime).publish(any());
 
         when(repositorio.consultarGruposPendientes(null, null)).thenThrow(new IllegalStateException("db"));

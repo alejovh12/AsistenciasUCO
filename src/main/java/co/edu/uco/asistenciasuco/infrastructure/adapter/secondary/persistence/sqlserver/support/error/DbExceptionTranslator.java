@@ -7,6 +7,7 @@ import co.edu.uco.asistenciasuco.application.features.admin.exception.DecanoErro
 import co.edu.uco.asistenciasuco.application.features.admin.exception.FacultadErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.ParametroErrorCode;
 import co.edu.uco.asistenciasuco.application.features.decano.exception.CoordinadorErrorCode;
+import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.exception.RevisionCancelacionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.festivos.exception.FestivoErrorCode;
@@ -47,7 +48,9 @@ public final class DbExceptionTranslator {
             AsistenciaQrErrorCode.AQR_002,
             AsistenciaQrErrorCode.AQR_004,
             ParametroErrorCode.PRM_003,
-            AdmisionEstudianteErrorCode.ADS_003
+            AdmisionEstudianteErrorCode.ADS_003,
+            // DEC-065 (1): el decano no resuelve la revision de cancelacion.
+            RevisionCancelacionErrorCode.RCN_016
     );
     private static final Set<ErrorDefinition> NOT_FOUND_CODES = Set.of(
             UsuarioErrorCode.ERR_USUARIO_NO_EXISTE,
@@ -66,6 +69,7 @@ public final class DbExceptionTranslator {
             TomaAsistenciaErrorCode.TOM_001,
             AsistenciaQrErrorCode.AQR_001,
             AsistenciaQrErrorCode.AQR_010,
+            RevisionCancelacionErrorCode.RCN_001,
             CommonErrorCode.RESOURCE_NOT_FOUND
     );
     private static final Set<ErrorDefinition> CONFLICT_CODES = Set.of(
@@ -106,6 +110,10 @@ public final class DbExceptionTranslator {
             SesionErrorCode.SES_012,
             SesionErrorCode.SES_016,
             SesionErrorCode.SES_018,
+            // DEC-065 (2): solicitud de sesion extraordinaria pendiente, ya resuelta o inexistente.
+            SesionErrorCode.SES_023,
+            SesionErrorCode.SES_024,
+            SesionErrorCode.SES_025,
             TomaAsistenciaErrorCode.TOM_003,
             TomaAsistenciaErrorCode.TOM_004,
             AsistenciaQrErrorCode.AQR_003,
@@ -115,6 +123,13 @@ public final class DbExceptionTranslator {
             ParametroErrorCode.PRM_010,
             ParametroErrorCode.PRM_012,
             ParametroErrorCode.AUD_001,
+            // HU026C: revision de cancelacion por inasistencia (estado, matricula, umbral, cierre, resolutor y proponente).
+            RevisionCancelacionErrorCode.RCN_004,
+            RevisionCancelacionErrorCode.RCN_005,
+            RevisionCancelacionErrorCode.RCN_006,
+            RevisionCancelacionErrorCode.RCN_012,
+            RevisionCancelacionErrorCode.RCN_013,
+            RevisionCancelacionErrorCode.RCN_014,
             CommonErrorCode.CONFLICT
     );
     private static final Set<ErrorDefinition> VALIDATION_CODES = Set.of(
@@ -137,6 +152,8 @@ public final class DbExceptionTranslator {
             SesionErrorCode.SES_013,
             SesionErrorCode.SES_019,
             SesionErrorCode.SES_021,
+            RevisionCancelacionErrorCode.RCN_002,
+            RevisionCancelacionErrorCode.RCN_003,
             FestivoErrorCode.FES_001,
             FestivoErrorCode.FES_002,
             FestivoErrorCode.FES_004,

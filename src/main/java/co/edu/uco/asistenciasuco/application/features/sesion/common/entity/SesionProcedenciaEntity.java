@@ -26,8 +26,30 @@ public record SesionProcedenciaEntity(
         LocalDateTime fechaHoraFinUtc,
         EstadoHorarioSesion estadoTemporal,
         String procedenciaTemporal,
-        CancelacionSesionDTO cancelacion
+        CancelacionSesionDTO cancelacion,
+        String estadoSolicitud,
+        boolean pendienteAprobacion
 ) {
+
+    /** Sesion con cancelacion opcional y sin solicitud (DEC-065 (2): {@code estadoSolicitud} nulo). */
+    public SesionProcedenciaEntity(
+            final UUID sesion,
+            final UUID grupo,
+            final String nombre,
+            final Integer numero,
+            final String codigo,
+            final Integer numeroSemana,
+            final String codigoGrupo,
+            final String nombreGrupo,
+            final LocalDateTime fechaHoraInicioUtc,
+            final LocalDateTime fechaHoraFinUtc,
+            final EstadoHorarioSesion estadoTemporal,
+            final String procedenciaTemporal,
+            final CancelacionSesionDTO cancelacion
+    ) {
+        this(sesion, grupo, nombre, numero, codigo, numeroSemana, codigoGrupo, nombreGrupo, fechaHoraInicioUtc,
+                fechaHoraFinUtc, estadoTemporal, procedenciaTemporal, cancelacion, null, false);
+    }
 
     /** Sesion programada (sin cancelacion). */
     public SesionProcedenciaEntity(
@@ -45,7 +67,7 @@ public record SesionProcedenciaEntity(
             final String procedenciaTemporal
     ) {
         this(sesion, grupo, nombre, numero, codigo, numeroSemana, codigoGrupo, nombreGrupo, fechaHoraInicioUtc,
-                fechaHoraFinUtc, estadoTemporal, procedenciaTemporal, null);
+                fechaHoraFinUtc, estadoTemporal, procedenciaTemporal, null, null, false);
     }
 
     /** CULM-001 B.1 (§3.2.4): {@code PROGRAMADA} o {@code CANCELADA}. */
@@ -84,6 +106,26 @@ public record SesionProcedenciaEntity(
             final String procedenciaTemporal,
             final CancelacionSesionDTO cancelacion
     ) {
+        return desdeAlmacenamiento(sesion, grupo, nombre, numero, codigo, numeroSemana, codigoGrupo, nombreGrupo,
+                fechaHoraInicio, fechaHoraFin, procedenciaTemporal, cancelacion, null, false);
+    }
+
+    public static SesionProcedenciaEntity desdeAlmacenamiento(
+            final UUID sesion,
+            final UUID grupo,
+            final String nombre,
+            final Integer numero,
+            final String codigo,
+            final Integer numeroSemana,
+            final String codigoGrupo,
+            final String nombreGrupo,
+            final LocalDateTime fechaHoraInicio,
+            final LocalDateTime fechaHoraFin,
+            final String procedenciaTemporal,
+            final CancelacionSesionDTO cancelacion,
+            final String estadoSolicitud,
+            final boolean pendienteAprobacion
+    ) {
         final EstadoHorarioSesion estado = EstadoHorarioSesion.desdeProcedencia(procedenciaTemporal);
         final boolean confirmada = estado == EstadoHorarioSesion.CONFIRMADA;
         return new SesionProcedenciaEntity(
@@ -92,7 +134,9 @@ public record SesionProcedenciaEntity(
                 confirmada ? fechaHoraFin : null,
                 estado,
                 confirmada ? procedenciaTemporal : null,
-                cancelacion
+                cancelacion,
+                estadoSolicitud,
+                pendienteAprobacion
         );
     }
 }

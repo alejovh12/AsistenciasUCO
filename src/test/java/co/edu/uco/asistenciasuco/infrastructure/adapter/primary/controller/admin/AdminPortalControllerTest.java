@@ -18,6 +18,7 @@ import co.edu.uco.asistenciasuco.application.features.admin.consultarinstitucion
 import co.edu.uco.asistenciasuco.application.features.admin.consultarinstituciones.primaryports.dto.InstitucionDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.CrearDecanoInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.dto.CrearDecanoDTO;
+import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.dto.CrearDecanoResultadoDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.crearfacultad.primaryports.CrearFacultadInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.crearfacultad.primaryports.dto.CrearFacultadDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.primaryports.EjecutarCierreMasivoInputPort;
@@ -99,15 +100,104 @@ class AdminPortalControllerTest {
                 + "\"primerNombre\":\"Ana\",\"segundoNombre\":\"Maria\",\"primerApellido\":\"Perez\","
                 + "\"segundoApellido\":\"Gomez\",\"correo\":\"ana@uco.edu.co\",\"password\":\"Clave123!\","
                 + "\"idFacultad\":\"" + FACULTAD + "\"}";
+        final UUID idDecano = UUID.randomUUID();
+        when(crearDecano.execute(any())).thenReturn(new CrearDecanoResultadoDTO(idDecano, FACULTAD, "Ingenieria"));
 
+        // DEC-065 (5): 201 con data = { idDecano, idFacultad, nombreFacultad } tambien al vincular una facultad existente.
         mvc.perform(post("/api/v1/admin/decanos").contentType("application/json").content(body))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.exitoso").value(true));
+                .andExpect(jsonPath("$.exitoso").value(true))
+                .andExpect(jsonPath("$.datos.idDecano").value(idDecano.toString()))
+                .andExpect(jsonPath("$.datos.idFacultad").value(FACULTAD.toString()))
+                .andExpect(jsonPath("$.datos.nombreFacultad").value("Ingenieria"));
 
         final ArgumentCaptor<CrearDecanoDTO> captor = ArgumentCaptor.forClass(CrearDecanoDTO.class);
         verify(crearDecano).execute(captor.capture());
         assertEquals("Ana", captor.getValue().primerNombre());
         assertEquals(FACULTAD, captor.getValue().idFacultad());
+        assertNull(captor.getValue().facultadNueva());
+    }
+
+    private static String cuerpoDecano(final String extra) {
+        return "{\"tipoIdentificacionId\":\"" + UUID.randomUUID() + "\",\"numeroIdentificacion\":123456789,"
+                + "\"primerNombre\":\"Ana\",\"primerApellido\":\"Perez\",\"correo\":\"ana@uco.edu.co\","
+                + "\"password\":\"Clave123!\"" + extra + "}";
+    }
+
+    /** DEC-065 (5): facultadNueva viaja al caso de uso y la respuesta trae la facultad creada. */
+    @Test
+    void dec065_crearDecano_con_facultad_nueva_mapea_el_bloque_y_devuelve_la_facultad_creada() throws Exception {
+        final UUID institucion = UUID.randomUUID();
+        final UUID idDecano = UUID.randomUUID();
+        final UUID idFacultad = UUID.randomUUID();
+        when(crearDecano.execute(any())).thenReturn(new CrearDecanoResultadoDTO(idDecano, idFacultad, "Facultad de Ingenieria"));
+
+        mvc.perform(post("/api/v1/admin/decanos").contentType("application/json").content(cuerpoDecano(
+                        ",\"facultadNueva\":{\"nombre\":\"Facultad de Ingenieria\",\"codigo\":\"ING\",\"idInstitucion\":\"" + institucion + "\"}")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.datos.idFacultad").value(idFacultad.toString()))
+                .andExpect(jsonPath("$.datos.nombreFacultad").value("Facultad de Ingenieria"));
+
+        final ArgumentCaptor<CrearDecanoDTO> captor = ArgumentCaptor.forClass(CrearDecanoDTO.class);
+        verify(crearDecano).execute(captor.capture());
+        assertNull(captor.getValue().idFacultad());
+        assertEquals("Facultad de Ingenieria", captor.getValue().facultadNueva().nombre());
+        assertEquals("ING", captor.getValue().facultadNueva().codigo());
+        assertEquals(institucion, captor.getValue().facultadNueva().idInstitucion());
+    }
+
+    @Test
+    void dec065_crearDecano_sin_facultad_responde_facultad_nula() throws Exception {
+        final UUID idDecano = UUID.randomUUID();
+        when(crearDecano.execute(any())).thenReturn(new CrearDecanoResultadoDTO(idDecano, null, null));
+
+        mvc.perform(post("/api/v1/admin/decanos").contentType("application/json").content(cuerpoDecano("")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.datos.idDecano").value(idDecano.toString()))
+                .andExpect(jsonPath("$.datos.idFacultad").doesNotExist())
+                .andExpect(jsonPath("$.datos.nombreFacultad").doesNotExist());
+    }
+
+    @Test
+    void dec065_crearDecano_con_id_facultad_y_facultad_nueva_es_400_sin_llamar_al_caso_de_uso() throws Exception {
+        mvc.perform(post("/api/v1/admin/decanos").contentType("application/json").content(cuerpoDecano(
+                        ",\"idFacultad\":\"" + FACULTAD + "\",\"facultadNueva\":{\"nombre\":\"Facultad de Ingenieria\",\"idInstitucion\":\""
+                                + UUID.randomUUID() + "\"}")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.details[0].field").value("facultadNueva"))
+                .andExpect(jsonPath("$.details[0].code").value("FIELD_INVALID_VALUE"));
+        org.mockito.Mockito.verifyNoInteractions(crearDecano);
+    }
+
+    @Test
+    void dec065_crearDecano_con_facultad_nueva_invalida_informa_cada_campo() throws Exception {
+        mvc.perform(post("/api/v1/admin/decanos").contentType("application/json").content(cuerpoDecano(
+                        ",\"facultadNueva\":{\"nombre\":\"AB\",\"codigo\":\"CODIGO-DEMASIADO-LARGO-123\"}")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details[?(@.field=='facultadNueva.nombre')].code").value("FIELD_INVALID_LENGTH"))
+                .andExpect(jsonPath("$.details[?(@.field=='facultadNueva.codigo')].code").value("FIELD_INVALID_LENGTH"))
+                .andExpect(jsonPath("$.details[?(@.field=='facultadNueva.idInstitucion')].code").value("FIELD_REQUIRED"));
+        org.mockito.Mockito.verifyNoInteractions(crearDecano);
+    }
+
+    @Test
+    void dec065_crearDecano_con_facultad_nueva_sin_nombre_ni_institucion_valida_es_400() throws Exception {
+        mvc.perform(post("/api/v1/admin/decanos").contentType("application/json").content(cuerpoDecano(
+                        ",\"facultadNueva\":{\"nombre\":\"   \",\"idInstitucion\":\"00000000-0000-0000-0000-000000000000\"}")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details[?(@.field=='facultadNueva.nombre')]").exists())
+                .andExpect(jsonPath("$.details[?(@.field=='facultadNueva.idInstitucion')]").exists());
+        org.mockito.Mockito.verifyNoInteractions(crearDecano);
+    }
+
+    @Test
+    void dec065_crearDecano_con_nombre_de_facultad_nuevo_repetido_es_409() throws Exception {
+        doThrow(new ConflictException("Ya existe una facultad con ese nombre.")).when(crearDecano).execute(any());
+
+        mvc.perform(post("/api/v1/admin/decanos").contentType("application/json").content(cuerpoDecano(
+                        ",\"facultadNueva\":{\"nombre\":\"Facultad de Ingenieria\",\"idInstitucion\":\"" + UUID.randomUUID() + "\"}")))
+                .andExpect(status().isConflict());
     }
 
     @Test

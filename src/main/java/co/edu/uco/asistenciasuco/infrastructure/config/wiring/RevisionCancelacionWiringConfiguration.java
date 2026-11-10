@@ -5,6 +5,8 @@ import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consul
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionescoordinador.usecase.impl.ConsultarRevisionesCoordinadorUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionesdecano.primaryports.ConsultarRevisionesDecanoInputPort;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionesdecano.usecase.impl.ConsultarRevisionesDecanoUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionesdocente.primaryports.ConsultarRevisionesDocenteInputPort;
+import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionesdocente.usecase.impl.ConsultarRevisionesDocenteUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.decidirrevision.primaryports.DecidirRevisionCancelacionInputPort;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.decidirrevision.usecase.impl.DecidirRevisionCancelacionUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.resolverrevision.primaryports.ResolverRevisionCancelacionInputPort;
@@ -37,5 +39,10 @@ public class RevisionCancelacionWiringConfiguration {
     @Bean
     public ConsultarRevisionesDecanoInputPort consultarRevisionesDecanoInputPort(final RevisionCancelacionRepositoryPort repositorio) {
         return new ConsultarRevisionesDecanoUseCaseImpl(repositorio);
+    }
+
+    @Bean
+    public ConsultarRevisionesDocenteInputPort consultarRevisionesDocenteInputPort(final RevisionCancelacionRepositoryPort repositorio) {
+        return new ConsultarRevisionesDocenteUseCaseImpl(repositorio);
     }
 }

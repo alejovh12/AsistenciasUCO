@@ -14,6 +14,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.ProcedureRow;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.ProcedureResult;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.NativeRowValues;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import jakarta.persistence.EntityManager;
 import java.util.LinkedHashMap;
@@ -39,6 +40,27 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
                  @idPrograma = :idPrograma,
                  @idFacultad = :idFacultad,
                  @password = :password,
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor,
+                 @idTipoIdIdentificacion = :idTipoIdIdentificacion
+            """;
+
+    // DEC-065 (5): una sola transaccion de BD para persona + rol + programa. Resultset canonico + idCoordinador, idPrograma, nombrePrograma.
+    static final String SQL_CREAR_COORDINADOR_CON_PROGRAMA = """
+            EXEC dbo.usp_crear_coordinador_con_programa
+                 @idCoordinador = :idCoordinador,
+                 @numeroIdentificacion = :numeroIdentificacion,
+                 @primerNombre = :primerNombre,
+                 @segundoNombre = :segundoNombre,
+                 @primerApellido = :primerApellido,
+                 @segundoApellido = :segundoApellido,
+                 @correo = :correo,
+                 @password = :password,
+                 @nombrePrograma = :nombrePrograma,
+                 @idTipoPrograma = :idTipoPrograma,
+                 @idModalidad = :idModalidad,
+                 @idJornada = :idJornada,
+                 @idFacultad = :idFacultad,
                  @idCorrelacion = :idCorrelacion,
                  @idUsuarioEjecutor = :idUsuarioEjecutor,
                  @idTipoIdIdentificacion = :idTipoIdIdentificacion
@@ -103,6 +125,7 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
             """;
 
     static final String OP_CREAR_COORDINADOR = "crearCoordinador";
+    static final String OP_CREAR_COORDINADOR_CON_PROGRAMA = "crearCoordinadorConPrograma";
     static final String OP_ACTUALIZAR_COORDINADOR = "actualizarCoordinador";
     static final String OP_CAMBIAR_ESTADO_COORDINADOR = "cambiarEstadoCoordinador";
 
@@ -124,6 +147,50 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
                                  final UUID usuarioEjecutor, final UUID idTipoIdIdentificacion) {
         ejecutarCrearCoordinador(idCoordinador, numeroIdentificacion, primerNombre, segundoNombre,
                 primerApellido, segundoApellido, correo, idPrograma, idFacultad, password, usuarioEjecutor, idTipoIdIdentificacion);
+    }
+
+    @Override
+    public ResultadoCoordinadorConPrograma crearCoordinadorConPrograma(final CrearCoordinadorConProgramaCommand command) {
+        final UUID correlationId = CorrelationIdContext.require();
+
+        final Map<String, Object> parametros = new LinkedHashMap<>();
+        parametros.put("idCoordinador", command.idCoordinador());
+        parametros.put("numeroIdentificacion", command.numeroIdentificacion());
+        parametros.put("primerNombre", command.primerNombre());
+        parametros.put("segundoNombre", command.segundoNombre());
+        parametros.put("primerApellido", command.primerApellido());
+        parametros.put("segundoApellido", command.segundoApellido());
+        parametros.put("correo", command.correo());
+        parametros.put("password", command.password());
+        parametros.put("nombrePrograma", command.nombrePrograma());
+        parametros.put("idTipoPrograma", command.idTipoPrograma());
+        parametros.put("idModalidad", command.idModalidad());
+        parametros.put("idJornada", command.idJornada());
+        parametros.put("idFacultad", command.idFacultad());
+        parametros.put("idCorrelacion", correlationId);
+        parametros.put("idUsuarioEjecutor", command.usuarioEjecutor());
+        parametros.put("idTipoIdIdentificacion", command.tipoIdentificacionId());
+
+        final ProcedureRow fila = procedureExecutor.executeWithExtras(
+                OP_CREAR_COORDINADOR_CON_PROGRAMA, SQL_CREAR_COORDINADOR_CON_PROGRAMA, parametros, correlationId, 3);
+        return new ResultadoCoordinadorConPrograma(
+                idObligatorio(fila.extras().get(0), "idCoordinador"),
+                idObligatorio(fila.extras().get(1), "idPrograma"),
+                NativeRowValues.texto(fila.extras().get(2)));
+    }
+
+    private static UUID idObligatorio(final Object valor, final String columna) {
+        try {
+            final UUID id = NativeRowValues.uuid(valor);
+            if (id != null) {
+                return id;
+            }
+        } catch (final IllegalArgumentException exception) {
+            throw new DatabaseOperationException(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT,
+                    "El procedimiento " + OP_CREAR_COORDINADOR_CON_PROGRAMA + " retorno " + columna + " con formato invalido.", exception);
+        }
+        throw new DatabaseOperationException(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT,
+                "El procedimiento " + OP_CREAR_COORDINADOR_CON_PROGRAMA + " no retorno " + columna + ".");
     }
 
     @Override

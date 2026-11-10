@@ -4,7 +4,12 @@ import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenExcepti
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionCancelacionRepositoryPort.SesionCancelada;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionManualRepositoryPort.DestinatarioSesionManual;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionManualRepositoryPort.MotivoCancelacion;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionManualRepositoryPort.PaginaSolicitudesSesion;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionManualRepositoryPort.SolicitudAprobada;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionManualRepositoryPort.SolicitudRechazada;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionManualRepositoryPort.SolicitudSesion;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.JpaProcedureExecutor;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.ProcedureResult;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.ProcedureRow;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import jakarta.persistence.EntityManager;
@@ -131,6 +136,136 @@ class SesionManualJpaRepositoryTest {
     void motivos_traduce_el_dbcode_de_la_consulta() {
         when(query.getResultList()).thenThrow(new PersistenceException("DBCODE=SEC_001|sin perfil"));
         assertThrows(ForbiddenException.class, () -> repository.consultarMotivosCancelacion(USUARIO));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void aprobar_envia_los_parametros_del_sp_y_devuelve_el_mensaje_del_sp() {
+        final LocalDateTime inicio = LocalDateTime.of(2026, 11, 10, 13, 0);
+        final ProcedureResult resultadoSp = resultado("Aprobada.");
+        when(executor.executeWithExtras(eq("aprobarSolicitudSesion"), anyString(), anyMap(), eq(correlacion), eq(4)))
+                .thenReturn(new ProcedureRow(resultadoSp, List.of(SESION.toString(), GRUPO, inicio, 30)));
+
+        assertEquals(new SolicitudAprobada(SESION, GRUPO, inicio, 30, "Aprobada."), repository.aprobarSolicitud(SESION, null, USUARIO));
+
+        final ArgumentCaptor<Map<String, Object>> parametros = ArgumentCaptor.forClass(Map.class);
+        verify(executor).executeWithExtras(eq("aprobarSolicitudSesion"), eq(SesionManualJpaRepository.SQL_APROBAR_SOLICITUD),
+                parametros.capture(), eq(correlacion), eq(4));
+        final Map<String, Object> esperados = new HashMap<>();
+        esperados.put("idSesion", SESION);
+        esperados.put("observacion", null);
+        esperados.put("idCorrelacion", correlacion);
+        esperados.put("idUsuarioEjecutor", USUARIO);
+        assertEquals(esperados, parametros.getValue());
+    }
+
+    @Test
+    void aprobar_tolera_conteo_nulo() {
+        final ProcedureResult resultadoSp = resultado("ok");
+        when(executor.executeWithExtras(anyString(), anyString(), anyMap(), any(), eq(4)))
+                .thenReturn(new ProcedureRow(resultadoSp, Arrays.asList(SESION, GRUPO, null, null)));
+
+        final SolicitudAprobada aprobada = repository.aprobarSolicitud(SESION, "obs", USUARIO);
+
+        assertEquals(0, aprobada.totalEstudiantesActivos());
+        assertNull(aprobada.fechaHoraInicio());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void rechazar_envia_motivo_y_observacion_y_devuelve_el_mensaje_del_sp() {
+        final LocalDateTime cancelada = LocalDateTime.of(2026, 11, 9, 14, 0);
+        final ProcedureResult resultadoSp = resultado("Rechazada.");
+        when(executor.executeWithExtras(eq("rechazarSolicitudSesion"), anyString(), anyMap(), eq(correlacion), eq(4)))
+                .thenReturn(new ProcedureRow(resultadoSp, List.of(SESION, GRUPO, cancelada, 12)));
+
+        assertEquals(new SolicitudRechazada(SESION, GRUPO, cancelada, 12, "Rechazada."),
+                repository.rechazarSolicitud(SESION, "DUPLICADA", "Ya existe", USUARIO));
+
+        final ArgumentCaptor<Map<String, Object>> parametros = ArgumentCaptor.forClass(Map.class);
+        verify(executor).executeWithExtras(eq("rechazarSolicitudSesion"), eq(SesionManualJpaRepository.SQL_RECHAZAR_SOLICITUD),
+                parametros.capture(), eq(correlacion), eq(4));
+        assertEquals("DUPLICADA", parametros.getValue().get("codigoMotivo"));
+        assertEquals("Ya existe", parametros.getValue().get("observacion"));
+        assertEquals(USUARIO, parametros.getValue().get("idUsuarioEjecutor"));
+    }
+
+    @Test
+    void rechazar_tolera_conteo_nulo() {
+        final ProcedureResult resultadoSp = resultado("ok");
+        when(executor.executeWithExtras(anyString(), anyString(), anyMap(), any(), eq(4)))
+                .thenReturn(new ProcedureRow(resultadoSp, Arrays.asList(SESION, GRUPO, null, null)));
+
+        assertEquals(0, repository.rechazarSolicitud(SESION, "OTRO", null, USUARIO).totalEstudiantesActivos());
+    }
+
+    @Test
+    void destinatarios_de_la_solicitud_usan_el_sp_del_coordinador_y_mapean_las_nueve_columnas() {
+        final UUID usuario = UUID.randomUUID();
+        final LocalDateTime inicio = LocalDateTime.of(2026, 11, 10, 13, 0);
+        when(query.getResultList()).thenReturn(java.util.Collections.singletonList(
+                (Object) new Object[]{"DOCENTE", usuario, "Maria Docente", "maria@uco.edu.co", "Calculo", "G01 de Calculo", "Maria Docente", inicio, inicio.plusHours(2)}));
+
+        final List<DestinatarioSesionManual> destinatarios = repository.consultarDestinatariosSolicitud(SESION, USUARIO);
+
+        assertEquals(new DestinatarioSesionManual("DOCENTE", usuario, "Maria Docente", "maria@uco.edu.co", "Calculo", "G01 de Calculo",
+                "Maria Docente", inicio, inicio.plusHours(2)), destinatarios.getFirst());
+        verify(entityManager).createNativeQuery(SesionManualJpaRepository.SQL_DESTINATARIOS_SOLICITUD);
+        verify(query).setParameter("idUsuarioEjecutor", USUARIO);
+    }
+
+    @Test
+    void destinatarios_de_la_solicitud_traducen_el_dbcode_de_ambito() {
+        when(query.getResultList()).thenThrow(new PersistenceException("DBCODE=SEC_002|sin ambito"));
+        assertThrows(ForbiddenException.class, () -> repository.consultarDestinatariosSolicitud(SESION, USUARIO));
+    }
+
+    @Test
+    void solicitudes_mapea_las_veinte_columnas_y_el_total() {
+        final UUID docente = UUID.randomUUID();
+        final UUID programa = UUID.randomUUID();
+        final LocalDateTime inicio = LocalDateTime.of(2026, 11, 10, 13, 0);
+        final LocalDateTime solicitada = LocalDateTime.of(2026, 11, 9, 14, 0);
+        when(query.getResultList()).thenReturn(List.<Object>of(
+                new Object[]{SESION.toString(), "Repaso", "S-9", GRUPO, "G01", "Calculo", programa, "Ingenieria", docente, "Maria Docente",
+                        inicio, inicio.plusHours(2), "PENDIENTE", "Pendiente", solicitada, null, null, "maria", true, false, 7},
+                new Object[]{SESION, null, null, GRUPO, null, null, programa, null, docente, null, null, null, null, null, null, null, null,
+                        null, true, false, 3}));
+
+        final PaginaSolicitudesSesion pagina = repository.consultarSolicitudes(USUARIO, true, programa, GRUPO, 1, 20);
+
+        assertEquals(7, pagina.total());
+        assertEquals(new SolicitudSesion(SESION, "Repaso", "S-9", GRUPO, "G01", "Calculo", programa, "Ingenieria", docente, "Maria Docente",
+                inicio, inicio.plusHours(2), "PENDIENTE", "Pendiente", solicitada, null, null), pagina.elementos().getFirst());
+        assertNull(pagina.elementos().get(1).nombreSesion());
+        verify(entityManager).createNativeQuery(
+                "EXEC dbo.usp_consultar_solicitudes_sesion_coordinador_paginado @idUsuario = :idUsuario, @soloPendientes = :soloPendientes, "
+                        + "@idPrograma = :idPrograma, @idGrupo = :idGrupo, @numeroPagina = :numeroPagina, @tamanoPagina = :tamanoPagina, "
+                        + "@idCorrelacion = :idCorrelacion");
+        verify(query).setParameter("soloPendientes", 1);
+        verify(query).setParameter("idUsuario", USUARIO);
+    }
+
+    @Test
+    void solicitudes_sin_filtros_omite_los_parametros_nulos_y_traduce_el_dbcode() {
+        when(query.getResultList()).thenReturn(List.of());
+
+        final PaginaSolicitudesSesion vacia = repository.consultarSolicitudes(USUARIO, false, null, null, 2, 5);
+
+        assertEquals(0, vacia.total());
+        verify(entityManager).createNativeQuery(
+                "EXEC dbo.usp_consultar_solicitudes_sesion_coordinador_paginado @idUsuario = :idUsuario, @soloPendientes = :soloPendientes, "
+                        + "@numeroPagina = :numeroPagina, @tamanoPagina = :tamanoPagina, @idCorrelacion = :idCorrelacion");
+        verify(query).setParameter("soloPendientes", 0);
+
+        when(query.getResultList()).thenThrow(new PersistenceException("DBCODE=SEC_001|sin perfil"));
+        assertThrows(ForbiddenException.class, () -> repository.consultarSolicitudes(USUARIO, true, null, null, 1, 20));
+    }
+
+    private static ProcedureResult resultado(final String mensajeUsuario) {
+        final ProcedureResult resultado = mock(ProcedureResult.class);
+        when(resultado.getMensajeUsuarioResultado()).thenReturn(mensajeUsuario);
+        return resultado;
     }
 
     @Test

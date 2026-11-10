@@ -7,6 +7,7 @@ import co.edu.uco.asistenciasuco.application.features.sesion.common.dto.Cancelac
 import co.edu.uco.asistenciasuco.application.features.sesion.common.EstadoHorarioSesion;
 import co.edu.uco.asistenciasuco.application.features.sesion.common.entity.EstadoSesion;
 import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
+import co.edu.uco.asistenciasuco.application.features.sesionmanual.common.AvisoSesionSupport;
 import co.edu.uco.asistenciasuco.application.features.sesioncancelacion.cancelarsesion.usecase.CancelarSesionUseCase;
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notificacion;
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
@@ -35,8 +36,8 @@ import java.util.Objects;
  * nuevo en la DB, que ademas exige RBAC DOCENTE, la longitud del motivo ({@code SES_013}) y que la sesion no tenga
  * asistencia ({@code SES_012}/{@code SES_016}); una sesion ya cancelada responde {@code SES_011}.
  *
- * <p>Tras el commit del SP: (1) un aviso {@code SESION_CANCELADA} por cada estudiante activo (mejor esfuerzo: un fallo se
- * registra y no cambia la respuesta) y (2) el evento SSE {@code SESION_CANCELADA} del grupo, sin el motivo. Ante
+ * <p>Tras el commit del SP: (1) UN aviso {@code SESION_CANCELADA} con todos los estudiantes activos agrupados (DEC-065 (3); mejor
+ * esfuerzo: un fallo se registra y no cambia la respuesta) y (2) el evento SSE {@code SESION_CANCELADA} del grupo, sin el motivo. Ante
  * cualquier error del SP no hay aviso ni evento.</p>
  */
 public final class CancelarSesionUseCaseImpl implements CancelarSesionUseCase {
@@ -94,6 +95,7 @@ public final class CancelarSesionUseCaseImpl implements CancelarSesionUseCase {
                 notificados);
     }
 
+    /** DEC-065 (3): UNA notificacion con todos los estudiantes activos (el canal los reparte en bloques BCC). */
     private int avisarEstudiantes(final Comando comando, final String motivo) {
         final List<DestinatarioSesionCancelada> destinatarios;
         try {
@@ -103,45 +105,47 @@ public final class CancelarSesionUseCaseImpl implements CancelarSesionUseCase {
                     comando.sesionId(), exception.getClass().getSimpleName());
             return 0;
         }
-        int encolados = 0;
-        for (final DestinatarioSesionCancelada destinatario : destinatarios) {
-            try {
-                notificaciones.notificar(construirAviso(comando, destinatario, motivo));
-                encolados++;
-            } catch (final RuntimeException exception) {
-                LOGGER.warn("No fue posible avisar la cancelacion de la sesion {} al estudiante {}: {}",
-                        comando.sesionId(), destinatario.idEstudiante(), exception.getClass().getSimpleName());
-            }
+        if (destinatarios.isEmpty()) {
+            return 0;
         }
-        return encolados;
+        try {
+            notificaciones.notificar(construirAviso(comando, destinatarios, motivo));
+            return destinatarios.size();
+        } catch (final RuntimeException exception) {
+            LOGGER.warn("No fue posible avisar la cancelacion de la sesion {} a los estudiantes: {}",
+                    comando.sesionId(), exception.getClass().getSimpleName());
+            return 0;
+        }
     }
 
-    private static Notificacion construirAviso(final Comando comando, final DestinatarioSesionCancelada destinatario,
+    private static Notificacion construirAviso(final Comando comando, final List<DestinatarioSesionCancelada> destinatarios,
                                                final String motivo) {
-        final String fecha = formatear(destinatario.fechaHoraInicio(), FORMATO_FECHA);
-        final String horaInicio = formatear(destinatario.fechaHoraInicio(), FORMATO_HORA);
-        final String horaFin = formatear(destinatario.fechaHoraFin(), FORMATO_HORA);
-        final String motivoAviso = destinatario.motivoCancelacion() == null ? motivo : destinatario.motivoCancelacion();
+        final DestinatarioSesionCancelada referencia = destinatarios.getFirst();
+        final String fecha = formatear(referencia.fechaHoraInicio(), FORMATO_FECHA);
+        final String horaInicio = formatear(referencia.fechaHoraInicio(), FORMATO_HORA);
+        final String horaFin = formatear(referencia.fechaHoraFin(), FORMATO_HORA);
+        final String motivoAviso = referencia.motivoCancelacion() == null ? motivo : referencia.motivoCancelacion();
         final Map<String, String> datos = new HashMap<>();
-        datos.put("estudiante", valor(destinatario.nombreCompleto()));
-        datos.put("asignatura", valor(destinatario.nombreAsignatura()));
-        datos.put("grupo", valor(destinatario.nombreGrupo()));
+        datos.put("estudiante", AvisoSesionSupport.SALUDO_ESTUDIANTES);
+        datos.put("asignatura", valor(referencia.nombreAsignatura()));
+        datos.put("grupo", valor(referencia.nombreGrupo()));
         datos.put("fecha", fecha);
         datos.put("horaInicio", horaInicio);
         datos.put("horaFin", horaFin);
         datos.put("motivo", valor(motivoAviso));
-        datos.put("docente", valor(destinatario.nombreDocente()));
+        datos.put("docente", valor(referencia.nombreDocente()));
         datos.put("idSesion", comando.sesionId().toString());
-        final String asunto = "Clase cancelada: " + valor(destinatario.nombreAsignatura()) + " (" + fecha + ")";
-        final String mensaje = "Hola " + valor(destinatario.nombreCompleto()) + ". El docente " + valor(destinatario.nombreDocente())
-                + " canceló la clase de " + valor(destinatario.nombreAsignatura()) + " del grupo " + valor(destinatario.nombreGrupo())
+        final String asunto = "Clase cancelada: " + valor(referencia.nombreAsignatura()) + " (" + fecha + ")";
+        final String mensaje = "Hola " + AvisoSesionSupport.SALUDO_ESTUDIANTES + ". El docente " + valor(referencia.nombreDocente())
+                + " canceló la clase de " + valor(referencia.nombreAsignatura()) + " del grupo " + valor(referencia.nombreGrupo())
                 + " programada para el " + fecha + " de " + horaInicio + " a " + horaFin + ". Motivo: " + valor(motivoAviso) + ".";
         return new Notificacion(
                 Notificacion.TIPO_SESION_CANCELADA,
                 asunto,
                 mensaje,
-                List.of(new Notificacion.Destinatario(ROL_ESTUDIANTE, destinatario.idUsuario(), destinatario.nombreCompleto(),
-                        destinatario.correo())),
+                destinatarios.stream()
+                        .map(d -> new Notificacion.Destinatario(ROL_ESTUDIANTE, d.idUsuario(), d.nombreCompleto(), d.correo()))
+                        .toList(),
                 datos);
     }
 

@@ -22,8 +22,30 @@ public record SesionV2ConsultadaDTO(
         LocalDateTime fechaHoraFinUtc,
         String estadoTemporal,
         String procedenciaTemporal,
-        CancelacionSesionDTO cancelacion
+        CancelacionSesionDTO cancelacion,
+        String estadoSolicitud,
+        boolean pendienteAprobacion
 ) {
+
+    /** Sesion con cancelacion opcional y sin solicitud (DEC-065 (2): {@code estadoSolicitud} nulo). */
+    public SesionV2ConsultadaDTO(
+            final UUID sesion,
+            final UUID grupo,
+            final String nombre,
+            final Integer numero,
+            final String codigo,
+            final Integer numeroSemana,
+            final String codigoGrupo,
+            final String nombreGrupo,
+            final LocalDateTime fechaHoraInicioUtc,
+            final LocalDateTime fechaHoraFinUtc,
+            final String estadoTemporal,
+            final String procedenciaTemporal,
+            final CancelacionSesionDTO cancelacion
+    ) {
+        this(sesion, grupo, nombre, numero, codigo, numeroSemana, codigoGrupo, nombreGrupo, fechaHoraInicioUtc,
+                fechaHoraFinUtc, estadoTemporal, procedenciaTemporal, cancelacion, null, false);
+    }
 
     /** Sesion programada (sin cancelacion). */
     public SesionV2ConsultadaDTO(
@@ -41,7 +63,7 @@ public record SesionV2ConsultadaDTO(
             final String procedenciaTemporal
     ) {
         this(sesion, grupo, nombre, numero, codigo, numeroSemana, codigoGrupo, nombreGrupo, fechaHoraInicioUtc,
-                fechaHoraFinUtc, estadoTemporal, procedenciaTemporal, null);
+                fechaHoraFinUtc, estadoTemporal, procedenciaTemporal, null, null, false);
     }
 
     /** CULM-001 B.1 (§3.2.4): {@code PROGRAMADA} o {@code CANCELADA}. */
