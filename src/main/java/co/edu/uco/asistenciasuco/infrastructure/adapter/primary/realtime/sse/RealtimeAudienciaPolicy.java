@@ -34,6 +34,9 @@ public final class RealtimeAudienciaPolicy {
     private static final Set<Audiencia> SOLO_TITULAR = EnumSet.of(Audiencia.DOCENTE_TITULAR);
     private static final Set<Audiencia> GRUPO_COMPLETO = EnumSet.of(Audiencia.DOCENTE_TITULAR, Audiencia.ESTUDIANTE_GRUPO, Audiencia.AMBITO_GRUPO);
     private static final Set<Audiencia> ESTUDIANTES_Y_AMBITO = EnumSet.of(Audiencia.ESTUDIANTE_GRUPO, Audiencia.AMBITO_GRUPO);
+    private static final Set<Audiencia> AMBITO_Y_TITULAR = EnumSet.of(Audiencia.AMBITO_GRUPO, Audiencia.DOCENTE_TITULAR);
+    private static final Set<Audiencia> ESTUDIANTES_AMBITO_Y_TITULAR =
+            EnumSet.of(Audiencia.ESTUDIANTE_GRUPO, Audiencia.AMBITO_GRUPO, Audiencia.DOCENTE_TITULAR);
     private static final Set<Audiencia> SOLO_ADMINISTRADOR = EnumSet.of(Audiencia.ADMINISTRADOR);
     private static final Set<Audiencia> TITULAR_Y_DESTINATARIO = EnumSet.of(Audiencia.DOCENTE_TITULAR, Audiencia.DESTINATARIO);
 
@@ -50,8 +53,11 @@ public final class RealtimeAudienciaPolicy {
         for (final String tipo : new String[]{"ASISTENCIAS_SESION_ACTUALIZADAS", "ASISTENCIAS_TOMA_ACTUALIZADAS", "SESION_CANCELADA"}) {
             tabla.put(tipo, GRUPO_COMPLETO);
         }
-        // CULM-001 / DEC-064: sesion creada manualmente por el docente. Estudiantes del grupo y ambito de lectura (coordinador del programa).
-        tabla.put("SESION_MANUAL_CREADA", ESTUDIANTES_Y_AMBITO);
+        // CULM-001 / DEC-064: sesion creada manualmente. Estudiantes del grupo y ambito de lectura (coordinador del programa).
+        // DEC-065 (2): ademas el docente titular, que ve aprobada su solicitud al instante.
+        tabla.put("SESION_MANUAL_CREADA", ESTUDIANTES_AMBITO_Y_TITULAR);
+        // DEC-065 (2): solicitud de sesion extraordinaria pendiente. Sin estudiantes: ambito de lectura (coordinador) y titular.
+        tabla.put("SESION_SOLICITUD_CREADA", AMBITO_Y_TITULAR);
         // Alertas y revisiones: el titular y los destinatarios que calcula la DB.
         for (final String tipo : new String[]{"ALERTA_INASISTENCIA", "REVISION_CANCELACION_CREADA", "REVISION_CANCELACION_DECIDIDA",
                 "REVISION_CANCELACION_RESUELTA", "REVISION_CANCELACION_REASIGNADA"}) {

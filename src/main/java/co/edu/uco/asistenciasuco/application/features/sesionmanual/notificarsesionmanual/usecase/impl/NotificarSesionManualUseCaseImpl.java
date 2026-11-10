@@ -1,6 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.sesionmanual.notificarsesionmanual.usecase.impl;
 
-import co.edu.uco.asistenciasuco.application.features.sesion.common.EstadoHorarioSesion;
+import co.edu.uco.asistenciasuco.application.features.sesionmanual.common.AvisoSesionSupport;
 import co.edu.uco.asistenciasuco.application.features.sesionmanual.notificarsesionmanual.usecase.NotificarSesionManualUseCase;
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notificacion;
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
@@ -14,9 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -27,10 +24,15 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * CULM-001 / DEC-064 (HU047): aviso inmediato de una sesion creada manualmente por el docente. Localiza la sesion recien creada
- * (grupo + nombre + horas tal como se guardaron; la de mayor numero si hubiera varias), consulta en la DB los destinatarios
- * ({@code usp_consultar_destinatarios_sesion_manual}: estudiantes activos y coordinador(es) del programa), encola un aviso por
- * destinatario (outbox, plantillas {@code SESION_MANUAL_CREADA_*}) y publica el evento {@code SESION_MANUAL_CREADA}.
+ * CULM-001 / DEC-064 (HU047) y DEC-065 (2)(3): aviso inmediato de una sesion creada por el docente. Localiza la sesion recien creada
+ * (grupo + nombre + horas tal como se guardaron; la de mayor numero si hubiera varias) y consulta en la DB los destinatarios
+ * ({@code usp_consultar_destinatarios_sesion_manual}: estudiantes activos, coordinador(es) del programa y el docente).
+ * <ul>
+ *   <li>Sesion SIN solicitud (coordinador, administrador, generador): UNA notificacion a todos los estudiantes y UNA a todos los
+ *       coordinadores (plantillas {@code SESION_MANUAL_CREADA_*}) y evento {@code SESION_MANUAL_CREADA}.</li>
+ *   <li>Sesion PENDIENTE de aprobacion (la crea un docente): solo UNA notificacion {@code SESION_SOLICITUD_CREADA_COORDINADOR} a
+ *       los coordinadores y evento {@code SESION_SOLICITUD_CREADA}; los estudiantes no se avisan.</li>
+ * </ul>
  *
  * <p>Todo es de mejor esfuerzo y ocurre despues del commit de la creacion: ningun fallo aqui revierte la sesion ni cambia la
  * respuesta; se registra y se continua.</p>
@@ -38,9 +40,9 @@ import java.util.UUID;
 public final class NotificarSesionManualUseCaseImpl implements NotificarSesionManualUseCase {
 
     public static final String EVENTO_SESION_MANUAL_CREADA = "SESION_MANUAL_CREADA";
-    static final ZoneId ZONA_INSTITUCIONAL = ZoneId.of("America/Bogota");
-    private static final DateTimeFormatter FORMATO_FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    private static final DateTimeFormatter FORMATO_HORA = DateTimeFormatter.ofPattern("HH:mm");
+    /** DEC-065 (2): la sesion del docente quedo como solicitud pendiente de aprobacion (audiencia: ambito del grupo + docente). */
+    public static final String EVENTO_SESION_SOLICITUD_CREADA = "SESION_SOLICITUD_CREADA";
+    static final String ESTADO_PENDIENTE = "PENDIENTE";
     private static final Logger LOGGER = LoggerFactory.getLogger(NotificarSesionManualUseCaseImpl.class);
 
     private final SesionProcedenciaQueryPort sesiones;
@@ -70,20 +72,26 @@ public final class NotificarSesionManualUseCaseImpl implements NotificarSesionMa
         final UUID sesionId = sesion.get().sesion();
         final List<DestinatarioSesionManual> destinatarios = consultarDestinatarios(sesionId, comando);
 
-        int estudiantes = 0;
-        int coordinadores = 0;
-        for (final DestinatarioSesionManual destinatario : destinatarios) {
-            final Optional<Notificacion> aviso = construirAviso(sesionId, destinatario);
-            if (aviso.isPresent() && encolar(sesionId, aviso.get())) {
-                if (DestinatarioSesionManual.TIPO_ESTUDIANTE.equals(destinatario.tipo())) {
-                    estudiantes++;
-                } else {
-                    coordinadores++;
-                }
-            }
+        if (ESTADO_PENDIENTE.equals(sesion.get().estadoSolicitud())) {
+            return avisarSolicitud(sesion.get(), destinatarios);
         }
-        final boolean publicado = publicarEvento(sesion.get(), destinatarios);
-        return new Resultado(sesionId, estudiantes, coordinadores, publicado);
+        final List<DestinatarioSesionManual> estudiantes = AvisoSesionSupport.deTipo(destinatarios, DestinatarioSesionManual.TIPO_ESTUDIANTE);
+        final List<DestinatarioSesionManual> coordinadores = AvisoSesionSupport.deTipo(destinatarios, DestinatarioSesionManual.TIPO_COORDINADOR);
+        final int avisadosEstudiantes = encolar(sesionId, AvisoSesionSupport.avisoSesionCreada(sesionId, estudiantes, true)) ? estudiantes.size() : 0;
+        final int avisadosCoordinadores = encolar(sesionId, AvisoSesionSupport.avisoSesionCreada(sesionId, coordinadores, false)) ? coordinadores.size() : 0;
+        final boolean publicado = publicarEvento(EVENTO_SESION_MANUAL_CREADA, sesion.get(), destinatarios);
+        return new Resultado(sesionId, avisadosEstudiantes, avisadosCoordinadores, publicado);
+    }
+
+    /**
+     * DEC-065 (2): la sesion del docente nace como solicitud pendiente. Solo se avisa al coordinador (UNA notificacion con todos los
+     * coordinadores del programa) y se publica {@code SESION_SOLICITUD_CREADA}; los estudiantes no se enteran hasta la aprobacion.
+     */
+    private Resultado avisarSolicitud(final SesionProcedenciaRepositoryProjection sesion, final List<DestinatarioSesionManual> destinatarios) {
+        final List<DestinatarioSesionManual> coordinadores = AvisoSesionSupport.deTipo(destinatarios, DestinatarioSesionManual.TIPO_COORDINADOR);
+        final int avisados = encolar(sesion.sesion(), avisoSolicitud(sesion.sesion(), coordinadores)) ? coordinadores.size() : 0;
+        final boolean publicado = publicarEvento(EVENTO_SESION_SOLICITUD_CREADA, sesion, destinatarios);
+        return new Resultado(sesion.sesion(), 0, avisados, publicado);
     }
 
     private Optional<SesionProcedenciaRepositoryProjection> localizar(final Comando comando) {
@@ -118,84 +126,49 @@ public final class NotificarSesionManualUseCaseImpl implements NotificarSesionMa
         }
     }
 
-    private boolean encolar(final UUID sesionId, final Notificacion aviso) {
+    /** Encola el aviso agrupado; {@code Optional.empty()} (sin destinatarios) no es un fallo ni se cuenta. */
+    private boolean encolar(final UUID sesionId, final Optional<Notificacion> aviso) {
+        if (aviso.isEmpty()) {
+            return false;
+        }
         try {
-            notificaciones.notificar(aviso);
+            notificaciones.notificar(aviso.get());
             return true;
         } catch (final RuntimeException exception) {
-            LOGGER.warn("No fue posible avisar la sesion manual {} ({}): {}", sesionId, aviso.tipo(), exception.getClass().getSimpleName());
+            LOGGER.warn("No fue posible avisar la sesion manual {} ({}): {}", sesionId, aviso.get().tipo(), exception.getClass().getSimpleName());
             return false;
         }
     }
 
-    private static Optional<Notificacion> construirAviso(final UUID sesionId, final DestinatarioSesionManual d) {
-        final boolean esEstudiante = DestinatarioSesionManual.TIPO_ESTUDIANTE.equals(d.tipo());
-        final boolean esCoordinador = DestinatarioSesionManual.TIPO_COORDINADOR.equals(d.tipo());
-        if (!esEstudiante && !esCoordinador) {
+    private static Optional<Notificacion> avisoSolicitud(final UUID sesionId, final List<DestinatarioSesionManual> coordinadores) {
+        if (coordinadores.isEmpty()) {
             return Optional.empty();
         }
-        final String fecha = formatear(d.fechaHoraInicio(), FORMATO_FECHA);
-        final String horaInicio = formatear(d.fechaHoraInicio(), FORMATO_HORA);
-        final String horaFin = formatear(d.fechaHoraFin(), FORMATO_HORA);
-        final String asignatura = valor(d.nombreAsignatura());
-        final String grupo = valor(d.nombreGrupo());
-        final String docente = valor(d.nombreDocente());
-        final String nombre = valor(d.nombreCompleto());
-        final Map<String, String> datos = new HashMap<>();
-        datos.put(esEstudiante ? "estudiante" : "coordinador", nombre);
-        datos.put("asignatura", asignatura);
-        datos.put("grupo", grupo);
-        datos.put("fecha", fecha);
-        datos.put("horaInicio", horaInicio);
-        datos.put("horaFin", horaFin);
-        datos.put("docente", docente);
-        datos.put("idSesion", sesionId.toString());
-        final String ventana = " del grupo " + grupo + " para el " + fecha + " de " + horaInicio + " a " + horaFin + ".";
-        final String asunto;
-        final String mensaje;
-        if (esEstudiante) {
-            asunto = "Nueva sesión de clase: " + asignatura + " (" + fecha + ")";
-            mensaje = "Hola " + nombre + ". El docente " + docente + " programó una sesión adicional de " + asignatura + ventana;
-        } else {
-            asunto = "Sesión creada manualmente: " + asignatura + " (" + fecha + ")";
-            mensaje = "Hola " + nombre + ". El docente " + docente + " creó manualmente una sesión de " + asignatura + ventana
-                    + " Si no corresponde, puede cancelarla desde su vista de sesiones.";
-        }
+        final Map<String, String> datos = AvisoSesionSupport.datosBase(sesionId, coordinadores.getFirst());
+        datos.put("coordinador", AvisoSesionSupport.SALUDO_COORDINADORES);
         return Optional.of(new Notificacion(
-                esEstudiante ? Notificacion.TIPO_SESION_MANUAL_CREADA_ESTUDIANTE : Notificacion.TIPO_SESION_MANUAL_CREADA_COORDINADOR,
-                asunto, mensaje,
-                List.of(new Notificacion.Destinatario(d.tipo(), d.idUsuario(), d.nombreCompleto(), d.correo())),
-                datos));
+                Notificacion.TIPO_SESION_SOLICITUD_CREADA_COORDINADOR,
+                "Solicitud de sesión extraordinaria: " + datos.get("asignatura") + " (" + datos.get("fecha") + ")",
+                "Hola " + AvisoSesionSupport.SALUDO_COORDINADORES + ". El docente " + datos.get("docente")
+                        + " solicitó una sesión extraordinaria de " + datos.get("asignatura") + AvisoSesionSupport.ventana(datos)
+                        + " La sesión queda pendiente de su aprobación; puede aprobarla o rechazarla desde su vista de solicitudes.",
+                AvisoSesionSupport.comoDestinatarios(coordinadores), datos));
     }
 
-    private boolean publicarEvento(final SesionProcedenciaRepositoryProjection sesion, final List<DestinatarioSesionManual> destinatarios) {
+    private boolean publicarEvento(final String tipo, final SesionProcedenciaRepositoryProjection sesion,
+                                   final List<DestinatarioSesionManual> destinatarios) {
         final Map<String, Object> payload = new HashMap<>();
         payload.put("grupo", sesion.grupo().toString());
         payload.put("sesion", sesion.sesion().toString());
-        payload.put("fechaHoraInicio", fechaHoraInicio(sesion));
+        payload.put("fechaHoraInicio", AvisoSesionSupport.fechaHoraInicio(sesion));
         payload.put("docente", destinatarios.stream().map(DestinatarioSesionManual::nombreDocente).filter(Objects::nonNull)
                 .findFirst().orElse(""));
         try {
-            realtime.publish(RealtimeEvent.of(EVENTO_SESION_MANUAL_CREADA, payload));
+            realtime.publish(RealtimeEvent.of(tipo, payload));
             return true;
         } catch (final RuntimeException exception) {
-            LOGGER.warn("No fue posible publicar el evento de la sesion manual {}: {}", sesion.sesion(), exception.getClass().getSimpleName());
+            LOGGER.warn("No fue posible publicar el evento {} de la sesion {}: {}", tipo, sesion.sesion(), exception.getClass().getSimpleName());
             return false;
         }
-    }
-
-    /** ISO-8601 con {@code Z} solo si el horario esta confirmado en UTC (v2); si no, el valor local sin zona de v1. */
-    private static String fechaHoraInicio(final SesionProcedenciaRepositoryProjection sesion) {
-        final boolean confirmada = EstadoHorarioSesion.desdeProcedencia(sesion.procedenciaTemporal()) == EstadoHorarioSesion.CONFIRMADA;
-        return confirmada ? sesion.fechaHoraInicio().toInstant(ZoneOffset.UTC).toString() : sesion.fechaHoraInicio().toString();
-    }
-
-    /** La DB guarda la sesion en UTC; los textos del aviso se muestran en la hora institucional. */
-    private static String formatear(final LocalDateTime utc, final DateTimeFormatter formato) {
-        return utc == null ? "" : utc.atOffset(ZoneOffset.UTC).atZoneSameInstant(ZONA_INSTITUCIONAL).format(formato);
-    }
-
-    private static String valor(final String texto) {
-        return texto == null ? "" : texto;
     }
 }

@@ -54,26 +54,28 @@ class NotificarSesionManualUseCaseImplTest {
             new NotificarSesionManualUseCaseImpl(sesiones, repositorio, notificaciones, realtime);
 
     @Test
-    void avisa_a_estudiantes_y_coordinadores_y_publica_el_evento_con_la_hora_utc_confirmada() {
+    void avisa_en_un_correo_a_los_estudiantes_y_en_otro_a_los_coordinadores_y_publica_el_evento_con_la_hora_utc_confirmada() {
         prepararSesion(SESION, 5, "UTC_V2");
         when(repositorio.consultarDestinatarios(SESION, DOCENTE)).thenReturn(List.of(
                 destinatario(DestinatarioSesionManual.TIPO_ESTUDIANTE, "Ana Perez", "ana@uco.edu.co"),
-                destinatario(DestinatarioSesionManual.TIPO_COORDINADOR, "Carlos Coord", "carlos@uco.edu.co")));
+                destinatario(DestinatarioSesionManual.TIPO_ESTUDIANTE, "Luis Gomez", "luis@uco.edu.co"),
+                destinatario(DestinatarioSesionManual.TIPO_COORDINADOR, "Carlos Coord", "carlos@uco.edu.co"),
+                destinatario(DestinatarioSesionManual.TIPO_DOCENTE, "Maria Docente", "maria@uco.edu.co")));
 
         final Resultado resultado = useCase.execute(COMANDO);
 
-        assertEquals(new Resultado(SESION, 1, 1, true), resultado);
+        // DEC-065 (3): una notificacion por rol; los conteos son destinatarios cubiertos.
+        assertEquals(new Resultado(SESION, 2, 1, true), resultado);
 
         final ArgumentCaptor<Notificacion> avisos = ArgumentCaptor.forClass(Notificacion.class);
         verify(notificaciones, times(2)).notificar(avisos.capture());
         final Notificacion alEstudiante = avisos.getAllValues().get(0);
         assertEquals(Notificacion.TIPO_SESION_MANUAL_CREADA_ESTUDIANTE, alEstudiante.tipo());
         assertEquals("Nueva sesión de clase: Calculo (10/11/2026)", alEstudiante.asunto());
-        assertEquals("Hola Ana Perez. El docente Maria Docente programó una sesión adicional de Calculo del grupo G01 de Calculo "
-                + "para el 10/11/2026 de 08:00 a 10:00.", alEstudiante.mensaje());
-        assertEquals(List.of(new Notificacion.Destinatario("ESTUDIANTE", alEstudiante.destinatarios().getFirst().idUsuario(),
-                "Ana Perez", "ana@uco.edu.co")), alEstudiante.destinatarios());
-        assertEquals(Map.of("estudiante", "Ana Perez", "asignatura", "Calculo", "grupo", "G01 de Calculo", "fecha", "10/11/2026",
+        assertEquals("Hola estudiantes del grupo. El docente Maria Docente programó una sesión adicional de Calculo del grupo "
+                + "G01 de Calculo para el 10/11/2026 de 08:00 a 10:00.", alEstudiante.mensaje());
+        assertEquals(List.of("Ana Perez", "Luis Gomez"), alEstudiante.destinatarios().stream().map(Notificacion.Destinatario::nombre).toList());
+        assertEquals(Map.of("estudiante", "estudiantes del grupo", "asignatura", "Calculo", "grupo", "G01 de Calculo", "fecha", "10/11/2026",
                 "horaInicio", "08:00", "horaFin", "10:00", "docente", "Maria Docente", "idSesion", SESION.toString()),
                 alEstudiante.datos());
 
@@ -81,7 +83,8 @@ class NotificarSesionManualUseCaseImplTest {
         assertEquals(Notificacion.TIPO_SESION_MANUAL_CREADA_COORDINADOR, alCoordinador.tipo());
         assertEquals("Sesión creada manualmente: Calculo (10/11/2026)", alCoordinador.asunto());
         assertEquals("COORDINADOR", alCoordinador.destinatarios().getFirst().rol());
-        assertEquals("Carlos Coord", alCoordinador.datos().get("coordinador"));
+        assertEquals(1, alCoordinador.destinatarios().size());
+        assertEquals("coordinación del programa", alCoordinador.datos().get("coordinador"));
         assertFalse(alCoordinador.datos().containsKey("estudiante"));
         assertTrue(alCoordinador.mensaje().contains("Si no corresponde, puede cancelarla desde su vista de sesiones."));
 
@@ -90,6 +93,60 @@ class NotificarSesionManualUseCaseImplTest {
         assertEquals("SESION_MANUAL_CREADA", evento.getValue().type());
         assertEquals(Map.of("grupo", GRUPO.toString(), "sesion", SESION.toString(), "fechaHoraInicio", "2026-11-10T13:00:00Z",
                 "docente", "Maria Docente"), evento.getValue().payload());
+    }
+
+    @Test
+    void una_sesion_pendiente_avisa_solo_al_coordinador_en_un_correo_y_publica_la_solicitud() {
+        when(sesiones.consultarSesionesPorGrupo(GRUPO)).thenReturn(List.of(pendiente(SESION, 5)));
+        when(repositorio.consultarDestinatarios(SESION, DOCENTE)).thenReturn(List.of(
+                destinatario(DestinatarioSesionManual.TIPO_ESTUDIANTE, "Ana Perez", "ana@uco.edu.co"),
+                destinatario(DestinatarioSesionManual.TIPO_COORDINADOR, "Carlos Coord", "carlos@uco.edu.co"),
+                destinatario(DestinatarioSesionManual.TIPO_COORDINADOR, "Clara Coord", "clara@uco.edu.co"),
+                destinatario(DestinatarioSesionManual.TIPO_DOCENTE, "Maria Docente", "maria@uco.edu.co")));
+
+        final Resultado resultado = useCase.execute(COMANDO);
+
+        assertEquals(new Resultado(SESION, 0, 2, true), resultado);
+        final ArgumentCaptor<Notificacion> aviso = ArgumentCaptor.forClass(Notificacion.class);
+        verify(notificaciones, times(1)).notificar(aviso.capture());
+        assertEquals(Notificacion.TIPO_SESION_SOLICITUD_CREADA_COORDINADOR, aviso.getValue().tipo());
+        assertEquals("Solicitud de sesión extraordinaria: Calculo (10/11/2026)", aviso.getValue().asunto());
+        assertEquals("Hola coordinación del programa. El docente Maria Docente solicitó una sesión extraordinaria de Calculo del grupo "
+                + "G01 de Calculo para el 10/11/2026 de 08:00 a 10:00. La sesión queda pendiente de su aprobación; puede aprobarla "
+                + "o rechazarla desde su vista de solicitudes.", aviso.getValue().mensaje());
+        assertEquals(List.of("Carlos Coord", "Clara Coord"),
+                aviso.getValue().destinatarios().stream().map(Notificacion.Destinatario::nombre).toList());
+        assertEquals(Map.of("coordinador", "coordinación del programa", "asignatura", "Calculo", "grupo", "G01 de Calculo",
+                "fecha", "10/11/2026", "horaInicio", "08:00", "horaFin", "10:00", "docente", "Maria Docente",
+                "idSesion", SESION.toString()), aviso.getValue().datos());
+
+        final ArgumentCaptor<RealtimeEvent> evento = ArgumentCaptor.forClass(RealtimeEvent.class);
+        verify(realtime).publish(evento.capture());
+        assertEquals("SESION_SOLICITUD_CREADA", evento.getValue().type());
+        assertEquals(Map.of("grupo", GRUPO.toString(), "sesion", SESION.toString(), "fechaHoraInicio", "2026-11-10T13:00:00Z",
+                "docente", "Maria Docente"), evento.getValue().payload());
+    }
+
+    @Test
+    void una_sesion_pendiente_sin_coordinadores_no_avisa_pero_publica_la_solicitud() {
+        when(sesiones.consultarSesionesPorGrupo(GRUPO)).thenReturn(List.of(pendiente(SESION, 5)));
+        when(repositorio.consultarDestinatarios(SESION, DOCENTE)).thenReturn(List.of(
+                destinatario(DestinatarioSesionManual.TIPO_ESTUDIANTE, "Ana Perez", "ana@uco.edu.co")));
+
+        assertEquals(new Resultado(SESION, 0, 0, true), useCase.execute(COMANDO));
+        verify(notificaciones, never()).notificar(any());
+        verify(realtime).publish(any());
+    }
+
+    @Test
+    void si_falla_el_aviso_o_el_evento_de_la_solicitud_la_respuesta_no_cambia() {
+        when(sesiones.consultarSesionesPorGrupo(GRUPO)).thenReturn(List.of(pendiente(SESION, 5)));
+        when(repositorio.consultarDestinatarios(SESION, DOCENTE)).thenReturn(List.of(
+                destinatario(DestinatarioSesionManual.TIPO_COORDINADOR, "Carlos Coord", "carlos@uco.edu.co")));
+        doThrow(new IllegalStateException("smtp")).when(notificaciones).notificar(any());
+        doThrow(new IllegalStateException("sse")).when(realtime).publish(any());
+
+        assertEquals(new Resultado(SESION, 0, 0, false), useCase.execute(COMANDO));
     }
 
     @Test
@@ -157,12 +214,13 @@ class NotificarSesionManualUseCaseImplTest {
                 destinatario(DestinatarioSesionManual.TIPO_ESTUDIANTE, "Luis Gomez", "luis@uco.edu.co"),
                 destinatario(DestinatarioSesionManual.TIPO_COORDINADOR, "Carlos Coord", "carlos@uco.edu.co")));
         doThrow(new IllegalStateException("smtp")).when(notificaciones)
-                .notificar(org.mockito.ArgumentMatchers.argThat(aviso -> aviso.destinatarios().getFirst().nombre().equals("Ana Perez")));
+                .notificar(org.mockito.ArgumentMatchers.argThat(aviso -> Notificacion.TIPO_SESION_MANUAL_CREADA_ESTUDIANTE.equals(aviso.tipo())));
 
         final Resultado resultado = useCase.execute(COMANDO);
 
-        assertEquals(new Resultado(SESION, 1, 1, true), resultado);
-        verify(notificaciones, times(3)).notificar(any());
+        // El aviso agrupado de estudiantes falla (ninguno cubierto) y el de coordinadores sigue.
+        assertEquals(new Resultado(SESION, 0, 1, true), resultado);
+        verify(notificaciones, times(2)).notificar(any());
     }
 
     @Test
@@ -202,6 +260,11 @@ class NotificarSesionManualUseCaseImplTest {
     private void prepararSesion(final UUID id, final int numero, final String procedencia) {
         when(sesiones.consultarSesionesPorGrupo(GRUPO))
                 .thenReturn(List.of(proyeccion(id, numero, "Sesion extra", INICIO, FIN, procedencia)));
+    }
+
+    private static SesionProcedenciaRepositoryProjection pendiente(final UUID id, final int numero) {
+        return new SesionProcedenciaRepositoryProjection(id, GRUPO, "Sesion extra", numero, "COD" + numero, 1, "01", "G01", INICIO, FIN,
+                "UTC_V2", null, "PENDIENTE", true);
     }
 
     private static SesionProcedenciaRepositoryProjection proyeccion(final UUID id, final int numero, final String nombre,
