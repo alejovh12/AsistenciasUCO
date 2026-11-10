@@ -44,6 +44,12 @@ import co.edu.uco.asistenciasuco.application.features.estudiante.consultaroferta
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarofertagrupos.primaryports.interactor.ConsultarOfertaGruposInteractor;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarofertagrupos.usecase.ConsultarOfertaGruposUseCase;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarofertagrupos.usecase.impl.ConsultarOfertaGruposUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.estudiante.consultarplanestudio.primaryports.ConsultarPlanEstudioEstudianteInputPort;
+import co.edu.uco.asistenciasuco.application.features.estudiante.consultarplanestudio.primaryports.interactor.ConsultarPlanEstudioEstudianteInteractor;
+import co.edu.uco.asistenciasuco.application.features.estudiante.consultarplanestudio.usecase.ConsultarPlanEstudioEstudianteUseCase;
+import co.edu.uco.asistenciasuco.application.features.estudiante.consultarplanestudio.usecase.impl.ConsultarPlanEstudioEstudianteUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.HorasProgramadasEstudianteQueryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.PlanEstudioEstudianteQueryPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -86,10 +92,12 @@ public class EstudianteWiringConfiguration {
         return new ConsultarEstudiantePorIdInteractor(consultarEstudiantePorIdUseCase);
     }
 
+    /** HU019: las materias llevan tambien las horas programadas del grupo. */
     @Bean
     ConsultarMateriasEstudianteUseCase consultarMateriasEstudianteUseCase(final InstitutionalScopePort scopePort, final MateriaEstudianteQueryPort queryPort,
-                                                                          final ResumenAsistenciaQueryPort resumenAsistenciaQueryPort) {
-        return new ConsultarMateriasEstudianteUseCaseImpl(scopePort, queryPort, resumenAsistenciaQueryPort);
+                                                                          final ResumenAsistenciaQueryPort resumenAsistenciaQueryPort,
+                                                                          final HorasProgramadasEstudianteQueryPort horasProgramadasQueryPort) {
+        return new ConsultarMateriasEstudianteUseCaseImpl(scopePort, queryPort, resumenAsistenciaQueryPort, horasProgramadasQueryPort);
     }
 
     @Bean
@@ -147,5 +155,17 @@ public class EstudianteWiringConfiguration {
     @Bean
     ConsultarOfertaGruposInputPort consultarOfertaGruposInputPort(final ConsultarOfertaGruposUseCase useCase) {
         return new ConsultarOfertaGruposInteractor(useCase);
+    }
+
+    /** HU018: estructura curricular por semestres de los planes activos del estudiante. */
+    @Bean
+    ConsultarPlanEstudioEstudianteUseCase consultarPlanEstudioEstudianteUseCase(final InstitutionalScopePort scopePort,
+                                                                                final PlanEstudioEstudianteQueryPort port) {
+        return new ConsultarPlanEstudioEstudianteUseCaseImpl(scopePort, port);
+    }
+
+    @Bean
+    ConsultarPlanEstudioEstudianteInputPort consultarPlanEstudioEstudianteInputPort(final ConsultarPlanEstudioEstudianteUseCase useCase) {
+        return new ConsultarPlanEstudioEstudianteInteractor(useCase);
     }
 }
