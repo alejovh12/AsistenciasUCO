@@ -17,6 +17,7 @@ public final class CrearDecanoDomain {
     private final String password;
     private final UUID idFacultad;
     private final UUID usuarioEjecutor;
+    private final FacultadNuevaDomain facultadNueva;
 
     public CrearDecanoDomain(
             final UUID tipoIdentificacionId,
@@ -30,6 +31,23 @@ public final class CrearDecanoDomain {
             final UUID idFacultad,
             final UUID usuarioEjecutor
     ) {
+        this(tipoIdentificacionId, numeroIdentificacion, primerNombre, segundoNombre, primerApellido, segundoApellido,
+                correo, password, idFacultad, usuarioEjecutor, null);
+    }
+
+    public CrearDecanoDomain(
+            final UUID tipoIdentificacionId,
+            final Integer numeroIdentificacion,
+            final String primerNombre,
+            final String segundoNombre,
+            final String primerApellido,
+            final String segundoApellido,
+            final String correo,
+            final String password,
+            final UUID idFacultad,
+            final UUID usuarioEjecutor,
+            final FacultadNuevaDomain facultadNueva
+    ) {
         this.tipoIdentificacionId = tipoIdentificacionId;
         this.numeroIdentificacion = numeroIdentificacion;
         this.primerNombre = primerNombre;
@@ -40,6 +58,7 @@ public final class CrearDecanoDomain {
         this.password = password;
         this.idFacultad = idFacultad;
         this.usuarioEjecutor = usuarioEjecutor;
+        this.facultadNueva = facultadNueva;
     }
 
     public UUID getTipoIdentificacionId() {
@@ -80,5 +99,9 @@ public final class CrearDecanoDomain {
 
     public UUID getUsuarioEjecutor() {
         return usuarioEjecutor;
+    }
+
+    public FacultadNuevaDomain getFacultadNueva() {
+        return facultadNueva;
     }
 }

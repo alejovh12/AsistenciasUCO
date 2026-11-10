@@ -17,6 +17,7 @@ public final class CrearCoordinadorDomain {
     private final UUID idPrograma;
     private final String password;
     private final UUID usuario;
+    private final ProgramaNuevoDomain programaNuevo;
 
     public CrearCoordinadorDomain(
             final UUID tipoIdentificacionId,
@@ -30,6 +31,23 @@ public final class CrearCoordinadorDomain {
             final String password,
             final UUID usuario
     ) {
+        this(tipoIdentificacionId, numeroIdentificacion, primerNombre, segundoNombre, primerApellido, segundoApellido, correo,
+                idPrograma, password, usuario, null);
+    }
+
+    public CrearCoordinadorDomain(
+            final UUID tipoIdentificacionId,
+            final String numeroIdentificacion,
+            final String primerNombre,
+            final String segundoNombre,
+            final String primerApellido,
+            final String segundoApellido,
+            final String correo,
+            final UUID idPrograma,
+            final String password,
+            final UUID usuario,
+            final ProgramaNuevoDomain programaNuevo
+    ) {
         this.tipoIdentificacionId = tipoIdentificacionId;
         this.numeroIdentificacion = numeroIdentificacion;
         this.primerNombre = primerNombre;
@@ -40,6 +58,7 @@ public final class CrearCoordinadorDomain {
         this.idPrograma = idPrograma;
         this.password = password;
         this.usuario = usuario;
+        this.programaNuevo = programaNuevo;
     }
 
     public CrearCoordinadorDomain(
@@ -94,5 +113,9 @@ public final class CrearCoordinadorDomain {
 
     public UUID getUsuario() {
         return usuario;
+    }
+
+    public ProgramaNuevoDomain getProgramaNuevo() {
+        return programaNuevo;
     }
 }

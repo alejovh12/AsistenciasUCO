@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.admin.creardecano.primary
 
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.CrearDecanoInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.dto.CrearDecanoDTO;
+import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.dto.CrearDecanoResultadoDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.mapper.CrearDecanoMapper;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.CrearDecanoUseCase;
 
@@ -13,7 +14,7 @@ public final class CrearDecanoInteractor implements CrearDecanoInputPort {
         this.useCase = Objects.requireNonNull(useCase, "CrearDecanoUseCase es obligatorio.");
     }
     @Override
-    public void execute(final CrearDecanoDTO dto) {
-        useCase.execute(CrearDecanoMapper.toDomain(dto));
+    public CrearDecanoResultadoDTO execute(final CrearDecanoDTO dto) {
+        return CrearDecanoMapper.toResultadoDto(useCase.execute(CrearDecanoMapper.toDomain(dto)));
     }
 }
