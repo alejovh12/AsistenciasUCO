@@ -93,10 +93,10 @@ Cada materia agrega:
 
 ## Base de datos
 
-Dos SP nuevos de solo lectura y sin objetos modificados: `usp_consultar_plan_estudio_estudiante` y `usp_consultar_horas_programadas_estudiante`, con la migración `30_hu018_hu019_plan_horas_estudiante`. El detalle está en el work item homónimo del repositorio de BD. Orden de despliegue: primero la migración y después el backend (DEC-060).
+Dos SP nuevos de solo lectura y sin objetos modificados: `usp_consultar_plan_estudio_estudiante` y `usp_consultar_horas_programadas_estudiante`, con la migración `33_hu018_hu019_plan_horas_estudiante`. El detalle está en el work item homónimo del repositorio de BD. Orden de despliegue: primero la migración y después el backend (DEC-060).
 
 ## Riesgos y rollback
 
 - `GET /estudiante/materias` hace una consulta más por petición. Es una consulta por estudiante, sin paginación, igual que el resumen.
-- Si el backend se despliega sin la migración 30, `GET /estudiante/materias` falla. Por eso la migración va primero.
-- Rollback: revertir el commit del backend y ejecutar el `down` de la migración 30, que solo elimina los dos SP.
+- Si el backend se despliega sin la migración 33, `GET /estudiante/materias` falla. Por eso la migración va primero.
+- Rollback: revertir el commit del backend y ejecutar el `down` de la migración 33, que solo elimina los dos SP.

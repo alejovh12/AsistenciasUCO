@@ -14,6 +14,29 @@ public final class CrearDecanoRepositoryMapper {
     private CrearDecanoRepositoryMapper() {
     }
 
+    public static DecanoCommandPort.CrearDecanoConFacultadCommand toCommandConFacultad(
+            final CrearDecanoDomain domain,
+            final UUID idDecano,
+            final String passwordParaPersistir
+    ) {
+        final var facultadNueva = domain.getFacultadNueva();
+        return new DecanoCommandPort.CrearDecanoConFacultadCommand(
+                idDecano,
+                domain.getTipoIdentificacionId(),
+                domain.getNumeroIdentificacion(),
+                domain.getPrimerNombre(),
+                domain.getSegundoNombre(),
+                domain.getPrimerApellido(),
+                domain.getSegundoApellido(),
+                domain.getCorreo(),
+                passwordParaPersistir,
+                facultadNueva.nombre(),
+                facultadNueva.codigo(),
+                facultadNueva.idInstitucion(),
+                domain.getUsuarioEjecutor()
+        );
+    }
+
     public static DecanoCommandPort.CrearDecanoCommand toCommand(
             final CrearDecanoDomain domain,
             final UUID idDecano,

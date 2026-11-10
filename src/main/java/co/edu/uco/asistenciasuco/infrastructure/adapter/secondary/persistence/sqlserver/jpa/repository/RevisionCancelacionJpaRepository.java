@@ -26,9 +26,9 @@ import static co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persist
 import static co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository.CancelacionRowSupport.uuid;
 
 /**
- * CULM-001 C.1 (HU026C): decision del docente ({@code usp_decidir_revision_cancelacion}), resolucion del coordinador o del decano
- * ({@code usp_resolver_revision_cancelacion}), bandejas y destinatarios. El ambito y las transiciones los fuerza la DB (SEC_002, COO_003,
- * RCN_001..RCN_015).
+ * CULM-001 C.1 (HU026C): decision del docente ({@code usp_decidir_revision_cancelacion}), resolucion del coordinador
+ * ({@code usp_resolver_revision_cancelacion}; el decano recibe RCN_016, DEC-065), bandejas (coordinador, decano y docente) y destinatarios.
+ * El ambito y las transiciones los fuerza la DB (SEC_002, COO_003, RCN_001..RCN_016).
  */
 @Repository
 public class RevisionCancelacionJpaRepository implements RevisionCancelacionRepositoryPort {
@@ -80,6 +80,19 @@ public class RevisionCancelacionJpaRepository implements RevisionCancelacionRepo
                                             final String estado, final UUID programaId) {
         return consultar("consultarRevisionesCancelacionDecano", "usp_consultar_revisiones_cancelacion_decano_paginado",
                 bandeja(usuarioId, pagina, tamano, soloPendientes, estado, programaId));
+    }
+
+    @Override
+    public PaginaRevisiones consultarDocente(final UUID usuarioId, final int pagina, final int tamano, final boolean soloPendientes,
+                                             final String estado, final UUID grupoId) {
+        final Map<String, Object> parametros = new LinkedHashMap<>();
+        parametros.put("idUsuario", usuarioId);
+        parametros.put("soloPendientes", soloPendientes ? 1 : 0);
+        parametros.put("idGrupo", grupoId);
+        parametros.put("estado", estado == null || estado.isBlank() ? null : estado.strip());
+        parametros.put("numeroPagina", pagina);
+        parametros.put("tamanoPagina", tamano);
+        return consultar("consultarRevisionesCancelacionDocente", "usp_consultar_revisiones_cancelacion_docente_paginado", parametros);
     }
 
     @Override

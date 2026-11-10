@@ -26,7 +26,7 @@ Pruebas nuevas del backend: 23 de HU018/HU019 (`ConsultarPlanEstudioEstudianteUs
 
 ## Revisión en pantalla (2026-11-10, 03:26–03:43)
 
-Con el estudiante y el administrador de prueba del lab, la BD local con la migración 30 y el backend con el jar de la corrida de arriba. El detalle está fuera de los repos, en la sección "Segunda pasada" de `informes/CERTIFICACION_FASE3_CULM001_2026-11-10/RECERTIFICACION.md`.
+Con el estudiante y el administrador de prueba del lab, la BD local con la migración 33 y el backend con el jar de la corrida de arriba. El detalle está fuera de los repos, en la sección "Segunda pasada" de `informes/CERTIFICACION_FASE3_CULM001_2026-11-10/RECERTIFICACION.md`.
 
 | Ítem | Resultado |
 |---|---|

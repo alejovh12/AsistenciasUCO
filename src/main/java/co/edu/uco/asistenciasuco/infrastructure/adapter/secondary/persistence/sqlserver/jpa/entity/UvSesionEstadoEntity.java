@@ -29,6 +29,9 @@ public class UvSesionEstadoEntity {
     @Column(name = "nombreDiaFestivo") private String nombreDiaFestivo;
     @JdbcType(LocalDateTimeJdbcType.class)
     @Column(name = "fechaCancelacionUtc") private LocalDateTime fechaCancelacionUtc;
+    /** DEC-065 (2): NULL si la sesion no nacio como solicitud; PENDIENTE, APROBADA o RECHAZADA. */
+    @Column(name = "estadoSolicitud") private String estadoSolicitud;
+    @Column(name = "pendienteAprobacion") private Boolean pendienteAprobacion;
 
     protected UvSesionEstadoEntity() { }
 
@@ -58,5 +61,13 @@ public class UvSesionEstadoEntity {
 
     public LocalDateTime fechaCancelacionUtc() {
         return fechaCancelacionUtc;
+    }
+
+    public String estadoSolicitud() {
+        return estadoSolicitud;
+    }
+
+    public boolean pendienteAprobacion() {
+        return Boolean.TRUE.equals(pendienteAprobacion);
     }
 }

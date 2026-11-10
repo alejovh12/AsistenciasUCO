@@ -39,7 +39,9 @@ public final class ConsultarSesionMapper {
                 entity.getNombreGrupo(),
                 entity.getFechaHoraInicio(),
                 entity.getFechaHoraFin(),
-                entity.getCancelacion()
+                entity.getCancelacion(),
+                entity.getEstadoSolicitud(),
+                entity.isPendienteAprobacion()
         );
     }
 }

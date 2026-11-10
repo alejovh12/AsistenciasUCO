@@ -19,8 +19,8 @@ public final class CrearSesionInteractor implements CrearSesionInputPort {
     }
 
     @Override
-    public void execute(final CrearSesionDTO dto) {
+    public String execute(final CrearSesionDTO dto) {
         final CrearSesionDomain domain = CrearSesionMapper.toDomain(dto);
-        useCase.execute(domain);
+        return useCase.execute(domain);
     }
 }

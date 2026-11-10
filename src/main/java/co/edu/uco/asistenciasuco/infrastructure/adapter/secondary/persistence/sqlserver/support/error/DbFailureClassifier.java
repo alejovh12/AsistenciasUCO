@@ -36,6 +36,9 @@ final class DbFailureClassifier {
 
     private static final String OPERATION_ACTUALIZAR_COORDINADOR = "actualizarCoordinador";
     private static final String OPERATION_CAMBIAR_ESTADO_COORDINADOR = "cambiarEstadoCoordinador";
+    // DEC-065 (5): altas compuestas; GEN_001 significa institucion o facultad inexistente (404).
+    private static final String OPERATION_CREAR_DECANO_CON_FACULTAD = "crearDecanoConFacultad";
+    private static final String OPERATION_CREAR_COORDINADOR_CON_PROGRAMA = "crearCoordinadorConPrograma";
     private static final String OPERATION_CONSULTAR_HISTORIAL_GRUPOS_DOCENTE = "consultarHistorialGruposDocente";
     private static final String OPERATION_ASIGNAR_DOCENTE = "asignarDocenteAGrupo";
     private static final String OPERATION_REGISTRAR_ESTUDIANTE = "registrarEstudianteEnGrupo";
@@ -234,6 +237,10 @@ final class DbFailureClassifier {
             case "SES_018" -> SesionErrorCode.SES_018;
             case "SES_019" -> SesionErrorCode.SES_019;
             case "SES_021" -> SesionErrorCode.SES_021;
+            // DEC-065 (2): solicitud de sesion extraordinaria (codigos de la DB tal cual).
+            case "SES_023" -> SesionErrorCode.SES_023;
+            case "SES_024" -> SesionErrorCode.SES_024;
+            case "SES_025" -> SesionErrorCode.SES_025;
             // CULM-001 B.1: festivos (carga, aplicacion y consultas del administrador).
             // CULM-001 B.2: tomas de asistencia y QR de asistencia (el codigo de la DB se expone tal cual).
             // CULM-001 C.1: revision de cancelacion por inasistencia (el codigo de la DB se expone tal cual).
@@ -246,6 +253,7 @@ final class DbFailureClassifier {
             case "RCN_012" -> RevisionCancelacionErrorCode.RCN_012;
             case "RCN_013" -> RevisionCancelacionErrorCode.RCN_013;
             case "RCN_014" -> RevisionCancelacionErrorCode.RCN_014;
+            case "RCN_016" -> RevisionCancelacionErrorCode.RCN_016;
             case "ALR_004" -> AlertaInasistenciaErrorCode.ALR_004;
             case "ALR_006" -> AlertaInasistenciaErrorCode.ALR_006;
             case "TOM_001" -> TomaAsistenciaErrorCode.TOM_001;
@@ -303,7 +311,9 @@ final class DbFailureClassifier {
                 // P5: area o componente inexistente al guardar una asignatura.
                 || OPERATION_CREAR_ASIGNATURA.equals(operation) || OPERATION_ACTUALIZAR_ASIGNATURA.equals(operation)
                 // HU159: el estudiante o el decano no existe o esta fuera de la jerarquia del ejecutor.
-                || OPERATION_CORREGIR_IDENTIDAD.equals(operation)) {
+                || OPERATION_CORREGIR_IDENTIDAD.equals(operation)
+                || OPERATION_CREAR_DECANO_CON_FACULTAD.equals(operation)
+                || OPERATION_CREAR_COORDINADOR_CON_PROGRAMA.equals(operation)) {
             return CommonErrorCode.RESOURCE_NOT_FOUND;
         }
         return DatabaseErrorCode.ERR_DB_UNCLASSIFIED;

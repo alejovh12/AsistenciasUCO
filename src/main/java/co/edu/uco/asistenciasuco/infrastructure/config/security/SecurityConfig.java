@@ -215,10 +215,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/api/v1/grupos/*/matricula-qr").hasRole(ROLE_DOCENTE)
                 .requestMatchers(HttpMethod.POST, "/api/v1/grupos/*/estudiantes/*/reenviar-verificacion")
                     .hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR)
-                // F3: el DOCENTE crea sus propios grupos (la DB exige que el titular sea el propio docente y que
-                // este tenga vinculo activo con el programa, ver usp_crear_grupo). PUT/DELETE siguen sin DOCENTE.
-                .requestMatchers(HttpMethod.POST, "/api/v1/grupos")
-                    .hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
+                // DEC-065 (4): solo el COORDINADOR crea grupos (usp_crear_grupo exige ese perfil); el docente y el administrador
+                // reciben 403. Retira la excepcion F3 del docente.
+                .requestMatchers(HttpMethod.POST, "/api/v1/grupos").hasRole(ROLE_COORDINADOR)
                 .requestMatchers(HttpMethod.POST, "/api/v1/grupos/**").hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
                 .requestMatchers(HttpMethod.PUT, "/api/v1/grupos/**").hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
                 .requestMatchers(HttpMethod.DELETE, "/api/v1/grupos/**").hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)

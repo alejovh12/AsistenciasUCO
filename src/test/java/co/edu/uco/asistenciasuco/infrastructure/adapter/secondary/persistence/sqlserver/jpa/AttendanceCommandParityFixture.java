@@ -118,6 +118,7 @@ final class AttendanceCommandParityFixture {
             creados.add(new String[]{"Sesion", id.toString()});
         }
         assertEquals(1, encontrada.size(), "La sesion de prueba debe ser resoluble de forma unica por nombre.");
+        TomaAsistenciaTestSql.aprobarSolicitudDeSesion(jdbcTemplate, encontrada.get(0).toString());
         moverAVentanaViva(encontrada.get(0), inicio, inicio.plusHours(2));
         return encontrada.get(0);
     }

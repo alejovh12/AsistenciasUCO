@@ -6,6 +6,7 @@ import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicat
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.usecase.CrearCoordinadorUseCase;
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.usecase.domain.CrearCoordinadorDomain;
+import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.usecase.domain.CrearCoordinadorResultado;
 import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.usuario.domain.rules.PasswordRegistroRule;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.CoordinadorCommandPort;
@@ -49,9 +50,16 @@ public final class CrearCoordinadorUseCaseImpl implements CrearCoordinadorUseCas
     }
 
     @Override
-    public void execute(final CrearCoordinadorDomain domain) {
+    public CrearCoordinadorResultado execute(final CrearCoordinadorDomain domain) {
         if (ObjectHelper.isNull(domain)) {
             throw new CrosscuttingException("El dominio para crear coordinador es obligatorio.");
+        }
+        // DEC-065 (5): el programa es existente (idPrograma) o nuevo (programaNuevo), nunca ambos.
+        if (domain.getIdPrograma() != null && domain.getProgramaNuevo() != null) {
+            throw new ValidationException("Indique un programa existente o un programa nuevo, no ambos.");
+        }
+        if (domain.getProgramaNuevo() != null && domain.getProgramaNuevo().idTipoPrograma() == null) {
+            throw new ValidationException("El tipo del programa nuevo es obligatorio.");
         }
         final UUID facultad = scopePort.findFacultadIdByDecanoUsuario(domain.getUsuario())
                 .orElseThrow(() -> new ForbiddenException("No fue posible resolver la facultad del decano autenticado."));
@@ -73,12 +81,24 @@ public final class CrearCoordinadorUseCaseImpl implements CrearCoordinadorUseCas
             passwordParaPersistir = passwordEncoderPort.encode(credencialInicial);
         }
 
-        if (domain.getTipoIdentificacionId() != null) {
-            commandPort.crearCoordinador(UUID.randomUUID(), domain.getNumeroIdentificacion(), domain.getPrimerNombre(),
+        final UUID idCoordinador = UUID.randomUUID();
+        final CrearCoordinadorResultado resultado;
+        if (domain.getProgramaNuevo() != null) {
+            final var programa = domain.getProgramaNuevo();
+            final var creado = commandPort.crearCoordinadorConPrograma(new CoordinadorCommandPort.CrearCoordinadorConProgramaCommand(
+                    idCoordinador, domain.getTipoIdentificacionId(), domain.getNumeroIdentificacion(), domain.getPrimerNombre(),
+                    domain.getSegundoNombre(), domain.getPrimerApellido(), domain.getSegundoApellido(), domain.getCorreo(),
+                    passwordParaPersistir, programa.nombre(), programa.idTipoPrograma(), programa.idModalidad(),
+                    programa.idJornada(), facultad, domain.getUsuario()));
+            resultado = new CrearCoordinadorResultado(creado.idCoordinador(), creado.idPrograma(), creado.nombrePrograma());
+        } else if (domain.getTipoIdentificacionId() != null) {
+            resultado = new CrearCoordinadorResultado(idCoordinador, domain.getIdPrograma(), null);
+            commandPort.crearCoordinador(idCoordinador, domain.getNumeroIdentificacion(), domain.getPrimerNombre(),
                     domain.getSegundoNombre(), domain.getPrimerApellido(), domain.getSegundoApellido(), domain.getCorreo(),
                     domain.getIdPrograma(), facultad, passwordParaPersistir, domain.getUsuario(), domain.getTipoIdentificacionId());
         } else {
-            commandPort.crearCoordinador(UUID.randomUUID(), domain.getNumeroIdentificacion(), domain.getPrimerNombre(),
+            resultado = new CrearCoordinadorResultado(idCoordinador, domain.getIdPrograma(), null);
+            commandPort.crearCoordinador(idCoordinador, domain.getNumeroIdentificacion(), domain.getPrimerNombre(),
                     domain.getSegundoNombre(), domain.getPrimerApellido(), domain.getSegundoApellido(), domain.getCorreo(),
                     domain.getIdPrograma(), facultad, passwordParaPersistir, domain.getUsuario());
         }
@@ -101,6 +121,7 @@ public final class CrearCoordinadorUseCaseImpl implements CrearCoordinadorUseCas
                 );
             }
         }
+        return resultado;
     }
 
     /**

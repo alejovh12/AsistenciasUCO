@@ -190,11 +190,14 @@ class OpenApiGoldenPathConformanceTest {
                         "horaInicio", "horaFin", "totalEstudiantes"),
                 Set.of("id", "idDocente", "idGrupo", "codigoMateria", "nombreMateria", "seccion", "dia",
                         "horaInicio", "horaFin", "totalEstudiantes"));
+        // DEC-065 (2): golden path 1.7.0, Sesion suma estadoSolicitud y pendienteAprobacion (siempre serializados).
         assertObjectSchema("Sesion",
                 Set.of("sesion", "grupo", "nombre", "numero", "codigo", "numeroSemana", "codigoGrupo",
-                        "nombreGrupo", "fechaHoraInicio", "fechaHoraFin", "estado", "cancelacion"),
+                        "nombreGrupo", "fechaHoraInicio", "fechaHoraFin", "estado", "cancelacion", "estadoSolicitud",
+                        "pendienteAprobacion"),
                 Set.of("sesion", "grupo", "nombre", "numero", "codigo", "numeroSemana", "codigoGrupo",
-                        "nombreGrupo", "fechaHoraInicio", "fechaHoraFin", "estado", "cancelacion"));
+                        "nombreGrupo", "fechaHoraInicio", "fechaHoraFin", "estado", "cancelacion", "estadoSolicitud",
+                        "pendienteAprobacion"));
         assertObjectSchema("EstudianteGrupo",
                 Set.of("id", "idEstudiante", "documento", "nombreCompleto", "correo", "codigoEstado", "nombreEstado"),
                 Set.of("id", "idEstudiante", "documento", "nombreCompleto", "correo", "codigoEstado", "nombreEstado"));
@@ -233,7 +236,14 @@ class OpenApiGoldenPathConformanceTest {
     // agrega POST /realtime/emit (solo ADMINISTRADOR, cuerpo validado, 200/400/401/403/500).
     @Test
     void goldenPath160DeclaraElVersionadoEl406DelStreamYElEmitSoloAdministrador() {
-        assertEquals("1.6.0", OPEN_API.getInfo().getVersion());
+        // DEC-065 (2): golden path 1.7.0, Sesion y SesionV2 agregan estadoSolicitud y pendienteAprobacion (cambio aditivo).
+        assertEquals("1.7.0", OPEN_API.getInfo().getVersion());
+        for (final String nombre : new String[]{"Sesion", "SesionV2"}) {
+            assertTrue(schema(nombre).getProperties().keySet().containsAll(Set.of("estadoSolicitud", "pendienteAprobacion")),
+                    () -> nombre + " debe declarar estadoSolicitud y pendienteAprobacion");
+            assertTrue(schema(nombre).getRequired().containsAll(Set.of("estadoSolicitud", "pendienteAprobacion")),
+                    () -> nombre + " siempre serializa estadoSolicitud y pendienteAprobacion");
+        }
 
         final Operation stream = operation(new OperationKey("/api/v1/realtime/stream", HttpMethod.GET));
         assertEquals(Set.of("200", "400", "401", "403", "406", "500"), stream.getResponses().keySet());

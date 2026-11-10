@@ -17,6 +17,9 @@ public final class CrearDecanoRequestValidator implements Validator<CrearDecanoR
 
     private static final int MAX_NOMBRE = 50;
     private static final int MAX_CORREO = 255;
+    private static final int MIN_NOMBRE_FACULTAD = 3;
+    private static final int MAX_NOMBRE_FACULTAD = 50;
+    private static final int MAX_CODIGO_FACULTAD = 20;
 
     @Override
     public ValidationResult validate(final CrearDecanoRequest request) {
@@ -41,7 +44,27 @@ public final class CrearDecanoRequestValidator implements Validator<CrearDecanoR
             builder.addIf(!ValidationHelper.isValidEmail(request.correo().trim()), "correo", ValidationErrorType.INVALID_FORMAT,
                     "El correo no tiene un formato valido.");
         }
+        facultadNueva(builder, request);
         return builder.build();
+    }
+
+    /** DEC-065 (5): la facultad es existente o nueva (nunca ambas); la nueva exige nombre de 3 a 50 caracteres e institucion. */
+    private static void facultadNueva(final ValidationResultBuilder builder, final CrearDecanoRequest request) {
+        final var facultad = request.facultadNueva();
+        if (facultad == null) {
+            return;
+        }
+        builder.addIf(request.idFacultad() != null, "facultadNueva", ValidationErrorType.INVALID_VALUE,
+                "Indique una facultad existente o una facultad nueva, no ambas.");
+        builder.addIf(!ValidationHelper.hasText(facultad.nombre())
+                        || !ValidationHelper.isLengthBetween(facultad.nombre().trim(), MIN_NOMBRE_FACULTAD, MAX_NOMBRE_FACULTAD),
+                "facultadNueva.nombre", ValidationErrorType.INVALID_LENGTH,
+                "El nombre de la facultad debe tener entre " + MIN_NOMBRE_FACULTAD + " y " + MAX_NOMBRE_FACULTAD + " caracteres.");
+        builder.addIf(ValidationHelper.hasText(facultad.codigo()) && facultad.codigo().trim().length() > MAX_CODIGO_FACULTAD,
+                "facultadNueva.codigo", ValidationErrorType.INVALID_LENGTH,
+                "El codigo de la facultad no puede superar " + MAX_CODIGO_FACULTAD + " caracteres.");
+        builder.addIf(facultad.idInstitucion() == null || !ValidationHelper.isNonEmptyUuid(facultad.idInstitucion()),
+                "facultadNueva.idInstitucion", ValidationErrorType.REQUIRED, "La institucion de la facultad es obligatoria.");
     }
 
     private static void nombre(final ValidationResultBuilder builder, final String campo, final String valor, final boolean obligatorio) {

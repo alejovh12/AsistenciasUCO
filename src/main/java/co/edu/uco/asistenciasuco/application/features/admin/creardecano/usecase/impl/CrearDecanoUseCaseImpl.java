@@ -5,6 +5,7 @@ import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicat
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.CrearDecanoUseCase;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.domain.CrearDecanoDomain;
+import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.domain.CrearDecanoResultado;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.mapper.CrearDecanoRepositoryMapper;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.mapper.CrearDecanoIdentityMapper;
 import co.edu.uco.asistenciasuco.application.features.usuario.domain.rules.PasswordRegistroRule;
@@ -45,10 +46,14 @@ public final class CrearDecanoUseCaseImpl implements CrearDecanoUseCase {
     }
 
     @Override
-    public void execute(final CrearDecanoDomain domain) {
+    public CrearDecanoResultado execute(final CrearDecanoDomain domain) {
         Objects.requireNonNull(domain, "CrearDecanoDomain es obligatorio.");
         if (domain.getTipoIdentificacionId() == null) {
             throw new ValidationException(TipoIdentificacionErrorCode.ERR_TIPO_IDENTIFICACION_REQUERIDA);
+        }
+        // DEC-065 (5): la facultad es existente (idFacultad) o nueva (facultadNueva), nunca ambas.
+        if (domain.getIdFacultad() != null && domain.getFacultadNueva() != null) {
+            throw new ValidationException("Indique una facultad existente o una facultad nueva, no ambas.");
         }
         final var facultad = domain.getIdFacultad() == null
                 ? null
@@ -61,14 +66,26 @@ public final class CrearDecanoUseCaseImpl implements CrearDecanoUseCase {
                         domain.getPassword(), domain.getNumeroIdentificacion()
                 ));
 
-        decanoCommandPort.crearDecano(CrearDecanoRepositoryMapper.toCommand(
-                domain, UUID.randomUUID(), facultad, passwordParaPersistir
-        ));
+        final UUID idDecano = UUID.randomUUID();
+        final CrearDecanoResultado resultado;
+        if (domain.getFacultadNueva() != null) {
+            final var creado = decanoCommandPort.crearDecanoConFacultad(CrearDecanoRepositoryMapper.toCommandConFacultad(
+                    domain, idDecano, passwordParaPersistir
+            ));
+            resultado = new CrearDecanoResultado(creado.idDecano(), creado.idFacultad(), creado.nombreFacultad());
+        } else {
+            decanoCommandPort.crearDecano(CrearDecanoRepositoryMapper.toCommand(
+                    domain, idDecano, facultad, passwordParaPersistir
+            ));
+            resultado = new CrearDecanoResultado(idDecano, domain.getIdFacultad(),
+                    facultad == null ? null : facultad.nombreFacultad());
+        }
 
         final UsuarioIdentidadRepositoryProjection usuarioCanonico = resolverUsuarioPostCommand(domain, idUsuarioPreexistente);
         // CULM-001 D.9-a (F-ADM-024): la base de datos ya confirmo el alta; un fallo del proveedor de identidad deja la cuenta
         // PENDIENTE_SINCRONIZACION (desfase registrado) en lugar de un 500, y repetir el alta ya no reporta exito (DEC_020).
         cuentas.asegurar(CrearDecanoIdentityMapper.toSolicitudCuentaIdentidad(domain, usuarioCanonico));
+        return resultado;
     }
 
     private Optional<UUID> resolverUsuarioPreexistente(final CrearDecanoDomain domain) {

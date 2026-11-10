@@ -12,8 +12,10 @@ public enum RevisionCancelacionErrorCode implements ErrorDefinition {
     RCN_005("RCN_005", "La matrícula del estudiante ya no está activa en el grupo.", ErrorKind.CONFLICT),
     RCN_006("RCN_006", "El estudiante ya no supera el límite de inasistencia.", ErrorKind.CONFLICT),
     RCN_012("RCN_012", "Hay casos de pérdida por inasistencia pendientes; resuélvelos antes del cierre.", ErrorKind.CONFLICT),
-    RCN_013("RCN_013", "No hay un coordinador ni un decano activo que pueda resolver la propuesta.", ErrorKind.CONFLICT),
-    RCN_014("RCN_014", "No puedes resolver una propuesta de cancelación que hiciste como docente.", ErrorKind.CONFLICT);
+    RCN_013("RCN_013", "El programa no tiene coordinador activo para resolver la revisión; solicite su asignación al decano.", ErrorKind.CONFLICT),
+    RCN_014("RCN_014", "No puedes resolver una propuesta de cancelación que hiciste como docente.", ErrorKind.CONFLICT),
+    /** DEC-065 (1): el decano no resuelve; la decision final es del coordinador del programa. */
+    RCN_016("RCN_016", "La resolución de la revisión corresponde al coordinador del programa.", ErrorKind.FORBIDDEN);
 
     private final String code;
     private final String defaultMessage;

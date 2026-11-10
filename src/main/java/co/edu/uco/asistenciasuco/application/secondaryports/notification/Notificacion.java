@@ -46,6 +46,12 @@ public record Notificacion(
     public static final String TIPO_SESION_MANUAL_CREADA_ESTUDIANTE = "SESION_MANUAL_CREADA_ESTUDIANTE";
     /** CULM-001 / DEC-064 (HU047): el docente creo una sesion manualmente (aviso al coordinador del programa). */
     public static final String TIPO_SESION_MANUAL_CREADA_COORDINADOR = "SESION_MANUAL_CREADA_COORDINADOR";
+    /** DEC-065 (2): el docente solicito una sesion extraordinaria (un solo aviso agrupado a los coordinadores del programa). */
+    public static final String TIPO_SESION_SOLICITUD_CREADA_COORDINADOR = "SESION_SOLICITUD_CREADA_COORDINADOR";
+    /** DEC-065 (2): el coordinador aprobo la solicitud (aviso al docente titular). */
+    public static final String TIPO_SESION_SOLICITUD_APROBADA_DOCENTE = "SESION_SOLICITUD_APROBADA_DOCENTE";
+    /** DEC-065 (2): el coordinador rechazo la solicitud (aviso al docente titular, con motivo y observacion). */
+    public static final String TIPO_SESION_SOLICITUD_RECHAZADA_DOCENTE = "SESION_SOLICITUD_RECHAZADA_DOCENTE";
 
     public Notificacion {
         Objects.requireNonNull(tipo, "El tipo de notificacion es obligatorio.");

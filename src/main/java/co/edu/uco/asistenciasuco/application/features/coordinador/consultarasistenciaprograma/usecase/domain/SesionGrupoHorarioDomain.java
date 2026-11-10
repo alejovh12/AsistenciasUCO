@@ -26,8 +26,21 @@ public record SesionGrupoHorarioDomain(
         LocalDateTime fechaHoraInicioUtc,
         LocalDateTime fechaHoraFinUtc,
         EstadoHorarioSesion estadoTemporal,
-        CancelacionSesionDTO cancelacion
+        CancelacionSesionDTO cancelacion,
+        String estadoSolicitud,
+        boolean pendienteAprobacion
 ) {
+
+    /** Sesion con cancelacion opcional y sin solicitud (DEC-065 (2): {@code estadoSolicitud} nulo). */
+    public SesionGrupoHorarioDomain(final UUID id, final UUID idGrupo, final Integer codigoGrupo, final String nombreGrupo,
+                                    final String nombre, final Integer numero, final String codigo,
+                                    final Integer numeroSemana, final LocalDateTime fechaHoraInicio,
+                                    final LocalDateTime fechaHoraFin, final LocalDateTime fechaHoraInicioUtc,
+                                    final LocalDateTime fechaHoraFinUtc, final EstadoHorarioSesion estadoTemporal,
+                                    final CancelacionSesionDTO cancelacion) {
+        this(id, idGrupo, codigoGrupo, nombreGrupo, nombre, numero, codigo, numeroSemana, fechaHoraInicio, fechaHoraFin,
+                fechaHoraInicioUtc, fechaHoraFinUtc, estadoTemporal, cancelacion, null, false);
+    }
 
     /** Sesion programada (sin cancelacion). */
     public SesionGrupoHorarioDomain(final UUID id, final UUID idGrupo, final Integer codigoGrupo, final String nombreGrupo,
@@ -36,7 +49,7 @@ public record SesionGrupoHorarioDomain(
                                     final LocalDateTime fechaHoraFin, final LocalDateTime fechaHoraInicioUtc,
                                     final LocalDateTime fechaHoraFinUtc, final EstadoHorarioSesion estadoTemporal) {
         this(id, idGrupo, codigoGrupo, nombreGrupo, nombre, numero, codigo, numeroSemana, fechaHoraInicio, fechaHoraFin,
-                fechaHoraInicioUtc, fechaHoraFinUtc, estadoTemporal, null);
+                fechaHoraInicioUtc, fechaHoraFinUtc, estadoTemporal, null, null, false);
     }
 
     public SesionGrupoHorarioDomain {

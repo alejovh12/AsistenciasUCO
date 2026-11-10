@@ -63,7 +63,7 @@ class CancelarSesionUseCaseImplTest {
             new CancelarSesionUseCaseImpl(scope, sesiones, repositorio, notificaciones, realtime);
 
     @Test
-    void cancela_avisa_a_cada_estudiante_y_publica_el_evento_del_grupo() {
+    void cancela_avisa_a_todos_los_estudiantes_en_un_solo_correo_y_publica_el_evento_del_grupo() {
         prepararSesion("UTC_V2");
         when(repositorio.cancelar(SESION, MOTIVO, DOCENTE)).thenReturn(new SesionCancelada(SESION, GRUPO, CANCELADA_UTC, 2));
         when(repositorio.consultarDestinatarios(SESION, DOCENTE)).thenReturn(List.of(
@@ -76,19 +76,20 @@ class CancelarSesionUseCaseImplTest {
                 new CancelacionSesionDTO("DOCENTE", MOTIVO, null, Instant.parse("2026-11-07T14:00:00Z")), 2), resultado);
 
         final ArgumentCaptor<Notificacion> avisos = ArgumentCaptor.forClass(Notificacion.class);
-        verify(notificaciones, times(2)).notificar(avisos.capture());
-        final Notificacion aviso = avisos.getAllValues().getFirst();
+        // DEC-065 (3): UNA notificacion con todos los estudiantes.
+        verify(notificaciones, times(1)).notificar(avisos.capture());
+        final Notificacion aviso = avisos.getValue();
         assertEquals(Notificacion.TIPO_SESION_CANCELADA, aviso.tipo());
         assertEquals("Clase cancelada: Calculo (10/11/2026)", aviso.asunto());
-        assertEquals("Hola Ana Perez. El docente Maria Docente canceló la clase de Calculo del grupo G01 de Calculo programada "
+        assertEquals("Hola estudiantes del grupo. El docente Maria Docente canceló la clase de Calculo del grupo G01 de Calculo programada "
                 + "para el 10/11/2026 de 08:00 a 10:00. Motivo: " + MOTIVO + ".", aviso.mensaje());
-        assertEquals(List.of(new Notificacion.Destinatario("ESTUDIANTE", aviso.destinatarios().getFirst().idUsuario(),
-                "Ana Perez", "ana@uco.edu.co")), aviso.destinatarios());
-        assertEquals(Map.of("estudiante", "Ana Perez", "asignatura", "Calculo", "grupo", "G01 de Calculo",
+        assertEquals(List.of(
+                new Notificacion.Destinatario("ESTUDIANTE", aviso.destinatarios().get(0).idUsuario(), "Ana Perez", "ana@uco.edu.co"),
+                new Notificacion.Destinatario("ESTUDIANTE", aviso.destinatarios().get(1).idUsuario(), "Luis Gomez", "luis@uco.edu.co")),
+                aviso.destinatarios());
+        assertEquals(Map.of("estudiante", "estudiantes del grupo", "asignatura", "Calculo", "grupo", "G01 de Calculo",
                 "fecha", "10/11/2026", "horaInicio", "08:00", "horaFin", "10:00", "motivo", MOTIVO,
                 "docente", "Maria Docente", "idSesion", SESION.toString()), aviso.datos());
-        // Sin motivo en la fila del destinatario se usa el motivo recortado del comando.
-        assertEquals(MOTIVO, avisos.getAllValues().get(1).datos().get("motivo"));
 
         final ArgumentCaptor<RealtimeEvent> evento = ArgumentCaptor.forClass(RealtimeEvent.class);
         verify(realtime).publish(evento.capture());
@@ -163,15 +164,16 @@ class CancelarSesionUseCaseImplTest {
     }
 
     @Test
-    void los_fallos_del_aviso_y_del_evento_no_cambian_la_respuesta() {
+    void el_fallo_del_aviso_agrupado_y_del_evento_no_cambian_la_respuesta() {
         prepararSesion("UTC_V2");
         when(repositorio.cancelar(SESION, MOTIVO, DOCENTE)).thenReturn(new SesionCancelada(SESION, GRUPO, CANCELADA_UTC, 2));
         when(repositorio.consultarDestinatarios(SESION, DOCENTE)).thenReturn(List.of(
                 destinatario("Ana Perez", "ana@uco.edu.co", MOTIVO), destinatario("Luis Gomez", "luis@uco.edu.co", MOTIVO)));
-        doThrow(new IllegalStateException("smtp")).doNothing().when(notificaciones).notificar(any());
+        doThrow(new IllegalStateException("smtp")).when(notificaciones).notificar(any());
         doThrow(new IllegalStateException("sse")).when(realtime).publish(any());
 
-        assertEquals(1, useCase.execute(new CancelarSesionInputPort.Comando(SESION, MOTIVO, DOCENTE)).estudiantesNotificados());
+        // Un solo aviso agrupado: si falla, ningun estudiante queda cubierto y la respuesta no cambia.
+        assertEquals(0, useCase.execute(new CancelarSesionInputPort.Comando(SESION, MOTIVO, DOCENTE)).estudiantesNotificados());
     }
 
     @Test

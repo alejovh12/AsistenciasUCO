@@ -25,8 +25,8 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * CULM-001 C.1 (DEC-043): el decano ve las revisiones escaladas a el (programa sin coordinador disponible) o resueltas por el, y las
- * resuelve. La DB fuerza el ambito (su facultad) y excluye al proponente.
+ * DEC-065 (1): el decano solo consulta (todas las revisiones de su facultad). La resolucion es del coordinador: el PATCH se conserva en la
+ * ruta, pero la DB responde RCN_016 y el backend lo expone como 403.
  */
 @RestController
 @RequestMapping("/api/v1/decano/revisiones-cancelacion")

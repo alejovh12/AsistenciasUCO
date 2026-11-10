@@ -71,7 +71,8 @@ public final class SesionV2ConsultaController {
                 dto.codigoGrupo(), dto.nombreGrupo(),
                 instante(dto.fechaHoraInicioUtc()), instante(dto.fechaHoraFinUtc()),
                 dto.estadoTemporal(), dto.procedenciaTemporal(),
-                dto.estado(), CancelacionSesionResponse.from(dto.cancelacion())
+                dto.estado(), CancelacionSesionResponse.from(dto.cancelacion()),
+                dto.estadoSolicitud(), dto.pendienteAprobacion()
         );
     }
 

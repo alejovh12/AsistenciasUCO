@@ -30,7 +30,18 @@ public final class ConsultasAsistenciaProgramaDTO {
                                  Integer numero, String codigo, Integer numeroSemana, LocalDateTime fechaHoraInicio,
                                  LocalDateTime fechaHoraFin, LocalDateTime fechaHoraInicioUtc,
                                  LocalDateTime fechaHoraFinUtc, String estadoTemporal, String estado,
-                                 CancelacionSesionDTO cancelacion) {
+                                 CancelacionSesionDTO cancelacion, String estadoSolicitud,
+                                 boolean pendienteAprobacion) {
+
+        /** Sesion con cancelacion opcional y sin solicitud (DEC-065 (2): {@code estadoSolicitud} nulo). */
+        public SesionGrupoDTO(UUID id, UUID idGrupo, Integer codigoGrupo, String nombreGrupo, String nombre,
+                              Integer numero, String codigo, Integer numeroSemana, LocalDateTime fechaHoraInicio,
+                              LocalDateTime fechaHoraFin, LocalDateTime fechaHoraInicioUtc,
+                              LocalDateTime fechaHoraFinUtc, String estadoTemporal, String estado,
+                              CancelacionSesionDTO cancelacion) {
+            this(id, idGrupo, codigoGrupo, nombreGrupo, nombre, numero, codigo, numeroSemana, fechaHoraInicio,
+                    fechaHoraFin, fechaHoraInicioUtc, fechaHoraFinUtc, estadoTemporal, estado, cancelacion, null, false);
+        }
 
         /** Sesion programada (sin cancelacion). */
         public SesionGrupoDTO(UUID id, UUID idGrupo, Integer codigoGrupo, String nombreGrupo, String nombre,
@@ -39,7 +50,7 @@ public final class ConsultasAsistenciaProgramaDTO {
                               LocalDateTime fechaHoraFinUtc, String estadoTemporal) {
             this(id, idGrupo, codigoGrupo, nombreGrupo, nombre, numero, codigo, numeroSemana, fechaHoraInicio,
                     fechaHoraFin, fechaHoraInicioUtc, fechaHoraFinUtc, estadoTemporal, EstadoSesion.PROGRAMADA.name(),
-                    null);
+                    null, null, false);
         }
     }
 

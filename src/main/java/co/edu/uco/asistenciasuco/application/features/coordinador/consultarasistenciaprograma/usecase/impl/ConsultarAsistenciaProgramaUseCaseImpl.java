@@ -100,7 +100,9 @@ public final class ConsultarAsistenciaProgramaUseCaseImpl implements ConsultarAs
                 conProcedencia ? procedencia.fechaHoraInicioUtc() : null,
                 conProcedencia ? procedencia.fechaHoraFinUtc() : null,
                 conProcedencia ? procedencia.estadoTemporal() : EstadoHorarioSesion.INDETERMINADA,
-                conProcedencia ? procedencia.cancelacion() : null);
+                conProcedencia ? procedencia.cancelacion() : null,
+                conProcedencia ? procedencia.estadoSolicitud() : null,
+                conProcedencia && procedencia.pendienteAprobacion());
     }
 
     @Override

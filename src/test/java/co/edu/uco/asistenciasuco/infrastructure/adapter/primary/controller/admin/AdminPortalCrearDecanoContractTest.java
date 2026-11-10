@@ -43,6 +43,13 @@ class AdminPortalCrearDecanoContractTest {
             authenticatedUserResolver
     );
 
+    @org.junit.jupiter.api.BeforeEach
+    void resultadoDelCasoDeUso() {
+        org.mockito.Mockito.when(useCase.execute(org.mockito.ArgumentMatchers.any())).thenReturn(
+                new co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.domain.CrearDecanoResultado(
+                        UUID.randomUUID(), null, null));
+    }
+
     @Test
     void tipo_identificacion_del_json_llega_al_domain() {
         controller.crearDecano(json.readValue(requestJson(TIPO_ID.toString()), AdminPortalController.CrearDecanoRequest.class));
@@ -82,6 +89,24 @@ class AdminPortalCrearDecanoContractTest {
         final ArgumentCaptor<CrearDecanoDomain> domain = ArgumentCaptor.forClass(CrearDecanoDomain.class);
         verify(useCase).execute(domain.capture());
         org.junit.jupiter.api.Assertions.assertNull(domain.getValue().getIdFacultad());
+    }
+
+    @Test
+    void facultad_nueva_del_json_llega_al_domain() {
+        final UUID institucion = UUID.fromString("44444444-2222-3333-4444-555555555555");
+        final String jsonConFacultadNueva = "{\"tipoIdentificacionId\":\"" + TIPO_ID + "\",\"numeroIdentificacion\":123456789,\"primerNombre\":\"Ana\","
+                + "\"segundoNombre\":\"Maria\",\"primerApellido\":\"Perez\","
+                + "\"segundoApellido\":\"Gomez\",\"correo\":\"nuevo@uco.edu.co\",\"password\":\"Clave123!\","
+                + "\"facultadNueva\":{\"nombre\":\"Facultad de Ingenieria\",\"codigo\":\"ING\",\"idInstitucion\":\"" + institucion + "\"}}";
+
+        controller.crearDecano(json.readValue(jsonConFacultadNueva, AdminPortalController.CrearDecanoRequest.class));
+
+        final ArgumentCaptor<CrearDecanoDomain> domain = ArgumentCaptor.forClass(CrearDecanoDomain.class);
+        verify(useCase).execute(domain.capture());
+        org.junit.jupiter.api.Assertions.assertNull(domain.getValue().getIdFacultad());
+        assertEquals("Facultad de Ingenieria", domain.getValue().getFacultadNueva().nombre());
+        assertEquals("ING", domain.getValue().getFacultadNueva().codigo());
+        assertEquals(institucion, domain.getValue().getFacultadNueva().idInstitucion());
     }
 
     private String requestJson(final String tipoId) {

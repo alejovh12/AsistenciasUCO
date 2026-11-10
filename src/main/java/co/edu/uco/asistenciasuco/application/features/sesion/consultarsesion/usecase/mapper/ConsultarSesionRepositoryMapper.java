@@ -40,7 +40,9 @@ public final class ConsultarSesionRepositoryMapper {
                 entity.getNombreGrupo(),
                 entity.getFechaHoraInicio(),
                 entity.getFechaHoraFin(),
-                CancelacionSesionDTO.desde(entity.getCancelacion())
+                CancelacionSesionDTO.desde(entity.getCancelacion()),
+                entity.getEstadoSolicitud(),
+                entity.isPendienteAprobacion()
         );
     }
 }
