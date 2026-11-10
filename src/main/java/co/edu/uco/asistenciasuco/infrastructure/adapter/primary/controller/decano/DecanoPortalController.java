@@ -4,6 +4,8 @@ import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinado
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.primaryports.dto.CoordinadorDTO;
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.primaryports.CrearCoordinadorInputPort;
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.primaryports.dto.CrearCoordinadorDTO;
+import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.primaryports.dto.ProgramaNuevoDTO;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.decano.response.CrearCoordinadorResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.decano.request.CrearCoordinadorRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiPageResponse;
@@ -56,8 +58,10 @@ public final class DecanoPortalController {
     }
 
     @PostMapping("/coordinadores")
-    public ResponseEntity<ApiDataResponse<Void>> crearCoordinador(@RequestBody final CrearCoordinadorRequest request) {
-        crearCoordinadorInputPort.execute(new CrearCoordinadorDTO(
+    public ResponseEntity<ApiDataResponse<CrearCoordinadorResponse>> crearCoordinador(@RequestBody final CrearCoordinadorRequest request) {
+        final var programa = request == null ? null : request.getProgramaNuevo();
+        final var resultado = crearCoordinadorInputPort.execute(new CrearCoordinadorDTO(
+                null,
                 request == null ? null : request.getNumeroIdentificacion(),
                 request == null ? null : request.getPrimerNombre(),
                 request == null ? null : request.getSegundoNombre(),
@@ -66,8 +70,12 @@ public final class DecanoPortalController {
                 request == null ? null : request.getCorreo(),
                 request == null ? null : request.getIdPrograma(),
                 request == null ? null : request.getPassword(),
-                authenticatedUserResolver.requireAuthenticatedUserId()
+                authenticatedUserResolver.requireAuthenticatedUserId(),
+                programa == null ? null : new ProgramaNuevoDTO(
+                        programa.nombre(), programa.idTipoPrograma(), programa.idModalidad(), programa.idJornada())
         ));
-        return ResponseEntity.ok(new ApiDataResponse<>(true, null));
+        // DEC-065 (5): ya no responde data=null; devuelve el coordinador y el programa vinculado o creado.
+        return ResponseEntity.ok(new ApiDataResponse<>(true, new CrearCoordinadorResponse(
+                resultado.idCoordinador(), resultado.idPrograma(), resultado.nombrePrograma())));
     }
 }

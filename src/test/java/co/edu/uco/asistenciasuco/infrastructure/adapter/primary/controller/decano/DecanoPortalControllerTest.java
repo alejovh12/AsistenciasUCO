@@ -5,6 +5,8 @@ import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinado
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.primaryports.dto.CoordinadorDTO;
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.primaryports.CrearCoordinadorInputPort;
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.primaryports.dto.CrearCoordinadorDTO;
+import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.primaryports.dto.CrearCoordinadorResultadoDTO;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.junit.jupiter.api.Test;
@@ -17,6 +19,8 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -68,20 +72,67 @@ class DecanoPortalControllerTest {
         final String body = "{\"numeroIdentificacion\":\"123456789\",\"primerNombre\":\"Ana\",\"segundoNombre\":\"Maria\","
                 + "\"primerApellido\":\"Perez\",\"segundoApellido\":\"Gomez\",\"correo\":\"ana@uco.edu.co\","
                 + "\"idPrograma\":\"" + PROGRAMA + "\",\"password\":\"Clave123!\"}";
+        final UUID idCoordinador = UUID.randomUUID();
+        when(crearCoordinador.execute(any())).thenReturn(new CrearCoordinadorResultadoDTO(idCoordinador, PROGRAMA, null));
 
+        // DEC-065 (5): ya no responde data=null; trae el coordinador y el programa vinculado.
         mvc.perform(post("/api/v1/decano/coordinadores").contentType("application/json").content(body))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exitoso").value(true));
+                .andExpect(jsonPath("$.exitoso").value(true))
+                .andExpect(jsonPath("$.datos.idCoordinador").value(idCoordinador.toString()))
+                .andExpect(jsonPath("$.datos.idPrograma").value(PROGRAMA.toString()))
+                .andExpect(jsonPath("$.datos.nombrePrograma").doesNotExist());
 
         final ArgumentCaptor<CrearCoordinadorDTO> captor = ArgumentCaptor.forClass(CrearCoordinadorDTO.class);
         verify(crearCoordinador).execute(captor.capture());
         assertEquals("Ana", captor.getValue().primerNombre());
         assertEquals(PROGRAMA, captor.getValue().idPrograma());
         assertEquals(ACTOR, captor.getValue().usuario());
+        assertNull(captor.getValue().programaNuevo());
+    }
+
+    @Test
+    void dec065_crearCoordinador_con_programa_nuevo_mapea_el_bloque_y_devuelve_el_programa_creado() throws Exception {
+        final UUID tipoPrograma = UUID.randomUUID();
+        final UUID modalidad = UUID.randomUUID();
+        final UUID jornada = UUID.randomUUID();
+        final UUID idCoordinador = UUID.randomUUID();
+        final UUID idPrograma = UUID.randomUUID();
+        when(crearCoordinador.execute(any())).thenReturn(new CrearCoordinadorResultadoDTO(idCoordinador, idPrograma, "Ingenieria de Sistemas"));
+        final String body = "{\"numeroIdentificacion\":\"123456789\",\"primerNombre\":\"Ana\",\"primerApellido\":\"Perez\","
+                + "\"correo\":\"ana@uco.edu.co\",\"password\":\"Clave123!\",\"programaNuevo\":{\"nombre\":\"Ingenieria de Sistemas\","
+                + "\"idTipoPrograma\":\"" + tipoPrograma + "\",\"idModalidad\":\"" + modalidad + "\",\"idJornada\":\"" + jornada + "\"}}";
+
+        mvc.perform(post("/api/v1/decano/coordinadores").contentType("application/json").content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.datos.idCoordinador").value(idCoordinador.toString()))
+                .andExpect(jsonPath("$.datos.idPrograma").value(idPrograma.toString()))
+                .andExpect(jsonPath("$.datos.nombrePrograma").value("Ingenieria de Sistemas"));
+
+        final ArgumentCaptor<CrearCoordinadorDTO> captor = ArgumentCaptor.forClass(CrearCoordinadorDTO.class);
+        verify(crearCoordinador).execute(captor.capture());
+        assertNull(captor.getValue().idPrograma());
+        assertEquals("Ingenieria de Sistemas", captor.getValue().programaNuevo().nombre());
+        assertEquals(tipoPrograma, captor.getValue().programaNuevo().idTipoPrograma());
+        assertEquals(modalidad, captor.getValue().programaNuevo().idModalidad());
+        assertEquals(jornada, captor.getValue().programaNuevo().idJornada());
+    }
+
+    @Test
+    void dec065_crearCoordinador_con_programa_y_programa_nuevo_a_la_vez_es_400() throws Exception {
+        doThrow(new ValidationException("Indique un programa existente o un programa nuevo, no ambos."))
+                .when(crearCoordinador).execute(any());
+        final String body = "{\"numeroIdentificacion\":\"123456789\",\"primerNombre\":\"Ana\",\"idPrograma\":\"" + PROGRAMA
+                + "\",\"programaNuevo\":{\"nombre\":\"P\",\"idTipoPrograma\":\"" + UUID.randomUUID() + "\"}}";
+
+        mvc.perform(post("/api/v1/decano/coordinadores").contentType("application/json").content(body))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     void crearCoordinador_con_peticion_nula_mapea_campos_nulos() {
+        when(crearCoordinador.execute(any())).thenReturn(new CrearCoordinadorResultadoDTO(UUID.randomUUID(), null, null));
+
         controller.crearCoordinador(null);
 
         final ArgumentCaptor<CrearCoordinadorDTO> captor = ArgumentCaptor.forClass(CrearCoordinadorDTO.class);

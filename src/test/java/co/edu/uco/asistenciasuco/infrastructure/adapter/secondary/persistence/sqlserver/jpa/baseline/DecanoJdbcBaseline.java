@@ -62,4 +62,9 @@ public final class DecanoJdbcBaseline implements DecanoQueryPort, DecanoCommandP
             final java.util.UUID usuarioEjecutor) {
         throw new UnsupportedOperationException("CULM-001 A.2-8: el cambio de estado del decano no forma parte de la linea base JDBC.");
     }
+
+    @Override
+    public ResultadoDecanoConFacultad crearDecanoConFacultad(final CrearDecanoConFacultadCommand command) {
+        return commands.crearDecanoConFacultad(command);
+    }
 }

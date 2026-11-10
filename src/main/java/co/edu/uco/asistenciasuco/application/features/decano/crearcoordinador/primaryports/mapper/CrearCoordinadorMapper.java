@@ -1,7 +1,10 @@
 package co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.primaryports.mapper;
 
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.primaryports.dto.CrearCoordinadorDTO;
+import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.primaryports.dto.CrearCoordinadorResultadoDTO;
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.usecase.domain.CrearCoordinadorDomain;
+import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.usecase.domain.CrearCoordinadorResultado;
+import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.usecase.domain.ProgramaNuevoDomain;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 
@@ -28,7 +31,13 @@ public final class CrearCoordinadorMapper {
                 dto.correo(),
                 dto.idPrograma(),
                 dto.password(),
-                dto.usuario()
+                dto.usuario(),
+                dto.programaNuevo() == null ? null : new ProgramaNuevoDomain(dto.programaNuevo().nombre(),
+                        dto.programaNuevo().idTipoPrograma(), dto.programaNuevo().idModalidad(), dto.programaNuevo().idJornada())
         );
+    }
+
+    public static CrearCoordinadorResultadoDTO toResultadoDto(final CrearCoordinadorResultado resultado) {
+        return new CrearCoordinadorResultadoDTO(resultado.idCoordinador(), resultado.idPrograma(), resultado.nombrePrograma());
     }
 }

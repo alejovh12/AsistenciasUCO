@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.p
 
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.primaryports.CrearCoordinadorInputPort;
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.primaryports.dto.CrearCoordinadorDTO;
+import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.primaryports.dto.CrearCoordinadorResultadoDTO;
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.primaryports.mapper.CrearCoordinadorMapper;
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.usecase.CrearCoordinadorUseCase;
 import java.util.Objects;
@@ -15,7 +16,7 @@ public final class CrearCoordinadorInteractor implements CrearCoordinadorInputPo
     }
 
     @Override
-    public void execute(final CrearCoordinadorDTO dto) {
-        useCase.execute(CrearCoordinadorMapper.toDomain(dto));
+    public CrearCoordinadorResultadoDTO execute(final CrearCoordinadorDTO dto) {
+        return CrearCoordinadorMapper.toResultadoDto(useCase.execute(CrearCoordinadorMapper.toDomain(dto)));
     }
 }

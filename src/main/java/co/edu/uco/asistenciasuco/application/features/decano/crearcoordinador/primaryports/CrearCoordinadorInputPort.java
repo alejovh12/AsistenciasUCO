@@ -1,8 +1,9 @@
 package co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.primaryports;
 
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.primaryports.dto.CrearCoordinadorDTO;
+import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.primaryports.dto.CrearCoordinadorResultadoDTO;
 
 public interface CrearCoordinadorInputPort {
 
-    void execute(CrearCoordinadorDTO dto);
+    CrearCoordinadorResultadoDTO execute(CrearCoordinadorDTO dto);
 }
