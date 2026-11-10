@@ -97,7 +97,9 @@ public final class CoordinadorJdbcBaseline implements CoordinadorQueryPort, Coor
                 JdbcBaselineValueMapper.toBoolean(rs.getObject("estaActivoRolCoordinador"))
         ));
     }
+
+    @Override
+    public ResultadoCoordinadorConPrograma crearCoordinadorConPrograma(final CrearCoordinadorConProgramaCommand command) {
+        return commands.crearCoordinadorConPrograma(command);
+    }
 }
-
-
-

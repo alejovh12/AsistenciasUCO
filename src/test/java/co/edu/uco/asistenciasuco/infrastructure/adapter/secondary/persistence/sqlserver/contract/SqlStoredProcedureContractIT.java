@@ -153,6 +153,41 @@ class SqlStoredProcedureContractIT {
                         input("@idUsuarioEjecutor", "uniqueidentifier"),
                         input("@idTipoIdIdentificacion", "uniqueidentifier") // CULM-001 D.5 (CONTRACT D v2 §6.3, OBS-10)
                 )),
+                // DEC-065 (5): altas compuestas (persona + rol + facultad / programa en una sola transaccion de BD).
+                Arguments.of("usp_crear_decano_con_facultad", List.of(
+                        input("@idDecano", "uniqueidentifier"),
+                        input("@numeroIdentificacion", "int"),
+                        input("@primerNombre", "nvarchar"),
+                        input("@segundoNombre", "nvarchar"),
+                        input("@primerApellido", "nvarchar"),
+                        input("@segundoApellido", "nvarchar"),
+                        input("@correo", "nvarchar"),
+                        input("@password", "nvarchar"),
+                        input("@nombreFacultad", "nvarchar"),
+                        input("@codigoFacultad", "nvarchar"),
+                        input("@idInstitucion", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idTipoIdIdentificacion", "uniqueidentifier")
+                )),
+                Arguments.of("usp_crear_coordinador_con_programa", List.of(
+                        input("@idCoordinador", "uniqueidentifier"),
+                        input("@numeroIdentificacion", "int"),
+                        input("@primerNombre", "nvarchar"),
+                        input("@segundoNombre", "nvarchar"),
+                        input("@primerApellido", "nvarchar"),
+                        input("@segundoApellido", "nvarchar"),
+                        input("@correo", "nvarchar"),
+                        input("@password", "nvarchar"),
+                        input("@nombrePrograma", "nvarchar"),
+                        input("@idTipoPrograma", "uniqueidentifier"),
+                        input("@idModalidad", "uniqueidentifier"),
+                        input("@idJornada", "uniqueidentifier"),
+                        input("@idFacultad", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idTipoIdIdentificacion", "uniqueidentifier")
+                )),
                 Arguments.of("usp_crear_asignatura", List.of(
                         input("@idAsignatura", "uniqueidentifier"),
                         input("@codigo", "nvarchar"),

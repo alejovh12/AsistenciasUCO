@@ -41,6 +41,25 @@ public class DecanoJpaRepository implements DecanoQueryPort, DecanoCommandPort {
                  @idTipoIdIdentificacion = :idTipoIdIdentificacion
             """;
 
+    // DEC-065 (5): una sola transaccion de BD para persona + rol + facultad. Resultset canonico + idDecano, idFacultad, nombreFacultad.
+    static final String SQL_CREAR_DECANO_CON_FACULTAD = """
+            EXEC dbo.usp_crear_decano_con_facultad
+                 @idDecano = :idDecano,
+                 @numeroIdentificacion = :numeroIdentificacion,
+                 @primerNombre = :primerNombre,
+                 @segundoNombre = :segundoNombre,
+                 @primerApellido = :primerApellido,
+                 @segundoApellido = :segundoApellido,
+                 @correo = :correo,
+                 @password = :password,
+                 @nombreFacultad = :nombreFacultad,
+                 @codigoFacultad = :codigoFacultad,
+                 @idInstitucion = :idInstitucion,
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor,
+                 @idTipoIdIdentificacion = :idTipoIdIdentificacion
+            """;
+
     static final String HQL_LISTAR = """
             select d.id, d.idUsuario, d.numeroIdentificacion, d.nombreCompleto,
                    d.idFacultad, d.nombreFacultad, d.estaActivoDecano
@@ -49,6 +68,7 @@ public class DecanoJpaRepository implements DecanoQueryPort, DecanoCommandPort {
             """;
 
     static final String OP_CREAR_DECANO = "crearDecano";
+    static final String OP_CREAR_DECANO_CON_FACULTAD = "crearDecanoConFacultad";
     static final String OP_CAMBIAR_ESTADO_DECANO = "cambiarEstadoDecano";
 
     // CULM-001 A.2-8: resultset canonico mas idUsuario, personaSinRolesActivos y estaActivoDecano.
@@ -73,6 +93,48 @@ public class DecanoJpaRepository implements DecanoQueryPort, DecanoCommandPort {
     @Override
     public void crearDecano(final CrearDecanoCommand command) {
         ejecutarCrearDecano(command);
+    }
+
+    @Override
+    public ResultadoDecanoConFacultad crearDecanoConFacultad(final CrearDecanoConFacultadCommand command) {
+        final UUID correlationId = CorrelationIdContext.require();
+
+        final Map<String, Object> parametros = new LinkedHashMap<>();
+        parametros.put("idDecano", command.idDecano());
+        parametros.put("numeroIdentificacion", command.numeroIdentificacion());
+        parametros.put("primerNombre", command.primerNombre());
+        parametros.put("segundoNombre", command.segundoNombre());
+        parametros.put("primerApellido", command.primerApellido());
+        parametros.put("segundoApellido", command.segundoApellido());
+        parametros.put("correo", command.correo());
+        parametros.put("password", command.password());
+        parametros.put("nombreFacultad", command.nombreFacultad());
+        parametros.put("codigoFacultad", command.codigoFacultad());
+        parametros.put("idInstitucion", command.idInstitucion());
+        parametros.put("idCorrelacion", correlationId);
+        parametros.put("idUsuarioEjecutor", command.usuarioEjecutor());
+        parametros.put("idTipoIdIdentificacion", command.tipoIdentificacionId());
+
+        final ProcedureRow fila = procedureExecutor.executeWithExtras(
+                OP_CREAR_DECANO_CON_FACULTAD, SQL_CREAR_DECANO_CON_FACULTAD, parametros, correlationId, 3);
+        return new ResultadoDecanoConFacultad(
+                idObligatorio(fila.extras().get(0), "idDecano"),
+                idObligatorio(fila.extras().get(1), "idFacultad"),
+                NativeRowValues.texto(fila.extras().get(2)));
+    }
+
+    private static UUID idObligatorio(final Object valor, final String columna) {
+        try {
+            final UUID id = NativeRowValues.uuid(valor);
+            if (id != null) {
+                return id;
+            }
+        } catch (final IllegalArgumentException exception) {
+            throw new DatabaseOperationException(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT,
+                    "El procedimiento " + OP_CREAR_DECANO_CON_FACULTAD + " retorno " + columna + " con formato invalido.", exception);
+        }
+        throw new DatabaseOperationException(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT,
+                "El procedimiento " + OP_CREAR_DECANO_CON_FACULTAD + " no retorno " + columna + ".");
     }
 
     @Override

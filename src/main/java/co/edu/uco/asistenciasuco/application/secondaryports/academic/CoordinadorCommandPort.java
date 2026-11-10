@@ -20,6 +20,36 @@ public interface CoordinadorCommandPort {
     }
 
     /**
+     * DEC-065 (5): registra, en una sola transaccion de BD, a la persona coordinadora y el programa academico que
+     * coordinara en la facultad del decano ({@code usp_crear_coordinador_con_programa}). Ante cualquier rechazo no
+     * queda persona ni programa.
+     */
+    ResultadoCoordinadorConPrograma crearCoordinadorConPrograma(CrearCoordinadorConProgramaCommand command);
+
+    /** Identificadores y nombre confirmados por la base de datos para el alta compuesta. */
+    record ResultadoCoordinadorConPrograma(UUID idCoordinador, UUID idPrograma, String nombrePrograma) {
+    }
+
+    record CrearCoordinadorConProgramaCommand(
+            UUID idCoordinador,
+            UUID tipoIdentificacionId,
+            String numeroIdentificacion,
+            String primerNombre,
+            String segundoNombre,
+            String primerApellido,
+            String segundoApellido,
+            String correo,
+            String password,
+            String nombrePrograma,
+            UUID idTipoPrograma,
+            UUID idModalidad,
+            UUID idJornada,
+            UUID idFacultad,
+            UUID usuarioEjecutor
+    ) {
+    }
+
+    /**
      * HU121: edita nombres, apellidos y correo; HU159: corrige el documento si {@code documento} lo pide. Devuelve el
      * usuario del coordinador para sincronizar la identidad.
      */

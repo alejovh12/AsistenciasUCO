@@ -36,6 +36,9 @@ final class DbFailureClassifier {
 
     private static final String OPERATION_ACTUALIZAR_COORDINADOR = "actualizarCoordinador";
     private static final String OPERATION_CAMBIAR_ESTADO_COORDINADOR = "cambiarEstadoCoordinador";
+    // DEC-065 (5): altas compuestas; GEN_001 significa institucion o facultad inexistente (404).
+    private static final String OPERATION_CREAR_DECANO_CON_FACULTAD = "crearDecanoConFacultad";
+    private static final String OPERATION_CREAR_COORDINADOR_CON_PROGRAMA = "crearCoordinadorConPrograma";
     private static final String OPERATION_CONSULTAR_HISTORIAL_GRUPOS_DOCENTE = "consultarHistorialGruposDocente";
     private static final String OPERATION_ASIGNAR_DOCENTE = "asignarDocenteAGrupo";
     private static final String OPERATION_REGISTRAR_ESTUDIANTE = "registrarEstudianteEnGrupo";
@@ -303,7 +306,9 @@ final class DbFailureClassifier {
                 // P5: area o componente inexistente al guardar una asignatura.
                 || OPERATION_CREAR_ASIGNATURA.equals(operation) || OPERATION_ACTUALIZAR_ASIGNATURA.equals(operation)
                 // HU159: el estudiante o el decano no existe o esta fuera de la jerarquia del ejecutor.
-                || OPERATION_CORREGIR_IDENTIDAD.equals(operation)) {
+                || OPERATION_CORREGIR_IDENTIDAD.equals(operation)
+                || OPERATION_CREAR_DECANO_CON_FACULTAD.equals(operation)
+                || OPERATION_CREAR_COORDINADOR_CON_PROGRAMA.equals(operation)) {
             return CommonErrorCode.RESOURCE_NOT_FOUND;
         }
         return DatabaseErrorCode.ERR_DB_UNCLASSIFIED;
