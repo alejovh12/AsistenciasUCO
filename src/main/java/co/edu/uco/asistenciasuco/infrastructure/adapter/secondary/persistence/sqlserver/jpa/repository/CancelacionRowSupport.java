@@ -6,6 +6,7 @@ import jakarta.persistence.Query;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -27,6 +28,24 @@ final class CancelacionRowSupport {
             }
         }
         return sql.toString();
+    }
+
+    /**
+     * Los parametros que de verdad aparecen en el {@code EXEC} que arma {@link #exec}: los no nulos, en el mismo orden.
+     *
+     * <p>CERT-CULM001 (HU026C): {@code JpaProcedureExecutor} enlaza todos los parametros que recibe. Si recibia el mapa
+     * completo, intentaba enlazar un parametro nulo que no esta en el {@code EXEC} (por ejemplo {@code idEstudianteGrupo}
+     * en la evaluacion del grupo entero) y Hibernate fallaba con {@code IllegalArgumentException}. Por eso el motor de
+     * alertas no evaluaba nunca. Quien use {@link #exec} con el ejecutor debe pasarle este mapa.</p>
+     */
+    static Map<String, Object> enlazables(final Map<String, Object> parametros) {
+        final Map<String, Object> noNulos = new LinkedHashMap<>();
+        parametros.forEach((nombre, valor) -> {
+            if (valor != null) {
+                noNulos.put(nombre, valor);
+            }
+        });
+        return noNulos;
     }
 
     static List<?> ejecutar(final EntityManager entityManager, final String procedimiento, final Map<String, Object> parametros) {

@@ -109,6 +109,17 @@ class EjecutarCargaUsuariosUseCaseImplTest {
         assertEquals(EstadoFilaResultado.CREADA, resultado.filas().get(0).estado());
         assertEquals(EstadoFilaResultado.ERROR, resultado.filas().get(1).estado());
         assertEquals(EstadoFilaResultado.CREADA, resultado.filas().get(2).estado());
+
+        // CERT-CULM001 (HU171): una persona nueva se vincula en modo "docente nuevo" (idDocente e idUsuario nulos).
+        // Con ids aleatorios VincularDocenteProgramaUseCaseImpl usaba el modo "existente" y el SP respondia DOC_005.
+        final org.mockito.ArgumentCaptor<co.edu.uco.asistenciasuco.application.features.coordinador.vinculardocenteprograma.usecase.domain.VincularDocenteProgramaDomain> captor =
+                org.mockito.ArgumentCaptor.forClass(co.edu.uco.asistenciasuco.application.features.coordinador.vinculardocenteprograma.usecase.domain.VincularDocenteProgramaDomain.class);
+        org.mockito.Mockito.verify(vincularDocenteUseCase, org.mockito.Mockito.times(3)).execute(captor.capture());
+        for (final var vinculo : captor.getAllValues()) {
+            org.junit.jupiter.api.Assertions.assertNull(vinculo.idDocente());
+            org.junit.jupiter.api.Assertions.assertNull(vinculo.idUsuario());
+            assertEquals(tipoVincId, vinculo.idTipoVinculacion());
+        }
     }
 
     @Test

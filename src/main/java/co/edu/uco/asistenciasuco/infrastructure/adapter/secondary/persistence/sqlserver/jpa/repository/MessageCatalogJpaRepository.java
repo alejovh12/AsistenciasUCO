@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
 
 /**
  * Adaptador secundario para resolver mensajes desde SQL Server
@@ -84,9 +85,24 @@ public class MessageCatalogJpaRepository implements MessageCatalogPort {
         }
     }
 
+    /**
+     * Acepta los dos formatos del catalogo, igual que los adaptadores de Azure y de MessageUcoLab: marcadores
+     * secuenciales {@code {}} (los que usan las semillas de la BD y {@code usp_obtener_mensaje_catalogo}) y marcadores
+     * indexados {@code {0}}.
+     *
+     * <p>CERT-CULM001 (HU026C): antes solo se aplicaba {@link MessageFormat}, que no entiende {@code {}} y devolvia la
+     * plantilla sin sustituir. Por eso las alertas del estudiante salian como "Llevas {}% de inasistencia en {}".</p>
+     */
     private String formatMessage(final String pattern, final Object... args) {
         if (args == null || args.length == 0 || pattern == null || pattern.isBlank()) {
             return pattern;
+        }
+        if (pattern.contains("{}")) {
+            String texto = pattern;
+            for (final Object arg : args) {
+                texto = texto.replaceFirst("\\{\\}", Matcher.quoteReplacement(String.valueOf(arg)));
+            }
+            return texto;
         }
         try {
             return MessageFormat.format(pattern, args);

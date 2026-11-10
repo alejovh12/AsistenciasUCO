@@ -140,6 +140,8 @@ class RevisionCancelacionJpaRepositoryTest {
         verify(query).setParameter("idRevision", REVISION);
         verify(query).setParameter("codigoDecision", "PROPONER");
         verify(query).setParameter("idUsuarioEjecutor", USUARIO);
+        // CERT-CULM001: el motivo nulo no esta en el EXEC, asi que no se enlaza (Hibernate lo rechazaria).
+        verify(query, org.mockito.Mockito.never()).setParameter(org.mockito.ArgumentMatchers.eq("motivo"), org.mockito.ArgumentMatchers.any());
     }
 
     @Test

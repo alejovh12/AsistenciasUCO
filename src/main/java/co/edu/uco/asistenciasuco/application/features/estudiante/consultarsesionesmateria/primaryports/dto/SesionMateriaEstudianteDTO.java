@@ -6,9 +6,11 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * {@code estadoAsistencia}: PRESENTE | AUSENTE | JUSTIFICADA | NO_DISPONIBLE (nunca nulo).
+ * {@code estadoAsistencia}: PRESENTE | AUSENTE | JUSTIFICADA | PARCIAL | NO_DISPONIBLE (nunca nulo). PARCIAL
+ * (CULM-001 B.2 [SUPUESTO-B-15], CERT-CULM001): varias tomas en la sesion, alguna {@code SJC} y otra {@code AN}.
  * {@code estadoSolicitudRevision}: nombre del estado de la solicitud de revision existente, o nulo.
- * {@code reclamable}: pista de UI (ausencia confirmada y sin solicitud previa); no sustituye la validacion al radicar.
+ * {@code reclamable}: pista de UI (ausencia confirmada, total o PARCIAL, y sin solicitud previa); no sustituye la
+ * validacion al radicar.
  * CULM-001 D.1: {@code fechaLimiteJustificacionUtc} (limite exclusivo en UTC, nulo si faltan los parametros) y
  * {@code plazoJustificacionVigente} salen de la base de datos; el cliente no calcula el plazo.
  */
