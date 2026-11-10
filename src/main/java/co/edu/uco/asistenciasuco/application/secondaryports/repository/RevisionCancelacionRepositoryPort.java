@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * CULM-001 C.1 (HU026C): decision del docente, resolucion del coordinador o del decano escalado, bandejas y destinatarios de
+ * CULM-001 C.1 (HU026C): decision del docente, resolucion del coordinador (DEC-065: el decano solo consulta), bandejas y destinatarios de
  * la revision de cancelacion por inasistencia. El ambito y las transiciones los decide la DB.
  */
 public interface RevisionCancelacionRepositoryPort {
@@ -22,6 +22,9 @@ public interface RevisionCancelacionRepositoryPort {
     PaginaRevisiones consultarCoordinador(UUID usuarioId, int pagina, int tamano, boolean soloPendientes, String estado, UUID programaId, UUID grupoId);
 
     PaginaRevisiones consultarDecano(UUID usuarioId, int pagina, int tamano, boolean soloPendientes, String estado, UUID programaId);
+
+    /** DEC-065 (1): revisiones de los grupos del docente titular; el ambito (SEC_002) lo fuerza el SP. */
+    PaginaRevisiones consultarDocente(UUID usuarioId, int pagina, int tamano, boolean soloPendientes, String estado, UUID grupoId);
 
     List<DestinatarioRevision> consultarDestinatarios(UUID usuarioId, UUID revisionId);
 

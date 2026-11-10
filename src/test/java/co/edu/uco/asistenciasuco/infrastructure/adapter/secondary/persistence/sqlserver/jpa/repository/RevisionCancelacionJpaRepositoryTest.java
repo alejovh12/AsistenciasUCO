@@ -210,6 +210,42 @@ class RevisionCancelacionJpaRepositoryTest {
     }
 
     @Test
+    void consultar_docente_usa_el_sp_del_docente_con_sus_nombres_de_parametro_y_el_mismo_mapeo() {
+        when(query.getResultList()).thenReturn(filas(filaBandeja(4L)));
+
+        final PaginaRevisiones pagina = repo.consultarDocente(USUARIO, 2, 10, true, "  PROPUESTA ", GRUPO);
+
+        assertEquals(4, pagina.total());
+        assertEquals(REVISION, pagina.filas().getFirst().id());
+        final ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
+        verify(manager).createNativeQuery(sql.capture());
+        assertTrue(sql.getValue().contains("usp_consultar_revisiones_cancelacion_docente_paginado"));
+        assertTrue(sql.getValue().contains("@idUsuario = :idUsuario"));
+        verify(query).setParameter("idUsuario", USUARIO);
+        verify(query).setParameter("soloPendientes", 1);
+        verify(query).setParameter("estado", "PROPUESTA");
+        verify(query).setParameter("idGrupo", GRUPO);
+        verify(query).setParameter("numeroPagina", 2);
+        verify(query).setParameter("tamanoPagina", 10);
+        verify(query).setParameter("idCorrelacion", CORRELACION);
+    }
+
+    @Test
+    void consultar_docente_sin_filtros_omite_estado_y_grupo() {
+        when(query.getResultList()).thenReturn(Collections.emptyList());
+
+        final PaginaRevisiones pagina = repo.consultarDocente(USUARIO, 1, 20, false, " ", null);
+
+        assertEquals(0, pagina.total());
+        final ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
+        verify(manager).createNativeQuery(sql.capture());
+        assertFalse(sql.getValue().contains("@estado"));
+        assertFalse(sql.getValue().contains("@idGrupo"));
+        verify(query).setParameter("soloPendientes", 0);
+        verify(query, never()).setParameter(eq("estado"), any());
+    }
+
+    @Test
     void consultar_destinatarios_mapea_19_columnas() {
         final Object[] c = {"DOCENTE", "DOC", UUID.randomUUID().toString(), "Doc Uno", "doc@uco.edu.co", PROGRAMA.toString(), 1, GRUPO.toString(), 3, "G03",
                 "Bases", "Est Uno", "Doc Uno", "PROPUESTA", new BigDecimal("21"), 20, "motivo docente", null, null};
@@ -231,6 +267,7 @@ class RevisionCancelacionJpaRepositoryTest {
     void los_rechazos_de_las_consultas_se_traducen_y_los_tecnicos_no() {
         doThrow(new PersistenceException("x", new RuntimeException("DBCODE=SEC_001|perfil"))).when(query).getResultList();
         assertThrows(ForbiddenException.class, () -> repo.consultarDecano(USUARIO, 1, 20, false, null, null));
+        assertThrows(ForbiddenException.class, () -> repo.consultarDocente(USUARIO, 1, 20, true, null, GRUPO));
         assertThrows(ForbiddenException.class, () -> repo.consultarDestinatarios(USUARIO, REVISION));
 
         doThrow(new PersistenceException("caida")).when(query).getResultList();

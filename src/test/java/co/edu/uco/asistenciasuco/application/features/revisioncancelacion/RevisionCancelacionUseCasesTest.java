@@ -5,6 +5,8 @@ import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consul
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionescoordinador.usecase.impl.ConsultarRevisionesCoordinadorUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionesdecano.primaryports.ConsultarRevisionesDecanoInputPort;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionesdecano.usecase.impl.ConsultarRevisionesDecanoUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionesdocente.primaryports.ConsultarRevisionesDocenteInputPort;
+import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionesdocente.usecase.impl.ConsultarRevisionesDocenteUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.decidirrevision.primaryports.DecidirRevisionCancelacionInputPort;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.decidirrevision.usecase.impl.DecidirRevisionCancelacionUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.resolverrevision.primaryports.ResolverRevisionCancelacionInputPort;
@@ -205,5 +207,19 @@ class RevisionCancelacionUseCasesTest {
         assertThrows(NullPointerException.class, () -> decano.execute(null));
         assertThrows(NullPointerException.class, () -> new ConsultarRevisionesCoordinadorUseCaseImpl(null));
         assertThrows(NullPointerException.class, () -> new ConsultarRevisionesDecanoUseCaseImpl(null));
+    }
+
+    @Test
+    void docente_consulta_sus_revisiones_con_pagina_y_tamano_por_defecto() {
+        // DEC-065 (1): la bandeja del docente reutiliza la normalizacion de la del coordinador (pagina 1, tamano 20).
+        final PaginaRevisiones pagina = new PaginaRevisiones(List.of(), 0);
+        when(repositorio.consultarDocente(DOCENTE, 1, 20, true, null, null)).thenReturn(pagina);
+        when(repositorio.consultarDocente(DOCENTE, 2, 10, false, "PROPUESTA", GRUPO)).thenReturn(pagina);
+        final ConsultarRevisionesDocenteUseCaseImpl docente = new ConsultarRevisionesDocenteUseCaseImpl(repositorio);
+
+        assertEquals(pagina, docente.execute(new ConsultarRevisionesDocenteInputPort.Comando(DOCENTE, null, null, true, null, null)));
+        assertEquals(pagina, docente.execute(new ConsultarRevisionesDocenteInputPort.Comando(DOCENTE, 2, 10, false, "PROPUESTA", GRUPO)));
+        assertThrows(NullPointerException.class, () -> docente.execute(null));
+        assertThrows(NullPointerException.class, () -> new ConsultarRevisionesDocenteUseCaseImpl(null));
     }
 }

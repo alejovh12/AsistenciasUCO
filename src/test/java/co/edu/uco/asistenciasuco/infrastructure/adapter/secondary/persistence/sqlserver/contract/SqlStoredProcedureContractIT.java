@@ -379,6 +379,15 @@ class SqlStoredProcedureContractIT {
                         input("@codigoEstado", "nvarchar"),
                         input("@idPrograma", "uniqueidentifier")
                 )),
+                Arguments.of("usp_consultar_revisiones_cancelacion_docente_paginado", List.of(
+                        input("@idUsuario", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@soloPendientes", "bit"),
+                        input("@idGrupo", "uniqueidentifier"),
+                        input("@estado", "nvarchar"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int")
+                )),
                 Arguments.of("usp_consultar_destinatarios_revision_cancelacion", List.of(
                         input("@idUsuarioEjecutor", "uniqueidentifier"),
                         input("@idCorrelacion", "uniqueidentifier"),
