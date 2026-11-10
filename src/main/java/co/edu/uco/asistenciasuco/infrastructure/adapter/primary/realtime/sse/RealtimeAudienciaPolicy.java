@@ -33,7 +33,6 @@ public final class RealtimeAudienciaPolicy {
 
     private static final Set<Audiencia> SOLO_TITULAR = EnumSet.of(Audiencia.DOCENTE_TITULAR);
     private static final Set<Audiencia> GRUPO_COMPLETO = EnumSet.of(Audiencia.DOCENTE_TITULAR, Audiencia.ESTUDIANTE_GRUPO, Audiencia.AMBITO_GRUPO);
-    private static final Set<Audiencia> ESTUDIANTES_Y_AMBITO = EnumSet.of(Audiencia.ESTUDIANTE_GRUPO, Audiencia.AMBITO_GRUPO);
     private static final Set<Audiencia> AMBITO_Y_TITULAR = EnumSet.of(Audiencia.AMBITO_GRUPO, Audiencia.DOCENTE_TITULAR);
     private static final Set<Audiencia> ESTUDIANTES_AMBITO_Y_TITULAR =
             EnumSet.of(Audiencia.ESTUDIANTE_GRUPO, Audiencia.AMBITO_GRUPO, Audiencia.DOCENTE_TITULAR);

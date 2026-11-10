@@ -39,7 +39,22 @@ public final class TomaAsistenciaTestSql {
         jdbc.update("DELETE FROM dbo.TokenAsistenciaToma WHERE toma IN (SELECT id FROM dbo.TomaAsistencia WHERE sesion = ?)", sesion);
         jdbc.update("DELETE FROM dbo.TomaAsistencia WHERE sesion = ?", sesion);
         jdbc.update("DELETE FROM dbo.SesionCancelacion WHERE sesion = ?", sesion);
+        // DEC-065 (2): la solicitud de sesion extraordinaria referencia a la sesion.
+        jdbc.update("DELETE FROM dbo.SesionSolicitud WHERE sesion = ?", sesion);
         jdbc.update("DELETE FROM dbo.Asistencia WHERE sesion = ?", sesion);
+    }
+
+    /**
+     * DEC-065 (2): una sesion que crea un docente por {@code usp_crear_sesion} nace PENDIENTE de aval del coordinador y no admite
+     * tomas ni registro de asistencia (SES_023). Las pruebas que necesitan una sesion operativa la dejan APROBADA, igual que
+     * lo haria el coordinador; si la sesion no tiene solicitud no hace nada.
+     */
+    public static void aprobarSolicitudDeSesion(final JdbcTemplate jdbc, final String sesion) {
+        jdbc.update("""
+                UPDATE ss SET ss.idEstado = e.id, ss.usuarioResolucion = ss.usuarioSolicitante, ss.fechaResolucionUtc = SYSUTCDATETIME()
+                FROM dbo.SesionSolicitud ss
+                CROSS JOIN dbo.EstadoSolicitudSesion e
+                WHERE e.codigo = 'APROBADA' AND ss.sesion = ?""", sesion);
     }
 
     /** Igual que {@link #limpiarDependientesDeSesion} para todas las sesiones que cumplen el filtro SQL dado. */
@@ -50,6 +65,8 @@ public final class TomaAsistenciaTestSql {
         jdbc.update("DELETE FROM dbo.TokenAsistenciaToma WHERE toma IN (SELECT id FROM dbo.TomaAsistencia WHERE sesion IN " + sesiones + ")", parametros);
         jdbc.update("DELETE FROM dbo.TomaAsistencia WHERE sesion IN " + sesiones, parametros);
         jdbc.update("DELETE FROM dbo.SesionCancelacion WHERE sesion IN " + sesiones, parametros);
+        // DEC-065 (2): la solicitud de sesion extraordinaria referencia a la sesion.
+        jdbc.update("DELETE FROM dbo.SesionSolicitud WHERE sesion IN " + sesiones, parametros);
         jdbc.update("DELETE FROM dbo.Asistencia WHERE sesion IN " + sesiones, parametros);
     }
 }

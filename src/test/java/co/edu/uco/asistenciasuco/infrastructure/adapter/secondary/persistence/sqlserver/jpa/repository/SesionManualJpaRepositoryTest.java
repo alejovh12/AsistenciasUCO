@@ -142,8 +142,9 @@ class SesionManualJpaRepositoryTest {
     @SuppressWarnings("unchecked")
     void aprobar_envia_los_parametros_del_sp_y_devuelve_el_mensaje_del_sp() {
         final LocalDateTime inicio = LocalDateTime.of(2026, 11, 10, 13, 0);
+        final ProcedureResult resultadoSp = resultado("Aprobada.");
         when(executor.executeWithExtras(eq("aprobarSolicitudSesion"), anyString(), anyMap(), eq(correlacion), eq(4)))
-                .thenReturn(new ProcedureRow(resultado("Aprobada."), List.of(SESION.toString(), GRUPO, inicio, 30)));
+                .thenReturn(new ProcedureRow(resultadoSp, List.of(SESION.toString(), GRUPO, inicio, 30)));
 
         assertEquals(new SolicitudAprobada(SESION, GRUPO, inicio, 30, "Aprobada."), repository.aprobarSolicitud(SESION, null, USUARIO));
 
@@ -160,8 +161,9 @@ class SesionManualJpaRepositoryTest {
 
     @Test
     void aprobar_tolera_conteo_nulo() {
+        final ProcedureResult resultadoSp = resultado("ok");
         when(executor.executeWithExtras(anyString(), anyString(), anyMap(), any(), eq(4)))
-                .thenReturn(new ProcedureRow(resultado("ok"), Arrays.asList(SESION, GRUPO, null, null)));
+                .thenReturn(new ProcedureRow(resultadoSp, Arrays.asList(SESION, GRUPO, null, null)));
 
         final SolicitudAprobada aprobada = repository.aprobarSolicitud(SESION, "obs", USUARIO);
 
@@ -173,8 +175,9 @@ class SesionManualJpaRepositoryTest {
     @SuppressWarnings("unchecked")
     void rechazar_envia_motivo_y_observacion_y_devuelve_el_mensaje_del_sp() {
         final LocalDateTime cancelada = LocalDateTime.of(2026, 11, 9, 14, 0);
+        final ProcedureResult resultadoSp = resultado("Rechazada.");
         when(executor.executeWithExtras(eq("rechazarSolicitudSesion"), anyString(), anyMap(), eq(correlacion), eq(4)))
-                .thenReturn(new ProcedureRow(resultado("Rechazada."), List.of(SESION, GRUPO, cancelada, 12)));
+                .thenReturn(new ProcedureRow(resultadoSp, List.of(SESION, GRUPO, cancelada, 12)));
 
         assertEquals(new SolicitudRechazada(SESION, GRUPO, cancelada, 12, "Rechazada."),
                 repository.rechazarSolicitud(SESION, "DUPLICADA", "Ya existe", USUARIO));
@@ -189,8 +192,9 @@ class SesionManualJpaRepositoryTest {
 
     @Test
     void rechazar_tolera_conteo_nulo() {
+        final ProcedureResult resultadoSp = resultado("ok");
         when(executor.executeWithExtras(anyString(), anyString(), anyMap(), any(), eq(4)))
-                .thenReturn(new ProcedureRow(resultado("ok"), Arrays.asList(SESION, GRUPO, null, null)));
+                .thenReturn(new ProcedureRow(resultadoSp, Arrays.asList(SESION, GRUPO, null, null)));
 
         assertEquals(0, repository.rechazarSolicitud(SESION, "OTRO", null, USUARIO).totalEstudiantesActivos());
     }
@@ -199,8 +203,8 @@ class SesionManualJpaRepositoryTest {
     void destinatarios_de_la_solicitud_usan_el_sp_del_coordinador_y_mapean_las_nueve_columnas() {
         final UUID usuario = UUID.randomUUID();
         final LocalDateTime inicio = LocalDateTime.of(2026, 11, 10, 13, 0);
-        when(query.getResultList()).thenReturn(List.<Object>of(
-                new Object[]{"DOCENTE", usuario, "Maria Docente", "maria@uco.edu.co", "Calculo", "G01 de Calculo", "Maria Docente", inicio, inicio.plusHours(2)}));
+        when(query.getResultList()).thenReturn(java.util.Collections.singletonList(
+                (Object) new Object[]{"DOCENTE", usuario, "Maria Docente", "maria@uco.edu.co", "Calculo", "G01 de Calculo", "Maria Docente", inicio, inicio.plusHours(2)}));
 
         final List<DestinatarioSesionManual> destinatarios = repository.consultarDestinatariosSolicitud(SESION, USUARIO);
 
