@@ -1,7 +1,10 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
 import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.usecase.CrearSesionUseCase;
+import co.edu.uco.asistenciasuco.application.features.sesionmanual.aprobarsolicitud.usecase.impl.AprobarSolicitudSesionUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.sesionmanual.cancelarsesioncoordinador.usecase.impl.CancelarSesionCoordinadorUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.sesionmanual.consultarsolicitudes.usecase.impl.ConsultarSolicitudesSesionUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.sesionmanual.rechazarsolicitud.usecase.impl.RechazarSolicitudSesionUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.sesionmanual.consultarmotivos.usecase.impl.ConsultarMotivosCancelacionUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.sesionmanual.notificarsesionmanual.primaryports.interactor.CrearSesionConAvisoInteractor;
 import co.edu.uco.asistenciasuco.application.features.sesionmanual.notificarsesionmanual.usecase.impl.NotificarSesionManualUseCaseImpl;
@@ -30,7 +33,12 @@ class SesionManualWiringConfigurationTest {
         final var notificar = config.notificarSesionManualInputPort(sesiones, repositorio, notificaciones, realtime);
         assertInstanceOf(NotificarSesionManualUseCaseImpl.class, notificar);
         assertInstanceOf(CrearSesionConAvisoInteractor.class, config.crearSesionConAvisoInputPort(mock(CrearSesionUseCase.class), notificar));
-        assertInstanceOf(CancelarSesionCoordinadorUseCaseImpl.class, config.cancelarSesionCoordinadorInputPort(sesiones, repositorio, realtime));
+        assertInstanceOf(CancelarSesionCoordinadorUseCaseImpl.class, config.cancelarSesionCoordinadorInputPort(sesiones, repositorio, notificaciones, realtime));
+        assertInstanceOf(AprobarSolicitudSesionUseCaseImpl.class,
+                config.aprobarSolicitudSesionInputPort(sesiones, repositorio, notificaciones, realtime));
+        assertInstanceOf(RechazarSolicitudSesionUseCaseImpl.class,
+                config.rechazarSolicitudSesionInputPort(sesiones, repositorio, notificaciones, realtime));
+        assertInstanceOf(ConsultarSolicitudesSesionUseCaseImpl.class, config.consultarSolicitudesSesionInputPort(repositorio));
         assertInstanceOf(ConsultarMotivosCancelacionUseCaseImpl.class, config.consultarMotivosCancelacionInputPort(repositorio));
     }
 

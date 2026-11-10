@@ -8,10 +8,13 @@ import co.edu.uco.asistenciasuco.application.features.sesion.common.entity.Estad
 import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.sesionmanual.cancelarsesioncoordinador.primaryports.CancelarSesionCoordinadorInputPort.Comando;
 import co.edu.uco.asistenciasuco.application.features.sesionmanual.cancelarsesioncoordinador.primaryports.CancelarSesionCoordinadorInputPort.Resultado;
+import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notificacion;
+import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimeEvent;
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionCancelacionRepositoryPort.SesionCancelada;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionManualRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionManualRepositoryPort.DestinatarioSesionManual;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionProcedenciaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.CancelacionSesionProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.SesionProcedenciaRepositoryProjection;
@@ -20,6 +23,7 @@ import org.mockito.ArgumentCaptor;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -52,8 +57,10 @@ class CancelarSesionCoordinadorUseCaseImplTest {
 
     private final SesionProcedenciaQueryPort sesiones = mock(SesionProcedenciaQueryPort.class);
     private final SesionManualRepositoryPort repositorio = mock(SesionManualRepositoryPort.class);
+    private final NotificacionPort notificaciones = mock(NotificacionPort.class);
     private final RealtimePublisherPort realtime = mock(RealtimePublisherPort.class);
-    private final CancelarSesionCoordinadorUseCaseImpl useCase = new CancelarSesionCoordinadorUseCaseImpl(sesiones, repositorio, realtime);
+    private final CancelarSesionCoordinadorUseCaseImpl useCase =
+            new CancelarSesionCoordinadorUseCaseImpl(sesiones, repositorio, notificaciones, realtime);
 
     @Test
     void cancela_devuelve_el_motivo_guardado_y_publica_el_evento_del_grupo() {
@@ -89,13 +96,60 @@ class CancelarSesionCoordinadorUseCaseImplTest {
     }
 
     @Test
+    void avisa_en_un_solo_correo_a_estudiantes_y_docente_de_una_sesion_con_solicitud() {
+        when(sesiones.consultarSesion(SESION)).thenReturn(Optional.of(sesion("UTC_V2", null)), Optional.of(sesion("UTC_V2", MOTIVO_TEXTO)));
+        when(repositorio.cancelarPorCoordinador(any(), any(), any(), any())).thenReturn(new SesionCancelada(SESION, GRUPO, CANCELADA_UTC, 2));
+        when(repositorio.consultarDestinatariosSolicitud(SESION, COORDINADOR)).thenReturn(List.of(
+                destinatario(DestinatarioSesionManual.TIPO_DOCENTE, "Maria Docente"),
+                destinatario(DestinatarioSesionManual.TIPO_ESTUDIANTE, "Ana Perez"),
+                destinatario(DestinatarioSesionManual.TIPO_ESTUDIANTE, "Luis Gomez"),
+                destinatario(DestinatarioSesionManual.TIPO_COORDINADOR, "Carlos Coord")));
+
+        useCase.execute(COMANDO);
+
+        final ArgumentCaptor<Notificacion> aviso = ArgumentCaptor.forClass(Notificacion.class);
+        verify(notificaciones, times(1)).notificar(aviso.capture());
+        assertEquals(Notificacion.TIPO_SESION_CANCELADA, aviso.getValue().tipo());
+        assertEquals(List.of("Maria Docente", "Ana Perez", "Luis Gomez"),
+                aviso.getValue().destinatarios().stream().map(Notificacion.Destinatario::nombre).toList());
+        assertEquals("Clase cancelada: Calculo (10/11/2026)", aviso.getValue().asunto());
+        assertEquals(MOTIVO_TEXTO, aviso.getValue().datos().get("motivo"));
+        assertEquals("estudiantes y docente del grupo", aviso.getValue().datos().get("estudiante"));
+        assertEquals("Hola estudiantes y docente del grupo. El coordinador del programa canceló la clase de Calculo del grupo "
+                + "G01 de Calculo para el 10/11/2026 de 08:00 a 10:00. Motivo: " + MOTIVO_TEXTO + ".", aviso.getValue().mensaje());
+    }
+
+    @Test
+    void una_sesion_sin_solicitud_no_envia_correo_pero_si_publica_el_evento() {
+        when(sesiones.consultarSesion(SESION)).thenReturn(Optional.of(sesion("UTC_V2", null)));
+        when(repositorio.cancelarPorCoordinador(any(), any(), any(), any())).thenReturn(new SesionCancelada(SESION, GRUPO, CANCELADA_UTC, 2));
+        when(repositorio.consultarDestinatariosSolicitud(SESION, COORDINADOR)).thenReturn(List.of());
+
+        useCase.execute(COMANDO);
+
+        verifyNoInteractions(notificaciones);
+        verify(realtime).publish(any());
+    }
+
+    @Test
+    void los_fallos_del_aviso_agrupado_no_cambian_la_respuesta_ni_el_evento() {
+        when(sesiones.consultarSesion(SESION)).thenReturn(Optional.of(sesion("UTC_V2", null)));
+        when(repositorio.cancelarPorCoordinador(any(), any(), any(), any())).thenReturn(new SesionCancelada(SESION, GRUPO, CANCELADA_UTC, 2));
+        when(repositorio.consultarDestinatariosSolicitud(SESION, COORDINADOR)).thenThrow(new IllegalStateException("db"));
+
+        assertEquals(2, useCase.execute(COMANDO).totalEstudiantesActivos());
+        verify(realtime).publish(any());
+        verifyNoInteractions(notificaciones);
+    }
+
+    @Test
     void una_sesion_inexistente_responde_404_sin_llamar_al_sp() {
         when(sesiones.consultarSesion(SESION)).thenReturn(Optional.empty());
 
         final ResourceNotFoundException error = assertThrows(ResourceNotFoundException.class, () -> useCase.execute(COMANDO));
 
         assertEquals(SesionErrorCode.ERR_SESION_NO_EXISTE.code(), error.getCode());
-        verifyNoInteractions(repositorio, realtime);
+        verifyNoInteractions(repositorio, notificaciones, realtime);
     }
 
     @Test
@@ -107,7 +161,7 @@ class CancelarSesionCoordinadorUseCaseImplTest {
 
         assertThrows(ForbiddenException.class, () -> useCase.execute(COMANDO));
         assertThrows(ConflictException.class, () -> useCase.execute(COMANDO));
-        verifyNoInteractions(realtime);
+        verifyNoInteractions(realtime, notificaciones);
     }
 
     @Test
@@ -121,10 +175,16 @@ class CancelarSesionCoordinadorUseCaseImplTest {
 
     @Test
     void el_constructor_y_el_comando_son_obligatorios() {
-        assertThrows(NullPointerException.class, () -> new CancelarSesionCoordinadorUseCaseImpl(null, repositorio, realtime));
-        assertThrows(NullPointerException.class, () -> new CancelarSesionCoordinadorUseCaseImpl(sesiones, null, realtime));
-        assertThrows(NullPointerException.class, () -> new CancelarSesionCoordinadorUseCaseImpl(sesiones, repositorio, null));
+        assertThrows(NullPointerException.class, () -> new CancelarSesionCoordinadorUseCaseImpl(null, repositorio, notificaciones, realtime));
+        assertThrows(NullPointerException.class, () -> new CancelarSesionCoordinadorUseCaseImpl(sesiones, null, notificaciones, realtime));
+        assertThrows(NullPointerException.class, () -> new CancelarSesionCoordinadorUseCaseImpl(sesiones, repositorio, null, realtime));
+        assertThrows(NullPointerException.class, () -> new CancelarSesionCoordinadorUseCaseImpl(sesiones, repositorio, notificaciones, null));
         assertThrows(NullPointerException.class, () -> useCase.execute(null));
+    }
+
+    private static DestinatarioSesionManual destinatario(final String tipo, final String nombre) {
+        return new DestinatarioSesionManual(tipo, UUID.randomUUID(), nombre, nombre + "@uco.edu.co", "Calculo", "G01 de Calculo",
+                "Maria Docente", INICIO_UTC, INICIO_UTC.plusHours(2));
     }
 
     private static SesionProcedenciaRepositoryProjection sesion(final String procedencia, final String motivoGuardado) {

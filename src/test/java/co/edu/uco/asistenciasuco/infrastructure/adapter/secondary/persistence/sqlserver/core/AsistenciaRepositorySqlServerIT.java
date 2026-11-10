@@ -274,6 +274,8 @@ class AsistenciaRepositorySqlServerIT {
             creados.add(new String[]{"Sesion", id.toString()});
         }
         assertEquals(1, encontrada.size(), "La sesion de prueba recien creada debe ser resoluble de forma unica por nombre.");
+        // DEC-065 (2): la sesion del docente nace pendiente de aval; la prueba la necesita operativa.
+        TomaAsistenciaTestSql.aprobarSolicitudDeSesion(jdbcTemplate, encontrada.get(0).toString());
         return encontrada.get(0);
     }
 

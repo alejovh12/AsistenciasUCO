@@ -61,7 +61,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *       {@code COORDINADOR}/{@code ADMINISTRADOR} — ver duda documentada en
  *       docs/security/runtime-security-provider-architecture.md (no hay contrato funcional
  *       explícito; DOCENTE NO tiene acceso bajo la política actual).</li>
- *   <li>{@code POST /api/v1/grupos} (command de coordinación; el DOCENTE solo crea a su nombre, lo exige la DB): {@code COORDINADOR}/{@code ADMINISTRADOR}/{@code DOCENTE}.</li>
+ *   <li>{@code POST /api/v1/grupos} (command de coordinación; DEC-065 (4): el docente ya no crea grupos): solo {@code COORDINADOR}.</li>
  *   <li>{@code POST /api/v1/asistencias/lote} (registro docente por lote): {@code DOCENTE}.</li>
  *   <li>{@code /api/v1/estudiante/**} (portal del propio estudiante): {@code ESTUDIANTE}.</li>
  * </ul>
@@ -414,7 +414,7 @@ class RbacSecurityFilterChainTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    // --- POST /api/v1/grupos : command de coordinación; el DOCENTE solo crea a su nombre (F3, lo exige la DB) ---
+    // --- POST /api/v1/grupos : command de coordinación. DEC-065 (4): solo el COORDINADOR; el docente ya no crea grupos ---
 
     @Test
     void crear_grupo_estudiante_recibe_403() throws Exception {
@@ -423,9 +423,35 @@ class RbacSecurityFilterChainTest {
     }
 
     @Test
-    void crear_grupo_docente_es_permitido_por_security_filter_chain() throws Exception {
+    void crear_grupo_docente_y_administrador_reciben_403_por_dec_065() throws Exception {
         mockMvc.perform(post("/api/v1/grupos").header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
-                .andExpect(status().isOk());
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/v1/grupos").header(HttpHeaders.AUTHORIZATION, bearer("ADMINISTRADOR")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void la_oferta_de_creacion_de_grupos_del_docente_fue_retirada_sin_handler() throws Exception {
+        // DEC-065 (4): el docente (rol permitido en /api/v1/docente/**) recibe 404 porque ya no hay controlador; los demas roles 403.
+        mockMvc.perform(get("/api/v1/docente/oferta-creacion-grupos").header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/v1/docente/oferta-creacion-grupos").header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/docente/oferta-creacion-grupos").header(HttpHeaders.AUTHORIZATION, bearer("ESTUDIANTE")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void las_solicitudes_de_sesion_extraordinaria_son_solo_del_coordinador() throws Exception {
+        final String sesion = "11111111-1111-1111-1111-111111111111";
+        for (final String rol : new String[]{"DOCENTE", "ESTUDIANTE", "ADMINISTRADOR", "DECANO"}) {
+            mockMvc.perform(get("/api/v1/coordinador/sesiones/solicitudes").header(HttpHeaders.AUTHORIZATION, bearer(rol)))
+                    .andExpect(status().isForbidden());
+            mockMvc.perform(post("/api/v1/coordinador/sesiones/{id}/aprobacion", sesion).header(HttpHeaders.AUTHORIZATION, bearer(rol)))
+                    .andExpect(status().isForbidden());
+            mockMvc.perform(post("/api/v1/coordinador/sesiones/{id}/rechazo", sesion).header(HttpHeaders.AUTHORIZATION, bearer(rol)))
+                    .andExpect(status().isForbidden());
+        }
     }
 
     @Test

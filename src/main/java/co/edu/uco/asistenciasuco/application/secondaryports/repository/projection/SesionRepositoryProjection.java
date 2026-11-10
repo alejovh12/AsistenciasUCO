@@ -19,6 +19,8 @@ public final class SesionRepositoryProjection {
     private final LocalDateTime fechaHoraInicio;
     private final LocalDateTime fechaHoraFin;
     private final CancelacionSesionProjection cancelacion;
+    private final String estadoSolicitud;
+    private final boolean pendienteAprobacion;
 
     public SesionRepositoryProjection(
             final UUID sesion,
@@ -49,6 +51,26 @@ public final class SesionRepositoryProjection {
             final LocalDateTime fechaHoraFin,
             final CancelacionSesionProjection cancelacion
     ) {
+        this(sesion, grupo, nombre, numero, codigo, numeroSemana, codigoGrupo, nombreGrupo, fechaHoraInicio, fechaHoraFin,
+                cancelacion, null, false);
+    }
+
+    /** DEC-065 (2): {@code estadoSolicitud} viene de {@code uv_sesion_estado}; {@code null} si no nacio como solicitud. */
+    public SesionRepositoryProjection(
+            final UUID sesion,
+            final UUID grupo,
+            final String nombre,
+            final Integer numero,
+            final String codigo,
+            final Integer numeroSemana,
+            final String codigoGrupo,
+            final String nombreGrupo,
+            final LocalDateTime fechaHoraInicio,
+            final LocalDateTime fechaHoraFin,
+            final CancelacionSesionProjection cancelacion,
+            final String estadoSolicitud,
+            final boolean pendienteAprobacion
+    ) {
         this.sesion = sesion;
         this.grupo = grupo;
         this.nombre = nombre;
@@ -60,6 +82,8 @@ public final class SesionRepositoryProjection {
         this.fechaHoraInicio = fechaHoraInicio;
         this.fechaHoraFin = fechaHoraFin;
         this.cancelacion = cancelacion;
+        this.estadoSolicitud = estadoSolicitud;
+        this.pendienteAprobacion = pendienteAprobacion;
     }
 
     public UUID getSesion() {
@@ -104,5 +128,13 @@ public final class SesionRepositoryProjection {
 
     public CancelacionSesionProjection getCancelacion() {
         return cancelacion;
+    }
+
+    public String getEstadoSolicitud() {
+        return estadoSolicitud;
+    }
+
+    public boolean isPendienteAprobacion() {
+        return pendienteAprobacion;
     }
 }

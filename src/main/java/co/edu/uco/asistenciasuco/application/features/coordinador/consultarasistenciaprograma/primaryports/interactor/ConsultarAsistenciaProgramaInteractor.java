@@ -40,7 +40,8 @@ public final class ConsultarAsistenciaProgramaInteractor implements ConsultarAsi
                 s -> new SesionGrupoDTO(s.id(), s.idGrupo(), s.codigoGrupo(), s.nombreGrupo(), s.nombre(), s.numero(),
                         s.codigo(), s.numeroSemana(), s.fechaHoraInicio(), s.fechaHoraFin(), s.fechaHoraInicioUtc(),
                         s.fechaHoraFinUtc(), s.estadoTemporal().name(),
-                        EstadoSesion.de(s.cancelacion() != null).name(), s.cancelacion()));
+                        EstadoSesion.de(s.cancelacion() != null).name(), s.cancelacion(),
+                        s.estadoSolicitud(), s.pendienteAprobacion()));
     }
 
     @Override

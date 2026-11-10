@@ -26,13 +26,14 @@ public final class CrearSesionConAvisoInteractor implements CrearSesionInputPort
     }
 
     @Override
-    public void execute(final CrearSesionDTO dto) {
-        crearSesion.execute(dto);
+    public String execute(final CrearSesionDTO dto) {
+        final String mensajeUsuario = crearSesion.execute(dto);
         try {
             notificarSesionManual.execute(new NotificarSesionManualInputPort.Comando(
                     dto.getGrupo(), dto.getNombre(), dto.getFechaHoraInicio(), dto.getFechaHoraFin(), dto.getUsuarioEjecutor()));
         } catch (final RuntimeException exception) {
             LOGGER.warn("No fue posible avisar la sesion manual creada en el grupo {}: {}", dto.getGrupo(), exception.getClass().getSimpleName());
         }
+        return mensajeUsuario;
     }
 }
