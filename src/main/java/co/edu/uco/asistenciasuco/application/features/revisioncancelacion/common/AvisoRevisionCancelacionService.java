@@ -34,7 +34,6 @@ public final class AvisoRevisionCancelacionService {
     static final String ROL_ESTUDIANTE = "ESTUDIANTE";
     static final String ROL_DOCENTE = "DOCENTE";
     static final String ROL_RESOLUTOR = "RESOLUTOR";
-    private static final String TEXTO_ESCALAMIENTO = "Se le asigna porque el programa no tiene coordinador disponible.";
     private static final Logger LOGGER = LoggerFactory.getLogger(AvisoRevisionCancelacionService.class);
 
     private final RevisionCancelacionRepositoryPort repositorio;
@@ -74,7 +73,7 @@ public final class AvisoRevisionCancelacionService {
             if (propone) {
                 for (final DestinatarioRevision d : destinatarios) {
                     if (ROL_RESOLUTOR.equals(d.rol())) {
-                        enviar(avisoPropuesta(d, r.tipoPlantillaNotificacion(), r.escalamiento()));
+                        enviar(avisoPropuesta(d, r.tipoPlantillaNotificacion()));
                     }
                 }
             }
@@ -116,7 +115,7 @@ public final class AvisoRevisionCancelacionService {
         }
     }
 
-    /** Job: propuesta a los resolutores nuevos y evento a docente y resolutores (reasignacion o escalamiento). */
+    /** Job: propuesta a los resolutores nuevos y evento a docente y resolutores (reasignacion al coordinador). */
     public void avisarReasignacion(final NovedadResolutores n) {
         try {
             final Set<UUID> audiencia = new HashSet<>();
@@ -135,14 +134,13 @@ public final class AvisoRevisionCancelacionService {
             }
             publicar(EVENTO_REASIGNADA, payload, audiencia);
             if (n.perfilResolutor() != null) {
-                final boolean escalada = "DECANO".equals(n.perfilResolutor());
                 for (final Resolutor resolutor : n.resolutores()) {
                     final Map<String, String> datos = datosPropuesta(resolutor.nombreCompleto(), n.nombreEstudiante(), n.nombreGrupo(), n.nombreAsignatura(),
                             n.nombreDocente(), n.porcentaje() == null ? "" : n.porcentaje().toPlainString(),
-                            n.umbral() == null ? "" : n.umbral().toPlainString(), n.motivo(), escalada);
+                            n.umbral() == null ? "" : n.umbral().toPlainString(), n.motivo());
                     enviar(new Notificacion(Notificacion.TIPO_PROPUESTA_CANCELACION, "Propuesta de cancelación por inasistencia: " + datos.get("estudiante")
                             + " en " + datos.get("grupo"), "Hola " + datos.get("resolutor") + ". Tienes una propuesta de cancelación por inasistencia pendiente de "
-                            + "resolver para " + datos.get("estudiante") + " en " + datos.get("grupo") + ". " + datos.get("escalamiento"),
+                            + "resolver para " + datos.get("estudiante") + " en " + datos.get("grupo") + ".",
                             List.of(new Notificacion.Destinatario(resolutor.codigoPerfil(), resolutor.idUsuario(), resolutor.nombreCompleto(), resolutor.correo())), datos));
                 }
             }
@@ -167,20 +165,19 @@ public final class AvisoRevisionCancelacionService {
         }
     }
 
-    private static Notificacion avisoPropuesta(final DestinatarioRevision d, final String tipo, final boolean escalada) {
+    private static Notificacion avisoPropuesta(final DestinatarioRevision d, final String tipo) {
         final String grupo = texto(d.nombreGrupo()) + " de " + texto(d.nombreAsignatura());
         final Map<String, String> datos = datosPropuesta(d.nombreCompleto(), d.nombreEstudiante(), d.nombreGrupo(), d.nombreAsignatura(), d.nombreDocente(),
                 d.porcentajeActual() == null ? "" : d.porcentajeActual().toPlainString(),
-                d.umbralPerdida() == null ? "" : d.umbralPerdida().toPlainString(), d.motivoDocente(), escalada);
+                d.umbralPerdida() == null ? "" : d.umbralPerdida().toPlainString(), d.motivoDocente());
         return new Notificacion(tipo, "Propuesta de cancelación por inasistencia: " + texto(d.nombreEstudiante()) + " en " + grupo,
                 "Hola " + texto(d.nombreCompleto()) + ". El docente " + texto(d.nombreDocente()) + " propone cancelar por inasistencia a "
-                        + texto(d.nombreEstudiante()) + " en " + grupo + ". Motivo: " + texto(d.motivoDocente()) + ". " + datos.get("escalamiento"),
+                        + texto(d.nombreEstudiante()) + " en " + grupo + ". Motivo: " + texto(d.motivoDocente()) + ".",
                 List.of(new Notificacion.Destinatario(d.codigoPerfil(), d.idUsuario(), d.nombreCompleto(), d.correo())), datos);
     }
 
     private static Map<String, String> datosPropuesta(final String resolutor, final String estudiante, final String grupo, final String asignatura,
-                                                      final String docente, final String porcentaje, final String limite, final String motivo,
-                                                      final boolean escalada) {
+                                                      final String docente, final String porcentaje, final String limite, final String motivo) {
         final Map<String, String> datos = new HashMap<>();
         datos.put("resolutor", texto(resolutor));
         datos.put("estudiante", texto(estudiante));
@@ -189,7 +186,6 @@ public final class AvisoRevisionCancelacionService {
         datos.put("porcentaje", porcentaje);
         datos.put("limite", limite);
         datos.put("motivo", texto(motivo));
-        datos.put("escalamiento", escalada ? TEXTO_ESCALAMIENTO : "");
         return datos;
     }
 

@@ -246,6 +246,7 @@ final class DbFailureClassifier {
             case "RCN_012" -> RevisionCancelacionErrorCode.RCN_012;
             case "RCN_013" -> RevisionCancelacionErrorCode.RCN_013;
             case "RCN_014" -> RevisionCancelacionErrorCode.RCN_014;
+            case "RCN_016" -> RevisionCancelacionErrorCode.RCN_016;
             case "ALR_004" -> AlertaInasistenciaErrorCode.ALR_004;
             case "ALR_006" -> AlertaInasistenciaErrorCode.ALR_006;
             case "TOM_001" -> TomaAsistenciaErrorCode.TOM_001;

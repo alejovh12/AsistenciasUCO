@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
@@ -102,20 +103,22 @@ class RevisionCancelacionUseCasesTest {
         verify(notificaciones).notificar(aviso.capture());
         assertEquals(Notificacion.TIPO_PROPUESTA_CANCELACION, aviso.getValue().tipo());
         assertEquals(RESOLUTOR, aviso.getValue().destinatarios().getFirst().idUsuario());
-        assertEquals("", aviso.getValue().datos().get("escalamiento"));
+        assertFalse(aviso.getValue().datos().containsKey("escalamiento"));
         final ArgumentCaptor<RealtimeEvent> evento = ArgumentCaptor.forClass(RealtimeEvent.class);
         verify(realtime).publish(evento.capture());
         assertEquals(Set.of(DOCENTE, RESOLUTOR), evento.getValue().destinatariosUsuario());
     }
 
     @Test
-    void proponer_con_escalamiento_informa_el_texto_del_decano() {
+    void proponer_nunca_informa_escalamiento_al_decano_dec_065() {
+        // DEC-065 (1): se retira el escalamiento; aunque la DB (compatibilidad) devolviera el indicador, el aviso no lo menciona.
         when(repositorio.decidir(REVISION, "PROPONER", "motivo valido", DOCENTE)).thenReturn(decision(Notificacion.TIPO_PROPUESTA_CANCELACION, false, true));
         new DecidirRevisionCancelacionUseCaseImpl(repositorio, avisos)
                 .execute(new DecidirRevisionCancelacionInputPort.Comando(REVISION, "PROPONER", "motivo valido", DOCENTE));
         final ArgumentCaptor<Notificacion> aviso = ArgumentCaptor.forClass(Notificacion.class);
         verify(notificaciones).notificar(aviso.capture());
-        assertEquals("Se le asigna porque el programa no tiene coordinador disponible.", aviso.getValue().datos().get("escalamiento"));
+        assertFalse(aviso.getValue().datos().containsKey("escalamiento"));
+        assertFalse(aviso.getValue().mensaje().contains("coordinador disponible"));
     }
 
     @Test
