@@ -164,13 +164,40 @@ class ConsultarSesionesMateriaEstudianteUseCaseImplTest {
         });
     }
 
+    /**
+     * CERT-CULM001 (hallazgo 5): con varias tomas manda el estado consolidado de [SUPUESTO-B-15], no la ultima toma
+     * escrita. Antes, SJC en la toma 1 y AN en la toma 2 se mostraba PRESENTE y no se podia reclamar.
+     */
     @Test
-    void con_varios_detalles_prevalece_el_de_mayor_codigo() {
+    void con_varias_tomas_sjc_y_an_es_parcial_y_reclamable() {
         dado(List.of(sesion(sesion1, 1, UUID.randomUUID())), List.of(
                 hecho(sesion1, 1, Boolean.FALSE, "SJC"),
                 hecho(sesion1, 2, Boolean.TRUE, "AN")));
 
-        assertEquals(EstadoAsistenciaSesion.PRESENTE, useCase.execute(actor, asignatura).getFirst().estadoAsistencia());
+        final SesionMateriaEstudianteDomain result = useCase.execute(actor, asignatura).getFirst();
+
+        assertEquals(EstadoAsistenciaSesion.PARCIAL, result.estadoAsistencia());
+        assertTrue(result.reclamable());
+    }
+
+    @Test
+    void con_varias_tomas_sjc_prevalece_sobre_ex_y_ex_sobre_an() {
+        final UUID otra = UUID.randomUUID();
+        final UUID tercera = UUID.randomUUID();
+        dado(List.of(sesion(sesion1, 1, UUID.randomUUID()), sesion(otra, 2, UUID.randomUUID()), sesion(tercera, 3, UUID.randomUUID())),
+                List.of(
+                        hecho(sesion1, 1, Boolean.FALSE, "EX"), hecho(sesion1, 2, Boolean.FALSE, "SJC"),
+                        hecho(otra, 3, Boolean.TRUE, "AN"), hecho(otra, 4, Boolean.FALSE, "EX"),
+                        hecho(tercera, 5, Boolean.TRUE, "AN"), hecho(tercera, 6, Boolean.TRUE, "AN")));
+
+        final List<SesionMateriaEstudianteDomain> result = useCase.execute(actor, asignatura);
+
+        assertEquals(EstadoAsistenciaSesion.AUSENTE, result.get(0).estadoAsistencia());
+        assertTrue(result.get(0).reclamable());
+        assertEquals(EstadoAsistenciaSesion.JUSTIFICADA, result.get(1).estadoAsistencia());
+        assertFalse(result.get(1).reclamable());
+        assertEquals(EstadoAsistenciaSesion.PRESENTE, result.get(2).estadoAsistencia());
+        assertFalse(result.get(2).reclamable());
     }
 
     @Test

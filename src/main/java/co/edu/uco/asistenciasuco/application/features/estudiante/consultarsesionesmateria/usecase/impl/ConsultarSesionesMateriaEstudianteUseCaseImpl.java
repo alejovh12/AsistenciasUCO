@@ -105,7 +105,9 @@ public final class ConsultarSesionesMateriaEstudianteUseCaseImpl implements Cons
                     final boolean cancelada = procedencia != null && procedencia.cancelacion() != null;
                     final EstadoAsistenciaSesion estado = cancelada ? EstadoAsistenciaSesion.NO_DISPONIBLE : resolverEstado(hechos);
                     final String estadoSolicitud = resolverEstadoSolicitud(hechos);
-                    final boolean reclamable = estado == EstadoAsistenciaSesion.AUSENTE && estadoSolicitud == null;
+                    // CERT-CULM001: PARCIAL tambien tiene una toma sin justa causa y se puede reclamar.
+                    final boolean reclamable = (estado == EstadoAsistenciaSesion.AUSENTE || estado == EstadoAsistenciaSesion.PARCIAL)
+                            && estadoSolicitud == null;
                     return ConsultarSesionesMateriaEstudianteRepositoryMapper.toDomain(
                             sesion, procedencia, estado, estadoSolicitud, reclamable);
                 })
@@ -145,13 +147,30 @@ public final class ConsultarSesionesMateriaEstudianteUseCaseImpl implements Cons
         return resultado;
     }
 
-    /** Usa el detalle de mayor codigo (la ultima escritura); sin detalle o con pareja no definida, no hay estado. */
+    /**
+     * Estado consolidado de la sesion con todas sus tomas, segun CULM-001 B.2 [SUPUESTO-B-15]: si alguna toma es
+     * {@code SJC} la sesion es AUSENTE (o PARCIAL si otra toma es {@code AN}); si no, JUSTIFICADA si alguna es
+     * {@code EX}; si no, PRESENTE si alguna es {@code AN}. Sin detalle o con parejas no definidas, NO_DISPONIBLE.
+     *
+     * <p>CERT-CULM001: antes se tomaba solo el detalle de mayor codigo (la ultima toma escrita), asi que una sesion con
+     * una toma SJC y otra AN se mostraba PRESENTE y no se podia reclamar, mientras la planilla del docente mostraba SJC.</p>
+     */
     static EstadoAsistenciaSesion resolverEstado(final List<AsistenciaSesionEstudianteProjection> hechos) {
-        return hechos.stream()
+        final Set<EstadoAsistenciaSesion> porToma = hechos.stream()
                 .filter(h -> h.asistio() != null)
-                .max(Comparator.comparing(h -> h.codigoDetalle() == null ? Integer.MIN_VALUE : h.codigoDetalle()))
                 .map(h -> clasificar(h.asistio(), h.codigoRazonCausa()))
-                .orElse(EstadoAsistenciaSesion.NO_DISPONIBLE);
+                .collect(Collectors.toSet());
+        if (porToma.contains(EstadoAsistenciaSesion.AUSENTE)) {
+            return porToma.contains(EstadoAsistenciaSesion.PRESENTE)
+                    ? EstadoAsistenciaSesion.PARCIAL : EstadoAsistenciaSesion.AUSENTE;
+        }
+        if (porToma.contains(EstadoAsistenciaSesion.JUSTIFICADA)) {
+            return EstadoAsistenciaSesion.JUSTIFICADA;
+        }
+        if (porToma.contains(EstadoAsistenciaSesion.PRESENTE)) {
+            return EstadoAsistenciaSesion.PRESENTE;
+        }
+        return EstadoAsistenciaSesion.NO_DISPONIBLE;
     }
 
     private static EstadoAsistenciaSesion clasificar(final boolean asistio, final String codigoRazonCausa) {

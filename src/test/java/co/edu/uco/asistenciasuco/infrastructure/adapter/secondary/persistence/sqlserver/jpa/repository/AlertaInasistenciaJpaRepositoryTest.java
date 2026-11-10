@@ -114,6 +114,32 @@ class AlertaInasistenciaJpaRepositoryTest {
         verify(query).setParameter("idGrupo", GRUPO);
     }
 
+    /**
+     * CERT-CULM001 (HU026C): Hibernate rechaza enlazar un parametro con nombre que no esta en el {@code EXEC}. Antes el
+     * ejecutor recibia el mapa completo, intentaba enlazar {@code idEstudianteGrupo} nulo y el job fallaba cada minuto.
+     */
+    @Test
+    void evaluar_del_grupo_entero_no_enlaza_parametros_ausentes_del_exec() {
+        when(query.setParameter(eq("idEstudianteGrupo"), any()))
+                .thenThrow(new IllegalArgumentException("Could not locate named parameter [idEstudianteGrupo]"));
+        when(query.getResultList()).thenReturn(Collections.<Object>singletonList(canonicaConExtras(2, 0, 0, 1, "[]")));
+
+        final ResultadoEvaluacion resultado = repo.evaluar(GRUPO, null);
+
+        assertEquals(2, resultado.alertasCreadas());
+        verify(query, never()).setParameter(eq("idEstudianteGrupo"), any());
+    }
+
+    @Test
+    void actualizar_resolutores_sin_lote_no_enlaza_el_lote_ausente_del_exec() {
+        when(query.setParameter(eq("tamanoLote"), any()))
+                .thenThrow(new IllegalArgumentException("Could not locate named parameter [tamanoLote]"));
+        when(query.getResultList()).thenReturn(Collections.<Object>singletonList(canonicaConExtras(0, 0, 0, "[]")));
+
+        assertTrue(repo.actualizarResolutores(null).novedades().isEmpty());
+        verify(query, never()).setParameter(eq("tamanoLote"), any());
+    }
+
     @Test
     void evaluar_con_json_de_novedades_invalido_es_fallo_tecnico() {
         when(query.getResultList()).thenReturn(Collections.<Object>singletonList(canonicaConExtras(0, 0, 0, 0, "{no es json")));

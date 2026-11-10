@@ -12,6 +12,11 @@ public enum EstadoAsistenciaSesion {
     AUSENTE,
     /** {@code asistio = 0} con razon {@code EX} (excusa). */
     JUSTIFICADA,
+    /**
+     * CULM-001 B.2 [SUPUESTO-B-15]: la sesion tuvo varias tomas y el estudiante quedo {@code AN} en unas y {@code SJC}
+     * en otras ({@code esParcial = 1}). Tiene falta sin justa causa, asi que se puede reclamar.
+     */
+    PARCIAL,
     /** Sin cabecera, sin detalle o con una combinacion que el contrato no define. Nunca equivale a ausencia. */
     NO_DISPONIBLE
 }

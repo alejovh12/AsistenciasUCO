@@ -58,7 +58,7 @@ public class AlertaInasistenciaJpaRepository implements AlertaInasistenciaReposi
         parametros.put("idCorrelacion", correlationId);
         parametros.put("idEstudianteGrupo", estudianteGrupoId);
         final ProcedureRow fila = procedureExecutor.executeWithExtras(OP_EVALUAR,
-                CancelacionRowSupport.exec("usp_evaluar_alertas_inasistencia_grupo", parametros), parametros, correlationId, 5);
+                CancelacionRowSupport.exec("usp_evaluar_alertas_inasistencia_grupo", parametros), CancelacionRowSupport.enlazables(parametros), correlationId, 5);
         final List<Object> c = fila.extras();
         return new ResultadoEvaluacion(entero(c.get(0)), entero(c.get(1)), entero(c.get(2)), entero(c.get(3)), novedades(texto(c.get(4))));
     }
@@ -125,7 +125,7 @@ public class AlertaInasistenciaJpaRepository implements AlertaInasistenciaReposi
         parametros.put("idCorrelacion", correlationId);
         parametros.put("tamanoLote", lote);
         final ProcedureRow fila = procedureExecutor.executeWithExtras(OP_RESOLUTORES,
-                CancelacionRowSupport.exec("usp_actualizar_resolutores_revisiones_cancelacion", parametros), parametros, correlationId, 4);
+                CancelacionRowSupport.exec("usp_actualizar_resolutores_revisiones_cancelacion", parametros), CancelacionRowSupport.enlazables(parametros), correlationId, 4);
         final List<Object> c = fila.extras();
         return new ResultadoResolutores(entero(c.get(0)), entero(c.get(1)), entero(c.get(2)), novedadesResolutores(texto(c.get(3))));
     }

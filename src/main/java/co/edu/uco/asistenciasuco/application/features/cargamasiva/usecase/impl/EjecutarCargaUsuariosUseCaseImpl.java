@@ -182,8 +182,10 @@ public class EjecutarCargaUsuariosUseCaseImpl implements EjecutarCargaUsuariosUs
                     case DOCENTE -> {
                         final VincularDocenteProgramaDomain docenteDomain = new VincularDocenteProgramaDomain(
                                 domain.usuarioEjecutor(),
-                                UUID.randomUUID(),
-                                UUID.randomUUID(),
+                                // CERT-CULM001 (HU171): docente nuevo => idDocente e idUsuario nulos (modo "nuevo" de
+                                // VincularDocenteProgramaUseCaseImpl). Con ids aleatorios el SP respondia DOC_005 y no se creaba nadie.
+                                null,
+                                null,
                                 dbProj.idTipoIdentificacion(),
                                 Integer.parseInt(fila.numeroDocumento()),
                                 fila.primerNombre(),
