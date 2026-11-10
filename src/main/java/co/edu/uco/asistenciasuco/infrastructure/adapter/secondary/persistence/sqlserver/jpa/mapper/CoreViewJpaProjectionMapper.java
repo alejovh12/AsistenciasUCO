@@ -19,9 +19,15 @@ public final class CoreViewJpaProjectionMapper {
 
     /** CULM-001 B.1: sesion v1 con la cancelacion de {@code uv_sesion_estado} ({@code null} si esta programada). */
     public static SesionRepositoryProjection toSesion(final UvSesionEntity row, final CancelacionSesionProjection cancelacion) {
+        return toSesion(row, cancelacion, null, false);
+    }
+
+    /** DEC-065 (2): ademas, el estado de la solicitud de sesion extraordinaria de {@code uv_sesion_estado}. */
+    public static SesionRepositoryProjection toSesion(final UvSesionEntity row, final CancelacionSesionProjection cancelacion,
+                                                      final String estadoSolicitud, final boolean pendienteAprobacion) {
         return new SesionRepositoryProjection(row.id(), row.idGrupo(), row.nombre(), row.numero(), row.codigo(),
                 row.numeroSemana(), textOrNull(row.codigoGrupo()), row.nombreGrupo(),
-                row.fechaHoraInicio(), row.fechaHoraFin(), cancelacion);
+                row.fechaHoraInicio(), row.fechaHoraFin(), cancelacion, estadoSolicitud, pendienteAprobacion);
     }
 
     public static GrupoRepositoryProjection toGrupo(final UvGrupoEntity row) {

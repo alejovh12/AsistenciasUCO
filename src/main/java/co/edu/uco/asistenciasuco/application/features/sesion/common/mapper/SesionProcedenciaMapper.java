@@ -22,7 +22,8 @@ public final class SesionProcedenciaMapper {
         return SesionProcedenciaEntity.desdeAlmacenamiento(
                 row.sesion(), row.grupo(), row.nombre(), row.numero(), row.codigo(), row.numeroSemana(),
                 row.codigoGrupo(), row.nombreGrupo(), row.fechaHoraInicio(), row.fechaHoraFin(),
-                row.procedenciaTemporal(), CancelacionSesionDTO.desde(row.cancelacion())
+                row.procedenciaTemporal(), CancelacionSesionDTO.desde(row.cancelacion()),
+                row.estadoSolicitud(), row.pendienteAprobacion()
         );
     }
 
@@ -32,7 +33,8 @@ public final class SesionProcedenciaMapper {
                 entity.sesion(), entity.grupo(), entity.nombre(), entity.numero(), entity.codigo(),
                 entity.numeroSemana(), entity.codigoGrupo(), entity.nombreGrupo(),
                 entity.fechaHoraInicioUtc(), entity.fechaHoraFinUtc(),
-                entity.estadoTemporal().name(), entity.procedenciaTemporal(), entity.cancelacion()
+                entity.estadoTemporal().name(), entity.procedenciaTemporal(), entity.cancelacion(),
+                entity.estadoSolicitud(), entity.pendienteAprobacion()
         );
     }
 

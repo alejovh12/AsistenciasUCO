@@ -51,7 +51,7 @@ public final class SesionV2Controller {
     @AuditableOperation(action = "CREAR_SESION", resourceType = "GRUPO", resourceIdRequestField = "grupo")
     public ResponseEntity<ApiMessageResponse> crearSesion(@RequestBody final Map<String, Object> body) {
         final SesionV2RequestParser.CrearSesionV2 request = SesionV2RequestParser.parseCrear(body);
-        crearSesionInputPort.execute(new CrearSesionDTO(
+        final String mensajeUsuario = crearSesionInputPort.execute(new CrearSesionDTO(
                 request.grupo(),
                 request.nombre(),
                 request.inicioUtc(),
@@ -60,7 +60,8 @@ public final class SesionV2Controller {
                 ContratoHorarioSesion.UTC_CONFIRMADO_V2
         ));
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ApiMessageResponse(true, "Sesion creada correctamente."));
+                .body(new ApiMessageResponse(true,
+                        mensajeUsuario == null || mensajeUsuario.isBlank() ? "Sesion creada correctamente." : mensajeUsuario));
     }
 
     /** Reemplazo completo de nombre y ambos instantes (sin PUT en v2, UTC-D09). */

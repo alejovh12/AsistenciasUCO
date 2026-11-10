@@ -25,13 +25,13 @@ public final class CrearSesionUseCaseImpl implements CrearSesionUseCase {
     }
 
     @Override
-    public void execute(final CrearSesionDomain domain) {
+    public String execute(final CrearSesionDomain domain) {
         if (ObjectHelper.isNull(domain)) {
             throw new CrosscuttingException("El dominio para crear sesion es obligatorio.");
         }
         // Solo chequeo de rol docente: el docente resuelto no se persiste ni se propaga.
         institutionalScopePort.findDocenteIdByUsuario(domain.getUsuarioEjecutor())
                 .orElseThrow(() -> new ForbiddenException("No fue posible resolver el docente autenticado."));
-        sesionRepositoryPort.crearSesion(CrearSesionRepositoryMapper.toRepositoryDTO(domain));
+        return sesionRepositoryPort.crearSesion(CrearSesionRepositoryMapper.toRepositoryDTO(domain));
     }
 }

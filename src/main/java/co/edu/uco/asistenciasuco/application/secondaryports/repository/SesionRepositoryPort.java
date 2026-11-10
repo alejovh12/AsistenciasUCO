@@ -15,7 +15,8 @@ import java.util.UUID;
  */
 public interface SesionRepositoryPort {
 
-    void crearSesion(CrearSesionRepositoryDTO dto);
+    /** Devuelve el {@code mensajeUsuario} del SP (DEC-065 (2): {@code SES_022} cuando la sesion queda como solicitud). */
+    String crearSesion(CrearSesionRepositoryDTO dto);
 
     void actualizarSesion(ActualizarSesionRepositoryDTO dto);
 

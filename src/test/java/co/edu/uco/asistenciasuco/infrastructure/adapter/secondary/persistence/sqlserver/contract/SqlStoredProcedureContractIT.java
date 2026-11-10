@@ -422,6 +422,34 @@ class SqlStoredProcedureContractIT {
                         input("@idUsuarioEjecutor", "uniqueidentifier"),
                         input("@idCorrelacion", "uniqueidentifier")
                 )),
+                // DEC-065 (2): solicitud de sesion extraordinaria con aval del coordinador.
+                Arguments.of("usp_aprobar_solicitud_sesion", List.of(
+                        input("@idSesion", "uniqueidentifier"),
+                        input("@observacion", "nvarchar"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_rechazar_solicitud_sesion", List.of(
+                        input("@idSesion", "uniqueidentifier"),
+                        input("@codigoMotivo", "nvarchar"),
+                        input("@observacion", "nvarchar"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_solicitudes_sesion_coordinador_paginado", List.of(
+                        input("@idUsuario", "uniqueidentifier"),
+                        input("@soloPendientes", "bit"),
+                        input("@idPrograma", "uniqueidentifier"),
+                        input("@idGrupo", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int"),
+                        input("@idCorrelacion", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_destinatarios_solicitud_sesion", List.of(
+                        input("@idSesion", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
                 Arguments.of("usp_cargar_dias_festivos", List.of(
                         input("@anio", "int"),
                         input("@festivosJSON", "nvarchar"),

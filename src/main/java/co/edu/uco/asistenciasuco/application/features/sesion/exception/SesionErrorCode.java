@@ -22,6 +22,10 @@ public enum SesionErrorCode implements ErrorDefinition {
     SES_018("SES_018", "Solo las sesiones creadas manualmente por el docente pueden ser canceladas por el coordinador.", ErrorKind.CONFLICT),
     SES_019("SES_019", "El motivo de cancelación no es válido.", ErrorKind.VALIDATION),
     SES_021("SES_021", "La observación supera el máximo de caracteres permitido.", ErrorKind.VALIDATION),
+    // DEC-065 (2): solicitud de sesion extraordinaria con aval del coordinador. Codigos de la DB expuestos tal cual.
+    SES_023("SES_023", "La sesión está pendiente de aprobación del coordinador; aún no admite tomas ni registro de asistencia.", ErrorKind.CONFLICT),
+    SES_024("SES_024", "La solicitud de sesión ya fue resuelta.", ErrorKind.CONFLICT),
+    SES_025("SES_025", "La sesión no tiene una solicitud de aprobación.", ErrorKind.CONFLICT),
     // CULM-001 A.2-10: sesion solapada en el grupo o con otro grupo del docente. 400 (el OpenAPI de las sesiones declara 400)
     // con su codigo de catalogo para que el usuario reciba el texto institucional; este es el texto de contingencia.
     SES_017("SES_017", "La sesión se cruza con otra sesión del grupo o del docente en ese horario.", ErrorKind.VALIDATION);

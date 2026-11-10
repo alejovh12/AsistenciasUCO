@@ -10,7 +10,8 @@ import java.util.UUID;
  * con sufijo {@code Z} solo si {@code estadoTemporal = CONFIRMADA}; en una sesion INDETERMINADA se
  * serializan explicitamente como {@code null} junto con {@code procedenciaTemporal}.
  * CULM-001 B.1 (§3.2.4): {@code estado} ({@code PROGRAMADA | CANCELADA}) y {@code cancelacion} ({@code null} si esta
- * programada).
+ * programada). DEC-065 (2): {@code estadoSolicitud} ({@code PENDIENTE|APROBADA|RECHAZADA}, {@code null} si no nacio como
+ * solicitud) y {@code pendienteAprobacion}.
  */
 @JsonInclude(JsonInclude.Include.ALWAYS)
 public record SesionV2Response(
@@ -27,6 +28,8 @@ public record SesionV2Response(
         String estadoTemporal,
         String procedenciaTemporal,
         String estado,
-        CancelacionSesionResponse cancelacion
+        CancelacionSesionResponse cancelacion,
+        String estadoSolicitud,
+        boolean pendienteAprobacion
 ) {
 }

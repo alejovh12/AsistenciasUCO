@@ -124,7 +124,7 @@ public class SesionJpaRepository implements SesionRepositoryPort {
     // COMMANDS
 
     @Override
-    public void crearSesion(final CrearSesionRepositoryDTO dto) {
+    public String crearSesion(final CrearSesionRepositoryDTO dto) {
         require(dto, "El dominio para crear sesion es obligatorio.");
         final UUID correlationId = CorrelationIdContext.require();
 
@@ -138,12 +138,12 @@ public class SesionJpaRepository implements SesionRepositoryPort {
         parametros.put("idCorrelacion", correlationId);
         parametros.put("idUsuarioEjecutor", dto.getUsuarioEjecutor());
 
-        procedureExecutor.execute(
+        return procedureExecutor.execute(
                 utcConfirmado ? OP_CREAR_SESION_V2 : OP_CREAR_SESION,
                 utcConfirmado ? SQL_CREAR_SESION_V2 : SQL_CREAR_SESION,
                 parametros,
                 correlationId
-        );
+        ).getMensajeUsuarioResultado();
     }
 
     @Override
@@ -235,8 +235,11 @@ public class SesionJpaRepository implements SesionRepositoryPort {
     // PRIVATE HELPERS
 
     static SesionRepositoryProjection toSesion(final Object[] fila) {
+        final UvSesionEstadoEntity estado = (UvSesionEstadoEntity) fila[1];
         return CoreViewJpaProjectionMapper.toSesion((UvSesionEntity) fila[0],
-                SesionProcedenciaJpaRepository.cancelacion((UvSesionEstadoEntity) fila[1]));
+                SesionProcedenciaJpaRepository.cancelacion(estado),
+                estado == null ? null : estado.estadoSolicitud(),
+                estado != null && estado.pendienteAprobacion());
     }
 
     private static int entero(final Object value) {

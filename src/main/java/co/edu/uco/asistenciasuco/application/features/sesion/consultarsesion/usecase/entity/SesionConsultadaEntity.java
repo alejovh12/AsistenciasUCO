@@ -30,6 +30,8 @@ public final class SesionConsultadaEntity {
     private final LocalDateTime fechaHoraInicio;
     private final LocalDateTime fechaHoraFin;
     private final CancelacionSesionDTO cancelacion;
+    private final String estadoSolicitud;
+    private final boolean pendienteAprobacion;
 
     public SesionConsultadaEntity(
             final UUID sesion,
@@ -60,6 +62,26 @@ public final class SesionConsultadaEntity {
             final LocalDateTime fechaHoraFin,
             final CancelacionSesionDTO cancelacion
     ) {
+        this(sesion, grupo, nombre, numero, codigo, numeroSemana, codigoGrupo, nombreGrupo, fechaHoraInicio, fechaHoraFin,
+                cancelacion, null, false);
+    }
+
+    /** DEC-065 (2): {@code estadoSolicitud} es {@code null} si la sesion no nacio como solicitud. */
+    public SesionConsultadaEntity(
+            final UUID sesion,
+            final UUID grupo,
+            final String nombre,
+            final Integer numero,
+            final String codigo,
+            final Integer numeroSemana,
+            final String codigoGrupo,
+            final String nombreGrupo,
+            final LocalDateTime fechaHoraInicio,
+            final LocalDateTime fechaHoraFin,
+            final CancelacionSesionDTO cancelacion,
+            final String estadoSolicitud,
+            final boolean pendienteAprobacion
+    ) {
         validarIdentificador(sesion, SesionErrorCode.ERR_SESION_REQUERIDA);
         validarIdentificador(grupo, GrupoErrorCode.ERR_GRUPO_REQUERIDO);
 
@@ -72,6 +94,8 @@ public final class SesionConsultadaEntity {
         this.fechaHoraInicio = fechaHoraInicio;
         this.fechaHoraFin = fechaHoraFin;
         this.cancelacion = cancelacion;
+        this.estadoSolicitud = estadoSolicitud;
+        this.pendienteAprobacion = pendienteAprobacion;
         this.sesion = sesion;
         this.grupo = grupo;
     }
@@ -138,5 +162,13 @@ public final class SesionConsultadaEntity {
 
     public CancelacionSesionDTO getCancelacion() {
         return cancelacion;
+    }
+
+    public String getEstadoSolicitud() {
+        return estadoSolicitud;
+    }
+
+    public boolean isPendienteAprobacion() {
+        return pendienteAprobacion;
     }
 }

@@ -83,15 +83,20 @@ public final class SesionController {
         this.authenticatedUserResolver = Objects.requireNonNull(authenticatedUserResolver, "AuthenticatedUserResolver es obligatorio.");
     }
 
+    /** El mensaje del SP (p. ej. {@code SES_022}); si no llega, el texto historico de la creacion directa. */
+    static String mensajeCreacion(final String mensajeUsuario) {
+        return mensajeUsuario == null || mensajeUsuario.isBlank() ? "Sesion creada correctamente." : mensajeUsuario;
+    }
+
     @PostMapping
     @AuditableOperation(action = "CREAR_SESION", resourceType = "GRUPO", resourceIdRequestField = "grupo")
     public ResponseEntity<ApiMessageResponse> crearSesion(@RequestBody final CrearSesionRequest request) {
         RequestValidationGuard.validate(CREATE_SESSION_VALIDATOR.validate(request));
         final CrearSesionDTO dto = SesionHttpMapper.toApplicationDTO(request, authenticatedUserResolver.requireAuthenticatedUserId());
-        crearSesionInputPort.execute(dto);
+        final String mensajeUsuario = crearSesionInputPort.execute(dto);
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ApiMessageResponse(true, "Sesion creada correctamente."));
+                .body(new ApiMessageResponse(true, mensajeCreacion(mensajeUsuario)));
     }
 
     @GetMapping("/grupo/{grupoId}")

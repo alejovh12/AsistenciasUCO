@@ -106,6 +106,10 @@ public final class DbExceptionTranslator {
             SesionErrorCode.SES_012,
             SesionErrorCode.SES_016,
             SesionErrorCode.SES_018,
+            // DEC-065 (2): solicitud de sesion extraordinaria pendiente, ya resuelta o inexistente.
+            SesionErrorCode.SES_023,
+            SesionErrorCode.SES_024,
+            SesionErrorCode.SES_025,
             TomaAsistenciaErrorCode.TOM_003,
             TomaAsistenciaErrorCode.TOM_004,
             AsistenciaQrErrorCode.AQR_003,
