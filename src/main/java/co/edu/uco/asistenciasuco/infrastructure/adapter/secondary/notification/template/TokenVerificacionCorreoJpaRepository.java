@@ -23,11 +23,25 @@ public class TokenVerificacionCorreoJpaRepository implements TokenVerificacionCo
 
     private static final String SP_NAME = "dbo.usp_emitir_token_verificacion_correo";
     private static final String OPERATION = "emitir_token_verificacion_correo";
+    /** HU177: SP que registra el hash del enlace para definir una contrasena nueva (misma firma y resultset). */
+    public static final String SP_RECUPERACION_CLAVE = "dbo.usp_emitir_token_recuperacion_clave";
+    public static final String OPERACION_RECUPERACION_CLAVE = "emitir_token_recuperacion_clave";
 
     private final EntityManager entityManager;
+    private final String procedimiento;
+    private final String operacion;
 
     public TokenVerificacionCorreoJpaRepository(final EntityManager entityManager) {
+        this(entityManager, SP_NAME, OPERATION);
+    }
+
+    /** Para otro token de un solo uso cuyo SP de emision tiene la misma firma (idUsuario, tokenHash, idCorrelacion). */
+    public TokenVerificacionCorreoJpaRepository(
+            final EntityManager entityManager, final String procedimiento, final String operacion
+    ) {
         this.entityManager = Objects.requireNonNull(entityManager, "EntityManager es obligatorio.");
+        this.procedimiento = Objects.requireNonNull(procedimiento, "El procedimiento de emision es obligatorio.");
+        this.operacion = Objects.requireNonNull(operacion, "La operacion es obligatoria.");
     }
 
     @Override
@@ -39,7 +53,7 @@ public class TokenVerificacionCorreoJpaRepository implements TokenVerificacionCo
         final EntityManager dedicado = abrirEntityManagerDedicado();
         final EntityManager em = dedicado != null ? dedicado : entityManager;
         try {
-            final StoredProcedureQuery sp = em.createStoredProcedureQuery(SP_NAME);
+            final StoredProcedureQuery sp = em.createStoredProcedureQuery(procedimiento);
             sp.registerStoredProcedureParameter("idUsuario", UUID.class, ParameterMode.IN);
             sp.registerStoredProcedureParameter("tokenHash", byte[].class, ParameterMode.IN);
             sp.registerStoredProcedureParameter("idCorrelacion", UUID.class, ParameterMode.IN);
@@ -50,7 +64,7 @@ public class TokenVerificacionCorreoJpaRepository implements TokenVerificacionCo
 
             final List<?> filas = sp.getResultList();
             final ProcedureResult canonico = ProcedureResultMapper.mapSingle(filas);
-            ProcedureResultValidator.validate(canonico, correlacion, OPERATION);
+            ProcedureResultValidator.validate(canonico, correlacion, operacion);
         } finally {
             if (dedicado != null && dedicado.isOpen()) {
                 dedicado.close();

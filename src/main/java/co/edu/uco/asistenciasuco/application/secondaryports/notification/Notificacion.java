@@ -53,6 +53,9 @@ public record Notificacion(
     /** DEC-065 (2): el coordinador rechazo la solicitud (aviso al docente titular, con motivo y observacion). */
     public static final String TIPO_SESION_SOLICITUD_RECHAZADA_DOCENTE = "SESION_SOLICITUD_RECHAZADA_DOCENTE";
 
+    /** HU177: enlace de un solo uso para definir una contrasena nueva (el enlace lo emite el canal al entregar). */
+    public static final String TIPO_RECUPERACION_CLAVE = "RECUPERACION_CLAVE";
+
     public Notificacion {
         Objects.requireNonNull(tipo, "El tipo de notificacion es obligatorio.");
         destinatarios = destinatarios == null ? List.of() : List.copyOf(destinatarios);
