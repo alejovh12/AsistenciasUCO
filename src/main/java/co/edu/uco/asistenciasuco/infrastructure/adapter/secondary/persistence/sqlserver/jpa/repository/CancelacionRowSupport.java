@@ -6,6 +6,7 @@ import jakarta.persistence.Query;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -14,6 +15,21 @@ import java.util.UUID;
 final class CancelacionRowSupport {
 
     private CancelacionRowSupport() {
+    }
+
+    /**
+     * Copia del mapa sin las entradas nulas: es lo unico que se puede enlazar cuando el {@code EXEC} se construyo con
+     * {@link #exec(String, Map)}, porque un parametro ausente del SQL no admite {@code setParameter} (el job de resolutores
+     * fallaba en cada ejecucion con el lote nulo).
+     */
+    static Map<String, Object> sinNulos(final Map<String, Object> parametros) {
+        final Map<String, Object> vinculables = new LinkedHashMap<>();
+        parametros.forEach((nombre, valor) -> {
+            if (valor != null) {
+                vinculables.put(nombre, valor);
+            }
+        });
+        return vinculables;
     }
 
     /** {@code EXEC dbo.proc @a = :a, ...} solo con los parametros no nulos; los SP tienen valor por defecto para el resto. */

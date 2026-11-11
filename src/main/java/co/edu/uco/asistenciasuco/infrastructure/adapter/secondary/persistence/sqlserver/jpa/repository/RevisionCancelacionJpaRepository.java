@@ -49,7 +49,8 @@ public class RevisionCancelacionJpaRepository implements RevisionCancelacionRepo
         final UUID correlationId = CorrelationIdContext.require();
         final Map<String, Object> parametros = comando(revisionId, decision, motivo, usuarioId, correlationId);
         final ProcedureRow fila = procedureExecutor.executeWithExtras(OP_DECIDIR,
-                CancelacionRowSupport.exec("usp_decidir_revision_cancelacion", parametros), parametros, correlationId, 12);
+                CancelacionRowSupport.exec("usp_decidir_revision_cancelacion", parametros),
+                CancelacionRowSupport.sinNulos(parametros), correlationId, 12);
         final List<Object> c = fila.extras();
         return new ResultadoDecision(fila.result().getMensajeUsuarioResultado(), uuid(c.get(0)), texto(c.get(1)), texto(c.get(2)), texto(c.get(3)),
                 bit(c.get(4)), uuid(c.get(5)), uuid(c.get(6)), uuid(c.get(7)), decimal(c.get(8)), texto(c.get(9)), texto(c.get(10)), bit(c.get(11)));
@@ -60,7 +61,8 @@ public class RevisionCancelacionJpaRepository implements RevisionCancelacionRepo
         final UUID correlationId = CorrelationIdContext.require();
         final Map<String, Object> parametros = comando(revisionId, decision, motivo, usuarioId, correlationId);
         final ProcedureRow fila = procedureExecutor.executeWithExtras(OP_RESOLVER,
-                CancelacionRowSupport.exec("usp_resolver_revision_cancelacion", parametros), parametros, correlationId, 13);
+                CancelacionRowSupport.exec("usp_resolver_revision_cancelacion", parametros),
+                CancelacionRowSupport.sinNulos(parametros), correlationId, 13);
         final List<Object> c = fila.extras();
         return new ResultadoResolucion(fila.result().getMensajeUsuarioResultado(), uuid(c.get(0)), texto(c.get(1)), texto(c.get(2)), texto(c.get(3)),
                 bit(c.get(4)), bit(c.get(5)), uuid(c.get(6)), uuid(c.get(7)), uuid(c.get(8)), uuid(c.get(9)), texto(c.get(10)), decimal(c.get(11)),

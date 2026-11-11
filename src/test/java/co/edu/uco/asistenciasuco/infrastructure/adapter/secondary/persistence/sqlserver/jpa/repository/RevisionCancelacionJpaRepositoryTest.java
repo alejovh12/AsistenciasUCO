@@ -137,6 +137,7 @@ class RevisionCancelacionJpaRepositoryTest {
         verify(manager).createNativeQuery(sql.capture());
         assertTrue(sql.getValue().startsWith("EXEC dbo.usp_decidir_revision_cancelacion"));
         assertFalse(sql.getValue().contains("@motivo"));
+        verify(query, never()).setParameter(eq("motivo"), any());
         verify(query).setParameter("idRevision", REVISION);
         verify(query).setParameter("codigoDecision", "PROPONER");
         verify(query).setParameter("idUsuarioEjecutor", USUARIO);

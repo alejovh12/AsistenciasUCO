@@ -204,6 +204,7 @@ class AlertaInasistenciaJpaRepositoryTest {
         final ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
         verify(manager).createNativeQuery(sql.capture());
         assertFalse(sql.getValue().contains("@tamanoLote"));
+        verify(query, never()).setParameter(eq("tamanoLote"), any());
 
         doThrow(new PersistenceException("caida")).when(query).getResultList();
         assertThrows(DatabaseOperationException.class, () -> repo.actualizarResolutores(null));
