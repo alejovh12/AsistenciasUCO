@@ -1,6 +1,5 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.adapters.notification.smtp;
 
-import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notificacion;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.channel.smtp.CorreoTransport;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.channel.smtp.JakartaMailCorreoTransport;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.channel.smtp.SmtpNotificacionChannelSender;
@@ -119,19 +118,9 @@ public class SmtpNotificacionAdapterConfiguration {
     @ConditionalOnMissingBean(MarcadorDinamicoProvider.class)
     public MarcadorDinamicoProvider marcadorDinamicoProvider(
             final TokenVerificacionCorreoRepository tokenRepository,
-            final EntityManager entityManager,
             final SmtpNotificationProperties properties
     ) {
-        return new VerificacionCorreoMarcadorProvider(tokenRepository, properties.platformUrl(), new SecureRandom())
-                // HU177: el mismo emisor arma el enlace para definir una contrasena nueva.
-                .conEnlace(
-                        Notificacion.TIPO_RECUPERACION_CLAVE,
-                        VerificacionCorreoMarcadorProvider.RUTA_RECUPERACION_CLAVE,
-                        new TokenVerificacionCorreoJpaRepository(
-                                entityManager,
-                                TokenVerificacionCorreoJpaRepository.SP_RECUPERACION_CLAVE,
-                                TokenVerificacionCorreoJpaRepository.OPERACION_RECUPERACION_CLAVE),
-                        "El usuario no esta disponible para definir una contrasena nueva.");
+        return new VerificacionCorreoMarcadorProvider(tokenRepository, properties.platformUrl(), new SecureRandom());
     }
 
     @Bean
