@@ -18,6 +18,7 @@ import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * IDENT-001 (CA-07/D9): limite de intentos en memoria por IP sobre {@code POST /api/v1/public/verificar-correo}, la
@@ -36,6 +37,7 @@ public final class VerificacionCorreoRateLimitFilter extends OncePerRequestFilte
     private final Clock clock;
     private final SecurityErrorResponseWriter responseWriter;
     private final Map<String, Deque<Instant>> intentosPorIp;
+    private final Set<String> rutas;
 
     public VerificacionCorreoRateLimitFilter(
             final int limitePorMinuto,
@@ -43,6 +45,21 @@ public final class VerificacionCorreoRateLimitFilter extends OncePerRequestFilte
             final Clock clock,
             final SecurityErrorResponseWriter responseWriter
     ) {
+        this(limitePorMinuto, maxClaves, clock, responseWriter, Set.of(RUTA));
+    }
+
+    /** HU177: el mismo limite por IP para otras rutas POST publicas (cada registro del filtro lleva su propio contador). */
+    public VerificacionCorreoRateLimitFilter(
+            final int limitePorMinuto,
+            final int maxClaves,
+            final Clock clock,
+            final SecurityErrorResponseWriter responseWriter,
+            final Set<String> rutas
+    ) {
+        if (rutas == null || rutas.isEmpty()) {
+            throw new IllegalArgumentException("El limitador exige al menos una ruta.");
+        }
+        this.rutas = Set.copyOf(rutas);
         if (limitePorMinuto < 1) {
             throw new IllegalArgumentException("El limite de intentos por minuto debe ser al menos 1.");
         }
@@ -58,7 +75,7 @@ public final class VerificacionCorreoRateLimitFilter extends OncePerRequestFilte
 
     @Override
     protected boolean shouldNotFilter(final HttpServletRequest request) {
-        return !HttpMethod.POST.matches(request.getMethod()) || !RUTA.equals(request.getRequestURI());
+        return !HttpMethod.POST.matches(request.getMethod()) || !rutas.contains(request.getRequestURI());
     }
 
     @Override

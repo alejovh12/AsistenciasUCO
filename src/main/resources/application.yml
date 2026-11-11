@@ -124,6 +124,10 @@ app:
   verificacion-correo:
     limite-por-minuto: ${VERIFICACION_CORREO_LIMITE_POR_MINUTO:20}
     max-claves: ${VERIFICACION_CORREO_MAX_CLAVES:10000}
+  # HU177: limite de intentos por IP de las dos rutas publicas de recuperacion de contrasena (en memoria, por instancia).
+  recuperacion-clave:
+    limite-por-minuto: ${RECUPERACION_CLAVE_LIMITE_POR_MINUTO:5}
+    max-claves: ${RECUPERACION_CLAVE_MAX_CLAVES:10000}
   adapters:
     identity:
       # Un solo selector (APP_ADAPTERS_SECURITY_PROVIDER) gobierna seguridad e identidad; si se define este

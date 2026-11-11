@@ -634,6 +634,8 @@ public class AdministracionNotificacionJpaAdapter implements AdministracionNotif
     }
 
     private static final String TIPO_PRUEBA_VERIFICACION_CORREO = "PRUEBA_VERIFICACION_CORREO";
+    /** HU177: igual que la verificacion, el envio de prueba no debe emitir un enlace real para definir una contrasena. */
+    private static final String TIPO_PRUEBA_RECUPERACION_CLAVE = "PRUEBA_RECUPERACION_CLAVE";
 
     @Override
     public void enviarCorreoPrueba(final UUID idUsuarioEjecutor, final String correoDestino) {
@@ -656,8 +658,14 @@ public class AdministracionNotificacionJpaAdapter implements AdministracionNotif
         // VERIFICACION_CORREO emite un token real por usuario y solo aplica a estudiantes sin verificar: un
         // envio de prueba del administrador no debe tocar ese flujo, asi que viaja como un tipo de prueba aparte.
         final boolean esVerificacion = Notificacion.TIPO_VERIFICACION_CORREO.equals(tipoEfectivo);
+        String tipoEnvio = tipoEfectivo;
+        if (esVerificacion) {
+            tipoEnvio = TIPO_PRUEBA_VERIFICACION_CORREO;
+        } else if (Notificacion.TIPO_RECUPERACION_CLAVE.equals(tipoEfectivo)) {
+            tipoEnvio = TIPO_PRUEBA_RECUPERACION_CLAVE;
+        }
         final Notificacion notificacion = new Notificacion(
-                esVerificacion ? TIPO_PRUEBA_VERIFICACION_CORREO : tipoEfectivo,
+                tipoEnvio,
                 esVerificacion ? "Prueba de verificación de correo institucional" : asunto,
                 esVerificacion
                         ? "Hola, este es un mensaje de prueba del correo de verificación. El enlace de verificación real "

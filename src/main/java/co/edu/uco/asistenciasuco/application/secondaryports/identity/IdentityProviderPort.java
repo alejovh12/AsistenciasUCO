@@ -100,6 +100,15 @@ public interface IdentityProviderPort {
         throw operacionNoSoportada();
     }
 
+    /**
+     * HU177: fija una contrasena definitiva (no temporal) para la cuenta y cierra sus sesiones abiertas. La contrasena
+     * llega en claro solo hasta el proveedor: nunca se registra en logs ni se guarda en la base de datos.
+     * Capacidad opcional del proveedor: si no la implementa falla de forma controlada.
+     */
+    default void establecerClave(final String idExterno, final String claveNueva) {
+        throw operacionNoSoportada();
+    }
+
     /** Retira un rol institucional de la cuenta. Idempotente: si no lo tiene, no falla. */
     default void retirarRol(final String idExterno, final InstitutionalRole rol) {
         throw operacionNoSoportada();
