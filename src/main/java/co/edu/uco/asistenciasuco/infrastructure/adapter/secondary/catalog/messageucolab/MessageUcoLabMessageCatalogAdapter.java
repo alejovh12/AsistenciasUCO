@@ -72,7 +72,11 @@ public class MessageUcoLabMessageCatalogAdapter implements MessageCatalogPort {
     @Override
     public String getTechnicalMessage(final String code, final Object... args) {
         if (fallback != null) {
-            return fallback.getTechnicalMessage(code, args);
+            try {
+                return fallback.getTechnicalMessage(code, args);
+            } catch (final RuntimeException e) {
+                advertirContingenciaCaida(code, e);
+            }
         }
         return code;
     }
@@ -87,7 +91,28 @@ public class MessageUcoLabMessageCatalogAdapter implements MessageCatalogPort {
         if (remote.isPresent()) {
             return remote;
         }
-        return fallback == null ? Optional.empty() : fallback.findUserMessage(clean);
+        return findFallback(clean);
+    }
+
+    /**
+     * Consulta el catalogo de contingencia sin propagar sus fallos: si tambien esta caido (p. ej. Azure sin sesion), el
+     * codigo queda sin resolver y quien lo consume aplica su texto de respaldo, en vez de convertir una validacion en 500.
+     */
+    private Optional<String> findFallback(final String code) {
+        if (fallback == null) {
+            return Optional.empty();
+        }
+        try {
+            return fallback.findUserMessage(code);
+        } catch (final RuntimeException e) {
+            advertirContingenciaCaida(code, e);
+            return Optional.empty();
+        }
+    }
+
+    private static void advertirContingenciaCaida(final String code, final RuntimeException e) {
+        LOGGER.warn("El catalogo de contingencia tampoco respondio; el codigo queda sin resolver. codigo={}, causa={}",
+                code, e.getClass().getSimpleName());
     }
 
     /** Invalida la cache local de MessageUcoLab y la del fallback Azure. */

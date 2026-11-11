@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional;
 
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
+import co.edu.uco.asistenciasuco.application.features.usuario.exception.VerificacionCorreoErrorCode;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
 
@@ -41,8 +42,24 @@ public final class CorreoInstitucionalPolicy {
     public void exigir(final String correo) {
         final String dominio = dominio();
         if (!cumple(correo, dominio)) {
-            throw new ValidationException(CODIGO_MENSAJE, conDominio(mensajes.getUserMessage(CODIGO_MENSAJE, dominio), dominio));
+            throw new ValidationException(CODIGO_MENSAJE, mensaje(dominio));
         }
+    }
+
+    /**
+     * Texto del catalogo con el dominio aplicado; si el catalogo esta caido o devuelve el codigo crudo, se usa el texto de
+     * respaldo de {@link VerificacionCorreoErrorCode#VCE_001} (los enums son la contingencia ante desconexion).
+     */
+    private String mensaje(final String dominio) {
+        try {
+            final String texto = mensajes.getUserMessage(CODIGO_MENSAJE, dominio);
+            if (texto != null && !texto.isBlank() && !CODIGO_MENSAJE.equals(texto.trim())) {
+                return conDominio(texto, dominio);
+            }
+        } catch (final RuntimeException e) {
+            // Catalogo no disponible: la validacion sigue siendo una validacion, con el texto de respaldo.
+        }
+        return VerificacionCorreoErrorCode.VCE_001.defaultMessage();
     }
 
     /**

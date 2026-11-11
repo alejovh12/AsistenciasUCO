@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional;
 
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
+import co.edu.uco.asistenciasuco.application.features.usuario.exception.VerificacionCorreoErrorCode;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
 import org.junit.jupiter.api.Test;
@@ -126,6 +127,41 @@ class CorreoInstitucionalPolicyTest {
         final ValidationException exception = assertThrows(ValidationException.class, () -> policy.exigir("ana@gmail.com"));
 
         assertEquals("El correo del estudiante debe ser institucional y terminar en @uco.edu.co.", exception.getMessage());
+    }
+
+    @Test
+    void exigir_con_el_catalogo_caido_usa_el_texto_de_respaldo_del_enum_y_sigue_siendo_validacion() {
+        final MessageCatalogPort catalogoCaido = new MessageCatalogPort() {
+            @Override
+            public String getUserMessage(final String code, final Object... args) {
+                throw new MessageCatalogException("Azure App Configuration 401");
+            }
+
+            @Override
+            public String getTechnicalMessage(final String code, final Object... args) {
+                return code;
+            }
+
+            @Override
+            public java.util.Optional<String> findUserMessage(final String code) {
+                return java.util.Optional.empty();
+            }
+        };
+        final CorreoInstitucionalPolicy policy = new CorreoInstitucionalPolicy(
+                parametros(new AtomicReference<>(DOMINIO)), catalogoCaido);
+
+        final ValidationException exception = assertThrows(ValidationException.class, () -> policy.exigir("ana@gmail.com"));
+
+        assertEquals(VerificacionCorreoErrorCode.VCE_001.defaultMessage(), exception.getMessage());
+    }
+
+    @Test
+    void exigir_con_el_codigo_crudo_del_catalogo_usa_el_texto_de_respaldo_del_enum() {
+        final CorreoInstitucionalPolicy policy = politica(DOMINIO);
+
+        final ValidationException exception = assertThrows(ValidationException.class, () -> policy.exigir("sergio/11@uco.net.co"));
+
+        assertEquals(VerificacionCorreoErrorCode.VCE_001.defaultMessage(), exception.getMessage());
     }
 
     @Test

@@ -126,6 +126,17 @@ class MessageUcoLabMessageCatalogAdapterTest {
     }
 
     @Test
+    void fallback_caido_deja_el_codigo_sin_resolver_en_vez_de_propagar() {
+        when(reader.getDetails("MSG_VAL001")).thenReturn(Mono.empty());
+        when(fallback.findUserMessage("VAL_001")).thenThrow(new MessageCatalogPort.MessageCatalogException("Azure 401", null));
+        when(fallback.getTechnicalMessage("VAL_001")).thenThrow(new MessageCatalogPort.MessageCatalogException("Azure 401", null));
+
+        assertEquals(Optional.empty(), adapter.findUserMessage("VAL_001"));
+        assertEquals("VAL_001", adapter.getUserMessage("VAL_001"));
+        assertEquals("VAL_001", adapter.getTechnicalMessage("VAL_001"));
+    }
+
+    @Test
     void contenido_nulo_degrada_al_fallback() {
         when(reader.getDetails("MSG_VAL001")).thenReturn(Mono.just(details("MSG_VAL001", null)));
         when(fallback.findUserMessage("VAL_001")).thenReturn(Optional.empty());
