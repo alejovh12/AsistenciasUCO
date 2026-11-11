@@ -243,22 +243,6 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
                 .log("Correo confirmado y cuenta habilitada en Keycloak.");
     }
 
-    /** HU177: contrasena definitiva elegida por el usuario desde el enlace de recuperacion; cierra las sesiones abiertas. */
-    @Override
-    public void establecerClave(final String idExterno, final String claveNueva) {
-        final String externalId = requireValidExternalUserId(idExterno, "externalUserId es obligatorio para establecer la contrasena de la cuenta.");
-        if (claveNueva == null || claveNueva.isBlank()) {
-            throw new IdentityProviderException("La contrasena nueva es obligatoria.");
-        }
-        final String adminToken = obtenerAdminToken();
-        establecerPassword(adminToken, externalId, claveNueva, false);
-        cerrarSesionesBestEffort(adminToken, externalId);
-        LOGGER.atInfo()
-                .addKeyValue("operation", "IDENTITY_SET_PASSWORD")
-                .addKeyValue("externalUserId", externalId)
-                .log("Contrasena definida por el usuario en Keycloak.");
-    }
-
     @Override
     public void actualizarDatosCuenta(final String idExterno, final ActualizarCuentaIdentidadDTO datos) {
         final String externalId = requireValidExternalUserId(idExterno, "externalUserId es obligatorio para actualizar la cuenta.");
@@ -580,17 +564,11 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
     // -------------------------------------------------------------------------
 
     private void establecerPassword(final String adminToken, final String externalId, final String password) {
-        establecerPassword(adminToken, externalId, password, true);
-    }
-
-    private void establecerPassword(
-            final String adminToken, final String externalId, final String password, final boolean temporal
-    ) {
         final String validatedExternalId = requireValidExternalUserId(
                 externalId,
                 "externalUserId es obligatorio para establecer password en Keycloak."
         );
-        final CredentialRepresentation credential = new CredentialRepresentation("password", password, temporal);
+        final CredentialRepresentation credential = new CredentialRepresentation("password", password, true);
         final HttpRequest request = authorizedRequestBuilder(
                 adminUrl("/users/" + validatedExternalId + "/reset-password"), adminToken)
                 .header("Content-Type", CONTENT_TYPE_JSON)

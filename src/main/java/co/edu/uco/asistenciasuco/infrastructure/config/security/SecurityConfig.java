@@ -111,11 +111,6 @@ public class SecurityConfig {
                 // IDENT-001: verificacion publica del correo. permitAll solo para esta ruta POST (sin comodin /public/**): la
                 // credencial es el token de un solo uso y el limite de intentos lo aplica VerificacionCorreoRateLimitFilter.
                 .requestMatchers(HttpMethod.POST, SecurityPublicEndpoints.VERIFICAR_CORREO).permitAll()
-                // HU177: recuperacion de contrasena. Dos rutas POST declaradas una por una (sin comodin /public/**): pedir el enlace
-                // responde siempre igual y definir la contrasena exige el token de un solo uso; el limite de intentos lo aplica
-                // el filtro de limite por IP registrado en RecuperacionClaveWiringConfiguration.
-                .requestMatchers(HttpMethod.POST, SecurityPublicEndpoints.RECUPERACION_CLAVE_SOLICITUD,
-                        SecurityPublicEndpoints.RECUPERACION_CLAVE_CONFIRMACION).permitAll()
                 // HU176B: matricula publica por QR/PIN. Las unicas dos rutas publicas de negocio nuevas, declaradas una por una
                 // (sin comodin /public/**): la credencial es el token/PIN rotativo; el limite de intentos lo aplica
                 // MatriculaQrRateLimitFilter y la red del campus y el interruptor los exige el caso de uso.
