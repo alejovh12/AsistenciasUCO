@@ -140,6 +140,7 @@ app:
     vault:
       provider: ${APP_ADAPTERS_VAULT_PROVIDER:azure_keyvault}
     parameter-catalog:
+      # azure_appconfig (predeterminado) | sqlserver | catalogoparametros (componente del equipo de parametros)
       provider: ${APP_ADAPTERS_PARAMETER_CATALOG_PROVIDER:azure_appconfig}
     message-catalog:
       # azure (predeterminado) | messageucolab (componente del equipo de mensajeria) | sqlserver.
@@ -160,6 +161,16 @@ app:
         targets: ${APP_ADAPTERS_NOTIFICATION_COMPOSITE_TARGETS:log,outbox}   # solo aplica con provider=composite
 
   providers:
+    # Solo aplica con app.adapters.parameter-catalog.provider=catalogoparametros.
+    catalogo-parametros:
+      base-url: ${CATALOGO_PARAMETROS_BASE_URL:http://localhost:8081/catalogo-parametros/api/v1}
+      token-id: ${CATALOGO_PARAMETROS_TOKEN_ID:}
+      secreto: ${CATALOGO_PARAMETROS_SECRETO:}
+      application-id: ${CATALOGO_PARAMETROS_APPLICATION_ID:}
+      environment-id: ${CATALOGO_PARAMETROS_ENVIRONMENT_ID:}
+      timeout: ${CATALOGO_PARAMETROS_TIMEOUT:3s}
+      cache-ttl: ${CATALOGO_PARAMETROS_CACHE_TTL:5m}   # 0 desactiva la cache
+      separador: ${CATALOGO_PARAMETROS_SEPARADOR:.}    # entre grupo y clave dentro de parametro.nombre
     # Solo aplica con app.adapters.message-catalog.provider=messageucolab (la conexion va en `messageucolab.*`).
     messageucolab:
       timeout: ${MESSAGEUCOLAB_TIMEOUT:3s}
