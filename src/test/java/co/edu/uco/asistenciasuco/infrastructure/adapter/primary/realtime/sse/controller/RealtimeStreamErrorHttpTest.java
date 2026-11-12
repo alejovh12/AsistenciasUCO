@@ -156,7 +156,8 @@ class RealtimeStreamErrorHttpTest {
 
         final long limite = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(2);
         String cuerpo = "";
-        while (!cuerpo.contains("TOMA_ABIERTA") && System.nanoTime() < limite) {
+        // El evento se escribe en varios fragmentos (event:, data:): se espera hasta que llegue tambien el dato del grupo.
+        while (!(cuerpo.contains("TOMA_ABIERTA") && cuerpo.contains(GRUPO_PROPIO.toString())) && System.nanoTime() < limite) {
             cuerpo = result.getResponse().getContentAsString();
             Thread.sleep(10);
         }

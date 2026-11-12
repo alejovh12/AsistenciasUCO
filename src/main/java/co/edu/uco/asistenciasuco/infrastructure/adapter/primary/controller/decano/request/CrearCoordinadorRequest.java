@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.decano.request;
 
 import java.util.UUID;
+import jakarta.validation.Valid;
 
 public final class CrearCoordinadorRequest {
     private String numeroIdentificacion;
@@ -11,6 +12,7 @@ public final class CrearCoordinadorRequest {
     private String correo;
     private UUID idPrograma;
     private String password;
+    @Valid
     private ProgramaNuevoRequest programaNuevo;
     public String getNumeroIdentificacion() { return numeroIdentificacion; }
     public void setNumeroIdentificacion(final String numeroIdentificacion) { this.numeroIdentificacion = numeroIdentificacion; }

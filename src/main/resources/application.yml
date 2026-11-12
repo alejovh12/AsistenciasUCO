@@ -15,6 +15,9 @@ spring:
   sql:
     init:
       mode: never
+  lifecycle:
+    # F12-09: tope del apagado elegante por fase (por debajo de los 30 s que Docker/Kubernetes esperan antes de SIGKILL).
+    timeout-per-shutdown-phase: ${SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE:20s}
   main:
     web-application-type: servlet
     keep-alive: true
@@ -38,6 +41,9 @@ spring:
 
 server:
   port: 8080
+  # F12-09 (desechabilidad): ante SIGTERM se deja de aceptar trafico y se terminan las peticiones en curso, con el tope
+  # por fase de spring.lifecycle.timeout-per-shutdown-phase. Los schedulers y el dispatcher ya paran en SmartLifecycle.stop().
+  shutdown: graceful
   # CULM-001 A.2-5: el despacho ERROR (excepcion en un filtro) nunca expone traza, mensaje ni excepcion.
   error:
     include-stacktrace: never
@@ -60,6 +66,28 @@ management:
     web:
       exposure:
         include: health,prometheus
+  # OBS-10 / F12-09: sondas de liveness y readiness en el puerto de gestion (/actuator/health/liveness y /readiness).
+  # Liveness solo mira el estado interno de la JVM (una dependencia caida nunca debe reiniciar el contenedor).
+  # Readiness agrega la BD (db) y el estado de los circuit breakers del PEP, MinIO y ClamAV (circuitBreakers, sin llamadas
+  # de red extra). Un breaker abierto se informa como CIRCUIT_OPEN, que no tumba la readiness: con el PEP caido todas las
+  # replicas responden 503 (fail-closed) y sacarlas del balanceo no restauraria el servicio.
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          include: readinessState,db,circuitBreakers
+  health:
+    circuitbreakers:
+      enabled: true
+  metrics:
+    distribution:
+      # OBS (alerta LatenciaP95Alta de Prometheus): histograma de http.server.requests para histogram_quantile(0.95, ...).
+      percentiles-histogram:
+        http.server.requests: true
   otlp:
     metrics:
       export:
@@ -83,9 +111,12 @@ management:
           endpoint: ${MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
           transport: http
 
+# F12-11 (logs como flujo): por defecto los logs salen SOLO por stdout, en JSON estructurado (logstash). El archivo JSONL con
+# rotacion es opcional: se activa definiendo ASISTENCIAS_UCO_LOG_FILE (los perfiles local y dev lo activan para el stack local
+# de Alloy/Loki, que lee infra/observability/logs/*.jsonl). Vacio = sin archivo.
 logging:
   file:
-    name: ${ASISTENCIAS_UCO_LOG_FILE:infra/observability/logs/asistencias-uco.jsonl}
+    name: ${ASISTENCIAS_UCO_LOG_FILE:}
   logback:
     rollingpolicy:
       file-name-pattern: ${ASISTENCIAS_UCO_LOG_FILE_PATTERN:infra/observability/logs/asistencias-uco.%d{yyyy-MM-dd}.%i.jsonl}
@@ -97,6 +128,7 @@ logging:
     level: "%5p [correlationId:%X{correlationId:-},traceId:%X{traceId:-},spanId:%X{spanId:-}]"
   structured:
     format:
+      console: ${ASISTENCIAS_UCO_LOG_CONSOLE_FORMAT:logstash}
       file: logstash
     json:
       add:
@@ -111,6 +143,38 @@ logging:
 # Conexion al starter de MessageUcoLab (messageucolab-spring-boot-starter). El starter se autoconfigura aunque
 # el provider activo sea otro, por eso hay valores por defecto inocuos; solo se consulta con
 # app.adapters.message-catalog.provider=messageucolab. Los identificadores no son secretos (guia, paso 7).
+# REA-02: circuit breakers de Resilience4j para las dependencias sincronas (PEP, MinIO, ClamAV). Solo se usan los registros
+# (sin anotaciones AOP); los adaptadores secundarios los aplican. Con el breaker abierto se falla rapido y cerrado: el PEP
+# responde 503, el storage StorageUnavailableException y el antivirus MalwareScanException (nunca CLEAN). El timeout por
+# llamada es el del transporte de cada cliente (request-timeout del PEP, timeouts de MinIO y de ClamAV).
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: ${RESILIENCE_CB_SLIDING_WINDOW_SIZE:20}
+        minimum-number-of-calls: ${RESILIENCE_CB_MINIMUM_NUMBER_OF_CALLS:10}
+        failure-rate-threshold: ${RESILIENCE_CB_FAILURE_RATE_THRESHOLD:50}
+        slow-call-duration-threshold: ${RESILIENCE_CB_SLOW_CALL_DURATION_THRESHOLD:4s}
+        slow-call-rate-threshold: ${RESILIENCE_CB_SLOW_CALL_RATE_THRESHOLD:80}
+        wait-duration-in-open-state: ${RESILIENCE_CB_WAIT_DURATION_IN_OPEN_STATE:30s}
+        permitted-number-of-calls-in-half-open-state: ${RESILIENCE_CB_PERMITTED_CALLS_IN_HALF_OPEN_STATE:3}
+        automatic-transition-from-open-to-half-open-enabled: true
+        register-health-indicator: true
+    instances:
+      securityBaselinePep:
+        base-config: default
+        wait-duration-in-open-state: ${RESILIENCE_CB_PEP_WAIT_DURATION_IN_OPEN_STATE:15s}
+        slow-call-duration-threshold: ${RESILIENCE_CB_PEP_SLOW_CALL_DURATION_THRESHOLD:2s}
+      fileStorage:
+        base-config: default
+        wait-duration-in-open-state: ${RESILIENCE_CB_STORAGE_WAIT_DURATION_IN_OPEN_STATE:30s}
+        slow-call-duration-threshold: ${RESILIENCE_CB_STORAGE_SLOW_CALL_DURATION_THRESHOLD:10s}
+      malwareScan:
+        base-config: default
+        wait-duration-in-open-state: ${RESILIENCE_CB_MALWARE_SCAN_WAIT_DURATION_IN_OPEN_STATE:30s}
+        slow-call-duration-threshold: ${RESILIENCE_CB_MALWARE_SCAN_SLOW_CALL_DURATION_THRESHOLD:10s}
+
 messageucolab:
   url: ${MESSAGEUCOLAB_URL:http://localhost:8000}
   application-id: ${MESSAGEUCOLAB_APPLICATION_ID:}
@@ -317,6 +381,9 @@ app:
   security:
     cors:
       allowed-origins: ${APP_SECURITY_CORS_ALLOWED_ORIGINS:http://localhost:4200,http://127.0.0.1:4200}
+    headers:
+      # CF-05: Strict-Transport-Security solo se escribe en peticiones HTTPS; false lo omite por completo.
+      hsts-enabled: ${APP_SECURITY_HSTS_ENABLED:true}
     azure-events:
       # Sin valor por defecto funcional: vacio = webhook Event Grid rechaza todo (401, fail-closed).
       webhook-token: ${AZURE_EVENTGRID_WEBHOOK_TOKEN:}

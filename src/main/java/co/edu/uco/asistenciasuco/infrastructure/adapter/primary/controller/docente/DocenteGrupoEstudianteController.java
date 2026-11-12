@@ -5,6 +5,7 @@ import co.edu.uco.asistenciasuco.application.features.docente.retirarestudianteg
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.request.RetirarEstudianteRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,7 +42,7 @@ public final class DocenteGrupoEstudianteController {
     public ResponseEntity<ApiDataResponse<Void>> retirarEstudiante(
             @PathVariable final UUID grupoId,
             @PathVariable final UUID estudianteId,
-            @RequestBody(required = false) final RetirarEstudianteRequest request
+            @Valid @RequestBody(required = false) final RetirarEstudianteRequest request
     ) {
         retirarEstudianteGrupoInputPort.execute(new RetirarEstudianteGrupoDTO(
                 authenticatedUserResolver.requireAuthenticatedUserId(),

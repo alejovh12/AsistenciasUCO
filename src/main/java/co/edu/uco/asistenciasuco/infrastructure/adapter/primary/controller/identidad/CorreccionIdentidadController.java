@@ -10,6 +10,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.ident
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,7 +48,7 @@ public final class CorreccionIdentidadController {
     @PutMapping("/api/v1/coordinador/estudiantes/{idEstudiante}/identidad")
     public ResponseEntity<ApiDataResponse<ResultadoCorreccionIdentidadDTO>> corregirEstudiante(
             @PathVariable final UUID idEstudiante,
-            @RequestBody final CorregirIdentidadRequest request
+            @Valid @RequestBody final CorregirIdentidadRequest request
     ) {
         return corregir(TIPO_ESTUDIANTE, idEstudiante, request);
     }
@@ -57,7 +58,7 @@ public final class CorreccionIdentidadController {
     @PutMapping("/api/v1/admin/estudiantes/{idEstudiante}/identidad")
     public ResponseEntity<ApiDataResponse<ResultadoCorreccionIdentidadDTO>> corregirEstudianteComoAdministrador(
             @PathVariable final UUID idEstudiante,
-            @RequestBody final CorregirIdentidadRequest request
+            @Valid @RequestBody final CorregirIdentidadRequest request
     ) {
         return corregir(TIPO_ESTUDIANTE, idEstudiante, request);
     }
@@ -66,7 +67,7 @@ public final class CorreccionIdentidadController {
     @PutMapping("/api/v1/admin/decanos/{id}/identidad")
     public ResponseEntity<ApiDataResponse<ResultadoCorreccionIdentidadDTO>> corregirDecano(
             @PathVariable final UUID id,
-            @RequestBody final CorregirIdentidadRequest request
+            @Valid @RequestBody final CorregirIdentidadRequest request
     ) {
         return corregir(TIPO_DECANO, id, request);
     }

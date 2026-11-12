@@ -11,6 +11,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.respo
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -59,7 +60,7 @@ public final class CoordinadorSesionCancelacionController {
     @AuditableOperation(action = "CANCELAR_SESION_COORDINADOR", resourceType = "SESION", resourceIdPathVariable = "sesionId")
     public ResponseEntity<ApiDataResponse<SesionCanceladaCoordinadorResponse>> cancelar(
             @PathVariable final UUID sesionId,
-            @RequestBody(required = false) final CancelarSesionCoordinadorRequest request
+            @Valid @RequestBody(required = false) final CancelarSesionCoordinadorRequest request
     ) {
         RequestValidationGuard.validate(VALIDATOR.validate(request));
         final CancelarSesionCoordinadorInputPort.Resultado resultado = cancelarSesion.execute(

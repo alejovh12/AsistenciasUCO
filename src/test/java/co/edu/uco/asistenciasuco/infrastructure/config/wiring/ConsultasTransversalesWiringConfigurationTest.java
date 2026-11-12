@@ -15,7 +15,9 @@ class ConsultasTransversalesWiringConfigurationTest {
 
     @Test
     void los_beans_se_construyen_con_el_port_esperado() {
-        final var useCase = config.consultasTransversalesUseCase(mock(ConsultasTransversalesQueryPort.class));
+        final var useCase = config.consultasTransversalesUseCase(mock(ConsultasTransversalesQueryPort.class),
+                new org.springframework.beans.factory.support.StaticListableBeanFactory().getBeanProvider(
+                        co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort.class));
         assertInstanceOf(ConsultasTransversalesUseCaseImpl.class, useCase);
         assertInstanceOf(ConsultasTransversalesInteractor.class, config.consultasTransversalesInputPort(useCase));
     }

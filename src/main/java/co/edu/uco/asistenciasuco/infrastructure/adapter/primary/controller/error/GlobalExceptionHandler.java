@@ -136,9 +136,25 @@ public final class GlobalExceptionHandler {
         return buildResponse(descriptor, request);
     }
 
+    /**
+     * ROL-06: Bean Validation (primera barrera, {@code @Valid} en el {@code @RequestBody}) responde con el MISMO contrato que
+     * los validators propios: 400 {@code VALIDATION_ERROR} con {@code details[]} de {@code field/code/message}. Los mensajes
+     * por defecto del proveedor de validacion nunca se exponen.
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiErrorResponse> handleBeanValidation(
+            final MethodArgumentNotValidException exception,
+            final HttpServletRequest request
+    ) {
+        final ApiErrorDescriptor descriptor = ApiErrorCatalog.requestValidationError();
+        final List<ApiFieldError> details = BeanValidationFieldErrorMapper.from(exception.getBindingResult());
+        logFrameworkBadRequest(descriptor, exception, request,
+                details.stream().map(ApiFieldError::field).distinct().sorted().toList());
+        return buildResponse(descriptor, request, details);
+    }
+
     @ExceptionHandler({
             TypeMismatchException.class,
-            MethodArgumentNotValidException.class,
             HandlerMethodValidationException.class,
             BindException.class
     })

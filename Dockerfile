@@ -31,4 +31,11 @@ RUN apk upgrade --no-cache libpng zlib
 # JAR is copied as world-readable and Java can use /tmp on Alpine.
 USER 10001:10001
 EXPOSE 8080
+# F12-09 / OBS-10: Actuator vive en el puerto de gestion (MANAGEMENT_SERVER_PORT, 8090 por defecto) y escucha en loopback
+# dentro del contenedor, asi que el healthcheck local llega sin exponer ese puerto. Se usa la sonda de readiness (BD lista y
+# contexto arrancado); wget es el de BusyBox de la imagen Alpine. start-period cubre el arranque de Spring y la carga de
+# configuracion externa.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
+    CMD ["sh", "-c", "wget -q -O /dev/null \"http://127.0.0.1:${MANAGEMENT_SERVER_PORT:-8090}/actuator/health/readiness\" || exit 1"]
+# F12-09: exec form => la JVM es el PID 1 y recibe SIGTERM directamente (apagado elegante de server.shutdown=graceful).
 ENTRYPOINT ["java", "-jar", "app.jar"]

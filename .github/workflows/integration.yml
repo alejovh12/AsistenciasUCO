@@ -1,37 +1,124 @@
 name: Backend Integration
 
+# PRU-04 (VAL oleada 2): las pruebas de integracion (*IT, perfil Maven `integration`) corren en cada
+# PR a develop contra un SQL Server efimero del propio job, con el esquema desplegado desde el repo
+# publico de BD (johnjduque/gestion-asistencia-db) por el mismo deploy_schema.ps1 que usa el CI de BD.
+# MinIO y ClamAV (requeridos por los IT de soportes) se levantan con infra/files/compose.yaml.
+# Todas las credenciales son efimeras: se generan al vuelo en el runner y mueren con el job.
 on:
+  pull_request:
+    branches:
+      - develop
   workflow_dispatch:
+    inputs:
+      db_ref:
+        description: Rama, tag o SHA del repo de BD cuyo esquema se despliega
+        required: false
+        default: develop
 
 permissions:
   contents: read
 
 concurrency:
   group: backend-integration-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 # Credenciales de solo lectura para GitHub Packages (starter MessageUcoLab, repo del equipo de mensajeria).
 env:
   MESSAGEUCOLAB_PACKAGES_USER: ${{ secrets.MESSAGEUCOLAB_PACKAGES_USER }}
   MESSAGEUCOLAB_PACKAGES_TOKEN: ${{ secrets.MESSAGEUCOLAB_PACKAGES_TOKEN }}
+  DB_REPOSITORY: johnjduque/gestion-asistencia-db
+  DB_REF: ${{ inputs.db_ref || 'develop' }}
+  # Etiqueta fija, la misma compilacion que fija Infra (F12-10); el CI de BD usa 2022-latest del mismo motor.
+  MSSQL_IMAGE: mcr.microsoft.com/mssql/server:2022-CU20-GDR1-ubuntu-22.04
+  MSSQL_CONTAINER: sqlserver-it
+  APP_DATABASE_EXPECTED_NAME: gestionasistenciadb
 
 jobs:
   integration:
     name: Backend Integration Gate
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    env:
-      SPRING_DATASOURCE_URL: ${{ secrets.CI_SPRING_DATASOURCE_URL }}
-      SPRING_DATASOURCE_USERNAME: ${{ secrets.CI_SPRING_DATASOURCE_USERNAME }}
-      SPRING_DATASOURCE_PASSWORD: ${{ secrets.CI_SPRING_DATASOURCE_PASSWORD }}
-      APP_DATABASE_EXPECTED_NAME: ${{ vars.CI_APP_DATABASE_EXPECTED_NAME }}
+    timeout-minutes: 45
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
+      - name: Checkout backend
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Checkout database schema repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ env.DB_REPOSITORY }}
+          ref: ${{ env.DB_REF }}
+          path: .ci-db
+          persist-credentials: false
+
+      - name: Generate ephemeral credentials (never stored)
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Contrasenas aleatorias por ejecucion; cumplen la politica de complejidad de SQL Server.
+          sa_password="Ci-$(openssl rand -hex 16)-Aa1!"
+          minio_root_password="$(openssl rand -hex 24)"
+          minio_secret_key="$(openssl rand -hex 24)"
+          for value in "$sa_password" "$minio_root_password" "$minio_secret_key"; do
+            echo "::add-mask::${value}"
+          done
+          {
+            echo "MSSQL_SA_PASSWORD=${sa_password}"
+            echo "SPRING_DATASOURCE_URL=jdbc:sqlserver://localhost:1433;databaseName=${APP_DATABASE_EXPECTED_NAME};encrypt=true;trustServerCertificate=true"
+            echo "SPRING_DATASOURCE_USERNAME=sa"
+            echo "SPRING_DATASOURCE_PASSWORD=${sa_password}"
+            echo "MINIO_ROOT_USER=ci-minio-root"
+            echo "MINIO_ROOT_PASSWORD=${minio_root_password}"
+            echo "MINIO_ACCESS_KEY=ci-minio-app"
+            echo "MINIO_SECRET_KEY=${minio_secret_key}"
+            echo "MINIO_ENDPOINT=http://localhost:9000"
+            echo "MINIO_BUCKET=asistencias-soportes"
+            echo "CLAMAV_HOST=localhost"
+            echo "CLAMAV_PORT=3310"
+          } >> "$GITHUB_ENV"
+
+      - name: Start ephemeral SQL Server
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run -d --name "$MSSQL_CONTAINER" \
+            -e ACCEPT_EULA=Y \
+            -e MSSQL_SA_PASSWORD \
+            -p 127.0.0.1:1433:1433 \
+            "$MSSQL_IMAGE"
+
+      - name: Start MinIO and ClamAV (infra/files/compose.yaml)
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker compose -f infra/files/compose.yaml up -d --build --wait --wait-timeout 600 minio clamav
+          docker compose -f infra/files/compose.yaml run --rm minio-init
+
+      - name: Wait for SQL Server readiness
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 60); do
+            if docker exec "$MSSQL_CONTAINER" /opt/mssql-tools18/bin/sqlcmd \
+                 -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -b -Q "SELECT 1;" >/dev/null 2>&1; then
+              echo "SQL Server ready after ${attempt} attempt(s)."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::SQL Server did not become ready in time."
+          docker logs --tail 100 "$MSSQL_CONTAINER" || true
+          exit 1
+
+      - name: Deploy database schema from the DB repository
+        shell: pwsh
+        working-directory: .ci-db
+        run: |
+          ./deploy_schema.ps1 -ContainerName $env:MSSQL_CONTAINER -Password $env:MSSQL_SA_PASSWORD
 
       - name: Set up Java 25
-        uses: actions/setup-java@v6
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
           distribution: temurin
           java-version: '25'
@@ -39,29 +126,6 @@ jobs:
           server-id: github
           server-username: MESSAGEUCOLAB_PACKAGES_USER
           server-password: MESSAGEUCOLAB_PACKAGES_TOKEN
-
-      - name: Validate integration configuration
-        shell: bash
-        run: |
-          set -euo pipefail
-          required=(
-            SPRING_DATASOURCE_URL
-            SPRING_DATASOURCE_USERNAME
-            SPRING_DATASOURCE_PASSWORD
-            APP_DATABASE_EXPECTED_NAME
-          )
-
-          missing=0
-          for name in "${required[@]}"; do
-            if [ -z "${!name:-}" ]; then
-              echo "::error::Missing required CI integration setting: ${name}"
-              missing=1
-            fi
-          done
-
-          if [ "$missing" -ne 0 ]; then
-            exit 1
-          fi
 
       - name: Verify toolchain
         shell: bash
@@ -74,11 +138,11 @@ jobs:
 
       - name: Run integration profile
         shell: bash
-        run: ./mvnw -B -ntp --no-transfer-progress clean verify -Pintegration
+        run: ./mvnw -B -ntp --no-transfer-progress verify -Pintegration
 
       - name: Upload unit test reports
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: backend-integration-surefire-${{ github.run_id }}
           path: target/surefire-reports/**
@@ -87,9 +151,16 @@ jobs:
 
       - name: Upload integration test reports
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: backend-integration-failsafe-${{ github.run_id }}
           path: target/failsafe-reports/**
           if-no-files-found: warn
           retention-days: 14
+
+      - name: Stop ephemeral services
+        if: always()
+        shell: bash
+        run: |
+          docker compose -f infra/files/compose.yaml down -v || true
+          docker rm -f "$MSSQL_CONTAINER" || true

@@ -2,10 +2,12 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asis
 
 import java.util.List;
 import java.util.UUID;
+import jakarta.validation.Valid;
 
 public final class RegistrarAsistenciasSesionRequest {
 
     private UUID sesionId;
+    @Valid
     private List<RegistroAsistenciaRequest> registros;
 
     public UUID getSesionId() {

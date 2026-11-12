@@ -20,6 +20,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.respo
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import java.util.Objects;
 import java.util.UUID;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -74,7 +75,7 @@ public final class DecanoProgramaController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiDataResponse<ProgramaAcademicoResponse>> crear(@RequestBody final ProgramaAcademicoRequest request) {
+    public ResponseEntity<ApiDataResponse<ProgramaAcademicoResponse>> crear(@Valid @RequestBody final ProgramaAcademicoRequest request) {
         ProgramaAcademicoRequestValidator.validar(request);
         final ProgramaAcademicoDTO creado = crearPrograma.execute(new CrearProgramaDTO(
                 authenticatedUserResolver.requireAuthenticatedUserId(), request.getNombre(), request.getIdTipoPrograma(),
@@ -86,7 +87,7 @@ public final class DecanoProgramaController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiDataResponse<ProgramaAcademicoResponse>> actualizar(
             @PathVariable final UUID id,
-            @RequestBody final ProgramaAcademicoRequest request
+            @Valid @RequestBody final ProgramaAcademicoRequest request
     ) {
         ProgramaAcademicoRequestValidator.validar(request);
         final ProgramaAcademicoDTO actualizado = actualizarPrograma.execute(new ActualizarProgramaDTO(
@@ -98,7 +99,7 @@ public final class DecanoProgramaController {
     @PatchMapping("/{id}/estado")
     public ResponseEntity<ApiDataResponse<ProgramaAcademicoResponse>> cambiarEstado(
             @PathVariable final UUID id,
-            @RequestBody final CambiarEstadoProgramaRequest request
+            @Valid @RequestBody final CambiarEstadoProgramaRequest request
     ) {
         ProgramaAcademicoRequestValidator.validar(request);
         final ProgramaAcademicoDTO resultado = cambiarEstadoPrograma.execute(new CambiarEstadoProgramaDTO(

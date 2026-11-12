@@ -49,6 +49,10 @@ public class SecurityConfig {
     @Value("${app.security.azure-events.webhook-token:}")
     private String azureWebhookToken;
 
+    /** CF-05: HSTS (solo en HTTPS) activo por defecto; se apaga con APP_SECURITY_HSTS_ENABLED=false. */
+    @Value("${app.security.headers.hsts-enabled:true}")
+    private boolean hstsEnabled;
+
     @Bean
     public InstitutionalJwtAuthenticationConverter institutionalJwtAuthenticationConverter(
             final JwtClaimsExtractor jwtClaimsExtractor
@@ -88,6 +92,8 @@ public class SecurityConfig {
             // exactamente la misma justificación y se excluye con el mismo alcance acotado.
             .csrf(csrf -> csrf.ignoringRequestMatchers("/api/v1/**", "/api/v2/sesiones/**"))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // CF-05: CSP, X-Frame-Options DENY, HSTS condicionado, nosniff, Referrer-Policy y Permissions-Policy explicitos.
+            .headers(headers -> SecurityHttpHeaders.apply(headers, hstsEnabled))
             .addFilterBefore(
                     new AzureEventGridAuthFilter(azureWebhookToken),
                     org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class

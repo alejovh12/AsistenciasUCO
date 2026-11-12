@@ -25,6 +25,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.respo
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -122,7 +123,7 @@ public final class CoordinadorDocentesController {
 
     @PostMapping
     @AuditableOperation(action = "VINCULAR_DOCENTE_PROGRAMA", resourceType = "DOCENTE")
-    public ResponseEntity<ApiDataResponse<DocenteProgramaDTO>> vincular(@RequestBody final VincularDocenteProgramaRequest request) {
+    public ResponseEntity<ApiDataResponse<DocenteProgramaDTO>> vincular(@Valid @RequestBody final VincularDocenteProgramaRequest request) {
         RequestValidationGuard.validate(VINCULAR_VALIDATOR.validate(request));
         final DocenteProgramaDTO resultado = vincularDocenteProgramaInputPort.execute(new VincularDocenteProgramaDTO(
                 authenticatedUserResolver.requireAuthenticatedUserId(),
@@ -144,7 +145,7 @@ public final class CoordinadorDocentesController {
     @AuditableOperation(action = "ACTUALIZAR_DOCENTE_PROGRAMA", resourceType = "DOCENTE")
     public ResponseEntity<ApiDataResponse<DocenteProgramaDTO>> actualizar(
             @PathVariable("idDocente") final UUID idDocente,
-            @RequestBody final ActualizarDocenteProgramaRequest request
+            @Valid @RequestBody final ActualizarDocenteProgramaRequest request
     ) {
         RequestValidationGuard.validate(ACTUALIZAR_VALIDATOR.validate(request));
         final DocenteProgramaDTO resultado = actualizarDocenteProgramaInputPort.execute(new ActualizarDocenteProgramaDTO(
@@ -165,7 +166,7 @@ public final class CoordinadorDocentesController {
     @AuditableOperation(action = "CAMBIAR_ESTADO_DOCENTE_PROGRAMA", resourceType = "DOCENTE")
     public ResponseEntity<ApiDataResponse<DocenteProgramaDTO>> cambiarEstado(
             @PathVariable("idDocente") final UUID idDocente,
-            @RequestBody final CambiarEstadoDocenteProgramaRequest request
+            @Valid @RequestBody final CambiarEstadoDocenteProgramaRequest request
     ) {
         Objects.requireNonNull(request, "request");
         RequestValidationGuard.validate(CAMBIAR_ESTADO_VALIDATOR.validate(request));

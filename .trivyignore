@@ -1,0 +1,10 @@
+# TRI-01 / TRI-02 / TRI-06 (VAL oleada 2, 2026-11-12): excepciones de la compuerta Trivy del backend.
+# Formato: un ID por linea, precedido de un comentario con el motivo; usar "exp:AAAA-MM-DD" para que la
+# excepcion venza y vuelva a bloquear. Solo se aceptan falsos positivos o hallazgos que no aplican.
+#
+# Triage 2026-11-12 (aquasec/trivy:0.74.0, fs, HIGH/CRITICAL, ignore-unfixed): 3 hallazgos reales en
+# dependencias transitivas de io.minio:minio:9.0.3, todos con correccion disponible. NO se ignoran:
+# se corrigen subiendo la dependencia en pom.xml (fuera del alcance del agente de CI):
+#   - com.google.guava:guava 33.6.0-jre -> 33.7.2 (CVE-2026-102554)
+#   - org.xerial.snappy:snappy-java 1.1.10.8 -> 1.1.10.9 (CVE-2026-108106, CVE-2026-93451)
+# Sin hallazgos de secretos ni de misconfig (Dockerfile, infra/files/minio/Dockerfile).

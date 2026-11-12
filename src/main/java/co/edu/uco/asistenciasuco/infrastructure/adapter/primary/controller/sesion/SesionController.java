@@ -28,6 +28,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesio
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesion.validation.CrearSesionRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -90,7 +91,7 @@ public final class SesionController {
 
     @PostMapping
     @AuditableOperation(action = "CREAR_SESION", resourceType = "GRUPO", resourceIdRequestField = "grupo")
-    public ResponseEntity<ApiMessageResponse> crearSesion(@RequestBody final CrearSesionRequest request) {
+    public ResponseEntity<ApiMessageResponse> crearSesion(@Valid @RequestBody final CrearSesionRequest request) {
         RequestValidationGuard.validate(CREATE_SESSION_VALIDATOR.validate(request));
         final CrearSesionDTO dto = SesionHttpMapper.toApplicationDTO(request, authenticatedUserResolver.requireAuthenticatedUserId());
         final String mensajeUsuario = crearSesionInputPort.execute(dto);
@@ -132,14 +133,14 @@ public final class SesionController {
     @Deprecated(forRemoval = false)
     @PostMapping("/consultas")
     public ResponseEntity<ApiDataResponse<SesionConsultadaDTO>> consultarSesionLegacy(
-            @RequestBody final ConsultarSesionRequest request
+            @Valid @RequestBody final ConsultarSesionRequest request
     ) {
         return executeConsultarSesion(request);
     }
 
     @PostMapping("/cierres")
     @AuditableOperation(action = "CERRAR_SESION", resourceType = "SESION", resourceIdRequestField = "sesion")
-    public ResponseEntity<ApiMessageResponse> cerrarSesion(@RequestBody final CerrarSesionRequest request) {
+    public ResponseEntity<ApiMessageResponse> cerrarSesion(@Valid @RequestBody final CerrarSesionRequest request) {
         RequestValidationGuard.validate(CLOSE_SESSION_VALIDATOR.validate(request));
         final CerrarSesionDTO dto = SesionHttpMapper.toApplicationDTO(request, authenticatedUserResolver.requireAuthenticatedUserId());
         cerrarSesionInputPort.execute(dto);
@@ -150,7 +151,7 @@ public final class SesionController {
     @PatchMapping("/{sesionId}")
     public ResponseEntity<ApiDataResponse<Void>> actualizarSesion(
             @PathVariable final UUID sesionId,
-            @RequestBody final ActualizarSesionRequest request
+            @Valid @RequestBody final ActualizarSesionRequest request
     ) {
         return executeActualizarSesion(sesionId, request);
     }
@@ -160,7 +161,7 @@ public final class SesionController {
     @PutMapping("/{sesionId}")
     public ResponseEntity<ApiDataResponse<Void>> actualizarSesionLegacy(
             @PathVariable final UUID sesionId,
-            @RequestBody final ActualizarSesionRequest request
+            @Valid @RequestBody final ActualizarSesionRequest request
     ) {
         return executeActualizarSesion(sesionId, request);
     }

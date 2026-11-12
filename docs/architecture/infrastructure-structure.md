@@ -193,8 +193,10 @@ en `infrastructure.adapter`. Se integran exclusivamente vía estándares:
 - **Tracing -> Tempo**: OpenTelemetry SDK exporta spans vía OTLP a un collector (Alloy), que los
   reenvía a Tempo. `infrastructure.observability.tracing.opentelemetry.TraceContextSnapshot` es
   el único punto de Infrastructure que toca el SDK de OTel.
-- **Logs -> Loki**: logging estructurado (Logback) se escribe actualmente en archivos JSONL; Alloy
-  lee el directorio montado y lo envía a Loki (`application.yml` y `infra/observability/alloy/config.alloy`). stdout/OTLP en cloud es evolución, no el flujo local actual. Ningún código productivo importa un cliente de Loki.
+- **Logs -> Loki**: logging estructurado (Logback, JSON logstash) sale por defecto SOLO por stdout (F12-11, factor XI);
+  en contenedores lo recoge el runtime. El archivo JSONL con rotación es opcional (`ASISTENCIAS_UCO_LOG_FILE`) y los
+  perfiles `local` y `dev` lo activan para el stack local, donde Alloy lee el directorio montado y lo envía a Loki
+  (`application*.yml` y `infra/observability/alloy/config.alloy`). Ningún código productivo importa un cliente de Loki.
 - **Dashboards -> Grafana**: consumidor puro de Prometheus/Loki/Tempo vía `infra/observability/grafana/provisioning`;
   nunca es tocado por Application ni por Infrastructure en tiempo de ejecución.
 

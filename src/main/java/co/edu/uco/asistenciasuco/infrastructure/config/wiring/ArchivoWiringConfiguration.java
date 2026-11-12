@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
+import org.springframework.beans.factory.ObjectProvider;
 import co.edu.uco.asistenciasuco.application.features.archivo.descargararchivo.primaryports.DescargarArchivoInputPort;
 import co.edu.uco.asistenciasuco.application.features.archivo.descargararchivo.primaryports.interactor.DescargarArchivoInteractor;
 import co.edu.uco.asistenciasuco.application.features.archivo.descargararchivo.usecase.DescargarArchivoUseCase;
@@ -21,9 +23,12 @@ public class ArchivoWiringConfiguration {
     public SubirArchivoUseCase subirArchivoUseCase(
             final FileStoragePort fileStoragePort,
             final MalwareScanPort malwareScanPort,
-            final SoporteArchivoMetadataPort soporteArchivoMetadataPort
+            final SoporteArchivoMetadataPort soporteArchivoMetadataPort,
+            final ObjectProvider<ParameterCatalogPort> parameterCatalogPort
     ) {
-        return new SubirArchivoUseCaseImpl(fileStoragePort, malwareScanPort, soporteArchivoMetadataPort);
+        // PAR-05: el tamano maximo del soporte sale de ARCHIVO/TAMANIO_MAXIMO_BYTES.
+        return new SubirArchivoUseCaseImpl(fileStoragePort, malwareScanPort, soporteArchivoMetadataPort,
+                parameterCatalogPort.getIfAvailable());
     }
 
     @Bean

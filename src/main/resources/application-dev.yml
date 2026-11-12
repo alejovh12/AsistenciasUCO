@@ -1,3 +1,9 @@
 asistencias:
   swagger-ui:
     enabled: true
+
+# F12-11: en local/dev se conserva el archivo JSONL para el stack de observabilidad local (Alloy lee
+# infra/observability/logs/*.jsonl). En contenedores y produccion los logs van solo a stdout (application.yml).
+logging:
+  file:
+    name: ${ASISTENCIAS_UCO_LOG_FILE:infra/observability/logs/asistencias-uco.jsonl}

@@ -14,6 +14,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.respo
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -74,7 +75,7 @@ public final class CoordinadorSesionSolicitudController {
     @AuditableOperation(action = "APROBAR_SOLICITUD_SESION", resourceType = "SESION", resourceIdPathVariable = "sesionId")
     public ResponseEntity<ApiDataMensajeResponse<SolicitudSesionResueltaResponse>> aprobar(
             @PathVariable final UUID sesionId,
-            @RequestBody(required = false) final AprobarSolicitudSesionRequest request
+            @Valid @RequestBody(required = false) final AprobarSolicitudSesionRequest request
     ) {
         RequestValidationGuard.validate(APROBAR_VALIDATOR.validate(request));
         final String observacion = request == null ? null : request.getObservacion();
@@ -88,7 +89,7 @@ public final class CoordinadorSesionSolicitudController {
     @AuditableOperation(action = "RECHAZAR_SOLICITUD_SESION", resourceType = "SESION", resourceIdPathVariable = "sesionId")
     public ResponseEntity<ApiDataMensajeResponse<SolicitudSesionResueltaResponse>> rechazar(
             @PathVariable final UUID sesionId,
-            @RequestBody(required = false) final CancelarSesionCoordinadorRequest request
+            @Valid @RequestBody(required = false) final CancelarSesionCoordinadorRequest request
     ) {
         RequestValidationGuard.validate(RECHAZAR_VALIDATOR.validate(request));
         final RechazarSolicitudSesionInputPort.Resultado resultado = rechazar.execute(new RechazarSolicitudSesionInputPort.Comando(

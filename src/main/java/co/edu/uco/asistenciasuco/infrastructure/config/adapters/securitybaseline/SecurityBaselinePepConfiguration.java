@@ -4,6 +4,9 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.handler
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.securitybaseline.SecurityBaselinePepClient;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.SecurityBaselinePepProperties;
 import co.edu.uco.asistenciasuco.infrastructure.config.security.SecurityPepEnforcementFilter;
+import co.edu.uco.asistenciasuco.infrastructure.config.resilience.ResilienceCircuitBreakerNames;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -21,7 +24,8 @@ public class SecurityBaselinePepConfiguration {
     @Bean
     public SecurityBaselinePepClient securityBaselinePepClient(
             final SecurityBaselinePepProperties properties,
-            final tools.jackson.databind.ObjectMapper objectMapper
+            final tools.jackson.databind.ObjectMapper objectMapper,
+            final ObjectProvider<CircuitBreakerRegistry> circuitBreakerRegistry
     ) {
         final HttpClient httpClient = HttpClient.newBuilder()
                 .connectTimeout(properties.connectTimeout())
@@ -31,7 +35,10 @@ public class SecurityBaselinePepConfiguration {
                 // Destino fijo: nunca seguir un redirect del PEP (fail-closed como respuesta anómala).
                 .followRedirects(HttpClient.Redirect.NEVER)
                 .build();
-        return new SecurityBaselinePepClient(httpClient, objectMapper, properties);
+        // REA-02: breaker "securityBaselinePep" (resilience4j.circuitbreaker.instances.* en application.yml).
+        return new SecurityBaselinePepClient(httpClient, objectMapper, properties,
+                circuitBreakerRegistry.getIfAvailable(CircuitBreakerRegistry::ofDefaults)
+                        .circuitBreaker(ResilienceCircuitBreakerNames.SECURITY_BASELINE_PEP));
     }
 
     @Bean

@@ -22,6 +22,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.respo
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -79,7 +80,7 @@ public final class GrupoController {
 
     @PostMapping
     public ResponseEntity<ApiDataResponse<CrearGrupoResultadoDTO>> crearGrupo(
-            @RequestBody final CrearGrupoRequest request
+            @Valid @RequestBody final CrearGrupoRequest request
     ) {
         final CrearGrupoResultadoDTO resultado = crearGrupoInputPort.execute(
                 GrupoHttpMapper.toApplicationDTO(request, authenticatedUserResolver.requireAuthenticatedUserId())
@@ -90,7 +91,7 @@ public final class GrupoController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiDataResponse<ActualizarGrupoResultadoDTO>> actualizarGrupo(
             @PathVariable final UUID id,
-            @RequestBody final ActualizarGrupoRequest request
+            @Valid @RequestBody final ActualizarGrupoRequest request
     ) {
         final ActualizarGrupoResultadoDTO resultado = actualizarGrupoInputPort.execute(
                 GrupoHttpMapper.toApplicationDTO(id, request, authenticatedUserResolver.requireAuthenticatedUserId())
@@ -112,7 +113,7 @@ public final class GrupoController {
     @AuditableOperation(action = "REGISTRAR_ESTUDIANTE_EN_GRUPO", resourceType = "GRUPO", resourceIdPathVariable = "grupoId")
     public ResponseEntity<RegistrarEstudianteResultadoDTO> matricularEstudiante(
             @PathVariable final UUID grupoId,
-            @RequestBody final RegistrarEstudianteRequest request
+            @Valid @RequestBody final RegistrarEstudianteRequest request
     ) {
         RequestValidationGuard.validate(REQUEST_VALIDATOR.validate(grupoId, request));
         final RegistrarEstudianteResultadoDTO resultado = registrarEstudianteInputPort.execute(

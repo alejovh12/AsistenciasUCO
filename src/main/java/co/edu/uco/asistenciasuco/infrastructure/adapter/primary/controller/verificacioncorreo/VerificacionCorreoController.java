@@ -4,6 +4,7 @@ import co.edu.uco.asistenciasuco.application.features.usuario.verificarcorreo.pr
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.verificacioncorreo.request.VerificarCorreoRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.verificacioncorreo.response.MensajeResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,7 +29,7 @@ public final class VerificacionCorreoController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiDataResponse<MensajeResponse>> verificar(@RequestBody(required = false) final VerificarCorreoRequest request) {
+    public ResponseEntity<ApiDataResponse<MensajeResponse>> verificar(@Valid @RequestBody(required = false) final VerificarCorreoRequest request) {
         final String mensaje = verificarCorreoInputPort.execute(request == null ? null : request.getToken());
         return ResponseEntity.ok(new ApiDataResponse<>(true, new MensajeResponse(mensaje)));
     }

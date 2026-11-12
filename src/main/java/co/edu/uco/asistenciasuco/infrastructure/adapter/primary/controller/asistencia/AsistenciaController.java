@@ -12,6 +12,7 @@ import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiMessageResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -53,7 +54,7 @@ public final class AsistenciaController {
     @PostMapping("/revisiones")
     @AuditableOperation(action = "SOLICITAR_REVISION_ASISTENCIA", resourceType = "SESION", resourceIdRequestField = "sesionId")
     public ResponseEntity<ApiMessageResponse> solicitarRevision(
-            @RequestBody final SolicitarRevisionAsistenciaRequest request
+            @Valid @RequestBody final SolicitarRevisionAsistenciaRequest request
     ) {
         RequestValidationGuard.validate(REQUEST_REVISION_VALIDATOR.validate(request));
         final SolicitarRevisionAsistenciaDTO dto = AsistenciaHttpMapper.toApplicationDTO(
@@ -69,7 +70,7 @@ public final class AsistenciaController {
     @PostMapping("/lote")
     @AuditableOperation(action = "REGISTRAR_ASISTENCIAS_SESION", resourceType = "SESION", resourceIdRequestField = "sesionId")
     public ResponseEntity<ApiMessageResponse> registrarAsistenciasLote(
-            @RequestBody final RegistrarAsistenciasSesionRequest request
+            @Valid @RequestBody final RegistrarAsistenciasSesionRequest request
     ) {
         final RegistrarAsistenciasSesionDTO dto = AsistenciaHttpMapper.toApplicationDTO(
                 request,

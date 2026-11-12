@@ -29,6 +29,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.respo
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiMessageResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -87,7 +88,7 @@ public class AdminNotificacionController {
     @PostMapping("/plantillas/{tipo}/versiones")
     public ResponseEntity<ApiDataResponse<VersionPlantillaResponse>> crearVersion(
             @PathVariable final String tipo,
-            @RequestBody final CrearVersionPlantillaRequest request
+            @Valid @RequestBody final CrearVersionPlantillaRequest request
     ) {
         // CULM-001 A.2-6: asunto y cuerpo obligatorios; {} responde 400 VALIDATION_ERROR antes de llegar al adaptador (antes NPE 500).
         RequestValidationGuard.validate(validarVersion(request));
@@ -126,7 +127,7 @@ public class AdminNotificacionController {
     @PostMapping("/plantillas/{tipo}/vista-previa")
     public ResponseEntity<ApiDataResponse<VistaPreviaPlantillaResponse>> generarVistaPrevia(
             @PathVariable final String tipo,
-            @RequestBody final VistaPreviaPlantillaRequest request
+            @Valid @RequestBody final VistaPreviaPlantillaRequest request
     ) {
         final VistaPreviaPlantillaProjection prev = administracionPort.generarVistaPrevia(
                 tipo,
@@ -188,7 +189,7 @@ public class AdminNotificacionController {
     @AuditableOperation(action = "ENVIAR_NOTIFICACION_PRUEBA", resourceType = "NOTIFICACION", metadataRequestFields = {"tipo"})
     @PostMapping("/prueba")
     public ResponseEntity<ApiMessageResponse> enviarPrueba(
-            @RequestBody(required = false) final EnviarCorreoPruebaRequest request
+            @Valid @RequestBody(required = false) final EnviarCorreoPruebaRequest request
     ) {
         final UUID adminId = authenticatedUserResolver.requireAuthenticatedUserId();
         final String tipo = request != null ? request.tipo() : null;

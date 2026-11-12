@@ -11,6 +11,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.respo
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiPageResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.PaginacionRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -58,7 +59,7 @@ public final class DecanoPortalController {
     }
 
     @PostMapping("/coordinadores")
-    public ResponseEntity<ApiDataResponse<CrearCoordinadorResponse>> crearCoordinador(@RequestBody final CrearCoordinadorRequest request) {
+    public ResponseEntity<ApiDataResponse<CrearCoordinadorResponse>> crearCoordinador(@Valid @RequestBody final CrearCoordinadorRequest request) {
         final var programa = request == null ? null : request.getProgramaNuevo();
         final var resultado = crearCoordinadorInputPort.execute(new CrearCoordinadorDTO(
                 null,
