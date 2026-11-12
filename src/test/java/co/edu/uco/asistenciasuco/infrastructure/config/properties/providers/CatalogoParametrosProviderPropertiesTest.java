@@ -24,7 +24,7 @@ class CatalogoParametrosProviderPropertiesTest {
     void aplica_valores_por_defecto() {
         final var p = con("http://h/api/v1", TOKEN, SECRETO, null, null, null);
 
-        assertEquals(Duration.ofSeconds(3), p.timeout());
+        assertEquals(Duration.ofSeconds(10), p.timeout());
         assertEquals(Duration.ofMinutes(5), p.cacheTtl());
         assertEquals(".", p.separador());
     }

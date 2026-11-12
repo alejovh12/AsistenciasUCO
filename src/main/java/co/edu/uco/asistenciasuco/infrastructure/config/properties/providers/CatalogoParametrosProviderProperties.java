@@ -14,7 +14,7 @@ import java.util.UUID;
  * @param secreto       secreto Bearer del token. Nunca se registra en logs ni en mensajes de error.
  * @param applicationId aplicacion (opcional, solo trazabilidad).
  * @param environmentId ambiente (opcional, solo trazabilidad).
- * @param timeout       espera maxima por la llamada HTTP.
+ * @param timeout       espera maxima por la llamada HTTP (10 s por defecto: la lectura fria del componente tarda varios segundos).
  * @param cacheTtl      vigencia de la cache en memoria; {@code 0} la desactiva.
  * @param separador     separador entre grupo y clave dentro de {@code parametro.nombre}.
  */
@@ -47,7 +47,7 @@ public record CatalogoParametrosProviderProperties(
         if (secreto == null || secreto.isBlank()) {
             throw new IllegalStateException("app.providers.catalogo-parametros.secreto es obligatorio.");
         }
-        timeout = timeout == null ? Duration.ofSeconds(3) : timeout;
+        timeout = timeout == null ? Duration.ofSeconds(10) : timeout;
         if (timeout.isNegative() || timeout.isZero()) {
             throw new IllegalStateException("app.providers.catalogo-parametros.timeout debe ser positivo.");
         }

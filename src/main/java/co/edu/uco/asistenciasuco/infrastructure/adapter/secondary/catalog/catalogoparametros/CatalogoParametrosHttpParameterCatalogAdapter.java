@@ -15,21 +15,35 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Proveedor de {@link ParameterCatalogPort} sobre el componente externo "Catalogo de Parametros".
  *
  * <p>Una sola llamada {@code GET {baseUrl}/tokens/{tokenId}/parametros} trae todos los parametros y se conserva en
- * memoria mientras no venza {@code cacheTtl}. El secreto y la cabecera Authorization nunca se registran ni viajan en
- * mensajes de error. No se reintenta ni se sirven datos vencidos en silencio.</p>
+ * memoria mientras no venza {@code cacheTtl}. La primera carga es sincrona (si falla, propaga
+ * {@link ParameterCatalogException} y el decorador DEC-018 aplica el valor por defecto). Cuando la cache vence se siguen
+ * sirviendo los valores vencidos y se refresca en segundo plano con una sola peticion en vuelo: una lectura nunca espera
+ * por el componente despues de la primera carga. Si el refresco falla se conservan los valores vencidos, se escribe un
+ * WARN y no se reintenta hasta pasada una gracia ({@link #GRACIA_MAXIMA_TRAS_FALLO}, acotada por el TTL), de modo que un
+ * Catalogo lento o caido no degrada cada lectura a los valores por defecto del codigo ni llena el log. Con
+ * {@code cacheTtl = 0} cada lectura consulta al componente. {@link #invalidateAll()} descarta la cache y la siguiente
+ * lectura vuelve a cargar de forma sincrona. El secreto y la cabecera Authorization nunca se registran ni viajan en
+ * mensajes de error.</p>
  */
 public final class CatalogoParametrosHttpParameterCatalogAdapter
         implements ParameterCatalogPort, InvalidableParameterCatalog {
+
+    /** Tras un refresco fallido no se vuelve a intentar antes de este lapso (o del TTL, si es menor). */
+    static final Duration GRACIA_MAXIMA_TRAS_FALLO = Duration.ofSeconds(30);
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CatalogoParametrosHttpParameterCatalogAdapter.class);
     private static final ObjectMapper JSON = JsonMapper.builder().build();
@@ -38,8 +52,11 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
     private final CatalogoParametrosProviderProperties properties;
     private final URI uri;
     private final long ttlNanos;
+    private final long graciaNanos;
     private final ReentrantLock lock = new ReentrantLock();
+    private final AtomicBoolean refrescando = new AtomicBoolean();
     private volatile Snapshot snapshot;
+    private volatile long reintentarDesde;
 
     public CatalogoParametrosHttpParameterCatalogAdapter(final HttpClient httpClient,
                                                          final CatalogoParametrosProviderProperties properties) {
@@ -47,6 +64,8 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
         this.properties = Objects.requireNonNull(properties, "Las propiedades del catalogo son obligatorias.");
         this.uri = URI.create(properties.baseUrl() + "/tokens/" + properties.tokenId() + "/parametros");
         this.ttlNanos = properties.cacheTtl().toNanos();
+        this.graciaNanos = Math.min(ttlNanos, GRACIA_MAXIMA_TRAS_FALLO.toNanos());
+        this.reintentarDesde = System.nanoTime();
     }
 
     @Override
@@ -106,48 +125,92 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
         if (vigente(actual)) {
             return actual.valores();
         }
-        lock.lock();
-        try {
-            final Snapshot recheck = snapshot;
-            if (vigente(recheck)) {
-                return recheck.valores();
-            }
-            try {
-                final Map<String, String> cargados = cargar();
-                snapshot = new Snapshot(cargados, System.nanoTime());
-                return cargados;
-            } catch (final ParameterCatalogException exception) {
-                if (recheck != null) {
-                    LOGGER.warn("Catalogo de Parametros no disponible; la cache vencida no se reutiliza: {}",
-                            exception.getMessage());
-                }
-                throw exception;
-            }
-        } finally {
-            lock.unlock();
+        if (actual != null && ttlNanos > 0) {
+            refrescarEnSegundoPlano();
+            return actual.valores();
         }
+        return cargarBloqueando();
     }
 
     private boolean vigente(final Snapshot candidato) {
         return ttlNanos > 0 && candidato != null && System.nanoTime() - candidato.cargadoEn() < ttlNanos;
     }
 
-    private Map<String, String> cargar() {
-        final HttpRequest request = HttpRequest.newBuilder(uri)
+    /** Primera carga (o sin cache): una sola peticion aunque lleguen lecturas concurrentes; un fallo se propaga. */
+    private Map<String, String> cargarBloqueando() {
+        lock.lock();
+        try {
+            final Snapshot recheck = snapshot;
+            if (vigente(recheck)) {
+                return recheck.valores();
+            }
+            final Map<String, String> cargados = interpretarRespuesta(enviar());
+            snapshot = new Snapshot(cargados, System.nanoTime());
+            return cargados;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** Cache vencida: un solo refresco en vuelo; mientras tanto (y si falla) se sirven los valores vencidos. */
+    private void refrescarEnSegundoPlano() {
+        if (System.nanoTime() - reintentarDesde < 0 || !refrescando.compareAndSet(false, true)) {
+            return;
+        }
+        final CompletableFuture<HttpResponse<String>> envio;
+        try {
+            envio = httpClient.sendAsync(peticion(), HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        } catch (final RuntimeException exception) {
+            registrarFalloDeRefresco(exception.getClass().getSimpleName());
+            refrescando.set(false);
+            return;
+        }
+        envio.whenComplete((response, error) -> {
+            try {
+                if (error != null) {
+                    registrarFalloDeRefresco(causa(error).getClass().getSimpleName());
+                    return;
+                }
+                snapshot = new Snapshot(interpretarRespuesta(response), System.nanoTime());
+            } catch (final ParameterCatalogException exception) {
+                registrarFalloDeRefresco(exception.getMessage());
+            } finally {
+                refrescando.set(false);
+            }
+        });
+    }
+
+    private void registrarFalloDeRefresco(final String detalle) {
+        reintentarDesde = System.nanoTime() + graciaNanos;
+        LOGGER.warn("Catalogo de Parametros no disponible; se conservan los valores vencidos y no se reintenta "
+                + "durante {} s. causa={}", graciaNanos / 1_000_000_000L, detalle);
+    }
+
+    private static Throwable causa(final Throwable error) {
+        return error instanceof CompletionException && error.getCause() != null ? error.getCause() : error;
+    }
+
+    private HttpRequest peticion() {
+        return HttpRequest.newBuilder(uri)
                 .timeout(properties.timeout())
                 .header("Accept", "application/json")
                 .header("Authorization", "Bearer " + properties.secreto())
                 .GET()
                 .build();
-        final HttpResponse<String> response;
+    }
+
+    private HttpResponse<String> enviar() {
         try {
-            response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            return httpClient.send(peticion(), HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
         } catch (final IOException exception) {
             throw new ParameterCatalogException("No fue posible consultar el Catalogo de Parametros.", exception);
         } catch (final InterruptedException exception) {
             Thread.currentThread().interrupt();
             throw new ParameterCatalogException("Consulta al Catalogo de Parametros interrumpida.", exception);
         }
+    }
+
+    private static Map<String, String> interpretarRespuesta(final HttpResponse<String> response) {
         final int status = response.statusCode();
         if (status < 200 || status >= 300) {
             throw new ParameterCatalogException("El Catalogo de Parametros respondio HTTP " + status + ".");

@@ -168,8 +168,8 @@ app:
       secreto: ${CATALOGO_PARAMETROS_SECRETO:}
       application-id: ${CATALOGO_PARAMETROS_APPLICATION_ID:}
       environment-id: ${CATALOGO_PARAMETROS_ENVIRONMENT_ID:}
-      timeout: ${CATALOGO_PARAMETROS_TIMEOUT:3s}
-      cache-ttl: ${CATALOGO_PARAMETROS_CACHE_TTL:5m}   # 0 desactiva la cache
+      timeout: ${CATALOGO_PARAMETROS_TIMEOUT:10s}  # la lectura fria del componente tarda varios segundos
+      cache-ttl: ${CATALOGO_PARAMETROS_CACHE_TTL:5m}   # 0 desactiva la cache; vencida se sirve y se refresca en segundo plano
       separador: ${CATALOGO_PARAMETROS_SEPARADOR:.}    # entre grupo y clave dentro de parametro.nombre
     # Solo aplica con app.adapters.message-catalog.provider=messageucolab (la conexion va en `messageucolab.*`).
     messageucolab:
