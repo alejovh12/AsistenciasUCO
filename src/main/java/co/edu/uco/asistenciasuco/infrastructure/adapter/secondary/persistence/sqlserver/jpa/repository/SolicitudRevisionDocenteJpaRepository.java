@@ -11,6 +11,7 @@ import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.Correl
 import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -94,7 +95,7 @@ public class SolicitudRevisionDocenteJpaRepository implements SolicitudRevisionD
     private static DetalleSolicitudRevisionDocenteProjection toDetalleProjection(
             final SpDetalleSolicitudRevisionDocenteEntity fila
     ) {
-        final SolicitudRevisionDocenteProjection base = toProjection(fila, 0);
+        final SolicitudRevisionDocenteProjection base = toProjection(fila, 0, null, null, null);
         return new DetalleSolicitudRevisionDocenteProjection(
                 base.idSolicitud(), base.nombreSolicitud(), base.fechaSolicitud(), base.codigoEstado(),
                 base.nombreEstado(), base.justificacionSolicitud(), base.justificacionRespuesta(),
@@ -110,12 +111,20 @@ public class SolicitudRevisionDocenteJpaRepository implements SolicitudRevisionD
     }
 
     private static SolicitudRevisionDocenteProjection toProjection(final SpSolicitudRevisionDocenteEntity fila) {
-        return toProjection(fila, fila.totalRegistros() == null ? 0 : fila.totalRegistros());
+        return toProjection(
+                fila,
+                fila.totalRegistros() == null ? 0 : fila.totalRegistros(),
+                fila.idToma(),
+                fila.numeroToma(),
+                SoporteArchivoJpaRepository.toUtcInstant(fila.fechaPuntoControlUtc()));
     }
 
     private static SolicitudRevisionDocenteProjection toProjection(
             final SpSolicitudRevisionDocenteBaseEntity fila,
-            final int totalRegistros
+            final int totalRegistros,
+            final UUID idToma,
+            final Integer numeroToma,
+            final Instant fechaPuntoControlUtc
     ) {
         final String procedencia = fila.procedenciaTemporalSesion();
         return new SolicitudRevisionDocenteProjection(
@@ -144,7 +153,10 @@ public class SolicitudRevisionDocenteJpaRepository implements SolicitudRevisionD
                 fila.tipoContenidoSoporte(),
                 fila.tamanioSoporteBytes(),
                 SoporteArchivoJpaRepository.toUtcInstant(fila.fechaRegistroSoporteUtc()),
-                totalRegistros
+                totalRegistros,
+                idToma,
+                numeroToma,
+                fechaPuntoControlUtc
         );
     }
 }
