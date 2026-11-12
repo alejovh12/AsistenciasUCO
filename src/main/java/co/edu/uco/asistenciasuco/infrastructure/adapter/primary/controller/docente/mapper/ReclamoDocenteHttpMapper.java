@@ -35,7 +35,10 @@ public final class ReclamoDocenteHttpMapper {
                 dto.materiaId(),
                 dto.materiaCodigo(),
                 dto.materiaNombre(),
-                soporte(soporte)
+                soporte(soporte),
+                dto.idToma(),
+                dto.numeroToma(),
+                utc(dto.fechaPuntoControlUtc())
         );
     }
 

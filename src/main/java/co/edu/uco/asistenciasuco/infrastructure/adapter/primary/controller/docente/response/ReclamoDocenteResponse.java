@@ -7,6 +7,8 @@ import java.util.UUID;
  * Representacion HTTP de una solicitud de revision para el docente titular (LB-004D). Los instantes son cadenas UTC
  * ISO-8601 con {@code Z} y hasta siete decimales (misma codificacion que el contrato UTC v2 de sesiones); {@code null} si
  * el dato historico no tiene procedencia verificable. {@code fechaSolicitud} es una fecha de calendario ({@code yyyy-MM-dd}).
+ * PC (puntos de control): {@code idToma}, {@code numeroToma} y {@code fechaPuntoControlUtc} (instante UTC) son los de la toma
+ * reclamada; nulos en un reclamo de la sesion completa.
  */
 public record ReclamoDocenteResponse(
         UUID id,
@@ -27,7 +29,10 @@ public record ReclamoDocenteResponse(
         UUID materiaId,
         String materiaCodigo,
         String materiaNombre,
-        SoporteAdjuntoResponse soporteAdjunto
+        SoporteAdjuntoResponse soporteAdjunto,
+        UUID idToma,
+        Integer numeroToma,
+        String fechaPuntoControlUtc
 ) {
 
     /** Soporte vinculado: se descarga por {@code GET /api/v1/archivos/{fileId}} autenticado, nunca por el storage. */
