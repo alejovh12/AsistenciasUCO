@@ -260,7 +260,7 @@ class JpaQueryAdapterContractTest {
                 query(UsuarioJpaRepository.HQL_POR_ID, UvUsuarioEntity.class, List.of());
         final TypedQuery<UvUsuarioEntity> porIdentificacion =
                 query(UsuarioJpaRepository.HQL_POR_IDENTIFICACION, UvUsuarioEntity.class, List.of(usuario));
-        final UsuarioJpaRepository repository = new UsuarioJpaRepository(manager, new JpaProcedureExecutor(manager));
+        final UsuarioJpaRepository repository = new UsuarioJpaRepository(manager);
 
         assertEquals(ID, repository.consultarUsuarioPorCorreo("Luz@UCO.edu.co").orElseThrow().id());
         verify(porCorreo).setParameter("correo", "Luz@UCO.edu.co");
@@ -277,7 +277,7 @@ class JpaQueryAdapterContractTest {
                 Map.of("id", ID, "correo", "luz@uco.edu.co"));
         final TypedQuery<UvUsuarioEntity> porNumero = query(
                 UsuarioJpaRepository.HQL_POR_NUMERO_IDENTIFICACION, UvUsuarioEntity.class, List.of(usuario));
-        final UsuarioJpaRepository repository = new UsuarioJpaRepository(manager, new JpaProcedureExecutor(manager));
+        final UsuarioJpaRepository repository = new UsuarioJpaRepository(manager);
 
         assertEquals(ID, repository.consultarUsuarioPorNumeroIdentificacion(1037).orElseThrow().id());
         verify(porNumero).setParameter("numeroIdentificacion", 1037);

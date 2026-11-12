@@ -59,7 +59,7 @@ class CoreViewQueriesJpaParityIT {
         grupos = new GrupoJpaRepository(entityManager,
                 org.mockito.Mockito.mock(org.springframework.transaction.support.TransactionOperations.class),
                 new JpaProcedureExecutor(entityManager));
-        usuarios = new UsuarioJpaRepository(entityManager, new JpaProcedureExecutor(entityManager));
+        usuarios = new UsuarioJpaRepository(entityManager);
         docentes = new DocenteJpaRepository(entityManager);
         estudiantes = new EstudianteJpaRepository(entityManager);
         tiposIdentificacion = new TipoIdentificacionJpaRepository(entityManager);

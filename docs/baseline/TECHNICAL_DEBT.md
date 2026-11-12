@@ -256,6 +256,9 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 - **Resolución esperada:** Flujos/roles autorizados acordados, implementados y E2E (MV-002).
 - **Bloquea línea base:** no para Golden Path; sí antes de liberar provisioning afectado.
 - **Estado:** ABIERTA.
+- **Actualización VAL ROL-05 (2026-11-12):** `POST /api/v1/usuarios` se retiró (decisión de John): ya no hay alta genérica sin
+  ejecutor ni ámbito. El alta de usuarios va solo por los flujos con ámbito. El resto de esta deuda (qué flujos provisionan
+  identidad para cada rol) sigue como está.
 
 ## TD-014
 

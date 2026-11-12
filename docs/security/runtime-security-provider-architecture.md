@@ -546,7 +546,7 @@ Estado vigente de las familias revisadas:
 | `POST /api/v1/asistencias/revisiones` | `ESTUDIANTE` |
 | `POST /api/v1/asistencias/consultas/grupo` | `DOCENTE`, `COORDINADOR` o `ADMINISTRADOR` |
 | `GET /api/v1/auth/me` | cualquier usuario autenticado (identidad institucional propia, §5.5) |
-| `POST /api/v1/usuarios` | cualquier usuario autenticado; deuda funcional pendiente |
+| ~~`POST /api/v1/usuarios`~~ | retirado el 2026-11-12 (VAL ROL-05): creaba usuarios sin ejecutor ni ámbito |
 | `/api/v1/archivos/**` | cualquier usuario autenticado; deuda Storage/ownership pendiente |
 | `GET /api/v1/realtime/stream` | cualquier usuario autenticado |
 | `GET /api/v1/realtime/status` | cualquier usuario autenticado |
@@ -639,9 +639,13 @@ En modo baseline `IdentityProviderPort` opera sobre el realm central (`app.provi
 cliente de servicio `asistencias-provisioner` (roles mínimos de `realm-management`; secreto solo por entorno) y asigna
 los cinco roles como client roles de `asistencias-api`; nunca contacta el Keycloak legacy (8081). El PDP mantiene sus
 propias asignaciones por aplicación (`provision_asistencias.py`); ambas fuentes se aprovisionan con la misma matriz que
-`SecurityConfig`. Verificado: `POST /api/v1/usuarios` crea la cuenta en `security-baseline` con `idUsuario`.
+`SecurityConfig`. La creación de cuentas se verificó en su momento con `POST /api/v1/usuarios`, que creaba la cuenta en
+`security-baseline` con `idUsuario`.
 
-`POST /api/v1/usuarios` permanece bajo `authenticated()`. Política funcional/roles pendientes: [TD-013](../baseline/TECHNICAL_DEBT.md#td-013). Contrato y semántica DB-first: [keycloak-identity-provider](keycloak-identity-provider.md).
+`POST /api/v1/usuarios` se retiró el 2026-11-12 (VAL ROL-05): estaba bajo `authenticated()` y creaba usuarios y cuentas sin
+ejecutor ni ámbito. El alta de usuarios va solo por los flujos con ámbito (crear decano, crear coordinador, vincular docente,
+admitir o registrar estudiante). Ver [TD-013](../baseline/TECHNICAL_DEBT.md#td-013). Contrato y semántica DB-first:
+[keycloak-identity-provider](keycloak-identity-provider.md).
 
 ## 16. Cómo agregar otro runtime IdP
 

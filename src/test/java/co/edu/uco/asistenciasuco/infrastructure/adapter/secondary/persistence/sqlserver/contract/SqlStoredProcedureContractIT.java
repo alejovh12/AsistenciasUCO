@@ -112,17 +112,7 @@ class SqlStoredProcedureContractIT {
      */
     private static Stream<Arguments> contratosEsperados() {
         return Stream.of(
-                Arguments.of("usp_sincronizar_usuario", List.of(
-                        input("@idTipoIdIdentificacion", "uniqueidentifier"),
-                        input("@numeroIdentificacion", "int"),
-                        input("@primerApellido", "nvarchar"),
-                        input("@segundoApellido", "nvarchar"),
-                        input("@primerNombre", "nvarchar"),
-                        input("@segundoNombre", "nvarchar"),
-                        input("@correo", "nvarchar"),
-                        input("@password", "nvarchar"),
-                        input("@idCorrelacion", "uniqueidentifier")
-                )),
+                // VAL ROL-05 (2026-11-12): usp_sincronizar_usuario se retiro con POST /api/v1/usuarios (migracion BD 39).
                 Arguments.of("usp_crear_decano", List.of(
                         input("@idDecano", "uniqueidentifier"),
                         input("@numeroIdentificacion", "int"),

@@ -11,9 +11,9 @@ on:
       - master
   workflow_dispatch:
 
+# Minimo por defecto; cada job declara sus propios permisos (el write de security-events solo vive en el job codeql).
 permissions:
   contents: read
-  security-events: write
 
 concurrency:
   group: backend-security-${{ github.workflow }}-${{ github.ref }}

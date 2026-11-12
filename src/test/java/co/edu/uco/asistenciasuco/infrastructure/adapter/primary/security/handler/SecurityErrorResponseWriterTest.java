@@ -96,6 +96,18 @@ class SecurityErrorResponseWriterTest {
         assertThat(body.get("path").asString().length()).isLessThanOrEqualTo(240);
     }
 
+    @Test
+    void nullRequestUriIsWrittenAsEmptyPathWithoutNullPointer() throws Exception {
+        final MockHttpServletRequest request = new MockHttpServletRequest("GET", "/x");
+        request.setRequestURI(null);
+        final MockHttpServletResponse response = new MockHttpServletResponse();
+
+        writer.write(request, response, HttpStatus.UNAUTHORIZED, definition());
+
+        final JsonNode body = MAPPER.readTree(response.getContentAsString(StandardCharsets.UTF_8));
+        assertThat(body.get("path").asString()).isEmpty();
+    }
+
     private JsonNode writeFor(final String path, final HttpStatus status) throws Exception {
         final MockHttpServletRequest request = new MockHttpServletRequest("GET", path);
         request.setRequestURI(path);

@@ -34,7 +34,7 @@ class ManagementPortConfigTest {
         }
 
         assertEquals("${MANAGEMENT_SERVER_PORT:8090}", propiedades.getProperty("management.server.port"));
-        assertEquals("127.0.0.1", propiedades.getProperty("management.server.address"));
+        assertEquals("${MANAGEMENT_SERVER_ADDRESS:127.0.0.1}", propiedades.getProperty("management.server.address"));
         assertTrue(propiedades.getProperty("management.endpoints.web.exposure.include").contains("prometheus"));
     }
 

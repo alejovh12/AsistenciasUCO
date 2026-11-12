@@ -1,20 +1,11 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.CrearUsuarioRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.CrearUsuarioRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.UsuarioIdentidadRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
-import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
-import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.mapper.CoreViewJpaProjectionMapper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvUsuarioEntity;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.JpaProcedureExecutor;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.ProcedureResult;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
-import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import jakarta.persistence.EntityManager;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -23,18 +14,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class UsuarioJpaRepository implements UsuarioRepositoryPort {
 
-    static final String SQL_SINCRONIZAR_USUARIO = """
-            EXEC dbo.usp_sincronizar_usuario
-                 @idTipoIdIdentificacion = :idTipoIdIdentificacion,
-                 @numeroIdentificacion = :numeroIdentificacion,
-                 @primerApellido = :primerApellido,
-                 @segundoApellido = :segundoApellido,
-                 @primerNombre = :primerNombre,
-                 @segundoNombre = :segundoNombre,
-                 @correo = :correo,
-                 @password = :password,
-                 @idCorrelacion = :idCorrelacion
-            """;
+    // VAL ROL-05 (2026-11-12): se retiro el alta generica (EXEC dbo.usp_sincronizar_usuario) junto con POST /api/v1/usuarios;
+    // este adaptador queda solo de consulta.
 
     private static final String SELECT_ROW = """
             select u
@@ -56,26 +37,12 @@ public class UsuarioJpaRepository implements UsuarioRepositoryPort {
             where e.id = :idEstudiante
             """;
 
-    static final String OP_SINCRONIZAR_USUARIO = "crearUsuario";
     private static final String PARAM_NUMERO_IDENTIFICACION = "numeroIdentificacion";
 
     private final EntityManager entityManager;
-    private final JpaProcedureExecutor procedureExecutor;
 
-    public UsuarioJpaRepository(final EntityManager entityManager, final JpaProcedureExecutor procedureExecutor) {
+    public UsuarioJpaRepository(final EntityManager entityManager) {
         this.entityManager = Objects.requireNonNull(entityManager, "El EntityManager es obligatorio.");
-        this.procedureExecutor = Objects.requireNonNull(procedureExecutor, "El JpaProcedureExecutor es obligatorio.");
-    }
-
-    // COMMANDS
-
-    @Override
-    public CrearUsuarioRepositoryProjection crearUsuario(final CrearUsuarioRepositoryDTO dto) {
-        if (ObjectHelper.isNull(dto)) throw new CrosscuttingException("El dominio para crear usuario es obligatorio.");
-        final ProcedureResult result = sincronizarUsuario(dto);
-        final UUID usuarioId = consultarPorIdentificacion(dto.getTipoIdIdentificacion(), dto.getNumeroIdentificacion())
-                .map(UsuarioIdentidadRepositoryProjection::id).orElse(null);
-        return new CrearUsuarioRepositoryProjection(usuarioId, result.getMensajeUsuarioResultado());
     }
 
     // QUERIES
@@ -140,23 +107,6 @@ public class UsuarioJpaRepository implements UsuarioRepositoryPort {
     }
 
     // PRIVATE HELPERS
-
-    private ProcedureResult sincronizarUsuario(final CrearUsuarioRepositoryDTO dto) {
-        final UUID correlationId = CorrelationIdContext.require();
-
-        final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idTipoIdIdentificacion", dto.getTipoIdIdentificacion());
-        parametros.put(PARAM_NUMERO_IDENTIFICACION, dto.getNumeroIdentificacion());
-        parametros.put("primerApellido", dto.getPrimerApellido());
-        parametros.put("segundoApellido", dto.getSegundoApellido());
-        parametros.put("primerNombre", dto.getPrimerNombre());
-        parametros.put("segundoNombre", dto.getSegundoNombre());
-        parametros.put("correo", dto.getCorreo());
-        parametros.put("password", dto.getPassword());
-        parametros.put("idCorrelacion", correlationId);
-
-        return procedureExecutor.execute(OP_SINCRONIZAR_USUARIO, SQL_SINCRONIZAR_USUARIO, parametros, correlationId);
-    }
 
     private Optional<UsuarioIdentidadRepositoryProjection> first(final String hql,
             final java.util.function.UnaryOperator<jakarta.persistence.TypedQuery<UvUsuarioEntity>> binder,

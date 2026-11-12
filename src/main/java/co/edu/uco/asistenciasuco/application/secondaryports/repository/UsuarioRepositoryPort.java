@@ -1,7 +1,5 @@
 package co.edu.uco.asistenciasuco.application.secondaryports.repository;
 
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.CrearUsuarioRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.CrearUsuarioRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.UsuarioIdentidadRepositoryProjection;
 
 import java.util.Optional;
@@ -18,7 +16,8 @@ public interface UsuarioRepositoryPort {
      */
     Optional<String> consultarCorreoPorEstudiante(UUID idEstudiante);
 
-    CrearUsuarioRepositoryProjection crearUsuario(CrearUsuarioRepositoryDTO dto);
+    // VAL ROL-05 (2026-11-12): se retiro crearUsuario (usp_sincronizar_usuario) junto con POST /api/v1/usuarios. El alta de
+    // usuarios va solo por los flujos con ambito (crear decano, crear coordinador, vincular docente, admitir o registrar estudiante).
 
     Optional<UsuarioIdentidadRepositoryProjection> consultarUsuarioPorCorreo(String correo);
 

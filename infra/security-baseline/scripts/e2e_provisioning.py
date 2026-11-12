@@ -2,9 +2,10 @@
 
 Uso: python -X utf8 -I infra/security-baseline/scripts/e2e_provisioning.py --sql-container NAME --sql-password-file FILE
          [--database DB] [--backend URL]
-Crea una cuenta nueva vía POST /api/v1/usuarios con un ADMINISTRADOR real, comprueba que se creó en el realm
+Crea una cuenta nueva por un alta con ámbito (POST /api/v1/admin/decanos con facultadNueva, como ADMINISTRADOR real; la ruta
+POST /api/v1/usuarios se retiró), comprueba que se creó en el realm
 `security-baseline` (con el atributo idUsuario) y NO en el Keycloak legacy (8081), y al terminar elimina la cuenta de prueba
-del realm Y la fila de Usuario (con sus dependientes por FK) de SQL Server. La contraseña de la cuenta de prueba se genera al
+del realm Y la facultad, el decano y la fila de Usuario (con sus dependientes por FK) de SQL Server. La contraseña de la cuenta de prueba se genera al
 vuelo y no se imprime ni se guarda.
 SOLO corre contra una base desechable identificada explícitamente (ver `e2e_safety.py`); cualquier otro destino se rechaza
 antes de crear nada. Si la cuenta sintética ya existía (en SQL o en Keycloak) se detiene sin borrar nada que no haya creado.
@@ -24,6 +25,7 @@ import spa_token  # noqa: E402
 
 USERNAME = "e2e.aprovisionado@uco.edu.co"
 IDENTIFICATION_NUMBER = 987000111
+FACULTY_NAME = "E2E Facultad Aprovisionada"
 LEGACY = "http://localhost:8081"
 RESULTS = []
 SKIPPED = []
@@ -52,20 +54,23 @@ def main(argv=None):
     existed_in_sql = bool(target.rows(f"SELECT id FROM dbo.uv_usuario WHERE correo = {sql_existing}"))
     existed_in_keycloak = bool(keycloak_users())
     taken = target.rows(f"SELECT id FROM dbo.uv_usuario WHERE numeroIdentificacion = {IDENTIFICATION_NUMBER}")
-    if existed_in_sql or existed_in_keycloak or taken:
-        raise SystemExit("la cuenta sintética ya existe (SQL o Keycloak) o su identificación está ocupada: "
+    faculty_taken = target.rows(f"SELECT id FROM dbo.Facultad WHERE nombre = {S.literal(FACULTY_NAME)}")
+    if existed_in_sql or existed_in_keycloak or taken or faculty_taken:
+        raise SystemExit("la cuenta sintética ya existe (SQL o Keycloak), su identificación o su facultad están ocupadas: "
                          "no se crea ni se borra nada")
 
     before = S.capture_state(target)
     token = spa_token.get_token(env, "uco-administrador")["access_token"]
     tipo_id = target.scalar("SELECT TOP 1 id FROM dbo.uv_tipo_identificacion WHERE tipoIdentificacion = 'CC'")
-    body = {"tipoIdIdentificacion": tipo_id, "numeroIdentificacion": IDENTIFICATION_NUMBER, "primerApellido": "Aprovisionado",
+    institution_id = target.scalar("SELECT TOP 1 id FROM dbo.uv_institucion WHERE estaActivaInstitucion = 1")
+    body = {"tipoIdentificacionId": tipo_id, "numeroIdentificacion": IDENTIFICATION_NUMBER, "primerApellido": "Aprovisionado",
             "segundoApellido": "Prueba", "primerNombre": "Cuenta", "segundoNombre": "Local", "correo": USERNAME,
-            "password": "Aa1!" + L.random_secret(24)}
+            "password": "Aa1!" + L.random_secret(24),
+            "facultadNueva": {"nombre": FACULTY_NAME, "codigo": "E2E", "idInstitucion": institution_id}}
     problems = []
     try:
-        status, _, raw = E.request(args.backend.rstrip("/"), "POST", "/api/v1/usuarios", token=token, body=body)
-        check("POST /api/v1/usuarios como ADMINISTRADOR responde 201", status == 201,
+        status, _, raw = E.request(args.backend.rstrip("/"), "POST", "/api/v1/admin/decanos", token=token, body=body)
+        check("POST /api/v1/admin/decanos (alta con ámbito) como ADMINISTRADOR responde 201", status == 201,
               f"HTTP {status}" + ("" if status == 201 else " " + raw[:400].decode("utf-8", "replace")))
 
         users = keycloak_users()
@@ -100,6 +105,7 @@ def main(argv=None):
         except SystemExit as error:
             problems.append(f"limpieza de Keycloak interrumpida: {error}")
         try:
+            S.delete_created_faculty(target, FACULTY_NAME, USERNAME, existed_before=False)
             S.delete_created_user(target, USERNAME, existed_before=False)
             after = S.capture_state(target)
             problems += S.residue_report(before, after, tolerated_growth=S.APPEND_ONLY_TABLES)

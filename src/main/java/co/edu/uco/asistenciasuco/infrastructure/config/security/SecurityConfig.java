@@ -150,7 +150,8 @@ public class SecurityConfig {
                 // Directorio de estudiantes (golden path 1.2.0, DEC-027/DEC-032): DOCENTE, COORDINADOR y ADMINISTRADOR; el ambito
                 // (grupos propios, programas, institucion) lo aplica usp_consultar_directorio_estudiantes_paginado.
                 .requestMatchers("/api/v1/estudiantes/**").hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
-                .requestMatchers(HttpMethod.POST, "/api/v1/usuarios").authenticated()
+                // VAL ROL-05 (2026-11-12): POST /api/v1/usuarios (alta sin ejecutor ni ambito) se retiro; el alta de usuarios va
+                // solo por los flujos con ambito (decanos, coordinadores, docentes del programa, admision de estudiantes).
                 // Estado de acceso y reconciliacion de cuentas: administrador, decano y coordinador; el alcance (facultad /
                 // programa) y los roles gestionables se validan en Application (AccesoCuentaService).
                 .requestMatchers(HttpMethod.POST, "/api/v1/identidad/cuentas/acceso/*")

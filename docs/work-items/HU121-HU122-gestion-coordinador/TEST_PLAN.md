@@ -56,7 +56,7 @@ last-reviewed: 2026-10-22
 | T-122-11 | CA-07: falla del IdP al desactivar | `FakeKeycloakAdminServer` 500 | Desactivar C2 | DB desactivada; HTTP 200 con `IAM_002`; desfase registrado; `identity_drift_total{operation}` incrementada | UseCase, IT |
 | T-122-12 | Efecto sobre el acceso | C2 desactivado | `POST` al token de Keycloak local con sus credenciales | Rechazado (`invalid_grant`); tras reactivarlo, aceptado | E2E (`scratch/test_hu122.ps1`) |
 | T-122-13 | Aislamiento de rol en la sesión | C2 desactivado con un token vigente | Llamada a `/api/v1/coordinador/**` | Rechazada por RBAC en DB (no se espera al vencimiento del token) | E2E, DB |
-| T-120R-01 | CA-09 / D5: contraseña obligatoria | — | `POST /decano/coordinadores` sin `password` o vacío | HTTP 400 con mensaje de catálogo; no se crea usuario ni cuenta; ya no existe `UcoCoord_<doc>!` | UseCase, Validator, Controller |
+| T-120R-01 | CA-09 / D5: contraseña obligatoria | — | `POST /decano/coordinadores` sin `password` o vacío | HTTP 400 con mensaje de catálogo; no se crea usuario ni cuenta; ya no existe plantilla retirada; ver historial | UseCase, Validator, Controller |
 | T-120R-02 | `usp_crear_coordinador` fija la facultad | Decano D1 | Crear coordinador sin programa | `Coordinador.facultad = F1`; aparece en `uv_coordinador` con `idFacultad = F1` | DB (amplía `test_usp_crear_coordinador.sql`) |
 | T-DDL-01 | Migración idempotente | DB con y sin las columnas | Ejecutar `up` dos veces | Sin error; datos conservados; `estado=1` en las filas existentes | DB |
 | T-DDL-02 | Relleno de `facultad` | Coordinadores con programa | `up` | `Coordinador.facultad = Programa.facultad`; huérfanos listados en el reporte | DB |
@@ -86,7 +86,7 @@ last-reviewed: 2026-10-22
 - RED esperado: los SPs y las columnas no existen → fallan por ausencia.
 - Comando de verificación:
   ```powershell
-  Get-Content -Path .\GestioAsistenciaDB\test\test_usp_cambiar_estado_coordinador.sql -Raw | docker exec -i sql_server_asistencias /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "TuPasswordSeguro123" -C -b
+  Get-Content -Path .\GestioAsistenciaDB\test\test_usp_cambiar_estado_coordinador.sql -Raw | docker exec -i sql_server_asistencias /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$env:MSSQL_SA_PASSWORD" -C -b
   ```
 
 ### 2.2 Backend (fase 03 RED → 04 GREEN)
