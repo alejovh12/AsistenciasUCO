@@ -111,12 +111,43 @@ class ConsultarReclamosDocenteFeatureTest {
         verify(query).consultarSolicitudesDocente(ACTOR, null, 1, 10);
     }
 
+    // PC (puntos de control): la bandeja trae la toma reclamada (numero y punto de control); nula en un reclamo de la sesion completa.
+    @Test
+    void la_toma_reclamada_llega_al_dto_y_la_sesion_completa_no_trae_toma() {
+        final UUID toma = UUID.randomUUID();
+        final Instant puntoControl = Instant.parse("2026-10-14T13:40:00Z");
+        when(scope.findDocenteIdByUsuario(ACTOR)).thenReturn(Optional.of(UUID.randomUUID()));
+        when(query.consultarSolicitudesDocente(any(), any(), anyInt(), anyInt())).thenReturn(List.of(
+                fila(null, null, 2, toma, 3, puntoControl), fila(null, null, 2, null, null, null)));
+
+        final ReclamosDocentePaginaDTO pagina = interactor.execute(new ConsultarReclamosDocenteDTO(ACTOR, null, null, null));
+
+        assertEquals(toma, pagina.reclamos().get(0).idToma());
+        assertEquals(3, pagina.reclamos().get(0).numeroToma());
+        assertEquals(puntoControl, pagina.reclamos().get(0).fechaPuntoControlUtc());
+        assertNull(pagina.reclamos().get(1).idToma());
+        assertNull(pagina.reclamos().get(1).numeroToma());
+        assertNull(pagina.reclamos().get(1).fechaPuntoControlUtc());
+    }
+
     private static SolicitudRevisionDocenteProjection fila(final UUID soporte, final Instant inicio, final int total) {
+        return fila(soporte, inicio, total, null, null, null);
+    }
+
+    private static SolicitudRevisionDocenteProjection fila(
+            final UUID soporte,
+            final Instant inicio,
+            final int total,
+            final UUID idToma,
+            final Integer numeroToma,
+            final Instant fechaPuntoControlUtc
+    ) {
         return new SolicitudRevisionDocenteProjection(
                 UUID.randomUUID(), "REC-1", LocalDate.of(2026, 10, 19), "P", "pendiente", "Justificacion", "",
                 UUID.randomUUID(), "Ana Perez", UUID.randomUUID(), 3, inicio, inicio == null ? null : "UTC_V2",
                 UUID.randomUUID(), 1, "G1", UUID.randomUUID(), "MAT1", "Matematicas",
                 soporte, soporte == null ? null : "evidencia.pdf", soporte == null ? null : "application/pdf",
-                soporte == null ? null : 1234L, soporte == null ? null : Instant.parse("2026-10-19T15:00:00Z"), total);
+                soporte == null ? null : 1234L, soporte == null ? null : Instant.parse("2026-10-19T15:00:00Z"), total,
+                idToma, numeroToma, fechaPuntoControlUtc);
     }
 }

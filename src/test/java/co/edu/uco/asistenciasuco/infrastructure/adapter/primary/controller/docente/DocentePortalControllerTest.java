@@ -44,6 +44,7 @@ class DocentePortalControllerTest {
 
     private static final UUID ACTOR = UUID.randomUUID();
     private static final UUID RECLAMO = UUID.randomUUID();
+    private static final UUID TOMA = UUID.randomUUID();
 
     private final ConsultarHorariosDocenteInputPort horarios = mock(ConsultarHorariosDocenteInputPort.class);
     private final ConsultarAsignaturasDocenteInputPort asignaturas = mock(ConsultarAsignaturasDocenteInputPort.class);
@@ -67,7 +68,8 @@ class DocentePortalControllerTest {
                 java.time.Instant.parse("2026-10-19T15:30:45.1234567Z"), "UTC_V2", UUID.randomUUID(), 1, "G1",
                 UUID.randomUUID(), "MAT1", "Matematicas",
                 new ReclamoDocenteDTO.SoporteAdjuntoDTO(soporte, "evidencia.pdf", "application/pdf", 1234L,
-                        java.time.Instant.parse("2026-10-19T15:00:00Z"), "/api/v1/archivos/" + soporte));
+                        java.time.Instant.parse("2026-10-19T15:00:00Z"), "/api/v1/archivos/" + soporte),
+                TOMA, 2, java.time.Instant.parse("2026-10-19T15:45:00.1234567Z"));
         when(reclamos.execute(new ConsultarReclamosDocenteDTO(ACTOR, "P", 2, 5)))
                 .thenReturn(new ReclamosDocentePaginaDTO(List.of(reclamo), 11));
 
@@ -79,7 +81,10 @@ class DocentePortalControllerTest {
                 .andExpect(jsonPath("$.datos[0].fechaSesionUtc").value("2026-10-19T15:30:45.1234567Z"))
                 .andExpect(jsonPath("$.datos[0].soporteAdjunto.fechaSubidaUtc").value("2026-10-19T15:00:00Z"))
                 .andExpect(jsonPath("$.datos[0].soporteAdjunto.fileId").value(soporte.toString()))
-                .andExpect(jsonPath("$.datos[0].soporteAdjunto.url").value("/api/v1/archivos/" + soporte));
+                .andExpect(jsonPath("$.datos[0].soporteAdjunto.url").value("/api/v1/archivos/" + soporte))
+                .andExpect(jsonPath("$.datos[0].idToma").value(TOMA.toString()))
+                .andExpect(jsonPath("$.datos[0].numeroToma").value(2))
+                .andExpect(jsonPath("$.datos[0].fechaPuntoControlUtc").value("2026-10-19T15:45:00.1234567Z"));
     }
 
     @Test

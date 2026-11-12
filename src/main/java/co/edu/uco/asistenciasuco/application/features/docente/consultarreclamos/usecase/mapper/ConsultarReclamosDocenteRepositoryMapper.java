@@ -15,6 +15,7 @@ public final class ConsultarReclamosDocenteRepositoryMapper {
                 p.idSesion(), p.numeroSesion(), p.fechaHoraInicioSesionUtc(), p.procedenciaTemporalSesion(),
                 p.idGrupo(), p.codigoGrupo(), p.nombreGrupo(), p.idAsignatura(), p.codigoAsignatura(),
                 p.nombreAsignatura(), p.idArchivoSoporte(), p.nombreSoporte(), p.tipoContenidoSoporte(),
-                p.tamanioSoporteBytes(), p.fechaRegistroSoporteUtc());
+                p.tamanioSoporteBytes(), p.fechaRegistroSoporteUtc(),
+                p.idToma(), p.numeroToma(), p.fechaPuntoControlUtc());
     }
 }

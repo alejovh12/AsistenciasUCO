@@ -51,7 +51,10 @@ public final class ConsultarReclamosDocenteMapper {
                 p.idAsignatura(),
                 p.codigoAsignatura(),
                 p.nombreAsignatura(),
-                soporte);
+                soporte,
+                p.idToma(),
+                p.numeroToma(),
+                p.fechaPuntoControlUtc());
     }
 
     /** Soporte adjunto del reclamo; nulo sin archivo (compartido con el detalle de la solicitud). */

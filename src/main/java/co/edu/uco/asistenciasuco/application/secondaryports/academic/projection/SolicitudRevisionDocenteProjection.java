@@ -8,7 +8,8 @@ import java.util.UUID;
  * Solicitud de revision de asistencia visible para el docente titular, con los datos minimos del
  * soporte adjunto (si existe). Los instantes son UTC; {@code procedenciaTemporalSesion} indica si la
  * hora de la sesion es verificablemente UTC ({@code UTC_V2}, {@code UTC_GENERADOR}, {@code UTC_OWNER})
- * o indeterminada ({@code null}, dato historico), en cuyo caso {@code fechaHoraInicioSesionUtc} es nula.
+ * o indeterminada ({@code null}, dato historico), en cuyo caso {@code fechaHoraInicioSesionUtc} es nula. PC (puntos de control):
+ * {@code idToma}, {@code numeroToma} y {@code fechaPuntoControlUtc} son los de la toma reclamada (nulos en un reclamo de la sesion).
  */
 public record SolicitudRevisionDocenteProjection(
         UUID idSolicitud,
@@ -35,6 +36,9 @@ public record SolicitudRevisionDocenteProjection(
         String tipoContenidoSoporte,
         Long tamanioSoporteBytes,
         Instant fechaRegistroSoporteUtc,
-        int totalRegistros
+        int totalRegistros,
+        UUID idToma,
+        Integer numeroToma,
+        Instant fechaPuntoControlUtc
 ) {
 }
