@@ -19,7 +19,7 @@ class DbFailureClassifierTomaQrTest {
 
     @ParameterizedTest
     @CsvSource({
-            "TOM_001, NOT_FOUND", "TOM_002, VALIDATION", "TOM_003, CONFLICT", "TOM_004, CONFLICT",
+            "TOM_001, NOT_FOUND", "TOM_002, VALIDATION", "TOM_003, CONFLICT", "TOM_004, CONFLICT", "TOM_012, CONFLICT",
             "AQR_001, NOT_FOUND", "AQR_003, CONFLICT", "AQR_004, FORBIDDEN", "AQR_005, CONFLICT",
             "AQR_006, CONFLICT", "AQR_007, VALIDATION"
     })
@@ -31,6 +31,8 @@ class DbFailureClassifierTomaQrTest {
 
     @Test
     void cada_codigo_se_traduce_a_la_excepcion_de_su_http() {
+        assertEquals("TOM_012", assertThrows(ConflictException.class, () -> DbExceptionTranslator.throwIfFailed(
+                false, "mensaje", "DBCODE=TOM_012|toma cerrada por la siguiente", "corr", "registrarAsistenciasToma")).getCode());
         assertInstanceOf(ResourceNotFoundException.class, DbExceptionTranslator.translateDbCode("TOM_001", null).orElseThrow());
         assertInstanceOf(ResourceNotFoundException.class, DbExceptionTranslator.translateDbCode("AQR_001", null).orElseThrow());
         assertInstanceOf(ValidationException.class, DbExceptionTranslator.translateDbCode("TOM_002", null).orElseThrow());

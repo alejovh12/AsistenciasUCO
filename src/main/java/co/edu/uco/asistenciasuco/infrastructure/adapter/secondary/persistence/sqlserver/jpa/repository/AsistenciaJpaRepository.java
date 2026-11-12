@@ -47,12 +47,25 @@ public class AsistenciaJpaRepository implements AsistenciaRepositoryPort {
                  @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
 
+    private static final String SQL_RADICAR_SOLICITUD_REVISION_V4 = """
+            EXEC dbo.usp_radicar_solicitud_revision_asistencia_v4
+                 @idEstudiante = :idEstudiante,
+                 @idSesion = :idSesion,
+                 @idToma = :idToma,
+                 @categoria = :categoria,
+                 @justificacion = :justificacion,
+                 @idsArchivoSoporte = :idsArchivoSoporte,
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
+            """;
+
     private static final String SQL_RESOLVER_SOLICITUD_REVISION = """
             EXEC dbo.usp_resolver_solicitud_revision_asistencia
                  @idSolicitud = :idSolicitud,
                  @idDocente = :idDocente,
                  @accion = :accion,
                  @respuestaDocente = :respuestaDocente,
+                 @codigoResultadoAprobacion = :codigoResultadoAprobacion,
                  @idCorrelacion = :idCorrelacion,
                  @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
@@ -72,9 +85,12 @@ public class AsistenciaJpaRepository implements AsistenciaRepositoryPort {
 
     /** idSolicitudRevision y totalSoportes, despues de las 4 columnas canonicas de usp_radicar_solicitud_revision_asistencia_v3. */
     private static final int COLUMNAS_EXTRA_RADICACION = 2;
+    /** PC: v4 agrega idToma, despues de idSolicitudRevision y totalSoportes. */
+    private static final int COLUMNAS_EXTRA_RADICACION_V4 = 3;
 
     private static final String PARAM_GRUPO = "idGrupo";
     private static final String PARAM_SESION = "idSesion";
+    private static final String PARAM_TOMA = "idToma";
 
     // CULM-001 A.2-2: asistencias del grupo con ambito validado por el SP ("ausencia = sin fila", §E), lista completa
     // (@tamanoPagina = NULL, A2-C3). Grupo inexistente o ajeno: THROW DBCODE=SEC_002 -> 403.
@@ -141,9 +157,16 @@ public class AsistenciaJpaRepository implements AsistenciaRepositoryPort {
         parametros.put("idCorrelacion", correlationId);
         parametros.put("idUsuarioEjecutor", dto.usuarioEjecutor());
 
-        // v3 devuelve las 4 columnas canonicas mas idSolicitudRevision y totalSoportes.
+        // v3 (reclamo de la sesion) devuelve las 4 columnas canonicas mas idSolicitudRevision y totalSoportes; PC: v4 (reclamo de una
+        // toma) agrega idToma.
+        if (dto.toma() == null) {
+            procedureExecutor.executeWithExtras(
+                    OP_SOLICITAR_REVISION_ASISTENCIA, SQL_RADICAR_SOLICITUD_REVISION, parametros, correlationId, COLUMNAS_EXTRA_RADICACION);
+            return;
+        }
+        parametros.put(PARAM_TOMA, dto.toma());
         procedureExecutor.executeWithExtras(
-                OP_SOLICITAR_REVISION_ASISTENCIA, SQL_RADICAR_SOLICITUD_REVISION, parametros, correlationId, COLUMNAS_EXTRA_RADICACION);
+                OP_SOLICITAR_REVISION_ASISTENCIA, SQL_RADICAR_SOLICITUD_REVISION_V4, parametros, correlationId, COLUMNAS_EXTRA_RADICACION_V4);
     }
 
     @Override
@@ -159,6 +182,8 @@ public class AsistenciaJpaRepository implements AsistenciaRepositoryPort {
         parametros.put("idDocente", dto.docente());
         parametros.put("accion", dto.accion());
         parametros.put("respuestaDocente", dto.respuestaDocente());
+        // Un String nulo tiene JdbcType resoluble; nulo deja que la DB aplique EX (reclamo rechazado o sin resultado).
+        parametros.put("codigoResultadoAprobacion", dto.codigoResultadoAprobacion());
         parametros.put("idCorrelacion", correlationId);
         parametros.put("idUsuarioEjecutor", dto.usuarioEjecutor());
 

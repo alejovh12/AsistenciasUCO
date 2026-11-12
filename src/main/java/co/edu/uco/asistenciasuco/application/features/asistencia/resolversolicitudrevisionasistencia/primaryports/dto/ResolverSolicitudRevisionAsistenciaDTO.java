@@ -8,6 +8,8 @@ public final class ResolverSolicitudRevisionAsistenciaDTO {
     private String accion;
     private String respuestaDocente;
     private UUID usuario;
+    /** PC (puntos de control): PRESENTE o JUSTIFICADA; nulo equivale a JUSTIFICADA al aprobar. */
+    private String resultado;
 
     public ResolverSolicitudRevisionAsistenciaDTO() {
         super();
@@ -23,6 +25,25 @@ public final class ResolverSolicitudRevisionAsistenciaDTO {
         setAccion(accion);
         setRespuestaDocente(respuestaDocente);
         setUsuario(usuario);
+    }
+
+    public ResolverSolicitudRevisionAsistenciaDTO(
+            final UUID solicitud,
+            final String accion,
+            final String respuestaDocente,
+            final String resultado,
+            final UUID usuario
+    ) {
+        this(solicitud, accion, respuestaDocente, usuario);
+        setResultado(resultado);
+    }
+
+    public String getResultado() {
+        return resultado;
+    }
+
+    public void setResultado(final String resultado) {
+        this.resultado = resultado;
     }
 
     public UUID getSolicitud() {

@@ -18,6 +18,7 @@ public final class ResolverSolicitudRevisionAsistenciaMapper {
                 dto.getSolicitud(),
                 dto.getAccion(),
                 dto.getRespuestaDocente(),
+                dto.getResultado(),
                 dto.getUsuario()
         );
     }

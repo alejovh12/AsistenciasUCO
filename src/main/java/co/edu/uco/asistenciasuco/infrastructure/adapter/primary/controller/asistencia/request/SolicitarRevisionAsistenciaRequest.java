@@ -7,6 +7,8 @@ public final class SolicitarRevisionAsistenciaRequest {
 
     private UUID sesionId;
     private UUID sesion;
+    /** PC (puntos de control): toma que se reclama; opcional. Con toma se radica por toma (v4); sin toma, el reclamo de la sesion (legado). */
+    private UUID tomaId;
     private String categoria;
     private String justificacion;
     private String motivo;
@@ -25,6 +27,14 @@ public final class SolicitarRevisionAsistenciaRequest {
 
     public void setSesionId(final UUID sesionId) {
         this.sesionId = sesionId;
+    }
+
+    public UUID getTomaId() {
+        return tomaId;
+    }
+
+    public void setTomaId(final UUID tomaId) {
+        this.tomaId = tomaId;
     }
 
     public void setSesion(final UUID sesion) {

@@ -169,6 +169,12 @@ final class DbFailureClassifier {
             case "REV_022" -> AsistenciaErrorCode.ERR_SOPORTE_OBLIGATORIO_CATEGORIA;
             case "REV_023" -> AsistenciaErrorCode.ERR_MAXIMO_SOPORTES_RECLAMO;
             case "REV_024" -> AsistenciaErrorCode.ERR_SOPORTE_RECLAMO_DUPLICADO;
+            // PC (puntos de control): reclamo por toma (REV_026 no reclamable, REV_027 duplicado) y resultado de la aprobacion
+            // (REV_028 invalido, REV_029 presente sin toma).
+            case "REV_026" -> AsistenciaErrorCode.ERR_TOMA_NO_RECLAMABLE;
+            case "REV_027" -> AsistenciaErrorCode.ERR_RECLAMO_TOMA_DUPLICADO;
+            case "REV_028" -> AsistenciaErrorCode.ERR_RESULTADO_APROBACION_INVALIDO;
+            case "REV_029" -> AsistenciaErrorCode.ERR_APROBACION_PRESENTE_SIN_TOMA;
             // CULM-001 A.2-8: no se desactiva al decano de una facultad con programas activos. 409 con su codigo de
             // catalogo (como COO_001) para que el usuario reciba el texto institucional (F-A-S02).
             case "DEC_002" -> DecanoErrorCode.DEC_002;
@@ -260,6 +266,7 @@ final class DbFailureClassifier {
             case "TOM_002" -> TomaAsistenciaErrorCode.TOM_002;
             case "TOM_003" -> TomaAsistenciaErrorCode.TOM_003;
             case "TOM_004" -> TomaAsistenciaErrorCode.TOM_004;
+            case "TOM_012" -> TomaAsistenciaErrorCode.TOM_012;
             case "AQR_001" -> AsistenciaQrErrorCode.AQR_001;
             case "AQR_002" -> AsistenciaQrErrorCode.AQR_002;
             case "AQR_003" -> AsistenciaQrErrorCode.AQR_003;

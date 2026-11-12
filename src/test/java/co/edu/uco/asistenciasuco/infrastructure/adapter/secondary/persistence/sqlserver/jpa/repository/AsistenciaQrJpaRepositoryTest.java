@@ -208,10 +208,15 @@ class AsistenciaQrJpaRepositoryTest {
         columnas.put("totalAusentes", 0);
         columnas.put("totalExcusas", 0);
         columnas.put("tieneQrActivo", true);
+        columnas.put("fechaPuntoControlUtc", LocalDateTime.of(2026, 11, 7, 13, 5));
+        columnas.put("ordenPuntoControl", 2);
+        columnas.put("minutosTramoAnterior", 40);
+        columnas.put("minutosTramoSiguiente", 80);
         final TomaAsistenciaResumen resumen = TomaAsistenciaJpaRepository.aResumen(HydratedViewRow.of(UvTomaAsistenciaEntity.class, columnas));
 
         assertEquals(new TomaAsistenciaResumen(TOMA, SESION, GRUPO, 2, "QR", "ABIERTA", true, false, Instant.parse("2026-11-07T13:05:00Z"),
-                null, new BigDecimal("0.67"), 3, 3, 0, 0, true), resumen);
+                null, new BigDecimal("0.67"), 3, 3, 0, 0, true,
+                Instant.parse("2026-11-07T13:05:00Z"), 2, 40, 80, true, null), resumen);
         columnas.put("fechaCierreUtc", LocalDateTime.of(2026, 11, 7, 14, 0));
         assertEquals(Instant.parse("2026-11-07T14:00:00Z"),
                 TomaAsistenciaJpaRepository.aResumen(HydratedViewRow.of(UvTomaAsistenciaEntity.class, columnas)).fechaCierreUtc());

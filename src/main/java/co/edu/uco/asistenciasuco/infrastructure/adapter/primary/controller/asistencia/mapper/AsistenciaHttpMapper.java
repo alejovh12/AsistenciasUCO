@@ -43,6 +43,7 @@ public final class AsistenciaHttpMapper {
         Objects.requireNonNull(request, "El request HTTP para solicitar revision de asistencia es obligatorio.");
         return new SolicitarRevisionAsistenciaDTO(
                 request.getSesionId(),
+                request.getTomaId(),
                 request.getCategoria(),
                 request.getJustificacion(),
                 soportesDe(request),

@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicitudrevisionasistencia.usecase.domain;
 
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
+import co.edu.uco.asistenciasuco.application.features.asistencia.common.ResultadoAprobacionReclamo;
 import co.edu.uco.asistenciasuco.application.features.asistencia.exception.AsistenciaErrorCode;
 import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
@@ -18,11 +19,26 @@ public final class ResolverSolicitudRevisionAsistenciaDomain {
     private final String accion;
     private final String respuestaDocente;
     private final UUID usuario;
+    private final ResultadoAprobacionReclamo resultado;
 
     public ResolverSolicitudRevisionAsistenciaDomain(
             final UUID solicitud,
             final String accion,
             final String respuestaDocente,
+            final UUID usuario
+    ) {
+        this(solicitud, accion, respuestaDocente, null, usuario);
+    }
+
+    /**
+     * PC (puntos de control): {@code resultado} (PRESENTE o JUSTIFICADA) solo cuenta con APROBADA; nulo o vacio deja que la base de datos
+     * aplique JUSTIFICADA. Un valor distinto es 400. Con RECHAZADA se ignora.
+     */
+    public ResolverSolicitudRevisionAsistenciaDomain(
+            final UUID solicitud,
+            final String accion,
+            final String respuestaDocente,
+            final String resultado,
             final UUID usuario
     ) {
         if (ObjectHelper.isNull(solicitud)) {
@@ -43,7 +59,16 @@ public final class ResolverSolicitudRevisionAsistenciaDomain {
         this.solicitud = solicitud;
         this.accion = accionContractual;
         this.respuestaDocente = TextHelper.trim(respuestaDocente);
+        this.resultado = "APROBADA".equals(accionContractual) ? resultadoValido(resultado) : null;
         this.usuario = usuario;
+    }
+
+    private static ResultadoAprobacionReclamo resultadoValido(final String resultado) {
+        if (TextHelper.isNullOrBlank(resultado)) {
+            return null;
+        }
+        return ResultadoAprobacionReclamo.desdeNombre(resultado)
+                .orElseThrow(() -> new ValidationException(AsistenciaErrorCode.ERR_RESULTADO_APROBACION_INVALIDO));
     }
 
     public UUID getSolicitud() {
@@ -56,6 +81,16 @@ public final class ResolverSolicitudRevisionAsistenciaDomain {
 
     public String getRespuestaDocente() {
         return respuestaDocente;
+    }
+
+    /** PC: resultado de aprobar (PRESENTE o JUSTIFICADA); nulo si no se indico o la accion es RECHAZADA. */
+    public String getResultado() {
+        return resultado == null ? null : resultado.name();
+    }
+
+    /** Codigo de razon para {@code @codigoResultadoAprobacion} (AN o EX); nulo deja el valor por defecto de la base de datos. */
+    public String getCodigoResultadoAprobacion() {
+        return resultado == null ? null : resultado.codigo();
     }
 
     public UUID getUsuario() {

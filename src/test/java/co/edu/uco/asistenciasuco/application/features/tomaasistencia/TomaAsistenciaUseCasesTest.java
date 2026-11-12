@@ -28,6 +28,9 @@ import co.edu.uco.asistenciasuco.application.features.tomaasistencia.consultaras
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.consultarasistenciastoma.usecase.impl.ConsultarAsistenciasTomaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.consultarfaltantestoma.primaryports.ConsultarFaltantesTomaInputPort;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.consultarfaltantestoma.usecase.impl.ConsultarFaltantesTomaUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.ResumenTomasSesionFila;
+import co.edu.uco.asistenciasuco.application.features.tomaasistencia.consultarresumensesion.primaryports.ConsultarResumenTomasSesionInputPort;
+import co.edu.uco.asistenciasuco.application.features.tomaasistencia.consultarresumensesion.usecase.impl.ConsultarResumenTomasSesionUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.consultartomassesion.primaryports.ConsultarTomasSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.consultartomassesion.usecase.impl.ConsultarTomasSesionUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.registrarasistenciastoma.primaryports.RegistrarAsistenciasTomaInputPort;
@@ -98,7 +101,7 @@ class TomaAsistenciaUseCasesTest {
 
     static TomaAsistenciaResumen toma(final String estado, final int registros) {
         return new TomaAsistenciaResumen(TOMA, SESION, GRUPO, 2, "QR", estado, "ABIERTA".equals(estado), false, APERTURA,
-                null, new BigDecimal("1.000000"), registros, registros, 0, 0, true);
+                null, new BigDecimal("1.000000"), registros, registros, 0, 0, true, APERTURA, 2, 40, 80, true, null);
     }
 
     private SesionProcedenciaRepositoryProjection sesion(final CancelacionSesionProjection cancelacion) {
@@ -199,6 +202,27 @@ class TomaAsistenciaUseCasesTest {
         assertEquals(Instant.parse("2026-11-06T10:00:00Z"), cancelada.cancelacion().fechaCancelacionUtc());
         assertTrue(new TomasSesionResumen(SESION, GRUPO, null, false, null, null, false, 4, null).tomas().isEmpty());
         assertThrows(NullPointerException.class, () -> useCase.execute(null));
+    }
+
+    @Test
+    void resumen_de_tomas_exige_titularidad_y_entrega_las_filas_de_la_base_de_datos() {
+        final List<ResumenTomasSesionFila> filas = List.of(
+                new ResumenTomasSesionFila(UUID.randomUUID(), "Ana Perez", 120, 120, 0, 0, 0, "PRESENTE", 0));
+        when(repositorio.consultarResumenTomasSesion(SESION, USUARIO)).thenReturn(filas);
+        final ConsultarResumenTomasSesionUseCaseImpl useCase = new ConsultarResumenTomasSesionUseCaseImpl(sesionTitular, repositorio);
+
+        when(sesiones.consultarSesion(SESION)).thenReturn(Optional.empty());
+        assertThrows(ResourceNotFoundException.class,
+                () -> useCase.execute(new ConsultarResumenTomasSesionInputPort.Consulta(SESION, USUARIO)));
+        verify(repositorio, never()).consultarResumenTomasSesion(any(), any());
+
+        when(sesiones.consultarSesion(SESION)).thenReturn(Optional.of(sesion(null)));
+        assertThrows(ForbiddenException.class,
+                () -> useCase.execute(new ConsultarResumenTomasSesionInputPort.Consulta(SESION, UUID.randomUUID())));
+        assertSame(filas, useCase.execute(new ConsultarResumenTomasSesionInputPort.Consulta(SESION, USUARIO)));
+        assertThrows(NullPointerException.class, () -> useCase.execute(null));
+        assertThrows(NullPointerException.class, () -> new ConsultarResumenTomasSesionUseCaseImpl(null, repositorio));
+        assertThrows(NullPointerException.class, () -> new ConsultarResumenTomasSesionUseCaseImpl(sesionTitular, null));
     }
 
     // ------------------------------------------------------------------ cerrar

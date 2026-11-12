@@ -33,8 +33,37 @@ public record ReclamoEstudianteDTO(
         String materiaNombre,
         SoporteAdjuntoDTO soporteAdjunto,
         CategoriaReclamoDTO categoria,
-        List<SoporteReclamoDTO> soportes
+        List<SoporteReclamoDTO> soportes,
+        UUID idToma,
+        Integer numeroToma,
+        Instant fechaPuntoControlUtc,
+        String resultadoAprobacion
 ) {
+
+    /** Compatibilidad: sin los datos de la toma (PC, puntos de control). */
+    public ReclamoEstudianteDTO(
+            final UUID id,
+            final String nombre,
+            final LocalDate fechaSolicitud,
+            final String estadoSolicitud,
+            final String justificacionSolicitud,
+            final String justificacionRespuesta,
+            final UUID sesionId,
+            final Integer sesionNumero,
+            final Instant fechaSesionUtc,
+            final String procedenciaTemporalSesion,
+            final UUID grupoId,
+            final Integer grupoCodigo,
+            final String grupoNombre,
+            final UUID materiaId,
+            final String materiaCodigo,
+            final String materiaNombre,
+            final SoporteAdjuntoDTO soporteAdjunto,
+            final CategoriaReclamoDTO categoria,
+            final List<SoporteReclamoDTO> soportes
+    ) {
+        this(id, nombre, fechaSolicitud, estadoSolicitud, justificacionSolicitud, justificacionRespuesta, sesionId, sesionNumero, fechaSesionUtc, procedenciaTemporalSesion, grupoId, grupoCodigo, grupoNombre, materiaId, materiaCodigo, materiaNombre, soporteAdjunto, categoria, soportes, null, null, null, null);
+    }
 
     /** Soporte vinculado: se descarga SIEMPRE por el backend autenticado ({@code url} relativa), nunca por el storage. */
     public record SoporteAdjuntoDTO(

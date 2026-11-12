@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.PaginaResultado;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.AsistenciaTomaFila;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.FaltanteTomaFila;
+import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.ResumenTomasSesionFila;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.TomaAsistenciaResumen;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.TomasSesionResumen;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.TomaAsistenciaRepositoryPort;
@@ -64,6 +65,10 @@ public class TomaAsistenciaJpaRepository implements TomaAsistenciaRepositoryPort
             """;
     static final String SQL_TOMAS_SESION = """
             EXEC dbo.usp_consultar_tomas_sesion
+                 @idUsuarioEjecutor = :idUsuarioEjecutor, @idCorrelacion = :idCorrelacion, @idSesion = :idSesion
+            """;
+    static final String SQL_RESUMEN_TOMAS_SESION = """
+            EXEC dbo.usp_consultar_resumen_tomas_sesion
                  @idUsuarioEjecutor = :idUsuarioEjecutor, @idCorrelacion = :idCorrelacion, @idSesion = :idSesion
             """;
     static final String SQL_ASISTENCIAS = """
@@ -174,13 +179,34 @@ public class TomaAsistenciaJpaRepository implements TomaAsistenciaRepositoryPort
                             NativeRowValues.instanteUtc(f.get("fechaAperturaUtc")), NativeRowValues.instanteUtc(f.get("fechaCierreUtc")),
                             NativeRowValues.decimal2(f.get("horasToma")), NativeRowValues.entero(f.get(C_TOTAL)),
                             NativeRowValues.entero(f.get("totalPresentes")), NativeRowValues.entero(f.get("totalAusentes")),
-                            NativeRowValues.entero(f.get("totalExcusas")), NativeRowValues.bit(f.get("tieneQrActivo"))));
+                            NativeRowValues.entero(f.get("totalExcusas")), NativeRowValues.bit(f.get("tieneQrActivo")),
+                            NativeRowValues.instanteUtc(f.get("fechaPuntoControlUtc")), NativeRowValues.entero(f.get("ordenPuntoControl")),
+                            NativeRowValues.entero(f.get("minutosTramoAnterior")), NativeRowValues.entero(f.get("minutosTramoSiguiente")),
+                            NativeRowValues.bit(f.get("esEditable")), NativeRowValues.instanteUtc(f.get("editableHastaUtc"))));
                 }
             }
             return new TomasSesionResumen(NativeRowValues.uuid(s.get(P_SESION)), NativeRowValues.uuid(s.get(C_GRUPO)),
                     NativeRowValues.decimal2(s.get("horasSesion")), NativeRowValues.bit(s.get("estaSesionCancelada")),
                     NativeRowValues.instanteUtc(s.get("ventanaAperturaUtc")), NativeRowValues.instanteUtc(s.get("ventanaCierreUtc")),
                     NativeRowValues.bit(s.get("ventanaAbierta")), NativeRowValues.entero(s.get("maximoTomas")), tomas);
+        }, excepcion -> DbCodeTranslator.traducir(excepcion, "sesion"));
+    }
+
+    @Override
+    public List<ResumenTomasSesionFila> consultarResumenTomasSesion(final UUID sesionId, final UUID usuarioEjecutor) {
+        final UUID correlacion = CorrelationIdContext.require();
+        return JpaQueryExecutor.execute("consultarResumenTomasSesion", "No fue posible consultar el resumen de tomas de la sesion.", () -> {
+            final List<Tuple> filas = tuplas(SQL_RESUMEN_TOMAS_SESION, Map.of(P_USUARIO, usuarioEjecutor, P_CORRELACION, correlacion,
+                    P_SESION, sesionId));
+            final List<ResumenTomasSesionFila> resumen = new ArrayList<>(filas.size());
+            for (final Tuple f : filas) {
+                resumen.add(new ResumenTomasSesionFila(NativeRowValues.uuid(f.get(C_ESTUDIANTE)),
+                        NativeRowValues.texto(f.get("nombreCompletoEstudiante")), NativeRowValues.entero(f.get("minutosSesion")),
+                        NativeRowValues.entero(f.get("minutosAsistidos")), NativeRowValues.entero(f.get("minutosFalta")),
+                        NativeRowValues.entero(f.get("minutosExcusa")), NativeRowValues.entero(f.get("minutosSinRegistro")),
+                        NativeRowValues.texto(f.get("codigoEstadoSesionEstudiante")), NativeRowValues.entero(f.get("tomasAusentes"))));
+            }
+            return resumen;
         }, excepcion -> DbCodeTranslator.traducir(excepcion, "sesion"));
     }
 
@@ -245,7 +271,11 @@ public class TomaAsistenciaJpaRepository implements TomaAsistenciaRepositoryPort
                 e.fechaCierreUtc() == null ? null : e.fechaCierreUtc().toInstant(ZoneOffset.UTC),
                 NativeRowValues.decimal2(e.horasToma()), NativeRowValues.entero(e.totalRegistros()),
                 NativeRowValues.entero(e.totalPresentes()), NativeRowValues.entero(e.totalAusentes()),
-                NativeRowValues.entero(e.totalExcusas()), Boolean.TRUE.equals(e.tieneQrActivo()));
+                NativeRowValues.entero(e.totalExcusas()), Boolean.TRUE.equals(e.tieneQrActivo()),
+                NativeRowValues.instanteUtc(e.fechaPuntoControlUtc()), NativeRowValues.entero(e.ordenPuntoControl()),
+                NativeRowValues.entero(e.minutosTramoAnterior()), NativeRowValues.entero(e.minutosTramoSiguiente()),
+                // La vista no trae la ventana: sin toma posterior (o abierta) se considera editable; el valor exacto lo da el listado.
+                Boolean.TRUE.equals(e.estaAbierta()) || e.fechaAperturaSiguienteUtc() == null, NativeRowValues.instanteUtc(e.fechaAperturaSiguienteUtc()));
     }
 
     /** Exactamente {@code [{"idEstudiante":"<UUID>","estado":"<valor>"}]}, en el orden recibido (contrato 2.8.2). */

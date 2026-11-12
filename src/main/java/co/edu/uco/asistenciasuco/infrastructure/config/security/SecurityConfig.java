@@ -161,6 +161,7 @@ public class SecurityConfig {
                 // CULM-001 B.2: tomas de asistencia de la sesion (POST cubierto por /api/v1/sesiones/**) y operaciones sobre
                 // una toma (cierre, lote, consultas, QR). Titularidad en Application y en la DB.
                 .requestMatchers(HttpMethod.GET, "/api/v1/sesiones/*/tomas").hasRole(ROLE_DOCENTE)
+                .requestMatchers(HttpMethod.GET, "/api/v1/sesiones/*/tomas/resumen").hasRole(ROLE_DOCENTE)
                 .requestMatchers("/api/v1/tomas/**").hasRole(ROLE_DOCENTE)
                 // Sesiones agrupadas por grupo: usadas por el docente para elegir la sesion sobre
                 // la que va a tomar asistencia. La titularidad sobre el grupo se valida en
