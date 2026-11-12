@@ -20,6 +20,7 @@ public final class SolicitarRevisionAsistenciaMapper {
 
         return new SolicitarRevisionAsistenciaDomain(
                 dto.getSesion(),
+                dto.getToma(),
                 dto.getCategoria(),
                 dto.getJustificacion(),
                 dto.getSoportes(),

@@ -130,7 +130,7 @@ class AsistenciaQrUseCasesTest {
 
     private static TomaAsistenciaResumen toma() {
         return new TomaAsistenciaResumen(TOMA, SESION, GRUPO, 1, "QR", "ABIERTA", true, false, ROTACION, null,
-                new BigDecimal("2.000000"), 30, 29, 1, 0, true);
+                new BigDecimal("2.000000"), 30, 29, 1, 0, true, ROTACION, 1, 40, 80, true, null);
     }
 
     private List<RealtimeEvent> publicados() {

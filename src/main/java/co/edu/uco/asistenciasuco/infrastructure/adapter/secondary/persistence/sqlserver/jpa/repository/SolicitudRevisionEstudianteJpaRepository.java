@@ -89,7 +89,11 @@ public class SolicitudRevisionEstudianteJpaRepository implements SolicitudRevisi
                 fila.totalRegistros() == null ? 0 : fila.totalRegistros(),
                 fila.codigoCategoria(),
                 fila.nombreCategoria(),
-                SoportesReclamoJson.leer(fila.soportesJson())
+                SoportesReclamoJson.leer(fila.soportesJson()),
+                fila.idToma(),
+                fila.numeroToma(),
+                SoporteArchivoJpaRepository.toUtcInstant(fila.fechaPuntoControlUtc()),
+                fila.codigoResultadoAprobacion()
         );
     }
 }

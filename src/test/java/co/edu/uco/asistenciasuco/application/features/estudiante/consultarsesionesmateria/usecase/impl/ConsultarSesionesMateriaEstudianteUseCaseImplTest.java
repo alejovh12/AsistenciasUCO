@@ -8,6 +8,8 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsistenciaS
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.SesionMateriaEstudianteQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.AsistenciaSesionEstudianteProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.AsistenciaTomaEstudianteProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.MinutosSesionEstudianteProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.SesionMateriaEstudianteProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.application.features.sesion.common.EstadoHorarioSesion;
@@ -454,5 +456,139 @@ class ConsultarSesionesMateriaEstudianteUseCaseImplTest {
 
         assertEquals(1, result.size());
         assertEquals(sesion2, result.getFirst().id());
+    }
+
+    // ---- PC (puntos de control): el estado y los minutos salen de la base de datos; las tomas se listan con su reclamabilidad ----
+
+    private static final java.time.Instant PUNTO_1 = java.time.Instant.parse("2026-08-17T13:00:00Z");
+    private static final java.time.Instant PUNTO_2 = java.time.Instant.parse("2026-08-17T13:40:00Z");
+
+    private static MinutosSesionEstudianteProjection minutos(final UUID sesion, final int asistidos, final int falta,
+                                                              final int excusa, final int sinRegistro, final String estado) {
+        return new MinutosSesionEstudianteProjection(sesion, 120, asistidos, falta, excusa, sinRegistro, estado);
+    }
+
+    private static AsistenciaTomaEstudianteProjection toma(final UUID sesion, final UUID idToma, final int numero,
+                                                           final java.time.Instant punto, final String estado,
+                                                           final boolean reclamable, final UUID solicitud,
+                                                           final String estadoSolicitud, final String resultado) {
+        return new AsistenciaTomaEstudianteProjection(sesion, idToma, numero, numero, punto, estado, reclamable, solicitud,
+                estadoSolicitud, resultado);
+    }
+
+    @Test
+    void el_estado_parcial_y_los_minutos_salen_de_la_base_de_datos_y_no_de_las_marcas() {
+        final UUID toma1 = UUID.randomUUID();
+        final UUID toma2 = UUID.randomUUID();
+        dado(List.of(sesion(sesion1, 1, UUID.randomUUID())),
+                List.of(hecho(sesion1, 1, Boolean.TRUE, "AN"), hecho(sesion1, 2, Boolean.FALSE, "SJC")));
+        when(asistenciaPort.consultarMinutosSesiones(eq(estudiante), eq(asignatura), any()))
+                .thenReturn(List.of(minutos(sesion1, 20, 0, 100, 0, "PARCIAL")));
+        when(asistenciaPort.consultarTomasSesiones(eq(estudiante), eq(asignatura), any())).thenReturn(List.of(
+                toma(sesion1, toma1, 1, PUNTO_1, "PRESENTE", false, null, null, null),
+                toma(sesion1, toma2, 2, PUNTO_2, "JUSTIFICADA", false, UUID.randomUUID(), "A", "EX")));
+
+        final SesionMateriaEstudianteDomain result = useCase.execute(actor, asignatura).getFirst();
+
+        assertEquals(EstadoAsistenciaSesion.PARCIAL, result.estadoAsistencia());
+        assertEquals(120, result.minutosSesion());
+        assertEquals(20, result.minutosAsistidos());
+        assertEquals(0, result.minutosFalta());
+        assertEquals(100, result.minutosExcusa());
+        assertEquals(0, result.minutosSinRegistro());
+        assertEquals(2, result.tomas().size());
+        assertEquals(toma1, result.tomas().get(0).idToma());
+        assertEquals(PUNTO_1, result.tomas().get(0).fechaPuntoControlUtc());
+        assertEquals("PRESENTE", result.tomas().get(0).estado());
+        assertEquals("JUSTIFICADA", result.tomas().get(1).estado());
+        assertEquals("APROBADA", result.tomas().get(1).estadoSolicitudRevision());
+        assertEquals("JUSTIFICADA", result.tomas().get(1).resultadoAprobacion());
+        assertFalse(result.reclamable());
+    }
+
+    @Test
+    void una_sesion_es_reclamable_si_alguna_toma_lo_es_y_el_estado_de_la_solicitud_se_traduce() {
+        dado(List.of(sesion(sesion1, 1, UUID.randomUUID())), List.of(hecho(sesion1, 1, Boolean.FALSE, "SJC")));
+        when(asistenciaPort.consultarMinutosSesiones(eq(estudiante), eq(asignatura), any()))
+                .thenReturn(List.of(minutos(sesion1, 40, 80, 0, 0, "PARCIAL")));
+        when(asistenciaPort.consultarTomasSesiones(eq(estudiante), eq(asignatura), any())).thenReturn(List.of(
+                toma(sesion1, UUID.randomUUID(), 1, PUNTO_1, "AUSENTE", false, UUID.randomUUID(), "P", null),
+                toma(sesion1, UUID.randomUUID(), 2, PUNTO_2, "AUSENTE", true, null, null, null),
+                toma(sesion1, UUID.randomUUID(), 3, PUNTO_2, "SIN_REGISTRO", false, UUID.randomUUID(), "R", null)));
+
+        final SesionMateriaEstudianteDomain result = useCase.execute(actor, asignatura).getFirst();
+
+        assertTrue(result.reclamable());
+        assertEquals("PENDIENTE", result.tomas().get(0).estadoSolicitudRevision());
+        assertNull(result.tomas().get(0).resultadoAprobacion());
+        assertTrue(result.tomas().get(1).reclamable());
+        assertNull(result.tomas().get(1).estadoSolicitudRevision());
+        assertEquals("RECHAZADA", result.tomas().get(2).estadoSolicitudRevision());
+    }
+
+    @Test
+    void sin_toma_reclamable_la_sesion_no_es_reclamable_aunque_la_base_de_datos_la_vea_ausente() {
+        dado(List.of(sesion(sesion1, 1, UUID.randomUUID())), List.of(hecho(sesion1, 1, Boolean.FALSE, "SJC")));
+        when(asistenciaPort.consultarMinutosSesiones(eq(estudiante), eq(asignatura), any()))
+                .thenReturn(List.of(minutos(sesion1, 0, 120, 0, 0, "AUSENTE")));
+        when(asistenciaPort.consultarTomasSesiones(eq(estudiante), eq(asignatura), any())).thenReturn(List.of(
+                toma(sesion1, UUID.randomUUID(), 1, PUNTO_1, "AUSENTE", false, UUID.randomUUID(), "X", null)));
+
+        final SesionMateriaEstudianteDomain result = useCase.execute(actor, asignatura).getFirst();
+
+        assertEquals(EstadoAsistenciaSesion.AUSENTE, result.estadoAsistencia());
+        assertFalse(result.reclamable());
+        assertEquals("X", result.tomas().getFirst().estadoSolicitudRevision());
+    }
+
+    @Test
+    void un_estado_desconocido_de_la_base_de_datos_usa_el_respaldo_por_marcas() {
+        dado(List.of(sesion(sesion1, 1, UUID.randomUUID())), List.of(hecho(sesion1, 1, Boolean.TRUE, "AN")));
+        when(asistenciaPort.consultarMinutosSesiones(eq(estudiante), eq(asignatura), any()))
+                .thenReturn(List.of(minutos(sesion1, 120, 0, 0, 0, "OTRO")));
+
+        final SesionMateriaEstudianteDomain result = useCase.execute(actor, asignatura).getFirst();
+
+        assertEquals(EstadoAsistenciaSesion.PRESENTE, result.estadoAsistencia());
+        assertEquals(120, result.minutosAsistidos());
+    }
+
+    @Test
+    void los_minutos_y_las_tomas_se_consultan_con_el_estudiante_resuelto_y_se_ignoran_las_sesiones_ajenas() {
+        dado(List.of(sesion(sesion1, 1, UUID.randomUUID())), List.of());
+        when(asistenciaPort.consultarMinutosSesiones(eq(estudiante), eq(asignatura), any()))
+                .thenReturn(List.of(minutos(UUID.randomUUID(), 120, 0, 0, 0, "PRESENTE")));
+        when(asistenciaPort.consultarTomasSesiones(eq(estudiante), eq(asignatura), any())).thenReturn(List.of(
+                toma(UUID.randomUUID(), UUID.randomUUID(), 1, PUNTO_1, "PRESENTE", false, null, null, null)));
+
+        final SesionMateriaEstudianteDomain result = useCase.execute(actor, asignatura).getFirst();
+
+        verify(asistenciaPort).consultarTomasSesiones(eq(estudiante), eq(asignatura), argThat(ids -> ids.contains(sesion1)));
+        verify(asistenciaPort).consultarMinutosSesiones(eq(estudiante), eq(asignatura), argThat(ids -> ids.contains(sesion1)));
+        assertEquals(EstadoAsistenciaSesion.NO_DISPONIBLE, result.estadoAsistencia());
+        assertNull(result.minutosSesion());
+        assertTrue(result.tomas().isEmpty());
+    }
+
+    @Test
+    void una_sesion_cancelada_no_muestra_minutos_ni_tomas_ni_es_reclamable() {
+        final UUID grupo = UUID.randomUUID();
+        dado(List.of(sesion(sesion1, 1, grupo)), List.of());
+        when(asistenciaPort.consultarMinutosSesiones(eq(estudiante), eq(asignatura), any()))
+                .thenReturn(List.of(minutos(sesion1, 0, 120, 0, 0, "AUSENTE")));
+        when(asistenciaPort.consultarTomasSesiones(eq(estudiante), eq(asignatura), any())).thenReturn(List.of(
+                toma(sesion1, UUID.randomUUID(), 1, PUNTO_1, "AUSENTE", true, null, null, null)));
+        when(procedenciaPort.consultarSesionesPorIds(any())).thenReturn(List.of(new SesionProcedenciaRepositoryProjection(
+                sesion1, grupo, "Sesion", 1, "SES", 1, "1", "Grupo 001", LocalDateTime.of(2026, 8, 17, 13, 0),
+                LocalDateTime.of(2026, 8, 17, 15, 0), "UTC_V2",
+                new co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.CancelacionSesionProjection(
+                        "DOCENTE", "Calamidad domestica", null, LocalDateTime.of(2026, 8, 16, 20, 0)))));
+
+        final SesionMateriaEstudianteDomain result = useCase.execute(actor, asignatura).getFirst();
+
+        assertEquals(EstadoAsistenciaSesion.NO_DISPONIBLE, result.estadoAsistencia());
+        assertFalse(result.reclamable());
+        assertNull(result.minutosSesion());
+        assertTrue(result.tomas().isEmpty());
     }
 }

@@ -217,6 +217,19 @@ class DocentePortalControllerTest {
     }
 
     @Test
+    void resolverReclamo_mapea_el_resultado_de_la_aprobacion() throws Exception {
+        mvc.perform(patch("/api/v1/docente/reclamos/{id}", RECLAMO).contentType("application/json")
+                        .content("{\"accion\":\"APROBADA\",\"resultado\":\"PRESENTE\",\"respuestaDocente\":\"Si estuvo\"}"))
+                .andExpect(status().isOk());
+
+        final ArgumentCaptor<ResolverSolicitudRevisionAsistenciaDTO> captor =
+                ArgumentCaptor.forClass(ResolverSolicitudRevisionAsistenciaDTO.class);
+        verify(resolverReclamo).execute(captor.capture());
+        assertEquals("APROBADA", captor.getValue().getAccion());
+        assertEquals("PRESENTE", captor.getValue().getResultado());
+    }
+
+    @Test
     void resolverReclamo_con_peticion_nula_mapea_campos_nulos() {
         controller.resolverReclamo(RECLAMO, null);
 

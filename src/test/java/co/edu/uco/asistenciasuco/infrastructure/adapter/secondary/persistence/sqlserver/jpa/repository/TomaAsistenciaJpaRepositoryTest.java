@@ -5,6 +5,7 @@ import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFound
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.PaginaResultado;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.AsistenciaTomaFila;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.FaltanteTomaFila;
+import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.ResumenTomasSesionFila;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.TomaAsistenciaResumen;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.TomasSesionResumen;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.TomaAsistenciaRepositoryPort;
@@ -176,6 +177,9 @@ class TomaAsistenciaJpaRepositoryTest {
                 "estaAbierta", false, "esImplicita", true, "fechaAperturaUtc", Timestamp.valueOf("2026-11-07 13:00:00"),
                 "fechaCierreUtc", Timestamp.valueOf("2026-11-07 13:00:00"), "horasToma", new BigDecimal("1.000000")));
         conToma.putAll(Map.of("totalRegistros", 30, "totalPresentes", 28, "totalAusentes", 2, "totalExcusas", 0, "tieneQrActivo", false));
+        conToma.putAll(Map.of("fechaPuntoControlUtc", Timestamp.valueOf("2026-11-07 13:00:00"), "ordenPuntoControl", 1,
+                "minutosTramoAnterior", 15, "minutosTramoSiguiente", 105, "esEditable", true,
+                "editableHastaUtc", Timestamp.valueOf("2026-11-07 15:30:00")));
         when(query.getResultList()).thenReturn(List.of(tupla(conToma)));
 
         final TomasSesionResumen resumen = repository.consultarTomasSesion(SESION, USUARIO);
@@ -187,12 +191,45 @@ class TomaAsistenciaJpaRepositoryTest {
         assertEquals(new BigDecimal("1.00"), toma.horasToma());
         assertTrue(toma.esImplicita());
         assertEquals(28, toma.totalPresentes());
+        assertEquals(Instant.parse("2026-11-07T13:00:00Z"), toma.fechaPuntoControlUtc());
+        assertEquals(1, toma.ordenPuntoControl());
+        assertEquals(15, toma.minutosTramoAnterior());
+        assertEquals(105, toma.minutosTramoSiguiente());
+        assertTrue(toma.esEditable());
+        assertEquals(Instant.parse("2026-11-07T15:30:00Z"), toma.editableHastaUtc());
 
         when(query.getResultList()).thenReturn(List.of(tupla(sesion)));
         assertTrue(repository.consultarTomasSesion(SESION, USUARIO).tomas().isEmpty());
 
         when(query.getResultList()).thenReturn(List.of());
         assertThrows(DatabaseOperationException.class, () -> repository.consultarTomasSesion(SESION, USUARIO));
+    }
+
+    @Test
+    void resumen_de_tomas_de_la_sesion_lee_los_minutos_y_el_estado_por_nombre() {
+        final UUID estudiante = UUID.randomUUID();
+        final Map<String, Object> fila = new HashMap<>();
+        fila.put("idEstudiante", estudiante.toString());
+        fila.put("nombreCompletoEstudiante", "Ana Perez");
+        fila.put("minutosSesion", 120);
+        fila.put("minutosAsistidos", 20);
+        fila.put("minutosFalta", 0);
+        fila.put("minutosExcusa", 100);
+        fila.put("minutosSinRegistro", 0);
+        fila.put("codigoEstadoSesionEstudiante", "PARCIAL");
+        fila.put("tomasAusentes", 0);
+        when(query.getResultList()).thenReturn(List.of(tupla(fila)));
+
+        final List<ResumenTomasSesionFila> resumen = repository.consultarResumenTomasSesion(SESION, USUARIO);
+
+        assertEquals(List.of(new ResumenTomasSesionFila(estudiante, "Ana Perez", 120, 20, 0, 100, 0, "PARCIAL", 0)), resumen);
+        verify(query).setParameter("idSesion", SESION);
+        verify(query).setParameter("idUsuarioEjecutor", USUARIO);
+        verify(query).setParameter("idCorrelacion", correlacion);
+        when(query.getResultList()).thenReturn(List.of());
+        assertTrue(repository.consultarResumenTomasSesion(SESION, USUARIO).isEmpty());
+        when(query.getResultList()).thenThrow(new PersistenceException("DBCODE=SEC_002|ajena"));
+        assertThrows(ForbiddenException.class, () -> repository.consultarResumenTomasSesion(SESION, USUARIO));
     }
 
     @Test

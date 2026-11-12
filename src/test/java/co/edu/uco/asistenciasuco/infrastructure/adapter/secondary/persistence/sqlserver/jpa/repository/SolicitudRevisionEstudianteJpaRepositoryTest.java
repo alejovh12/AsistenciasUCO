@@ -139,6 +139,26 @@ class SolicitudRevisionEstudianteJpaRepositoryTest {
         assertThrows(DatabaseOperationException.class, () -> repository.consultarSolicitudesEstudiante(EJECUTOR, null, 1, 10));
     }
 
+    // PC (puntos de control): la lista del estudiante trae la toma reclamada y el resultado de la aprobacion.
+    @Test
+    void mapea_la_toma_reclamada_y_el_resultado_de_la_aprobacion() {
+        final UUID toma = UUID.randomUUID();
+        when(query.getResultList()).thenReturn(List.of(
+                fila(Map.of("idSolicitudRevisionAsistencia", UUID.randomUUID(), "idToma", toma, "numeroToma", 3,
+                        "fechaPuntoControlUtc", LocalDateTime.of(2026, 10, 19, 15, 40), "codigoResultadoAprobacion", "EX")),
+                fila(Map.of("idSolicitudRevisionAsistencia", UUID.randomUUID()))));
+
+        final var filas = repository.consultarSolicitudesEstudiante(EJECUTOR, null, 1, 10);
+
+        assertEquals(toma, filas.getFirst().idToma());
+        assertEquals(3, filas.getFirst().numeroToma());
+        assertEquals(Instant.parse("2026-10-19T15:40:00Z"), filas.getFirst().fechaPuntoControlUtc());
+        assertEquals("EX", filas.getFirst().codigoResultadoAprobacion());
+        assertNull(filas.get(1).idToma());
+        assertNull(filas.get(1).fechaPuntoControlUtc());
+        assertNull(filas.get(1).codigoResultadoAprobacion());
+    }
+
     private static SpSolicitudRevisionEstudianteEntity fila(final Map<String, Object> campos) {
         try {
             final var constructor = SpSolicitudRevisionEstudianteEntity.class.getDeclaredConstructor();

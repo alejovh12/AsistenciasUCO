@@ -27,7 +27,11 @@ class DbFailureClassifierReclamoRevisionTest {
             "REV_002, ERR_RECLAMO_YA_RESUELTO, CONFLICT",
             "REV_003, ERR_RECLAMO_ASISTENCIA_NO_JUSTIFICABLE, CONFLICT",
             "REV_004, ERR_RECLAMO_SIN_DETALLE_ASISTENCIA, CONFLICT",
-            "REV_005, ERR_RECLAMO_NO_EXISTE, NOT_FOUND"
+            "REV_005, ERR_RECLAMO_NO_EXISTE, NOT_FOUND",
+            "REV_026, ERR_TOMA_NO_RECLAMABLE, CONFLICT",
+            "REV_027, ERR_RECLAMO_TOMA_DUPLICADO, CONFLICT",
+            "REV_028, ERR_RESULTADO_APROBACION_INVALIDO, VALIDATION",
+            "REV_029, ERR_APROBACION_PRESENTE_SIN_TOMA, CONFLICT"
     })
     void rechazo_de_resolucion_se_traduce_al_codigo_publico(
             final String codigoDb, final AsistenciaErrorCode esperado, final String tipo) {

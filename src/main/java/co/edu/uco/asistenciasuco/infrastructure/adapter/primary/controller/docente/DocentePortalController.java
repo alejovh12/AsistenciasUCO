@@ -112,6 +112,7 @@ public final class DocentePortalController {
                 id,
                 request == null ? null : request.getAccion(),
                 request == null ? null : request.getRespuestaDocente(),
+                request == null ? null : request.getResultado(),
                 authenticatedUserResolver.requireAuthenticatedUserId()
         ));
         return ResponseEntity.ok(new ApiDataResponse<>(true, null));

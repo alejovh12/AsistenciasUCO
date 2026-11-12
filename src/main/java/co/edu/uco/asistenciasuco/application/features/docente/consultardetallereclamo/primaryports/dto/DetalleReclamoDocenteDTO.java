@@ -40,8 +40,45 @@ public record DetalleReclamoDocenteDTO(
         CausalInasistenciaDTO causalInasistencia,
         ReclamoDocenteDTO.SoporteAdjuntoDTO soporteAdjunto,
         CategoriaReclamoDTO categoria,
-        List<SoporteReclamoDTO> soportes
+        List<SoporteReclamoDTO> soportes,
+        UUID idToma,
+        Integer numeroToma,
+        Instant fechaPuntoControlUtc,
+        String resultadoAprobacion,
+        String estadoToma,
+        Integer minutosSesion,
+        Integer minutosAsistidos
 ) {
+
+    /** Compatibilidad: sin los datos de la toma (PC, puntos de control). */
+    public DetalleReclamoDocenteDTO(
+            final UUID id,
+            final String nombre,
+            final LocalDate fechaSolicitud,
+            final String codigoEstado,
+            final String estadoSolicitud,
+            final String nombreEstado,
+            final String justificacionSolicitud,
+            final String justificacionRespuesta,
+            final UUID estudianteId,
+            final String estudianteNombre,
+            final UUID sesionId,
+            final Integer sesionNumero,
+            final Instant fechaSesionUtc,
+            final String procedenciaTemporalSesion,
+            final UUID grupoId,
+            final Integer grupoCodigo,
+            final String grupoNombre,
+            final UUID materiaId,
+            final String materiaCodigo,
+            final String materiaNombre,
+            final CausalInasistenciaDTO causalInasistencia,
+            final ReclamoDocenteDTO.SoporteAdjuntoDTO soporteAdjunto,
+            final CategoriaReclamoDTO categoria,
+            final List<SoporteReclamoDTO> soportes
+    ) {
+        this(id, nombre, fechaSolicitud, codigoEstado, estadoSolicitud, nombreEstado, justificacionSolicitud, justificacionRespuesta, estudianteId, estudianteNombre, sesionId, sesionNumero, fechaSesionUtc, procedenciaTemporalSesion, grupoId, grupoCodigo, grupoNombre, materiaId, materiaCodigo, materiaNombre, causalInasistencia, soporteAdjunto, categoria, soportes, null, null, null, null, null, null, null);
+    }
 
     /** Causa registrada de la inasistencia ({@code RazonCausa}) y si el estudiante figura como asistente. */
     public record CausalInasistenciaDTO(String codigo, String nombre, Boolean asistio) {

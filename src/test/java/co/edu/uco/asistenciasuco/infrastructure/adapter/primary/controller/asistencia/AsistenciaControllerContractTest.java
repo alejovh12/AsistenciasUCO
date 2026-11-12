@@ -87,6 +87,21 @@ class AsistenciaControllerContractTest {
     // ---- CULM-001 D.2 (CONTRACT D 3.3, HU014/HU015): soporteArchivoIds (0..N); soporteArchivoId (legado) = lista de uno ----
 
     @Test
+    void reviewWithTomaIdCarriesItToApplicationAndWithoutItStaysLegacy() throws Exception {
+        final java.util.UUID toma = java.util.UUID.fromString("99999999-9999-9999-9999-999999999999");
+        mvc.perform(post("/api/v1/asistencias/revisiones").contentType("application/json")
+                        .content("{\"sesionId\":\"" + SESSION + "\",\"tomaId\":\"" + toma + "\",\"categoria\":\"MED\",\"justificacion\":\"Cita\"}"))
+                .andExpect(status().isAccepted());
+        mvc.perform(post("/api/v1/asistencias/revisiones").contentType("application/json")
+                        .content("{\"sesionId\":\"" + SESSION + "\",\"categoria\":\"MED\",\"justificacion\":\"Cita\"}"))
+                .andExpect(status().isAccepted());
+        final var captor = ArgumentCaptor.forClass(SolicitarRevisionAsistenciaDTO.class);
+        verify(review, org.mockito.Mockito.times(2)).execute(captor.capture());
+        assertEquals(toma, captor.getAllValues().get(0).getToma());
+        assertEquals(null, captor.getAllValues().get(1).getToma());
+    }
+
+    @Test
     void reviewAcceptsSeveralSupportsInOrder() throws Exception {
         mvc.perform(post("/api/v1/asistencias/revisiones").contentType("application/json")
                         .content("""

@@ -20,9 +20,23 @@ public final class SolicitarRevisionAsistenciaDomain {
     private final String justificacion;
     private final List<UUID> soportes;
     private final UUID usuario;
+    private final UUID toma;
 
+    /** Reclamo de la sesion (legado, sin toma). */
     public SolicitarRevisionAsistenciaDomain(
             final UUID sesion,
+            final String categoria,
+            final String justificacion,
+            final List<UUID> soportes,
+            final UUID usuario
+    ) {
+        this(sesion, null, categoria, justificacion, soportes, usuario);
+    }
+
+    /** PC (puntos de control): {@code toma} nula es el reclamo de la sesion; con toma, el reclamo es de esa toma. */
+    public SolicitarRevisionAsistenciaDomain(
+            final UUID sesion,
+            final UUID toma,
             final String categoria,
             final String justificacion,
             final List<UUID> soportes,
@@ -35,6 +49,7 @@ public final class SolicitarRevisionAsistenciaDomain {
         this.soportes = validarSoportes(soportes);
 
         this.sesion = sesion;
+        this.toma = toma;
         this.usuario = usuario;
     }
 
@@ -73,6 +88,11 @@ public final class SolicitarRevisionAsistenciaDomain {
 
     public UUID getSesion() {
         return sesion;
+    }
+
+    /** PC (puntos de control): toma reclamada; nulo es el reclamo de la sesion completa (legado). */
+    public UUID getToma() {
+        return toma;
     }
 
     public String getCategoria() {

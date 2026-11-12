@@ -1,6 +1,8 @@
 package co.edu.uco.asistenciasuco.application.secondaryports.academic;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.AsistenciaSesionEstudianteProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.AsistenciaTomaEstudianteProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.MinutosSesionEstudianteProjection;
 
 import java.util.Collection;
 import java.util.List;
@@ -20,4 +22,15 @@ public interface AsistenciaSesionEstudianteQueryPort {
      */
     List<AsistenciaSesionEstudianteProjection> consultarAsistenciaSesiones(UUID idEstudiante, UUID idAsignatura,
                                                                            Collection<UUID> idsSesion);
+
+    /**
+     * PC (puntos de control): una fila por (sesion, toma) con el estado del estudiante en esa toma y si es reclamable. Mismo
+     * aislamiento por estudiante y asignatura; una sesion sin cabecera de asistencia no devuelve filas.
+     */
+    List<AsistenciaTomaEstudianteProjection> consultarTomasSesiones(UUID idEstudiante, UUID idAsignatura,
+                                                                    Collection<UUID> idsSesion);
+
+    /** PC (puntos de control): minutos y estado de cada sesion (una fila por sesion con cabecera de asistencia). */
+    List<MinutosSesionEstudianteProjection> consultarMinutosSesiones(UUID idEstudiante, UUID idAsignatura,
+                                                                     Collection<UUID> idsSesion);
 }

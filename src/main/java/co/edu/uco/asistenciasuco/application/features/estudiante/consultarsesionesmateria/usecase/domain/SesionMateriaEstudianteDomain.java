@@ -4,6 +4,7 @@ import co.edu.uco.asistenciasuco.application.features.sesion.common.dto.Cancelac
 import co.edu.uco.asistenciasuco.application.features.sesion.common.EstadoHorarioSesion;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -12,6 +13,7 @@ import java.util.UUID;
  * {@code reclamable} es solo una pista de presentacion: la autorizacion definitiva es del backend/DB al radicar.
  * CULM-001 D.1 (HU026B): {@code fechaLimiteJustificacionUtc} y {@code plazoJustificacionVigente} los calcula la base de datos
  * (limite exclusivo en UTC; nulo si faltan sus parametros) y Java solo los transporta.
+ * PC (puntos de control): {@code minutos*} (nulos si la sesion no tiene cabecera de asistencia) y {@code tomas} salen de la base de datos.
  */
 public record SesionMateriaEstudianteDomain(UUID id, String nombre, Integer numero, String codigo, Integer numeroSemana,
                                             UUID idGrupo, String codigoGrupo, String nombreGrupo,
@@ -21,7 +23,30 @@ public record SesionMateriaEstudianteDomain(UUID id, String nombre, Integer nume
                                             EstadoAsistenciaSesion estadoAsistencia, String estadoSolicitudRevision,
                                             boolean reclamable, CancelacionSesionDTO cancelacion,
                                             LocalDateTime fechaLimiteJustificacionUtc,
-                                            boolean plazoJustificacionVigente) {
+                                            boolean plazoJustificacionVigente,
+                                            Integer minutosSesion, Integer minutosAsistidos, Integer minutosFalta,
+                                            Integer minutosExcusa, Integer minutosSinRegistro,
+                                            List<TomaSesionEstudianteDomain> tomas) {
+
+    public SesionMateriaEstudianteDomain {
+        tomas = tomas == null ? List.of() : List.copyOf(tomas);
+    }
+
+    /** Sesion con plazo y sin minutos ni tomas (compatibilidad). */
+    public SesionMateriaEstudianteDomain(final UUID id, final String nombre, final Integer numero, final String codigo,
+                                         final Integer numeroSemana, final UUID idGrupo, final String codigoGrupo,
+                                         final String nombreGrupo, final LocalDateTime fechaHoraInicio,
+                                         final LocalDateTime fechaHoraFin, final LocalDateTime fechaHoraInicioUtc,
+                                         final LocalDateTime fechaHoraFinUtc, final EstadoHorarioSesion estadoTemporal,
+                                         final EstadoAsistenciaSesion estadoAsistencia,
+                                         final String estadoSolicitudRevision, final boolean reclamable,
+                                         final CancelacionSesionDTO cancelacion,
+                                         final LocalDateTime fechaLimiteJustificacionUtc,
+                                         final boolean plazoJustificacionVigente) {
+        this(id, nombre, numero, codigo, numeroSemana, idGrupo, codigoGrupo, nombreGrupo, fechaHoraInicio, fechaHoraFin,
+                fechaHoraInicioUtc, fechaHoraFinUtc, estadoTemporal, estadoAsistencia, estadoSolicitudRevision, reclamable,
+                cancelacion, fechaLimiteJustificacionUtc, plazoJustificacionVigente, null, null, null, null, null, null);
+    }
 
     /** Sesion programada (sin cancelacion). */
     public SesionMateriaEstudianteDomain(final UUID id, final String nombre, final Integer numero, final String codigo,

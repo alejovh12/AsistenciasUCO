@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.docente.consultardetallereclamo.primaryports.mapper;
 
+import co.edu.uco.asistenciasuco.application.features.asistencia.common.ResultadoAprobacionReclamo;
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.mapper.SoporteReclamoMapper;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardetallereclamo.primaryports.dto.ConsultarDetalleReclamoDocenteDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardetallereclamo.primaryports.dto.DetalleReclamoDocenteDTO;
@@ -52,6 +53,23 @@ public final class ConsultarDetalleReclamoDocenteMapper {
                 causal,
                 soporte,
                 SoporteReclamoMapper.categoria(d.codigoCategoria(), d.nombreCategoria()),
-                SoporteReclamoMapper.toDTO(d.soportes()));
+                SoporteReclamoMapper.toDTO(d.soportes()),
+                d.idToma(), d.numeroToma(), d.fechaPuntoControlUtc(),
+                ResultadoAprobacionReclamo.nombreDesdeCodigo(d.codigoResultadoAprobacion()),
+                estadoToma(d), d.minutosSesion(), d.minutosAsistidos());
+    }
+
+    /** PC (puntos de control): estado actual del estudiante en la toma reclamada; nulo en un reclamo de la sesion (sin toma). */
+    private static String estadoToma(final DetalleReclamoDocenteDomain d) {
+        if (d.idToma() == null) {
+            return null;
+        }
+        final String codigo = d.codigoRazonCausaToma() == null ? "" : d.codigoRazonCausaToma().strip().toUpperCase(java.util.Locale.ROOT);
+        return switch (codigo) {
+            case "AN" -> "PRESENTE";
+            case "SJC" -> "AUSENTE";
+            case "EX" -> "JUSTIFICADA";
+            default -> "SIN_REGISTRO";
+        };
     }
 }

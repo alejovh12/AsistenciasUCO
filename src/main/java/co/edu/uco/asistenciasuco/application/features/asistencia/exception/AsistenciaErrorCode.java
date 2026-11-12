@@ -44,7 +44,13 @@ public enum AsistenciaErrorCode implements ErrorDefinition {
     ERR_SOPORTE_OBLIGATORIO_CATEGORIA("ERR_SOPORTE_OBLIGATORIO_CATEGORIA", "La categoría seleccionada exige adjuntar al menos un soporte.", ErrorKind.VALIDATION),
     ERR_MAXIMO_SOPORTES_RECLAMO("ERR_MAXIMO_SOPORTES_RECLAMO", "Se superó el máximo de soportes permitido por reclamo.", ErrorKind.VALIDATION),
     ERR_SOPORTE_RECLAMO_DUPLICADO("ERR_SOPORTE_RECLAMO_DUPLICADO", "Un mismo soporte no se puede adjuntar dos veces.", ErrorKind.VALIDATION),
-    ERR_SOPORTE_RECLAMO_INVALIDO("ERR_SOPORTE_RECLAMO_INVALIDO", "La lista de soportes contiene un identificador no válido.", ErrorKind.VALIDATION);
+    ERR_SOPORTE_RECLAMO_INVALIDO("ERR_SOPORTE_RECLAMO_INVALIDO", "La lista de soportes contiene un identificador no válido.", ErrorKind.VALIDATION),
+    // PC (puntos de control): reclamo por toma y resultado de la aprobacion. DB: REV_026 (la toma no es reclamable), REV_027 (ya hay un
+    // reclamo de la toma), REV_028 (resultado distinto de PRESENTE/JUSTIFICADA) y REV_029 (aprobar como presente un reclamo sin toma).
+    ERR_TOMA_NO_RECLAMABLE("ERR_TOMA_NO_RECLAMABLE", "Solo puedes reclamar una toma en la que quedaste ausente.", ErrorKind.CONFLICT),
+    ERR_RECLAMO_TOMA_DUPLICADO("ERR_RECLAMO_TOMA_DUPLICADO", "Ya existe un reclamo para esta toma.", ErrorKind.CONFLICT),
+    ERR_RESULTADO_APROBACION_INVALIDO("ERR_RESULTADO_APROBACION_INVALIDO", "El resultado de la aprobación debe ser PRESENTE o JUSTIFICADA.", ErrorKind.VALIDATION),
+    ERR_APROBACION_PRESENTE_SIN_TOMA("ERR_APROBACION_PRESENTE_SIN_TOMA", "La aprobación como presente solo aplica a reclamos de una toma.", ErrorKind.CONFLICT);
 
     private final String code;
     private final String defaultMessage;

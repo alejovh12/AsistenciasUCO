@@ -5,6 +5,16 @@ public final class ResolverReclamoRequest {
     private String accion;
     private String respuestaDocente;
     private String respuesta;
+    /** PC (puntos de control): PRESENTE o JUSTIFICADA; opcional y solo con APROBADA (por defecto JUSTIFICADA). */
+    private String resultado;
+
+    public String getResultado() {
+        return resultado;
+    }
+
+    public void setResultado(final String resultado) {
+        this.resultado = resultado;
+    }
 
     public String getAccion() {
         return accion;

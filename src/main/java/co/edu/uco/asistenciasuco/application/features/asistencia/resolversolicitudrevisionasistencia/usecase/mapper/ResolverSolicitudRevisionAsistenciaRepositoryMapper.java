@@ -24,7 +24,8 @@ public final class ResolverSolicitudRevisionAsistenciaRepositoryMapper {
                 docenteId,
                 domain.getAccion(),
                 domain.getRespuestaDocente(),
-                domain.getUsuario()
+                domain.getUsuario(),
+                domain.getCodigoResultadoAprobacion()
         );
     }
 }

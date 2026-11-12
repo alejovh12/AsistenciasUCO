@@ -72,4 +72,38 @@ class ResolverSolicitudRevisionAsistenciaDomainTest {
 
         assertEquals(accion.trim().toUpperCase(java.util.Locale.ROOT), domain.getAccion());
     }
+
+    // PC (puntos de control): resultado de aprobar un reclamo de una toma (PRESENTE = AN, JUSTIFICADA = EX).
+    @ParameterizedTest
+    @ValueSource(strings = {"PRESENTE", " presente ", "JUSTIFICADA", "justificada"})
+    void aprobada_con_resultado_valido_lo_normaliza_y_expone_el_codigo(final String resultado) {
+        final ResolverSolicitudRevisionAsistenciaDomain domain =
+                new ResolverSolicitudRevisionAsistenciaDomain(SOLICITUD, "APROBADA", null, resultado, USUARIO);
+
+        assertEquals(resultado.strip().toUpperCase(), domain.getResultado());
+        assertEquals(domain.getResultado().equals("PRESENTE") ? "AN" : "EX", domain.getCodigoResultadoAprobacion());
+    }
+
+    @Test
+    void aprobada_sin_resultado_deja_que_la_base_de_datos_aplique_el_valor_por_defecto() {
+        assertNull(new ResolverSolicitudRevisionAsistenciaDomain(SOLICITUD, "APROBADA", null, USUARIO).getCodigoResultadoAprobacion());
+        assertNull(new ResolverSolicitudRevisionAsistenciaDomain(SOLICITUD, "APROBADA", null, "  ", USUARIO).getResultado());
+    }
+
+    @Test
+    void aprobada_con_resultado_invalido_es_error_de_validacion() {
+        final ValidationException exception = assertThrows(ValidationException.class,
+                () -> new ResolverSolicitudRevisionAsistenciaDomain(SOLICITUD, "APROBADA", null, "AN", USUARIO));
+
+        assertEquals(AsistenciaErrorCode.ERR_RESULTADO_APROBACION_INVALIDO.code(), exception.getCode());
+    }
+
+    @Test
+    void rechazada_ignora_el_resultado() {
+        final ResolverSolicitudRevisionAsistenciaDomain domain =
+                new ResolverSolicitudRevisionAsistenciaDomain(SOLICITUD, "RECHAZADA", null, "PRESENTE", USUARIO);
+
+        assertNull(domain.getResultado());
+        assertNull(domain.getCodigoResultadoAprobacion());
+    }
 }

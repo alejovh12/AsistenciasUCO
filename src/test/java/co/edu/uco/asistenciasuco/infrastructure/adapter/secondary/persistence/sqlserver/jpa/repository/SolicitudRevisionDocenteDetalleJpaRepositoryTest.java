@@ -140,6 +140,46 @@ class SolicitudRevisionDocenteDetalleJpaRepositoryTest {
         assertEquals(List.of(), b.soportes());
     }
 
+    // PC (puntos de control): el detalle del docente trae la toma reclamada, su resultado, la marca actual y los minutos de la sesion.
+    @Test
+    void mapea_la_toma_reclamada_y_los_minutos_de_la_sesion() {
+        CorrelationIdContext.set(UUID.randomUUID());
+        final UUID toma = UUID.randomUUID();
+        final SpDetalleSolicitudRevisionDocenteEntity conToma = fila("UTC_V2", null);
+        when(conToma.idToma()).thenReturn(toma);
+        when(conToma.numeroToma()).thenReturn(2);
+        when(conToma.fechaPuntoControlUtc()).thenReturn(LocalDateTime.parse("2026-10-14T13:40:00"));
+        when(conToma.codigoResultadoAprobacion()).thenReturn("AN");
+        when(conToma.codigoRazonCausaToma()).thenReturn("SJC");
+        when(conToma.minutosSesion()).thenReturn(120);
+        when(conToma.minutosAsistidos()).thenReturn(40);
+        when(entityManager.createNativeQuery(anyString(), eq(SpDetalleSolicitudRevisionDocenteEntity.class))).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(conToma));
+
+        final DetalleSolicitudRevisionDocenteProjection p = repository.consultarDetalleSolicitudDocente(SOLICITUD, USUARIO).orElseThrow();
+
+        assertEquals(toma, p.idToma());
+        assertEquals(2, p.numeroToma());
+        assertEquals(java.time.Instant.parse("2026-10-14T13:40:00Z"), p.fechaPuntoControlUtc());
+        assertEquals("AN", p.codigoResultadoAprobacion());
+        assertEquals("SJC", p.codigoRazonCausaToma());
+        assertEquals(120, p.minutosSesion());
+        assertEquals(40, p.minutosAsistidos());
+    }
+
+    @Test
+    void un_reclamo_de_la_sesion_no_trae_datos_de_toma() {
+        CorrelationIdContext.set(UUID.randomUUID());
+        when(entityManager.createNativeQuery(anyString(), eq(SpDetalleSolicitudRevisionDocenteEntity.class))).thenReturn(query);
+        final SpDetalleSolicitudRevisionDocenteEntity legado = fila("UTC_V2", null);
+        when(query.getResultList()).thenReturn(List.of(legado));
+
+        final DetalleSolicitudRevisionDocenteProjection p = repository.consultarDetalleSolicitudDocente(SOLICITUD, USUARIO).orElseThrow();
+
+        assertNull(p.idToma());
+        assertNull(p.fechaPuntoControlUtc());
+    }
+
     private static SpDetalleSolicitudRevisionDocenteEntity fila(final String procedencia, final UUID archivo) {
         final SpDetalleSolicitudRevisionDocenteEntity fila = mock(SpDetalleSolicitudRevisionDocenteEntity.class);
         when(fila.idSolicitudRevisionAsistencia()).thenReturn(SOLICITUD);

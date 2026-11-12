@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.application.secondaryports.repository;
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.PaginaResultado;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.AsistenciaTomaFila;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.FaltanteTomaFila;
+import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.ResumenTomasSesionFila;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.TomaAsistenciaResumen;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.TomasSesionResumen;
 
@@ -49,6 +50,9 @@ public interface TomaAsistenciaRepositoryPort {
     Optional<TomaAsistenciaResumen> consultarToma(UUID tomaId);
 
     TomasSesionResumen consultarTomasSesion(UUID sesionId, UUID usuarioEjecutor);
+
+    /** PC: resumen por estudiante de la sesion en minutos y estado ({@code usp_consultar_resumen_tomas_sesion}, titularidad en la DB). */
+    List<ResumenTomasSesionFila> consultarResumenTomasSesion(UUID sesionId, UUID usuarioEjecutor);
 
     PaginaResultado<AsistenciaTomaFila> consultarAsistencias(UUID tomaId, int numeroPagina, int tamanoPagina, UUID usuarioEjecutor);
 

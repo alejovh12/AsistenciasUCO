@@ -116,6 +116,10 @@ public final class DbExceptionTranslator {
             SesionErrorCode.SES_025,
             TomaAsistenciaErrorCode.TOM_003,
             TomaAsistenciaErrorCode.TOM_004,
+            TomaAsistenciaErrorCode.TOM_012,
+            AsistenciaErrorCode.ERR_TOMA_NO_RECLAMABLE,
+            AsistenciaErrorCode.ERR_RECLAMO_TOMA_DUPLICADO,
+            AsistenciaErrorCode.ERR_APROBACION_PRESENTE_SIN_TOMA,
             AsistenciaQrErrorCode.AQR_003,
             AsistenciaQrErrorCode.AQR_005,
             AsistenciaQrErrorCode.AQR_006,
@@ -144,6 +148,7 @@ public final class DbExceptionTranslator {
             AsistenciaErrorCode.ERR_SOPORTE_OBLIGATORIO_CATEGORIA,
             AsistenciaErrorCode.ERR_MAXIMO_SOPORTES_RECLAMO,
             AsistenciaErrorCode.ERR_SOPORTE_RECLAMO_DUPLICADO,
+            AsistenciaErrorCode.ERR_RESULTADO_APROBACION_INVALIDO,
             DocenteErrorCode.ERR_TIPO_VINCULACION_INVALIDO,
             DocenteErrorCode.ERR_MODO_VINCULACION_INVALIDO,
             DocenteErrorCode.ERR_BUSQUEDA_CANDIDATOS_CORTA,
@@ -175,7 +180,8 @@ public final class DbExceptionTranslator {
     private static final Set<ErrorDefinition> CODIGOS_CON_MENSAJE_DE_LA_DB = Set.of(
             AsistenciaErrorCode.ERR_PLAZO_JUSTIFICACION_VENCIDO,
             AsistenciaErrorCode.ERR_SOPORTE_OBLIGATORIO_CATEGORIA,
-            AsistenciaErrorCode.ERR_MAXIMO_SOPORTES_RECLAMO
+            AsistenciaErrorCode.ERR_MAXIMO_SOPORTES_RECLAMO,
+            TomaAsistenciaErrorCode.TOM_012
     );
 
     private static final Map<Set<ErrorDefinition>, ExceptionFactory> EXCEPTION_BY_CODES = Map.of(

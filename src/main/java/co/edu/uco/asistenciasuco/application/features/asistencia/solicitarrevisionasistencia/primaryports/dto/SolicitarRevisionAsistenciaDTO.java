@@ -13,6 +13,8 @@ public final class SolicitarRevisionAsistenciaDTO {
     private String justificacion;
     private List<UUID> soportes;
     private UUID usuario;
+    /** PC (puntos de control): toma reclamada; nulo es el reclamo de la sesion (legado). */
+    private UUID toma;
 
     public SolicitarRevisionAsistenciaDTO() {
         super();
@@ -30,6 +32,26 @@ public final class SolicitarRevisionAsistenciaDTO {
         setJustificacion(justificacion);
         setSoportes(soportes);
         setUsuario(usuario);
+    }
+
+    public SolicitarRevisionAsistenciaDTO(
+            final UUID sesion,
+            final UUID toma,
+            final String categoria,
+            final String justificacion,
+            final List<UUID> soportes,
+            final UUID usuario
+    ) {
+        this(sesion, categoria, justificacion, soportes, usuario);
+        setToma(toma);
+    }
+
+    public UUID getToma() {
+        return toma;
+    }
+
+    public void setToma(final UUID toma) {
+        this.toma = toma;
     }
 
     public UUID getSesion() {
