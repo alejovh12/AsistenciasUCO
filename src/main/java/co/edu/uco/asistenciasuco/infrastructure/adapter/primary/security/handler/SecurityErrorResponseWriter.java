@@ -46,6 +46,8 @@ public final class SecurityErrorResponseWriter {
     }
 
     private String safePath(final HttpServletRequest request) {
-        return SensitiveDataSanitizer.sanitizeForLog(request.getRequestURI(), 240);
+        final String sanitized = SensitiveDataSanitizer.sanitizeForLog(request.getRequestURI(), 240);
+        // sanitizeForLog devuelve null si el URI es null; el path reflejado nunca debe propagar null.
+        return sanitized == null ? "" : sanitized;
     }
 }

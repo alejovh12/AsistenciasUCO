@@ -6,7 +6,7 @@ se rechaza antes de tocar nada:
 
 1. el contenedor SQL lleva la etiqueta Docker `asistencias.e2e.disposable=true` (se fija en `docker run --label`);
 2. la base lleva la propiedad extendida `uco.e2e.disposable = 'true'` (se fija con `mark-disposable`, que a su vez exige 1);
-3. el backend bajo prueba tiene sesiones JDBC abiertas contra ESA base (si apuntara a otra, `POST /api/v1/usuarios`
+3. el backend bajo prueba tiene sesiones JDBC abiertas contra ESA base (si apuntara a otra, `POST /api/v1/admin/decanos`
    escribiría fuera de ella).
 
 El contenedor de desarrollo habitual (`sql_server_asistencias`, puerto host 1433, base `gestionasistenciadb`) está
@@ -290,6 +290,22 @@ def referencing_columns(target):
         "ON k.constraint_object_id = fk.object_id JOIN sys.tables t ON t.object_id = fk.parent_object_id "
         "JOIN sys.schemas s ON s.schema_id = t.schema_id JOIN sys.columns c ON c.object_id = k.parent_object_id "
         "AND c.column_id = k.parent_column_id WHERE fk.referenced_object_id = OBJECT_ID('dbo.Usuario')")]
+
+
+def delete_created_faculty(target, nombre, correo, existed_before):
+    """Elimina la Facultad que el alta de decano con `facultadNueva` creó para el E2E. Devuelve cuántas borró.
+
+    Va ANTES de `delete_created_user`: `Facultad.decano` referencia a `Decano`, que a su vez referencia al Usuario sintético.
+    Solo borra la facultad con ese nombre cuyo decano es el usuario sintético; nunca una facultad previa ni de otro decano.
+    """
+    if existed_before:
+        return 0
+    rows = target.rows(
+        "SELECT f.id FROM dbo.Facultad f JOIN dbo.Decano d ON d.id = f.decano JOIN dbo.Usuario u ON u.id = d.usuario "
+        f"WHERE f.nombre = {literal(nombre)} AND u.correo = {literal(correo)}")
+    for row in rows:
+        target.sql(f"DELETE FROM dbo.Facultad WHERE id = '{guid(row[0])}'")
+    return len(rows)
 
 
 def delete_created_user(target, correo, existed_before):

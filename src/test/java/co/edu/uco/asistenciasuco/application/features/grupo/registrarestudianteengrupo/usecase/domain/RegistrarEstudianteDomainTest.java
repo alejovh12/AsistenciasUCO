@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.domain;
 
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
-import co.edu.uco.asistenciasuco.application.features.usuario.crearusuario.usecase.domain.CrearUsuarioDomain;
+import co.edu.uco.asistenciasuco.application.features.usuario.domain.UsuarioRegistroDomain;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -22,7 +22,7 @@ class RegistrarEstudianteDomainTest {
     @Test
     void construye_domain_valido_y_normaliza_texto_igual_que_crear_usuario() {
         final RegistrarEstudianteDomain domain = domainValido();
-        final CrearUsuarioDomain usuario = CrearUsuarioDomain.crear(
+        final UsuarioRegistroDomain usuario = UsuarioRegistroDomain.crear(
                 TIPO_IDENTIFICACION,
                 123456789,
                 "  perez ",
@@ -181,7 +181,7 @@ class RegistrarEstudianteDomainTest {
     ) {
         final ValidationException crearUsuarioException = assertThrows(
                 ValidationException.class,
-                () -> CrearUsuarioDomain.crear(
+                () -> UsuarioRegistroDomain.crear(
                         tipoIdentificacionId,
                         numeroIdentificacion,
                         primerApellido,

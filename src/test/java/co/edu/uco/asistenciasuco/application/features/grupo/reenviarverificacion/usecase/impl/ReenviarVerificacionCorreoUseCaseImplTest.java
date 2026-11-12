@@ -7,8 +7,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notific
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.VerificacionCorreoRepositoryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.CrearUsuarioRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.CrearUsuarioRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.UsuarioIdentidadRepositoryProjection;
 import org.junit.jupiter.api.Test;
 
@@ -62,11 +60,6 @@ class ReenviarVerificacionCorreoUseCaseImplTest {
         return new UsuarioRepositoryPort() {
             @Override
             public Optional<String> consultarCorreoPorEstudiante(final UUID idEstudiante) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public CrearUsuarioRepositoryProjection crearUsuario(final CrearUsuarioRepositoryDTO dto) {
                 throw new UnsupportedOperationException();
             }
 

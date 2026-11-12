@@ -6,9 +6,6 @@ import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFound
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.PlanEstudioCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.PlanEstudioQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PlanEstudioProjection;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.CrearUsuarioRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.CrearUsuarioRepositoryProjection;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,15 +23,14 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * CC-003G-01 — certifica contra SQL Server real, SOLO a traves de los puertos de Application, los dos
- * proveedores publicos {@code dbo.usp_sincronizar_usuario} y {@code dbo.usp_registrar_o_actualizar_plan_estudio}:
- * exito, idempotencia, duplicados, autorizacion por ejecutor y mapeo de errores. Cada escenario corre en una
+ * CC-003G-01 — certifica contra SQL Server real, SOLO a traves de los puertos de Application, el proveedor
+ * publico {@code dbo.usp_registrar_o_actualizar_plan_estudio}: exito, idempotencia, duplicados, autorizacion
+ * por ejecutor y mapeo de errores. VAL ROL-05 (2026-11-12): el proveedor {@code dbo.usp_sincronizar_usuario}
+ * se retiro junto con {@code POST /api/v1/usuarios} (alta sin ambito), y con el sus escenarios. Cada escenario corre en una
  * transaccion que se revierte (no deja datos). Las fixtures se leen de la DB (programa con su coordinador
  * titular); si faltan, el test FALLA (no se omite con {@code assume}).
  *
@@ -53,9 +49,6 @@ class UsuarioPlanEstudioProvidersSqlServerIT {
     private PlanEstudioQueryPort planEstudioQueryPort;
 
     @Autowired
-    private UsuarioRepositoryPort usuarioRepositoryPort;
-
-    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     @Autowired
@@ -64,7 +57,6 @@ class UsuarioPlanEstudioProvidersSqlServerIT {
     private UUID programa;
     private UUID coordinador;
     private UUID estudiante;
-    private UUID tipoIdentificacion;
 
     @BeforeEach
     void cargarFixturesYCorrelacion() {
@@ -80,7 +72,6 @@ class UsuarioPlanEstudioProvidersSqlServerIT {
         programa = UUID.fromString(programaYCoordinador.get(0).split("\\|")[0]);
         coordinador = UUID.fromString(programaYCoordinador.get(0).split("\\|")[1]);
         estudiante = uuid("SELECT TOP 1 idUsuario FROM dbo.uv_estudiante_identidad WHERE estaActivoUsuario = 1 ORDER BY idUsuario");
-        tipoIdentificacion = uuid("SELECT TOP 1 id FROM dbo.uv_tipo_identificacion ORDER BY tipoIdentificacion");
     }
 
     @AfterEach
@@ -154,52 +145,6 @@ class UsuarioPlanEstudioProvidersSqlServerIT {
         });
     }
 
-    @Test
-    void usuario_alta_idempotente_y_duplicados_conservan_el_primer_registro_sin_exponer_el_password() {
-        final String sufijo = UUID.randomUUID().toString().replace("-", "");
-        final int numero = 800000000 + ThreadLocalRandom.current().nextInt(100000000);
-        final String correo = "it.cc003g01." + sufijo.substring(0, 20) + "@uco.edu.co";
-        final String hashOriginal = "{bcrypt}IT_CC003G01_HASH_ORIGINAL_" + sufijo;
-        final CrearUsuarioRepositoryDTO dtoDocumentoDuplicado =
-                dto(numero, "otro." + correo, "ANA", hashOriginal);
-        final CrearUsuarioRepositoryDTO dtoCorreoDuplicado =
-                dto(numero + 1, correo, "ANA", hashOriginal);
-        final CrearUsuarioRepositoryDTO dtoPerfilDistinto =
-                dto(numero, correo, "OTRA", hashOriginal);
-        transactionTemplate.executeWithoutResult(status -> {
-            final CrearUsuarioRepositoryProjection creado = usuarioRepositoryPort.crearUsuario(
-                    dto(numero, correo, "ANA", hashOriginal));
-            assertNotNull(creado.getUsuarioId(), "El alta debe quedar consultable por identificacion.");
-            assertEquals(hashOriginal, passwordPersistido(correo));
-
-            final CrearUsuarioRepositoryProjection reintento = usuarioRepositoryPort.crearUsuario(
-                    dto(numero, correo, "ANA", "{bcrypt}IT_CC003G01_HASH_REINTENTO_" + sufijo));
-            assertEquals(creado.getUsuarioId(), reintento.getUsuarioId(), "El reintento exacto devuelve el mismo usuario.");
-            assertEquals(hashOriginal, passwordPersistido(correo), "El reintento no debe tocar el password existente.");
-            assertEquals(1, usuariosCon(numero, correo));
-
-            final ConflictException porDocumento = assertThrows(ConflictException.class, () -> usuarioRepositoryPort.crearUsuario(
-                    dtoDocumentoDuplicado));
-            assertEquals("ERR_UNICIDAD_DOCUMENTO", porDocumento.getCode());
-
-            final ConflictException porCorreo = assertThrows(ConflictException.class, () -> usuarioRepositoryPort.crearUsuario(
-                    dtoCorreoDuplicado));
-            assertEquals("CONFLICT", porCorreo.getCode());
-
-            final ConflictException perfilDistinto = assertThrows(ConflictException.class, () -> usuarioRepositoryPort.crearUsuario(
-                    dtoPerfilDistinto));
-            assertEquals("ERR_UNICIDAD_DOCUMENTO", perfilDistinto.getCode());
-            assertNotEquals(0, usuariosCon(numero, correo));
-            assertEquals(1, usuariosCon(numero, correo), "Los rechazos no deben crear ni duplicar usuarios.");
-            status.setRollbackOnly();
-        });
-        assertEquals(0, usuariosCon(numero, correo), "La transaccion del test debia revertirse.");
-    }
-
-    private CrearUsuarioRepositoryDTO dto(final int numero, final String correo, final String nombre, final String password) {
-        return new CrearUsuarioRepositoryDTO(tipoIdentificacion, numero, "PEREZ", "GOMEZ", nombre, "MARIA", correo, password);
-    }
-
     private String inpDelPlan(final UUID plan) {
         final List<PlanEstudioProjection> planes = planEstudioQueryPort.consultarPlanesPorPrograma(programa);
         final List<String> inps = planes.stream().filter(p -> plan.equals(p.id())).map(PlanEstudioProjection::inp).toList();
@@ -213,19 +158,6 @@ class UsuarioPlanEstudioProvidersSqlServerIT {
 
     private int planesConId(final UUID plan) {
         return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM dbo.uv_plan_estudio WHERE id = ?", Integer.class, plan.toString());
-    }
-
-    private int usuariosCon(final int numero, final String correo) {
-        return jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM dbo.uv_usuario WHERE numeroIdentificacion = ? OR correo = ?",
-                Integer.class, numero, correo);
-    }
-
-    private String passwordPersistido(final String correo) {
-        final String password = jdbcTemplate.queryForObject(
-                "SELECT password FROM dbo.uv_usuario_autenticacion WHERE correo = ?", String.class, correo);
-        assertTrue(password != null && !password.isBlank());
-        return password;
     }
 
     private UUID uuid(final String sql) {

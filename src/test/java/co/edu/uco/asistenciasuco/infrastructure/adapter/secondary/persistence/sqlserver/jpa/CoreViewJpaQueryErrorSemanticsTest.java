@@ -52,7 +52,7 @@ class CoreViewJpaQueryErrorSemanticsTest {
                         mock(org.springframework.transaction.support.TransactionOperations.class),
                         new JpaProcedureExecutor(entityManager)).consultarGrupos(UUID.randomUUID()));
         assertThrows(DatabaseOperationException.class,
-                () -> new UsuarioJpaRepository(entityManager, new JpaProcedureExecutor(entityManager))
+                () -> new UsuarioJpaRepository(entityManager)
                         .consultarUsuarioPorId(UUID.randomUUID()));
         assertThrows(DatabaseOperationException.class,
                 () -> new DocenteJpaRepository(entityManager).consultarDocentes());

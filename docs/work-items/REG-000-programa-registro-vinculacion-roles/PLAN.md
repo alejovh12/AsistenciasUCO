@@ -146,7 +146,7 @@ Formato de fila del catálogo: `| ID | Título | DB | Backend | Frontend | Estad
 | `ufn_obtener_parametro_guid(@x, 'GENERAL', 'GUID_DEFECTO_CORRELACION')` reemplaza `NULL` por un GUID por defecto (va contra la regla "evaluar `@parametro IS NULL`") | `usp_crear_programa_academico` y otros | A (y quien toque cada SP) |
 | `usp_crear_decano`: resuelve la facultad por nombre con `LIKE`, el tipo de documento siempre es `CC` y no valida que la facultad exista | `schema/stored-procedures/usp_crear_decano.sql` | F / G |
 | RBAC por `nombrePerfil LIKE %valor%` | `usp_validar_permiso_rbac_usuario_interno` | E |
-| Contraseña por defecto de coordinador `UcoCoord_<doc>!` cuando viene vacía | `CrearCoordinadorUseCaseImpl` | H (ver DA-5: la contraseña debe venir siempre en la creación) |
+| Contraseña por defecto de coordinador plantilla retirada; ver historial cuando viene vacía | `CrearCoordinadorUseCaseImpl` | H (ver DA-5: la contraseña debe venir siempre en la creación) |
 | TD-013 (aprovisionamiento incompleto y sin política), TD-014 (`emailVerified=true`), TD-015 (sin reconciliación DB↔Keycloak) | `docs/baseline/TECHNICAL_DEBT.md` | E (TD-013 docente → B) |
 | Programas quemados en el front | `CatalogService.getProgramasAcademicos()` | A |
 | Ruta del toggle de coordinador: front `…/toggle`, back `…/estado` | `dean-management.service.ts:79` vs `DecanoPortalController` | H |

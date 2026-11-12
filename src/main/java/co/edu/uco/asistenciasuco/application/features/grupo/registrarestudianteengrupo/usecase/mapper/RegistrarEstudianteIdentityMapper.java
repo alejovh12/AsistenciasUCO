@@ -9,8 +9,8 @@ import java.util.Objects;
 
 /**
  * Mapper entre el dominio de registrar estudiante en grupo y el contrato del proveedor de
- * identidad. Es propio de esta feature — no reutiliza el mapper de {@code provisionarusuario}
- * para no acoplar dominios de features distintas.
+ * identidad. Es propio de esta feature para no acoplar dominios de features distintas (el antiguo
+ * {@code provisionarusuario} se retiro con {@code POST /api/v1/usuarios}, VAL ROL-05).
  */
 public final class RegistrarEstudianteIdentityMapper {
 
