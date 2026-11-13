@@ -1,0 +1,3 @@
+# VAL-oleada3-baul-secretos (SEC-02): secretos de ejecucion desde el baul cuando app.adapters.vault.provider=azure_keyvault.
+org.springframework.boot.EnvironmentPostProcessor=\
+co.edu.uco.asistenciasuco.infrastructure.config.adapters.vault.runtime.VaultRuntimeSecretsEnvironmentPostProcessor

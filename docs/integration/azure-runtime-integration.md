@@ -3,7 +3,7 @@ status: active
 type: normative
 scope: backend
 owner: backend-team
-last-reviewed: 2026-09-26
+last-reviewed: 2026-11-13
 ---
 
 # Azure Runtime Integration
@@ -84,6 +84,17 @@ Key Vault contiene conceptualmente secretos de infraestructura y configuración 
 - invalida la entrada local ante respuestas 401/403 antes de propagar el fallo;
 - soporta invalidación específica y total.
 
+Secretos de ejecución (VAL-oleada3-baul-secretos, SEC-02): con `app.adapters.vault.provider=azure_keyvault`,
+`VaultRuntimeSecretsEnvironmentPostProcessor` lee al arrancar, por `SecretVaultPort`, los secretos de
+`RuntimeSecretCatalog` (BD, Keycloak, PDP/PEP, MinIO, SMTP, webhook) y los antepone a las demás fuentes; un secreto
+ausente cae a su variable de entorno y un fallo técnico detiene el arranque. Inventario en
+[SECRETS_INVENTORY](../security/SECRETS_INVENTORY.md) y rotación en
+[SECRETS_ROTATION_RUNBOOK](../security/SECRETS_ROTATION_RUNBOOK.md).
+
+Endpoints (SEC-12): `AZURE_KEYVAULT_ENDPOINT` y `AZURE_APPCONFIG_ENDPOINT` no tienen valor por defecto. Con un proveedor
+Azure activo y el endpoint vacío, el arranque falla con un mensaje que nombra la variable. Los perfiles `local` y `dev`
+usan por defecto `local_env` y catálogos `sqlserver`.
+
 ## 7. App Configuration — Parameters
 
 App Configuration contiene parámetros funcionales/configurables y claves de configuración no secretas. La convención efectiva del adapter es `grupo:clave`, construida desde ambos argumentos. Ejemplo público permitido: `asistencias:asistencia:tolerancia-minutos`, resultante de grupo `asistencias:asistencia` y clave `tolerancia-minutos`.
@@ -159,7 +170,7 @@ Endpoints y opciones del provider viven bajo `app.providers.*`; no se mezclan co
 
 ## 14. Local/dev workflow
 
-1. Seleccionar providers explícitos o conservar los defaults conocidos.
+1. Seleccionar providers explícitos; sin variables, los perfiles `local`/`dev` usan `local_env` y `sqlserver` (sin Azure).
 2. Configurar endpoints por variables de entorno sin copiar valores sensibles a documentos.
 3. Autenticarse mediante un mecanismo soportado por `DefaultAzureCredential` y con permisos mínimos.
 4. Ejecutar unit/component tests sin depender de Azure real.

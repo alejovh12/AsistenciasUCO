@@ -16,6 +16,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 /**
  * Composition Root del catalogo de mensajes sobre MessageUcoLab.
@@ -25,10 +26,12 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(prefix = "app.adapters.message-catalog", name = "provider", havingValue = "messageucolab")
-@EnableConfigurationProperties({MessageUcoLabProviderProperties.class, AzureAppConfigProviderProperties.class})
+// SEC-12: AzureAppConfigProviderProperties no se registra aqui; el endpoint solo se exige si la contingencia es azure.
+@EnableConfigurationProperties(MessageUcoLabProviderProperties.class)
 public class MessageUcoLabMessageCatalogAdapterConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageUcoLabMessageCatalogAdapterConfiguration.class);
+    private static final String PROPIEDAD_ENDPOINT_APPCONFIG = "app.providers.azure-appconfig.endpoint";
 
     // Sin @Primary: los tres proveedores (azure, sqlserver, messageucolab) son mutuamente excluyentes por
     // @ConditionalOnProperty, asi que en ejecucion solo existe un MessageCatalogPort. Un segundo @Primary (el de Azure ya lo
@@ -37,10 +40,11 @@ public class MessageUcoLabMessageCatalogAdapterConfiguration {
     public MessageCatalogPort messageUcoLabMessageCatalogPort(
             final MessageReader messageReader,
             final MessageUcoLabProviderProperties properties,
-            final AzureAppConfigProviderProperties azureProperties
+            final Environment environment
     ) {
         final MessageCatalogPort fallback = properties.fallback() == MessageUcoLabProviderProperties.Fallback.AZURE
-                ? azureFallback(azureProperties)
+                ? azureFallback(new AzureAppConfigProviderProperties(
+                        environment.getProperty(PROPIEDAD_ENDPOINT_APPCONFIG, "")))
                 : null;
         LOGGER.info("Catalogo de mensajes activo: MessageUcoLab (timeout={}, cacheTtl={}, contingencia={}, alias={})",
                 properties.timeout(), properties.cacheTtl(), properties.fallback(), properties.codeAliases().size());
