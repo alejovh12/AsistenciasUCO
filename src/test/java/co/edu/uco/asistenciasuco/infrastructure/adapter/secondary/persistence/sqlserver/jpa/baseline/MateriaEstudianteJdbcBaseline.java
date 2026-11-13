@@ -21,7 +21,8 @@ public final class MateriaEstudianteJdbcBaseline implements MateriaEstudianteQue
     @Override
     public List<MateriaEstudianteProjection> consultarMateriasEstudiante(final UUID idEstudiante) {
         return jdbcOperations.query("""
-                SELECT DISTINCT a.id AS idAsignatura, a.nombre AS nombreAsignatura, g.id AS idGrupo, g.nombre AS nombreGrupo
+                SELECT DISTINCT a.id AS idAsignatura, a.nombre AS nombreAsignatura, g.id AS idGrupo, g.nombre AS nombreGrupo,
+                       a.credito AS creditos
                 FROM dbo.uv_estudiante_grupo eg
                 INNER JOIN dbo.uv_grupo g ON g.id = eg.idGrupo
                 INNER JOIN dbo.uv_asignatura a ON a.id = g.idAsignatura
@@ -31,7 +32,9 @@ public final class MateriaEstudianteJdbcBaseline implements MateriaEstudianteQue
                 JdbcBaselineValueMapper.toUuid(rs.getObject("idAsignatura")),
                 JdbcBaselineValueMapper.toString(rs.getObject("nombreAsignatura")),
                 JdbcBaselineValueMapper.toUuid(rs.getObject("idGrupo")),
-                JdbcBaselineValueMapper.toString(rs.getObject("nombreGrupo"))
+                JdbcBaselineValueMapper.toString(rs.getObject("nombreGrupo")),
+                // CULM-001 D.9-a (F-EST-006): el SP productivo devuelve los creditos de la asignatura como quinta columna.
+                JdbcBaselineValueMapper.toInteger(rs.getObject("creditos"))
         ));
     }
 }

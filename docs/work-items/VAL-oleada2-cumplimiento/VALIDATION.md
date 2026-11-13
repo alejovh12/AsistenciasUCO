@@ -92,6 +92,8 @@ Las IT de la tabla anterior quedan en cuarentena con `@Tag("cuarentena-oleada3")
 
 Correr las IT en cuarentena localmente (con la BD y fixtures listas): `.\mvnw.cmd -Pintegration verify -Dfailsafe.excludedGroups=` (vacío = no excluye nada). Solo las de cuarentena: `-Dfailsafe.excludedGroups= -Dgroups=cuarentena-oleada3`.
 
+> **Actualización (oleada 3, 2026-11-13):** las 12 IT se corrigieron y ya no llevan la etiqueta; el gate las corre todas. Causas, arreglos y evidencia en `docs/work-items/VAL-oleada3-pru04/`.
+
 Nota: no se tenían los reportes de Failsafe del último run completo, así que las clases en las que no se identificó el método exacto se pusieron en cuarentena a nivel de clase (incluye métodos que hoy pasan). Al corregirlas en la oleada 3 conviene bajar la etiqueta al método real.
 
 | IT | Nivel de la etiqueta | Causa | Área / responsable | Plan oleada 3 |

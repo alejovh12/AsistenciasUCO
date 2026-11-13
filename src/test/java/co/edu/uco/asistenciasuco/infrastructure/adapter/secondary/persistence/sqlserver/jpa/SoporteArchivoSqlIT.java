@@ -45,8 +45,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * fixture marcado {@code IT-LB0022D-}; los soportes y solicitudes que crea se eliminan en {@code @AfterEach}.
  */
 @Tag("integration")
-// Cuarentena: la proyeccion devuelve UTC_V2 en vez de null. VAL-PRU-04, se corrige en oleada 3.
-@Tag("cuarentena-oleada3")
 @SpringBootTest
 @MockitoBean(types = JwtDecoder.class)
 class SoporteArchivoSqlIT {
@@ -250,9 +248,12 @@ class SoporteArchivoSqlIT {
         assertEquals("application/pdf", conSoporte.tipoContenidoSoporte());
         assertEquals(77L, conSoporte.tamanioSoporteBytes());
         assertNotNull(conSoporte.fechaRegistroSoporteUtc());
-        // Las sesiones del fixture son historicas (v1): sin procedencia temporal no se afirma ningun instante UTC.
-        assertNull(conSoporte.procedenciaTemporalSesion());
-        assertNull(conSoporte.fechaHoraInicioSesionUtc());
+        // SES-01: el fixture crea la sesion con el contrato v2 (UTC confirmado): la bandeja expone la procedencia y el
+        // instante UTC exacto de inicio (literal del DATETIME2, sin desplazamiento).
+        assertEquals("UTC_V2", conSoporte.procedenciaTemporalSesion());
+        final String inicioSql = jdbc.queryForObject(
+                "SELECT CONVERT(varchar(27), fechaHoraInicio, 126) FROM dbo.Sesion WHERE id = ?", String.class, sesion.toString());
+        assertEquals(LocalDateTime.parse(inicioSql).toInstant(ZoneOffset.UTC), conSoporte.fechaHoraInicioSesionUtc());
         assertTrue(conSoporte.totalRegistros() >= 2);
 
         final List<SolicitudRevisionDocenteProjection> primera = reclamosPort.consultarSolicitudesDocente(docenteTitular, "P", 1, 1);

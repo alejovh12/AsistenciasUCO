@@ -1,7 +1,9 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver;
 
+import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -46,7 +48,7 @@ public final class TomaQrCargaFixture {
     }
 
     public TomaQrCargaFixture crear(final int cantidadGrupos, final int estudiantesPorGrupo) {
-        jdbc.execute("""
+        ejecutarLote("""
                 SET NOCOUNT ON;
                 SET XACT_ABORT ON;
                 DECLARE @tag NVARCHAR(40) = N'%1$s';
@@ -124,19 +126,25 @@ public final class TomaQrCargaFixture {
     }
 
     public void limpiar() {
-        jdbc.execute("""
+        ejecutarLote("""
                 SET NOCOUNT ON;
                 SET XACT_ABORT ON;
                 DECLARE @tag NVARCHAR(40) = N'%1$s';
                 DECLARE @g TABLE (id UNIQUEIDENTIFIER);
                 INSERT INTO @g SELECT id FROM dbo.Grupo WHERE nombre LIKE CONCAT(@tag, N' G%%');
                 BEGIN TRANSACTION;
+                DELETE sr FROM dbo.SolicitudRevisionAsistencia sr INNER JOIN dbo.Asistencia a ON a.id = sr.asistencia INNER JOIN dbo.Sesion s ON s.id = a.sesion WHERE s.grupo IN (SELECT id FROM @g);
                 DELETE da FROM dbo.DetalleAsistencia da INNER JOIN dbo.TomaAsistencia t ON t.id = da.toma INNER JOIN dbo.Sesion s ON s.id = t.sesion WHERE s.grupo IN (SELECT id FROM @g);
                 DELETE tk FROM dbo.TokenAsistenciaToma tk INNER JOIN dbo.TomaAsistencia t ON t.id = tk.toma INNER JOIN dbo.Sesion s ON s.id = t.sesion WHERE s.grupo IN (SELECT id FROM @g);
                 DELETE t FROM dbo.TomaAsistencia t INNER JOIN dbo.Sesion s ON s.id = t.sesion WHERE s.grupo IN (SELECT id FROM @g);
                 DELETE sc FROM dbo.SesionCancelacion sc INNER JOIN dbo.Sesion s ON s.id = sc.sesion WHERE s.grupo IN (SELECT id FROM @g);
                 DELETE ss FROM dbo.SesionSolicitud ss INNER JOIN dbo.Sesion s ON s.id = ss.sesion WHERE s.grupo IN (SELECT id FROM @g);
                 DELETE a FROM dbo.Asistencia a INNER JOIN dbo.Sesion s ON s.id = a.sesion WHERE s.grupo IN (SELECT id FROM @g);
+                -- VAL-PRU-04: el motor de alertas (DEC-065) escribe evaluaciones, alertas y revisiones de cancelacion de los grupos.
+                DELETE h FROM dbo.RevisionCancelacionHistorial h INNER JOIN dbo.RevisionCancelacion r ON r.id = h.revision INNER JOIN dbo.EstudianteGrupo eg ON eg.id = r.estudianteGrupo WHERE eg.grupo IN (SELECT id FROM @g);
+                DELETE r FROM dbo.RevisionCancelacion r INNER JOIN dbo.EstudianteGrupo eg ON eg.id = r.estudianteGrupo WHERE eg.grupo IN (SELECT id FROM @g);
+                DELETE al FROM dbo.AlertaInasistencia al INNER JOIN dbo.EstudianteGrupo eg ON eg.id = al.estudianteGrupo WHERE eg.grupo IN (SELECT id FROM @g);
+                DELETE FROM dbo.EvaluacionAlertaGrupo WHERE grupo IN (SELECT id FROM @g);
                 DELETE FROM dbo.Sesion WHERE grupo IN (SELECT id FROM @g);
                 DELETE FROM dbo.EstudianteGrupo WHERE grupo IN (SELECT id FROM @g);
                 DELETE FROM dbo.Grupo WHERE id IN (SELECT id FROM @g);
@@ -148,5 +156,23 @@ public final class TomaQrCargaFixture {
                 SET XACT_ABORT OFF;
                 SET NOCOUNT OFF;
                 """.formatted(etiqueta));
+    }
+
+    /**
+     * VAL-PRU-04: ejecuta un lote T-SQL y SIEMPRE restaura {@code NOCOUNT}/{@code XACT_ABORT} de la conexion, aunque el lote falle
+     * a mitad. Antes, un lote abortado devolvia la conexion al pool con {@code NOCOUNT ON} y el siguiente INSERT de Hibernate que la
+     * reutilizaba fallaba con "Unexpected row count (-1)" (sintoma visto en {@code AuditEventJpaParityIT}).
+     */
+    private void ejecutarLote(final String sql) {
+        jdbc.execute((ConnectionCallback<Void>) connection -> {
+            try (Statement statement = connection.createStatement()) {
+                statement.execute(sql);
+            } finally {
+                try (Statement reset = connection.createStatement()) {
+                    reset.execute("SET XACT_ABORT OFF; SET NOCOUNT OFF;");
+                }
+            }
+            return null;
+        });
     }
 }

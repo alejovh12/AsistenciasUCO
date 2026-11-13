@@ -62,8 +62,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * {@code EstudiantePrograma} no figura aqui: {@code BLOCKED_BY_VIEW_IDENTITY}.</p>
  */
 @Tag("integration")
-// Cuarentena: datos esperados distintos de la seed actual. VAL-PRU-04, se corrige en oleada 3.
-@Tag("cuarentena-oleada3")
 @SpringBootTest
 @MockitoBean(types = JwtDecoder.class)
 class AcademicQueryJpaParityIT {

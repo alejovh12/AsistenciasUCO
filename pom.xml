@@ -436,7 +436,8 @@
         <profile>
             <id>integration</id>
             <properties>
-                <!-- VAL-PRU-04: ITs con deuda previa en cuarentena hasta la oleada 3. Para correrlas: -Dfailsafe.excludedGroups= -->
+                <!-- VAL-PRU-04: mecanismo de cuarentena explicita. La oleada 3 corrigio las 12 IT que la usaban y hoy ninguna
+                     lleva @Tag("cuarentena-oleada3"), asi que el gate corre todas. Para incluir una IT etiquetada: -Dfailsafe.excludedGroups= -->
                 <failsafe.excludedGroups>cuarentena-oleada3</failsafe.excludedGroups>
             </properties>
             <build>

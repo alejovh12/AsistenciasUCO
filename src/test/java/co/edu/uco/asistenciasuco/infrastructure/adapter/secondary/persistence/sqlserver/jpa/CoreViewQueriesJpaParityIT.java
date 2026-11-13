@@ -36,8 +36,6 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
  * ambos lados compartan la implementacion bajo prueba.
  */
 @Tag("integration")
-// Cuarentena: la fixture requiere al menos 11 estudiantes. VAL-PRU-04, se corrige en oleada 3.
-@Tag("cuarentena-oleada3")
 @SpringBootTest
 @MockitoBean(types = JwtDecoder.class)
 class CoreViewQueriesJpaParityIT {
