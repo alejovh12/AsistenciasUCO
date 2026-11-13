@@ -45,6 +45,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * fixture marcado {@code IT-LB0022D-}; los soportes y solicitudes que crea se eliminan en {@code @AfterEach}.
  */
 @Tag("integration")
+// Cuarentena: la proyeccion devuelve UTC_V2 en vez de null. VAL-PRU-04, se corrige en oleada 3.
+@Tag("cuarentena-oleada3")
 @SpringBootTest
 @MockitoBean(types = JwtDecoder.class)
 class SoporteArchivoSqlIT {

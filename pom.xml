@@ -435,6 +435,10 @@
     <profiles>
         <profile>
             <id>integration</id>
+            <properties>
+                <!-- VAL-PRU-04: ITs con deuda previa en cuarentena hasta la oleada 3. Para correrlas: -Dfailsafe.excludedGroups= -->
+                <failsafe.excludedGroups>cuarentena-oleada3</failsafe.excludedGroups>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
@@ -444,6 +448,7 @@
                             <systemPropertyVariables>
                                 <spring.config.name>application-integration</spring.config.name>
                             </systemPropertyVariables>
+                            <excludedGroups>${failsafe.excludedGroups}</excludedGroups>
                             <includes>
                                 <include>**/*IT.java</include>
                             </includes>

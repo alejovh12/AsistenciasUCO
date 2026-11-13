@@ -86,4 +86,25 @@ Se desplegó el esquema de `origin/develop` de BD (exportado con `git archive` a
 | `AcademicQueryJpaParityIT` (2), `EstudianteAcademicFilterJpaParityIT`, `CoreViewQueriesJpaParityIT`, `AcademicUserCommandsSuccessParityIT` (2), `AvisoDocenteUmbralCancelacionIT` | datos esperados distintos o fixture insuficiente | Seed/fixtures cambiaron (DB-DEV consolidation) |
 | `AuditEventJpaParityIT` (2) | `Unexpected row count (-1)` en el insert JPA de `AuditoriaEvento` | El row count de SQL Server no llega al insert JPA (se debe revisar en la BD) |
 
-Mientras estas IT no se corrijan, el `Backend Integration Gate` seguirá rojo. Hay que decidir si se corrigen por dominio o se ponen en cuarentena explícita.
+### Cuarentena explícita (decisión de John, 2026-11-12)
+
+Las IT de la tabla anterior quedan en cuarentena con `@Tag("cuarentena-oleada3")` y un comentario `VAL-PRU-04, se corrige en oleada 3`. El perfil `integration` del `pom.xml` define `failsafe.excludedGroups=cuarentena-oleada3` y lo pasa a Failsafe como `excludedGroups`, así que el `Backend Integration Gate` las excluye y todas las demás IT siguen corriendo y bloqueando. Surefire (pruebas unitarias) no se ve afectado: la propiedad solo vive en el perfil `integration` y solo la lee Failsafe. La cuarentena no oculta la deuda: se corrige en la oleada 3 y entonces se quita la etiqueta.
+
+Correr las IT en cuarentena localmente (con la BD y fixtures listas): `.\mvnw.cmd -Pintegration verify -Dfailsafe.excludedGroups=` (vacío = no excluye nada). Solo las de cuarentena: `-Dfailsafe.excludedGroups= -Dgroups=cuarentena-oleada3`.
+
+Nota: no se tenían los reportes de Failsafe del último run completo, así que las clases en las que no se identificó el método exacto se pusieron en cuarentena a nivel de clase (incluye métodos que hoy pasan). Al corregirlas en la oleada 3 conviene bajar la etiqueta al método real.
+
+| IT | Nivel de la etiqueta | Causa | Área / responsable | Plan oleada 3 |
+|---|---|---|---|---|
+| `AsistenciaRepositorySqlServerIT` (3 métodos) | clase | "El horario de la sesión no está confirmado" | Sesiones, José Alejandro | Fixture con sesiones de horario confirmado (CULM-001) |
+| `JpaAttendanceStoredProcedureFeasibilityIT` (5) | clase | El SP no completa; mismo horario sin confirmar | Sesiones, José Alejandro | Igual que la anterior |
+| `TomaAsistenciaQrSqlServerIT` (1) | clase (un solo método) | Esperado 4, real 20 | QR, Sergio | Ajustar a la regla de tomas por puntos de control |
+| `AsistenciaCommandsSpParityIT.RES_01` | método | `ConflictException` al aprobar | Equipo (reclamos con tomas/horario) | Fixture con tomas y horario |
+| `SoporteArchivoSqlIT` (1) | clase | `UTC_V2` en vez de `null` | Equipo | Alinear la proyección o el valor esperado |
+| `SolicitudRevisionDocenteDetalleSqlIT` (1) | clase | Campos del detalle distintos | Equipo | Alinear el detalle con las proyecciones actuales |
+| `AcademicQueryJpaParityIT` (2) | clase | Datos esperados distintos de la seed | Equipo | Reajustar a la seed consolidada |
+| `EstudianteAcademicFilterJpaParityIT` (1) | clase | Ídem | Equipo | Ídem |
+| `CoreViewQueriesJpaParityIT` (1) | clase | La fixture necesita al menos 11 estudiantes | Equipo | Ampliar la fixture |
+| `AcademicUserCommandsSuccessParityIT` (2) | clase | Datos esperados distintos | Equipo | Reajustar a la seed |
+| `AvisoDocenteUmbralCancelacionIT` (1) | clase (un solo método) | La fixture no tiene la matrícula correspondiente | Equipo | Completar la fixture |
+| `AuditEventJpaParityIT` (2) | clase | `Unexpected row count (-1)` en el insert JPA | Equipo, con BD | Revisar el row count de SQL Server en el insert JPA |

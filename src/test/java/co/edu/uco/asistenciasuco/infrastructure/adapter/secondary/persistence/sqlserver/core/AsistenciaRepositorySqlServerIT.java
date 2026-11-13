@@ -55,6 +55,8 @@ import static org.junit.jupiter.api.Assertions.fail;
  * {@link #limpiarFixture()} aunque una asercion falle.</p>
  */
 @Tag("integration")
+// Cuarentena: El horario de la sesion no esta confirmado (fixture sin horario confirmado). VAL-PRU-04, se corrige en oleada 3.
+@Tag("cuarentena-oleada3")
 @SpringBootTest
 @MockitoBean(types = JwtDecoder.class)
 class AsistenciaRepositorySqlServerIT {

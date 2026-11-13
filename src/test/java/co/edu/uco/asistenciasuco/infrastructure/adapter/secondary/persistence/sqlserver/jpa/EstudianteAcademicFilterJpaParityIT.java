@@ -29,6 +29,8 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
  * no ejercita. El oraculo es SQL directo de solo lectura; no reutiliza el adapter bajo prueba.
  */
 @Tag("integration")
+// Cuarentena: datos esperados distintos de la seed actual. VAL-PRU-04, se corrige en oleada 3.
+@Tag("cuarentena-oleada3")
 @SpringBootTest
 @MockitoBean(types = JwtDecoder.class)
 class EstudianteAcademicFilterJpaParityIT {
