@@ -3,11 +3,17 @@
     [string]$Keycloak = 'http://127.0.0.1:8081',
     [string]$SqlContainer = 'sql_docentes',
     [string]$SqlPassword = $env:MSSQL_SA_PASSWORD,
+    [string]$UserPassword = $env:E2E_USER_PASSWORD,
+    [string]$DocentePassword = $env:E2E_DOCENTE_PASSWORD,
     [string]$Documento = '960091001',
     [string]$Correo = 'e2e.hu091.docente@uco.edu.co'
 )
 # E2E HU062/HU063/HU089/HU090/HU091 con JWT real (Keycloak) contra un backend en otro puerto y SQL propio.
 $ErrorActionPreference = 'Stop'
+# Las contrasenas se leen del entorno; el script no trae valores por defecto.
+if ([string]::IsNullOrEmpty($SqlPassword)) { throw 'Falta la variable de entorno MSSQL_SA_PASSWORD (ver scratch/README.md).' }
+if ([string]::IsNullOrEmpty($UserPassword)) { throw 'Falta la variable de entorno E2E_USER_PASSWORD (ver scratch/README.md).' }
+if ([string]::IsNullOrEmpty($DocentePassword)) { throw 'Falta la variable de entorno E2E_DOCENTE_PASSWORD (ver scratch/README.md).' }
 function Get-Token($user, $pass) {
     (Invoke-RestMethod -Uri "$Keycloak/realms/asistencias-uco/protocol/openid-connect/token" -Method Post -Body @{
         client_id = 'asistencias-uco-frontend'; grant_type = 'password'; username = $user; password = $pass }).access_token
@@ -28,8 +34,8 @@ function Call($method, $path, $token, $body) {
 function Assert($cond, $msg) { if (-not $cond) { throw "E2E FAILED: $msg" } else { Write-Host "OK  $msg" -ForegroundColor Green } }
 function Sql($q) { (docker exec $SqlContainer /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $SqlPassword -C -d gestionasistenciadb -h -1 -W -Q "SET NOCOUNT ON; $q" | Out-String).Trim() }
 
-$coord = Get-Token 'coordinador.sistemas@uco.edu.co' 'Test1234!'
-$decano = Get-Token 'decano.ingenieria@uco.edu.co' 'Test1234!'
+$coord = Get-Token 'coordinador.sistemas@uco.edu.co' $UserPassword
+$decano = Get-Token 'decano.ingenieria@uco.edu.co' $UserPassword
 
 $tipos = Call GET '/tipos-vinculacion' $coord $null
 Assert ($tipos.status -eq 200 -and $tipos.body.Count -ge 4) 'GET /tipos-vinculacion devuelve el catalogo activo'
@@ -41,13 +47,13 @@ $lista = Call GET '/coordinador/docentes?pagina=1&tamano=5' $coord $null
 Assert ($lista.status -eq 200 -and $lista.body.exitoso) 'GET /coordinador/docentes responde 200 (antes 501)'
 
 $nuevo = @{ idTipoIdentificacion = $tipoCC; numeroIdentificacion = $Documento; primerNombre = 'Eduardo'; primerApellido = 'Prueba';
-            correo = $Correo; password = 'Docente2026!'; idTipoVinculacion = $cat }
+            correo = $Correo; password = $DocentePassword; idTipoVinculacion = $cat }
 $r1 = Call POST '/coordinador/docentes' $coord $nuevo
 Assert ($r1.status -eq 201) "POST modo nuevo responde 201 (obtuvo $($r1.status))"
 $idDocente = $r1.body.datos.idDocente
 Assert ($r1.body.datos.codigoTipoVinculacion -eq 'CAT' -and $r1.body.datos.totalGruposPrograma -eq 0) 'El docente aparece con CAT y 0 grupos'
 
-$login = Get-Token $Correo 'Docente2026!'
+$login = Get-Token $Correo $DocentePassword
 Assert ([bool]$login) 'El docente nuevo inicia sesion en Keycloak con la contrasena asignada'
 $seg = $login.Split('.')[1].Replace('-', '+').Replace('_', '/')
 while ($seg.Length % 4 -ne 0) { $seg += '=' }

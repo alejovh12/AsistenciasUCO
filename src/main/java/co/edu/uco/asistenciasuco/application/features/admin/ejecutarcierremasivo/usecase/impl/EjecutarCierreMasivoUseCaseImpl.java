@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.alertainasistencia.common.EvaluadorAlertasInasistencia;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.usecase.EjecutarCierreMasivoUseCase;
@@ -56,7 +57,7 @@ public final class EjecutarCierreMasivoUseCaseImpl implements EjecutarCierreMasi
     @Override
     public void execute(final EjecutarCierreMasivoDomain domain) {
         final var periodo = periodoAcademicoQueryPort.consultarPeriodoAcademicoPorId(domain.getIdPeriodoAcademico())
-                .orElseThrow(() -> new ResourceNotFoundException("El periodo academico indicado no existe."));
+                .orElseThrow(() -> new ResourceNotFoundException(MensajeUsuarioErrorCode.PER_001));
         final String codigoPeriodo = EjecutarCierreMasivoRepositoryMapper.toCodigoPeriodo(periodo);
         evaluador.evaluarPeriodoYAvisar(domain.getIdPeriodoAcademico());
         cierrePeriodoCommandPort.ejecutarCierreMasivoPeriodo(

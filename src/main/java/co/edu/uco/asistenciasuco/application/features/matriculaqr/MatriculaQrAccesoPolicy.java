@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.matriculaqr;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.matriculaqr.exception.MatriculaQrErrorCode;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.network.RedInstitucionalPort;
@@ -31,7 +32,7 @@ public final class MatriculaQrAccesoPolicy {
                 .map(valor -> Boolean.parseBoolean(valor.strip()))
                 .orElse(false);
         if (!habilitada) {
-            throw new ResourceNotFoundException("La matrícula por código no está disponible en este momento.");
+            throw new ResourceNotFoundException(MensajeUsuarioErrorCode.NOF_APP_011);
         }
     }
 

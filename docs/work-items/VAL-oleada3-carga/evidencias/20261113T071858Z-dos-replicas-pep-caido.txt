@@ -1,0 +1,21 @@
+﻿# VAL-oleada3 carga: dos-replicas-pep-caido
+fecha_utc=20261113T071858Z
+k6_image=grafana/k6:1.3.0@sha256:3ddc8b1a33a2c3d8edc6e99b6a762ae36cba08788463458f5e6a7703e14eb77d
+base_url=http://host.docker.internal:8088 modo=dependencia-caida vus=10 duracion=40s rampa=5s think_ms=1000
+k6_exit_code=99 (0 = todos los umbrales cumplen; 99 = algun umbral falla)
+reparto http://host.docker.internal:8080 status=200 peticiones=25
+reparto http://host.docker.internal:8080 status=503 peticiones=209
+reparto http://host.docker.internal:8082 status=200 peticiones=24
+reparto http://host.docker.internal:8082 status=503 peticiones=209
+
+## salida k6
+modo=dependencia-caida base=http://host.docker.internal:8088 vus=10 duracion=40s
+http_reqs={"count":467,"rate":8.630919274436453}
+http_req_failed={"rate":0.10492505353319058,"passes":49,"fails":418}
+http_req_duration={"p(95)":565.0246929,"p(99)":825.1454391799997,"max":1035.149337,"avg":123.46789876017127,"min":14.524094,"med":49.846154,"p(90)":315.3534038}
+lecturaPropia=n/a
+agregado=n/a
+checks={"rate":0.8950749464668094,"passes":418,"fails":49}
+estados={"estado_200":49,"estado_503":418}
+umbrales={"http_req_duration{name:/api/v1/docente/horarios}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/docente/asignaturas}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/estudiante/materias}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/estudiante/alertas}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/estudiante/horarios}":{"max>=0":{"ok":true}},"http_req_duration":{"p(95)<2500":{"ok":true}},"http_req_duration{name:/api/v1/estudiante/reclamos}":{"max>=0":{"ok":true}},"fallo_cerrado_503":{"rate>0.99":{"ok":false}},"http_req_duration{name:/api/v1/coordinador/alertas-tempranas}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/coordinador/indicadores}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/auth/me}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/coordinador/grupos}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/coordinador/consolidado-asistencia}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/docente/reclamos}":{"max>=0":{"ok":true}}}
+time="2026-11-13T07:19:59Z" level=error msg="thresholds on metrics 'fallo_cerrado_503' have been crossed"

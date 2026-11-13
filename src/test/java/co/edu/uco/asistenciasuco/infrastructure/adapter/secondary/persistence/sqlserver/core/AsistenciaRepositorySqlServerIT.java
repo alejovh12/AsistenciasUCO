@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.TomaAsistenciaTestSql;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
+import co.edu.uco.asistenciasuco.application.features.sesion.common.ContratoHorarioSesion;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarAsistenciasPorGrupoRepositoryDTO;
@@ -23,6 +24,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -253,13 +255,18 @@ class AsistenciaRepositorySqlServerIT {
 
     private UUID crearSesionDePrueba() {
         final String nombreUnico = IT_PREFIX + UUID.randomUUID().toString().substring(0, 12);
-        final LocalDateTime inicio = LocalDateTime.now().minusHours(1);
+        // SES-01 (VAL-PRU-04): el registro exige la sesion activa en UTC con procedencia confirmada (contrato v2); una sesion
+        // v1 (procedencia NULL) se rechaza con SES_009. SES_017: se crea en el primer hueco libre del docente y luego se
+        // lleva a la ventana viva reafirmando la procedencia, igual que AttendanceCommandParityFixture.
+        final LocalDateTime inicio = LocalDateTime.now(ZoneOffset.UTC).minusHours(1);
+        final LocalDateTime libre = primerHuecoLibreDelDocente(LocalDateTime.now(ZoneOffset.UTC).plusHours(1));
         sesionRepositoryPort.crearSesion(new CrearSesionRepositoryDTO(
                 grupoId,
                 nombreUnico,
-                inicio,
-                inicio.plusHours(2),
-                docenteAUsuarioId
+                libre,
+                libre.plusHours(2),
+                docenteAUsuarioId,
+                ContratoHorarioSesion.UTC_CONFIRMADO_V2
         ));
 
         final List<UUID> encontrada = jdbcTemplate.query(
@@ -276,7 +283,18 @@ class AsistenciaRepositorySqlServerIT {
         assertEquals(1, encontrada.size(), "La sesion de prueba recien creada debe ser resoluble de forma unica por nombre.");
         // DEC-065 (2): la sesion del docente nace pendiente de aval; la prueba la necesita operativa.
         TomaAsistenciaTestSql.aprobarSolicitudDeSesion(jdbcTemplate, encontrada.get(0).toString());
+        jdbcTemplate.update("UPDATE dbo.Sesion SET fechaHoraInicio = ?, fechaHoraFin = ?, procedenciaTemporal = procedenciaTemporal WHERE id = ?",
+                java.sql.Timestamp.valueOf(inicio), java.sql.Timestamp.valueOf(inicio.plusHours(2)), encontrada.get(0).toString());
         return encontrada.get(0);
+    }
+
+    private LocalDateTime primerHuecoLibreDelDocente(final LocalDateTime minimo) {
+        final List<java.sql.Timestamp> fin = jdbcTemplate.query("""
+                SELECT MAX(s.fechaHoraFin) FROM dbo.Sesion s INNER JOIN dbo.Grupo g ON g.id = s.grupo
+                WHERE g.docente = (SELECT docente FROM dbo.Grupo WHERE id = ?)
+                """, (rs, n) -> rs.getTimestamp(1), grupoId.toString());
+        final LocalDateTime ultimo = fin.isEmpty() || fin.getFirst() == null ? minimo : fin.getFirst().toLocalDateTime();
+        return (ultimo.isAfter(minimo) ? ultimo : minimo).plusMinutes(1).withSecond(0).withNano(0);
     }
 
     private Integer contarRazonCausa(final String codigo) {

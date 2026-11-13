@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.usecase.GestionarAsignaturaUseCase;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.usecase.domain.AsignaturaDomain;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsignaturaCommandPort;
@@ -49,7 +50,7 @@ public final class GestionarAsignaturaUseCaseImpl implements GestionarAsignatura
                 .anyMatch(asignatura -> domain.idAsignatura().equals(asignatura.id())
                         && programa.equals(asignatura.idPrograma()));
         if (!perteneceAlPlan) {
-            throw new ForbiddenException("La asignatura no pertenece al programa del coordinador autenticado.");
+            throw new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_009);
         }
         commandPort.actualizarAsignatura(domain.idAsignatura(), domain.codigo(), domain.nombre(), domain.creditos(), domain.idPlanEstudio(),
                 domain.semestreNumero(), domain.nombreArea(), domain.nombreComponente(), domain.codigoCaracter(), domain.usuarioEjecutor());
@@ -65,7 +66,7 @@ public final class GestionarAsignaturaUseCaseImpl implements GestionarAsignatura
                 .anyMatch(asignatura -> asignaturaId.equals(asignatura.id())
                         && programa.equals(asignatura.idPrograma()));
         if (!perteneceAlPrograma) {
-            throw new ForbiddenException("La asignatura no pertenece al programa del coordinador autenticado.");
+            throw new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_009);
         }
         commandPort.toggleEstadoAsignatura(asignaturaId, usuarioEjecutor);
     }
@@ -73,7 +74,7 @@ public final class GestionarAsignaturaUseCaseImpl implements GestionarAsignatura
     private UUID resolverPrograma(final UUID usuarioEjecutor) {
         return Objects.requireNonNullElseGet(
                 scopePort.findProgramaIdByCoordinadorUsuario(usuarioEjecutor).orElse(null),
-                () -> { throw new ForbiddenException("No fue posible resolver el programa del coordinador autenticado."); }
+                () -> { throw new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_006); }
         );
     }
 
@@ -81,7 +82,7 @@ public final class GestionarAsignaturaUseCaseImpl implements GestionarAsignatura
         if (ObjectHelper.isNull(planId)
                 || planQueryPort.consultarPlanesPorPrograma(programa).stream()
                 .noneMatch(plan -> planId.equals(plan.id()) && programa.equals(plan.idPrograma()))) {
-            throw new ForbiddenException("El plan de estudio no pertenece al programa del coordinador autenticado.");
+            throw new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_010);
         }
     }
 

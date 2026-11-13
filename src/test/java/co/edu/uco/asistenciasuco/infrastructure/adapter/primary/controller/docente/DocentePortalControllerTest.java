@@ -44,6 +44,7 @@ class DocentePortalControllerTest {
 
     private static final UUID ACTOR = UUID.randomUUID();
     private static final UUID RECLAMO = UUID.randomUUID();
+    private static final UUID TOMA = UUID.randomUUID();
 
     private final ConsultarHorariosDocenteInputPort horarios = mock(ConsultarHorariosDocenteInputPort.class);
     private final ConsultarAsignaturasDocenteInputPort asignaturas = mock(ConsultarAsignaturasDocenteInputPort.class);
@@ -67,7 +68,8 @@ class DocentePortalControllerTest {
                 java.time.Instant.parse("2026-10-19T15:30:45.1234567Z"), "UTC_V2", UUID.randomUUID(), 1, "G1",
                 UUID.randomUUID(), "MAT1", "Matematicas",
                 new ReclamoDocenteDTO.SoporteAdjuntoDTO(soporte, "evidencia.pdf", "application/pdf", 1234L,
-                        java.time.Instant.parse("2026-10-19T15:00:00Z"), "/api/v1/archivos/" + soporte));
+                        java.time.Instant.parse("2026-10-19T15:00:00Z"), "/api/v1/archivos/" + soporte),
+                TOMA, 2, java.time.Instant.parse("2026-10-19T15:45:00.1234567Z"));
         when(reclamos.execute(new ConsultarReclamosDocenteDTO(ACTOR, "P", 2, 5)))
                 .thenReturn(new ReclamosDocentePaginaDTO(List.of(reclamo), 11));
 
@@ -79,7 +81,10 @@ class DocentePortalControllerTest {
                 .andExpect(jsonPath("$.datos[0].fechaSesionUtc").value("2026-10-19T15:30:45.1234567Z"))
                 .andExpect(jsonPath("$.datos[0].soporteAdjunto.fechaSubidaUtc").value("2026-10-19T15:00:00Z"))
                 .andExpect(jsonPath("$.datos[0].soporteAdjunto.fileId").value(soporte.toString()))
-                .andExpect(jsonPath("$.datos[0].soporteAdjunto.url").value("/api/v1/archivos/" + soporte));
+                .andExpect(jsonPath("$.datos[0].soporteAdjunto.url").value("/api/v1/archivos/" + soporte))
+                .andExpect(jsonPath("$.datos[0].idToma").value(TOMA.toString()))
+                .andExpect(jsonPath("$.datos[0].numeroToma").value(2))
+                .andExpect(jsonPath("$.datos[0].fechaPuntoControlUtc").value("2026-10-19T15:45:00.1234567Z"));
     }
 
     @Test
@@ -214,6 +219,19 @@ class DocentePortalControllerTest {
         assertEquals("APROBAR", captor.getValue().getAccion());
         assertEquals("Aceptada", captor.getValue().getRespuestaDocente());
         assertEquals(ACTOR, captor.getValue().getUsuario());
+    }
+
+    @Test
+    void resolverReclamo_mapea_el_resultado_de_la_aprobacion() throws Exception {
+        mvc.perform(patch("/api/v1/docente/reclamos/{id}", RECLAMO).contentType("application/json")
+                        .content("{\"accion\":\"APROBADA\",\"resultado\":\"PRESENTE\",\"respuestaDocente\":\"Si estuvo\"}"))
+                .andExpect(status().isOk());
+
+        final ArgumentCaptor<ResolverSolicitudRevisionAsistenciaDTO> captor =
+                ArgumentCaptor.forClass(ResolverSolicitudRevisionAsistenciaDTO.class);
+        verify(resolverReclamo).execute(captor.capture());
+        assertEquals("APROBADA", captor.getValue().getAccion());
+        assertEquals("PRESENTE", captor.getValue().getResultado());
     }
 
     @Test

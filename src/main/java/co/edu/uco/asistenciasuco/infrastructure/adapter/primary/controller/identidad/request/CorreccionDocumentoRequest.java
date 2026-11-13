@@ -1,6 +1,9 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.identidad.request;
 
 import java.util.UUID;
+import jakarta.validation.constraints.Size;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.BeanValidationCodes;
+import jakarta.validation.constraints.Positive;
 
 /**
  * HU159 (decision de John 2026-11-05): campos comunes de la correccion de identidad. El tipo y el numero de documento
@@ -9,7 +12,9 @@ import java.util.UUID;
  */
 public abstract class CorreccionDocumentoRequest {
     private UUID idTipoIdentificacion;
+    @Positive(message = "El numero de documento debe ser un numero positivo.", payload = BeanValidationCodes.InvalidFormat.class)
     private Integer numeroIdentificacion;
+    @Size(max = 500, message = "El motivo no puede superar 500 caracteres.")
     private String motivo;
 
     public UUID getIdTipoIdentificacion() { return idTipoIdentificacion; }

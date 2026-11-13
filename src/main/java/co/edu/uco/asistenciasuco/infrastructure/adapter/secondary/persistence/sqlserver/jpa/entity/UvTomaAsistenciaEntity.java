@@ -39,6 +39,13 @@ public class UvTomaAsistenciaEntity {
     @Column(name = "totalAusentes") private Integer totalAusentes;
     @Column(name = "totalExcusas") private Integer totalExcusas;
     @Column(name = "tieneQrActivo") private Boolean tieneQrActivo;
+    @JdbcType(LocalDateTimeJdbcType.class)
+    @Column(name = "fechaPuntoControlUtc") private LocalDateTime fechaPuntoControlUtc;
+    @Column(name = "ordenPuntoControl") private Integer ordenPuntoControl;
+    @Column(name = "minutosTramoAnterior") private Integer minutosTramoAnterior;
+    @Column(name = "minutosTramoSiguiente") private Integer minutosTramoSiguiente;
+    @JdbcType(LocalDateTimeJdbcType.class)
+    @Column(name = "fechaAperturaSiguienteUtc") private LocalDateTime fechaAperturaSiguienteUtc;
 
     protected UvTomaAsistenciaEntity() { }
 
@@ -58,4 +65,9 @@ public class UvTomaAsistenciaEntity {
     public Integer totalAusentes() { return totalAusentes; }
     public Integer totalExcusas() { return totalExcusas; }
     public Boolean tieneQrActivo() { return tieneQrActivo; }
+    public LocalDateTime fechaPuntoControlUtc() { return fechaPuntoControlUtc; }
+    public Integer ordenPuntoControl() { return ordenPuntoControl; }
+    public Integer minutosTramoAnterior() { return minutosTramoAnterior; }
+    public Integer minutosTramoSiguiente() { return minutosTramoSiguiente; }
+    public LocalDateTime fechaAperturaSiguienteUtc() { return fechaAperturaSiguienteUtc; }
 }

@@ -96,11 +96,6 @@ public final class ProfileSyncingIdentityProvider implements IdentityProviderPor
     }
 
     @Override
-    public void establecerClave(final String idExterno, final String claveNueva) {
-        delegate.establecerClave(idExterno, claveNueva);
-    }
-
-    @Override
     public void actualizarDatosCuenta(final String idExterno, final ActualizarCuentaIdentidadDTO datos) {
         delegate.actualizarDatosCuenta(idExterno, datos);
     }

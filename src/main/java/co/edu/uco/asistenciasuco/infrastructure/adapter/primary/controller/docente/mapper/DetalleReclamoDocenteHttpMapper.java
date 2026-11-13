@@ -37,7 +37,14 @@ public final class DetalleReclamoDocenteHttpMapper {
                         causal.codigo(), causal.nombre(), causal.asistio()),
                 ReclamoDocenteHttpMapper.soporte(dto.soporteAdjunto()),
                 ReclamoCategoriaSoportesHttpMapper.categoria(dto.categoria()),
-                ReclamoCategoriaSoportesHttpMapper.soportes(dto.soportes())
+                ReclamoCategoriaSoportesHttpMapper.soportes(dto.soportes()),
+                dto.idToma(),
+                dto.numeroToma(),
+                ReclamoDocenteHttpMapper.utc(dto.fechaPuntoControlUtc()),
+                dto.resultadoAprobacion(),
+                dto.estadoToma(),
+                dto.minutosSesion(),
+                dto.minutosAsistidos()
         );
     }
 }

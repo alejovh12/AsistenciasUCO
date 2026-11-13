@@ -10,6 +10,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.valid
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -48,7 +49,7 @@ public final class EstudianteAsistenciaQrController {
     @PostMapping("/asistencia-qr")
     @AuditableOperation(action = "REGISTRAR_ASISTENCIA_POR_TOKEN", resourceType = "TOMA_ASISTENCIA")
     public ResponseEntity<ApiDataResponse<RegistroAsistenciaQrResponse>> registrar(
-            @RequestBody(required = false) final RegistrarAsistenciaQrRequest request,
+            @Valid @RequestBody(required = false) final RegistrarAsistenciaQrRequest request,
             final HttpServletRequest http
     ) {
         RequestValidationGuard.validate(VALIDATOR.validar(request));

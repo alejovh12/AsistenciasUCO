@@ -18,10 +18,13 @@ import co.edu.uco.asistenciasuco.application.features.tomaasistencia.abrirtoma.p
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.cerrartoma.primaryports.CerrarTomaAsistenciaInputPort;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.AsistenciaTomaFila;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.FaltanteTomaFila;
+import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.ResumenTomasSesionFila;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.TomaAsistenciaResumen;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.TomasSesionResumen;
+import co.edu.uco.asistenciasuco.application.features.tomaasistencia.exception.TomaAsistenciaErrorCode;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.consultarasistenciastoma.primaryports.ConsultarAsistenciasTomaInputPort;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.consultarfaltantestoma.primaryports.ConsultarFaltantesTomaInputPort;
+import co.edu.uco.asistenciasuco.application.features.tomaasistencia.consultarresumensesion.primaryports.ConsultarResumenTomasSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.consultartomassesion.primaryports.ConsultarTomasSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.registrarasistenciastoma.primaryports.RegistrarAsistenciasTomaInputPort;
 import co.edu.uco.asistenciasuco.application.features.sesion.common.dto.CancelacionSesionDTO;
@@ -73,6 +76,7 @@ class TomaAsistenciaControllersTest {
 
     private AbrirTomaAsistenciaInputPort abrir;
     private ConsultarTomasSesionInputPort consultarTomas;
+    private ConsultarResumenTomasSesionInputPort consultarResumenTomas;
     private CerrarTomaAsistenciaInputPort cerrar;
     private RegistrarAsistenciasTomaInputPort lote;
     private ConsultarAsistenciasTomaInputPort asistencias;
@@ -88,6 +92,7 @@ class TomaAsistenciaControllersTest {
     void preparar() {
         abrir = mock(AbrirTomaAsistenciaInputPort.class);
         consultarTomas = mock(ConsultarTomasSesionInputPort.class);
+        consultarResumenTomas = mock(ConsultarResumenTomasSesionInputPort.class);
         cerrar = mock(CerrarTomaAsistenciaInputPort.class);
         lote = mock(RegistrarAsistenciasTomaInputPort.class);
         asistencias = mock(ConsultarAsistenciasTomaInputPort.class);
@@ -99,7 +104,7 @@ class TomaAsistenciaControllersTest {
         resumen = mock(ConsultarResumenAsistenciaGrupoInputPort.class);
         final AuthenticatedUserResolver usuario = () -> ACTOR;
         mvc = MockMvcBuilders.standaloneSetup(
-                        new SesionTomaController(abrir, consultarTomas, usuario),
+                        new SesionTomaController(abrir, consultarTomas, consultarResumenTomas, usuario),
                         new TomaAsistenciaController(cerrar, lote, asistencias, faltantes, usuario),
                         new TomaQrController(abrirQr, rotarQr, cerrarQr, usuario),
                         new EstudianteAsistenciaQrController(registrarQr, new NetworkClientIpResolver(Optional::empty), usuario),
@@ -110,7 +115,7 @@ class TomaAsistenciaControllersTest {
 
     private static TomaAsistenciaResumen toma() {
         return new TomaAsistenciaResumen(TOMA, SESION, GRUPO, 2, "QR", "ABIERTA", true, false, APERTURA, null,
-                new BigDecimal("1.00"), 31, 30, 1, 0, true);
+                new BigDecimal("1.00"), 31, 30, 1, 0, true, APERTURA, 2, 40, 80, true, null);
     }
 
     @Test
@@ -130,7 +135,51 @@ class TomaAsistenciaControllersTest {
                 .andExpect(jsonPath("$.datos.fechaCierreUtc").isEmpty())
                 .andExpect(jsonPath("$.datos.horasToma").value(1.00))
                 .andExpect(jsonPath("$.datos.totalPresentes").value(30))
-                .andExpect(jsonPath("$.datos.tieneQrActivo").value(true));
+                .andExpect(jsonPath("$.datos.tieneQrActivo").value(true))
+                .andExpect(jsonPath("$.datos.fechaPuntoControlUtc").value("2026-11-07T13:05:00Z"))
+                .andExpect(jsonPath("$.datos.ordenPuntoControl").value(2))
+                .andExpect(jsonPath("$.datos.minutosTramoAnterior").value(40))
+                .andExpect(jsonPath("$.datos.minutosTramoSiguiente").value(80))
+                .andExpect(jsonPath("$.datos.esEditable").value(true))
+                .andExpect(jsonPath("$.datos.editableHastaUtc").isEmpty());
+    }
+
+    @Test
+    void resumen_de_tomas_de_la_sesion_lista_minutos_y_estado_por_estudiante() throws Exception {
+        when(consultarResumenTomas.execute(new ConsultarResumenTomasSesionInputPort.Consulta(SESION, ACTOR))).thenReturn(List.of(
+                new ResumenTomasSesionFila(ESTUDIANTE, "Ana Perez", 120, 40, 80, 0, 0, "PARCIAL", 1)));
+
+        mvc.perform(get("/api/v1/sesiones/{s}/tomas/resumen", SESION))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exitoso").value(true))
+                .andExpect(jsonPath("$.datos[0].estudianteId").value(ESTUDIANTE.toString()))
+                .andExpect(jsonPath("$.datos[0].nombreCompleto").value("Ana Perez"))
+                .andExpect(jsonPath("$.datos[0].minutosSesion").value(120))
+                .andExpect(jsonPath("$.datos[0].minutosAsistidos").value(40))
+                .andExpect(jsonPath("$.datos[0].minutosFalta").value(80))
+                .andExpect(jsonPath("$.datos[0].minutosExcusa").value(0))
+                .andExpect(jsonPath("$.datos[0].minutosSinRegistro").value(0))
+                .andExpect(jsonPath("$.datos[0].estado").value("PARCIAL"))
+                .andExpect(jsonPath("$.datos[0].tomasAusentes").value(1));
+    }
+
+    @Test
+    void resumen_de_tomas_rechazado_por_titularidad_responde_403() throws Exception {
+        when(consultarResumenTomas.execute(any(ConsultarResumenTomasSesionInputPort.Consulta.class)))
+                .thenThrow(new ForbiddenException("No es titular de la sesion."));
+
+        mvc.perform(get("/api/v1/sesiones/{s}/tomas/resumen", SESION))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void corregir_una_toma_cerrada_por_la_siguiente_responde_409_tom_012() throws Exception {
+        when(lote.execute(any())).thenThrow(new ConflictException(TomaAsistenciaErrorCode.TOM_012.code(),
+                TomaAsistenciaErrorCode.TOM_012.defaultMessage()));
+
+        mvc.perform(post("/api/v1/tomas/{t}/asistencias", TOMA).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"registros\":[{\"estudianteId\":\"" + ESTUDIANTE + "\",\"estado\":\"AN\"}]}"))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("TOM_012"));
     }
 
     @Test

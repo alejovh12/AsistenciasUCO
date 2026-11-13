@@ -20,6 +20,9 @@ import java.util.UUID;
  *
  * <p>COMMAND delega en {@link PlanEstudioJpaRepository} (LB-008 JPA-03; el provider público
  * {@code usp_registrar_o_actualizar_plan_estudio} lo entrega el work item DB CC-003G-01, {@code CODE_MIGRATION_STATUS = JPA}). La QUERY es oráculo JDBC de paridad (solo {@code src/test}).</p>
+ *
+ * <p>VAL-PRU-04: el oraculo incluye {@code totalAsignaturas}/{@code totalCreditos} de la malla (vinculos activos de
+ * {@code uv_asignatura_plan_estudio}), que la proyeccion productiva agrego en la certificacion F3.</p>
  */
 public final class PlanEstudioJdbcBaseline implements PlanEstudioQueryPort, PlanEstudioCommandPort {
 
@@ -65,7 +68,11 @@ public final class PlanEstudioJdbcBaseline implements PlanEstudioQueryPort, Plan
                 SELECT id, idPrograma, nombrePrograma, inp, estaActivoPlanEstudio,
                        estaActivoTextoPlanEstudio, justificacionEstado,
                        totalSemestres = COALESCE((SELECT MAX(sp.numeroSemestre) FROM dbo.uv_semestre_plan_estudio sp
-                                                  WHERE sp.idPlanEstudio = uv_plan_estudio.id), 0)
+                                                  WHERE sp.idPlanEstudio = uv_plan_estudio.id), 0),
+                       totalAsignaturas = COALESCE((SELECT COUNT(v.idAsignatura) FROM dbo.uv_asignatura_plan_estudio v
+                                                    WHERE v.idPlanEstudio = uv_plan_estudio.id AND v.estaActivoVinculo = 1), 0),
+                       totalCreditos = COALESCE((SELECT SUM(v.credito) FROM dbo.uv_asignatura_plan_estudio v
+                                                 WHERE v.idPlanEstudio = uv_plan_estudio.id AND v.estaActivoVinculo = 1), 0)
                 FROM dbo.uv_plan_estudio
                 WHERE idPrograma IN (SELECT id FROM dbo.uv_programa WHERE idFacultad = :idFacultad)
                 ORDER BY nombrePrograma, inp, id
@@ -77,7 +84,9 @@ public final class PlanEstudioJdbcBaseline implements PlanEstudioQueryPort, Plan
                 JdbcBaselineValueMapper.toBoolean(rs.getObject("estaActivoPlanEstudio")),
                 JdbcBaselineValueMapper.toString(rs.getObject("estaActivoTextoPlanEstudio")),
                 JdbcBaselineValueMapper.toString(rs.getObject("justificacionEstado")),
-                rs.getInt("totalSemestres")
+                rs.getInt("totalSemestres"),
+                rs.getInt("totalAsignaturas"),
+                rs.getInt("totalCreditos")
         ));
     }
 
@@ -87,7 +96,11 @@ public final class PlanEstudioJdbcBaseline implements PlanEstudioQueryPort, Plan
                 SELECT id, idPrograma, nombrePrograma, inp, estaActivoPlanEstudio,
                        estaActivoTextoPlanEstudio, justificacionEstado,
                        totalSemestres = COALESCE((SELECT MAX(sp.numeroSemestre) FROM dbo.uv_semestre_plan_estudio sp
-                                                  WHERE sp.idPlanEstudio = uv_plan_estudio.id), 0)
+                                                  WHERE sp.idPlanEstudio = uv_plan_estudio.id), 0),
+                       totalAsignaturas = COALESCE((SELECT COUNT(v.idAsignatura) FROM dbo.uv_asignatura_plan_estudio v
+                                                    WHERE v.idPlanEstudio = uv_plan_estudio.id AND v.estaActivoVinculo = 1), 0),
+                       totalCreditos = COALESCE((SELECT SUM(v.credito) FROM dbo.uv_asignatura_plan_estudio v
+                                                 WHERE v.idPlanEstudio = uv_plan_estudio.id AND v.estaActivoVinculo = 1), 0)
                 FROM dbo.uv_plan_estudio
                 WHERE idPrograma = :idPrograma
                 ORDER BY nombrePrograma, inp, id
@@ -99,7 +112,9 @@ public final class PlanEstudioJdbcBaseline implements PlanEstudioQueryPort, Plan
                 JdbcBaselineValueMapper.toBoolean(rs.getObject("estaActivoPlanEstudio")),
                 JdbcBaselineValueMapper.toString(rs.getObject("estaActivoTextoPlanEstudio")),
                 JdbcBaselineValueMapper.toString(rs.getObject("justificacionEstado")),
-                rs.getInt("totalSemestres")
+                rs.getInt("totalSemestres"),
+                rs.getInt("totalAsignaturas"),
+                rs.getInt("totalCreditos")
         ));
     }
 }

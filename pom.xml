@@ -35,6 +35,10 @@
         <jackson-bom.version>3.1.7</jackson-bom.version>
         <jacoco.version>0.8.15</jacoco.version>
         <swagger-parser.version>2.1.46</swagger-parser.version>
+        <resilience4j.version>2.4.0</resilience4j.version>
+        <!-- Trivy (oleada 2): transitivas de minio 9.0.3 con CVE HIGH corregidas en estas versiones. -->
+        <guava.version>33.7.2-jre</guava.version>
+        <snappy-java.version>1.1.10.12</snappy-java.version>
         <swagger-ui.version>5.32.15</swagger-ui.version>
         <!-- SEC-002: POI 5.4.1 references commons-compress; align to patched 1.28.0. -->
         <commons-compress.version>1.28.0</commons-compress.version>
@@ -63,6 +67,24 @@
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+        <!--
+            ROL-06 (decision G, 2026-11-12): Jakarta Bean Validation como primera barrera de los cuerpos HTTP (@Valid en
+            los @RequestBody; anotaciones solo en los requests de infrastructure). Los validators propios se conservan.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <!--
+            REA-02: circuit breaker de Resilience4j para el PEP, MinIO y ClamAV. Solo se usan los registros configurados
+            desde application.yml (resilience4j.circuitbreaker.instances.*); sin anotaciones AOP. La linea spring-boot4
+            es la que corresponde a Spring Boot 4.x.
+        -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-spring-boot4</artifactId>
+            <version>${resilience4j.version}</version>
         </dependency>
         <!-- HU176B (D4): el backend genera el PNG del QR de matricula; el cliente nunca lo arma ni lo delega a terceros. -->
         <dependency>
@@ -231,6 +253,22 @@
                 <artifactId>commons-compress</artifactId>
                 <version>${commons-compress.version}</version>
             </dependency>
+            <!--
+                Trivy (oleada 2): transitivas de io.minio:minio:9.0.3. guava >= 33.7.2-jre (CVE-2026-102554) y snappy-java
+                >= 1.1.10.9 (CVE-2026-108106, CVE-2026-93451). Se fijan aqui en vez de subir minio a 9.0.4 (que ya las trae)
+                porque 9.0.4 tambien mueve okhttp, Bouncy Castle y Jackson 2, que este pom alinea a proposito. Son las mismas
+                versiones que declara minio 9.0.4.
+            -->
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.xerial.snappy</groupId>
+                <artifactId>snappy-java</artifactId>
+                <version>${snappy-java.version}</version>
+            </dependency>
             <!-- SEC-002: keep all Bouncy Castle jdk18on artifacts aligned; CVE-2026-8763. -->
             <dependency>
                 <groupId>org.bouncycastle</groupId>
@@ -397,6 +435,11 @@
     <profiles>
         <profile>
             <id>integration</id>
+            <properties>
+                <!-- VAL-PRU-04: mecanismo de cuarentena explicita. La oleada 3 corrigio las 12 IT que la usaban y hoy ninguna
+                     lleva @Tag("cuarentena-oleada3"), asi que el gate corre todas. Para incluir una IT etiquetada: -Dfailsafe.excludedGroups= -->
+                <failsafe.excludedGroups>cuarentena-oleada3</failsafe.excludedGroups>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
@@ -406,6 +449,7 @@
                             <systemPropertyVariables>
                                 <spring.config.name>application-integration</spring.config.name>
                             </systemPropertyVariables>
+                            <excludedGroups>${failsafe.excludedGroups}</excludedGroups>
                             <includes>
                                 <include>**/*IT.java</include>
                             </includes>

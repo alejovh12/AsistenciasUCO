@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.cambiarestadodocenteprograma.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
 import co.edu.uco.asistenciasuco.application.features.coordinador.cambiarestadodocenteprograma.usecase.CambiarEstadoDocenteProgramaUseCase;
 import co.edu.uco.asistenciasuco.application.features.coordinador.cambiarestadodocenteprograma.usecase.domain.CambiarEstadoDocenteProgramaDomain;
@@ -43,7 +44,7 @@ public final class CambiarEstadoDocenteProgramaUseCaseImpl implements CambiarEst
             throw new CrosscuttingException("El dominio para cambiar el estado del docente es obligatorio.");
         }
         final UUID idPrograma = scopePort.findProgramaIdByCoordinadorUsuario(domain.actorUsuarioId())
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver el programa del coordinador autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_006));
 
         commandPort.cambiarEstado(new CambiarEstadoDocenteProgramaCommand(
                 domain.idDocente(), idPrograma, domain.estaActivo(), domain.actorUsuarioId()));

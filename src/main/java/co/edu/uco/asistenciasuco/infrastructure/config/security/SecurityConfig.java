@@ -49,6 +49,10 @@ public class SecurityConfig {
     @Value("${app.security.azure-events.webhook-token:}")
     private String azureWebhookToken;
 
+    /** CF-05: HSTS (solo en HTTPS) activo por defecto; se apaga con APP_SECURITY_HSTS_ENABLED=false. */
+    @Value("${app.security.headers.hsts-enabled:true}")
+    private boolean hstsEnabled;
+
     @Bean
     public InstitutionalJwtAuthenticationConverter institutionalJwtAuthenticationConverter(
             final JwtClaimsExtractor jwtClaimsExtractor
@@ -65,7 +69,7 @@ public class SecurityConfig {
             final AuthenticationEntryPoint authenticationEntryPoint,
             final AccessDeniedHandler accessDeniedHandler,
             final ObjectProvider<SecurityPepEnforcementFilter> securityPepEnforcementFilter,
-            final ObjectProvider<org.springframework.web.servlet.handler.HandlerMappingIntrospector> handlerMappingIntrospector,
+            final ObjectProvider<org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping> requestMappingHandlerMappings,
             final ObjectProvider<co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.handler.SecurityErrorResponseWriter> errorResponseWriter
     ) throws Exception {
         http
@@ -88,6 +92,8 @@ public class SecurityConfig {
             // exactamente la misma justificación y se excluye con el mismo alcance acotado.
             .csrf(csrf -> csrf.ignoringRequestMatchers("/api/v1/**", "/api/v2/sesiones/**"))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // CF-05: CSP, X-Frame-Options DENY, HSTS condicionado, nosniff, Referrer-Policy y Permissions-Policy explicitos.
+            .headers(headers -> SecurityHttpHeaders.apply(headers, hstsEnabled))
             .addFilterBefore(
                     new AzureEventGridAuthFilter(azureWebhookToken),
                     org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class
@@ -111,11 +117,6 @@ public class SecurityConfig {
                 // IDENT-001: verificacion publica del correo. permitAll solo para esta ruta POST (sin comodin /public/**): la
                 // credencial es el token de un solo uso y el limite de intentos lo aplica VerificacionCorreoRateLimitFilter.
                 .requestMatchers(HttpMethod.POST, SecurityPublicEndpoints.VERIFICAR_CORREO).permitAll()
-                // HU177: recuperacion de contrasena. Dos rutas POST declaradas una por una (sin comodin /public/**): pedir el enlace
-                // responde siempre igual y definir la contrasena exige el token de un solo uso; el limite de intentos lo aplica
-                // el filtro de limite por IP registrado en RecuperacionClaveWiringConfiguration.
-                .requestMatchers(HttpMethod.POST, SecurityPublicEndpoints.RECUPERACION_CLAVE_SOLICITUD,
-                        SecurityPublicEndpoints.RECUPERACION_CLAVE_CONFIRMACION).permitAll()
                 // HU176B: matricula publica por QR/PIN. Las unicas dos rutas publicas de negocio nuevas, declaradas una por una
                 // (sin comodin /public/**): la credencial es el token/PIN rotativo; el limite de intentos lo aplica
                 // MatriculaQrRateLimitFilter y la red del campus y el interruptor los exige el caso de uso.
@@ -155,7 +156,8 @@ public class SecurityConfig {
                 // Directorio de estudiantes (golden path 1.2.0, DEC-027/DEC-032): DOCENTE, COORDINADOR y ADMINISTRADOR; el ambito
                 // (grupos propios, programas, institucion) lo aplica usp_consultar_directorio_estudiantes_paginado.
                 .requestMatchers("/api/v1/estudiantes/**").hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
-                .requestMatchers(HttpMethod.POST, "/api/v1/usuarios").authenticated()
+                // VAL ROL-05 (2026-11-12): POST /api/v1/usuarios (alta sin ejecutor ni ambito) se retiro; el alta de usuarios va
+                // solo por los flujos con ambito (decanos, coordinadores, docentes del programa, admision de estudiantes).
                 // Estado de acceso y reconciliacion de cuentas: administrador, decano y coordinador; el alcance (facultad /
                 // programa) y los roles gestionables se validan en Application (AccesoCuentaService).
                 .requestMatchers(HttpMethod.POST, "/api/v1/identidad/cuentas/acceso/*")
@@ -166,6 +168,7 @@ public class SecurityConfig {
                 // CULM-001 B.2: tomas de asistencia de la sesion (POST cubierto por /api/v1/sesiones/**) y operaciones sobre
                 // una toma (cierre, lote, consultas, QR). Titularidad en Application y en la DB.
                 .requestMatchers(HttpMethod.GET, "/api/v1/sesiones/*/tomas").hasRole(ROLE_DOCENTE)
+                .requestMatchers(HttpMethod.GET, "/api/v1/sesiones/*/tomas/resumen").hasRole(ROLE_DOCENTE)
                 .requestMatchers("/api/v1/tomas/**").hasRole(ROLE_DOCENTE)
                 // Sesiones agrupadas por grupo: usadas por el docente para elegir la sesion sobre
                 // la que va a tomar asistencia. La titularidad sobre el grupo se valida en
@@ -250,9 +253,9 @@ public class SecurityConfig {
         // CULM-001 D.9-a (F-EST-024, OBS-17): en modo baseline, una ruta sin handler responde 404 sin consultar al PDP; ese filtro se
         // registra justo ANTES del PEP (ambos despues de BearerTokenAuthenticationFilter, en orden de registro).
         securityPepEnforcementFilter.ifAvailable(filter -> {
-            if (handlerMappingIntrospector.getIfAvailable() != null && errorResponseWriter.getIfAvailable() != null) {
+            if (errorResponseWriter.getIfAvailable() != null) {
                 http.addFilterAfter(
-                        new UnmappedRouteFilter(handlerMappingIntrospector.getObject(), errorResponseWriter.getObject()),
+                        new UnmappedRouteFilter(requestMappingHandlerMappings, errorResponseWriter.getObject()),
                         org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class
                 );
             }

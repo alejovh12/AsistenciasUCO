@@ -27,6 +27,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.respo
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.PaginacionRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -106,12 +107,13 @@ public final class DocentePortalController {
     @PatchMapping("/reclamos/{id}")
     public ResponseEntity<ApiDataResponse<Void>> resolverReclamo(
             @PathVariable final UUID id,
-            @RequestBody final ResolverReclamoRequest request
+            @Valid @RequestBody final ResolverReclamoRequest request
     ) {
         resolverSolicitudRevisionAsistenciaInputPort.execute(new ResolverSolicitudRevisionAsistenciaDTO(
                 id,
                 request == null ? null : request.getAccion(),
                 request == null ? null : request.getRespuestaDocente(),
+                request == null ? null : request.getResultado(),
                 authenticatedUserResolver.requireAuthenticatedUserId()
         ));
         return ResponseEntity.ok(new ApiDataResponse<>(true, null));
@@ -131,7 +133,7 @@ public final class DocentePortalController {
     @AuditableOperation(action = "CANCELAR_SESION", resourceType = "SESION", resourceIdPathVariable = "sesionId")
     public ResponseEntity<ApiDataResponse<SesionCanceladaResponse>> cancelarSesion(
             @PathVariable final UUID sesionId,
-            @RequestBody(required = false) final CancelarSesionRequest request
+            @Valid @RequestBody(required = false) final CancelarSesionRequest request
     ) {
         RequestValidationGuard.validate(CANCELAR_SESION_VALIDATOR.validate(request));
         final CancelarSesionInputPort.Resultado resultado = cancelarSesionInputPort.execute(new CancelarSesionInputPort.Comando(

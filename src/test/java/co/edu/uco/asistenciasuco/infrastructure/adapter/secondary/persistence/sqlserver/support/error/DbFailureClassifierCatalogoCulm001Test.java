@@ -21,7 +21,7 @@ class DbFailureClassifierCatalogoCulm001Test {
             "ADS_002", "ADS_003", "ADS_004", "ADS_005", "ADS_006",
             "CMA_001", "CMA_002", "CMA_003", "CMA_004", "CMA_005", "CMA_006", "CMA_007",
             "CMA_008", "CMA_009", "CMA_010", "CMA_011", "CMA_012", "CMA_013", "CMA_014",
-            "TOM_001", "TOM_002", "TOM_003", "TOM_004",
+            "TOM_001", "TOM_002", "TOM_003", "TOM_004", "TOM_012",
             "AQR_001", "AQR_002", "AQR_003", "AQR_004", "AQR_005", "AQR_006", "AQR_007", "AQR_010"
     })
     void el_codigo_de_la_db_se_expone_tal_cual(final String codigoDb) {

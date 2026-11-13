@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.decano.common.rule;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 
@@ -23,7 +24,7 @@ public final class ConsultaPaginadaRules {
             return PAGINA_POR_DEFECTO;
         }
         if (pagina < 1) {
-            throw new ValidationException("La pagina debe ser mayor o igual a 1.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_038);
         }
         return pagina;
     }
@@ -33,7 +34,7 @@ public final class ConsultaPaginadaRules {
             return TAMANO_POR_DEFECTO;
         }
         if (tamano < 1 || tamano > TAMANO_MAXIMO) {
-            throw new ValidationException("El tamano de pagina debe estar entre 1 y " + TAMANO_MAXIMO + ".");
+            throw ValidationException.conParametros(MensajeUsuarioErrorCode.VAL_APP_039, TAMANO_MAXIMO);
         }
         return tamano;
     }
@@ -42,7 +43,7 @@ public final class ConsultaPaginadaRules {
     public static String busqueda(final String busqueda) {
         final String filtro = ObjectHelper.isNull(busqueda) || busqueda.isBlank() ? null : busqueda.trim();
         if (!ObjectHelper.isNull(filtro) && filtro.length() > BUSQUEDA_MAXIMA) {
-            throw new ValidationException("La busqueda excede la longitud permitida.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_044);
         }
         return filtro;
     }

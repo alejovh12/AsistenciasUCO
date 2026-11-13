@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicitudrevisionasistencia.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.alertainasistencia.common.EvaluadorAlertasInasistencia;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicitudrevisionasistencia.usecase.ResolverSolicitudRevisionAsistenciaUseCase;
@@ -68,7 +69,7 @@ public final class ResolverSolicitudRevisionAsistenciaUseCaseImpl implements Res
             throw new CrosscuttingException("El dominio para resolver solicitud de revision es obligatorio.");
         }
         final var docenteId = institutionalScopePort.findDocenteIdByUsuario(domain.getUsuario())
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver el docente autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_003));
         asistenciaRepositoryPort.resolverSolicitudRevisionAsistencia(
                 ResolverSolicitudRevisionAsistenciaRepositoryMapper.toRepositoryDTO(domain, docenteId)
         );

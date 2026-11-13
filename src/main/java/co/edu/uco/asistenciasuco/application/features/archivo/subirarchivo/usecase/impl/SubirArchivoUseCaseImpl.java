@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.archivo.subirarchivo.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
 import co.edu.uco.asistenciasuco.application.features.archivo.shared.contentsecurity.ChecksumCalculator;
@@ -10,6 +11,7 @@ import co.edu.uco.asistenciasuco.application.features.archivo.shared.contentsecu
 import co.edu.uco.asistenciasuco.application.features.archivo.subirarchivo.usecase.SubirArchivoUseCase;
 import co.edu.uco.asistenciasuco.application.features.archivo.subirarchivo.usecase.domain.SubirArchivoDomain;
 import co.edu.uco.asistenciasuco.application.features.archivo.subirarchivo.usecase.entity.SubirArchivoResultadoEntity;
+import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.malwarescan.MalwareScanPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.storage.FileStoragePort;
 import co.edu.uco.asistenciasuco.application.secondaryports.storage.SoporteArchivoMetadataPort;
@@ -42,12 +44,27 @@ public final class SubirArchivoUseCaseImpl implements SubirArchivoUseCase {
     private final FileStoragePort fileStoragePort;
     private final MalwareScanPort malwareScanPort;
     private final SoporteArchivoMetadataPort soporteArchivoMetadataPort;
+    /** PAR-05: {@code null} = sin catalogo (pruebas unitarias); se aplica el respaldo de 5 MiB. */
+    private final ParameterCatalogPort parametros;
+
+    static final String GRUPO_PARAMETRO_TAMANIO = "ARCHIVO";
+    static final String CLAVE_PARAMETRO_TAMANIO = "TAMANIO_MAXIMO_BYTES";
 
     public SubirArchivoUseCaseImpl(
             final FileStoragePort fileStoragePort,
             final MalwareScanPort malwareScanPort,
             final SoporteArchivoMetadataPort soporteArchivoMetadataPort
     ) {
+        this(fileStoragePort, malwareScanPort, soporteArchivoMetadataPort, null);
+    }
+
+    public SubirArchivoUseCaseImpl(
+            final FileStoragePort fileStoragePort,
+            final MalwareScanPort malwareScanPort,
+            final SoporteArchivoMetadataPort soporteArchivoMetadataPort,
+            final ParameterCatalogPort parametros
+    ) {
+        this.parametros = parametros;
         this.fileStoragePort = Objects.requireNonNull(fileStoragePort, "El puerto de salida FileStoragePort es obligatorio.");
         this.malwareScanPort = Objects.requireNonNull(malwareScanPort, "El puerto de salida MalwareScanPort es obligatorio.");
         this.soporteArchivoMetadataPort = Objects.requireNonNull(
@@ -64,7 +81,7 @@ public final class SubirArchivoUseCaseImpl implements SubirArchivoUseCase {
         }
 
         final ValidatedContent validated = ContentSecurityValidator.validate(
-                domain.originalFilename(), domain.declaredContentType(), domain.content());
+                domain.originalFilename(), domain.declaredContentType(), domain.content(), tamanioMaximoBytes());
 
         scanForMalwareFailClosed(domain.content());
 
@@ -96,6 +113,27 @@ public final class SubirArchivoUseCaseImpl implements SubirArchivoUseCase {
         ));
 
         return new SubirArchivoResultadoEntity(fileId, validated.sanitizedFilename(), ARCHIVO_URL_PREFIX + fileId, domain.content().length);
+    }
+
+    /**
+     * PAR-05: tamano maximo vigente desde {@code ARCHIVO/TAMANIO_MAXIMO_BYTES} (el mismo valor que publica
+     * {@code GET /api/v1/configuracion/reclamos}). Sin catalogo, sin valor o con un valor no numerico se usa el respaldo
+     * {@link ContentSecurityValidator#MAX_FILE_SIZE_BYTES}; el validador acota el valor al techo tecnico.
+     */
+    long tamanioMaximoBytes() {
+        if (parametros == null) {
+            return ContentSecurityValidator.MAX_FILE_SIZE_BYTES;
+        }
+        try {
+            return parametros.getParameter(GRUPO_PARAMETRO_TAMANIO, CLAVE_PARAMETRO_TAMANIO)
+                    .map(String::strip)
+                    .map(Long::parseLong)
+                    .orElse(ContentSecurityValidator.MAX_FILE_SIZE_BYTES);
+        } catch (final RuntimeException _) {
+            LOGGER.warn("parametro {}/{} no disponible o invalido; se aplica el respaldo de {} bytes",
+                    GRUPO_PARAMETRO_TAMANIO, CLAVE_PARAMETRO_TAMANIO, ContentSecurityValidator.MAX_FILE_SIZE_BYTES);
+            return ContentSecurityValidator.MAX_FILE_SIZE_BYTES;
+        }
     }
 
     private void registrarBorradorDurable(final SoporteArchivoMetadataPort.RegistrarSoporteBorrador comando) {
@@ -147,8 +185,7 @@ public final class SubirArchivoUseCaseImpl implements SubirArchivoUseCase {
                     "No fue posible completar el control de seguridad del archivo.", exception);
         }
         if (scanResult.isInfected()) {
-            throw new ValidationException(
-                    "El archivo fue rechazado: se detecto una firma de malware conocida.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_028);
         }
     }
 }

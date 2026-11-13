@@ -2,8 +2,8 @@ package co.edu.uco.asistenciasuco.infrastructure.config.adapters;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.malwarescan.MalwareScanPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.storage.FileStoragePort;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.malwarescan.clamav.ClamAvMalwareScanAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.storage.minio.MinioFileStorageAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.malwarescan.resilience.CircuitBreakerMalwareScanAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.storage.resilience.CircuitBreakerFileStorageAdapter;
 import co.edu.uco.asistenciasuco.infrastructure.config.adapters.malwarescan.clamav.ClamAvMalwareScanAdapterConfiguration;
 import co.edu.uco.asistenciasuco.infrastructure.config.adapters.storage.minio.MinioStorageAdapterConfiguration;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.ClamAvProviderProperties;
@@ -96,8 +96,9 @@ class FileProvidersConfigurationTest {
                         "app.providers.clamav.port=3310")
                 .run(context -> {
                     assertThat(context).hasNotFailed();
-                    assertInstanceOf(MinioFileStorageAdapter.class, context.getBean(FileStoragePort.class));
-                    assertInstanceOf(ClamAvMalwareScanAdapter.class, context.getBean(MalwareScanPort.class));
+                    // REA-02: el adapter aprobado se publica envuelto en su circuit breaker (fail-closed).
+                    assertInstanceOf(CircuitBreakerFileStorageAdapter.class, context.getBean(FileStoragePort.class));
+                    assertInstanceOf(CircuitBreakerMalwareScanAdapter.class, context.getBean(MalwareScanPort.class));
                 });
     }
 

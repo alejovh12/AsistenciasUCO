@@ -11,7 +11,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Objects;
 
-/** HU006: perfil del usuario autenticado (solo el propio). La edicion (PUT) sigue en {@code UsuarioController} (501). */
+/**
+ * HU006: perfil del usuario autenticado (solo el propio, de solo consulta). VAL ROL-05 (2026-11-12): el alta generica
+ * {@code POST /api/v1/usuarios} se retiro; bajo esta ruta solo queda {@code GET /perfil}.
+ */
 @RestController
 @RequestMapping("/api/v1/usuarios")
 public final class UsuarioPerfilController {

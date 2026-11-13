@@ -94,6 +94,16 @@ final class AcademicUserParityFixture {
         return ThreadLocalRandom.current().nextInt(100_000_000, 999_999_999);
     }
 
+    /** Nombre de un area existente de la semilla (P5 de usp_crear_asignatura: debe existir). */
+    String nombreAreaSemilla() {
+        return jdbc.queryForObject("SELECT TOP 1 nombre FROM dbo.uv_area ORDER BY id", String.class);
+    }
+
+    /** Nombre de un componente existente de la semilla (P5 de usp_crear_asignatura: debe existir). */
+    String nombreComponenteSemilla() {
+        return jdbc.queryForObject("SELECT TOP 1 nombre FROM dbo.uv_componente ORDER BY id", String.class);
+    }
+
     // ------------------------------------------------------------------ creacion de fixtures
 
     UUID insertarAsignatura(final String codigo, final boolean estadoActivo) {
@@ -114,7 +124,7 @@ final class AcademicUserParityFixture {
         return id;
     }
 
-    /** Periodo con un grupo, dos estudiantes activos y tres inasistencias del estudiante 1 (caso de cierre). */
+    /** Periodo con un grupo, el estudiante 1 cancelado por inasistencia (tres faltas) y el estudiante 2 activo (caso de cierre). */
     record PeriodoCierre(UUID periodo, UUID grupo, UUID egEstudiante1, UUID egEstudiante2, UUID sesion) {
     }
 
@@ -139,8 +149,11 @@ final class AcademicUserParityFixture {
                 """, grupo.toString(), s.asignaturaGrupo().toString(), periodo.toString(), codigoEnteroUnico(), token,
                 s.docenteGrupo().toString());
 
+        // CULM-001 C.1 (DEC-041 C-10): el cierre ya no escribe CI por conteo de faltas; CI solo nace de una revision de
+        // cancelacion aprobada. El estudiante 1 llega al cierre ya cancelado por inasistencia (resultado de esa revision), el
+        // cierre lo conserva y lo cuenta en cantidadEstudiantesCancelaronAutomaticamente; el estudiante 2 pasa A -> F.
         jdbc.update("INSERT INTO dbo.EstudianteGrupo (id, estado, estudiante, grupo) VALUES (?, ?, ?, ?)",
-                eg1.toString(), s.estadoActivo().toString(), s.estudiante1().toString(), grupo.toString());
+                eg1.toString(), s.estadoCancelado().toString(), s.estudiante1().toString(), grupo.toString());
         jdbc.update("INSERT INTO dbo.EstudianteGrupo (id, estado, estudiante, grupo) VALUES (?, ?, ?, ?)",
                 eg2.toString(), s.estadoActivo().toString(), s.estudiante2().toString(), grupo.toString());
 

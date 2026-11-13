@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.matriculaqr.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.matriculaqr.MatriculaQrAccesoPolicy;
@@ -120,7 +121,7 @@ public final class RegistrarEstudiantePorTokenUseCaseImpl implements RegistrarEs
         if (comando.tipoIdentificacionId() == null || comando.numeroIdentificacion() == null
                 || estaVacio(comando.primerNombre()) || estaVacio(comando.primerApellido())
                 || estaVacio(comando.correo()) || estaVacio(comando.password())) {
-            throw new ValidationException("Los datos del registro son obligatorios.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_062);
         }
     }
 

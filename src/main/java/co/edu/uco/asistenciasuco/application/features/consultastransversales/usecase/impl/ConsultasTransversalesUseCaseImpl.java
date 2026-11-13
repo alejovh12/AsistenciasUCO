@@ -2,10 +2,12 @@ package co.edu.uco.asistenciasuco.application.features.consultastransversales.us
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.usecase.ConsultasTransversalesUseCase;
 import co.edu.uco.asistenciasuco.application.features.decano.common.rule.ConsultaPaginadaRules;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.AsignaturaProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.CategoriaJustificacionProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.ComponenteFormacionProjection;
@@ -43,18 +45,34 @@ public final class ConsultasTransversalesUseCaseImpl implements ConsultasTransve
     private static final java.util.Set<String> ESTADOS_VINCULO = java.util.Set.of("ACTIVO", "SIN_VINCULO", "TODOS");
 
     static final Duration RANGO_AUDITORIA_POR_DEFECTO = Duration.ofDays(7);
+    /** PAR-06: respaldo del parametro {@code AUDITORIA/RANGO_MAXIMO_DIAS} (pendiente de migracion en la BD). */
     static final Duration RANGO_AUDITORIA_MAXIMO = Duration.ofDays(90);
+    static final String GRUPO_PARAMETRO_AUDITORIA = "AUDITORIA";
+    static final String CLAVE_RANGO_MAXIMO_DIAS = "RANGO_MAXIMO_DIAS";
+    /** Cota dura del parametro: nunca se recorre mas de un ano de auditoria en una consulta. */
+    static final long RANGO_MAXIMO_DIAS_TECHO = 366;
     static final int LONGITUD_MAXIMA_FILTRO_AUDITORIA = 120;
     private static final List<String> RESULTADOS_AUDITORIA = List.of("SUCCESS", "FAILURE");
 
     private final ConsultasTransversalesQueryPort queryPort;
     private final Clock clock;
+    private final ParameterCatalogPort parametros;
 
     public ConsultasTransversalesUseCaseImpl(final ConsultasTransversalesQueryPort queryPort) {
         this(queryPort, Clock.systemUTC());
     }
 
     public ConsultasTransversalesUseCaseImpl(final ConsultasTransversalesQueryPort queryPort, final Clock clock) {
+        this(queryPort, clock, null);
+    }
+
+    /** @param parametros catalogo de parametros; {@code null} solo en pruebas unitarias (aplica el respaldo de 90 dias). */
+    public ConsultasTransversalesUseCaseImpl(
+            final ConsultasTransversalesQueryPort queryPort,
+            final Clock clock,
+            final ParameterCatalogPort parametros
+    ) {
+        this.parametros = parametros;
         this.queryPort = Objects.requireNonNull(queryPort, "ConsultasTransversalesQueryPort es obligatorio.");
         this.clock = Objects.requireNonNull(clock, "Clock es obligatorio.");
     }
@@ -89,7 +107,7 @@ public final class ConsultasTransversalesUseCaseImpl implements ConsultasTransve
         }
         final String normalizado = valor.trim().toUpperCase(java.util.Locale.ROOT);
         if (!ESTADOS_VINCULO.contains(normalizado)) {
-            throw new ValidationException("El estado de vinculo debe ser ACTIVO, SIN_VINCULO o TODOS.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_029);
         }
         return normalizado;
     }
@@ -111,12 +129,12 @@ public final class ConsultasTransversalesUseCaseImpl implements ConsultasTransve
     @Override
     public List<HistorialEstudianteProjection> consultarHistorial(final UUID usuario, final UUID idEstudiante) {
         if (ObjectHelper.isNull(idEstudiante)) {
-            throw new ValidationException("El estudiante es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_030);
         }
         final List<HistorialEstudianteProjection> historial = queryPort.consultarHistorial(exigirUsuario(usuario),
                 idEstudiante);
         if (historial.isEmpty()) {
-            throw new ResourceNotFoundException("El estudiante no existe en su ambito.");
+            throw new ResourceNotFoundException(MensajeUsuarioErrorCode.NOF_APP_003);
         }
         return historial;
     }
@@ -154,8 +172,28 @@ public final class ConsultasTransversalesUseCaseImpl implements ConsultasTransve
     }
 
     /**
+     * PAR-06: rango maximo de la consulta de auditoria desde {@code AUDITORIA/RANGO_MAXIMO_DIAS}. Sin catalogo, sin el
+     * parametro (aun no esta en la BD) o con un valor fuera de 1..366 se aplica el respaldo de 90 dias.
+     */
+    Duration rangoAuditoriaMaximo() {
+        if (parametros == null) {
+            return RANGO_AUDITORIA_MAXIMO;
+        }
+        try {
+            return parametros.getParameter(GRUPO_PARAMETRO_AUDITORIA, CLAVE_RANGO_MAXIMO_DIAS)
+                    .map(String::strip)
+                    .map(Long::parseLong)
+                    .filter(dias -> dias >= 1 && dias <= RANGO_MAXIMO_DIAS_TECHO)
+                    .map(Duration::ofDays)
+                    .orElse(RANGO_AUDITORIA_MAXIMO);
+        } catch (final RuntimeException _) {
+            return RANGO_AUDITORIA_MAXIMO;
+        }
+    }
+
+    /**
      * Rango [desde, hasta) en UTC: sin hasta se usa el instante actual y sin desde los 7 dias anteriores a hasta. El
-     * rango debe ser positivo y de maximo 90 dias para no recorrer toda la tabla de auditoria.
+     * rango debe ser positivo y no superar {@link #rangoAuditoriaMaximo()} para no recorrer toda la tabla de auditoria.
      */
     private FiltroAuditoria normalizar(final FiltroAuditoria filtro) {
         final FiltroAuditoria entrada = ObjectHelper.isNull(filtro)
@@ -168,16 +206,16 @@ public final class ConsultasTransversalesUseCaseImpl implements ConsultasTransve
         final OffsetDateTime desde = ObjectHelper.isNull(entrada.desde())
                 ? hasta.minus(RANGO_AUDITORIA_POR_DEFECTO) : entrada.desde();
         if (!desde.isBefore(hasta)) {
-            throw new ValidationException("La fecha inicial debe ser anterior a la fecha final.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_031);
         }
-        if (Duration.between(desde, hasta).compareTo(RANGO_AUDITORIA_MAXIMO) > 0) {
-            throw new ValidationException("El rango de fechas no puede superar " + RANGO_AUDITORIA_MAXIMO.toDays()
-                    + " dias.");
+        final Duration rangoMaximo = rangoAuditoriaMaximo();
+        if (Duration.between(desde, hasta).compareTo(rangoMaximo) > 0) {
+            throw ValidationException.conParametros(MensajeUsuarioErrorCode.VAL_APP_032, rangoMaximo.toDays());
         }
         final String resultado = filtroTexto(entrada.resultado(), "resultado");
         final String resultadoNormalizado = ObjectHelper.isNull(resultado) ? null : resultado.toUpperCase(Locale.ROOT);
         if (!ObjectHelper.isNull(resultadoNormalizado) && !RESULTADOS_AUDITORIA.contains(resultadoNormalizado)) {
-            throw new ValidationException("El resultado debe ser SUCCESS o FAILURE.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_033);
         }
         final String accion = filtroTexto(entrada.accion(), "accion");
         return new FiltroAuditoria(desde.withOffsetSameInstant(ZoneOffset.UTC),
@@ -191,14 +229,14 @@ public final class ConsultasTransversalesUseCaseImpl implements ConsultasTransve
     private static String filtroTexto(final String valor, final String nombre) {
         final String filtro = ObjectHelper.isNull(valor) || valor.isBlank() ? null : valor.trim();
         if (!ObjectHelper.isNull(filtro) && filtro.length() > LONGITUD_MAXIMA_FILTRO_AUDITORIA) {
-            throw new ValidationException("El filtro " + nombre + " excede la longitud permitida.");
+            throw ValidationException.conParametros(MensajeUsuarioErrorCode.VAL_APP_034, nombre);
         }
         return filtro;
     }
 
     private static UUID exigirUsuario(final UUID usuario) {
         if (ObjectHelper.isNull(usuario)) {
-            throw new ForbiddenException("No fue posible resolver el usuario autenticado.");
+            throw new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_005);
         }
         return usuario;
     }

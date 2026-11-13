@@ -2,12 +2,14 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coor
 
 import co.edu.uco.asistenciasuco.application.features.coordinador.asignaturaplan.primaryports.AsignaturaPlanInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.asignaturaplan.primaryports.dto.*;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador.request.AsociarAsignaturaPlanRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiPageResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarplanesestudio.primaryports.dto.PlanEstudioDTO;
 import java.util.UUID;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,8 +28,9 @@ public final class AsignaturaPlanController {
     }
 
     @PostMapping("/coordinador/planes-estudio/{planId}/asignaturas-asociadas")
-    public ResponseEntity<ApiDataResponse<Void>> asociar(@PathVariable final UUID planId, @RequestBody final AsociarAsignaturaPlanDTO request) {
-        inputPort.asociar(authenticatedUserResolver.requireAuthenticatedUserId(), planId, request);
+    public ResponseEntity<ApiDataResponse<Void>> asociar(@PathVariable final UUID planId, @Valid @RequestBody final AsociarAsignaturaPlanRequest request) {
+        inputPort.asociar(authenticatedUserResolver.requireAuthenticatedUserId(), planId,
+                new AsociarAsignaturaPlanDTO(request.idAsignatura(), request.semestreNumero(), request.codigoCaracter()));
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiDataResponse<>(true, null));
     }
 

@@ -22,7 +22,7 @@ Ajustes locales que **no** se commitean:
 
 ## 3. Casos manuales
 
-Docente: `maria.rostagno@uco.edu.co` / `Test1234!` → Toma de asistencia → «+ Matricular» → «+ Registrar datos de nuevo alumno».
+Docente: `maria.rostagno@uco.edu.co` / contraseña de prueba (ver la variable `E2E_USER_PASSWORD` en `scratch/README.md`) → Toma de asistencia → «+ Matricular» → «+ Registrar datos de nuevo alumno».
 
 | # | Acción | Resultado esperado |
 | :--- | :--- | :--- |

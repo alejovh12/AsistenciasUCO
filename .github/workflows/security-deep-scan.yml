@@ -26,16 +26,16 @@ jobs:
     timeout-minutes: 25
     steps:
       - name: Checkout source
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up JDK 25
-        uses: actions/setup-java@v6
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
           distribution: temurin
           java-version: '25'
           cache: maven
           server-id: github
-          server-username: MESSAGEUCOLAB_PACKAGES_USER
-          server-password: MESSAGEUCOLAB_PACKAGES_TOKEN
+          server-username-env-var: MESSAGEUCOLAB_PACKAGES_USER
+          server-password-env-var: MESSAGEUCOLAB_PACKAGES_TOKEN
       - name: Execute architectural rules only
         shell: bash
         run: |
@@ -47,7 +47,7 @@ jobs:
           test "$count" -ge 20
       - name: Upload ArchUnit reports
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: archunit-${{ github.run_id }}
           path: target/surefire-reports/TEST-co.edu.uco.asistenciasuco.architecture.*.xml
@@ -63,46 +63,66 @@ jobs:
       security-events: write
     steps:
       - name: Checkout source
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # Trivy resolves transitive Maven POMs; an empty ~/.m2 may exhaust
       # Maven Central rate limits (HTTP 429). Resolve+cache before filesystem scan.
       # Do not switch to --offline-scan: missing POMs would silently reduce coverage.
       - name: Set up Java 25 and cache Maven
-        uses: actions/setup-java@v6
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
           distribution: temurin
           java-version: '25'
           cache: maven
           server-id: github
-          server-username: MESSAGEUCOLAB_PACKAGES_USER
-          server-password: MESSAGEUCOLAB_PACKAGES_TOKEN
+          server-username-env-var: MESSAGEUCOLAB_PACKAGES_USER
+          server-password-env-var: MESSAGEUCOLAB_PACKAGES_TOKEN
       - name: Warm Maven POM and dependency cache for Trivy
         shell: bash
         run: |
           set -euo pipefail
           chmod +x mvnw
           ./mvnw -B -ntp --no-transfer-progress -DskipTests dependency:go-offline dependency:resolve
-      - name: Scan repository with Trivy (inventory-only)
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # signed v0.36.0, immutable SHA
+      # TRI-01 / SEC-08 (VAL oleada 2, decision E de John 2026-11-12): primero el inventario SARIF
+      # completo (no bloquea, sube a Code Scanning) y despues la compuerta que SI bloquea en HIGH/CRITICAL
+      # con correccion disponible. Las excepciones viven en .trivyignore, cada una justificada y con fecha.
+      - name: Scan repository with Trivy (SARIF inventory for Code Scanning)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           version: v0.74.0
           scan-type: fs
           scan-ref: .
-          scanners: vuln,misconfig
+          scanners: vuln,misconfig,secret
           severity: HIGH,CRITICAL
+          ignore-unfixed: false
           format: sarif
           output: trivy-fs.sarif
-          exit-code: '0' # Baseline inventory; remediation/threshold requires approved decision.
+          exit-code: '0'
+          trivyignores: .trivyignore
+          cache: 'true'
+      - name: Trivy repository gate (blocks HIGH/CRITICAL with fix available)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.74.0
+          skip-setup-trivy: true
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,misconfig,secret
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          format: table
+          output: ''
+          exit-code: '1'
+          trivyignores: .trivyignore
           cache: 'true'
       - name: Publish findings to Code Scanning
         if: always() && hashFiles('trivy-fs.sarif') != ''
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         with:
           sarif_file: trivy-fs.sarif
           category: trivy-filesystem
       - name: Preserve sanitized vulnerability report
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: trivy-fs-${{ github.run_id }}
           path: trivy-fs.sarif
@@ -118,7 +138,7 @@ jobs:
       security-events: write
     steps:
       - name: Checkout source
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Prepare GitHub Packages credentials for the Docker build
         shell: bash
         run: |
@@ -149,28 +169,47 @@ jobs:
           trap 'docker rm -f "$cid" >/dev/null 2>&1 || true' EXIT
           docker cp "$cid":/app/app.jar "${RUNNER_TEMP}/asistencias-runtime.jar"
           python3 scripts/security/verify_jdbc_artifact.py "${RUNNER_TEMP}/asistencias-runtime.jar"
-      - name: Scan built Docker image (inventory-only)
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # signed v0.36.0, immutable SHA
+      # TRI-02 (VAL oleada 2): inventario SARIF de la imagen + compuerta bloqueante.
+      - name: Scan built Docker image (SARIF inventory for Code Scanning)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           version: v0.74.0
           scan-type: image
           image-ref: asistencias-uco-security-scan:${{ github.sha }}
-          scanners: vuln
+          scanners: vuln,secret,misconfig
           vuln-type: os,library
           severity: HIGH,CRITICAL
+          ignore-unfixed: false
           format: sarif
           output: trivy-image.sarif
-          exit-code: '0' # Initial inventory; not a "no vulnerabilities" gate.
+          exit-code: '0'
+          trivyignores: .trivyignore
+          cache: 'true'
+      - name: Trivy image gate (blocks HIGH/CRITICAL with fix available)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.74.0
+          skip-setup-trivy: true
+          scan-type: image
+          image-ref: asistencias-uco-security-scan:${{ github.sha }}
+          scanners: vuln,secret,misconfig
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          format: table
+          output: ''
+          exit-code: '1'
+          trivyignores: .trivyignore
           cache: 'true'
       - name: Publish image findings to Code Scanning
         if: always() && hashFiles('trivy-image.sarif') != ''
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         with:
           sarif_file: trivy-image.sarif
           category: trivy-production-image
       - name: Preserve sanitized image report
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: trivy-image-${{ github.run_id }}
           path: trivy-image.sarif

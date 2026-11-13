@@ -23,4 +23,8 @@ public class BusinessException extends ApplicationException {
     protected BusinessException(final ErrorDefinition errorDefinition, final String message) {
         super(errorDefinition, message);
     }
+
+    protected BusinessException(final ErrorDefinition errorDefinition, final Object[] argumentos) {
+        super(errorDefinition, argumentos);
+    }
 }

@@ -244,6 +244,58 @@ class SecurityConfigTest {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    void cf06_preflight_de_origen_rechazado_no_recibe_encabezados_cors() throws Exception {
+        mockMvc.perform(options("/api/v1/protegido")
+                        .header(HttpHeaders.ORIGIN, "https://sitio-ajeno.example")
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, HttpMethod.POST.name())
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS, HttpHeaders.AUTHORIZATION))
+                .andExpect(status().isForbidden())
+                .andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN))
+                .andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS));
+    }
+
+    @Test
+    void cf05_la_api_responde_con_csp_estricta_frame_options_deny_y_encabezados_explicitos() throws Exception {
+        mockMvc.perform(get("/api/v1/protegido").header(HttpHeaders.AUTHORIZATION, "Bearer valid-do"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Security-Policy",
+                        "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"))
+                .andExpect(header().string("X-Frame-Options", "DENY"))
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+                .andExpect(header().string("Referrer-Policy", "no-referrer"))
+                .andExpect(header().string("Permissions-Policy",
+                        org.hamcrest.Matchers.containsString("camera=()")))
+                // HSTS condicionado: nunca sobre HTTP plano.
+                .andExpect(header().doesNotExist("Strict-Transport-Security"));
+    }
+
+    @Test
+    void cf05_los_errores_401_tambien_llevan_los_encabezados_de_seguridad() throws Exception {
+        mockMvc.perform(get("/api/v1/protegido"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().string("X-Frame-Options", "DENY"))
+                .andExpect(header().string("Content-Security-Policy",
+                        org.hamcrest.Matchers.startsWith("default-src 'none'")));
+    }
+
+    @Test
+    void cf05_hsts_solo_en_https_con_un_anio_e_include_subdomains() throws Exception {
+        mockMvc.perform(get("/api/v1/protegido").secure(true).header(HttpHeaders.AUTHORIZATION, "Bearer valid-do"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Strict-Transport-Security", "max-age=31536000 ; includeSubDomains"));
+    }
+
+    @Test
+    void cf05_swagger_ui_recibe_una_csp_limitada_a_su_propio_origen() throws Exception {
+        mockMvc.perform(get("/swagger-ui/index.html"))
+                .andExpect(header().string("Content-Security-Policy",
+                        org.hamcrest.Matchers.allOf(
+                                org.hamcrest.Matchers.containsString("default-src 'self'"),
+                                org.hamcrest.Matchers.containsString("frame-ancestors 'none'"),
+                                org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("unsafe-eval")))));
+    }
+
     private MockHttpServletRequest corsRequest(final String origin) {
         final MockHttpServletRequest request = new MockHttpServletRequest(HttpMethod.OPTIONS.name(), "/api/v1/protegido");
         request.addHeader(HttpHeaders.ORIGIN, origin);

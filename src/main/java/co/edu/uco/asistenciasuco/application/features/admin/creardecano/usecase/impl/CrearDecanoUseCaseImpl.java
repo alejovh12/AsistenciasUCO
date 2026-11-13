@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.CrearDecanoUseCase;
@@ -53,12 +54,12 @@ public final class CrearDecanoUseCaseImpl implements CrearDecanoUseCase {
         }
         // DEC-065 (5): la facultad es existente (idFacultad) o nueva (facultadNueva), nunca ambas.
         if (domain.getIdFacultad() != null && domain.getFacultadNueva() != null) {
-            throw new ValidationException("Indique una facultad existente o una facultad nueva, no ambas.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_013);
         }
         final var facultad = domain.getIdFacultad() == null
                 ? null
                 : facultadQueryPort.consultarFacultadPorId(domain.getIdFacultad())
-                        .orElseThrow(() -> new ResourceNotFoundException("La facultad indicada para crear decano no existe."));
+                        .orElseThrow(() -> new ResourceNotFoundException(MensajeUsuarioErrorCode.NOF_APP_002));
         final Optional<UUID> idUsuarioPreexistente = resolverUsuarioPreexistente(domain);
         final String passwordParaPersistir = idUsuarioPreexistente.isPresent()
                 ? null

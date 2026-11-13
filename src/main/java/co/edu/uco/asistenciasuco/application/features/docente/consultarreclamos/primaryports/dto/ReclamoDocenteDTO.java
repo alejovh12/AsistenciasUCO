@@ -7,6 +7,8 @@ import java.util.UUID;
 /**
  * Solicitud de revision para el docente titular. {@code fechaSesionUtc} es un instante UTC (nulo si la hora
  * historica de la sesion no tiene procedencia verificable); el cliente la presenta en la zona IANA del usuario.
+ * PC (puntos de control): {@code idToma}, {@code numeroToma} y {@code fechaPuntoControlUtc} son los de la toma reclamada
+ * (nulos en un reclamo de la sesion completa).
  */
 public record ReclamoDocenteDTO(
         UUID id,
@@ -27,7 +29,10 @@ public record ReclamoDocenteDTO(
         UUID materiaId,
         String materiaCodigo,
         String materiaNombre,
-        SoporteAdjuntoDTO soporteAdjunto
+        SoporteAdjuntoDTO soporteAdjunto,
+        UUID idToma,
+        Integer numeroToma,
+        Instant fechaPuntoControlUtc
 ) {
 
     /** Soporte vinculado: se descarga SIEMPRE por el backend autenticado ({@code url} relativa), nunca por el storage. */

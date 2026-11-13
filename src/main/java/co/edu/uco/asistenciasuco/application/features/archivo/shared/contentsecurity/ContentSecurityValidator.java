@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.archivo.shared.contentsecurity;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 
 import java.nio.file.InvalidPathException;
@@ -16,6 +17,10 @@ import java.util.Set;
  */
 public final class ContentSecurityValidator {
 
+    /**
+     * Techo tecnico del soporte (5 MiB): limite multipart del servidor y tope de descompresion. PAR-05: el limite vigente
+     * es el parametro {@code ARCHIVO/TAMANIO_MAXIMO_BYTES} (rango 256 KiB..5 MiB en el catalogo); este valor es su respaldo.
+     */
     public static final long MAX_FILE_SIZE_BYTES = 5L * 1024 * 1024;
     /** Longitud maxima del nombre persistido: coincide con ArchivoSoporte.nombreOriginal NVARCHAR(250). */
     public static final int MAX_FILENAME_LENGTH = 250;
@@ -44,42 +49,66 @@ public final class ContentSecurityValidator {
             final String declaredContentType,
             final byte[] content
     ) {
+        return validate(originalFilename, declaredContentType, content, MAX_FILE_SIZE_BYTES);
+    }
+
+    /**
+     * PAR-05: valida con el tamano maximo vigente (parametro del catalogo). Un limite fuera de (0, techo] se ignora y se
+     * aplica el techo tecnico {@link #MAX_FILE_SIZE_BYTES}: el parametro solo puede bajar el limite, nunca superarlo.
+     */
+    public static ValidatedContent validate(
+            final String originalFilename,
+            final String declaredContentType,
+            final byte[] content,
+            final long maxFileSizeBytes
+    ) {
+        final long limite = maxFileSizeBytes > 0 && maxFileSizeBytes <= MAX_FILE_SIZE_BYTES ? maxFileSizeBytes : MAX_FILE_SIZE_BYTES;
         if (content == null || content.length == 0) {
-            throw new ValidationException("El archivo adjunto no puede estar vacio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_021);
         }
-        if (content.length > MAX_FILE_SIZE_BYTES) {
-            throw new ValidationException("El archivo excede el tamano maximo permitido (5 MiB).");
+        if (content.length > limite) {
+            throw ValidationException.conParametros(MensajeUsuarioErrorCode.VAL_APP_022, describirTamano(limite));
         }
 
         final String safeName = sanitizeFilename(originalFilename);
         final String extension = extensionOf(safeName);
         if (!ALLOWED_EXTENSIONS.contains(extension)) {
-            throw new ValidationException(
-                    "Formato de archivo no permitido. Solo se aceptan archivos PDF, PNG o JPG.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_023);
         }
 
         final String expectedContentType = CONTENT_TYPE_BY_EXTENSION.get(extension);
         if (!expectedContentType.equals(normalizeDeclaredContentType(declaredContentType))) {
-            throw new ValidationException(
-                    "El Content-Type declarado no coincide con la extension del archivo.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_024);
         }
 
         if (!matchesMagicBytes(content, MAGIC_BYTES.get(extension))) {
-            throw new ValidationException(
-                    "El contenido del archivo no coincide con su extension declarada.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_025);
         }
 
         return new ValidatedContent(safeName, extension, expectedContentType);
     }
 
+    /** {@code 5 MiB}, {@code 512 KiB} o {@code 300000 bytes}: el texto del limite en el mensaje de error. */
+    static String describirTamano(final long bytes) {
+        final long kib = 1024L;
+        final long mib = kib * kib;
+        if (bytes % mib == 0) {
+            return (bytes / mib) + " MiB";
+        }
+        if (bytes % kib == 0) {
+            return (bytes / kib) + " KiB";
+        }
+        return bytes + " bytes";
+    }
+
     public static String sanitizeFilename(final String filename) {
         final String candidate = filename == null || filename.isBlank() ? "archivo" : filename;
         if (!isSimpleFilename(candidate)) {
-            throw new ValidationException("Nombre de archivo no valido.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_026);
         }
         final String sanitized = candidate.replaceAll("[^a-zA-Z0-9._-]", "_");
         if (sanitized.length() > MAX_FILENAME_LENGTH) {
-            throw new ValidationException("El nombre del archivo excede la longitud maxima permitida (250 caracteres).");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_027);
         }
         return sanitized;
     }

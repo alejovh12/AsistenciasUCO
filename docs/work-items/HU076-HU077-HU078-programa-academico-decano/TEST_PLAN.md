@@ -102,7 +102,7 @@ Cada archivo es transaccional (`BEGIN TRAN … ROLLBACK` al final), con fixtures
 
 **Comando:**
 ```powershell
-Get-Content -Path .\GestioAsistenciaDB\test_suite.sql -Raw | docker exec -i sql_server_asistencias /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "TuPasswordSeguro123" -C -y 35 -Y 35
+Get-Content -Path .\GestioAsistenciaDB\test_suite.sql -Raw | docker exec -i sql_server_asistencias /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$env:MSSQL_SA_PASSWORD" -C -y 35 -Y 35
 ```
 
 ### 2.2 Backend (`GestioAsistenciaBackend/src/test/java/co/edu/uco/asistenciasuco/`)

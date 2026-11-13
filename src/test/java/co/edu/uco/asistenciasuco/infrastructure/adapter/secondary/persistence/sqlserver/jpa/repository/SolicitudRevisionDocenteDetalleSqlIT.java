@@ -119,8 +119,10 @@ class SolicitudRevisionDocenteDetalleSqlIT {
                 () -> assertNotNull(detalle.idAsignatura()),
                 () -> assertNotNull(detalle.codigoAsignatura()),
                 () -> assertNotNull(detalle.nombreAsignatura()),
-                () -> assertNull(detalle.procedenciaTemporalSesion()),
-                () -> assertNull(detalle.fechaHoraInicioSesionUtc())
+                // SES-01: el fixture crea la sesion con el contrato v2 (UTC confirmado), asi que el detalle expone la
+                // procedencia y el instante UTC exacto de inicio de la sesion.
+                () -> assertEquals("UTC_V2", detalle.procedenciaTemporalSesion()),
+                () -> assertEquals(inicioSesionUtc(), detalle.fechaHoraInicioSesionUtc())
         );
         assertCausalYSoporte(detalle, archivo);
     }
@@ -202,6 +204,13 @@ class SolicitudRevisionDocenteDetalleSqlIT {
     }
 
     private static final Random RANDOM = new Random();
+
+    /** Instante UTC literal del DATETIME2 de inicio de la sesion del fixture. */
+    private java.time.Instant inicioSesionUtc() {
+        final String literal = jdbc.queryForObject(
+                "SELECT CONVERT(varchar(27), fechaHoraInicio, 126) FROM dbo.Sesion WHERE id = ?", String.class, sesion.toString());
+        return LocalDateTime.parse(literal).toInstant(java.time.ZoneOffset.UTC);
+    }
 
     private UUID asistenciaDe(final UUID solicitud) {
         return UUID.fromString(jdbc.queryForObject(

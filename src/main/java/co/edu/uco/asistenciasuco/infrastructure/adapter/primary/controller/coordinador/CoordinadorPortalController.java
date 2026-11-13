@@ -15,6 +15,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.respo
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiPageResponse;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.primaryports.dto.ConsultarEstudiantesProgramaDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -54,7 +55,7 @@ public final class CoordinadorPortalController {
 
 
     @PostMapping("/planes-estudio")
-    public ResponseEntity<ApiDataResponse<Void>> crearPlanEstudio(@RequestBody final GuardarPlanEstudioRequest request) {
+    public ResponseEntity<ApiDataResponse<Void>> crearPlanEstudio(@Valid @RequestBody final GuardarPlanEstudioRequest request) {
         gestionarPlanEstudioInputPort.guardar(new GuardarPlanEstudioDTO(
                 null,
                 request == null ? null : request.getInp(),
@@ -65,7 +66,7 @@ public final class CoordinadorPortalController {
     @PutMapping("/planes-estudio/{id}")
     public ResponseEntity<ApiDataResponse<Void>> actualizarPlanEstudio(
             @PathVariable final UUID id,
-            @RequestBody final GuardarPlanEstudioRequest request
+            @Valid @RequestBody final GuardarPlanEstudioRequest request
     ) {
         gestionarPlanEstudioInputPort.guardar(new GuardarPlanEstudioDTO(
                 id,
@@ -93,7 +94,7 @@ public final class CoordinadorPortalController {
     @PostMapping("/planes-estudio/{id}/asignaturas")
     public ResponseEntity<ApiDataResponse<Void>> crearAsignaturaPlan(
             @PathVariable final UUID id,
-            @RequestBody final GuardarAsignaturaRequest request
+            @Valid @RequestBody final GuardarAsignaturaRequest request
     ) {
         gestionarAsignaturaInputPort.crear(
                 toAsignaturaDTO(null, id, request, authenticatedUserResolver.requireAuthenticatedUserId())
@@ -104,7 +105,7 @@ public final class CoordinadorPortalController {
     public ResponseEntity<ApiDataResponse<Void>> actualizarAsignaturaPlan(
             @PathVariable final UUID planId,
             @PathVariable final UUID asigId,
-            @RequestBody final GuardarAsignaturaRequest request
+            @Valid @RequestBody final GuardarAsignaturaRequest request
     ) {
         gestionarAsignaturaInputPort.actualizar(toAsignaturaDTO(
                 asigId, planId, request, authenticatedUserResolver.requireAuthenticatedUserId()));

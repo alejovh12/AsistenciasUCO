@@ -1,10 +1,13 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.decano.request;
 
+import jakarta.validation.constraints.NotNull;
+
 /**
  * Cuerpo de {@code PATCH /api/v1/decano/coordinadores/{id}/estado} (HU122). El estado destino es explicito:
  * nunca se asume un toggle.
  */
 public final class CambiarEstadoCoordinadorRequest {
+    @NotNull(message = "El estado destino del coordinador es obligatorio.")
     private Boolean estaActivo;
 
     public Boolean getEstaActivo() { return estaActivo; }

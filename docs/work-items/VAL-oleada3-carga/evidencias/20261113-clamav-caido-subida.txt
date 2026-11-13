@@ -1,0 +1,7 @@
+# ClamAV detenido (asistencias-files-clamav-1 Exited). POST /api/v1/archivos/subir como ESTUDIANTE, PDF minimo, 6 intentos secuenciales
+intento=1 status=500 code=INTERNAL_APPLICATION_ERROR ms=820
+intento=2 status=500 code=INTERNAL_APPLICATION_ERROR ms=175
+intento=3 status=500 code=INTERNAL_APPLICATION_ERROR ms=163
+intento=4 status=500 code=INTERNAL_APPLICATION_ERROR ms=170
+intento=5 status=500 code=INTERNAL_APPLICATION_ERROR ms=309
+intento=6 status=500 code=INTERNAL_APPLICATION_ERROR ms=277

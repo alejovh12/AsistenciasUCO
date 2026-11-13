@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.decano.actualizarcoordinador.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.decano.actualizarcoordinador.usecase.ActualizarCoordinadorUseCase;
 import co.edu.uco.asistenciasuco.application.features.decano.actualizarcoordinador.usecase.domain.ActualizarCoordinadorDomain;
 import co.edu.uco.asistenciasuco.application.features.decano.common.domain.ResultadoGestionCoordinadorDomain;
@@ -52,7 +53,7 @@ public final class ActualizarCoordinadorUseCaseImpl implements ActualizarCoordin
             throw new CrosscuttingException("El dominio para actualizar coordinador es obligatorio.");
         }
         final UUID facultad = scopePort.findFacultadIdByDecanoUsuario(domain.usuario())
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver la facultad del decano autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_011));
 
         final CorreccionDocumentoDTO documento = new CorreccionDocumentoDTO(
                 domain.idTipoIdentificacion(), domain.numeroIdentificacion(), domain.motivo());

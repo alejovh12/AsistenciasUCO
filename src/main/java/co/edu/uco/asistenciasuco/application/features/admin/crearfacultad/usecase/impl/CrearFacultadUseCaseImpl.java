@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.admin.crearfacultad.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.admin.crearfacultad.usecase.CrearFacultadUseCase;
 import co.edu.uco.asistenciasuco.application.features.admin.crearfacultad.usecase.domain.CrearFacultadDomain;
@@ -18,16 +19,16 @@ public class CrearFacultadUseCaseImpl implements CrearFacultadUseCase {
     @Override
     public void execute(final CrearFacultadDomain domain) {
         if (domain == null) {
-            throw new ValidationException("Los datos de la facultad son obligatorios.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_001);
         }
 
         final String nombre = domain.nombre() != null ? domain.nombre().trim() : "";
         if (nombre.length() < 3 || nombre.length() > 50) {
-            throw new ValidationException("El nombre de la facultad es obligatorio y debe tener entre 3 y 50 caracteres.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_014);
         }
 
         if (domain.idDecano() == null) {
-            throw new ValidationException("El decano titular de la facultad es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_015);
         }
 
         final UUID idFacultad = domain.id() != null ? domain.id() : UUID.randomUUID();

@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.consultarplanesestudio.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarplanesestudio.usecase.ConsultarPlanesEstudioUseCase;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarplanesestudio.usecase.domain.PlanEstudioDomain;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarplanesestudio.usecase.mapper.ConsultarPlanesEstudioRepositoryMapper;
@@ -22,7 +23,7 @@ public final class ConsultarPlanesEstudioUseCaseImpl implements ConsultarPlanesE
             planes = queryPort.consultarPlanesPorPrograma(idPrograma.get());
         } else {
             final UUID idFacultad = scopePort.findFacultadIdByDecanoUsuario(actorUsuarioId)
-                    .orElseThrow(() -> new ForbiddenException("No fue posible resolver el programa ni la facultad del usuario autenticado."));
+                    .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_007));
             planes = queryPort.consultarPlanesPorFacultad(idFacultad);
         }
         return planes.stream().map(ConsultarPlanesEstudioRepositoryMapper::toDomain).toList();

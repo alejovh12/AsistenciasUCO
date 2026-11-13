@@ -6,13 +6,12 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.servlet.HandlerMapping;
-import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 import org.springframework.web.util.ServletRequestPathUtils;
 
@@ -28,14 +27,19 @@ import java.util.Objects;
  * <p>Sin credencial no decide nada: la cadena sigue y responde 401 (una ruta inexistente no revela si existe a un anonimo). Una
  * ruta existente con otro metodo, tipo de contenido o parametros incorrectos tiene handler y sigue su camino normal (405/415/400).
  * El manejador de recursos estaticos ({@code /**}) no cuenta como handler: solo los {@code @RequestMapping}.</p>
+ *
+ * <p>Consulta directamente los beans {@link RequestMappingHandlerMapping} del contexto MVC (antes via
+ * {@code HandlerMappingIntrospector}, deprecado en Spring Framework 7). Si el contexto no tiene ninguno, no decide nada y la
+ * cadena sigue: el PEP conserva la autorizacion.</p>
  */
 public class UnmappedRouteFilter extends OncePerRequestFilter {
 
-    private final HandlerMappingIntrospector introspector;
+    private final ObjectProvider<RequestMappingHandlerMapping> handlerMappings;
     private final SecurityErrorResponseWriter responseWriter;
 
-    public UnmappedRouteFilter(final HandlerMappingIntrospector introspector, final SecurityErrorResponseWriter responseWriter) {
-        this.introspector = Objects.requireNonNull(introspector, "HandlerMappingIntrospector es obligatorio.");
+    public UnmappedRouteFilter(final ObjectProvider<RequestMappingHandlerMapping> handlerMappings,
+            final SecurityErrorResponseWriter responseWriter) {
+        this.handlerMappings = Objects.requireNonNull(handlerMappings, "Los RequestMappingHandlerMapping son obligatorios.");
         this.responseWriter = Objects.requireNonNull(responseWriter, "SecurityErrorResponseWriter es obligatorio.");
     }
 
@@ -60,12 +64,15 @@ public class UnmappedRouteFilter extends OncePerRequestFilter {
             ServletRequestPathUtils.parseAndCache(request);
         }
         try {
-            for (final HandlerMapping mapping : introspector.getHandlerMappings()) {
-                if (mapping instanceof RequestMappingHandlerMapping && atiende(mapping, request)) {
+            boolean hayMappings = false;
+            for (final RequestMappingHandlerMapping mapping : handlerMappings.orderedStream().toList()) {
+                hayMappings = true;
+                if (atiende(mapping, request)) {
                     return true;
                 }
             }
-            return false;
+            // Sin mappings MVC no hay base para afirmar que la ruta no existe: decide el resto de la cadena.
+            return !hayMappings;
         } finally {
             if (!rutaParseada) {
                 ServletRequestPathUtils.clearParsedRequestPath(request);
@@ -73,7 +80,7 @@ public class UnmappedRouteFilter extends OncePerRequestFilter {
         }
     }
 
-    private static boolean atiende(final HandlerMapping mapping, final HttpServletRequest request) {
+    private static boolean atiende(final RequestMappingHandlerMapping mapping, final HttpServletRequest request) {
         try {
             return mapping.getHandler(request) != null;
         } catch (final Exception coincidenciaParcial) {

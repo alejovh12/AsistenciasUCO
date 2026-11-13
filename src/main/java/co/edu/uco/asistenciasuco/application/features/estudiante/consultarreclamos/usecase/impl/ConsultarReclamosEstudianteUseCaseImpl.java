@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.usecase.ConsultarReclamosEstudianteUseCase;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.usecase.domain.ConsultarReclamosEstudianteDomain;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.usecase.domain.ReclamosEstudiantePaginaDomain;
@@ -33,7 +34,7 @@ public final class ConsultarReclamosEstudianteUseCaseImpl implements ConsultarRe
     @Override
     public ReclamosEstudiantePaginaDomain execute(final ConsultarReclamosEstudianteDomain domain) {
         scopePort.findEstudianteIdByUsuario(domain.actorUsuarioId())
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver el estudiante autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_004));
 
         final List<SolicitudRevisionEstudianteProjection> filas = queryPort.consultarSolicitudesEstudiante(
                 domain.actorUsuarioId(), domain.codigoEstado(), domain.pagina(), domain.tamano());

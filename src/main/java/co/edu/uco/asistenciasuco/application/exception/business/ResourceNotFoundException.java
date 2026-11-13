@@ -22,4 +22,13 @@ public final class ResourceNotFoundException extends BusinessException {
     public ResourceNotFoundException(final String code, final String message) {
         super(code, message);
     }
+
+    private ResourceNotFoundException(final ErrorDefinition errorDefinition, final Object[] argumentos) {
+        super(errorDefinition, argumentos);
+    }
+
+    /** Error de catalogo con marcadores {@code {}} que se llenan con {@code argumentos} (VAL-oleada3 MSG-05). */
+    public static ResourceNotFoundException conParametros(final ErrorDefinition errorDefinition, final Object... argumentos) {
+        return new ResourceNotFoundException(errorDefinition, argumentos);
+    }
 }

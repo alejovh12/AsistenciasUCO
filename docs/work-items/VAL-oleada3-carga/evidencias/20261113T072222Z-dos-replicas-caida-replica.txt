@@ -1,0 +1,23 @@
+﻿# VAL-oleada3 carga: dos-replicas-caida-replica
+fecha_utc=20261113T072222Z
+k6_image=grafana/k6:1.3.0@sha256:3ddc8b1a33a2c3d8edc6e99b6a762ae36cba08788463458f5e6a7703e14eb77d
+base_url=http://host.docker.internal:8088 modo=normal vus=10 duracion=90s rampa=10s think_ms=1000
+dependencia_detenida=ninguna
+k6_exit_code=99 (0 = todos los umbrales cumplen; 99 = algun umbral falla)
+reparto http://host.docker.internal:8080 status=200 peticiones=466
+reparto http://host.docker.internal:8080 status=503 peticiones=81
+reparto http://host.docker.internal:8082 status=200 peticiones=29
+reparto http://host.docker.internal:8082 status=502 peticiones=6
+reparto http://host.docker.internal:8082 status=503 peticiones=83
+
+## salida k6
+modo=normal base=http://host.docker.internal:8088 vus=10 duracion=90s
+http_reqs={"rate":6.110888596315056,"count":665}
+http_req_failed={"rate":0.2556390977443609,"passes":170,"fails":495}
+http_req_duration={"p(95)":1640.6509811999997,"p(99)":2946.3573439600004,"max":5118.193691,"avg":639.2639638736833,"min":13.878161,"med":467.69105,"p(90)":1373.2233968}
+lecturaPropia={"max":5118.193691,"avg":638.9446244990397,"min":13.878161,"med":467.69105,"p(90)":1369.299058,"p(95)":1617.377754,"p(99)":3619.124110199963}
+agregado={"p(95)":1698.9769395999997,"p(99)":2276.8592466099985,"max":2666.066919,"avg":640.4193514722223,"min":14.874256,"med":471.18604949999997,"p(90)":1373.6227236}
+checks={"rate":0.7443609022556391,"passes":495,"fails":170}
+estados={"estado_502":6,"estado_503":164,"estado_200":495}
+umbrales={"http_req_failed":{"rate<0.01":{"ok":false}},"checks":{"rate>0.99":{"ok":false}},"http_req_duration{name:/api/v1/estudiante/reclamos}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/estudiante/alertas}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/docente/horarios}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/coordinador/grupos}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/auth/me}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/coordinador/alertas-tempranas}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/coordinador/indicadores}":{"max>=0":{"ok":true}},"http_req_duration{clase:agregado}":{"p(95)<1500":{"ok":false}},"http_req_duration{name:/api/v1/docente/reclamos}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/estudiante/materias}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/coordinador/consolidado-asistencia}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/estudiante/horarios}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/docente/asignaturas}":{"max>=0":{"ok":true}},"http_req_duration{clase:lecturaPropia}":{"p(95)<800":{"ok":false}}}
+time="2026-11-13T07:24:20Z" level=error msg="thresholds on metrics 'checks, http_req_duration{clase:agregado}, http_req_duration{clase:lecturaPropia}, http_req_failed' have been crossed"

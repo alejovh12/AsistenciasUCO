@@ -7,6 +7,7 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.Resu
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.cerrartoma.primaryports.CerrarTomaAsistenciaInputPort;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.AsistenciaTomaFila;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.FaltanteTomaFila;
+import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.ResumenTomasSesionFila;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.TomaAsistenciaResumen;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.consultartomassesion.primaryports.ConsultarTomasSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.registrarasistenciastoma.primaryports.RegistrarAsistenciasTomaInputPort;
@@ -33,12 +34,16 @@ public final class TomaAsistenciaHttpResponses {
     public record TomaAsistenciaResponse(UUID idToma, UUID idSesion, UUID idGrupo, int numero, String modo, String estado,
                                          boolean esImplicita, String fechaAperturaUtc, String fechaCierreUtc, BigDecimal horasToma,
                                          int totalRegistros, int totalPresentes, int totalAusentes, int totalExcusas,
-                                         boolean tieneQrActivo) {
+                                         boolean tieneQrActivo, String fechaPuntoControlUtc, int ordenPuntoControl,
+                                         int minutosTramoAnterior, int minutosTramoSiguiente, boolean esEditable,
+                                         String editableHastaUtc) {
 
         public static TomaAsistenciaResponse from(final TomaAsistenciaResumen t) {
             return new TomaAsistenciaResponse(t.idToma(), t.idSesion(), t.idGrupo(), t.numero(), t.modo(), t.estado(),
                     t.esImplicita(), utc(t.fechaAperturaUtc()), utc(t.fechaCierreUtc()), t.horasToma(), t.totalRegistros(),
-                    t.totalPresentes(), t.totalAusentes(), t.totalExcusas(), t.tieneQrActivo());
+                    t.totalPresentes(), t.totalAusentes(), t.totalExcusas(), t.tieneQrActivo(), utc(t.fechaPuntoControlUtc()),
+                    t.ordenPuntoControl(), t.minutosTramoAnterior(), t.minutosTramoSiguiente(), t.esEditable(),
+                    utc(t.editableHastaUtc()));
         }
     }
 
@@ -55,6 +60,18 @@ public final class TomaAsistenciaHttpResponses {
                     new VentanaResponse(utc(r.tomas().ventanaAperturaUtc()), utc(r.tomas().ventanaCierreUtc()), r.tomas().ventanaAbierta()),
                     r.tomas().horasSesion(), r.tomas().maximoTomas(),
                     r.tomas().tomas().stream().map(TomaAsistenciaResponse::from).toList());
+        }
+    }
+
+    /** PC (puntos de control): resumen de un estudiante en la sesion, en minutos; {@code estado} es el de la sesion para el estudiante. */
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public record ResumenTomasEstudianteResponse(UUID estudianteId, String nombreCompleto, int minutosSesion, int minutosAsistidos,
+                                                 int minutosFalta, int minutosExcusa, int minutosSinRegistro, String estado,
+                                                 int tomasAusentes) {
+
+        public static ResumenTomasEstudianteResponse from(final ResumenTomasSesionFila f) {
+            return new ResumenTomasEstudianteResponse(f.idEstudiante(), f.nombreCompleto(), f.minutosSesion(), f.minutosAsistidos(),
+                    f.minutosFalta(), f.minutosExcusa(), f.minutosSinRegistro(), f.estado(), f.tomasAusentes());
         }
     }
 

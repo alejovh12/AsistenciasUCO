@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.docente.consultarreclamos.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.SolicitudRevisionDocenteQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.SolicitudRevisionDocenteProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
@@ -33,7 +34,7 @@ public final class ConsultarReclamosDocenteUseCaseImpl implements ConsultarRecla
     @Override
     public ReclamosDocentePaginaDomain execute(final ConsultarReclamosDocenteDomain domain) {
         scopePort.findDocenteIdByUsuario(domain.actorUsuarioId())
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver el docente autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_003));
 
         final List<SolicitudRevisionDocenteProjection> filas = queryPort.consultarSolicitudesDocente(
                 domain.actorUsuarioId(), domain.codigoEstado(), domain.pagina(), domain.tamano());

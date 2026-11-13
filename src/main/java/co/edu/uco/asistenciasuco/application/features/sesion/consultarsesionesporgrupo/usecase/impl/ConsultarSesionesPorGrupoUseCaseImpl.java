@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionesporgrupo.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.usecase.entity.SesionConsultadaEntity;
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.usecase.mapper.ConsultarSesionRepositoryMapper;
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionesporgrupo.usecase.ConsultarSesionesPorGrupoUseCase;
@@ -42,7 +43,7 @@ public final class ConsultarSesionesPorGrupoUseCaseImpl implements ConsultarSesi
         }
 
         if (!institutionalScopePort.canDocenteAccessGrupo(domain.getUsuarioEjecutor(), domain.getGrupo())) {
-            throw new ForbiddenException("El docente autenticado no tiene titularidad sobre el grupo consultado.");
+            throw new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_001);
         }
 
         return sesionRepositoryPort.consultarSesionesPorGrupo(domain.getGrupo()).stream()

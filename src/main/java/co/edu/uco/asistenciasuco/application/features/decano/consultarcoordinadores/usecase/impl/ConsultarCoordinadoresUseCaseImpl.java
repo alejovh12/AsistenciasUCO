@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.usecase.ConsultarCoordinadoresUseCase;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.usecase.domain.CoordinadorDomain;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.usecase.mapper.ConsultarCoordinadoresRepositoryMapper;
@@ -24,7 +25,7 @@ public final class ConsultarCoordinadoresUseCaseImpl implements ConsultarCoordin
     }
     @Override public List<CoordinadorDomain> execute(final UUID actorUsuarioId) {
         final UUID idFacultad = scopePort.findFacultadIdByDecanoUsuario(actorUsuarioId)
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver la facultad del decano autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_011));
         final Map<UUID, CoordinadorProjection> consolidado = new LinkedHashMap<>();
         for (final CoordinadorProjection item : coordinadorQueryPort.consultarCoordinadoresPorFacultad(idFacultad)) {
             if (item != null && item.id() != null) {

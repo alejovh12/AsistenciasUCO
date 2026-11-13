@@ -1,15 +1,20 @@
 package co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.usecase.ConsultarSesionesMateriaEstudianteUseCase;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.usecase.domain.EstadoAsistenciaSesion;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.usecase.domain.SesionMateriaEstudianteDomain;
+import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.usecase.domain.TomaSesionEstudianteDomain;
+import co.edu.uco.asistenciasuco.application.features.asistencia.common.ResultadoAprobacionReclamo;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.usecase.mapper.ConsultarSesionesMateriaEstudianteRepositoryMapper;
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.PaginaResultado;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsistenciaSesionEstudianteQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.SesionMateriaEstudianteQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.AsistenciaSesionEstudianteProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.AsistenciaTomaEstudianteProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.MinutosSesionEstudianteProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.SesionMateriaEstudianteProjection;
 import co.edu.uco.asistenciasuco.application.features.sesion.common.entity.SesionProcedenciaEntity;
 import co.edu.uco.asistenciasuco.application.features.sesion.common.mapper.SesionProcedenciaMapper;
@@ -73,7 +78,7 @@ public final class ConsultarSesionesMateriaEstudianteUseCaseImpl implements Cons
     @Override public List<SesionMateriaEstudianteDomain> execute(final UUID actorUsuarioId, final UUID idAsignatura,
                                                                  final Integer pagina, final Integer tamano) {
         final UUID idEstudiante = scopePort.findEstudianteIdByUsuario(actorUsuarioId)
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver el estudiante autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_004));
         final int numeroPagina = pagina == null ? 1 : pagina;
         final int tamanoPagina = tamano == null ? tamanoPorDefecto() : tamano;
         final PaginaResultado<SesionMateriaEstudianteProjection> resultado =
@@ -97,21 +102,72 @@ public final class ConsultarSesionesMateriaEstudianteUseCaseImpl implements Cons
             }
         }
         final Map<UUID, SesionProcedenciaEntity> procedencias = procedencias(sesiones, idsPagina);
+        final Map<UUID, List<TomaSesionEstudianteDomain>> tomasPorSesion = tomasPorSesion(
+                asistenciaPort.consultarTomasSesiones(idEstudiante, idAsignatura, idsPagina), idsPagina);
+        final Map<UUID, MinutosSesionEstudianteProjection> minutosPorSesion = new HashMap<>();
+        for (final var minutos : asistenciaPort.consultarMinutosSesiones(idEstudiante, idAsignatura, idsPagina)) {
+            if (idsPagina.contains(minutos.idSesion())) {
+                minutosPorSesion.putIfAbsent(minutos.idSesion(), minutos);
+            }
+        }
         return sesiones.stream()
                 .map(sesion -> {
                     final var hechos = hechosPorSesion.getOrDefault(sesion.id(), List.of());
                     final SesionProcedenciaEntity procedencia = procedencias.get(sesion.id());
+                    final var tomas = tomasPorSesion.getOrDefault(sesion.id(), List.of());
+                    final var minutos = minutosPorSesion.get(sesion.id());
                     // CULM-001 B.1 (3.2.4): una sesion cancelada no tiene asistencia que mostrar ni es reclamable.
                     final boolean cancelada = procedencia != null && procedencia.cancelacion() != null;
-                    final EstadoAsistenciaSesion estado = cancelada ? EstadoAsistenciaSesion.NO_DISPONIBLE : resolverEstado(hechos);
+                    // PC (puntos de control): el estado sale de la base de datos (minutos por tramo); sin fila se usa el respaldo por marcas.
+                    final EstadoAsistenciaSesion estado = cancelada ? EstadoAsistenciaSesion.NO_DISPONIBLE : estadoDeLaBaseDeDatos(minutos, hechos);
                     final String estadoSolicitud = resolverEstadoSolicitud(hechos);
-                    // CERT-CULM001: PARCIAL tambien tiene una toma sin justa causa y se puede reclamar.
-                    final boolean reclamable = (estado == EstadoAsistenciaSesion.AUSENTE || estado == EstadoAsistenciaSesion.PARCIAL)
-                            && estadoSolicitud == null;
+                    // PC: reclamable si alguna toma lo es (la base de datos valida ausencia, solicitud previa y plazo); sin tomas, la regla anterior.
+                    final boolean reclamable = !cancelada && (tomas.isEmpty()
+                            ? (estado == EstadoAsistenciaSesion.AUSENTE || estado == EstadoAsistenciaSesion.PARCIAL) && estadoSolicitud == null
+                            : tomas.stream().anyMatch(TomaSesionEstudianteDomain::reclamable));
                     return ConsultarSesionesMateriaEstudianteRepositoryMapper.toDomain(
-                            sesion, procedencia, estado, estadoSolicitud, reclamable);
+                            sesion, procedencia, estado, estadoSolicitud, reclamable, cancelada ? null : minutos, cancelada ? List.of() : tomas);
                 })
                 .toList();
+    }
+
+    private static EstadoAsistenciaSesion estadoDeLaBaseDeDatos(final MinutosSesionEstudianteProjection minutos,
+                                                                final List<AsistenciaSesionEstudianteProjection> hechos) {
+        if (minutos != null && minutos.codigoEstadoSesion() != null) {
+            try {
+                return EstadoAsistenciaSesion.valueOf(minutos.codigoEstadoSesion().strip().toUpperCase(Locale.ROOT));
+            } catch (final IllegalArgumentException ignorado) {
+                LOGGER.warn("Estado de sesion desconocido {}; se usa el respaldo por marcas.", minutos.codigoEstadoSesion());
+            }
+        }
+        return resolverEstado(hechos);
+    }
+
+    private static Map<UUID, List<TomaSesionEstudianteDomain>> tomasPorSesion(
+            final List<AsistenciaTomaEstudianteProjection> filas, final Set<UUID> idsPagina) {
+        final Map<UUID, List<TomaSesionEstudianteDomain>> resultado = new HashMap<>();
+        for (final AsistenciaTomaEstudianteProjection f : filas) {
+            if (idsPagina.contains(f.idSesion())) {
+                resultado.computeIfAbsent(f.idSesion(), k -> new ArrayList<>()).add(new TomaSesionEstudianteDomain(f.idToma(),
+                        f.numeroToma(), f.fechaPuntoControlUtc(), f.codigoEstadoToma(), f.esReclamable(), f.idSolicitud(),
+                        nombreEstadoSolicitud(f.codigoEstadoSolicitud()),
+                        ResultadoAprobacionReclamo.nombreDesdeCodigo(f.codigoAprobacion())));
+            }
+        }
+        return resultado;
+    }
+
+    /** Codigos de {@code dbo.Estado} de la solicitud: P pendiente, A aprobada, R rechazada; otro valor se transporta tal cual. */
+    private static String nombreEstadoSolicitud(final String codigo) {
+        if (codigo == null || codigo.isBlank()) {
+            return null;
+        }
+        return switch (codigo.strip().toUpperCase(Locale.ROOT)) {
+            case "P" -> "PENDIENTE";
+            case "A" -> "APROBADA";
+            case "R" -> "RECHAZADA";
+            default -> codigo.strip();
+        };
     }
 
     /** PAGINACION/TAMANO_MAXIMO del catalogo; ausente, vacio o mal formado vale 100 (semilla). */

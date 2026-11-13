@@ -42,8 +42,7 @@ class JpaRepositoryBeanUniquenessTest {
     // CULM-001 C.1: + AlertaInasistenciaJpaRepository, RevisionCancelacionJpaRepository y RealtimeAudienciaJpaRepository = 68.
     // DEC-065 (4): - OfertaCreacionGruposDocenteJpaRepository (el docente ya no crea grupos) = 68.
     // HU018 / HU019: + PlanEstudioEstudianteJpaRepository y HorasProgramadasEstudianteJpaRepository = 70.
-    // HU177: + RecuperacionClaveJpaRepository = 71.
-    private static final int EXPECTED_REPOSITORIES = 71;
+    private static final int EXPECTED_REPOSITORIES = 70;
 
     @Test
     void cada_port_tiene_exactamente_un_repository_activo_con_provider_sqlserver() {

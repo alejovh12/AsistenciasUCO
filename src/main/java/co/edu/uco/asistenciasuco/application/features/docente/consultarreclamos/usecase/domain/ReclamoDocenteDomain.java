@@ -28,6 +28,9 @@ public record ReclamoDocenteDomain(
         String nombreSoporte,
         String tipoContenidoSoporte,
         Long tamanioSoporteBytes,
-        Instant fechaRegistroSoporteUtc
+        Instant fechaRegistroSoporteUtc,
+        UUID idToma,
+        Integer numeroToma,
+        Instant fechaPuntoControlUtc
 ) {
 }

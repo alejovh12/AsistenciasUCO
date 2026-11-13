@@ -38,6 +38,42 @@ public record SolicitudRevisionEstudianteProjection(
         int totalRegistros,
         String codigoCategoria,
         String nombreCategoria,
-        List<SoporteReclamoProjection> soportes
+        List<SoporteReclamoProjection> soportes,
+        UUID idToma,
+        Integer numeroToma,
+        Instant fechaPuntoControlUtc,
+        String codigoResultadoAprobacion
 ) {
+
+    /** Compatibilidad: sin los datos de la toma (PC, puntos de control). */
+    public SolicitudRevisionEstudianteProjection(
+            final UUID idSolicitud,
+            final String nombreSolicitud,
+            final LocalDate fechaSolicitud,
+            final String codigoEstado,
+            final String nombreEstado,
+            final String justificacionSolicitud,
+            final String justificacionRespuesta,
+            final UUID idSesion,
+            final Integer numeroSesion,
+            final Instant fechaHoraInicioSesionUtc,
+            final String procedenciaTemporalSesion,
+            final UUID idGrupo,
+            final Integer codigoGrupo,
+            final String nombreGrupo,
+            final UUID idAsignatura,
+            final String codigoAsignatura,
+            final String nombreAsignatura,
+            final UUID idArchivoSoporte,
+            final String nombreSoporte,
+            final String tipoContenidoSoporte,
+            final Long tamanioSoporteBytes,
+            final Instant fechaRegistroSoporteUtc,
+            final int totalRegistros,
+            final String codigoCategoria,
+            final String nombreCategoria,
+            final List<SoporteReclamoProjection> soportes
+    ) {
+        this(idSolicitud, nombreSolicitud, fechaSolicitud, codigoEstado, nombreEstado, justificacionSolicitud, justificacionRespuesta, idSesion, numeroSesion, fechaHoraInicioSesionUtc, procedenciaTemporalSesion, idGrupo, codigoGrupo, nombreGrupo, idAsignatura, codigoAsignatura, nombreAsignatura, idArchivoSoporte, nombreSoporte, tipoContenidoSoporte, tamanioSoporteBytes, fechaRegistroSoporteUtc, totalRegistros, codigoCategoria, nombreCategoria, soportes, null, null, null, null);
+    }
 }

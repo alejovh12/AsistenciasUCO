@@ -109,9 +109,12 @@ class AcademicUserCommandsSuccessParityIT {
         final UUID idJpa = UUID.randomUUID();
 
         final UUID corrJdbc = nuevaCorrelacion();
+        // P5 (usp_crear_asignatura): el area y el componente deben existir (GEN_001); ya no se aceptan vacios ni se asigna
+        // uno cualquiera. Se envian los de la semilla (VAL-PRU-04).
         final List<Long> antesJdbc = fixture.conteos();
         final ProcedureResult jdbc = oracle.crearAsignatura(idJdbc, tokenJdbc, "Asignatura fixture", 4,
-                s.planEstudio(), s.semestreNumero(), "", "", s.ejecutorCoordinador());
+                s.planEstudio(), s.semestreNumero(), fixture.nombreAreaSemilla(), fixture.nombreComponenteSemilla(),
+                s.ejecutorCoordinador());
         final String efectosJdbc = fixture.asignaturaPorId(idJdbc, tokenJdbc) + "#"
                 + fixture.deltaConteos(antesJdbc, fixture.conteos());
         final String resultadoJdbc = canonico(jdbc, corrJdbc);
@@ -119,7 +122,8 @@ class AcademicUserCommandsSuccessParityIT {
         nuevaCorrelacion();
         final List<Long> antesJpa = fixture.conteos();
         final String resultadoJpa = exitoJpa(() -> new AsignaturaJpaRepository(entityManager, new JpaProcedureExecutor(entityManager)).crearAsignatura(idJpa,
-                tokenJpa, "Asignatura fixture", 4, s.planEstudio(), s.semestreNumero(), "", "", null, s.ejecutorCoordinador()));
+                tokenJpa, "Asignatura fixture", 4, s.planEstudio(), s.semestreNumero(), fixture.nombreAreaSemilla(),
+                fixture.nombreComponenteSemilla(), null, s.ejecutorCoordinador()));
         final String efectosJpa = fixture.asignaturaPorId(idJpa, tokenJpa) + "#"
                 + fixture.deltaConteos(antesJpa, fixture.conteos());
 

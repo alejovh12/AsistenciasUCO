@@ -17,9 +17,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoRepo
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ActualizarGrupoRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.CrearGrupoRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.CrearUsuarioRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarEstudianteRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.CrearUsuarioRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.EstudianteGrupoRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.GrupoCommandRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.GrupoRepositoryProjection;
@@ -624,11 +622,6 @@ class RegistrarEstudianteUseCaseImplTest {
             @Override
             public Optional<String> consultarCorreoPorEstudiante(final UUID idEstudiante) {
                 throw new UnsupportedOperationException("Con correo informado no se resuelve el correo por estudiante.");
-            }
-
-            @Override
-            public CrearUsuarioRepositoryProjection crearUsuario(final CrearUsuarioRepositoryDTO dto) {
-                throw new UnsupportedOperationException("No usado por este test.");
             }
 
             @Override

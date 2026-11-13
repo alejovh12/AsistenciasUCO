@@ -3,11 +3,17 @@
     [string]$Keycloak = 'http://127.0.0.1:8081',
     [string]$SqlContainer = 'sql_docentes',
     [string]$SqlPassword = $env:MSSQL_SA_PASSWORD,
+    [string]$UserPassword = $env:E2E_USER_PASSWORD,
+    [string]$DocentePassword = $env:E2E_DOCENTE_PASSWORD,
     [string]$Documento = '960093001',
     [string]$Correo = 'e2e.hu093.docente@uco.edu.co'
 )
 # E2E HU093 (activar/inactivar el vinculo) con JWT real. Requiere el backend en otro puerto y SQL propio.
 $ErrorActionPreference = 'Stop'
+# Las contrasenas se leen del entorno; el script no trae valores por defecto.
+if ([string]::IsNullOrEmpty($SqlPassword)) { throw 'Falta la variable de entorno MSSQL_SA_PASSWORD (ver scratch/README.md).' }
+if ([string]::IsNullOrEmpty($UserPassword)) { throw 'Falta la variable de entorno E2E_USER_PASSWORD (ver scratch/README.md).' }
+if ([string]::IsNullOrEmpty($DocentePassword)) { throw 'Falta la variable de entorno E2E_DOCENTE_PASSWORD (ver scratch/README.md).' }
 function Get-Token($user, $pass) {
     (Invoke-RestMethod -Uri "$Keycloak/realms/asistencias-uco/protocol/openid-connect/token" -Method Post -Body @{
         client_id = 'asistencias-uco-frontend'; grant_type = 'password'; username = $user; password = $pass }).access_token
@@ -28,14 +34,14 @@ function Call($method, $path, $token, $body) {
 function Assert($cond, $msg) { if (-not $cond) { throw "E2E FAILED: $msg" } else { Write-Host "OK  $msg" -ForegroundColor Green } }
 function Sql($q) { (docker exec $SqlContainer /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $SqlPassword -C -d gestionasistenciadb -h -1 -W -Q "SET NOCOUNT ON; $q" | Out-String).Trim() }
 
-$coord = Get-Token 'coordinador.sistemas@uco.edu.co' 'Test1234!'
-$decano = Get-Token 'decano.ingenieria@uco.edu.co' 'Test1234!'
+$coord = Get-Token 'coordinador.sistemas@uco.edu.co' $UserPassword
+$decano = Get-Token 'decano.ingenieria@uco.edu.co' $UserPassword
 $tipos = Call GET '/tipos-vinculacion' $coord $null
 $cat = ($tipos.body | Where-Object codigo -eq 'CAT').id
 $tipoCC = (Sql "SELECT TOP 1 id FROM dbo.uv_tipo_identificacion WHERE tipoIdentificacion='CC'")
 
 $alta = Call POST '/coordinador/docentes' $coord @{ idTipoIdentificacion = $tipoCC; numeroIdentificacion = $Documento; primerNombre = 'Estado'; primerApellido = 'Prueba';
-    correo = $Correo; password = 'Docente2026!'; idTipoVinculacion = $cat }
+    correo = $Correo; password = $DocentePassword; idTipoVinculacion = $cat }
 Assert ($alta.status -eq 201) "Alta previa del docente de prueba (obtuvo $($alta.status))"
 $id = $alta.body.datos.idDocente
 
@@ -43,7 +49,7 @@ $r1 = Call PATCH "/coordinador/docentes/$id/estado" $coord @{ estaActivo = $fals
 Assert ($r1.status -eq 200 -and $r1.body.datos.estaActivo -eq $false) "PATCH inactivar responde 200 con estaActivo=false (obtuvo $($r1.status))"
 $bd = Sql "SELECT CONCAT(dp.estado, '|', u.estado) FROM dbo.DocentePrograma dp INNER JOIN dbo.Docente d ON d.id = dp.docente INNER JOIN dbo.Usuario u ON u.id = d.usuario WHERE dp.docente = '$id'"
 Assert ($bd -eq '0|1') "sqlcmd: vinculo inactivo (0) y persona activa (1): $bd"
-Assert ([bool](Get-Token $Correo 'Docente2026!')) 'El docente SIGUE iniciando sesion en Keycloak (la cuenta no se deshabilita)'
+Assert ([bool](Get-Token $Correo $DocentePassword)) 'El docente SIGUE iniciando sesion en Keycloak (la cuenta no se deshabilita)'
 
 $inact = Call GET '/coordinador/docentes?estaActivo=false' $coord $null
 Assert ($inact.status -eq 200 -and (@($inact.body.datos | Where-Object { $_.idDocente -eq $id }).Count -eq 1)) 'El filtro estaActivo=false lista al docente inactivado'

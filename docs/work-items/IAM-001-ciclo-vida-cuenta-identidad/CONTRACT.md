@@ -155,7 +155,7 @@ Después marca `RESUELTO`. Es idempotente.
 ## 6. Infraestructura
 
 - `infra/keycloak/scripts/seed-canonical-users.ps1`:
-  - parámetros `-SqlContainer sql_server_asistencias -Realm asistencias-uco -Password 'Test1234!'` (**solo local**);
+  - parámetros `-SqlContainer sql_server_asistencias -Realm asistencias-uco -Password $env:E2E_USER_PASSWORD` (ver la variable `E2E_USER_PASSWORD` en `scratch/README.md`) (**solo local**);
   - lee `uv_usuario` + `uv_usuario_perfil` de los usuarios del seed y, para cada uno, crea o actualiza la cuenta (`username` = documento, atributo `idUsuario` = `Usuario.id`), fija la contraseña solo si es nueva y asigna los client roles de `asistencias-api`;
   - es idempotente; con `-WhatIf`, solo muestra lo que haría;
   - falla si detecta un `idUsuario` asignado a dos cuentas.

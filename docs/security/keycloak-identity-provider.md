@@ -372,7 +372,7 @@ Estado real de qué flujo provisiona identidad, a la fecha:
 
 | UseCase | ¿Llama a `IdentityProviderPort`? | Rol |
 |---|---|---|
-| `ProvisionarUsuarioUseCaseImpl` (`/api/v1/usuarios`) | Sí | Siempre `ESTUDIANTE` (hardcode pendiente — ver 2B.2-D abajo) |
+| ~~`ProvisionarUsuarioUseCaseImpl` (`/api/v1/usuarios`)~~ | Retirado el 2026-11-12 (VAL ROL-05) | Creaba usuarios sin ejecutor ni ámbito; el alta va por los flujos con ámbito |
 | `RegistrarEstudianteUseCaseImpl` (registrar estudiante en grupo) | Sí (desde 2B.2-B) | Siempre `ESTUDIANTE` (correcto: esta feature no puede producir otro rol) |
 | `CrearDecanoUseCaseImpl` | Sí (desde 2B.2-C1) | Siempre `DECANO`, determinado por el servidor |
 | `CrearCoordinadorUseCaseImpl` | No | — |

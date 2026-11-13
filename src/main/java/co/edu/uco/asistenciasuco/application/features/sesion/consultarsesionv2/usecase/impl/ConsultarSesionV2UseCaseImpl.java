@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionv2.
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.sesion.common.entity.SesionProcedenciaEntity;
 import co.edu.uco.asistenciasuco.application.features.sesion.common.mapper.SesionProcedenciaMapper;
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionv2.usecase.ConsultarSesionV2UseCase;
@@ -40,7 +41,7 @@ public final class ConsultarSesionV2UseCaseImpl implements ConsultarSesionV2UseC
         final SesionProcedenciaRepositoryProjection row = sesionProcedenciaQueryPort.consultarSesion(domain.getSesion())
                 .orElseThrow(() -> new ResourceNotFoundException(SesionErrorCode.ERR_SESION_NO_EXISTE));
         if (!institutionalScopePort.canDocenteAccessGrupo(domain.getUsuarioEjecutor(), row.grupo())) {
-            throw new ForbiddenException("El docente autenticado no tiene titularidad sobre la sesion consultada.");
+            throw new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_016);
         }
         return SesionProcedenciaMapper.toEntity(row);
     }

@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.docente.consultardetaller
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardetallereclamo.usecase.ConsultarDetalleReclamoDocenteUseCase;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardetallereclamo.usecase.domain.ConsultarDetalleReclamoDocenteDomain;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardetallereclamo.usecase.domain.DetalleReclamoDocenteDomain;
@@ -32,10 +33,10 @@ public final class ConsultarDetalleReclamoDocenteUseCaseImpl implements Consulta
     @Override
     public DetalleReclamoDocenteDomain execute(final ConsultarDetalleReclamoDocenteDomain domain) {
         scopePort.findDocenteIdByUsuario(domain.actorUsuarioId())
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver el docente autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_003));
 
         return queryPort.consultarDetalleSolicitudDocente(domain.idSolicitud(), domain.actorUsuarioId())
                 .map(ConsultarDetalleReclamoDocenteRepositoryMapper::toDomain)
-                .orElseThrow(() -> new ResourceNotFoundException("La solicitud de revision no existe."));
+                .orElseThrow(() -> new ResourceNotFoundException(MensajeUsuarioErrorCode.NOF_APP_008));
     }
 }

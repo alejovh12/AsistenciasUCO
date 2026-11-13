@@ -5,8 +5,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.CierrePerio
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.CoordinadorCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DecanoCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.PlanEstudioCommandPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.CrearUsuarioRepositoryDTO;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -25,10 +23,11 @@ import java.util.function.Supplier;
  *
  * <p>Cada escenario imprime una linea {@code PARITY_OUTCOME|escenario|excepcion|codigo|mensaje} normalizada
  * (UUID sustituidos). El log del baseline JDBC (BEFORE) y del candidato JPA (AFTER) debe coincidir linea a linea.
- * Escenarios: errores funcionales deterministas (ids inexistentes, validacion) sin efectos DB. Los providers
- * publicos {@code usp_sincronizar_usuario} y {@code usp_registrar_o_actualizar_plan_estudio} los entrega el work
- * item DB CC-003G-01 (no existian en la DB publicada hasta ese work item; ver MAINT-003H). Los escenarios de
- * PlanEstudio y Usuario ejercitan el provider real con una entrada invalida deterministica; el camino de exito con
+ * Escenarios: errores funcionales deterministas (ids inexistentes, validacion) sin efectos DB. El provider
+ * publico {@code usp_registrar_o_actualizar_plan_estudio} lo entrega el work item DB CC-003G-01 (no existia en la
+ * DB publicada hasta ese work item; ver MAINT-003H). VAL ROL-05 (2026-11-12): el provider {@code usp_sincronizar_usuario}
+ * se retiro con {@code POST /api/v1/usuarios}, y con el su escenario USU_01. El escenario de
+ * PlanEstudio ejercita el provider real con una entrada invalida deterministica; el camino de exito con
  * efectos DB, los duplicados y la autorizacion se certifican en {@code UsuarioPlanEstudioProvidersSqlServerIT}.</p>
  */
 @Tag("integration")
@@ -52,9 +51,6 @@ class AcademicUserCommandsSpParityIT {
 
     @Autowired
     private PlanEstudioCommandPort planEstudioCommandPort;
-
-    @Autowired
-    private UsuarioRepositoryPort usuarioRepositoryPort;
 
     @BeforeEach
     void prepararCorrelacion() {
@@ -121,16 +117,6 @@ class AcademicUserCommandsSpParityIT {
         registrar("PLA_01_PROGRAMA_INEXISTENTE", () -> {
             planEstudioCommandPort.registrarOActualizarPlanEstudio(UUID.randomUUID(), UUID.randomUUID(), 2026,
                     UUID.randomUUID());
-            return "OK";
-        });
-    }
-
-    @Test
-    void usuario_sincronizar_sin_password_produce_el_mismo_resultado() {
-        registrar("USU_01_SIN_PASSWORD", () -> {
-            usuarioRepositoryPort.crearUsuario(new CrearUsuarioRepositoryDTO(
-                    UUID.randomUUID(), 7, "Apellido", null, "Nombre", null,
-                    PREFIJO + "usu@example.test", null));
             return "OK";
         });
     }

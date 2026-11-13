@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.matriculaqr.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.matriculaqr.usecase.CerrarVentanaMatriculaUseCase;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.MatriculaQrRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
@@ -25,7 +26,7 @@ public final class CerrarVentanaMatriculaUseCaseImpl implements CerrarVentanaMat
     public Void execute(final Comando comando) {
         Objects.requireNonNull(comando, "El comando para cerrar la ventana de matricula es obligatorio.");
         if (!scope.canDocenteAccessGrupo(comando.usuarioEjecutor(), comando.grupoId())) {
-            throw new ForbiddenException("El docente autenticado no tiene titularidad sobre el grupo solicitado.");
+            throw new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_002);
         }
         repositorio.cerrarVentana(comando.grupoId(), comando.usuarioEjecutor());
         return null;

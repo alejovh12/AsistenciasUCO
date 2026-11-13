@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.festivos.exception.FestivoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.matriculaqr.exception.MatriculaQrErrorCode;
@@ -35,8 +36,8 @@ final class DbCodeTranslator {
             case "KPI_001" -> new ForbiddenException("KPI_001", "No tiene un programa academico a su cargo para consultar estos indicadores.");
             case "KPI_003" -> new ForbiddenException("KPI_003", "No tiene una facultad a su cargo para consultar estos indicadores.");
             case "KPI_004" -> new ForbiddenException("KPI_004", "No tiene una institucion a su cargo para consultar estos indicadores.");
-            case "GEN_001" -> new ResourceNotFoundException("El " + entidadNoEncontrada + " especificado no existe en el sistema.");
-            case "PER_001" -> new ResourceNotFoundException("El periodo academico especificado no existe en el sistema.");
+            case "GEN_001" -> ResourceNotFoundException.conParametros(MensajeUsuarioErrorCode.GEN_001, entidadNoEncontrada);
+            case "PER_001" -> new ResourceNotFoundException(MensajeUsuarioErrorCode.PER_001);
             // IDENT-001: reenvio del enlace de verificacion. VCE_004 (fuera de ambito) es indistinguible de inexistente.
             case "VCE_003" -> new ConflictException("VCE_003", "Debe esperar unos minutos antes de volver a enviar el enlace de verificacion.");
             case "VCE_004" -> new ResourceNotFoundException("VCE_004", "El estudiante no pertenece a un grupo a su cargo.");
@@ -46,8 +47,8 @@ final class DbCodeTranslator {
             case "MQR_007" -> new ValidationException(MatriculaQrErrorCode.MQR_007.code(), MatriculaQrErrorCode.MQR_007.defaultMessage());
             // CULM-001 B.1: consultas de festivos del administrador (anio fuera de FESTIVOS/ANIO_MINIMO..ANIO_MAXIMO).
             case "FES_001" -> new ValidationException(FestivoErrorCode.FES_001);
-            case "PAG_001" -> new ValidationException("Los parametros de paginacion no son validos.");
-            case "GEN_002", "VAL_001" -> new ValidationException("Los datos de la consulta no son validos.");
+            case "PAG_001" -> new ValidationException(MensajeUsuarioErrorCode.PAG_001);
+            case "GEN_002", "VAL_001" -> new ValidationException(MensajeUsuarioErrorCode.VAL_APP_071);
             // HU112/HU128/HU143/HU157: el SP de lectura exige el perfil del ejecutor.
             case "SEC_001" -> new ForbiddenException("SEC_001", "No tiene el perfil requerido para esta consulta.");
             // CULM-001 A.2-9: el resto (SEC_002 -> 403, NTF_002 -> 404...) usa la tabla unica de DbFailureClassifier.

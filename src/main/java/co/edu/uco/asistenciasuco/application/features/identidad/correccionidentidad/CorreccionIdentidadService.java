@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.identidad.correccionidentidad;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.identidad.correccionidentidad.primaryports.CorreccionIdentidadInputPort;
 import co.edu.uco.asistenciasuco.application.features.identidad.correccionidentidad.primaryports.dto.ConfiguracionCorreccionIdentidadDTO;
@@ -84,6 +85,6 @@ public final class CorreccionIdentidadService implements CorreccionIdentidadInpu
                 return tipo;
             }
         }
-        throw new ValidationException("El tipo de usuario a corregir no es valido.");
+        throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_061);
     }
 }

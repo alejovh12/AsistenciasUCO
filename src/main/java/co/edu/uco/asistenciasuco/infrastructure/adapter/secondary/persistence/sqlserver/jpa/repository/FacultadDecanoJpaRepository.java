@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadDecanoQueryPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.SpEstructuraFacultadEntity;
@@ -57,8 +58,6 @@ public class FacultadDecanoJpaRepository implements FacultadDecanoQueryPort {
                  @idPrograma = :idPrograma,
                  @idGrupo = :idGrupo
             """;
-    static final String MENSAJE_PAGINACION_INVALIDA = "Los parametros de paginacion no son validos.";
-
     private final EntityManager entityManager;
 
     public FacultadDecanoJpaRepository(final EntityManager entityManager) {
@@ -135,7 +134,7 @@ public class FacultadDecanoJpaRepository implements FacultadDecanoQueryPort {
                         .getResultList();
             } catch (final PersistenceException exception) {
                 if (esPaginacionInvalida(exception)) {
-                    throw new ValidationException(MENSAJE_PAGINACION_INVALIDA);
+                    throw new ValidationException(MensajeUsuarioErrorCode.PAG_001);
                 }
                 throw exception;
             }

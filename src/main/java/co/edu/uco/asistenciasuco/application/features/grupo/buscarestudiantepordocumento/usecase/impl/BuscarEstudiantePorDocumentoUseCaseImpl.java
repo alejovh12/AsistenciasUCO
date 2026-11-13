@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.buscarestudiantepordocumento.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.grupo.buscarestudiantepordocumento.usecase.BuscarEstudiantePorDocumentoUseCase;
 import co.edu.uco.asistenciasuco.application.features.grupo.buscarestudiantepordocumento.usecase.domain.BuscarEstudiantePorDocumentoDomain;
@@ -25,16 +26,16 @@ public final class BuscarEstudiantePorDocumentoUseCaseImpl implements BuscarEstu
     @Override
     public Optional<EstudianteBusquedaRepositoryProjection> execute(final BuscarEstudiantePorDocumentoDomain domain) {
         if (domain == null || domain.grupoId() == null) {
-            throw new ValidationException("El grupo es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_058);
         }
         if (domain.tipoIdentificacionId() == null) {
-            throw new ValidationException("El tipo de identificacion es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_059);
         }
         if (domain.numeroIdentificacion() == null || domain.numeroIdentificacion() <= 0) {
-            throw new ValidationException("El numero de documento debe ser un entero positivo.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_060);
         }
         if (domain.actorUsuarioId() == null) {
-            throw new ValidationException("El usuario autenticado es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_008);
         }
         return grupoRepositoryPort.buscarEstudiantePorDocumento(
                 domain.grupoId(), domain.tipoIdentificacionId(), domain.numeroIdentificacion(), domain.actorUsuarioId());

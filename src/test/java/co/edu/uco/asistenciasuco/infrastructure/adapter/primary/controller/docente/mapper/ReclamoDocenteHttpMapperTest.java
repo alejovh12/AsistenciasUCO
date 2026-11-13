@@ -29,7 +29,8 @@ class ReclamoDocenteHttpMapperTest {
         return new ReclamoDocenteDTO(UUID.randomUUID(), "REC-1", LocalDate.of(2026, 10, 19), "PENDIENTE", "J", null,
                 UUID.randomUUID(), "Ana", UUID.randomUUID(), 1, sesion, sesion == null ? null : "UTC_V2",
                 UUID.randomUUID(), 1, "G1", UUID.randomUUID(), "M", "Mate",
-                conSoporte ? new ReclamoDocenteDTO.SoporteAdjuntoDTO(UUID.randomUUID(), "a.pdf", "application/pdf", 5L, subida, "/u") : null);
+                conSoporte ? new ReclamoDocenteDTO.SoporteAdjuntoDTO(UUID.randomUUID(), "a.pdf", "application/pdf", 5L, subida, "/u") : null,
+                null, null, null);
     }
 
     @ParameterizedTest
@@ -51,6 +52,24 @@ class ReclamoDocenteHttpMapperTest {
 
         assertEquals("2026-12-31T23:59:59Z", response.fechaSesionUtc());
         assertNull(response.soporteAdjunto());
+    }
+
+    @Test
+    void la_toma_reclamada_se_codifica_con_el_codec_utc_y_sin_toma_queda_nula() {
+        final UUID toma = UUID.randomUUID();
+        final ReclamoDocenteDTO conToma = new ReclamoDocenteDTO(UUID.randomUUID(), "REC-1", LocalDate.of(2026, 10, 19), "PENDIENTE", "J", null,
+                UUID.randomUUID(), "Ana", UUID.randomUUID(), 1, null, null, UUID.randomUUID(), 1, "G1", UUID.randomUUID(), "M", "Mate",
+                null, toma, 2, Instant.parse("2026-10-19T15:45:00.1234567Z"));
+
+        final ReclamoDocenteResponse response = ReclamoDocenteHttpMapper.toResponse(conToma);
+
+        assertEquals(toma, response.idToma());
+        assertEquals(2, response.numeroToma());
+        assertEquals("2026-10-19T15:45:00.1234567Z", response.fechaPuntoControlUtc());
+        final ReclamoDocenteResponse sinToma = ReclamoDocenteHttpMapper.toResponse(dto(null, null, false));
+        assertNull(sinToma.idToma());
+        assertNull(sinToma.numeroToma());
+        assertNull(sinToma.fechaPuntoControlUtc());
     }
 
     @Test

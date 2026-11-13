@@ -13,6 +13,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.decan
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -52,7 +53,7 @@ public final class DecanoCoordinadorGestionController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiDataResponse<ResultadoGestionCoordinadorResponse>> actualizarCoordinador(
             @PathVariable final UUID id,
-            @RequestBody final ActualizarCoordinadorRequest request
+            @Valid @RequestBody final ActualizarCoordinadorRequest request
     ) {
         RequestValidationGuard.validate(ACTUALIZAR_VALIDATOR.validate(request));
         final ResultadoGestionCoordinadorDTO resultado = actualizarCoordinadorInputPort.execute(new ActualizarCoordinadorDTO(
@@ -73,7 +74,7 @@ public final class DecanoCoordinadorGestionController {
     @PatchMapping("/{id}/estado")
     public ResponseEntity<ApiDataResponse<ResultadoGestionCoordinadorResponse>> cambiarEstadoCoordinador(
             @PathVariable final UUID id,
-            @RequestBody final CambiarEstadoCoordinadorRequest request
+            @Valid @RequestBody final CambiarEstadoCoordinadorRequest request
     ) {
         RequestValidationGuard.validate(CAMBIAR_ESTADO_VALIDATOR.validate(request));
         final ResultadoGestionCoordinadorDTO resultado = cambiarEstadoCoordinadorInputPort.execute(new CambiarEstadoCoordinadorDTO(

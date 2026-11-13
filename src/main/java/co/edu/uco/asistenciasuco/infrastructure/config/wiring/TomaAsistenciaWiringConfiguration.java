@@ -16,6 +16,8 @@ import co.edu.uco.asistenciasuco.application.features.tomaasistencia.consultaras
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.consultarasistenciastoma.usecase.impl.ConsultarAsistenciasTomaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.consultarfaltantestoma.primaryports.ConsultarFaltantesTomaInputPort;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.consultarfaltantestoma.usecase.impl.ConsultarFaltantesTomaUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.tomaasistencia.consultarresumensesion.primaryports.ConsultarResumenTomasSesionInputPort;
+import co.edu.uco.asistenciasuco.application.features.tomaasistencia.consultarresumensesion.usecase.impl.ConsultarResumenTomasSesionUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.consultartomassesion.primaryports.ConsultarTomasSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.consultartomassesion.usecase.impl.ConsultarTomasSesionUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.registrarasistenciastoma.primaryports.RegistrarAsistenciasTomaInputPort;
@@ -59,6 +61,12 @@ public class TomaAsistenciaWiringConfiguration {
     public ConsultarTomasSesionInputPort consultarTomasSesionInputPort(final SesionTitularAcceso sesiones,
                                                                        final TomaAsistenciaRepositoryPort repositorio) {
         return new ConsultarTomasSesionUseCaseImpl(sesiones, repositorio);
+    }
+
+    @Bean
+    public ConsultarResumenTomasSesionInputPort consultarResumenTomasSesionInputPort(final SesionTitularAcceso sesiones,
+                                                                                     final TomaAsistenciaRepositoryPort repositorio) {
+        return new ConsultarResumenTomasSesionUseCaseImpl(sesiones, repositorio);
     }
 
     @Bean

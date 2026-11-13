@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.decano.validation;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.decano.request.CambiarEstadoProgramaRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.decano.request.ProgramaAcademicoRequest;
@@ -14,25 +15,25 @@ public final class ProgramaAcademicoRequestValidator {
 
     public static void validar(final ProgramaAcademicoRequest request) {
         if (request == null) {
-            throw new ValidationException("El cuerpo de la peticion es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_063);
         }
         if (request.getNombre() == null || request.getNombre().isBlank()) {
-            throw new ValidationException("El nombre del programa academico es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_045);
         }
         if (request.getNombre().trim().length() > NOMBRE_MAXIMO) {
-            throw new ValidationException("El nombre del programa academico no puede superar " + NOMBRE_MAXIMO + " caracteres.");
+            throw ValidationException.conParametros(MensajeUsuarioErrorCode.VAL_APP_046, NOMBRE_MAXIMO);
         }
         if (request.getIdTipoPrograma() == null) {
-            throw new ValidationException("El tipo de programa es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_064);
         }
         if (request.getIdCoordinador() == null) {
-            throw new ValidationException("El coordinador del programa es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_065);
         }
     }
 
     public static void validar(final CambiarEstadoProgramaRequest request) {
         if (request == null || request.getEstaActivo() == null) {
-            throw new ValidationException("El estado deseado del programa es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_066);
         }
     }
 }

@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.localsse;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.realtime.resolveraudiencia.AudienciaRealtimeGrupo;
 import co.edu.uco.asistenciasuco.application.features.realtime.resolveraudiencia.primaryports.ResolverAudienciaRealtimeInputPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimeEvent;
@@ -58,7 +59,7 @@ public final class LocalSseRealtimeStreamGateway implements RealtimeStreamGatewa
         Objects.requireNonNull(grupoId, "El grupoId es obligatorio para suscribirse a realtime.");
         final AudienciaRealtimeGrupo audiencia = resolverAudiencia.execute(new ResolverAudienciaRealtimeInputPort.Comando(usuarioId, grupoId));
         if (audiencia == null || !audiencia.tieneAlguna()) {
-            throw new ForbiddenException("El usuario autenticado no tiene acceso al grupo solicitado.");
+            throw new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_017);
         }
         final Set<Audiencia> delSuscriptor = EnumSet.noneOf(Audiencia.class);
         if (audiencia.docenteTitular()) {

@@ -177,6 +177,28 @@ class SoporteArchivoJpaRepositoryTest {
         assertEquals(LocalDate.of(2026, 10, 19), filas.get(0).fechaSolicitud());
     }
 
+    // PC (puntos de control): la bandeja del docente mapea la toma reclamada; sin toma (reclamo de la sesion) quedan nulas.
+    @Test
+    void reclamos_docente_mapea_la_toma_reclamada_y_deja_nula_la_de_la_sesion_completa() throws Exception {
+        final SolicitudRevisionDocenteJpaRepository docente = new SolicitudRevisionDocenteJpaRepository(entityManager);
+        final UUID toma = UUID.randomUUID();
+        final SpSolicitudRevisionDocenteEntity conToma = filaDocente("UTC_V2", LocalDateTime.parse("2026-10-19T15:30:45.1234567"));
+        poner(conToma, "idToma", toma);
+        poner(conToma, "numeroToma", 2);
+        poner(conToma, "fechaPuntoControlUtc", LocalDateTime.parse("2026-10-19T15:45:00.1234567"));
+        final SpSolicitudRevisionDocenteEntity sinToma = filaDocente("UTC_V2", LocalDateTime.parse("2026-10-19T15:30:45.1234567"));
+        when(query.getResultList()).thenReturn(List.of(conToma, sinToma));
+
+        final List<SolicitudRevisionDocenteProjection> filas = docente.consultarSolicitudesDocente(USER, null, 1, 10);
+
+        assertEquals(toma, filas.get(0).idToma());
+        assertEquals(2, filas.get(0).numeroToma());
+        assertEquals(Instant.parse("2026-10-19T15:45:00.1234567Z"), filas.get(0).fechaPuntoControlUtc());
+        assertNull(filas.get(1).idToma());
+        assertNull(filas.get(1).numeroToma());
+        assertNull(filas.get(1).fechaPuntoControlUtc());
+    }
+
     private static SpSolicitudRevisionDocenteEntity filaDocente(final String procedencia, final LocalDateTime inicio) throws Exception {
         final SpSolicitudRevisionDocenteEntity fila = entidad(SpSolicitudRevisionDocenteEntity.class);
         poner(fila, "idSolicitudRevisionAsistencia", UUID.randomUUID());

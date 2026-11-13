@@ -38,8 +38,7 @@ public class PlantillaPorDefectoCatalogo {
             Notificacion.TIPO_SESION_MANUAL_CREADA_COORDINADOR,
             Notificacion.TIPO_SESION_SOLICITUD_CREADA_COORDINADOR,
             Notificacion.TIPO_SESION_SOLICITUD_APROBADA_DOCENTE,
-            Notificacion.TIPO_SESION_SOLICITUD_RECHAZADA_DOCENTE,
-            Notificacion.TIPO_RECUPERACION_CLAVE
+            Notificacion.TIPO_SESION_SOLICITUD_RECHAZADA_DOCENTE
     );
 
     private static final String IDIOMA_SOPORTADO = "es";

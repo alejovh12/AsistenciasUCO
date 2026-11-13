@@ -6,12 +6,15 @@ param(
     [string]$ApiUrl = 'http://localhost:8090/api/v1',
     [string]$TokenUrl = 'http://127.0.0.1:8081/realms/asistencias-uco/protocol/openid-connect/token',
     [string]$Container = 'sql_server_asistencias',
-    [string]$SqlPassword = 'TuPasswordSeguro123',
-    [string]$UserPassword = 'Test1234!',
+    [string]$SqlPassword = $env:MSSQL_SA_PASSWORD,
+    [string]$UserPassword = $env:E2E_USER_PASSWORD,
     [string]$Admin = 'admin.institucional@uco.edu.co',
     [string]$IdAdminUsuario = 'E1F2A3B4-0000-0000-0000-000000000000'
 )
 $ErrorActionPreference = 'Stop'
+# Las contrasenas se leen del entorno; el script no trae valores por defecto.
+if ([string]::IsNullOrEmpty($SqlPassword)) { throw 'Falta la variable de entorno MSSQL_SA_PASSWORD (ver scratch/README.md).' }
+if ([string]::IsNullOrEmpty($UserPassword)) { throw 'Falta la variable de entorno E2E_USER_PASSWORD (ver scratch/README.md).' }
 $failures = 0
 $skips = 0
 

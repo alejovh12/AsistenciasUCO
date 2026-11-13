@@ -2,7 +2,8 @@
 
 Uso: python -X utf8 -I infra/security-baseline/scripts/e2e_profile_assignment.py --sql-container NAME --sql-password-file FILE
          [--database DB] [--backend URL]
-Crea un usuario nuevo (POST /api/v1/usuarios como ADMINISTRADOR) y comprueba, capa por capa, que:
+Crea un usuario nuevo por un alta con ámbito (POST /api/v1/admin/decanos con facultadNueva, como ADMINISTRADOR; la ruta
+POST /api/v1/usuarios se retiró) y comprueba, capa por capa, que:
   1. sin perfil (aunque la cuenta traiga el rol por defecto de Keycloak): DENY del PEP;
   2. con el perfil `Docencia` en el PDP: el PEP permite SOLO los recursos del rol DOCENTE (el backend sigue denegando mientras
      el token no traiga el rol de Keycloak: defensa en profundidad);
@@ -110,6 +111,7 @@ def main(argv=None):
     tag = secrets.token_hex(4)
     email = f"e2e.perfil.{tag}@uco.edu.co"
     identification = 988_000_000 + secrets.randbelow(900_000)
+    faculty_name = "E2E Facultad " + tag
     username = str(identification)  # el backend crea la cuenta del realm con la identificación como nombre de usuario
     password = "Aa1!" + L.random_secret(24)  # solo en memoria
     password_key = "LAB_USER_E2E_PERFIL_" + tag.upper() + "_PASSWORD"
@@ -141,6 +143,7 @@ def main(argv=None):
     before_assignments = assignment_state(profiles, roles, pdp.paged)
     admin_token = spa_token.get_token(env, "uco-administrador")["access_token"]
     tipo_id = target.scalar("SELECT TOP 1 id FROM dbo.uv_tipo_identificacion WHERE tipoIdentificacion = 'CC'")
+    institution_id = target.scalar("SELECT TOP 1 id FROM dbo.uv_institucion WHERE estaActivaInstitucion = 1")
 
     held = {}  # nombre de perfil -> id de asignación creada por este E2E
     problems, aborted = [], None
@@ -208,17 +211,18 @@ def main(argv=None):
 
     try:
         try:
-            body = {"tipoIdIdentificacion": tipo_id, "numeroIdentificacion": identification, "primerApellido": "Perfil",
+            body = {"tipoIdentificacionId": tipo_id, "numeroIdentificacion": identification, "primerApellido": "Perfil",
                     "segundoApellido": "Prueba", "primerNombre": "Cuenta", "segundoNombre": "Sintetica", "correo": email,
-                    "password": password}
-            status, _, raw = E.request(base_url, "POST", "/api/v1/usuarios", token=admin_token, body=body)
+                    "password": password,
+                    "facultadNueva": {"nombre": faculty_name, "codigo": "E2E", "idInstitucion": institution_id}}
+            status, _, raw = E.request(base_url, "POST", "/api/v1/admin/decanos", token=admin_token, body=body)
             if status != 201:
-                raise SystemExit(f"POST /api/v1/usuarios: HTTP {status} {raw[:200].decode('utf-8', 'replace')}")
+                raise SystemExit(f"POST /api/v1/admin/decanos: HTTP {status} {raw[:200].decode('utf-8', 'replace')}")
             kc_user = keycloak_users()[0]
             kc_user_id = kc_user["id"]
             # Como las cuentas de laboratorio: correo verificado y sin acciones pendientes.
             kc_call("PUT", f"/users/{kc_user_id}", dict(kc_user, emailVerified=True, requiredActions=[]), expect=(204,))
-            # El alta por el backend deja en Keycloak el rol por defecto del realm; se parte de él, no se asume vacío.
+            # El alta de decano deja en Keycloak el rol por defecto del realm; se parte de él, no se asume vacío.
             initial_roles = {r["name"] for r in kc_call("GET", f"/users/{kc_user_id}/role-mappings/clients/{client['id']}")[1]}
             sql_id = S.guid(target.scalar(f"SELECT id FROM dbo.uv_usuario WHERE correo = {S.literal(email)}"))
             session_status = L.bff_session(env, username, password_key)[2]  # el PDP lo aprovisiona al primer login
@@ -312,6 +316,7 @@ def main(argv=None):
         except (SystemExit, RuntimeError) as error:
             problems.append(f"limpieza de Keycloak interrumpida: {error}")
         try:
+            S.delete_created_faculty(target, faculty_name, email, existed_before=False)
             S.delete_created_user(target, email, existed_before=False)
             problems += S.restore_and_verify(target, before, tolerated_growth=S.APPEND_ONLY_TABLES)
             for table, rows in S.audit_growth(before, S.capture_state(target)).items():

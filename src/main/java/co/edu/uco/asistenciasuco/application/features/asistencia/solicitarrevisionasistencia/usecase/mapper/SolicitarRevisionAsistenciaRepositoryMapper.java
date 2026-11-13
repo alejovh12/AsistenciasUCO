@@ -26,6 +26,7 @@ public final class SolicitarRevisionAsistenciaRepositoryMapper {
         return new SolicitarRevisionAsistenciaRepositoryDTO(
                 estudianteId,
                 domain.getSesion(),
+                domain.getToma(),
                 domain.getCategoria(),
                 domain.getJustificacion(),
                 domain.getSoportes(),

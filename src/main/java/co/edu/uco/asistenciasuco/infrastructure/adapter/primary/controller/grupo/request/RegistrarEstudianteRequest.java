@@ -1,6 +1,10 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo.request;
 
 import java.util.UUID;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.BeanValidationPatterns;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.HttpValidationMessages;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 /**
  * Request HTTP para registrar estudiante en un grupo.
@@ -22,6 +26,8 @@ public final class RegistrarEstudianteRequest {
 
     private String segundoNombre;
 
+    @Size(max = 100, message = "El correo puede tener maximo 100 caracteres.")
+    @Pattern(regexp = BeanValidationPatterns.EMAIL_OR_BLANK, message = HttpValidationMessages.INVALID_EMAIL)
     private String correo;
 
     private String password;

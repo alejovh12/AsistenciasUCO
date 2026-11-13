@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.decano.crearprograma.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.decano.common.domain.ProgramaAcademicoDomain;
@@ -33,11 +34,11 @@ public final class CrearProgramaUseCaseImpl implements CrearProgramaUseCase {
     @Override
     public ProgramaAcademicoDomain execute(final CrearProgramaDomain domain) {
         if (domain == null) {
-            throw new ValidationException("Los datos del programa son obligatorios.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_043);
         }
         final String nombre = ProgramaAcademicoRules.nombreNormalizado(domain.nombre());
-        ProgramaAcademicoRules.requerido(domain.idTipoPrograma(), "El tipo de programa es obligatorio.");
-        ProgramaAcademicoRules.requerido(domain.idCoordinador(), "El coordinador del programa es obligatorio.");
+        ProgramaAcademicoRules.requerido(domain.idTipoPrograma(), MensajeUsuarioErrorCode.VAL_APP_064);
+        ProgramaAcademicoRules.requerido(domain.idCoordinador(), MensajeUsuarioErrorCode.VAL_APP_065);
         final UUID facultad = ProgramaAcademicoRules.facultadDelDecano(scopePort, domain.actorUsuarioId());
         final UUID id = UUID.randomUUID();
         commandPort.crear(new ProgramaAcademicoCommandPort.CrearProgramaCommand(id, facultad, nombre, domain.idTipoPrograma(),

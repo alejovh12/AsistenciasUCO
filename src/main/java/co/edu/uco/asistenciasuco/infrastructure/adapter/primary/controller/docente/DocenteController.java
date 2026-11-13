@@ -15,6 +15,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docen
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -74,7 +75,7 @@ public final class DocenteController {
     @Deprecated(forRemoval = false)
     @PostMapping("/consultas/id")
     public ResponseEntity<ApiDataResponse<DocenteIdentidadDTO>> consultarDocentePorIdLegacy(
-            @RequestBody final ConsultarDocentePorIdRequest request
+            @Valid @RequestBody final ConsultarDocentePorIdRequest request
     ) {
         return executeConsultarDocente(request);
     }
@@ -106,7 +107,7 @@ public final class DocenteController {
     @Deprecated(forRemoval = false)
     @PostMapping("/consultas/asignaciones")
     public ResponseEntity<ApiListResponse<DocenteAsignacionAcademicaDTO>> consultarAsignacionesAcademicasLegacy(
-            @RequestBody final ConsultarAsignacionesAcademicasDocenteRequest request
+            @Valid @RequestBody final ConsultarAsignacionesAcademicasDocenteRequest request
     ) {
         return executeConsultarAsignacionesAcademicas(request);
     }

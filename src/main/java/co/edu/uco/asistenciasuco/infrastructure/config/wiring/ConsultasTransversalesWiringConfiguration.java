@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
+import org.springframework.beans.factory.ObjectProvider;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.ConsultasTransversalesInputPort;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.interactor.ConsultasTransversalesInteractor;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.usecase.ConsultasTransversalesUseCase;
@@ -12,8 +14,13 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 public class ConsultasTransversalesWiringConfiguration {
 
-    @Bean ConsultasTransversalesUseCase consultasTransversalesUseCase(final ConsultasTransversalesQueryPort queryPort) {
-        return new ConsultasTransversalesUseCaseImpl(queryPort);
+    @Bean ConsultasTransversalesUseCase consultasTransversalesUseCase(
+            final ConsultasTransversalesQueryPort queryPort,
+            final ObjectProvider<ParameterCatalogPort> parameterCatalogPort
+    ) {
+        // PAR-06: el rango maximo de auditoria sale de AUDITORIA/RANGO_MAXIMO_DIAS (respaldo 90 dias).
+        return new ConsultasTransversalesUseCaseImpl(queryPort, java.time.Clock.systemUTC(),
+                parameterCatalogPort.getIfAvailable());
     }
 
     @Bean ConsultasTransversalesInputPort consultasTransversalesInputPort(final ConsultasTransversalesUseCase useCase) {

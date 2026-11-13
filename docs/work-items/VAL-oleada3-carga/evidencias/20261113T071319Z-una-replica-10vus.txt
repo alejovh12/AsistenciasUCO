@@ -1,0 +1,18 @@
+﻿# VAL-oleada3 carga: una-replica-10vus
+fecha_utc=20261113T071319Z
+k6_image=grafana/k6:1.3.0@sha256:3ddc8b1a33a2c3d8edc6e99b6a762ae36cba08788463458f5e6a7703e14eb77d
+base_url=http://host.docker.internal:8080 modo=normal vus=10 duracion=2m rampa=20s think_ms=1000
+k6_exit_code=99 (0 = todos los umbrales cumplen; 99 = algun umbral falla)
+reparto=n/a (sin balanceador)
+
+## salida k6
+modo=normal base=http://host.docker.internal:8080 vus=10 duracion=2m
+http_reqs={"count":840,"rate":5.676634807448803}
+http_req_failed={"rate":0.007142857142857143,"passes":6,"fails":834}
+http_req_duration={"avg":750.0403278761898,"min":84.917268,"med":601.6102445,"p(90)":1426.1234140000001,"p(95)":1924.0059517499992,"p(99)":3548.7055091200064,"max":4637.435637}
+lecturaPropia={"avg":734.765230595454,"min":84.917268,"med":582.1891565,"p(90)":1413.2335346000002,"p(95)":1945.2868743499994,"p(99)":3190.7938903999966,"max":4637.435637}
+agregado={"min":107.576761,"med":671.242096,"p(90)":1462.7648130999999,"p(95)":1730.65440885,"p(99)":3977.6007647100064,"max":4622.120302,"avg":806.0490179055552}
+checks={"rate":0.9928571428571429,"passes":834,"fails":6}
+estados={"estado_503":6,"estado_200":834}
+umbrales={"http_req_duration{name:/api/v1/coordinador/indicadores}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/estudiante/horarios}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/coordinador/consolidado-asistencia}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/coordinador/grupos}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/estudiante/reclamos}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/estudiante/materias}":{"max>=0":{"ok":true}},"http_req_failed":{"rate<0.01":{"ok":true}},"http_req_duration{clase:agregado}":{"p(95)<1500":{"ok":false}},"http_req_duration{name:/api/v1/coordinador/alertas-tempranas}":{"max>=0":{"ok":true}},"checks":{"rate>0.99":{"ok":true}},"http_req_duration{name:/api/v1/docente/horarios}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/auth/me}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/docente/reclamos}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/estudiante/alertas}":{"max>=0":{"ok":true}},"http_req_duration{clase:lecturaPropia}":{"p(95)<800":{"ok":false}},"http_req_duration{name:/api/v1/docente/asignaturas}":{"max>=0":{"ok":true}}}
+time="2026-11-13T07:15:54Z" level=error msg="thresholds on metrics 'http_req_duration{clase:agregado}, http_req_duration{clase:lecturaPropia}' have been crossed"

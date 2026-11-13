@@ -32,6 +32,40 @@ public record ReclamoEstudianteDomain(
         Instant fechaRegistroSoporteUtc,
         String codigoCategoria,
         String nombreCategoria,
-        List<SoporteReclamoDomain> soportes
+        List<SoporteReclamoDomain> soportes,
+        UUID idToma,
+        Integer numeroToma,
+        Instant fechaPuntoControlUtc,
+        String codigoResultadoAprobacion
 ) {
+
+    /** Compatibilidad: sin los datos de la toma (PC, puntos de control). */
+    public ReclamoEstudianteDomain(
+            final UUID idSolicitud,
+            final String nombreSolicitud,
+            final LocalDate fechaSolicitud,
+            final String codigoEstado,
+            final String justificacionSolicitud,
+            final String justificacionRespuesta,
+            final UUID idSesion,
+            final Integer numeroSesion,
+            final Instant fechaHoraInicioSesionUtc,
+            final String procedenciaTemporalSesion,
+            final UUID idGrupo,
+            final Integer codigoGrupo,
+            final String nombreGrupo,
+            final UUID idAsignatura,
+            final String codigoAsignatura,
+            final String nombreAsignatura,
+            final UUID idArchivoSoporte,
+            final String nombreSoporte,
+            final String tipoContenidoSoporte,
+            final Long tamanioSoporteBytes,
+            final Instant fechaRegistroSoporteUtc,
+            final String codigoCategoria,
+            final String nombreCategoria,
+            final List<SoporteReclamoDomain> soportes
+    ) {
+        this(idSolicitud, nombreSolicitud, fechaSolicitud, codigoEstado, justificacionSolicitud, justificacionRespuesta, idSesion, numeroSesion, fechaHoraInicioSesionUtc, procedenciaTemporalSesion, idGrupo, codigoGrupo, nombreGrupo, idAsignatura, codigoAsignatura, nombreAsignatura, idArchivoSoporte, nombreSoporte, tipoContenidoSoporte, tamanioSoporteBytes, fechaRegistroSoporteUtc, codigoCategoria, nombreCategoria, soportes, null, null, null, null);
+    }
 }

@@ -38,7 +38,11 @@ public final class ReclamoEstudianteHttpMapper {
                         soporte.fileId(), soporte.nombre(), soporte.tipo(), soporte.tamanioBytes(),
                         utc(soporte.fechaSubidaUtc()), soporte.url()),
                 ReclamoCategoriaSoportesHttpMapper.categoria(dto.categoria()),
-                ReclamoCategoriaSoportesHttpMapper.soportes(dto.soportes())
+                ReclamoCategoriaSoportesHttpMapper.soportes(dto.soportes()),
+                dto.idToma(),
+                dto.numeroToma(),
+                utc(dto.fechaPuntoControlUtc()),
+                dto.resultadoAprobacion()
         );
     }
 

@@ -21,8 +21,22 @@ final class ApiErrorCatalog {
 
     static ApiErrorDescriptor fromApplicationException(final ApplicationException exception) {
         return exception.getErrorDefinition()
-                .map(ApiErrorCatalog::from)
+                .map(definition -> fromDefinition(definition, exception))
                 .orElseGet(() -> fromUnknownApplicationException(exception));
+    }
+
+    /**
+     * VAL-oleada3 MSG-05: el codigo publico y el estado salen de la definicion; el texto se busca en el catalogo por su
+     * {@code messageCode}. Con parametros, el respaldo es el texto ya llenado de la excepcion. Funcionalidad no disponible
+     * conserva el 501 de su tipo de excepcion.
+     */
+    private static ApiErrorDescriptor fromDefinition(final ErrorDefinition definition, final ApplicationException exception) {
+        final boolean conParametros = !exception.getMessageArgs().isEmpty();
+        final String message = conParametros ? exception.getMessage() : definition.defaultMessage();
+        final HttpStatus status = exception instanceof FeatureUnavailableException
+                ? HttpStatus.NOT_IMPLEMENTED
+                : statusFor(definition.kind());
+        return new ApiErrorDescriptor(definition.code(), message, status, definition.messageCode(), exception.getMessageArgs());
     }
 
     static ApiErrorDescriptor fromTechnicalException(final TechnicalException exception) {

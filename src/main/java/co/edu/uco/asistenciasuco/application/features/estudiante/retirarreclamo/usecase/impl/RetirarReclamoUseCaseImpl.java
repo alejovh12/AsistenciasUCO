@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.estudiante.retirarreclamo.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.estudiante.retirarreclamo.usecase.RetirarReclamoUseCase;
 import co.edu.uco.asistenciasuco.application.features.estudiante.retirarreclamo.usecase.domain.RetirarReclamoDomain;
@@ -27,13 +28,13 @@ public final class RetirarReclamoUseCaseImpl implements RetirarReclamoUseCase {
     @Override
     public String execute(final RetirarReclamoDomain domain) {
         if (domain == null || domain.idReclamo() == null) {
-            throw new ValidationException("El reclamo a retirar es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_056);
         }
         if (domain.actorUsuarioId() == null) {
-            throw new ValidationException("El usuario autenticado es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_008);
         }
         scopePort.findEstudianteIdByUsuario(domain.actorUsuarioId())
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver el estudiante autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_004));
         return asistenciaRepositoryPort.retirarSolicitudRevision(domain.idReclamo(), domain.actorUsuarioId());
     }
 }

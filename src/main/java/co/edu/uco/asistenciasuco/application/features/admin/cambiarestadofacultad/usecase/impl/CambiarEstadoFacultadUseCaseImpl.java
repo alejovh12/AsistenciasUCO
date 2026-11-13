@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.admin.cambiarestadofacultad.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadofacultad.usecase.CambiarEstadoFacultadUseCase;
 import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadofacultad.usecase.domain.CambiarEstadoFacultadDomain;
@@ -18,13 +19,13 @@ public class CambiarEstadoFacultadUseCaseImpl implements CambiarEstadoFacultadUs
     @Override
     public void execute(final CambiarEstadoFacultadDomain domain) {
         if (domain == null) {
-            throw new ValidationException("Los datos de la facultad son obligatorios.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_001);
         }
         if (domain.id() == null) {
-            throw new ValidationException("El identificador de la facultad es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_002);
         }
         if (domain.activa() == null) {
-            throw new ValidationException("El estado deseado de la facultad es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_009);
         }
 
         facultadCommandPort.cambiarEstadoFacultad(new FacultadCommandPort.CambiarEstadoFacultadCommand(

@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.asistencia.consultarresumenasistencia.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.PaginaResultado;
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.ParametrosPaginacion;
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.ResumenAsistenciaEstudianteDTO;
@@ -28,7 +29,7 @@ public final class ConsultarResumenAsistenciaGrupoUseCaseImpl implements Consult
     public PaginaResultado<ResumenAsistenciaEstudianteDTO> execute(final Consulta consulta) {
         Objects.requireNonNull(consulta, "La consulta del resumen de asistencia es obligatoria.");
         if (!scope.canDocenteAccessGrupo(consulta.usuarioEjecutor(), consulta.grupoId())) {
-            throw new ForbiddenException("El docente autenticado no tiene titularidad sobre el grupo solicitado.");
+            throw new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_002);
         }
         final PaginaResultado<ResumenAsistenciaQueryPort.FilaResumen> pagina = resumen.consultarResumenGrupoDocente(
                 consulta.grupoId(), ParametrosPaginacion.pagina(consulta.pagina()),

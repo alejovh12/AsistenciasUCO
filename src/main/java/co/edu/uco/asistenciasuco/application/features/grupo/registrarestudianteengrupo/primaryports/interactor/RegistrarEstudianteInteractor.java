@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.primaryports.interactor;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.primaryports.RegistrarEstudianteInputPort;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.primaryports.dto.RegistrarEstudianteDTO;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.primaryports.dto.RegistrarEstudianteResultadoDTO;
@@ -44,7 +45,7 @@ public final class RegistrarEstudianteInteractor implements RegistrarEstudianteI
         if (dto.getEstudianteId() != null && estudianteRepositoryPort != null) {
             final EstudianteDetalleRepositoryProjection estudiante = estudianteRepositoryPort
                     .consultarEstudiantePorId(dto.getEstudianteId(), dto.getUsuarioEjecutor())
-                    .orElseThrow(() -> new ResourceNotFoundException("El estudiante especificado no se encuentra registrado."));
+                    .orElseThrow(() -> new ResourceNotFoundException(MensajeUsuarioErrorCode.NOF_APP_009));
             final EstudianteResumenRepositoryProjection datos = estudiante.datosPersonales();
             dto.setTipoIdentificacionId(datos.tipoIdentificacionId());
             dto.setNumeroIdentificacion(datos.numeroIdentificacion());

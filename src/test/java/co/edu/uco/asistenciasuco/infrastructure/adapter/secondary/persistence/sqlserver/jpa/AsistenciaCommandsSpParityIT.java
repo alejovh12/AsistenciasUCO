@@ -5,6 +5,8 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 
 import co.edu.uco.asistenciasuco.application.exception.ApplicationException;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciasSesionRepositoryDTO;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistroAsistenciaSesionRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ResolverSolicitudRevisionAsistenciaRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.SolicitarRevisionAsistenciaRepositoryDTO;
 import co.edu.uco.asistenciasuco.crosscutting.exception.TechnicalException;
@@ -169,6 +171,10 @@ class AsistenciaCommandsSpParityIT {
     @Test
     void RES_01_docente_titular_aprueba_la_solicitud_igual_en_jdbc_y_jpa() {
         final UUID estudiante = fixture.estudiantes().get(0);
+        // SES-04 (REV_004): solo se aprueba (justifica) una inasistencia registrada; sin DetalleAsistencia la DB responde
+        // conflicto. El fixture registra la ausencia SJC del estudiante en ambas sesiones antes de radicar (VAL-PRU-04).
+        registrarAusenciaPorBaseline(sesionA(), estudiante);
+        registrarAusenciaPorBaseline(sesionB(), estudiante);
         final UUID solicitudA = solicitudRadicadaPorBaseline(sesionA(), estudiante);
         final UUID solicitudB = solicitudRadicadaPorBaseline(sesionB(), estudiante);
 
@@ -179,6 +185,13 @@ class AsistenciaCommandsSpParityIT {
         assertNull(jpa.exceptionClass());
         assertEquals(ESTADO_APROBADA, jpa.estadosSolicitud(),
                 "APROBADA mapea al estado A del catalogo dbo.Estado.");
+        assertEquals(1, jpa.detalles(), "La aprobacion justifica el detalle existente; no crea otro.");
+    }
+
+    /** Registra con el baseline JDBC (solo preparacion de datos) la ausencia SJC del estudiante en la sesion. */
+    private void registrarAusenciaPorBaseline(final UUID sesion, final UUID estudiante) {
+        jdbcOracle.registrarAsistenciasSesion(new RegistrarAsistenciasSesionRepositoryDTO(sesion,
+                List.of(new RegistroAsistenciaSesionRepositoryDTO(estudiante, "SJC")), fixture.docenteUsuarioId()));
     }
 
     @Test

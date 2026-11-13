@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.usecase.SolicitarRevisionAsistenciaUseCase;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.usecase.domain.SolicitarRevisionAsistenciaDomain;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.usecase.mapper.SolicitarRevisionAsistenciaRepositoryMapper;
@@ -58,7 +59,7 @@ public final class SolicitarRevisionAsistenciaUseCaseImpl implements SolicitarRe
             throw new CrosscuttingException("El dominio para solicitar revision de asistencia es obligatorio.");
         }
         final var estudianteId = institutionalScopePort.findEstudianteIdByUsuario(domain.getUsuario())
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver el estudiante autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_004));
         asistenciaRepositoryPort.solicitarRevisionAsistencia(
                 SolicitarRevisionAsistenciaRepositoryMapper.toRepositoryDTO(domain, estudianteId)
         );

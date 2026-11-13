@@ -208,4 +208,44 @@ class AsistenciaJpaCommandNativeQueryPatternTest {
 
         assertEquals(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT.code(), exception.getCode());
     }
+
+    // PC (puntos de control): con toma se radica por v4 (7 columnas: 4 canonicas + idSolicitudRevision, totalSoportes e idToma).
+    @Test
+    void CMD_PAT_012_con_toma_radica_por_v4_y_envia_idToma() {
+        final UUID toma = UUID.fromString("88888888-8888-8888-8888-888888888888");
+        when(query.getResultList()).thenReturn(Collections.singletonList(
+                new Object[]{CORRELATION, "Operacion exitosa.", "", true, UUID.randomUUID().toString(), 1, toma.toString()}));
+
+        command.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
+                ESTUDIANTE, SESION, toma, "NOTA", "Justificacion", List.of(SOPORTE), EJECUTOR));
+
+        verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_radicar_solicitud_revision_asistencia_v4"));
+        verify(query).setParameter("idToma", toma);
+        verify(query).setParameter("idSesion", SESION);
+        verify(query).setParameter("idsArchivoSoporte", "[\"" + SOPORTE + "\"]");
+        verify(query).setParameter("idUsuarioEjecutor", EJECUTOR);
+    }
+
+    @Test
+    void CMD_PAT_013_con_toma_la_fila_de_seis_columnas_de_v3_no_cumple_el_contrato_de_v4() {
+        when(query.getResultList()).thenReturn(Collections.singletonList(exitoV3()));
+
+        final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
+                () -> command.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
+                        ESTUDIANTE, SESION, UUID.randomUUID(), "CAL", "J", List.of(), EJECUTOR)));
+
+        assertEquals(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT.code(), exception.getCode());
+    }
+
+    @Test
+    void CMD_PAT_014_resolver_envia_el_codigo_del_resultado_de_la_aprobacion_o_nulo() {
+        command.resolverSolicitudRevisionAsistencia(new ResolverSolicitudRevisionAsistenciaRepositoryDTO(
+                SOLICITUD, DOCENTE, "APROBADA", "Respuesta", EJECUTOR, "AN"));
+        command.resolverSolicitudRevisionAsistencia(new ResolverSolicitudRevisionAsistenciaRepositoryDTO(
+                SOLICITUD, DOCENTE, "RECHAZADA", "Respuesta", EJECUTOR));
+
+        verify(entityManager, org.mockito.Mockito.times(2)).createNativeQuery(contains("@codigoResultadoAprobacion = :codigoResultadoAprobacion"));
+        verify(query).setParameter("codigoResultadoAprobacion", "AN");
+        verify(query).setParameter("codigoResultadoAprobacion", (Object) null);
+    }
 }

@@ -4,6 +4,10 @@ import co.edu.uco.asistenciasuco.application.secondaryports.storage.FileStorageP
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.storage.minio.MinioFileStorageAdapter;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.MinioProviderProperties;
 import io.minio.MinioClient;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.storage.resilience.CircuitBreakerFileStorageAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.config.resilience.ResilienceCircuitBreakerNames;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -29,7 +33,10 @@ import org.springframework.context.annotation.Configuration;
 public class MinioStorageAdapterConfiguration {
 
     @Bean
-    public FileStoragePort fileStoragePort(final MinioProviderProperties properties) {
+    public FileStoragePort fileStoragePort(
+            final MinioProviderProperties properties,
+            final ObjectProvider<CircuitBreakerRegistry> circuitBreakerRegistry
+    ) {
         final MinioClient minioClient = MinioClient.builder()
                 .endpoint(properties.endpoint())
                 .credentials(properties.accessKey(), properties.secretKey())
@@ -40,6 +47,10 @@ public class MinioStorageAdapterConfiguration {
                 properties.writeTimeoutMillis(),
                 properties.readTimeoutMillis());
 
-        return new MinioFileStorageAdapter(minioClient, properties.bucket());
+        // REA-02: breaker "fileStorage"; con el breaker abierto se falla rapido con StorageUnavailableException.
+        return new CircuitBreakerFileStorageAdapter(
+                new MinioFileStorageAdapter(minioClient, properties.bucket()),
+                circuitBreakerRegistry.getIfAvailable(CircuitBreakerRegistry::ofDefaults)
+                        .circuitBreaker(ResilienceCircuitBreakerNames.FILE_STORAGE));
     }
 }

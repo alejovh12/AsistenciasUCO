@@ -3,11 +3,17 @@ param(
     [string]$Keycloak = 'http://127.0.0.1:8081',
     [string]$SqlContainer = 'sql_docentes',
     [string]$SqlPassword = $env:MSSQL_SA_PASSWORD,
+    [string]$UserPassword = $env:E2E_USER_PASSWORD,
+    [string]$DocentePassword = $env:E2E_DOCENTE_PASSWORD,
     [string]$Documento = '960092001',
     [string]$Correo = 'e2e.hu092.docente@uco.edu.co'
 )
 # E2E HU092 (editar tipo de vinculacion y nombres) con JWT real. Requiere el backend en otro puerto y SQL propio.
 $ErrorActionPreference = 'Stop'
+# Las contrasenas se leen del entorno; el script no trae valores por defecto.
+if ([string]::IsNullOrEmpty($SqlPassword)) { throw 'Falta la variable de entorno MSSQL_SA_PASSWORD (ver scratch/README.md).' }
+if ([string]::IsNullOrEmpty($UserPassword)) { throw 'Falta la variable de entorno E2E_USER_PASSWORD (ver scratch/README.md).' }
+if ([string]::IsNullOrEmpty($DocentePassword)) { throw 'Falta la variable de entorno E2E_DOCENTE_PASSWORD (ver scratch/README.md).' }
 function Get-Token($user, $pass) {
     (Invoke-RestMethod -Uri "$Keycloak/realms/asistencias-uco/protocol/openid-connect/token" -Method Post -Body @{
         client_id = 'asistencias-uco-frontend'; grant_type = 'password'; username = $user; password = $pass }).access_token
@@ -28,15 +34,15 @@ function Call($method, $path, $token, $body) {
 function Assert($cond, $msg) { if (-not $cond) { throw "E2E FAILED: $msg" } else { Write-Host "OK  $msg" -ForegroundColor Green } }
 function Sql($q) { (docker exec $SqlContainer /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $SqlPassword -C -d gestionasistenciadb -h -1 -W -Q "SET NOCOUNT ON; $q" | Out-String).Trim() }
 
-$coord = Get-Token 'coordinador.sistemas@uco.edu.co' 'Test1234!'
-$decano = Get-Token 'decano.ingenieria@uco.edu.co' 'Test1234!'
+$coord = Get-Token 'coordinador.sistemas@uco.edu.co' $UserPassword
+$decano = Get-Token 'decano.ingenieria@uco.edu.co' $UserPassword
 $tipos = Call GET '/tipos-vinculacion' $coord $null
 $cat = ($tipos.body | Where-Object codigo -eq 'CAT').id
 $pla = ($tipos.body | Where-Object codigo -eq 'PLA').id
 $tipoCC = (Sql "SELECT TOP 1 id FROM dbo.uv_tipo_identificacion WHERE tipoIdentificacion='CC'")
 
 $alta = Call POST '/coordinador/docentes' $coord @{ idTipoIdentificacion = $tipoCC; numeroIdentificacion = $Documento; primerNombre = 'Edgar'; primerApellido = 'Original';
-    correo = $Correo; password = 'Docente2026!'; idTipoVinculacion = $cat }
+    correo = $Correo; password = $DocentePassword; idTipoVinculacion = $cat }
 Assert ($alta.status -eq 201) "Alta previa del docente de prueba (obtuvo $($alta.status))"
 $id = $alta.body.datos.idDocente
 
@@ -48,7 +54,7 @@ Assert ($r1.body.datos.correo -eq $Correo -and $r1.body.datos.numeroIdentificaci
 $fila = Sql "SELECT CONCAT(primerNombre, '|', segundoApellido, '|', correo) FROM dbo.Usuario WHERE correo = '$Correo'"
 Assert ($fila -eq "Editado|Nuevo|$Correo") 'sqlcmd confirma los nombres editados en Usuario'
 
-$login = Get-Token $Correo 'Docente2026!'
+$login = Get-Token $Correo $DocentePassword
 Assert ([bool]$login) 'El docente sigue iniciando sesion en Keycloak (los nombres no afectan el login)'
 
 $vacio = Call PUT "/coordinador/docentes/$id" $coord @{}

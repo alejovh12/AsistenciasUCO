@@ -1,0 +1,23 @@
+﻿# VAL-oleada3 carga: una-replica-20vus
+fecha_utc=20261113T070046Z
+k6_image=grafana/k6:1.3.0@sha256:3ddc8b1a33a2c3d8edc6e99b6a762ae36cba08788463458f5e6a7703e14eb77d
+base_url=http://host.docker.internal:8080 modo=normal vus=20 duracion=2m rampa=20s think_ms=1000
+k6_exit_code=99 (0 = todos los umbrales cumplen; 99 = algun umbral falla)
+reparto=n/a (sin balanceador)
+
+## salida k6
+time="2026-11-13T07:02:46Z" level=warning msg="Request Failed" error="Get \"http://host.docker.internal:8080/api/v1/auth/me\": request timeout"
+time="2026-11-13T07:03:05Z" level=warning msg="Request Failed" error="Get \"http://host.docker.internal:8080/api/v1/docente/horarios\": request timeout"
+time="2026-11-13T07:03:06Z" level=warning msg="Request Failed" error="Get \"http://host.docker.internal:8080/api/v1/docente/horarios\": request timeout"
+time="2026-11-13T07:03:06Z" level=warning msg="Request Failed" error="Get \"http://host.docker.internal:8080/api/v1/estudiante/alertas\": dial: i/o timeout"
+time="2026-11-13T07:03:06Z" level=warning msg="Request Failed" error="Get \"http://host.docker.internal:8080/api/v1/coordinador/alertas-tempranas\": request timeout"
+time="2026-11-13T07:03:06Z" level=warning msg="Request Failed" error="Get \"http://host.docker.internal:8080/api/v1/estudiante/alertas\": request timeout"
+modo=normal base=http://host.docker.internal:8080 vus=20 duracion=2m
+http_reqs={"count":1441,"rate":9.637818047861813}
+http_req_failed={"fails":389,"rate":0.7300485773768216,"passes":1052}
+http_req_duration={"p(95)":3295.691474,"p(99)":6398.244886599939,"max":11158.624057,"avg":679.9759952727277,"min":0,"med":30.447786,"p(90)":2292.537737}
+lecturaPropia={"p(95)":3176.526371,"p(99)":5878.398878200017,"max":11158.624057,"avg":667.1777249319554,"min":0,"med":31.525489,"p(90)":2215.129757}
+agregado={"p(99)":7531.98275489998,"max":10859.3655,"avg":733.0431090785719,"min":0,"med":23.737955499999998,"p(90)":2407.7606912,"p(95)":3487.2156326000004}
+checks={"rate":0.26995142262317834,"passes":389,"fails":1052}
+umbrales={"checks":{"rate>0.99":{"ok":false}},"http_req_duration{name:/api/v1/docente/reclamos}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/coordinador/alertas-tempranas}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/coordinador/consolidado-asistencia}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/coordinador/indicadores}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/estudiante/materias}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/docente/asignaturas}":{"max>=0":{"ok":true}},"http_req_duration{clase:agregado}":{"p(95)<1500":{"ok":false}},"http_req_failed":{"rate<0.01":{"ok":false}},"http_req_duration{name:/api/v1/coordinador/grupos}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/auth/me}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/estudiante/alertas}":{"max>=0":{"ok":true}},"http_req_duration{clase:lecturaPropia}":{"p(95)<800":{"ok":false}},"http_req_duration{name:/api/v1/estudiante/reclamos}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/docente/horarios}":{"max>=0":{"ok":true}},"http_req_duration{name:/api/v1/estudiante/horarios}":{"max>=0":{"ok":true}}}
+time="2026-11-13T07:03:26Z" level=error msg="thresholds on metrics 'checks, http_req_duration{clase:agregado}, http_req_duration{clase:lecturaPropia}, http_req_failed' have been crossed"

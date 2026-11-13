@@ -23,7 +23,7 @@ Abrir PR branch `jose-valencia/sec-001-trivy-archunit` contra `develop` y consul
 2. `Trivy Repository Vulnerability and Misconfiguration Scan`: SARIF con findings y artifact.
 3. `Trivy Production Docker Image Scan`: construye imagen fresca desde Dockerfile y analiza OS/libs.
 
-Trivy se ejecuta por primera vez en `report-only` (`exit-code:0` para findings): es obligatorio leer SARIF y clasificar HIGH/CRITICAL, no llamar a estos jobs `CVE-free`. Mantener `security-events: write` solo para subir SARIF.
+Desde VAL oleada 2 (2026-11-12, decisión E de John) cada escaneo tiene dos pasos: un inventario SARIF completo (`exit-code: 0`, `ignore-unfixed: false`) que se sube a Code Scanning, y una compuerta que **bloquea** HIGH/CRITICAL con corrección disponible (`exit-code: 1`, `ignore-unfixed: true`), con escáneres `vuln,misconfig,secret`. Las excepciones viven en `.trivyignore`, una por hallazgo con motivo y `exp:AAAA-MM-DD`. Triage inicial en [VAL-oleada2-cumplimiento](../work-items/VAL-oleada2-cumplimiento/VALIDATION.md). Mantener `security-events: write` solo para subir SARIF.
 
 ## Ejecución local (solo JDK25, Docker y Trivy previamente verificados)
 ```powershell
@@ -33,8 +33,8 @@ java -version
 .\mvnw.cmd -B -ntp "-Dtest=co/edu/uco/asistenciasuco/architecture/*Test" test
 docker build -t asistencias-uco-backend:local .
 trivy --version
-trivy fs --scanners vuln,misconfig --severity HIGH,CRITICAL --format table .
-trivy image --scanners vuln --severity HIGH,CRITICAL --format table asistencias-uco-backend:local
+trivy fs --scanners vuln,misconfig,secret --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 --format table .
+trivy image --scanners vuln,secret,misconfig --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 --format table asistencias-uco-backend:local
 ```
 No introducir tags de acción mutables: Trivy sufrió alteración de tags en marzo 2026. Utilizar versiones aprobadas y commit SHA fijado en workflow; no descargar binarios sin verificar fuentes. No guardar tokens, DB dumps ni reportes de secret scanner sin sanitizar.
 

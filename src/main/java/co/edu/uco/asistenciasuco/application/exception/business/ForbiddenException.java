@@ -22,4 +22,13 @@ public final class ForbiddenException extends BusinessException {
     public ForbiddenException(final String code, final String message) {
         super(code, message);
     }
+
+    private ForbiddenException(final ErrorDefinition errorDefinition, final Object[] argumentos) {
+        super(errorDefinition, argumentos);
+    }
+
+    /** Error de catalogo con marcadores {@code {}} que se llenan con {@code argumentos} (VAL-oleada3 MSG-05). */
+    public static ForbiddenException conParametros(final ErrorDefinition errorDefinition, final Object... argumentos) {
+        return new ForbiddenException(errorDefinition, argumentos);
+    }
 }

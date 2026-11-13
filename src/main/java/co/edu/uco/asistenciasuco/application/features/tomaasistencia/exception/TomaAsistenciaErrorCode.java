@@ -11,7 +11,9 @@ public enum TomaAsistenciaErrorCode implements ErrorDefinition {
     TOM_001("TOM_001", "La toma de asistencia no existe.", ErrorKind.NOT_FOUND),
     TOM_002("TOM_002", "El modo de la toma no es válido.", ErrorKind.VALIDATION),
     TOM_003("TOM_003", "Ya hay una toma abierta en esta sesión; ciérrala antes de abrir otra.", ErrorKind.CONFLICT),
-    TOM_004("TOM_004", "La sesión ya tiene el máximo de tomas permitido.", ErrorKind.CONFLICT);
+    TOM_004("TOM_004", "La sesión ya tiene el máximo de tomas permitido.", ErrorKind.CONFLICT),
+    // PC (puntos de control): una toma cerrada solo se corrige mientras no se abra la siguiente; despues, por reclamo.
+    TOM_012("TOM_012", "La toma ya no se puede corregir porque se abrió la toma siguiente. Las correcciones se hacen por reclamo del estudiante.", ErrorKind.CONFLICT);
 
     private final String code;
     private final String defaultMessage;

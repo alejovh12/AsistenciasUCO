@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.admin.cambiarestadodecano.primaryports.interactor;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.admin.consultardecanos.primaryports.dto.DecanoDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadodecano.primaryports.CambiarEstadoDecanoInputPort;
@@ -21,7 +22,7 @@ public final class CambiarEstadoDecanoInteractor implements CambiarEstadoDecanoI
     @Override
     public DecanoDTO execute(final CambiarEstadoDecanoDTO dto) {
         if (dto == null) {
-            throw new ValidationException("Los datos del cambio de estado del decano son obligatorios.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_006);
         }
         final DecanoProjection d = useCase.execute(new CambiarEstadoDecanoDomain(dto.idDecano(), dto.actorUsuarioId()));
         return new DecanoDTO(d.id(), d.idUsuario(), d.numeroIdentificacion(), d.nombreCompleto(), d.idFacultad(),

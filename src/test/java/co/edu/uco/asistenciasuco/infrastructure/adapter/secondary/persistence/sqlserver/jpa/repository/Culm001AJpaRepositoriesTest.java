@@ -244,7 +244,7 @@ class Culm001AJpaRepositoriesTest {
         when(manager.createQuery(eq(UsuarioJpaRepository.HQL_CORREO_POR_ESTUDIANTE), eq(String.class))).thenReturn(correo);
         final UUID estudiante = UUID.randomUUID();
         when(correo.getResultList()).thenReturn(List.of("ana.perez@uco.edu.co"), List.of(" "));
-        final UsuarioJpaRepository repository = new UsuarioJpaRepository(manager, new JpaProcedureExecutor(manager));
+        final UsuarioJpaRepository repository = new UsuarioJpaRepository(manager);
 
         assertEquals("ana.perez@uco.edu.co", repository.consultarCorreoPorEstudiante(estudiante).orElseThrow());
         verify(correo).setParameter("idEstudiante", estudiante);

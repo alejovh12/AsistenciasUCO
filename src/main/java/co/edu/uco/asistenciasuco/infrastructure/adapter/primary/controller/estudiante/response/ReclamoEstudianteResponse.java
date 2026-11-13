@@ -33,8 +33,37 @@ public record ReclamoEstudianteResponse(
         String materiaNombre,
         SoporteAdjuntoResponse soporteAdjunto,
         CategoriaReclamoResponse categoria,
-        List<SoporteReclamoResponse> soportes
+        List<SoporteReclamoResponse> soportes,
+        UUID idToma,
+        Integer numeroToma,
+        String fechaPuntoControlUtc,
+        String resultadoAprobacion
 ) {
+
+    /** Compatibilidad: sin los datos de la toma (PC, puntos de control). */
+    public ReclamoEstudianteResponse(
+            final UUID id,
+            final String nombre,
+            final LocalDate fechaSolicitud,
+            final String estadoSolicitud,
+            final String justificacionSolicitud,
+            final String justificacionRespuesta,
+            final UUID sesionId,
+            final Integer sesionNumero,
+            final String fechaSesionUtc,
+            final String procedenciaTemporalSesion,
+            final UUID grupoId,
+            final Integer grupoCodigo,
+            final String grupoNombre,
+            final UUID materiaId,
+            final String materiaCodigo,
+            final String materiaNombre,
+            final SoporteAdjuntoResponse soporteAdjunto,
+            final CategoriaReclamoResponse categoria,
+            final List<SoporteReclamoResponse> soportes
+    ) {
+        this(id, nombre, fechaSolicitud, estadoSolicitud, justificacionSolicitud, justificacionRespuesta, sesionId, sesionNumero, fechaSesionUtc, procedenciaTemporalSesion, grupoId, grupoCodigo, grupoNombre, materiaId, materiaCodigo, materiaNombre, soporteAdjunto, categoria, soportes, null, null, null, null);
+    }
 
     /** Soporte vinculado: se descarga por {@code GET /api/v1/archivos/{fileId}} autenticado, nunca por el storage. */
     public record SoporteAdjuntoResponse(

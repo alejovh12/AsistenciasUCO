@@ -9,6 +9,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asist
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -60,7 +61,7 @@ public final class AsistenciaQueryController {
     @Deprecated(forRemoval = false)
     @PostMapping("/api/v1/asistencias/consultas/grupo")
     public ResponseEntity<ApiListResponse<AsistenciaConsultadaDTO>> consultarAsistenciasPorGrupoLegacy(
-            @RequestBody final ConsultarAsistenciasPorGrupoRequest request
+            @Valid @RequestBody final ConsultarAsistenciasPorGrupoRequest request
     ) {
         return executeConsultarAsistenciasPorGrupo(request);
     }
