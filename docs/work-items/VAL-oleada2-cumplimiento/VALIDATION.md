@@ -108,3 +108,10 @@ Nota: no se tenían los reportes de Failsafe del último run completo, así que 
 | `AcademicUserCommandsSuccessParityIT` (2) | clase | Datos esperados distintos | Equipo | Reajustar a la seed |
 | `AvisoDocenteUmbralCancelacionIT` (1) | clase (un solo método) | La fixture no tiene la matrícula correspondiente | Equipo | Completar la fixture |
 | `AuditEventJpaParityIT` (2) | clase | `Unexpected row count (-1)` en el insert JPA | Equipo, con BD | Revisar el row count de SQL Server en el insert JPA |
+
+## Compuerta Trivy de la imagen de producción (2026-11-12)
+
+- **Síntoma:** el paso "Trivy image gate (blocks HIGH/CRITICAL with fix available)" del job "Trivy Production Docker Image Scan" fallaba con exit 1; el escaneo del repositorio pasaba.
+- **Causa:** el único hallazgo era CVE-2025-59250 (HIGH) en `com.microsoft.sqlserver:mssql-jdbc` dentro de `app.jar`. El JAR empaquetado es `mssql-jdbc-13.2.1.jre11.jar` (la versión corregida, verificada por `scripts/security/verify_jdbc_artifact.py`), pero su `pom.properties` interno declara `13.2.1` sin el sufijo `.jre11`. Trivy compara `13.2.1` contra la corrección `13.2.1.jre11` y lo marca como vulnerable: falso positivo. El escaneo de `pom.xml` no lo ve porque ahí la versión sí lleva `.jre11`. La imagen base Alpine (con `apk upgrade libpng zlib`), guava 33.7.2-jre y snappy-java 1.1.10.12 salen limpios.
+- **Corrección:** entrada justificada y con vencimiento en `.trivyignore` (`CVE-2025-59250 exp:2027-02-12`). No hay actualización real posible: la versión instalada ya es la corregida.
+- **Evidencia:** reproducido con `aquasec/trivy:0.74.0 image --scanners vuln,misconfig --pkg-types os,library --severity HIGH,CRITICAL --ignore-unfixed` sobre una imagen con la misma etapa final del Dockerfile y el JAR de `mvnw package -DskipTests`. Antes: 1 hallazgo (exit 1). Después con `.trivyignore`: alpine 0, jar 0 (exit 0). Limitación: el escaneo de secretos del JAR de 155 MB agota el timeout de 5 min por defecto de Trivy en el portátil, por lo que se omitió localmente; el repositorio ya pasa ese escáner en CI.

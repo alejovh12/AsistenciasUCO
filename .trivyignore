@@ -8,3 +8,11 @@
 #   - com.google.guava:guava 33.6.0-jre -> 33.7.2 (CVE-2026-102554)
 #   - org.xerial.snappy:snappy-java 1.1.10.8 -> 1.1.10.9 (CVE-2026-108106, CVE-2026-93451)
 # Sin hallazgos de secretos ni de misconfig (Dockerfile, infra/files/minio/Dockerfile).
+
+# TRI-02 (2026-11-12): falso positivo en la imagen de produccion. El JAR de runtime empaqueta
+# mssql-jdbc-13.2.1.jre11.jar (la version corregida de CVE-2025-59250, verificada en CI por
+# scripts/security/verify_jdbc_artifact.py), pero Microsoft embebe en su META-INF/maven pom.properties
+# la version "13.2.1" sin el sufijo .jre11 y Trivy la compara contra la correccion "13.2.1.jre11"
+# (13.2.1 < 13.2.1.jre11), por lo que la reporta como vulnerable. El escaneo del repositorio (pom.xml,
+# 13.2.1.jre11) no la reporta. Revisar al vencer o al subir el driver.
+CVE-2025-59250 exp:2027-02-12
