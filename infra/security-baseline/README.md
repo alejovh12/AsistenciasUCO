@@ -1,14 +1,14 @@
-# Security Baseline 0.1.7 — instalación local única
+# Security Baseline 0.1.13 — instalación local única
 
 Estado: 2026-10-26. Esta es **la única** instalación local de Security Baseline (PDP, PEP, OPA, Keycloak central,
 Redis, SurrealDB). El Keycloak legacy de AsistenciasUCO (`infra/keycloak`, puerto 8081) es otro proyecto y se conserva.
 
 | Servicio | Imagen | Puerto host |
 |---|---|---|
-| Keycloak central (realm `security-baseline`) | `davidalzate/security-keycloak-local:0.1.7` | `127.0.0.1:19090` (issuer `http://keycloak.localhost:19090/realms/security-baseline`) |
-| PDP | `davidalzate/security-pdp:0.1.7` | `127.0.0.1:18080` |
-| PEP | `davidalzate/security-pep:0.1.7` | `127.0.0.1:18081` |
-| OPA / Redis / SurrealDB | `security-opa:0.1.7` / `redis:7.4-alpine` / `surrealdb:v3.3.0` | solo red interna |
+| Keycloak central (realm `security-baseline`) | `davidalzate/security-keycloak-local:0.1.13` | `127.0.0.1:19090` (issuer `http://keycloak.localhost:19090/realms/security-baseline`) |
+| PDP | `davidalzate/security-pdp:0.1.13` | `127.0.0.1:18080` |
+| PEP | `davidalzate/security-pep:0.1.13` | `127.0.0.1:18081` |
+| OPA / Redis / SurrealDB | `security-opa:0.1.13` / `redis:7.4-alpine` / `surrealdb:v3.3.0` | solo red interna |
 
 Proyecto Compose: **`asistencias-security-lab`** (se conserva a propósito: sus volúmenes `asistencias-security-lab_*-data`
 contienen el realm, el catálogo del PDP y las asignaciones; renombrarlo los dejaría huérfanos).
@@ -19,7 +19,7 @@ contienen el realm, el catálogo del PDP y las asignaciones; renombrarlo los dej
 docker compose --env-file "$env:USERPROFILE\.asistencias-security-lab\lab.env" -f infra\security-baseline\compose.yaml up -d
 ```
 
-`lab.env` (fuera de Git, ACL solo del usuario) define `SECURITY_VERSION=0.1.7` y todos los secretos; plantilla en
+`lab.env` (fuera de Git, ACL solo del usuario) define `SECURITY_VERSION=0.1.13` y todos los secretos; plantilla en
 `lab.env.example`. **Prohibido:** `docker compose down -v`, `docker volume prune`, `docker system prune -a`.
 Antes de actualizar versión respalde los volúmenes (`tar` desde un contenedor efímero con el volumen en solo lectura).
 

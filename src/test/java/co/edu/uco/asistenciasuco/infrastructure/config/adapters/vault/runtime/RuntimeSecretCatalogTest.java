@@ -34,7 +34,8 @@ class RuntimeSecretCatalogTest {
                 "app.providers.minio.access-key",
                 "app.providers.minio.secret-key",
                 "app.providers.smtp-notification.password",
-                "app.security.azure-events.webhook-token");
+                "app.security.azure-events.webhook-token",
+                "app.providers.catalogo-parametros.secreto");
 
         assertTrue(RuntimeSecretCatalog.PROPIEDAD_A_SECRETO.keySet().containsAll(requeridas));
     }

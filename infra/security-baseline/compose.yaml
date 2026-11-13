@@ -1,4 +1,4 @@
-# Security Baseline 0.1.9 — instalación local ÚNICA de AsistenciasUCO.
+# Security Baseline 0.1.13 — instalación local ÚNICA de AsistenciasUCO.
 #
 # Origen: distribution/compose.yaml del release oficial de Seguridad-UCO (imágenes
 # davidalzate/security-{keycloak-local,opa,pdp,pep}:${SECURITY_VERSION}), endurecido para este repositorio:
@@ -25,7 +25,12 @@ services:
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${SECURITY_KC_ADMIN_PASSWORD:?Configure SECURITY_KC_ADMIN_PASSWORD}
       KC_HOSTNAME: http://keycloak.localhost:${KEYCLOAK_PORT:-19090}
       KC_HOSTNAME_STRICT: "true"
-      KC_HTTP_PORT: ${KEYCLOAK_PORT:-19090}
+      # 0.1.13: el entrypoint de la imagen migra el realm por el Admin API en 127.0.0.1:8080 (puerto fijo), asi que
+      # Keycloak escucha en el 8080 interno; el servicio keycloak-relay expone ${KEYCLOAK_PORT} en este mismo
+      # contenedor para que PDP/PEP (keycloak.localhost:${KEYCLOAK_PORT}) y el host sigan usando el puerto oficial.
+      # 0.1.13: la imagen migra el realm persistido y crea el cliente técnico aprovisionador (identidades de
+      # servicio M2M) con este mismo secreto, que también recibe el PDP. Sin valor por defecto: llega de lab.env.
+      SECURITY_BASELINE_PROVISIONER_CLIENT_SECRET: ${PDP_KEYCLOAK_PROVISIONER_CLIENT_SECRET:?Configure PDP_KEYCLOAK_PROVISIONER_CLIENT_SECRET}
     networks:
       lab:
         ipv4_address: 172.31.240.10
@@ -34,10 +39,21 @@ services:
     ports:
       - "127.0.0.1:${KEYCLOAK_PORT:-19090}:${KEYCLOAK_PORT:-19090}"
     healthcheck:
-      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/${KEYCLOAK_PORT:-19090}'"]
+      # 0.1.13: no arranca consumidores hasta que la imagen haya migrado el realm persistido.
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8080 && test -f /tmp/security-baseline-keycloak-migration-complete'"]
       interval: 5s
       timeout: 3s
-      retries: 24
+      retries: 36
+
+  # Relevo TCP dentro del espacio de red de keycloak: ${KEYCLOAK_PORT} -> 8080 (ver comentario en keycloak).
+  keycloak-relay:
+    image: alpine/socat:1.8.0.3
+    network_mode: "service:keycloak"
+    command: ["TCP-LISTEN:${KEYCLOAK_PORT:-19090},fork,reuseaddr", "TCP:127.0.0.1:8080"]
+    restart: unless-stopped
+    depends_on:
+      keycloak:
+        condition: service_started
 
   surrealdb:
     networks: [lab]
@@ -54,7 +70,7 @@ services:
 
   redis:
     networks: [lab]
-    # Versión fija (igual que distribution/compose.yaml 0.1.9): un tag flotante cambia Redis sin aviso en cada `pull`.
+    # Versión fija (igual que distribution/compose.yaml 0.1.13): un tag flotante cambia Redis sin aviso en cada `pull`.
     image: redis:7.4.12-alpine
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
@@ -82,6 +98,10 @@ services:
       PDP_REDIS_HOST: redis
       PDP_OPA_BASE_URL: http://opa:8181
       PDP_INTERNAL_MTLS_ENABLED: "false"
+      # 0.1.13: el PDP aprovisiona clientes M2M (identidades de servicio) por el Admin API: dentro de Docker usa el
+      # nombre del servicio y el puerto interno de Keycloak (8080), no keycloak.localhost.
+      PDP_KEYCLOAK_ADMIN_URL: http://keycloak:8080
+      PDP_KEYCLOAK_PROVISIONER_CLIENT_SECRET: ${PDP_KEYCLOAK_PROVISIONER_CLIENT_SECRET:?Configure PDP_KEYCLOAK_PROVISIONER_CLIENT_SECRET}
       PDP_KEYCLOAK_ISSUER: http://keycloak.localhost:${KEYCLOAK_PORT:-19090}/realms/security-baseline
       PDP_KEYCLOAK_CLIENT_ID: security-baseline-bff
       PDP_KEYCLOAK_CLIENT_SECRET: ${SECURITY_PDP_KEYCLOAK_CLIENT_SECRET:?Configure SECURITY_PDP_KEYCLOAK_CLIENT_SECRET}
