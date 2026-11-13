@@ -23,6 +23,7 @@ tickets, ni en evidencias.
 | Claves de aplicación de MinIO | 90 días | Dueño de Infra | Reinicio escalonado |
 | Contraseña SMTP | 180 días o la política del proveedor | Dueño de notificaciones | Reinicio escalonado |
 | Token del webhook de Event Grid | 90 días | Dueño de Azure | Reinicio escalonado |
+| Secreto del token de consulta del Catálogo de Parámetros | 90 días o la política del Catálogo | Dueño de la integración del Catálogo, con el equipo del Catálogo | Reinicio escalonado |
 | API key de festivos | Según el proveedor | Dueño de Azure | No (se lee en caliente) |
 
 Además, **cualquier secreto se rota de inmediato** si aparece en un log, un commit, una captura o un ticket, o si se va
@@ -82,6 +83,7 @@ versión nueva: una lectura sin versión de un secreto cuya última versión est
 | Credencial del PEP | La emite el PDP para la aplicación y ambiente; coordinar con Security Baseline. Con la credencial vieja inválida, el PEP responde 503 (fail-closed). |
 | MinIO | Crear la clave de servicio nueva para la cuenta de aplicación, guardar las dos piezas en el baúl, reiniciar y borrar la clave anterior. Nunca usar las credenciales root. |
 | Token del webhook | El filtro acepta un solo token. Orden: guardar el token nuevo en el baúl, reiniciar el backend y actualizar el header de entrega en la suscripción de Event Grid. Mientras tanto Event Grid recibe 401 y reintenta (hasta 24 h por defecto), así que no se pierden eventos; tras actualizar la suscripción, confirmar una entrega aceptada. |
+| Catálogo de Parámetros | El secreto pertenece a un token de consulta del Catálogo (`CATALOGO_PARAMETROS_TOKEN_ID`). Emitir el secreto nuevo en el Catálogo, guardarlo en el baúl, reiniciar y luego revocar el anterior. Sin secreto, el backend con `catalogoparametros` no arranca; con un secreto revocado o inválido el Catálogo responde error, el backend aplica los valores por defecto (DEC-018) y registra un WARN. |
 | Local, test y CI | Usan `local_env`: los secretos vienen de `.env` (fuera de git) o de los secretos del CI. Rotar ahí es editar ese valor y reiniciar. |
 
 ## 5. Lo que este runbook no cubre

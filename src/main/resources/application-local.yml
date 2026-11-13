@@ -13,6 +13,8 @@ logging:
 # definir APP_ADAPTERS_VAULT_PROVIDER=azure_keyvault, APP_ADAPTERS_PARAMETER_CATALOG_PROVIDER=azure_appconfig,
 # APP_ADAPTERS_MESSAGE_CATALOG_PROVIDER=azure y los endpoints AZURE_KEYVAULT_ENDPOINT / AZURE_APPCONFIG_ENDPOINT
 # (init-env.ps1 de Infra los escribe en el .env del backend).
+# Para leer los parametros del componente externo Catalogo de Parametros: APP_ADAPTERS_PARAMETER_CATALOG_PROVIDER=catalogoparametros
+# y las variables CATALOGO_PARAMETROS_* de .env.example (la edicion local de parametros queda deshabilitada, PRM_010).
 app:
   adapters:
     vault:
