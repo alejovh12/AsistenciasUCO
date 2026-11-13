@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *   <li>OBS-10: sondas de liveness y readiness con BD y circuit breakers; histograma de latencia HTTP.</li>
  *   <li>F12-11: logs a stdout por defecto (JSON) y archivo solo si se define la variable.</li>
  *   <li>REA-02: los circuit breakers del PEP, MinIO y ClamAV se construyen desde la configuracion.</li>
+ *   <li>F12-08: el pool de conexiones (Hikari) se dimensiona por variable y por replica.</li>
  * </ul>
  */
 class OperationalReadinessConfigurationTest {
@@ -80,6 +81,13 @@ class OperationalReadinessConfigurationTest {
         assertTrue(dockerfile.contains("HEALTHCHECK"), "el Dockerfile declara HEALTHCHECK");
         assertTrue(dockerfile.contains("http://127.0.0.1:${MANAGEMENT_SERVER_PORT:-8090}/actuator/health/readiness"));
         assertTrue(dockerfile.contains("ENTRYPOINT [\"java\""), "exec form: la JVM recibe SIGTERM");
+    }
+
+    @Test
+    void f12_08_pool_de_conexiones_dimensionado_por_variable_y_por_replica() {
+        assertEquals("${SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE:10}", valor("spring.datasource.hikari.maximum-pool-size"));
+        assertEquals("${SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE:10}", valor("spring.datasource.hikari.minimum-idle"));
+        assertEquals("${SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT:30000}", valor("spring.datasource.hikari.connection-timeout"));
     }
 
     @Test
