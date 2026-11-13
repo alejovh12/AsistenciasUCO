@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.docente.retirarestudiantegrupo.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.docente.retirarestudiantegrupo.usecase.RetirarEstudianteGrupoUseCase;
 import co.edu.uco.asistenciasuco.application.features.docente.retirarestudiantegrupo.usecase.domain.RetirarEstudianteGrupoDomain;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.RetiroEstudianteGrupoPort;
@@ -41,7 +42,7 @@ public final class RetirarEstudianteGrupoUseCaseImpl implements RetirarEstudiant
     @Override
     public void execute(final RetirarEstudianteGrupoDomain domain) {
         scopePort.findDocenteIdByUsuario(domain.actorUsuarioId())
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver el docente autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_003));
 
         retiroPort.retirarEstudiante(domain.grupoId(), domain.estudianteId(), domain.motivo(), domain.actorUsuarioId());
         avisar(domain);

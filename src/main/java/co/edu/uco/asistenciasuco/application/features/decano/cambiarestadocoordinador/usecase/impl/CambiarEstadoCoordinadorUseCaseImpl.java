@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.decano.cambiarestadocoordinador.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.decano.cambiarestadocoordinador.usecase.CambiarEstadoCoordinadorUseCase;
 import co.edu.uco.asistenciasuco.application.features.decano.cambiarestadocoordinador.usecase.domain.CambiarEstadoCoordinadorDomain;
 import co.edu.uco.asistenciasuco.application.features.decano.common.domain.ResultadoGestionCoordinadorDomain;
@@ -51,7 +52,7 @@ public final class CambiarEstadoCoordinadorUseCaseImpl implements CambiarEstadoC
             throw new CrosscuttingException("El dominio para cambiar el estado del coordinador es obligatorio.");
         }
         final UUID facultad = scopePort.findFacultadIdByDecanoUsuario(domain.usuario())
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver la facultad del decano autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_011));
 
         final ResultadoGestionCoordinadorProjection resultado = commandPort.cambiarEstadoCoordinador(
                 domain.idCoordinador(), domain.estaActivo(), facultad, domain.usuario());

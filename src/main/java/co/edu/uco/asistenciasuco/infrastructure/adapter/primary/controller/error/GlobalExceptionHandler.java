@@ -291,7 +291,10 @@ public final class GlobalExceptionHandler {
 
     private String resolveErrorMessage(final ApiErrorDescriptor descriptor) {
         try {
-            final Optional<String> catalogMessage = resolverMensajeUsuario.execute(descriptor.code());
+            // VAL-oleada3 MSG-05: el texto se busca por el codigo de mensaje de la definicion (por defecto el mismo codigo de la
+            // respuesta) y sus marcadores se llenan con los argumentos de la excepcion.
+            final Optional<String> catalogMessage = resolverMensajeUsuario.execute(descriptor.messageCode())
+                    .map(texto -> TextHelper.reemplazarMarcadores(texto, descriptor.messageArgs().toArray()));
             // Un texto del catalogo con el marcador de parametro sin resolver ("{}") nunca se muestra: se prefiere el mensaje de la
             // excepcion, que ya trae el parametro (por ejemplo el dominio institucional de VCE_001).
             if (catalogMessage.isPresent() && !TextHelper.isNullOrBlank(catalogMessage.get())

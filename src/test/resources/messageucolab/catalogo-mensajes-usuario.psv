@@ -60,6 +60,9 @@ SES_003|SES003|Funcional|Error|SES_003 - El cierre de sesión no está soportado
 SES_004|SES004|Funcional|Error|SES_004 - La fecha y hora de fin de sesión debe…|La fecha y hora de fin de sesión debe ser posterior a la fecha y hora de inicio.
 SES_005|SES005|Funcional|Error|SES_005 - El horario institucional incluye una…|El horario institucional incluye una hora local inexistente por cambio de horario; no se generaron sesiones.
 SES_006|SES006|Funcional|Error|SES_006 - La sesión no coincide con el…|La sesión no coincide con el manifiesto de clasificación aprobado; no se modificó.
+SES_007|SES007|Funcional|Error|SES_007 - La sesión de clase aún no ha iniciado…|La sesión de clase aún no ha iniciado; la asistencia solo se registra durante la sesión.
+SES_008|SES008|Funcional|Error|SES_008 - La sesión de clase ya finalizó; la…|La sesión de clase ya finalizó; la asistencia solo puede modificarse mediante un reclamo.
+SES_009|SES009|Funcional|Error|SES_009 - El horario de la sesión no está…|El horario de la sesión no está confirmado; no es posible registrar asistencia.
 ERR_TOKEN_VERIFICACION_INVALIDO|ERR019|Funcional|Error|ERR_TOKEN_VERIFICACION_INVALIDO|El codigo de verificacion de asistencia es incorrecto o ha expirado.
 INST_001|INST001|Funcional|Error|INST_001 - El estudiante, programa y facultad…|El estudiante, programa y facultad deben pertenecer a la misma institución.
 ERR_PROGRAMA_FACULTAD_INCONSISTENTE|ERR020|Funcional|Error|ERR_PROGRAMA_FACULTAD_INCONSISTENTE|El programa académico indicado no pertenece a la facultad especificada.
@@ -67,11 +70,22 @@ RC_001|RC001|Funcional|Error|RC_001 - El estado de asistencia … no…|El estad
 ATT_001|ATT001|Funcional|Error|ATT_001 - El payload JSON de asistencia no…|El payload JSON de asistencia no cumple el contrato requerido.
 ATT_002|ATT002|Funcional|Error|ATT_002 - El lote de asistencia no puede estar…|El lote de asistencia no puede estar vacío.
 ATT_003|ATT003|Funcional|Error|ATT_003 - El estudiante … aparece más de una vez…|El estudiante {} aparece más de una vez en el lote de asistencia.
+REV_001|REV001|Funcional|Error|REV_001 - La acción sobre el reclamo no es…|La acción sobre el reclamo no es válida; use APROBADA o RECHAZADA.
+REV_002|REV002|Funcional|Error|REV_002 - El reclamo ya fue resuelto con una…|El reclamo ya fue resuelto con una decisión distinta.
+REV_003|REV003|Funcional|Error|REV_003 - La asistencia del reclamo no es una…|La asistencia del reclamo no es una inasistencia justificable.
+REV_004|REV004|Funcional|Error|REV_004 - El reclamo no tiene un registro de…|El reclamo no tiene un registro de asistencia que se pueda justificar.
+REV_005|REV005|Funcional|Error|REV_005 - El reclamo indicado no existe.|El reclamo indicado no existe.
 SEC_001|SEC001|Funcional|Error|SEC_001 - No tiene permisos suficientes para…|No tiene permisos suficientes para realizar esta operación.
 SEC_002|SEC002|Funcional|Error|SEC_002 - No tiene autorización sobre el recurso…|No tiene autorización sobre el recurso solicitado.
 NTF_001|NTF001|Funcional|Error|NTF_001 - Los datos de la notificación no son…|Los datos de la notificación no son válidos.
 NTF_002|NTF002|Funcional|Error|NTF_002 - La notificación especificada no existe…|La notificación especificada no existe en el sistema.
 NTF_003|NTF003|Funcional|Error|NTF_003 - La notificación ya no está reservada…|La notificación ya no está reservada por este proceso.
+NTF_004|NTF004|Funcional|Error|NTF_004 - La plantilla de notificación no…|La plantilla de notificación no contiene todos los marcadores obligatorios o incluye marcadores no permitidos para este tipo.
+NTF_005|NTF005|Funcional|Error|NTF_005 - No existe la versión de plantilla…|No existe la versión de plantilla solicitada para el tipo e idioma indicados.
+NTF_006|NTF006|Funcional|Confirmación|NTF_006 - La plantilla de correo se actualizó y…|La plantilla de correo se actualizó y activó correctamente en una nueva versión.
+NTF_007|NTF007|Funcional|Confirmación|NTF_007 - La notificación fallida fue reencolada…|La notificación fallida fue reencolada exitosamente para un nuevo intento de envío.
+NTF_008|NTF008|Funcional|Error|NTF_008 - Solo se pueden reencolar…|Solo se pueden reencolar notificaciones en estado fallido definitivo o reintentable.
+NTF_009|NTF009|Funcional|Confirmación|NTF_009 - Correo de prueba encolado correctamente.|Correo de prueba encolado correctamente.
 SYS_001|SYS001|Técnico|Error|SYS_001 - Ocurrió un error inesperado al…|Ocurrió un error inesperado al procesar la solicitud.
 ERR_INESPERADO_REGISTRO_ESTUDIANTE|ERR022|Técnico|Error|ERR_INESPERADO_REGISTRO_ESTUDIANTE|Hubo un error inesperado al procesar el registro completo del estudiante.
 ERR_INESPERADO_REGISTRO_DOCENTE|ERR023|Técnico|Error|ERR_INESPERADO_REGISTRO_DOCENTE|Hubo un error inesperado al procesar el registro completo del docente.
@@ -127,9 +141,259 @@ VCE_004|VCE004|Funcional|Error|VCE_004 - El estudiante no pertenece a un grupo�
 VCE_005|VCE005|Funcional|Error|VCE_005 - El correo de este estudiante ya fue…|El correo de este estudiante ya fue verificado.
 VCE_006|VCE006|Funcional|Confirmación|VCE_006 - Su correo fue verificado. Ya puede…|Su correo fue verificado. Ya puede iniciar sesión.
 VCE_007|VCE007|Funcional|Error|VCE_007 - El usuario no existe o no está activo.|El usuario no existe o no está activo.
+ASI_001|ASI001|Funcional|Error|ASI_001 - Los créditos de la asignatura son…|Los créditos de la asignatura son obligatorios y deben ser mayores que cero.
+MQR_001|MQR001|Funcional|Error|MQR_001 - El código de matrícula no es válido o…|El código de matrícula no es válido o ya no está disponible. Solicítale al docente uno nuevo.
+MQR_002|MQR002|Funcional|Error|MQR_002 - La matrícula por código solo está…|La matrícula por código solo está disponible desde la red Wi-Fi del campus UCO.
+MQR_003|MQR003|Funcional|Error|MQR_003 - Demasiados intentos. Espera un momento…|Demasiados intentos. Espera un momento antes de volver a intentarlo.
+MQR_004|MQR004|Funcional|Error|MQR_004 - Ya estás matriculado en este grupo.|Ya estás matriculado en este grupo.
+MQR_005|MQR005|Funcional|Error|MQR_005 - Ya tienes una cuenta registrada…|Ya tienes una cuenta registrada. Inicia sesión para completar tu matrícula.
+MQR_006|MQR006|Funcional|Error|MQR_006 - No fue posible generar un código…|No fue posible generar un código único. Inténtalo de nuevo.
+MQR_007|MQR007|Funcional|Error|MQR_007 - Debes indicar el código QR o el PIN…|Debes indicar el código QR o el PIN, pero no ambos.
+IDE_001|IDE001|Funcional|Error|IDE_001 - El motivo de la corrección es…|El motivo de la corrección es obligatorio y no puede superar 500 caracteres.
+IDE_002|IDE002|Funcional|Confirmación|IDE_002 - Los datos de identidad fueron…|Los datos de identidad fueron corregidos.
+IDE_003|IDE003|Funcional|Error|IDE_003 - La corrección del tipo o número de…|La corrección del tipo o número de documento no está habilitada.
 SES_017|SES017|Funcional|Error|SES_017 - La sesión se cruza con otra sesión del…|La sesión se cruza con otra sesión del grupo o del docente en ese horario.
 REV_006|REV006|Funcional|Error|REV_006 - La solicitud de revisión no existe.|La solicitud de revisión no existe.
 REV_007|REV007|Funcional|Error|REV_007 - Solo se puede retirar una solicitud de…|Solo se puede retirar una solicitud de revisión pendiente.
 REV_008|REV008|Funcional|Confirmación|REV_008 - La solicitud de revisión fue retirada.|La solicitud de revisión fue retirada.
-DEC_002|DEC002|Funcional|Error|DEC_002 - No se puede desactivar al decano de una…|No se puede desactivar al decano de una facultad con programas activos.
+DEC_002|DEC002|Funcional|Error|DEC_002 - No se puede desactivar al decano de…|No se puede desactivar al decano de una facultad con programas activos.
 DEC_003|DEC003|Funcional|Confirmación|DEC_003 - Se actualizó el estado del decano.|Se actualizó el estado del decano.
+SES_010|SES010|Funcional|Error|SES_010 - La sesión fue cancelada; no admite…|La sesión fue cancelada; no admite registro de asistencia.
+SES_011|SES011|Funcional|Error|SES_011 - La sesión ya estaba cancelada.|La sesión ya estaba cancelada.
+SES_012|SES012|Funcional|Error|SES_012 - No es posible cancelar una sesión que…|No es posible cancelar una sesión que ya tiene asistencia registrada.
+SES_013|SES013|Funcional|Error|SES_013 - El motivo de cancelación debe tener…|El motivo de cancelación debe tener entre {} y {} caracteres.
+SES_014|SES014|Funcional|Confirmación|SES_014 - La sesión fue cancelada y se avisó a…|La sesión fue cancelada y se avisó a los estudiantes.
+SES_016|SES016|Funcional|Error|SES_016 - La sesión ya terminó y tiene…|La sesión ya terminó y tiene asistencia registrada; no se puede cancelar. Las correcciones se hacen por reclamo.
+FES_001|FES001|Funcional|Error|FES_001 - El año de festivos no es válido.|El año de festivos no es válido.
+FES_002|FES002|Funcional|Error|FES_002 - El listado de festivos recibido no es…|El listado de festivos recibido no es válido.
+FES_003|FES003|Funcional|Error|FES_003 - El listado de festivos no tiene una…|El listado de festivos no tiene una cantidad válida de días.
+FES_004|FES004|Funcional|Error|FES_004 - La fuente de festivos no es válida.|La fuente de festivos no es válida.
+FES_005|FES005|Funcional|Confirmación|FES_005 - Se cargaron … días festivos de ….|Se cargaron {} días festivos de {}.
+FES_006|FES006|Funcional|Error|FES_006 - Indica el periodo académico o el año…|Indica el periodo académico o el año, no ambos.
+FES_007|FES007|Funcional|Error|FES_007 - El periodo académico no existe.|El periodo académico no existe.
+FES_008|FES008|Funcional|Confirmación|FES_008 - Se cancelaron … sesiones por festivo…|Se cancelaron {} sesiones por festivo; {} sesiones con asistencia quedaron sin cambios.
+FES_009|FES009|Funcional|Error|FES_009 - Algunos grupos no se pudieron…|Algunos grupos no se pudieron actualizar con los festivos.
+FES_010|FES010|Técnico|Error|FES_010 - No fue posible obtener los festivos…|No fue posible obtener los festivos del año; se usó el cálculo local.
+TOM_001|TOM001|Funcional|Error|TOM_001 - La toma de asistencia no existe.|La toma de asistencia no existe.
+TOM_002|TOM002|Funcional|Error|TOM_002 - El modo de la toma no es válido.|El modo de la toma no es válido.
+TOM_003|TOM003|Funcional|Error|TOM_003 - Ya hay una toma abierta en esta…|Ya hay una toma abierta en esta sesión; ciérrala antes de abrir otra.
+TOM_004|TOM004|Funcional|Error|TOM_004 - La sesión ya tiene el máximo de … tomas.|La sesión ya tiene el máximo de {} tomas.
+TOM_008|TOM008|Funcional|Confirmación|TOM_008 - Toma … abierta.|Toma {} abierta.
+TOM_009|TOM009|Funcional|Confirmación|TOM_009 - Toma cerrada. … estudiantes quedaron…|Toma cerrada. {} estudiantes quedaron como ausentes.
+TOM_010|TOM010|Funcional|Confirmación|TOM_010 - Asistencia de la toma guardada.|Asistencia de la toma guardada.
+TOM_011|TOM011|Funcional|Confirmación|TOM_011 - La toma ya estaba cerrada.|La toma ya estaba cerrada.
+AQR_001|AQR001|Funcional|Error|AQR_001 - El código QR o el PIN no es válido o…|El código QR o el PIN no es válido o ya venció. Pide el PIN vigente al docente.
+AQR_002|AQR002|Funcional|Error|AQR_002 - Debes estar conectado a la red Wi-Fi…|Debes estar conectado a la red Wi-Fi del campus para registrar tu asistencia.
+AQR_003|AQR003|Funcional|Error|AQR_003 - Esta toma es manual; no admite código…|Esta toma es manual; no admite código QR.
+AQR_004|AQR004|Funcional|Error|AQR_004 - No estás matriculado en el grupo de…|No estás matriculado en el grupo de esta clase.
+AQR_005|AQR005|Funcional|Error|AQR_005 - La toma de asistencia ya se cerró.|La toma de asistencia ya se cerró.
+AQR_006|AQR006|Técnico|Error|AQR_006 - No fue posible generar el código…|No fue posible generar el código. Intenta de nuevo.
+AQR_007|AQR007|Funcional|Error|AQR_007 - Escanea el código QR o digita el PIN.|Escanea el código QR o digita el PIN.
+AQR_008|AQR008|Funcional|Confirmación|AQR_008 - Tu asistencia a esta toma ya estaba…|Tu asistencia a esta toma ya estaba registrada.
+AQR_009|AQR009|Funcional|Confirmación|AQR_009 - ¡Listo! Tu asistencia quedó registrada.|¡Listo! Tu asistencia quedó registrada.
+AQR_010|AQR010|Funcional|Error|AQR_010 - El registro de asistencia por QR no…|El registro de asistencia por QR no está disponible.
+AQR_011|AQR011|Funcional|Error|AQR_011 - Hiciste demasiados intentos. Espera un…|Hiciste demasiados intentos. Espera un minuto e intenta de nuevo.
+AQR_012|AQR012|Funcional|Confirmación|AQR_012 - Código QR listo para proyectar.|Código QR listo para proyectar.
+AQR_013|AQR013|Funcional|Confirmación|AQR_013 - Se dejó de proyectar el código QR.|Se dejó de proyectar el código QR.
+ASI_002|ASI002|Funcional|Error|ASI_002 - Ya existe una asignatura con ese…|Ya existe una asignatura con ese código. Usa "Asociar asignatura existente" para agregarla a este plan.
+ASI_003|ASI003|Funcional|Error|ASI_003 - La asignatura ya está asociada a este…|La asignatura ya está asociada a este plan de estudios.
+ASI_004|ASI004|Funcional|Error|ASI_004 - La asignatura no está asociada a este…|La asignatura no está asociada a este plan de estudios.
+ASI_005|ASI005|Funcional|Error|ASI_005 - No puedes quitar la asignatura de este…|No puedes quitar la asignatura de este plan: tiene grupos o estudiantes del programa en el periodo vigente o en periodos futuros.
+ASI_006|ASI006|Funcional|Error|ASI_006 - La asignatura es compartida con…|La asignatura es compartida con programas que no coordinas; solo puedes cambiar su semestre y su carácter en tu plan.
+ASI_007|ASI007|Funcional|Error|ASI_007 - El carácter de la asignatura no es…|El carácter de la asignatura no es válido.
+EST_005|EST005|Funcional|Error|EST_005 - El grupo pertenece a varios programas…|El grupo pertenece a varios programas: indica el programa.
+EST_006|EST006|Funcional|Error|EST_006 - El programa indicado no corresponde a…|El programa indicado no corresponde a los programas del grupo.
+MQR_008|MQR008|Funcional|Error|MQR_008 - No se pudo determinar tu programa en…|No se pudo determinar tu programa en este grupo. Pide a tu docente que te matricule.
+COO_002|COO002|Funcional|Error|COO_002 - Coordinas varios programas: selecciona…|Coordinas varios programas: selecciona el programa que quieres consultar.
+COO_003|COO003|Funcional|Error|COO_003 - El programa indicado no pertenece a tu…|El programa indicado no pertenece a tu coordinación.
+ALR_001|ALR001|Funcional|Confirmación|ALR_001 - Las alertas de inasistencia están…|Las alertas de inasistencia están deshabilitadas.
+ALR_002|ALR002|Técnico|Error|ALR_002 - No fue posible evaluar las alertas de…|No fue posible evaluar las alertas de inasistencia.
+ALR_003|ALR003|Funcional|Confirmación|ALR_003 - Evaluación de alertas completada.|Evaluación de alertas completada.
+ALR_004|ALR004|Funcional|Error|ALR_004 - La lista de alertas no es válida.|La lista de alertas no es válida.
+ALR_005|ALR005|Funcional|Confirmación|ALR_005 - Se marcaron … alertas como leídas.|Se marcaron {} alertas como leídas.
+ALR_006|ALR006|Funcional|Error|ALR_006 - La matrícula indicada no pertenece al…|La matrícula indicada no pertenece al grupo.
+ALR_007|ALR007|Funcional|Confirmación|ALR_007 - Actualización de resolutores completada.|Actualización de resolutores completada.
+ALR_010|ALR010|Funcional|Información|ALR_010 - Llevas …% de inasistencia en …. Si…|Llevas {}% de inasistencia en {}. Si llegas al {}% podrías perder la asignatura.
+ALR_011|ALR011|Funcional|Información|ALR_011 - Alcanzaste …% de inasistencia en ……|Alcanzaste {}% de inasistencia en {} (límite {}%). Tu docente revisará tu caso.
+RCN_001|RCN001|Funcional|Error|RCN_001 - La revisión de cancelación no existe.|La revisión de cancelación no existe.
+RCN_002|RCN002|Funcional|Error|RCN_002 - La decisión no es válida.|La decisión no es válida.
+RCN_003|RCN003|Funcional|Error|RCN_003 - El motivo debe tener entre … y ……|El motivo debe tener entre {} y {} caracteres.
+RCN_004|RCN004|Funcional|Error|RCN_004 - La revisión está en estado «…» y no…|La revisión está en estado «{}» y no admite esa decisión.
+RCN_005|RCN005|Funcional|Error|RCN_005 - La matrícula del estudiante ya no está…|La matrícula del estudiante ya no está activa en el grupo.
+RCN_006|RCN006|Funcional|Error|RCN_006 - El estudiante ya no supera el límite…|El estudiante ya no supera el límite de inasistencia ({}% de {}%); no se puede proponer ni aprobar la cancelación.
+RCN_007|RCN007|Funcional|Confirmación|RCN_007 - Decisión registrada: el estudiante se…|Decisión registrada: el estudiante se mantiene en el grupo.
+RCN_008|RCN008|Funcional|Confirmación|RCN_008 - Se envió la propuesta de cancelación a…|Se envió la propuesta de cancelación a la coordinación del programa.
+RCN_009|RCN009|Funcional|Confirmación|RCN_009 - Cancelación aprobada: el estudiante…|Cancelación aprobada: el estudiante quedó cancelado por inasistencia.
+RCN_010|RCN010|Funcional|Confirmación|RCN_010 - Cancelación rechazada: el estudiante…|Cancelación rechazada: el estudiante sigue activo en el grupo.
+RCN_011|RCN011|Funcional|Confirmación|RCN_011 - La decisión ya estaba registrada.|La decisión ya estaba registrada.
+RCN_012|RCN012|Funcional|Error|RCN_012 - Hay … casos de pérdida por…|Hay {} casos de pérdida por inasistencia pendientes de decisión del docente o de resolución en el periodo; resuélvelos antes del cierre.
+RCN_013|RCN013|Funcional|Error|RCN_013 - El programa no tiene coordinador…|El programa no tiene coordinador activo para resolver la revisión; solicite su asignación al decano.
+RCN_014|RCN014|Funcional|Error|RCN_014 - No puedes resolver una propuesta de…|No puedes resolver una propuesta de cancelación que hiciste como docente.
+RCN_015|RCN015|Funcional|Confirmación|RCN_015 - Mensaje en desuso (DEC-065): la…|Mensaje en desuso (DEC-065): la propuesta ya no se envía a la decanatura; la decisión final es del coordinador.
+RCN_016|RCN016|Funcional|Error|RCN_016 - La resolución de la revisión…|La resolución de la revisión corresponde al coordinador del programa.
+REV_020|REV020|Funcional|Error|REV_020 - El plazo para justificar esta…|El plazo para justificar esta inasistencia venció el {}.
+REV_025|REV025|Técnico|Error|REV_025 - No es posible validar el plazo de…|No es posible validar el plazo de justificación en este momento.
+REV_021|REV021|Funcional|Error|REV_021 - La categoría de justificación no es…|La categoría de justificación no es válida.
+REV_022|REV022|Funcional|Error|REV_022 - La categoría «…» exige adjuntar al…|La categoría «{}» exige adjuntar al menos un soporte.
+REV_023|REV023|Funcional|Error|REV_023 - Puedes adjuntar como máximo … soportes.|Puedes adjuntar como máximo {} soportes.
+REV_024|REV024|Funcional|Error|REV_024 - Un mismo soporte no se puede adjuntar…|Un mismo soporte no se puede adjuntar dos veces.
+PRM_001|PRM001|Funcional|Confirmación|PRM_001 - Parámetro actualizado.|Parámetro actualizado.
+PRM_002|PRM002|Funcional|Error|PRM_002 - El parámetro no existe.|El parámetro no existe.
+PRM_003|PRM003|Funcional|Error|PRM_003 - Este parámetro no se puede editar.|Este parámetro no se puede editar.
+PRM_004|PRM004|Funcional|Error|PRM_004 - El valor debe ser de tipo ….|El valor debe ser de tipo {}.
+PRM_005|PRM005|Funcional|Error|PRM_005 - El valor debe estar entre … y ….|El valor debe estar entre {} y {}.
+PRM_006|PRM006|Funcional|Error|PRM_006 - El valor debe ser uno de: ….|El valor debe ser uno de: {}.
+PRM_007|PRM007|Funcional|Error|PRM_007 - «…» debe ser menor que «…».|«{}» debe ser menor que «{}».
+PRM_008|PRM008|Funcional|Error|PRM_008 - Otro usuario modificó el parámetro…|Otro usuario modificó el parámetro. Recarga y vuelve a intentarlo.
+PRM_009|PRM009|Funcional|Error|PRM_009 - Indica un motivo de al menos ……|Indica un motivo de al menos {} caracteres.
+PRM_010|PRM010|Funcional|Error|PRM_010 - La edición de parámetros no está…|La edición de parámetros no está disponible con el catálogo de configuración activo.
+PRM_011|PRM011|Funcional|Confirmación|PRM_011 - El valor no cambió.|El valor no cambió.
+PRM_012|PRM012|Funcional|Error|PRM_012 - La edición de parámetros requiere una…|La edición de parámetros requiere una sola institución activa.
+ADS_001|ADS001|Funcional|Confirmación|ADS_001 - Estudiante admitido.|Estudiante admitido.
+ADS_002|ADS002|Funcional|Error|ADS_002 - El estudiante ya está admitido en este…|El estudiante ya está admitido en este programa.
+ADS_003|ADS003|Funcional|Error|ADS_003 - El programa no existe o no pertenece a…|El programa no existe o no pertenece a tu institución.
+ADS_004|ADS004|Funcional|Error|ADS_004 - El documento y el correo corresponden…|El documento y el correo corresponden a personas distintas.
+ADS_005|ADS005|Funcional|Error|ADS_005 - El correo debe ser institucional (…).|El correo debe ser institucional ({}).
+ADS_006|ADS006|Funcional|Error|ADS_006 - Indica una contraseña inicial para el…|Indica una contraseña inicial para el estudiante nuevo.
+CMA_001|CMA001|Funcional|Error|CMA_001 - El archivo supera … filas.|El archivo supera {} filas.
+CMA_002|CMA002|Funcional|Error|CMA_002 - El archivo supera el tamaño permitido.|El archivo supera el tamaño permitido.
+CMA_003|CMA003|Funcional|Error|CMA_003 - El archivo cambió desde la validación…|El archivo cambió desde la validación. Valídalo de nuevo.
+CMA_004|CMA004|Funcional|Error|CMA_004 - La cabecera no coincide con la…|La cabecera no coincide con la plantilla: {}.
+CMA_005|CMA005|Funcional|Error|CMA_005 - Número de documento inválido.|Número de documento inválido.
+CMA_006|CMA006|Funcional|Error|CMA_006 - Código de … desconocido: ….|Código de {} desconocido: {}.
+CMA_007|CMA007|Funcional|Error|CMA_007 - «…» no está en tu ámbito.|«{}» no está en tu ámbito.
+CMA_008|CMA008|Funcional|Error|CMA_008 - El documento y el correo corresponden…|El documento y el correo corresponden a personas distintas.
+CMA_009|CMA009|Funcional|Error|CMA_009 - Tu rol no puede cargar este tipo de…|Tu rol no puede cargar este tipo de cuentas.
+CMA_010|CMA010|Funcional|Error|CMA_010 - Fila repetida en el archivo (línea …).|Fila repetida en el archivo (línea {}).
+CMA_011|CMA011|Funcional|Error|CMA_011 - Valor no permitido en la columna ….|Valor no permitido en la columna {}.
+CMA_012|CMA012|Funcional|Error|CMA_012 - Falta la clave inicial para una…|Falta la clave inicial para una persona nueva.
+CMA_013|CMA013|Funcional|Error|CMA_013 - El archivo no es un CSV UTF-8 válido.|El archivo no es un CSV UTF-8 válido.
+CMA_014|CMA014|Funcional|Error|CMA_014 - Has superado el número de cargas por…|Has superado el número de cargas por minuto.
+CMA_015|CMA015|Funcional|Confirmación|CMA_015 - Carga procesada: … creadas, … ya…|Carga procesada: {} creadas, {} ya existentes, {} con error.
+AUD_001|AUD001|Funcional|Error|AUD_001 - La consulta de auditoría requiere una…|La consulta de auditoría requiere una sola institución activa.
+AUD_002|AUD002|Funcional|Error|AUD_002 - Los filtros de solo asistencia y solo…|Los filtros de solo asistencia y solo administración no se pueden combinar.
+DEC_020|DEC020|Funcional|Error|DEC_020 - La persona ya está registrada como…|La persona ya está registrada como decano.
+NTF_020|NTF020|Funcional|Error|NTF_020 - La notificación no existe.|La notificación no existe.
+NTF_021|NTF021|Funcional|Error|NTF_021 - El tipo de plantilla no existe.|El tipo de plantilla no existe.
+SES_018|SES018|Funcional|Error|SES_018 - Solo las sesiones creadas manualmente…|Solo las sesiones creadas manualmente por el docente pueden ser canceladas por el coordinador.
+SES_019|SES019|Funcional|Error|SES_019 - El motivo de cancelación no es válido.|El motivo de cancelación no es válido.
+SES_020|SES020|Funcional|Confirmación|SES_020 - La sesión fue cancelada por la…|La sesión fue cancelada por la coordinación del programa.
+SES_021|SES021|Funcional|Error|SES_021 - La observación no puede superar ……|La observación no puede superar {} caracteres.
+SES_022|SES022|Funcional|Confirmación|SES_022 - La sesión extraordinaria quedó…|La sesión extraordinaria quedó registrada como solicitud pendiente de aprobación del coordinador del programa.
+SES_023|SES023|Funcional|Error|SES_023 - La sesión está pendiente de aprobación…|La sesión está pendiente de aprobación del coordinador.
+SES_024|SES024|Funcional|Error|SES_024 - La solicitud ya fue resuelta.|La solicitud ya fue resuelta.
+SES_025|SES025|Funcional|Error|SES_025 - La sesión no tiene una solicitud de…|La sesión no tiene una solicitud de aprobación.
+SES_026|SES026|Funcional|Confirmación|SES_026 - La solicitud de sesión extraordinaria…|La solicitud de sesión extraordinaria fue aprobada.
+SES_027|SES027|Funcional|Confirmación|SES_027 - La solicitud de sesión extraordinaria…|La solicitud de sesión extraordinaria fue rechazada y la sesión quedó cancelada.
+TOM_012|TOM012|Funcional|Error|TOM_012 - La toma … ya no se puede corregir…|La toma {} ya no se puede corregir porque se abrió la toma {}. Las correcciones se hacen por reclamo del estudiante.
+REV_026|REV026|Funcional|Error|REV_026 - Solo puedes reclamar una toma en la…|Solo puedes reclamar una toma en la que quedaste ausente.
+REV_027|REV027|Funcional|Error|REV_027 - Ya existe un reclamo para esta toma.|Ya existe un reclamo para esta toma.
+REV_028|REV028|Funcional|Error|REV_028 - El resultado de la aprobación debe ser…|El resultado de la aprobación debe ser PRESENTE o JUSTIFICADA.
+REV_029|REV029|Funcional|Error|REV_029 - La aprobación como presente solo…|La aprobación como presente solo aplica a reclamos de una toma.
+VAL_APP_001|VALAPP001|Funcional|Error|VAL_APP_001 - Los datos de la facultad son…|Los datos de la facultad son obligatorios.
+VAL_APP_002|VALAPP002|Funcional|Error|VAL_APP_002 - El identificador de la facultad es…|El identificador de la facultad es obligatorio.
+VAL_APP_003|VALAPP003|Funcional|Error|VAL_APP_003 - Debe indicar al menos el nombre o…|Debe indicar al menos el nombre o el decano de la facultad.
+VAL_APP_004|VALAPP004|Funcional|Error|VAL_APP_004 - El nombre de la facultad debe…|El nombre de la facultad debe tener entre 3 y 50 caracteres.
+VAL_APP_005|VALAPP005|Funcional|Error|VAL_APP_005 - Los datos para actualizar el…|Los datos para actualizar el parámetro no son válidos.
+VAL_APP_006|VALAPP006|Funcional|Error|VAL_APP_006 - Los datos del cambio de estado del…|Los datos del cambio de estado del decano son obligatorios.
+VAL_APP_007|VALAPP007|Funcional|Error|VAL_APP_007 - El decano es obligatorio.|El decano es obligatorio.
+VAL_APP_008|VALAPP008|Funcional|Error|VAL_APP_008 - El usuario autenticado es…|El usuario autenticado es obligatorio.
+VAL_APP_009|VALAPP009|Funcional|Error|VAL_APP_009 - El estado deseado de la facultad…|El estado deseado de la facultad es obligatorio.
+VAL_APP_010|VALAPP010|Funcional|Error|VAL_APP_010 - El parámetro es obligatorio.|El parámetro es obligatorio.
+VAL_APP_011|VALAPP011|Funcional|Error|VAL_APP_011 - Los datos de la consulta son…|Los datos de la consulta son obligatorios.
+VAL_APP_012|VALAPP012|Funcional|Error|VAL_APP_012 - La granularidad debe ser SEMANA o…|La granularidad debe ser SEMANA o MES.
+VAL_APP_013|VALAPP013|Funcional|Error|VAL_APP_013 - Indique una facultad existente o…|Indique una facultad existente o una facultad nueva, no ambas.
+VAL_APP_014|VALAPP014|Funcional|Error|VAL_APP_014 - El nombre de la facultad es…|El nombre de la facultad es obligatorio y debe tener entre 3 y 50 caracteres.
+VAL_APP_015|VALAPP015|Funcional|Error|VAL_APP_015 - El decano titular de la facultad…|El decano titular de la facultad es obligatorio.
+VAL_APP_016|VALAPP016|Funcional|Error|VAL_APP_016 - El usuario ejecutor es obligatorio.|El usuario ejecutor es obligatorio.
+VAL_APP_017|VALAPP017|Funcional|Error|VAL_APP_017 - El período académico a modificar…|El período académico a modificar es obligatorio.
+VAL_APP_018|VALAPP018|Funcional|Error|VAL_APP_018 - El período académico a eliminar es…|El período académico a eliminar es obligatorio.
+VAL_APP_019|VALAPP019|Funcional|Error|VAL_APP_019 - El nombre del período académico es…|El nombre del período académico es obligatorio.
+VAL_APP_020|VALAPP020|Funcional|Error|VAL_APP_020 - La fecha de inicio del período…|La fecha de inicio del período debe ser anterior a la fecha de fin.
+VAL_APP_021|VALAPP021|Funcional|Error|VAL_APP_021 - El archivo adjunto no puede estar…|El archivo adjunto no puede estar vacío.
+VAL_APP_022|VALAPP022|Funcional|Error|VAL_APP_022 - El archivo excede el tamaño máximo…|El archivo excede el tamaño máximo permitido ({}).
+VAL_APP_023|VALAPP023|Funcional|Error|VAL_APP_023 - Formato de archivo no permitido…|Formato de archivo no permitido. Solo se aceptan archivos PDF, PNG o JPG.
+VAL_APP_024|VALAPP024|Funcional|Error|VAL_APP_024 - El Content-Type declarado no…|El Content-Type declarado no coincide con la extensión del archivo.
+VAL_APP_025|VALAPP025|Funcional|Error|VAL_APP_025 - El contenido del archivo no…|El contenido del archivo no coincide con su extensión declarada.
+VAL_APP_026|VALAPP026|Funcional|Error|VAL_APP_026 - Nombre de archivo no válido.|Nombre de archivo no válido.
+VAL_APP_027|VALAPP027|Funcional|Error|VAL_APP_027 - El nombre del archivo excede la…|El nombre del archivo excede la longitud máxima permitida (250 caracteres).
+VAL_APP_028|VALAPP028|Funcional|Error|VAL_APP_028 - El archivo fue rechazado: se…|El archivo fue rechazado: se detectó una firma de malware conocida.
+VAL_APP_029|VALAPP029|Funcional|Error|VAL_APP_029 - El estado de vínculo debe ser…|El estado de vínculo debe ser ACTIVO, SIN_Vínculo o TODOS.
+VAL_APP_030|VALAPP030|Funcional|Error|VAL_APP_030 - El estudiante es obligatorio.|El estudiante es obligatorio.
+VAL_APP_031|VALAPP031|Funcional|Error|VAL_APP_031 - La fecha inicial debe ser anterior…|La fecha inicial debe ser anterior a la fecha final.
+VAL_APP_032|VALAPP032|Funcional|Error|VAL_APP_032 - El rango de fechas no puede…|El rango de fechas no puede superar {} días.
+VAL_APP_033|VALAPP033|Funcional|Error|VAL_APP_033 - El resultado debe ser SUCCESS o…|El resultado debe ser SUCCESS o FAILURE.
+VAL_APP_034|VALAPP034|Funcional|Error|VAL_APP_034 - El filtro … excede la longitud…|El filtro {} excede la longitud permitida.
+VAL_APP_035|VALAPP035|Funcional|Error|VAL_APP_035 - Los filtros de consulta son…|Los filtros de consulta son obligatorios.
+VAL_APP_036|VALAPP036|Funcional|Error|VAL_APP_036 - El semáforo debe ser VERDE, AMBAR…|El semáforo debe ser VERDE, AMBAR o ROJO.
+VAL_APP_037|VALAPP037|Funcional|Error|VAL_APP_037 - La fecha desde no puede ser…|La fecha desde no puede ser posterior a la fecha hasta.
+VAL_APP_038|VALAPP038|Funcional|Error|VAL_APP_038 - La página debe ser mayor o igual a…|La página debe ser mayor o igual a 1.
+VAL_APP_039|VALAPP039|Funcional|Error|VAL_APP_039 - El tamaño de página debe estar…|El tamaño de página debe estar entre 1 y {}.
+VAL_APP_040|VALAPP040|Funcional|Error|VAL_APP_040 - El número de semestre debe ser un…|El número de semestre debe ser un entero positivo.
+VAL_APP_041|VALAPP041|Funcional|Error|VAL_APP_041 - El número de página debe ser mayor…|El número de página debe ser mayor o igual a 1.
+VAL_APP_042|VALAPP042|Funcional|Error|VAL_APP_042 - El tamaño de página debe ser mayor…|El tamaño de página debe ser mayor o igual a 1.
+VAL_APP_043|VALAPP043|Funcional|Error|VAL_APP_043 - Los datos del programa son…|Los datos del programa son obligatorios.
+VAL_APP_044|VALAPP044|Funcional|Error|VAL_APP_044 - La búsqueda excede la longitud…|La búsqueda excede la longitud permitida.
+VAL_APP_045|VALAPP045|Funcional|Error|VAL_APP_045 - El nombre del programa académico…|El nombre del programa académico es obligatorio.
+VAL_APP_046|VALAPP046|Funcional|Error|VAL_APP_046 - El nombre del programa académico…|El nombre del programa académico no puede superar {} caracteres.
+VAL_APP_047|VALAPP047|Funcional|Error|VAL_APP_047 - Los parámetros de paginación deben…|Los parámetros de paginación deben ser mayores o iguales a 1.
+VAL_APP_048|VALAPP048|Funcional|Error|VAL_APP_048 - Indique un programa existente o un…|Indique un programa existente o un programa nuevo, no ambos.
+VAL_APP_049|VALAPP049|Funcional|Error|VAL_APP_049 - El tipo del programa nuevo es…|El tipo del programa nuevo es obligatorio.
+VAL_APP_050|VALAPP050|Funcional|Error|VAL_APP_050 - La contraseña inicial del…|La contraseña inicial del coordinador es obligatoria.
+VAL_APP_051|VALAPP051|Funcional|Error|VAL_APP_051 - La solicitud de revisión es…|La solicitud de revisión es obligatoria.
+VAL_APP_052|VALAPP052|Funcional|Error|VAL_APP_052 - El estado de la solicitud no es…|El estado de la solicitud no es válido.
+VAL_APP_053|VALAPP053|Funcional|Error|VAL_APP_053 - El grupo y el estudiante son…|El grupo y el estudiante son obligatorios.
+VAL_APP_054|VALAPP054|Funcional|Error|VAL_APP_054 - El motivo del retiro es…|El motivo del retiro es obligatorio y no puede superar 500 caracteres.
+VAL_APP_055|VALAPP055|Funcional|Error|VAL_APP_055 - Los datos del retiro del reclamo…|Los datos del retiro del reclamo son obligatorios.
+VAL_APP_056|VALAPP056|Funcional|Error|VAL_APP_056 - El reclamo a retirar es obligatorio.|El reclamo a retirar es obligatorio.
+VAL_APP_057|VALAPP057|Funcional|Error|VAL_APP_057 - Los datos de la búsqueda son…|Los datos de la búsqueda son obligatorios.
+VAL_APP_058|VALAPP058|Funcional|Error|VAL_APP_058 - El grupo es obligatorio.|El grupo es obligatorio.
+VAL_APP_059|VALAPP059|Funcional|Error|VAL_APP_059 - El tipo de identificación es…|El tipo de identificación es obligatorio.
+VAL_APP_060|VALAPP060|Funcional|Error|VAL_APP_060 - El número de documento debe ser un…|El número de documento debe ser un entero positivo.
+VAL_APP_061|VALAPP061|Funcional|Error|VAL_APP_061 - El tipo de usuario a corregir no…|El tipo de usuario a corregir no es válido.
+VAL_APP_062|VALAPP062|Funcional|Error|VAL_APP_062 - Los datos del registro son…|Los datos del registro son obligatorios.
+VAL_APP_063|VALAPP063|Funcional|Error|VAL_APP_063 - El cuerpo de la petición es…|El cuerpo de la petición es obligatorio.
+VAL_APP_064|VALAPP064|Funcional|Error|VAL_APP_064 - El tipo de programa es obligatorio.|El tipo de programa es obligatorio.
+VAL_APP_065|VALAPP065|Funcional|Error|VAL_APP_065 - El coordinador del programa es…|El coordinador del programa es obligatorio.
+VAL_APP_066|VALAPP066|Funcional|Error|VAL_APP_066 - El estado deseado del programa es…|El estado deseado del programa es obligatorio.
+VAL_APP_067|VALAPP067|Funcional|Error|VAL_APP_067 - Cada franja del horario es…|Cada franja del horario es obligatoria.
+VAL_APP_068|VALAPP068|Funcional|Error|VAL_APP_068 - El campo dias es obligatorio…|El campo dias es obligatorio cuando se envía el horario.
+VAL_APP_069|VALAPP069|Funcional|Error|VAL_APP_069 - El campo … es obligatorio.|El campo {} es obligatorio.
+VAL_APP_070|VALAPP070|Funcional|Error|VAL_APP_070 - El campo … debe usar formato ISO…|El campo {} debe usar formato ISO local {}.
+VAL_APP_071|VALAPP071|Funcional|Error|VAL_APP_071 - Los datos de la consulta no son…|Los datos de la consulta no son válidos.
+VAL_APP_072|VALAPP072|Funcional|Error|VAL_APP_072 - La sesión es obligatoria.|La sesión es obligatoria.
+VAL_APP_073|VALAPP073|Funcional|Error|VAL_APP_073 - El identificador del estudiante es…|El identificador del estudiante es obligatorio.
+VAL_APP_074|VALAPP074|Funcional|Error|VAL_APP_074 - El identificador del docente es…|El identificador del docente es obligatorio.
+VAL_APP_075|VALAPP075|Funcional|Error|VAL_APP_075 - El identificador del programa es…|El identificador del programa es obligatorio.
+ACC_APP_001|ACCAPP001|Funcional|Error|ACC_APP_001 - El docente autenticado no tiene…|El docente autenticado no tiene titularidad sobre el grupo consultado.
+ACC_APP_002|ACCAPP002|Funcional|Error|ACC_APP_002 - El docente autenticado no tiene…|El docente autenticado no tiene titularidad sobre el grupo solicitado.
+ACC_APP_003|ACCAPP003|Funcional|Error|ACC_APP_003 - No fue posible resolver el docente…|No fue posible resolver el docente autenticado.
+ACC_APP_004|ACCAPP004|Funcional|Error|ACC_APP_004 - No fue posible resolver el…|No fue posible resolver el estudiante autenticado.
+ACC_APP_005|ACCAPP005|Funcional|Error|ACC_APP_005 - No fue posible resolver el usuario…|No fue posible resolver el usuario autenticado.
+ACC_APP_006|ACCAPP006|Funcional|Error|ACC_APP_006 - No fue posible resolver el…|No fue posible resolver el programa del coordinador autenticado.
+ACC_APP_007|ACCAPP007|Funcional|Error|ACC_APP_007 - No fue posible resolver el…|No fue posible resolver el programa ni la facultad del usuario autenticado.
+ACC_APP_008|ACCAPP008|Funcional|Error|ACC_APP_008 - El plan de estudio solicitado no…|El plan de estudio solicitado no pertenece al ámbito del usuario autenticado.
+ACC_APP_009|ACCAPP009|Funcional|Error|ACC_APP_009 - La asignatura no pertenece al…|La asignatura no pertenece al programa del coordinador autenticado.
+ACC_APP_010|ACCAPP010|Funcional|Error|ACC_APP_010 - El plan de estudio no pertenece al…|El plan de estudio no pertenece al programa del coordinador autenticado.
+ACC_APP_011|ACCAPP011|Funcional|Error|ACC_APP_011 - No fue posible resolver la…|No fue posible resolver la facultad del decano autenticado.
+ACC_APP_012|ACCAPP012|Funcional|Error|ACC_APP_012 - El usuario autenticado no puede…|El usuario autenticado no puede gestionar cuentas de acceso.
+ACC_APP_013|ACCAPP013|Funcional|Error|ACC_APP_013 - La cuenta indicada está fuera del…|La cuenta indicada está fuera del alcance del usuario autenticado.
+ACC_APP_014|ACCAPP014|Funcional|Error|ACC_APP_014 - El usuario autenticado no tiene…|El usuario autenticado no tiene autorización institucional para consultar el reporte del grupo.
+ACC_APP_015|ACCAPP015|Funcional|Error|ACC_APP_015 - El usuario autenticado no tiene…|El usuario autenticado no tiene relación institucional con la sesión consultada.
+ACC_APP_016|ACCAPP016|Funcional|Error|ACC_APP_016 - El docente autenticado no tiene…|El docente autenticado no tiene titularidad sobre la sesión consultada.
+ACC_APP_017|ACCAPP017|Funcional|Error|ACC_APP_017 - El usuario autenticado no tiene…|El usuario autenticado no tiene acceso al grupo solicitado.
+NOF_APP_001|NOFAPP001|Funcional|Error|NOF_APP_001 - El decano especificado no existe…|El decano especificado no existe en el sistema.
+NOF_APP_002|NOFAPP002|Funcional|Error|NOF_APP_002 - La facultad indicada para crear…|La facultad indicada para crear decano no existe.
+NOF_APP_003|NOFAPP003|Funcional|Error|NOF_APP_003 - El estudiante no existe en su…|El estudiante no existe en su ámbito.
+NOF_APP_004|NOFAPP004|Funcional|Error|NOF_APP_004 - El docente no existe o no está…|El docente no existe o no está vinculado a su programa.
+NOF_APP_005|NOFAPP005|Funcional|Error|NOF_APP_005 - El plan de estudio indicado no…|El plan de estudio indicado no existe en el programa del coordinador.
+NOF_APP_006|NOFAPP006|Funcional|Error|NOF_APP_006 - El programa académico especificado…|El programa académico especificado no existe en el sistema.
+NOF_APP_007|NOFAPP007|Funcional|Error|NOF_APP_007 - El estudiante no existe en la…|El estudiante no existe en la facultad del decano.
+NOF_APP_008|NOFAPP008|Funcional|Error|NOF_APP_008 - La solicitud de revisión no existe.|La solicitud de revisión no existe.
+NOF_APP_009|NOFAPP009|Funcional|Error|NOF_APP_009 - El estudiante especificado no se…|El estudiante especificado no se encuentra registrado.
+NOF_APP_010|NOFAPP010|Funcional|Error|NOF_APP_010 - La cuenta indicada no existe.|La cuenta indicada no existe.
+NOF_APP_011|NOFAPP011|Funcional|Error|NOF_APP_011 - La matrícula por código no está…|La matrícula por código no está disponible en este momento.
+NOF_APP_012|NOFAPP012|Funcional|Error|NOF_APP_012 - No se encontró el perfil del…|No se encontró el perfil del usuario autenticado.
+NOF_APP_013|NOFAPP013|Funcional|Error|NOF_APP_013 - La facultad especificada no existe…|La facultad especificada no existe en el sistema.
+NOF_APP_014|NOFAPP014|Funcional|Error|NOF_APP_014 - El archivo solicitado no existe.|El archivo solicitado no existe.
+DIS_APP_001|DISAPP001|Funcional|Error|DIS_APP_001 - La generación automática de…|La generación automática de sesiones al crear el grupo aún no está disponible (fase F2: precarga de sesiones).

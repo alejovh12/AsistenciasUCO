@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.usecase.ConsultarAsistenciaProgramaUseCase;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.usecase.domain.SesionGrupoHorarioDomain;
@@ -14,6 +15,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsistenciaP
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsistenciaProgramaQueryPort.SesionGrupoProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionProcedenciaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
+import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorDefinition;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 
 import java.time.LocalDate;
@@ -61,9 +63,9 @@ public final class ConsultarAsistenciaProgramaUseCaseImpl implements ConsultarAs
                                                                     final LocalDate desde, final LocalDate hasta,
                                                                     final Integer pagina, final Integer tamano) {
         exigirCoordinador(usuario);
-        exigirId(idGrupo, "El grupo es obligatorio.");
+        exigirId(idGrupo, MensajeUsuarioErrorCode.VAL_APP_058);
         if (!ObjectHelper.isNull(desde) && !ObjectHelper.isNull(hasta) && desde.isAfter(hasta)) {
-            throw new ValidationException("La fecha desde no puede ser posterior a la fecha hasta.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_037);
         }
         final Pagina<SesionGrupoProjection> sesiones =
                 queryPort.consultarSesionesGrupo(usuario, idGrupo, desde, hasta, pagina(pagina), tamano(tamano));
@@ -110,17 +112,17 @@ public final class ConsultarAsistenciaProgramaUseCaseImpl implements ConsultarAs
                                                                           final Boolean asistio, final Integer pagina,
                                                                           final Integer tamano) {
         exigirCoordinador(usuario);
-        exigirId(idSesion, "La sesion es obligatoria.");
+        exigirId(idSesion, MensajeUsuarioErrorCode.VAL_APP_072);
         return queryPort.consultarAsistenciasSesion(usuario, idSesion, asistio, pagina(pagina), tamano(tamano));
     }
 
     private void exigirCoordinador(final UUID usuario) {
         if (ObjectHelper.isNull(usuario) || scopePort.findProgramaIdByCoordinadorUsuario(usuario).isEmpty()) {
-            throw new ForbiddenException("No fue posible resolver el programa del coordinador autenticado.");
+            throw new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_006);
         }
     }
 
-    private static void exigirId(final UUID id, final String mensaje) {
+    private static void exigirId(final UUID id, final ErrorDefinition mensaje) {
         if (ObjectHelper.isNull(id)) {
             throw new ValidationException(mensaje);
         }
@@ -131,7 +133,7 @@ public final class ConsultarAsistenciaProgramaUseCaseImpl implements ConsultarAs
             return PAGINA_POR_DEFECTO;
         }
         if (pagina < 1) {
-            throw new ValidationException("La pagina debe ser mayor o igual a 1.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_038);
         }
         return pagina;
     }
@@ -141,7 +143,7 @@ public final class ConsultarAsistenciaProgramaUseCaseImpl implements ConsultarAs
             return TAMANO_POR_DEFECTO;
         }
         if (tamano < 1 || tamano > TAMANO_MAXIMO) {
-            throw new ValidationException("El tamano de pagina debe estar entre 1 y " + TAMANO_MAXIMO + ".");
+            throw ValidationException.conParametros(MensajeUsuarioErrorCode.VAL_APP_039, TAMANO_MAXIMO);
         }
         return tamano;
     }

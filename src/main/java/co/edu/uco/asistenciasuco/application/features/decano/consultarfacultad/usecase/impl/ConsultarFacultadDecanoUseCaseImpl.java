@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.decano.consultarfacultad.
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.decano.common.rule.ConsultaPaginadaRules;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarfacultad.usecase.ConsultarFacultadDecanoUseCase;
@@ -61,11 +62,11 @@ public final class ConsultarFacultadDecanoUseCaseImpl implements ConsultarFacult
     public List<MatriculaEstudianteProjection> consultarDetalleEstudiante(final UUID usuario, final UUID idEstudiante) {
         exigirDecano(usuario);
         if (ObjectHelper.isNull(idEstudiante)) {
-            throw new ValidationException("El estudiante es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_030);
         }
         final List<MatriculaEstudianteProjection> matriculas = queryPort.consultarDetalleEstudiante(usuario, idEstudiante);
         if (matriculas.isEmpty()) {
-            throw new ResourceNotFoundException("El estudiante no existe en la facultad del decano.");
+            throw new ResourceNotFoundException(MensajeUsuarioErrorCode.NOF_APP_007);
         }
         return matriculas;
     }
@@ -82,7 +83,7 @@ public final class ConsultarFacultadDecanoUseCaseImpl implements ConsultarFacult
                                                                  final UUID idGrupo, final Integer pagina, final Integer tamano) {
         exigirDecano(usuario);
         if (!ObjectHelper.isNull(desde) && !ObjectHelper.isNull(hasta) && desde.isAfter(hasta)) {
-            throw new ValidationException("La fecha desde no puede ser posterior a la fecha hasta.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_037);
         }
         final Pagina<SesionFacultadProjection> sesiones = queryPort.consultarSesiones(usuario, desde, hasta, idPrograma, idGrupo,
                 ConsultaPaginadaRules.pagina(pagina), ConsultaPaginadaRules.tamano(tamano));
@@ -125,7 +126,7 @@ public final class ConsultarFacultadDecanoUseCaseImpl implements ConsultarFacult
 
     private void exigirDecano(final UUID usuario) {
         if (ObjectHelper.isNull(usuario) || scopePort.findFacultadIdByDecanoUsuario(usuario).isEmpty()) {
-            throw new ForbiddenException("No fue posible resolver la facultad del decano autenticado.");
+            throw new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_011);
         }
     }
 }

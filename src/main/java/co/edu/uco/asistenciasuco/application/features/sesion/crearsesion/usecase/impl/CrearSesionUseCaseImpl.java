@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.usecase.CrearSesionUseCase;
 import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.usecase.domain.CrearSesionDomain;
 import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.usecase.mapper.CrearSesionRepositoryMapper;
@@ -31,7 +32,7 @@ public final class CrearSesionUseCaseImpl implements CrearSesionUseCase {
         }
         // Solo chequeo de rol docente: el docente resuelto no se persiste ni se propaga.
         institutionalScopePort.findDocenteIdByUsuario(domain.getUsuarioEjecutor())
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver el docente autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_003));
         return sesionRepositoryPort.crearSesion(CrearSesionRepositoryMapper.toRepositoryDTO(domain));
     }
 }

@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.vinculardocenteprograma.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.domain.DocenteProgramaDomain;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.mapper.DocenteProgramaMapper;
@@ -63,7 +64,7 @@ public final class VincularDocenteProgramaUseCaseImpl implements VincularDocente
         }
         final UUID actor = domain.actorUsuarioId();
         final UUID idPrograma = scopePort.findProgramaIdByCoordinadorUsuario(actor)
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver el programa del coordinador autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_006));
 
         final boolean modoNuevo = domain.idDocente() == null && domain.idUsuario() == null;
         final String passwordInicial = modoNuevo

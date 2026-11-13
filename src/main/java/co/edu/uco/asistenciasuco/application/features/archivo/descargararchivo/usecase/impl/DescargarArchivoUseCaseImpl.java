@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.archivo.descargararchivo.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
 import co.edu.uco.asistenciasuco.application.features.archivo.shared.contentsecurity.ChecksumCalculator;
 import co.edu.uco.asistenciasuco.application.features.archivo.descargararchivo.usecase.DescargarArchivoUseCase;
@@ -27,8 +28,6 @@ import java.util.Objects;
  */
 public final class DescargarArchivoUseCaseImpl implements DescargarArchivoUseCase {
 
-    private static final String NOT_FOUND = "El archivo solicitado no existe.";
-
     private final FileStoragePort fileStoragePort;
     private final SoporteArchivoMetadataPort soporteArchivoMetadataPort;
 
@@ -47,7 +46,7 @@ public final class DescargarArchivoUseCaseImpl implements DescargarArchivoUseCas
             throw new CrosscuttingException("El dominio para descargar un archivo es obligatorio.");
         }
         if (domain.fileId() == null || domain.requesterSubject() == null) {
-            throw new ResourceNotFoundException(NOT_FOUND);
+            throw new ResourceNotFoundException(MensajeUsuarioErrorCode.NOF_APP_014);
         }
 
         // DENY_BY_DEFAULT: sin fila autorizada en SQL no hay lectura del storage.
@@ -82,7 +81,7 @@ public final class DescargarArchivoUseCaseImpl implements DescargarArchivoUseCas
     private SoporteArchivoMetadataPort.SoporteArchivoAutorizado consultarAutorizacion(final DescargarArchivoDomain domain) {
         try {
             return soporteArchivoMetadataPort.consultarAutorizado(domain.fileId(), domain.requesterSubject())
-                    .orElseThrow(() -> new ResourceNotFoundException(NOT_FOUND));
+                    .orElseThrow(() -> new ResourceNotFoundException(MensajeUsuarioErrorCode.NOF_APP_014));
         } catch (final SoporteArchivoMetadataPort.SoporteMetadataNoDisponibleException exception) {
             throw new InternalApplicationException("No fue posible verificar la autorizacion del archivo.", exception);
         }

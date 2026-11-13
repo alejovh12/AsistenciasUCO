@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsistenciaProgramaQueryPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.SpAsistenciaSesionPaginadoEntity;
@@ -57,8 +58,6 @@ public class AsistenciaProgramaJpaRepository implements AsistenciaProgramaQueryP
                  @numeroPagina = :numeroPagina,
                  @tamanoPagina = :tamanoPagina
             """;
-    static final String MENSAJE_PAGINACION_INVALIDA = "Los parametros de paginacion no son validos.";
-
     private final EntityManager entityManager;
 
     public AsistenciaProgramaJpaRepository(final EntityManager entityManager) {
@@ -122,7 +121,7 @@ public class AsistenciaProgramaJpaRepository implements AsistenciaProgramaQueryP
                         .getResultList();
             } catch (final PersistenceException exception) {
                 if (esPaginacionInvalida(exception)) {
-                    throw new ValidationException(MENSAJE_PAGINACION_INVALIDA);
+                    throw new ValidationException(MensajeUsuarioErrorCode.PAG_001);
                 }
                 throw exception;
             }

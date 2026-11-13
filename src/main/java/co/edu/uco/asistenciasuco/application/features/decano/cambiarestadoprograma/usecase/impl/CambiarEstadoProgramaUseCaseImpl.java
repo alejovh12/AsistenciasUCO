@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.decano.cambiarestadoprograma.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.decano.cambiarestadoprograma.usecase.CambiarEstadoProgramaUseCase;
@@ -33,14 +34,14 @@ public final class CambiarEstadoProgramaUseCaseImpl implements CambiarEstadoProg
     @Override
     public ProgramaAcademicoDomain execute(final CambiarEstadoProgramaDomain domain) {
         if (domain == null) {
-            throw new ValidationException("Los datos del programa son obligatorios.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_043);
         }
-        ProgramaAcademicoRules.requerido(domain.id(), "El identificador del programa es obligatorio.");
-        ProgramaAcademicoRules.requerido(domain.estaActivo(), "El estado deseado del programa es obligatorio.");
+        ProgramaAcademicoRules.requerido(domain.id(), MensajeUsuarioErrorCode.VAL_APP_075);
+        ProgramaAcademicoRules.requerido(domain.estaActivo(), MensajeUsuarioErrorCode.VAL_APP_066);
         final UUID facultad = ProgramaAcademicoRules.facultadDelDecano(scopePort, domain.actorUsuarioId());
         commandPort.cambiarEstado(new ProgramaAcademicoCommandPort.CambiarEstadoProgramaCommand(domain.id(), domain.estaActivo(), domain.actorUsuarioId()));
         return queryPort.consultarPorId(domain.id(), facultad)
                 .map(ProgramaAcademicoMapper::toDomain)
-                .orElseThrow(() -> new ResourceNotFoundException("El programa academico especificado no existe en el sistema."));
+                .orElseThrow(() -> new ResourceNotFoundException(MensajeUsuarioErrorCode.NOF_APP_006));
     }
 }

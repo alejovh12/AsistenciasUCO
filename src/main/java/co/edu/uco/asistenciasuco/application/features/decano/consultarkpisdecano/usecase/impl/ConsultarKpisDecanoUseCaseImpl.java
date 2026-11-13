@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.decano.consultarkpisdecano.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.decano.common.rule.DecanoIndicadoresRules;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DecanoIndicadoresQueryPort;
@@ -23,7 +24,7 @@ public final class ConsultarKpisDecanoUseCaseImpl implements ConsultarKpisDecano
     @Override
     public KpisDecanoDomain execute(final ConsultarKpisDecanoDomain domain) {
         if (domain == null) {
-            throw new ValidationException("Los datos de la consulta son obligatorios.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_011);
         }
         DecanoIndicadoresRules.facultadDelDecano(scopePort, domain.actorUsuarioId());
         final KpisDecanoProjection p = queryPort.consultarKpis(domain.actorUsuarioId(), domain.idPeriodoAcademico());

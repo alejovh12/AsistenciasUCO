@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.u
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.usecase.CrearCoordinadorUseCase;
@@ -56,13 +57,13 @@ public final class CrearCoordinadorUseCaseImpl implements CrearCoordinadorUseCas
         }
         // DEC-065 (5): el programa es existente (idPrograma) o nuevo (programaNuevo), nunca ambos.
         if (domain.getIdPrograma() != null && domain.getProgramaNuevo() != null) {
-            throw new ValidationException("Indique un programa existente o un programa nuevo, no ambos.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_048);
         }
         if (domain.getProgramaNuevo() != null && domain.getProgramaNuevo().idTipoPrograma() == null) {
-            throw new ValidationException("El tipo del programa nuevo es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_049);
         }
         final UUID facultad = scopePort.findFacultadIdByDecanoUsuario(domain.getUsuario())
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver la facultad del decano autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_011));
 
         final Optional<UsuarioIdentidadRepositoryProjection> usuarioPreexistente =
                 resolverUsuarioPreexistente(domain);
@@ -216,7 +217,7 @@ public final class CrearCoordinadorUseCaseImpl implements CrearCoordinadorUseCas
     private void validarContrasenaObligatoria(final CrearCoordinadorDomain domain, final boolean usuarioPreexistente) {
         final boolean sinContrasena = domain.getPassword() == null || domain.getPassword().isBlank();
         if (sinContrasena && !usuarioPreexistente && passwordEncoderPort != null) {
-            throw new ValidationException("La contrasena inicial del coordinador es obligatoria.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_050);
         }
     }
 

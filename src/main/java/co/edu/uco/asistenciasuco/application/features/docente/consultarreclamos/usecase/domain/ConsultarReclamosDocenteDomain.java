@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.docente.consultarreclamos.usecase.domain;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 
 import java.util.Locale;
@@ -29,12 +30,12 @@ public record ConsultarReclamosDocenteDomain(UUID actorUsuarioId, String codigoE
             final Integer tamano
     ) {
         if (actorUsuarioId == null) {
-            throw new ValidationException("El usuario autenticado es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_008);
         }
         final String normalizado = estado == null || estado.isBlank() ? null : estado.trim().toUpperCase(Locale.ROOT);
         final String codigo = normalizado == null ? null : CODIGO_POR_ESTADO.get(normalizado);
         if (normalizado != null && codigo == null) {
-            throw new ValidationException("El estado de la solicitud no es valido.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_052);
         }
         final int paginaSegura = pagina == null || pagina < 1 ? 1 : pagina;
         final int tamanoSeguro = tamano == null || tamano < 1 ? TAMANO_PREDETERMINADO : Math.min(tamano, TAMANO_MAXIMO);

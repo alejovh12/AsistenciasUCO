@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
 import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.usecase.ActualizarDocenteProgramaUseCase;
 import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.usecase.domain.ActualizarDocenteProgramaDomain;
@@ -51,7 +52,7 @@ public final class ActualizarDocenteProgramaUseCaseImpl implements ActualizarDoc
             throw new CrosscuttingException("El dominio para actualizar docente es obligatorio.");
         }
         final UUID idPrograma = scopePort.findProgramaIdByCoordinadorUsuario(domain.actorUsuarioId())
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver el programa del coordinador autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_006));
 
         final CorreccionDocumentoDTO documento = new CorreccionDocumentoDTO(
                 domain.idTipoIdentificacion(), domain.numeroIdentificacion(), domain.motivo());

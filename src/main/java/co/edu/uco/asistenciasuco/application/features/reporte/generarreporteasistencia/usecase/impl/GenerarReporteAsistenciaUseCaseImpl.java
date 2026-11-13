@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.usecase.domain.GenerarReporteAsistenciaDomain;
 import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.usecase.GenerarReporteAsistenciaUseCase;
 import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.usecase.entity.ReporteAsistenciaEntity;
@@ -58,6 +59,6 @@ public final class GenerarReporteAsistenciaUseCaseImpl implements GenerarReporte
     }
 
     private static ForbiddenException accesoDenegado() {
-        return new ForbiddenException("El usuario autenticado no tiene autorizacion institucional para consultar el reporte del grupo.");
+        return new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_014);
     }
 }

@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.buscarestudiantepordocumento.primaryports.interactor;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.grupo.buscarestudiantepordocumento.primaryports.BuscarEstudiantePorDocumentoInputPort;
 import co.edu.uco.asistenciasuco.application.features.grupo.buscarestudiantepordocumento.primaryports.dto.BuscarEstudiantePorDocumentoDTO;
@@ -21,7 +22,7 @@ public final class BuscarEstudiantePorDocumentoInteractor implements BuscarEstud
     @Override
     public Optional<EstudianteBusquedaDTO> execute(final BuscarEstudiantePorDocumentoDTO dto) {
         if (dto == null) {
-            throw new ValidationException("Los datos de la busqueda son obligatorios.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_057);
         }
         return useCase.execute(new BuscarEstudiantePorDocumentoDomain(
                         dto.grupoId(), dto.tipoIdentificacionId(), dto.numeroIdentificacion(), dto.actorUsuarioId()))

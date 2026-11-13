@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.admin.cambiarestadodecano.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadodecano.usecase.CambiarEstadoDecanoUseCase;
 import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadodecano.usecase.domain.CambiarEstadoDecanoDomain;
@@ -41,10 +42,10 @@ public final class CambiarEstadoDecanoUseCaseImpl implements CambiarEstadoDecano
     @Override
     public DecanoProjection execute(final CambiarEstadoDecanoDomain domain) {
         if (domain == null || domain.idDecano() == null) {
-            throw new ValidationException("El decano es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_007);
         }
         if (domain.actorUsuarioId() == null) {
-            throw new ValidationException("El usuario autenticado es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_008);
         }
         final ResultadoCambioEstadoDecano resultado = commandPort.cambiarEstadoDecano(domain.idDecano(), null, domain.actorUsuarioId());
         if (resultado.estaActivoDecano()) {
@@ -55,6 +56,6 @@ public final class CambiarEstadoDecanoUseCaseImpl implements CambiarEstadoDecano
         return queryPort.consultarDecanos().stream()
                 .filter(decano -> domain.idDecano().equals(decano.id()))
                 .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("El decano especificado no existe en el sistema."));
+                .orElseThrow(() -> new ResourceNotFoundException(MensajeUsuarioErrorCode.NOF_APP_001));
     }
 }

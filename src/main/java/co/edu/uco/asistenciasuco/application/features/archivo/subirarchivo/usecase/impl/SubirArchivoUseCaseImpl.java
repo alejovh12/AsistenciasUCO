@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.archivo.subirarchivo.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
 import co.edu.uco.asistenciasuco.application.features.archivo.shared.contentsecurity.ChecksumCalculator;
@@ -184,8 +185,7 @@ public final class SubirArchivoUseCaseImpl implements SubirArchivoUseCase {
                     "No fue posible completar el control de seguridad del archivo.", exception);
         }
         if (scanResult.isInfected()) {
-            throw new ValidationException(
-                    "El archivo fue rechazado: se detecto una firma de malware conocida.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_028);
         }
     }
 }

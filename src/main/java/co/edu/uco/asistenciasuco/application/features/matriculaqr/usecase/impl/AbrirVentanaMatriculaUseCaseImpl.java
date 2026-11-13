@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.matriculaqr.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.matriculaqr.usecase.MatriculaQrCredencialesEmisor;
 import co.edu.uco.asistenciasuco.application.features.matriculaqr.usecase.MatriculaQrPresentador;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
@@ -45,7 +46,7 @@ public final class AbrirVentanaMatriculaUseCaseImpl implements AbrirVentanaMatri
         Objects.requireNonNull(comando, "El comando para abrir la ventana de matricula es obligatorio.");
         acceso.exigirHabilitada();
         if (!scope.canDocenteAccessGrupo(comando.usuarioEjecutor(), comando.grupoId())) {
-            throw new ForbiddenException("El docente autenticado no tiene titularidad sobre el grupo solicitado.");
+            throw new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_002);
         }
         return emisor.emitir(credenciales -> {
             final MatriculaQrRepositoryPort.VentanaAbierta ventana = repositorio.abrirVentana(

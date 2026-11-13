@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.archivo;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.archivo.descargararchivo.primaryports.DescargarArchivoInputPort;
 import co.edu.uco.asistenciasuco.application.features.archivo.descargararchivo.primaryports.dto.DescargarArchivoDTO;
 import co.edu.uco.asistenciasuco.application.features.archivo.descargararchivo.primaryports.dto.DescargarArchivoResultado;
@@ -103,7 +104,7 @@ public final class ArchivoController {
         try {
             return UUID.fromString(fileId);
         } catch (final IllegalArgumentException exception) {
-            throw new ResourceNotFoundException("El archivo solicitado no existe.");
+            throw new ResourceNotFoundException(MensajeUsuarioErrorCode.NOF_APP_014);
         }
     }
 

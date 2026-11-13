@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.consultarbitacoraestudiante.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.coordinador.indicadores.rule.IndicadoresRules;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarbitacoraestudiante.primaryports.dto.BitacoraSesionDTO;
@@ -25,9 +26,9 @@ public final class ConsultarBitacoraEstudianteUseCaseImpl implements ConsultarBi
     @Override
     public BitacoraPaginaDomain execute(final ConsultarBitacoraEstudianteDomain domain) {
         if (domain == null) {
-            throw new ValidationException("Los datos de la consulta son obligatorios.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_011);
         }
-        IndicadoresRules.requerido(domain.idEstudiante(), "El identificador del estudiante es obligatorio.");
+        IndicadoresRules.requerido(domain.idEstudiante(), MensajeUsuarioErrorCode.VAL_APP_073);
         final int pagina = IndicadoresRules.pagina(domain.pagina());
         final int tamano = IndicadoresRules.tamano(domain.tamano());
         IndicadoresRules.programaDelCoordinador(scopePort, domain.actorUsuarioId());

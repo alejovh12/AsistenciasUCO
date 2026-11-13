@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.admin.consultarcomparativafacultades.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AdminIndicadoresQueryPort;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarcomparativafacultades.usecase.ConsultarComparativaFacultadesUseCase;
@@ -20,7 +21,7 @@ public final class ConsultarComparativaFacultadesUseCaseImpl implements Consulta
     @Override
     public List<ComparativaFacultadDomain> execute(final ConsultarComparativaFacultadesDomain domain) {
         if (domain == null) {
-            throw new ValidationException("Los datos de la consulta son obligatorios.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_011);
         }
         return queryPort.consultarComparativa(domain.actorUsuarioId(), domain.idPeriodoAcademico()).stream()
                 .map(p -> new ComparativaFacultadDomain(p.idFacultad(), p.nombreFacultad(), p.estaActivaFacultad(), p.totalProgramas(), p.totalEstudiantes(), p.estudiantesRiesgo(), p.estudiantesPerdida(), p.tasaRetencion(), p.sesionesEjecutadas(), p.faltasSinJustaCausa(), p.porcentajeAusentismo(), p.horasDictadas(), p.horasFalta()))

@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.sesion.cerrarsesion.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.sesion.cerrarsesion.usecase.CerrarSesionUseCase;
 import co.edu.uco.asistenciasuco.application.features.sesion.cerrarsesion.usecase.domain.CerrarSesionDomain;
 import co.edu.uco.asistenciasuco.application.features.sesion.cerrarsesion.usecase.mapper.CerrarSesionRepositoryMapper;
@@ -30,7 +31,7 @@ public final class CerrarSesionUseCaseImpl implements CerrarSesionUseCase {
             throw new CrosscuttingException("El dominio para cerrar sesion es obligatorio.");
         }
         final var docenteId = institutionalScopePort.findDocenteIdByUsuario(domain.getDocente())
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver el docente autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_003));
         final var scopedDomain = new CerrarSesionDomain(
                 domain.getSesion(), docenteId, domain.getObservacionCierre(), domain.getUsuarioEjecutor()
         );
