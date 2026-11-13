@@ -57,3 +57,9 @@ reales. Los nombres reales de los recursos Azure de desarrollo salen de `applica
 | SEC-10 | CUMPLE | `docs/security/SECRETS_ROTATION_RUNBOOK.md`, `RotacionSecretoInvalidacionCacheTest` |
 | SEC-12 | CUMPLE | `application.yml` sin nombres reales, fallo temprano con mensaje, perfiles `local`/`dev` sin Azure, Frontend `40-env-js.sh` sin id real |
 | SEC-11 | Sigue PENDIENTE EXTERNO | Requiere Azure real |
+
+## Corrección de CI (PR #138)
+
+- **Falla:** el job `Trivy Production Docker Image Scan` falló al construir la imagen. El `Dockerfile` corre `mvnw clean verify`, y `RuntimeSecretCatalogTest` lee `docs/security/SECRETS_INVENTORY.md`, que no se copiaba a la etapa de build.
+- **Corrección:** se agregó `COPY docs/security/SECRETS_INVENTORY.md`, siguiendo el mismo patrón de los otros archivos que leen las pruebas.
+- **Verificación local:** `OperationalReadinessConfigurationTest` y `RuntimeSecretCatalogTest` pasan.

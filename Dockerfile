@@ -19,6 +19,8 @@ COPY docs/contracts/openapi/openapi-golden-path.yaml docs/contracts/openapi/open
 COPY docs/contracts/openapi/openapi-golden-path.sha256 docs/contracts/openapi/openapi-golden-path.sha256
 # AccessCatalogConsistencyTest contrasta Spring MVC y SecurityConfig con el catalogo de acceso compartido.
 COPY infra/security-baseline/access-catalog.json infra/security-baseline/access-catalog.json
+# RuntimeSecretCatalogTest (SEC-02) contrasta el catalogo de secretos con el inventario documentado.
+COPY docs/security/SECRETS_INVENTORY.md docs/security/SECRETS_INVENTORY.md
 # OperationalReadinessConfigurationTest (F12-09) lee el propio Dockerfile para verificar HEALTHCHECK y ENTRYPOINT.
 COPY Dockerfile Dockerfile
 RUN --mount=type=secret,id=m2settings,target=/root/.m2/settings.xml,required=false ./mvnw -B -ntp clean verify
