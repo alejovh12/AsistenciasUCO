@@ -57,6 +57,28 @@ class MessageUcoLabMessageCatalogWiringTest {
     }
 
     @Test
+    void sec12_messageucolab_sin_contingencia_arranca_sin_endpoint_de_app_configuration() {
+        runner.withPropertyValues(CONEXION[0], CONEXION[1], CONEXION[2]).withPropertyValues(
+                        "app.adapters.message-catalog.provider=messageucolab",
+                        "app.providers.messageucolab.fallback=none")
+                .run(context -> assertInstanceOf(MessageUcoLabMessageCatalogAdapter.class, context.getBean(MessageCatalogPort.class)));
+    }
+
+    @Test
+    void sec12_messageucolab_con_contingencia_azure_y_sin_endpoint_falla_con_mensaje_claro() {
+        runner.withPropertyValues(CONEXION[0], CONEXION[1], CONEXION[2]).withPropertyValues(
+                        "app.adapters.message-catalog.provider=messageucolab",
+                        "app.providers.messageucolab.fallback=azure",
+                        "app.providers.azure-appconfig.endpoint=")
+                .run(context -> {
+                    assertNotNull(context.getStartupFailure());
+                    org.junit.jupiter.api.Assertions.assertTrue(
+                            org.springframework.core.NestedExceptionUtils.getMostSpecificCause(context.getStartupFailure()).getMessage()
+                                    .contains("AZURE_APPCONFIG_ENDPOINT"));
+                });
+    }
+
+    @Test
     void provider_azure_registra_azure_y_no_el_adaptador_de_messageucolab() {
         runner.withPropertyValues(CONEXION).withPropertyValues("app.adapters.message-catalog.provider=azure")
                 .run(context -> {

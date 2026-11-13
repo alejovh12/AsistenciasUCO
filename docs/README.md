@@ -45,7 +45,7 @@ Entrada operativa: [AGENTS](../AGENTS.md). **NORMATIVE** significa regla activa;
 ## Security
 
 - **NORMATIVE:** [runtime provider-neutral](security/runtime-security-provider-architecture.md), [provisioning de identidad](security/keycloak-identity-provider.md).
-- Runbooks: [service account](security/keycloak-service-account.md), [infraestructura Keycloak LOCAL/DEV](../infra/keycloak/README.md).
+- Runbooks: [service account](security/keycloak-service-account.md), [inventario de secretos](security/SECRETS_INVENTORY.md), [rotación de secretos](security/SECRETS_ROTATION_RUNBOOK.md), [infraestructura Keycloak LOCAL/DEV](../infra/keycloak/README.md).
 
 ## Observability
 

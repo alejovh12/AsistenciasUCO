@@ -1,11 +1,8 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.adapters.vault.azure;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.vault.SecretVaultPort;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.vault.azure.AzureKeyVaultAdapter;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.AzureKeyVaultProviderProperties;
 import com.azure.identity.DefaultAzureCredentialBuilder;
-import com.azure.security.keyvault.secrets.SecretClient;
-import com.azure.security.keyvault.secrets.SecretClientBuilder;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -30,11 +27,6 @@ public class AzureKeyVaultAdapterConfiguration {
 
     @Bean
     public SecretVaultPort secretVaultPort(final AzureKeyVaultProviderProperties properties) {
-        final SecretClient secretClient = new SecretClientBuilder()
-                .vaultUrl(properties.endpoint())
-                .credential(new DefaultAzureCredentialBuilder().build())
-                .buildClient();
-
-        return new AzureKeyVaultAdapter(secretClient);
+        return AzureKeyVaultClientFactory.crearAdaptador(properties.endpoint());
     }
 }

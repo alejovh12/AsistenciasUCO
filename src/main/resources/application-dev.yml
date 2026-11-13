@@ -7,3 +7,17 @@ asistencias:
 logging:
   file:
     name: ${ASISTENCIAS_UCO_LOG_FILE:infra/observability/logs/asistencias-uco.jsonl}
+
+# SEC-12 (VAL-oleada3-baul-secretos): en local/dev el arranque no depende de recursos de Azure. Sin variables, el baul
+# es local_env (variables de entorno) y los catalogos se leen de SQL Server. Para usar los recursos Azure de desarrollo,
+# definir APP_ADAPTERS_VAULT_PROVIDER=azure_keyvault, APP_ADAPTERS_PARAMETER_CATALOG_PROVIDER=azure_appconfig,
+# APP_ADAPTERS_MESSAGE_CATALOG_PROVIDER=azure y los endpoints AZURE_KEYVAULT_ENDPOINT / AZURE_APPCONFIG_ENDPOINT
+# (init-env.ps1 de Infra los escribe en el .env del backend).
+app:
+  adapters:
+    vault:
+      provider: ${APP_ADAPTERS_VAULT_PROVIDER:local_env}
+    parameter-catalog:
+      provider: ${APP_ADAPTERS_PARAMETER_CATALOG_PROVIDER:sqlserver}
+    message-catalog:
+      provider: ${APP_ADAPTERS_MESSAGE_CATALOG_PROVIDER:sqlserver}

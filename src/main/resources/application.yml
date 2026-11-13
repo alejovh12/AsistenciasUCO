@@ -257,11 +257,13 @@ app:
         "[SUC_REGISTRO_ESTUDIANTE_GRUPO]": SUC001
         "[SUC_REGISTRO_DOCENTE_GRUPO]": SUC002
         "[SUC_REGISTRO_ASISTENCIA]": SUC003
-    # Azure Key Vault y App Configuration (autenticacion por DefaultAzureCredential con Azure CLI)
+    # Azure Key Vault y App Configuration (autenticacion por DefaultAzureCredential con Azure CLI).
+    # SEC-12: sin nombres de recursos reales por defecto. Con un proveedor Azure activo y el endpoint vacio, el arranque
+    # falla con un mensaje claro; los perfiles local/dev usan proveedores sin Azure salvo que se definan las variables.
     azure-keyvault:
-      endpoint: ${AZURE_KEYVAULT_ENDPOINT:https://kv-asist-dev-21245.vault.azure.net/}
+      endpoint: ${AZURE_KEYVAULT_ENDPOINT:}
     azure-appconfig:
-      endpoint: ${AZURE_APPCONFIG_ENDPOINT:https://appcs-asist-dev-29183.azconfig.io}
+      endpoint: ${AZURE_APPCONFIG_ENDPOINT:}
     # Identity provisioning administrativo (crear/verificar/eliminar cuentas institucionales
     # y asignar client roles vía Admin REST API). NO confundir con keycloak-security: esto
     # nunca participa en la validación de JWT de cada request. Ver
@@ -375,6 +377,13 @@ app:
       test-mode:
         enabled: ${SMTP_NOTIFICATION_TEST_MODE_ENABLED:false} # D15: true => redirige TODO a redirect-to
         redirect-to: ${SMTP_NOTIFICATION_TEST_MODE_REDIRECT_TO:} # 1..5 direcciones separadas por coma; obligatorio si enabled=true
+
+  # SEC-02 (VAL-oleada3-baul-secretos): con app.adapters.vault.provider=azure_keyvault los secretos de ejecucion
+  # (BD, Keycloak, PDP/PEP, MinIO, SMTP, webhook Event Grid) se leen del baul al arrancar; un secreto ausente en el baul
+  # cae a su variable de entorno. Inventario: docs/security/SECRETS_INVENTORY.md. false desactiva solo esta carga.
+  secrets:
+    runtime-from-vault:
+      enabled: ${APP_SECRETS_RUNTIME_FROM_VAULT_ENABLED:true}
 
   # CORS es neutral (no conoce ningun proveedor de identidad); SecurityConfig lo lee
   # directamente via @Value.
