@@ -23,14 +23,15 @@ description = "Fake password literal used by backend unit tests"
 regexTarget = "match"
 regexes = ['''NoSeUsa-[A-Za-z0-9-]+''']
 
-# Literales inventados de pruebas (GreenMail, fixtures de paridad JPA). No son credenciales reales:
-# las pruebas corren contra servicios efimeros o dobles de prueba.
+# Literales inventados de pruebas (GreenMail, fixtures de paridad JPA, secreto del token del Catalogo de
+# Parametros contra un HttpClient simulado). No son credenciales reales: las pruebas corren contra servicios
+# efimeros o dobles de prueba.
 [[allowlists]]
 description = "Fake literals used by backend tests"
 condition = "AND"
 paths = ['''(^|/)src/test/''']
 regexTarget = "match"
-regexes = ['''DatoUltraSecretoDeCuerpo[0-9]+''', '''Clave-IT-[A-Za-z0-9-]+''']
+regexes = ['''DatoUltraSecretoDeCuerpo[0-9]+''', '''Clave-IT-[A-Za-z0-9-]+''', '''valor-secreto-de-prueba''']
 
 # Trace IDs W3C (32 hex) fijados en pruebas de auditoria/trazas: son identificadores, no secretos.
 [[allowlists]]
