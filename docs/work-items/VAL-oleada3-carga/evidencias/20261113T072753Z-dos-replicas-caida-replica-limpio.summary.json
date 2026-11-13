@@ -1,0 +1,577 @@
+{
+  "root_group": {
+    "checks": [
+      {
+        "path": "::/api/v1/auth/me 200",
+        "id": "af2a5139a3d0dad37eb0225851b4e8a0",
+        "passes": 140,
+        "fails": 5,
+        "name": "/api/v1/auth/me 200"
+      },
+      {
+        "fails": 1,
+        "name": "/api/v1/estudiante/horarios 200",
+        "path": "::/api/v1/estudiante/horarios 200",
+        "id": "63e71626b2fb0d52f4ab58f31ea243b9",
+        "passes": 61
+      },
+      {
+        "name": "/api/v1/coordinador/indicadores 200",
+        "path": "::/api/v1/coordinador/indicadores 200",
+        "id": "1977a484a10e0e48e24750aa1a79a800",
+        "passes": 35,
+        "fails": 1
+      },
+      {
+        "name": "/api/v1/docente/horarios 200",
+        "path": "::/api/v1/docente/horarios 200",
+        "id": "3c86eca4e9e65e8af660a93c4f312159",
+        "passes": 45,
+        "fails": 2
+      },
+      {
+        "name": "/api/v1/estudiante/materias 200",
+        "path": "::/api/v1/estudiante/materias 200",
+        "id": "e50d5ed20c9ab5999c39980b4df7611c",
+        "passes": 59,
+        "fails": 3
+      },
+      {
+        "path": "::/api/v1/docente/asignaturas 200",
+        "id": "96b195587278b3859f9078135f9cf463",
+        "passes": 46,
+        "fails": 1,
+        "name": "/api/v1/docente/asignaturas 200"
+      },
+      {
+        "passes": 35,
+        "fails": 1,
+        "name": "/api/v1/coordinador/grupos 200",
+        "path": "::/api/v1/coordinador/grupos 200",
+        "id": "4c16ebcdb4f93eed629038ee0960e5d5"
+      },
+      {
+        "name": "/api/v1/estudiante/alertas 200",
+        "path": "::/api/v1/estudiante/alertas 200",
+        "id": "9daea292643cb1312f72cac051b02ec1",
+        "passes": 60,
+        "fails": 2
+      },
+      {
+        "name": "/api/v1/docente/reclamos 200",
+        "path": "::/api/v1/docente/reclamos 200",
+        "id": "811d3af2bffc8818289cb208fc76e692",
+        "passes": 45,
+        "fails": 2
+      },
+      {
+        "name": "/api/v1/coordinador/consolidado-asistencia 200",
+        "path": "::/api/v1/coordinador/consolidado-asistencia 200",
+        "id": "dc9b58aa087ad9f844ccc2304d4588b9",
+        "passes": 34,
+        "fails": 2
+      },
+      {
+        "name": "/api/v1/estudiante/reclamos 200",
+        "path": "::/api/v1/estudiante/reclamos 200",
+        "id": "c1d56d9a641e195a393747c7c7b66bbc",
+        "passes": 60,
+        "fails": 1
+      },
+      {
+        "path": "::/api/v1/coordinador/alertas-tempranas 200",
+        "id": "5afcc1a80ce16c2991cfe9430f1c7205",
+        "passes": 36,
+        "fails": 0,
+        "name": "/api/v1/coordinador/alertas-tempranas 200"
+      }
+    ],
+    "name": "",
+    "path": "",
+    "id": "d41d8cd98f00b204e9800998ecf8427e",
+    "groups": []
+  },
+  "options": {
+    "summaryTrendStats": [
+      "avg",
+      "min",
+      "med",
+      "p(90)",
+      "p(95)",
+      "p(99)",
+      "max"
+    ],
+    "summaryTimeUnit": "",
+    "noColor": false
+  },
+  "state": {
+    "isStdOutTTY": false,
+    "isStdErrTTY": false,
+    "testRunDurationMs": 109602.410752
+  },
+  "metrics": {
+    "http_req_duration{clase:agregado}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 672.180588236111,
+        "min": 16.847212,
+        "med": 518.3503845,
+        "p(90)": 1445.422634000001,
+        "p(95)": 1671.7079221999998,
+        "p(99)": 1891.6373553999983,
+        "max": 2008.655254
+      },
+      "thresholds": {
+        "p(95)<1500": {
+          "ok": false
+        }
+      }
+    },
+    "http_reqs": {
+      "contains": "default",
+      "values": {
+        "count": 677,
+        "rate": 6.176871433347065
+      },
+      "type": "counter"
+    },
+    "http_req_duration{name:/api/v1/coordinador/alertas-tempranas}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 1356.2709245,
+        "p(95)": 1456.4176847499998,
+        "p(99)": 1656.56908065,
+        "max": 1686.311843,
+        "avg": 676.2322268333332,
+        "min": 159.124722,
+        "med": 515.584549
+      },
+      "thresholds": {
+        "max>=0": {
+          "ok": true
+        }
+      }
+    },
+    "estado_502": {
+      "contains": "default",
+      "values": {
+        "count": 21,
+        "rate": 0.19160162496349833
+      },
+      "type": "counter"
+    },
+    "vus_max": {
+      "type": "gauge",
+      "contains": "default",
+      "values": {
+        "max": 11,
+        "value": 11,
+        "min": 11
+      }
+    },
+    "http_req_duration{clase:lecturaPropia}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 593.1930889287056,
+        "min": 6.564991,
+        "med": 440.814639,
+        "p(90)": 1310.1961918,
+        "p(95)": 1500.267785,
+        "p(99)": 1865.37090784,
+        "max": 2093.999416
+      },
+      "thresholds": {
+        "p(95)<800": {
+          "ok": false
+        }
+      }
+    },
+    "checks": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0.9689807976366323,
+        "passes": 656,
+        "fails": 21
+      },
+      "thresholds": {
+        "rate>0.99": {
+          "ok": false
+        }
+      }
+    },
+    "http_req_duration{name:/api/v1/auth/me}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 9.206538,
+        "med": 417.033966,
+        "p(90)": 1074.8220783999998,
+        "p(95)": 1404.6823697999996,
+        "p(99)": 1668.62251936,
+        "max": 1757.678099,
+        "avg": 522.8825489999996
+      },
+      "thresholds": {
+        "max>=0": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_duration{name:/api/v1/coordinador/grupos}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 544.5439655,
+        "p(90)": 1156.891273,
+        "p(95)": 1567.21721725,
+        "p(99)": 1713.6615156999999,
+        "max": 1714.672147,
+        "avg": 639.9253669722223,
+        "min": 51.620317
+      },
+      "thresholds": {
+        "max>=0": {
+          "ok": true
+        }
+      }
+    },
+    "data_received": {
+      "type": "counter",
+      "contains": "data",
+      "values": {
+        "count": 1344233,
+        "rate": 12264.629863312297
+      }
+    },
+    "iterations": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "rate": 1.2955919402293696,
+        "count": 142
+      }
+    },
+    "http_req_duration{name:/api/v1/docente/asignaturas}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 710.702912212766,
+        "min": 44.643792,
+        "med": 479.088223,
+        "p(90)": 1545.1493979999998,
+        "p(95)": 1631.2930015,
+        "p(99)": 1902.6338964599997,
+        "max": 2093.999416
+      },
+      "thresholds": {
+        "max>=0": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_duration{name:/api/v1/docente/horarios}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 1368.5188957999999,
+        "p(95)": 1460.4114527999998,
+        "p(99)": 1525.3141894999999,
+        "max": 1546.776582,
+        "avg": 561.2790232978724,
+        "min": 27.122034,
+        "med": 339.409599
+      },
+      "thresholds": {
+        "max>=0": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_duration{name:/api/v1/docente/reclamos}": {
+      "values": {
+        "p(95)": 1428.0983039,
+        "p(99)": 1797.21178646,
+        "max": 1864.639253,
+        "avg": 544.7313459787233,
+        "min": 6.564991,
+        "med": 397.206484,
+        "p(90)": 1254.0912609999998
+      },
+      "thresholds": {
+        "max>=0": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "http_req_duration{name:/api/v1/coordinador/indicadores}": {
+      "values": {
+        "med": 620.242015,
+        "p(90)": 1617.084245,
+        "p(95)": 1734.0144955,
+        "p(99)": 1909.8224209999996,
+        "max": 1989.382083,
+        "avg": 715.7954065277777,
+        "min": 76.466609
+      },
+      "thresholds": {
+        "max>=0": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "http_req_connecting": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0,
+        "med": 0,
+        "p(90)": 0,
+        "p(95)": 0,
+        "p(99)": 4.350352680000002,
+        "max": 177.093592,
+        "avg": 0.41769226292466766
+      }
+    },
+    "http_req_duration{expected_response:true}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 2093.999416,
+        "avg": 627.9458151753053,
+        "min": 83.767807,
+        "med": 474.0134265,
+        "p(90)": 1373.753078,
+        "p(95)": 1556.2420869999999,
+        "p(99)": 1913.9889687000048
+      }
+    },
+    "estado_200": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 656,
+        "rate": 5.985269808383567
+      }
+    },
+    "vus": {
+      "type": "gauge",
+      "contains": "default",
+      "values": {
+        "value": 2,
+        "min": 0,
+        "max": 11
+      }
+    },
+    "http_req_duration{name:/api/v1/estudiante/materias}": {
+      "contains": "time",
+      "values": {
+        "max": 1981.690779,
+        "avg": 572.2711629838708,
+        "min": 7.841312,
+        "med": 411.913614,
+        "p(90)": 1164.510311,
+        "p(95)": 1328.7696974499995,
+        "p(99)": 1820.6074104400002
+      },
+      "thresholds": {
+        "max>=0": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "http_req_failed": {
+      "thresholds": {
+        "rate<0.01": {
+          "ok": false
+        }
+      },
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0.0310192023633678,
+        "passes": 21,
+        "fails": 656
+      }
+    },
+    "http_req_duration{name:/api/v1/coordinador/consolidado-asistencia}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 441.2024425,
+        "p(90)": 1474.469822,
+        "p(95)": 1525.73464725,
+        "p(99)": 1870.9742598499995,
+        "max": 2008.655254,
+        "avg": 656.7693526111111,
+        "min": 16.847212
+      },
+      "thresholds": {
+        "max>=0": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_sending": {
+      "contains": "time",
+      "values": {
+        "med": 0.050643,
+        "p(90)": 0.13251639999999998,
+        "p(95)": 0.2934687999999979,
+        "p(99)": 4.973726240000004,
+        "max": 13.94825,
+        "avg": 0.2001897636632199,
+        "min": 0.019412
+      },
+      "type": "trend"
+    },
+    "data_sent": {
+      "type": "counter",
+      "contains": "data",
+      "values": {
+        "count": 1017121,
+        "rate": 9280.0969706904
+      }
+    },
+    "http_req_tls_handshaking": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0,
+        "med": 0,
+        "p(90)": 0,
+        "p(95)": 0,
+        "p(99)": 0,
+        "max": 0,
+        "avg": 0
+      }
+    },
+    "http_req_duration{name:/api/v1/estudiante/alertas}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 11.823809,
+        "med": 574.3444784999999,
+        "p(90)": 1403.7840621999999,
+        "p(95)": 1585.3695013999998,
+        "p(99)": 1947.97884849,
+        "max": 2076.647607,
+        "avg": 709.0440460645164
+      },
+      "thresholds": {
+        "max>=0": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_waiting": {
+      "contains": "time",
+      "values": {
+        "p(99)": 1886.4621668800007,
+        "max": 2092.620831,
+        "avg": 605.0074122392908,
+        "min": 6.324538,
+        "med": 450.318178,
+        "p(90)": 1342.9282873999996,
+        "p(95)": 1542.4226377999996
+      },
+      "type": "trend"
+    },
+    "http_req_blocked": {
+      "contains": "time",
+      "values": {
+        "min": 0.005103,
+        "med": 0.010409,
+        "p(90)": 0.014128599999999998,
+        "p(95)": 0.030112199999999898,
+        "p(99)": 4.81914376,
+        "max": 184.465337,
+        "avg": 0.47777634268833064
+      },
+      "type": "trend"
+    },
+    "http_req_duration{name:/api/v1/estudiante/horarios}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 61.08234,
+        "med": 501.4740485,
+        "p(90)": 1209.8931705,
+        "p(95)": 1492.4115824499997,
+        "p(99)": 1988.79859861,
+        "max": 2013.524521,
+        "avg": 634.9603254838709
+      },
+      "thresholds": {
+        "max>=0": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_receiving": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 18.702568799999977,
+        "p(99)": 43.854634480000016,
+        "max": 167.680265,
+        "avg": 4.786373041358935,
+        "min": 0.055744,
+        "med": 1.568683,
+        "p(90)": 13.149717199999985
+      }
+    },
+    "iteration_duration": {
+      "contains": "time",
+      "values": {
+        "p(99)": 10189.246155,
+        "max": 10535.521274,
+        "avg": 7613.5111789577495,
+        "min": 3997.144785,
+        "med": 7669.7824745,
+        "p(90)": 9463.8748799,
+        "p(95)": 9715.0711579
+      },
+      "type": "trend"
+    },
+    "http_req_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 1891.461217440001,
+        "max": 2093.999416,
+        "avg": 609.9939750443134,
+        "min": 6.564991,
+        "med": 452.725512,
+        "p(90)": 1352.4657756,
+        "p(95)": 1547.9218401999995
+      }
+    },
+    "http_req_duration{name:/api/v1/estudiante/reclamos}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 592.776056114754,
+        "min": 33.433966,
+        "med": 407.738372,
+        "p(90)": 1140.811292,
+        "p(95)": 1301.007472,
+        "p(99)": 1617.4290991999999,
+        "max": 1666.517429
+      },
+      "thresholds": {
+        "max>=0": {
+          "ok": true
+        }
+      }
+    }
+  }
+}
