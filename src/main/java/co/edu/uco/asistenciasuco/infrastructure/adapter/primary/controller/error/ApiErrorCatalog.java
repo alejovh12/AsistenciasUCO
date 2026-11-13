@@ -157,6 +157,7 @@ final class ApiErrorCatalog {
             case FORBIDDEN -> HttpStatus.FORBIDDEN;
             case UNAUTHORIZED -> HttpStatus.UNAUTHORIZED;
             case TOO_MANY_REQUESTS -> HttpStatus.TOO_MANY_REQUESTS;
+            case SERVICE_UNAVAILABLE -> HttpStatus.SERVICE_UNAVAILABLE;
             case TECHNICAL -> HttpStatus.INTERNAL_SERVER_ERROR;
             case BUSINESS -> HttpStatus.UNPROCESSABLE_CONTENT;
         };

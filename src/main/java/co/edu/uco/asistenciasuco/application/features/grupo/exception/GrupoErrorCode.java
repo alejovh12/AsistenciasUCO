@@ -39,4 +39,14 @@ public enum GrupoErrorCode implements ErrorDefinition {
     public ErrorKind kind() {
         return kind;
     }
+
+    /**
+     * VAL MSG-03: {@link #ERR_CORREO_REQUERIDO_MATRICULA} conserva el codigo publico {@code FIELD_REQUIRED} (contrato A.2-15), pero su
+     * texto se busca en el catalogo por su propio codigo; asi no se reserva el codigo generico FIELD_REQUIRED para un texto de
+     * matricula. En las demas constantes el codigo de mensaje es el mismo codigo publico.
+     */
+    @Override
+    public String messageCode() {
+        return this == ERR_CORREO_REQUERIDO_MATRICULA ? name() : code;
+    }
 }
