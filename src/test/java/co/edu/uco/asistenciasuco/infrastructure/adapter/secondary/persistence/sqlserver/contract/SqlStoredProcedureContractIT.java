@@ -304,7 +304,9 @@ class SqlStoredProcedureContractIT {
                         input("@accion", "nvarchar"),
                         input("@respuestaDocente", "nvarchar"),
                         input("@idCorrelacion", "uniqueidentifier"),
-                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        // PC (puntos de control, migracion BD 37): opcional al final, NULL = EX.
+                        input("@codigoResultadoAprobacion", "nvarchar")
                 )),
                 // LB-004D (ONE_TABLE): soporte de revision. La v1 de arriba permanece intacta.
                 Arguments.of("usp_registrar_archivo_soporte", List.of(

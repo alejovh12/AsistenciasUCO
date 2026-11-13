@@ -3,6 +3,7 @@ name: Backend Integration
 # PRU-04 (VAL oleada 2): las pruebas de integracion (*IT, perfil Maven `integration`) corren en cada
 # PR a develop contra un SQL Server efimero del propio job, con el esquema desplegado desde el repo
 # publico de BD (johnjduque/gestion-asistencia-db) por el mismo deploy_schema.ps1 que usa el CI de BD.
+# Rama de BD: la homonima de la rama del PR si existe en el repo de BD; si no, develop (ver "Resolve database schema ref").
 # MinIO y ClamAV (requeridos por los IT de soportes) se levantan con infra/files/compose.yaml.
 # Todas las credenciales son efimeras: se generan al vuelo en el runner y mueren con el job.
 on:
@@ -44,11 +45,34 @@ jobs:
       - name: Checkout backend
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # Orden de cambios cruzados backend/BD: si el repo de BD tiene una rama con el MISMO nombre que la rama
+      # del PR (p. ej. fix/VAL-oleada2-cumplimiento con sus migraciones aun sin unir), se despliega esa rama;
+      # si no existe, se usa develop. Un workflow_dispatch con db_ref explicito siempre manda.
+      - name: Resolve database schema ref
+        id: db-ref
+        shell: bash
+        env:
+          REQUESTED_DB_REF: ${{ inputs.db_ref }}
+          PR_HEAD_REF: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+          resolved="${DB_REF}"
+          if [ -z "${REQUESTED_DB_REF}" ] && [ -n "${PR_HEAD_REF}" ]; then
+            # Solo nombres de rama con caracteres seguros; cualquier otra cosa cae a develop.
+            if [[ "${PR_HEAD_REF}" =~ ^[A-Za-z0-9._/-]+$ ]] \
+               && git ls-remote --exit-code --heads "https://github.com/${DB_REPOSITORY}.git" \
+                    "refs/heads/${PR_HEAD_REF}" >/dev/null 2>&1; then
+              resolved="${PR_HEAD_REF}"
+            fi
+          fi
+          echo "Database schema ref: ${resolved}"
+          echo "ref=${resolved}" >> "$GITHUB_OUTPUT"
+
       - name: Checkout database schema repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ env.DB_REPOSITORY }}
-          ref: ${{ env.DB_REF }}
+          ref: ${{ steps.db-ref.outputs.ref }}
           path: .ci-db
           persist-credentials: false
 
@@ -117,6 +141,15 @@ jobs:
         run: |
           ./deploy_schema.ps1 -ContainerName $env:MSSQL_CONTAINER -Password $env:MSSQL_SA_PASSWORD
 
+      # Fixtures que el repo de BD publica para las *IT de Java (MAINT-003G/003H: filas de asistencia en las vistas
+      # piloto, multi/empty y horarios). Sin ellas varias IT fallan con FIXTURE_MISSING. Exige Developer Edition (la del
+      # contenedor efimero) y la BD gestionasistenciadb.
+      - name: Prepare Java integration fixtures from the DB repository
+        shell: pwsh
+        working-directory: .ci-db
+        run: |
+          ./test/prepare_java_integration_fixture.ps1 -ContainerName $env:MSSQL_CONTAINER -AdminPassword $env:MSSQL_SA_PASSWORD
+
       - name: Set up Java 25
         uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
@@ -124,8 +157,8 @@ jobs:
           java-version: '25'
           cache: maven
           server-id: github
-          server-username: MESSAGEUCOLAB_PACKAGES_USER
-          server-password: MESSAGEUCOLAB_PACKAGES_TOKEN
+          server-username-env-var: MESSAGEUCOLAB_PACKAGES_USER
+          server-password-env-var: MESSAGEUCOLAB_PACKAGES_TOKEN
 
       - name: Verify toolchain
         shell: bash

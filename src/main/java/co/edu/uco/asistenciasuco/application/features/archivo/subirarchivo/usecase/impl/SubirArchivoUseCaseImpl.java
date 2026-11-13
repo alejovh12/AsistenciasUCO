@@ -128,7 +128,7 @@ public final class SubirArchivoUseCaseImpl implements SubirArchivoUseCase {
                     .map(String::strip)
                     .map(Long::parseLong)
                     .orElse(ContentSecurityValidator.MAX_FILE_SIZE_BYTES);
-        } catch (final RuntimeException exception) {
+        } catch (final RuntimeException _) {
             LOGGER.warn("parametro {}/{} no disponible o invalido; se aplica el respaldo de {} bytes",
                     GRUPO_PARAMETRO_TAMANIO, CLAVE_PARAMETRO_TAMANIO, ContentSecurityValidator.MAX_FILE_SIZE_BYTES);
             return ContentSecurityValidator.MAX_FILE_SIZE_BYTES;

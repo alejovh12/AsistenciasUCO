@@ -57,20 +57,26 @@ public final class CircuitBreakerFileStorageAdapter implements FileStoragePort {
             throw new StorageUnavailableException(MENSAJE_ABIERTO, null);
         }
         final long inicio = circuitBreaker.getCurrentTimestamp();
+        boolean registrado = false;
         try {
             final T resultado = llamada.get();
+            registrado = true;
             circuitBreaker.onSuccess(circuitBreaker.getCurrentTimestamp() - inicio, circuitBreaker.getTimestampUnit());
             return resultado;
         } catch (final ObjectNotFoundException exception) {
+            registrado = true;
             circuitBreaker.onSuccess(circuitBreaker.getCurrentTimestamp() - inicio, circuitBreaker.getTimestampUnit());
             throw exception;
         } catch (final StorageException exception) {
+            registrado = true;
             circuitBreaker.onError(circuitBreaker.getCurrentTimestamp() - inicio, circuitBreaker.getTimestampUnit(), exception);
             throw exception;
-        } catch (final RuntimeException | Error exception) {
-            // Un error de programacion o de argumentos no dice nada de la salud del provider: no se cuenta.
-            circuitBreaker.releasePermission();
-            throw exception;
+        } finally {
+            // Un error de programacion o de argumentos (cualquier otro Throwable) no dice nada de la salud del
+            // provider: no se cuenta, solo se devuelve el permiso.
+            if (!registrado) {
+                circuitBreaker.releasePermission();
+            }
         }
     }
 }

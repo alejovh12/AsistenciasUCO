@@ -34,8 +34,8 @@ jobs:
           java-version: '25'
           cache: maven
           server-id: github
-          server-username: MESSAGEUCOLAB_PACKAGES_USER
-          server-password: MESSAGEUCOLAB_PACKAGES_TOKEN
+          server-username-env-var: MESSAGEUCOLAB_PACKAGES_USER
+          server-password-env-var: MESSAGEUCOLAB_PACKAGES_TOKEN
       - name: Execute architectural rules only
         shell: bash
         run: |
@@ -74,8 +74,8 @@ jobs:
           java-version: '25'
           cache: maven
           server-id: github
-          server-username: MESSAGEUCOLAB_PACKAGES_USER
-          server-password: MESSAGEUCOLAB_PACKAGES_TOKEN
+          server-username-env-var: MESSAGEUCOLAB_PACKAGES_USER
+          server-password-env-var: MESSAGEUCOLAB_PACKAGES_TOKEN
       - name: Warm Maven POM and dependency cache for Trivy
         shell: bash
         run: |

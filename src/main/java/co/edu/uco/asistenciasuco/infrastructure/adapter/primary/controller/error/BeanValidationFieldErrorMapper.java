@@ -101,13 +101,14 @@ public final class BeanValidationFieldErrorMapper {
     }
 
     private static String defaultMessage(final ApiFieldErrorCode code, final String field) {
-        return switch (code) {
-            case FIELD_REQUIRED -> "El campo '" + field + "' es obligatorio.";
-            case FIELD_INVALID_LENGTH -> "El campo '" + field + "' no cumple la longitud permitida.";
-            case FIELD_INVALID_FORMAT -> "El campo '" + field + "' no tiene un formato valido.";
-            case FIELD_OUT_OF_RANGE -> "El campo '" + field + "' esta fuera del rango permitido.";
-            default -> "El campo '" + field + "' no es valido.";
+        final String detalle = switch (code) {
+            case FIELD_REQUIRED -> "es obligatorio.";
+            case FIELD_INVALID_LENGTH -> "no cumple la longitud permitida.";
+            case FIELD_INVALID_FORMAT -> "no tiene un formato valido.";
+            case FIELD_OUT_OF_RANGE -> "esta fuera del rango permitido.";
+            default -> "no es valido.";
         };
+        return "El campo '" + field + "' " + detalle;
     }
 
     /** Solo el {@code message} explicito de la anotacion; nunca la plantilla por defecto del proveedor. */

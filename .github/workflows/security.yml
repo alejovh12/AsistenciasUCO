@@ -68,7 +68,7 @@ jobs:
         run: |
           set -euo pipefail
           archive="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
-          curl --fail --location --silent --show-error --retry 2 --retry-all-errors --connect-timeout 20 --max-time 120 \
+          curl --proto '=https' --proto-redir '=https' --fail --location --silent --show-error --retry 2 --retry-all-errors --connect-timeout 20 --max-time 120 \
             --output "${RUNNER_TEMP}/${archive}" \
             "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${archive}"
           printf '%s  %s\n' "$GITLEAKS_SHA256" "${RUNNER_TEMP}/${archive}" | sha256sum --check --status
@@ -124,8 +124,8 @@ jobs:
           java-version: '25'
           cache: maven
           server-id: github
-          server-username: MESSAGEUCOLAB_PACKAGES_USER
-          server-password: MESSAGEUCOLAB_PACKAGES_TOKEN
+          server-username-env-var: MESSAGEUCOLAB_PACKAGES_USER
+          server-password-env-var: MESSAGEUCOLAB_PACKAGES_TOKEN
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3

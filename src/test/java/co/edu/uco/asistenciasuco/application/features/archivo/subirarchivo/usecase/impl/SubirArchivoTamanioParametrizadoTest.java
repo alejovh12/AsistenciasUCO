@@ -38,8 +38,9 @@ class SubirArchivoTamanioParametrizadoTest {
     void un_limite_parametrizado_menor_rechaza_antes_del_antivirus_y_lo_informa() {
         when(parametros.getParameter("ARCHIVO", "TAMANIO_MAXIMO_BYTES")).thenReturn(Optional.of(" 262144 "));
 
-        final ValidationException error = assertThrows(ValidationException.class,
-                () -> useCase.execute(pdf(262_145)));
+        final SubirArchivoDomain excedido = pdf(262_145);
+
+        final ValidationException error = assertThrows(ValidationException.class, () -> useCase.execute(excedido));
 
         assertTrue(error.getMessage().contains("256 KiB"), error.getMessage());
         verifyNoInteractions(antivirus);
@@ -75,8 +76,9 @@ class SubirArchivoTamanioParametrizadoTest {
     void un_parametro_por_encima_del_techo_tecnico_no_amplia_el_limite() {
         when(parametros.getParameter("ARCHIVO", "TAMANIO_MAXIMO_BYTES")).thenReturn(Optional.of("10485760"));
 
-        final ValidationException error = assertThrows(ValidationException.class,
-                () -> useCase.execute(pdf((int) ContentSecurityValidator.MAX_FILE_SIZE_BYTES + 1)));
+        final SubirArchivoDomain sobreTecho = pdf((int) ContentSecurityValidator.MAX_FILE_SIZE_BYTES + 1);
+
+        final ValidationException error = assertThrows(ValidationException.class, () -> useCase.execute(sobreTecho));
 
         assertTrue(error.getMessage().contains("5 MiB"), error.getMessage());
     }

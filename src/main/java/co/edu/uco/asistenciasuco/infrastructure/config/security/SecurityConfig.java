@@ -69,7 +69,7 @@ public class SecurityConfig {
             final AuthenticationEntryPoint authenticationEntryPoint,
             final AccessDeniedHandler accessDeniedHandler,
             final ObjectProvider<SecurityPepEnforcementFilter> securityPepEnforcementFilter,
-            final ObjectProvider<org.springframework.web.servlet.handler.HandlerMappingIntrospector> handlerMappingIntrospector,
+            final ObjectProvider<org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping> requestMappingHandlerMappings,
             final ObjectProvider<co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.handler.SecurityErrorResponseWriter> errorResponseWriter
     ) throws Exception {
         http
@@ -253,9 +253,9 @@ public class SecurityConfig {
         // CULM-001 D.9-a (F-EST-024, OBS-17): en modo baseline, una ruta sin handler responde 404 sin consultar al PDP; ese filtro se
         // registra justo ANTES del PEP (ambos despues de BearerTokenAuthenticationFilter, en orden de registro).
         securityPepEnforcementFilter.ifAvailable(filter -> {
-            if (handlerMappingIntrospector.getIfAvailable() != null && errorResponseWriter.getIfAvailable() != null) {
+            if (errorResponseWriter.getIfAvailable() != null) {
                 http.addFilterAfter(
-                        new UnmappedRouteFilter(handlerMappingIntrospector.getObject(), errorResponseWriter.getObject()),
+                        new UnmappedRouteFilter(requestMappingHandlerMappings, errorResponseWriter.getObject()),
                         org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class
                 );
             }

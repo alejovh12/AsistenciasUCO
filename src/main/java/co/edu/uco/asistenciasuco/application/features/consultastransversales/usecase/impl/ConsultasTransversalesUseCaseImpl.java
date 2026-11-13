@@ -171,10 +171,6 @@ public final class ConsultasTransversalesUseCaseImpl implements ConsultasTransve
     }
 
     /**
-     * Rango [desde, hasta) en UTC: sin hasta se usa el instante actual y sin desde los 7 dias anteriores a hasta. El
-     * rango debe ser positivo y de maximo 90 dias para no recorrer toda la tabla de auditoria.
-     */
-    /**
      * PAR-06: rango maximo de la consulta de auditoria desde {@code AUDITORIA/RANGO_MAXIMO_DIAS}. Sin catalogo, sin el
      * parametro (aun no esta en la BD) o con un valor fuera de 1..366 se aplica el respaldo de 90 dias.
      */
@@ -189,11 +185,15 @@ public final class ConsultasTransversalesUseCaseImpl implements ConsultasTransve
                     .filter(dias -> dias >= 1 && dias <= RANGO_MAXIMO_DIAS_TECHO)
                     .map(Duration::ofDays)
                     .orElse(RANGO_AUDITORIA_MAXIMO);
-        } catch (final RuntimeException exception) {
+        } catch (final RuntimeException _) {
             return RANGO_AUDITORIA_MAXIMO;
         }
     }
 
+    /**
+     * Rango [desde, hasta) en UTC: sin hasta se usa el instante actual y sin desde los 7 dias anteriores a hasta. El
+     * rango debe ser positivo y no superar {@link #rangoAuditoriaMaximo()} para no recorrer toda la tabla de auditoria.
+     */
     private FiltroAuditoria normalizar(final FiltroAuditoria filtro) {
         final FiltroAuditoria entrada = ObjectHelper.isNull(filtro)
                 ? new FiltroAuditoria(null, null, null, null, null, null, null, true, null, false) : filtro;

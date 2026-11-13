@@ -14,7 +14,7 @@ import jakarta.validation.constraints.Pattern;
  */
 public final class RegistrarAsistenciaQrRequest {
 
-    @Pattern(regexp = BeanValidationPatterns.TOKEN_43_OR_BLANK, message = "El codigo QR no es valido.")
+    @Pattern(regexp = BeanValidationPatterns.BASE64URL_43_OR_BLANK, message = "El codigo QR no es valido.")
     private String token;
     @Pattern(regexp = BeanValidationPatterns.PIN_6_OR_BLANK, message = "El PIN debe tener 6 digitos.")
     private String pin;

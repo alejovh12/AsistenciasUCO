@@ -15,10 +15,10 @@ public final class BeanValidationPatterns {
             + "[A-Za-z0-9.-]+\\.[A-Za-z]{2,63}\\s*$";
 
     /** Token de 43 caracteres base64url (QR de asistencia y de matricula), o vacio. */
-    public static final String TOKEN_43_OR_BLANK = "^\\s*$|^\\s*[A-Za-z0-9_-]{43}\\s*$";
+    public static final String BASE64URL_43_OR_BLANK = "^\\s*$|^\\s*[A-Za-z0-9_-]{43}\\s*$";
 
     /** Token de 43 caracteres base64url sin espacios (matricula QR no recorta), o vacio. */
-    public static final String TOKEN_43_STRICT_OR_BLANK = "^\\s*$|^[A-Za-z0-9_-]{43}$";
+    public static final String BASE64URL_43_STRICT_OR_BLANK = "^\\s*$|^[A-Za-z0-9_-]{43}$";
 
     /** PIN de 6 digitos, con espacios alrededor o vacio. */
     public static final String PIN_6_OR_BLANK = "^\\s*$|^\\s*\\d{6}\\s*$";

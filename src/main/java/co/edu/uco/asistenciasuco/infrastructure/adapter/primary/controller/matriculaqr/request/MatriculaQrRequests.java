@@ -17,14 +17,14 @@ public final class MatriculaQrRequests {
 
     /** Exactamente uno de {@code token} o {@code pin}. */
     public record Credencial(
-            @Pattern(regexp = BeanValidationPatterns.TOKEN_43_STRICT_OR_BLANK, message = "El codigo de matricula no es valido.") String token,
+            @Pattern(regexp = BeanValidationPatterns.BASE64URL_43_STRICT_OR_BLANK, message = "El codigo de matricula no es valido.") String token,
             @Pattern(regexp = BeanValidationPatterns.PIN_6_STRICT_OR_BLANK, message = "El PIN debe tener 6 digitos.") String pin
     ) {
     }
 
     /** Alta publica: credencial (token o PIN) mas los datos de la persona. */
     public record Registro(
-            @Pattern(regexp = BeanValidationPatterns.TOKEN_43_STRICT_OR_BLANK, message = "El codigo de matricula no es valido.") String token,
+            @Pattern(regexp = BeanValidationPatterns.BASE64URL_43_STRICT_OR_BLANK, message = "El codigo de matricula no es valido.") String token,
             @Pattern(regexp = BeanValidationPatterns.PIN_6_STRICT_OR_BLANK, message = "El PIN debe tener 6 digitos.") String pin,
             @NotNull(message = "El tipo de identificacion es obligatorio.") UUID idTipoIdentificacion,
             @NotNull(message = "El numero de identificacion es obligatorio.") @Min(value = 100000, message = "El numero de identificacion no es valido.") @Max(value = 2147483647, message = "El numero de identificacion no es valido.") Long numeroIdentificacion,

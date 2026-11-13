@@ -40,8 +40,10 @@ class ConsultasAuditoriaRangoParametrizadoTest {
     void el_parametro_acota_el_rango_de_la_consulta() {
         when(parametros.getParameter("AUDITORIA", "RANGO_MAXIMO_DIAS")).thenReturn(Optional.of("30"));
 
+        final FiltroAuditoria filtro31 = filtro(31);
+
         final ValidationException error = assertThrows(ValidationException.class,
-                () -> useCase.consultarAuditoria(USUARIO, filtro(31), 1, 10));
+                () -> useCase.consultarAuditoria(USUARIO, filtro31, 1, 10));
         assertTrue(error.getMessage().contains("30 dias"), error.getMessage());
     }
 
@@ -51,7 +53,8 @@ class ConsultasAuditoriaRangoParametrizadoTest {
         when(port.consultarAuditoria(any(), any(), anyInt(), anyInt())).thenReturn(new Pagina<>(List.of(), 0));
 
         useCase.consultarAuditoria(USUARIO, filtro(90), 1, 10);
-        assertThrows(ValidationException.class, () -> useCase.consultarAuditoria(USUARIO, filtro(91), 1, 10));
+        final FiltroAuditoria filtro91 = filtro(91);
+        assertThrows(ValidationException.class, () -> useCase.consultarAuditoria(USUARIO, filtro91, 1, 10));
     }
 
     @Test
