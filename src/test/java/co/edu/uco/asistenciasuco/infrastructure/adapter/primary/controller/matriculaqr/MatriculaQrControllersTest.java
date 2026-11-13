@@ -194,15 +194,23 @@ class MatriculaQrControllersTest {
     }
 
     /**
-     * Sin el GlobalExceptionHandler (que la aplicacion traduce a 400) la validacion de forma sale como
-     * RequestValidationException; lo que se verifica aqui es que el rechazo ocurre ANTES del caso de uso.
+     * Sin el GlobalExceptionHandler (que la aplicacion traduce a 400) el rechazo de forma llega por una de dos barreras,
+     * ambas ANTES del caso de uso: Bean Validation (ROL-06, primera barrera: Spring responde 400 con
+     * MethodArgumentNotValidException) o el validator propio (RequestValidationException).
      */
     private void exigirRechazoDeValidacion(final String ruta, final String cuerpo) {
-        final Exception error = org.junit.jupiter.api.Assertions.assertThrows(Exception.class,
-                () -> mvc.perform(post(ruta).contentType(MediaType.APPLICATION_JSON).content(cuerpo)));
+        final org.springframework.test.web.servlet.MvcResult resultado;
+        try {
+            resultado = mvc.perform(post(ruta).contentType(MediaType.APPLICATION_JSON).content(cuerpo)).andReturn();
+        } catch (final Exception error) {
+            org.junit.jupiter.api.Assertions.assertInstanceOf(
+                    co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.RequestValidationException.class,
+                    error.getCause());
+            return;
+        }
+        org.junit.jupiter.api.Assertions.assertEquals(400, resultado.getResponse().getStatus());
         org.junit.jupiter.api.Assertions.assertInstanceOf(
-                co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.RequestValidationException.class,
-                error.getCause());
+                org.springframework.web.bind.MethodArgumentNotValidException.class, resultado.getResolvedException());
     }
 
     private static String registroJson(final String password) {

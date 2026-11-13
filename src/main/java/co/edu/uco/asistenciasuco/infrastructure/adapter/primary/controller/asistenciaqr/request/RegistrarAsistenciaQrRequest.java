@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 
 import java.util.ArrayList;
 import java.util.List;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.BeanValidationPatterns;
+import jakarta.validation.constraints.Pattern;
 
 /**
  * CULM-001 B.2 (HU176, contrato 3.2.7): cuerpo nuevo del registro por QR: exactamente uno de {@code token} o {@code pin}.
@@ -12,7 +14,9 @@ import java.util.List;
  */
 public final class RegistrarAsistenciaQrRequest {
 
+    @Pattern(regexp = BeanValidationPatterns.BASE64URL_43_OR_BLANK, message = "El codigo QR no es valido.")
     private String token;
+    @Pattern(regexp = BeanValidationPatterns.PIN_6_OR_BLANK, message = "El PIN debe tener 6 digitos.")
     private String pin;
     private final List<String> camposDesconocidos = new ArrayList<>();
 

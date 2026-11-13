@@ -1,0 +1,62 @@
+# EST-09 (VAL oleada 2): actualizacion automatica semanal de dependencias.
+# Los PR de Dependabot pasan por las mismas compuertas (Trivy, gitleaks, Sonar, pruebas).
+version: 2
+registries:
+  # Starter MessageUcoLab en GitHub Packages. Requiere el secreto de Dependabot
+  # MESSAGEUCOLAB_PACKAGES_TOKEN (Settings > Secrets > Dependabot), de solo lectura.
+  messageucolab-packages:
+    type: maven-repository
+    url: https://maven.pkg.github.com/CamiloGarcia09/MessageUcolab--Backend
+    username: x-access-token
+    password: ${{secrets.MESSAGEUCOLAB_PACKAGES_TOKEN}}
+updates:
+  - package-ecosystem: maven
+    directory: "/"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/Bogota
+    open-pull-requests-limit: 5
+    groups:
+      maven-minor-patch:
+        update-types: [minor, patch]
+    registries:
+      - messageucolab-packages
+  - package-ecosystem: docker
+    directories:
+      - "/"
+      - "/infra/files/minio"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/Bogota
+    open-pull-requests-limit: 5
+    groups:
+      docker-minor-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: docker-compose
+    directories:
+      - "/"
+      - "/infra/files"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/Bogota
+    open-pull-requests-limit: 5
+    groups:
+      docker_compose-minor-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directory: "/"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/Bogota
+    open-pull-requests-limit: 5
+    groups:
+      github_actions-minor-patch:
+        update-types: [minor, patch]

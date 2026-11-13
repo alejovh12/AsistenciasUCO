@@ -11,6 +11,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.tomaa
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.tomaasistencia.response.TomaAsistenciaHttpResponses.TomasSesionResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -53,7 +54,7 @@ public final class SesionTomaController {
     @AuditableOperation(action = "ABRIR_TOMA_ASISTENCIA", resourceType = "SESION", resourceIdPathVariable = "sesionId")
     public ResponseEntity<ApiDataResponse<TomaAsistenciaResponse>> abrir(
             @PathVariable final UUID sesionId,
-            @RequestBody(required = false) final TomaAsistenciaRequests.AbrirToma request
+            @Valid @RequestBody(required = false) final TomaAsistenciaRequests.AbrirToma request
     ) {
         final TomaAsistenciaResumen toma = abrirToma.execute(new AbrirTomaAsistenciaInputPort.Comando(
                 sesionId, request == null ? null : request.modo(), authenticatedUserResolver.requireAuthenticatedUserId()));

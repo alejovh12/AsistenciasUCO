@@ -8,6 +8,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.respo
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -39,7 +40,7 @@ public final class AccesoCuentaController {
     }
 
     @PostMapping("/consultas")
-    public ResponseEntity<ApiDataResponse<AccesoCuentaDTO>> consultar(@RequestBody final AccesoCuentaRequest request) {
+    public ResponseEntity<ApiDataResponse<AccesoCuentaDTO>> consultar(@Valid @RequestBody final AccesoCuentaRequest request) {
         RequestValidationGuard.validate(VALIDATOR.validate(request));
         return ResponseEntity.ok(new ApiDataResponse<>(true,
                 accesoCuentaInputPort.consultar(authenticatedUserResolver.requireAuthenticatedUserId(), correoValidado(request))));
@@ -47,7 +48,7 @@ public final class AccesoCuentaController {
 
     @PostMapping("/reconciliaciones")
     @AuditableOperation(action = "RECONCILIAR_ACCESO_CUENTA", resourceType = "USUARIO")
-    public ResponseEntity<ApiDataResponse<AccesoCuentaDTO>> reconciliar(@RequestBody final AccesoCuentaRequest request) {
+    public ResponseEntity<ApiDataResponse<AccesoCuentaDTO>> reconciliar(@Valid @RequestBody final AccesoCuentaRequest request) {
         RequestValidationGuard.validate(VALIDATOR.validate(request));
         return ResponseEntity.ok(new ApiDataResponse<>(true,
                 accesoCuentaInputPort.reconciliar(authenticatedUserResolver.requireAuthenticatedUserId(), correoValidado(request))));

@@ -12,6 +12,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.respo
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,6 +25,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 /**
  * CULM-001 D.3 (HU168): parametros de negocio del administrador. GET paginado y legible, PUT con lista blanca, motivo y
@@ -73,7 +76,7 @@ public class AdminParametroController {
             metadataResponseFields = {"grupo", "clave", "valorAnterior", "valorNuevo"}, metadataRequestFields = {"motivo"})
     public ResponseEntity<ApiDataResponse<ParametroActualizadoResponse>> actualizarParametro(
             @PathVariable("id") final UUID id,
-            @RequestBody final ActualizarParametroRequest request
+            @Valid @RequestBody final ActualizarParametroRequest request
     ) {
         RequestValidationGuard.validate(VALIDATOR.validate(request));
         final var resultado = actualizarParametro.execute(new ActualizarParametroInputPort.Comando(
@@ -96,6 +99,10 @@ public class AdminParametroController {
     }
 
     /** {@code fechaModificacionEsperada}: ISO-8601 UTC con milisegundos, exactamente como la entrego el GET. */
-    public record ActualizarParametroRequest(String valor, String fechaModificacionEsperada, String motivo) {
+    public record ActualizarParametroRequest(
+            @NotBlank(message = "El valor es obligatorio.") @Size(max = 4000, message = "El valor no puede superar 4000 caracteres.") String valor,
+            @NotBlank(message = "La versión leída del parámetro es obligatoria.") String fechaModificacionEsperada,
+            @NotBlank(message = "El motivo es obligatorio.") @Size(max = 500, message = "El motivo no puede superar 500 caracteres.") String motivo
+    ) {
     }
 }

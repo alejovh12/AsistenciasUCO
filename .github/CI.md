@@ -45,31 +45,22 @@ Solo en pull requests. Requiere que GitHub Dependency Graph esté habilitado en 
 
 Analiza Java/Kotlin con CodeQL. Debe conservarse activo para PR y push hacia las ramas protegidas.
 
-### `integration.yml` — integración con SQL Server
+### `integration.yml` — integración con SQL Server (PRU-04)
 
-Workflow manual mientras la DB se mantenga en un repositorio independiente y no exista una estrategia versionada de provisioning cross-repo.
+Corre en cada `pull_request` a `develop` (y manual con la entrada `db_ref`). Diseño:
 
-Requiere:
+1. SQL Server efímero (`mcr.microsoft.com/mssql/server:2022-CU20-GDR1-ubuntu-22.04`) levantado con `docker run` dentro del job, en `127.0.0.1:1433`. No se usa `services:` porque el contenedor de servicio se crea antes de los pasos y no puede recibir una contraseña generada en la ejecución; así no hace falta ningún secreto de BD.
+2. Contraseñas de `sa` y de MinIO generadas con `openssl rand` en cada ejecución y enmascaradas (`::add-mask::`); mueren con el job.
+3. El esquema se despliega haciendo checkout del repo público de BD (`johnjduque/gestion-asistencia-db`, rama `develop` por defecto) y corriendo su `deploy_schema.ps1`, el mismo que usa el CI de BD (tablas, triggers, funciones, vistas, SP, seguridad y semillas).
+4. MinIO y ClamAV para los IT de soportes salen de `infra/files/compose.yaml` (`up --wait` + `minio-init`).
+5. `./mvnw verify -Pintegration` con `SPRING_DATASOURCE_*` apuntando al contenedor y `APP_DATABASE_EXPECTED_NAME=gestionasistenciadb`.
+6. Reportes Surefire y Failsafe como artifacts; limpieza de contenedores al final.
 
-#### Secrets
+Cuando un PR del backend dependa de un cambio de esquema aún no unido en `develop` de BD, correr el workflow manual con `db_ref` apuntando a la rama de BD. Volverlo required check cuando tenga una racha de ejecuciones verdes.
 
-- `CI_SPRING_DATASOURCE_URL`
-- `CI_SPRING_DATASOURCE_USERNAME`
-- `CI_SPRING_DATASOURCE_PASSWORD`
+### `security.yml` — gitleaks (SEC-05/SEC-08)
 
-#### Repository variable
-
-- `CI_APP_DATABASE_EXPECTED_NAME`
-
-Ejecuta:
-
-```bash
-./mvnw clean verify -Pintegration
-```
-
-y conserva Surefire y Failsafe como artifacts.
-
-No debe convertirse en required check hasta contar con una DB CI reproducible y versionada. No debe apuntar a una DB personal ni de producción.
+Job `Gitleaks Secret Scan`: binario oficial `gitleaks 8.30.1` con SHA-256 fijado, configuración `.github/gitleaks.toml` (reglas por defecto + falsos positivos conocidos). Escanea solo los commits del PR (`base..head`) o del push (`before..after`); el historial anterior tiene valores invalidados por la rotación de credenciales y no se reescribe.
 
 ## Sonar y evidencia de ejecución
 
@@ -88,7 +79,7 @@ Configurar GitHub Rulesets para `develop` y `master`:
 - Block branch deletion.
 - No bypass salvo administración explícita para recuperación.
 
-`Backend Integration Gate` se mantendrá manual hasta disponer de infraestructura CI reproducible.
+- Required (recomendado tras una racha verde): `Backend Integration Gate` y `Gitleaks Secret Scan`.
 
 ## Principios que CI debe preservar
 
@@ -121,4 +112,4 @@ Backend Quality Gate: Maven clean verify y XML JaCoCo PASS; SonarCloud FAIL por 
 
 ## SEC-001 — Trivy + evidencia ArchUnit dirigida (postmerge PR #15)
 
-Workflow adicional [security-deep-scan.yml](workflows/security-deep-scan.yml) ejecuta ArchUnit dirigido y Trivy filesystem/imagen con versión/commit verificados. Primera etapa **report-only**: un run verde no equivale a 0 vulnerabilidades. El equipo debe revisar SARIF y aprobar el cambio a fail-on y required checks. Ver [runbook](../docs/testing/TRIVY_ARCHUNIT_RUNBOOK.md) y [work item](../docs/work-items/SEC-001-trivy-archunit/PLAN.md). No reemplaza CodeQL, Sonar o SQL integration.
+Workflow adicional [security-deep-scan.yml](workflows/security-deep-scan.yml) ejecuta ArchUnit dirigido y Trivy filesystem/imagen con versión/commit verificados. Desde VAL oleada 2 bloquea HIGH/CRITICAL con corrección disponible (inventario SARIF aparte); excepciones justificadas en `.trivyignore`. Todas las acciones están fijadas por SHA y Dependabot (`.github/dependabot.yml`) propone sus actualizaciones semanalmente. Ver [runbook](../docs/testing/TRIVY_ARCHUNIT_RUNBOOK.md) y [work item](../docs/work-items/SEC-001-trivy-archunit/PLAN.md). No reemplaza CodeQL, Sonar o SQL integration.

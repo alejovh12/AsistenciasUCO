@@ -14,6 +14,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.tomaa
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.tomaasistencia.response.TomaAsistenciaHttpResponses.LoteTomaResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -59,7 +60,7 @@ public final class TomaAsistenciaController {
     @AuditableOperation(action = "CERRAR_TOMA_ASISTENCIA", resourceType = "TOMA_ASISTENCIA", resourceIdPathVariable = "tomaId")
     public ResponseEntity<ApiDataResponse<CierreTomaResponse>> cerrar(
             @PathVariable final UUID tomaId,
-            @RequestBody(required = false) final TomaAsistenciaRequests.CerrarToma request
+            @Valid @RequestBody(required = false) final TomaAsistenciaRequests.CerrarToma request
     ) {
         return ResponseEntity.ok(new ApiDataResponse<>(true, CierreTomaResponse.from(cerrarToma.execute(new CerrarTomaAsistenciaInputPort.Comando(
                 tomaId, request == null ? null : request.marcarAusentes(), authenticatedUserResolver.requireAuthenticatedUserId())))));
@@ -69,7 +70,7 @@ public final class TomaAsistenciaController {
     @AuditableOperation(action = "REGISTRAR_ASISTENCIAS_TOMA", resourceType = "TOMA_ASISTENCIA", resourceIdPathVariable = "tomaId")
     public ResponseEntity<ApiDataResponse<LoteTomaResponse>> registrar(
             @PathVariable final UUID tomaId,
-            @RequestBody(required = false) final TomaAsistenciaRequests.LoteToma request
+            @Valid @RequestBody(required = false) final TomaAsistenciaRequests.LoteToma request
     ) {
         final List<RegistrarAsistenciasTomaInputPort.Registro> registros = request == null || request.registros() == null ? null
                 : request.registros().stream()

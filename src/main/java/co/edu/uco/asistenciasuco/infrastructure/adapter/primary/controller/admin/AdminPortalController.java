@@ -47,6 +47,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.BeanValidationPatterns;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.BeanValidationCodes;
+import jakarta.validation.constraints.Positive;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.NonEmptyUuid;
 
 @RestController
 @RequestMapping("/api/v1/admin")
@@ -125,7 +134,7 @@ public final class AdminPortalController {
 
     @AuditableOperation(action = "CREAR_DECANO", resourceType = "DECANO", metadataRequestFields = {"idFacultad"})
     @PostMapping("/decanos")
-    public ResponseEntity<ApiDataResponse<CrearDecanoResponse>> crearDecano(@RequestBody final CrearDecanoRequest request) {
+    public ResponseEntity<ApiDataResponse<CrearDecanoResponse>> crearDecano(@Valid @RequestBody final CrearDecanoRequest request) {
         RequestValidationGuard.validate(CREAR_DECANO_VALIDATOR.validate(request));
         final var facultadNueva = request.facultadNueva();
         final var resultado = crearDecanoInputPort.execute(new CrearDecanoDTO(
@@ -154,7 +163,7 @@ public final class AdminPortalController {
 
     @AuditableOperation(action = "CIERRE_MASIVO_PERIODO", resourceType = "PERIODO_ACADEMICO", resourceIdRequestField = "idPeriodoAcademico")
     @PostMapping("/cierre-masivo")
-    public ResponseEntity<ApiMessageResponse> ejecutarCierreMasivo(@RequestBody final CierreMasivoRequest request) {
+    public ResponseEntity<ApiMessageResponse> ejecutarCierreMasivo(@Valid @RequestBody final CierreMasivoRequest request) {
         RequestValidationGuard.validate(CIERRE_MASIVO_VALIDATOR.validate(request));
         ejecutarCierreMasivoInputPort.execute(new EjecutarCierreMasivoDTO(
                 request.idPeriodoAcademico(),
@@ -186,7 +195,7 @@ public final class AdminPortalController {
     }
     @AuditableOperation(action = "CREAR_FACULTAD", resourceType = "FACULTAD", resourceIdResponseField = "id")
     @PostMapping("/facultades")
-    public ResponseEntity<ApiDataResponse<FacultadDTO>> crearFacultad(@RequestBody final CrearFacultadRequest request) {
+    public ResponseEntity<ApiDataResponse<FacultadDTO>> crearFacultad(@Valid @RequestBody final CrearFacultadRequest request) {
         RequestValidationGuard.validate(FACULTAD_VALIDATOR.validarCreacion(request));
         final UUID actorId = authenticatedUserResolver.requireAuthenticatedUserId();
         final UUID facultadId = UUID.randomUUID();
@@ -221,7 +230,7 @@ public final class AdminPortalController {
     @PutMapping("/facultades/{id}")
     public ResponseEntity<ApiDataResponse<FacultadDTO>> actualizarFacultad(
             @PathVariable final UUID id,
-            @RequestBody final ActualizarFacultadRequest request
+            @Valid @RequestBody final ActualizarFacultadRequest request
     ) {
         RequestValidationGuard.validate(FACULTAD_VALIDATOR.validarActualizacion(request));
         actualizarFacultadInputPort.execute(new ActualizarFacultadDTO(
@@ -236,7 +245,7 @@ public final class AdminPortalController {
     @PatchMapping("/facultades/{id}/estado")
     public ResponseEntity<ApiDataResponse<FacultadDTO>> cambiarEstadoFacultad(
             @PathVariable final UUID id,
-            @RequestBody final CambiarEstadoFacultadRequest request
+            @Valid @RequestBody final CambiarEstadoFacultadRequest request
     ) {
         cambiarEstadoFacultadInputPort.execute(new CambiarEstadoFacultadDTO(
                 id,
@@ -259,24 +268,48 @@ public final class AdminPortalController {
                 .orElseThrow(() -> new ResourceNotFoundException("La facultad especificada no existe en el sistema."));
     }
 
-    public record CrearDecanoRequest(UUID tipoIdentificacionId, Integer numeroIdentificacion, String primerNombre,
-                                     String segundoNombre, String primerApellido, String segundoApellido, String correo,
-                                     String password, UUID idFacultad, FacultadNuevaRequest facultadNueva) {
+    public record CrearDecanoRequest(
+            @NotNull(message = "El tipo de identificacion es obligatorio.") @NonEmptyUuid(message = "El tipo de identificacion es obligatorio.", payload = BeanValidationCodes.Required.class) UUID tipoIdentificacionId,
+            @NotNull(message = "El numero de identificacion es obligatorio y debe ser positivo.") @Positive(message = "El numero de identificacion es obligatorio y debe ser positivo.", payload = BeanValidationCodes.InvalidFormat.class) Integer numeroIdentificacion,
+            @NotBlank(message = "El campo primerNombre es obligatorio.") @Size(max = 50, message = "El campo primerNombre no puede superar 50 caracteres.") String primerNombre,
+            @Size(max = 50, message = "El campo segundoNombre no puede superar 50 caracteres.") String segundoNombre,
+            @NotBlank(message = "El campo primerApellido es obligatorio.") @Size(max = 50, message = "El campo primerApellido no puede superar 50 caracteres.") String primerApellido,
+            @Size(max = 50, message = "El campo segundoApellido no puede superar 50 caracteres.") String segundoApellido,
+            @NotBlank(message = "El correo es obligatorio.") @Size(max = 255, message = "El correo no puede superar 255 caracteres.") @Pattern(regexp = BeanValidationPatterns.EMAIL_OR_BLANK, message = "El correo no tiene un formato valido.") String correo,
+            String password,
+            UUID idFacultad,
+            @Valid FacultadNuevaRequest facultadNueva
+    ) {
     }
 
     /** Facultad que se crea junto con el decano (DEC-065 (5)); excluyente con {@code idFacultad}. */
-    public record FacultadNuevaRequest(String nombre, String codigo, UUID idInstitucion) {
+    public record FacultadNuevaRequest(
+            @NotBlank(message = "El nombre de la facultad debe tener entre 3 y 50 caracteres.", payload = BeanValidationCodes.InvalidLength.class)
+            @Size(min = 3, max = 50, message = "El nombre de la facultad debe tener entre 3 y 50 caracteres.") String nombre,
+            @Size(max = 20, message = "El codigo de la facultad no puede superar 20 caracteres.") String codigo,
+            @NotNull(message = "La institucion de la facultad es obligatoria.") @NonEmptyUuid(message = "La institucion de la facultad es obligatoria.", payload = BeanValidationCodes.Required.class) UUID idInstitucion
+    ) {
     }
 
-    public record CrearFacultadRequest(String nombre, String codigo, UUID idInstitucion, UUID idDecano) {
+    public record CrearFacultadRequest(
+            @NotBlank(message = "El nombre de la facultad es obligatorio.") @Size(min = 3, max = 50, message = "El nombre de la facultad debe tener entre 3 y 50 caracteres.") String nombre,
+            String codigo,
+            UUID idInstitucion,
+            @NotNull(message = "El decano titular de la facultad es obligatorio.") @NonEmptyUuid(message = "El decano titular de la facultad es obligatorio.", payload = BeanValidationCodes.Required.class) UUID idDecano
+    ) {
     }
 
-    public record ActualizarFacultadRequest(String nombre, UUID idDecano) {
+    public record ActualizarFacultadRequest(
+            @Size(max = 50, message = "El nombre de la facultad debe tener entre 3 y 50 caracteres.") String nombre,
+            UUID idDecano
+    ) {
     }
 
     public record CambiarEstadoFacultadRequest(Boolean activa) {
     }
 
-    public record CierreMasivoRequest(UUID idPeriodoAcademico) {
+    public record CierreMasivoRequest(
+            @NotNull(message = "El periodo academico es obligatorio.") @NonEmptyUuid(message = "El periodo academico es obligatorio.", payload = BeanValidationCodes.Required.class) UUID idPeriodoAcademico
+    ) {
     }
 }

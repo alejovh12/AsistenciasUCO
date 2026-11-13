@@ -3,7 +3,7 @@ status: active
 type: runbook
 scope: backend
 owner: backend-team
-last-reviewed: 2026-09-20
+last-reviewed: 2026-11-12
 ---
 
 # Guia de validacion del backend
@@ -12,7 +12,7 @@ last-reviewed: 2026-09-20
 
 Las validaciones se distribuyen asi:
 
-- HTTP request: validators propios + `RequestValidationGuard` y configuración JSON estricta; ver [input-validation](../architecture/input-validation.md). No usa Jakarta Bean Validation como mecanismo de entrada.
+- HTTP request: Jakarta Bean Validation (`@Valid` en el `@RequestBody`, primera barrera, ROL-06) + validators propios + `RequestValidationGuard` y configuración JSON estricta; ver [input-validation](../architecture/input-validation.md).
 - Application/domain: invariantes funcionales y normalizacion.
 - Infrastructure adapter: contrato JDBC/SQL Server, transaccion y traduccion SQL -> `ApplicationException`.
 - `GlobalExceptionHandler`: traduccion semantica a HTTP y respuestas seguras.

@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.securitybaseline;
 
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.SecurityBaselinePepProperties;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import jakarta.servlet.http.HttpServletRequest;
 import tools.jackson.databind.ObjectMapper;
 
@@ -43,23 +44,58 @@ public class SecurityBaselinePepClient {
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
     private final SecurityBaselinePepProperties properties;
+    /** REA-02: {@code null} solo en pruebas unitarias del contrato HTTP; el Composition Root siempre lo entrega. */
+    private final CircuitBreaker circuitBreaker;
 
     public SecurityBaselinePepClient(
             final HttpClient httpClient,
             final ObjectMapper objectMapper,
             final SecurityBaselinePepProperties properties
     ) {
+        this(httpClient, objectMapper, properties, null);
+    }
+
+    public SecurityBaselinePepClient(
+            final HttpClient httpClient,
+            final ObjectMapper objectMapper,
+            final SecurityBaselinePepProperties properties,
+            final CircuitBreaker circuitBreaker
+    ) {
         this.httpClient = httpClient;
         this.objectMapper = objectMapper;
         this.properties = properties;
+        this.circuitBreaker = circuitBreaker;
     }
 
+    /**
+     * REA-02: con el circuit breaker abierto no se llama al PEP (no se espera {@code request-timeout}) y la decision es
+     * {@code UNAVAILABLE}: el filtro sigue respondiendo 503 (fail-closed). Solo cuenta como fallo una decision
+     * {@code UNAVAILABLE} (PEP caido, timeout, 5xx o respuesta anomala); 204/401/403 son respuestas sanas del PEP.
+     */
     public PepDecision evaluate(final HttpServletRequest request, final String correlationId) {
         final String authorization = singleBearer(request);
         if (authorization == null) {
             // Sin un único Bearer bien formado no hay credencial que evaluar: nunca se degrada a cookie.
             return new PepDecision(PepDecision.Outcome.UNAUTHORIZED, null);
         }
+        if (circuitBreaker == null) {
+            return consultar(request, authorization, correlationId);
+        }
+        if (!circuitBreaker.tryAcquirePermission()) {
+            return unavailable();
+        }
+        final long inicio = circuitBreaker.getCurrentTimestamp();
+        final PepDecision decision = consultar(request, authorization, correlationId);
+        final long duracion = circuitBreaker.getCurrentTimestamp() - inicio;
+        if (decision.outcome() == PepDecision.Outcome.UNAVAILABLE) {
+            circuitBreaker.onError(duracion, circuitBreaker.getTimestampUnit(), new PepUnavailableException());
+        } else {
+            circuitBreaker.onSuccess(duracion, circuitBreaker.getTimestampUnit());
+        }
+        return decision;
+    }
+
+    private PepDecision consultar(final HttpServletRequest request, final String authorization, final String correlationId) {
         try {
             final String requestId = UUID.randomUUID().toString();
             final String body = objectMapper.writeValueAsString(new EmbeddedAccessDecisionRawRequest(
@@ -124,6 +160,13 @@ public class SecurityBaselinePepClient {
 
     private PepDecision unavailable() {
         return new PepDecision(PepDecision.Outcome.UNAVAILABLE, null);
+    }
+
+    /** Marca para el circuit breaker; nunca sale de este adaptador ni lleva datos de la peticion. */
+    static final class PepUnavailableException extends RuntimeException {
+        PepUnavailableException() {
+            super("PEP no disponible", null, false, false);
+        }
     }
 
     private record EmbeddedAccessDecisionRawRequest(

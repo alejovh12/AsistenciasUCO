@@ -6,6 +6,7 @@ import co.edu.uco.asistenciasuco.application.features.admin.gestionarperiodoacad
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin.request.GuardarPeriodoAcademicoRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,7 +47,7 @@ public final class AdminPeriodoAcademicoController {
 
     @AuditableOperation(action = "CREAR_PERIODO_ACADEMICO", resourceType = "PERIODO_ACADEMICO", metadataRequestFields = {"nombre"})
     @PostMapping
-    public ResponseEntity<ApiDataResponse<PeriodoCreadoResponse>> crear(@RequestBody final GuardarPeriodoAcademicoRequest request) {
+    public ResponseEntity<ApiDataResponse<PeriodoCreadoResponse>> crear(@Valid @RequestBody final GuardarPeriodoAcademicoRequest request) {
         final UUID id = gestionarPeriodoAcademicoInputPort.crear(toDTO(null, request));
         // CULM-001 D.9-a (F-ADM-030): 201 con el periodo creado (antes 200 con datos nulos).
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiDataResponse<>(true,
@@ -72,7 +73,7 @@ public final class AdminPeriodoAcademicoController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiDataResponse<Void>> actualizar(
             @PathVariable final UUID id,
-            @RequestBody final GuardarPeriodoAcademicoRequest request
+            @Valid @RequestBody final GuardarPeriodoAcademicoRequest request
     ) {
         gestionarPeriodoAcademicoInputPort.actualizar(toDTO(id, request));
         return ResponseEntity.ok(new ApiDataResponse<>(true, null));

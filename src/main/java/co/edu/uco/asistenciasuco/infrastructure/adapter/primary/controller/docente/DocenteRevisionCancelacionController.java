@@ -12,6 +12,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.valid
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -66,7 +67,7 @@ public final class DocenteRevisionCancelacionController {
     @AuditableOperation(action = "DECIDIR_REVISION_CANCELACION", resourceType = "REVISION_CANCELACION", resourceIdPathVariable = "revisionId")
     public ResponseEntity<ApiDataResponse<DecisionRevisionCancelacionResponse>> decidir(
             @PathVariable final UUID revisionId,
-            @RequestBody(required = false) final DecisionRevisionCancelacionRequest request
+            @Valid @RequestBody(required = false) final DecisionRevisionCancelacionRequest request
     ) {
         RequestValidationGuard.validate(VALIDATOR.validate(request));
         Objects.requireNonNull(request, "La decision es obligatoria.");

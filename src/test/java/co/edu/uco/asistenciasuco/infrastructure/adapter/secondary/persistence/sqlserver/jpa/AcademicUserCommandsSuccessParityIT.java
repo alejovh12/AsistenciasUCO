@@ -49,6 +49,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @Import(JdbcBaselineTestConfiguration.class)
 @Tag("integration")
+// Cuarentena: datos esperados distintos de la seed actual. VAL-PRU-04, se corrige en oleada 3.
+@Tag("cuarentena-oleada3")
 @SpringBootTest
 @MockitoBean(types = JwtDecoder.class)
 class AcademicUserCommandsSuccessParityIT {

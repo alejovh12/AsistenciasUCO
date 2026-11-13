@@ -19,6 +19,8 @@ COPY docs/contracts/openapi/openapi-golden-path.yaml docs/contracts/openapi/open
 COPY docs/contracts/openapi/openapi-golden-path.sha256 docs/contracts/openapi/openapi-golden-path.sha256
 # AccessCatalogConsistencyTest contrasta Spring MVC y SecurityConfig con el catalogo de acceso compartido.
 COPY infra/security-baseline/access-catalog.json infra/security-baseline/access-catalog.json
+# OperationalReadinessConfigurationTest (F12-09) lee el propio Dockerfile para verificar HEALTHCHECK y ENTRYPOINT.
+COPY Dockerfile Dockerfile
 RUN --mount=type=secret,id=m2settings,target=/root/.m2/settings.xml,required=false ./mvnw -B -ntp clean verify
 
 FROM eclipse-temurin:25-jre-alpine
@@ -31,4 +33,11 @@ RUN apk upgrade --no-cache libpng zlib
 # JAR is copied as world-readable and Java can use /tmp on Alpine.
 USER 10001:10001
 EXPOSE 8080
+# F12-09 / OBS-10: Actuator vive en el puerto de gestion (MANAGEMENT_SERVER_PORT, 8090 por defecto) y escucha en loopback
+# dentro del contenedor, asi que el healthcheck local llega sin exponer ese puerto. Se usa la sonda de readiness (BD lista y
+# contexto arrancado); wget es el de BusyBox de la imagen Alpine. start-period cubre el arranque de Spring y la carga de
+# configuracion externa.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
+    CMD ["sh", "-c", "wget -q -O /dev/null \"http://127.0.0.1:${MANAGEMENT_SERVER_PORT:-8090}/actuator/health/readiness\" || exit 1"]
+# F12-09: exec form => la JVM es el PID 1 y recibe SIGTERM directamente (apagado elegante de server.shutdown=graceful).
 ENTRYPOINT ["java", "-jar", "app.jar"]

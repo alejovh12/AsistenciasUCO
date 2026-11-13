@@ -10,6 +10,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.matri
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -70,7 +71,7 @@ public final class MatriculaQrPublicaController {
 
     @PostMapping("/validar")
     public ResponseEntity<ApiDataResponse<CursoMatriculaQrResponse>> validar(
-            @RequestBody final MatriculaQrRequests.Credencial request,
+            @Valid @RequestBody final MatriculaQrRequests.Credencial request,
             final HttpServletRequest http
     ) {
         RequestValidationGuard.validate(VALIDATOR.validarCredencial(request));
@@ -85,7 +86,7 @@ public final class MatriculaQrPublicaController {
 
     @PostMapping("/registro")
     public ResponseEntity<ApiDataResponse<MatriculaQrResultadoResponse>> registrar(
-            @RequestBody final MatriculaQrRequests.Registro request,
+            @Valid @RequestBody final MatriculaQrRequests.Registro request,
             final HttpServletRequest http
     ) {
         RequestValidationGuard.validate(VALIDATOR.validarRegistro(request));

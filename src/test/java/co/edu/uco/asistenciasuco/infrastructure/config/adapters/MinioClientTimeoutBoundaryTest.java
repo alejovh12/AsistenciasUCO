@@ -95,6 +95,9 @@ class MinioClientTimeoutBoundaryTest {
                 READ_TIMEOUT_MILLIS,
                 READ_TIMEOUT_MILLIS,
                 READ_TIMEOUT_MILLIS);
-        return new MinioStorageAdapterConfiguration().fileStoragePort(properties);
+        // REA-02: sin registro configurado el Composition Root usa un breaker por defecto (cerrado al inicio).
+        return new MinioStorageAdapterConfiguration().fileStoragePort(properties,
+                new org.springframework.beans.factory.support.StaticListableBeanFactory()
+                        .getBeanProvider(io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry.class));
     }
 }
