@@ -424,4 +424,96 @@ class CatalogoParametrosHttpParameterCatalogAdapterTest {
         assertThrows(IllegalArgumentException.class, () -> a.getParameterAs("N", "ENTERO", java.math.BigDecimal.class));
         assertThrows(ParameterNotFoundException.class, () -> a.getParameterAs("N", "NOPE", Integer.class));
     }
+
+    @Test
+    void primera_carga_fallida_no_reintenta_durante_la_gracia() throws Exception {
+        when(http.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                .thenThrow(new HttpTimeoutException("el catalogo tardo demasiado"));
+        final var a = adaptor(Duration.ofMinutes(5));
+
+        assertThrows(ParameterCatalogException.class, () -> a.getParameter("G", "SINACTIVO"));
+        final var e = assertThrows(ParameterCatalogException.class, () -> a.getParameter("G", "SINACTIVO"));
+        assertThrows(ParameterCatalogException.class, () -> a.getParameter("N", "ENTERO"));
+
+        // Gracia = min(TTL 5 min, 30 s): las lecturas siguientes fallan al instante sin volver a llamar al Catalogo.
+        verify(http, times(1)).send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
+        assertFalse(e.getMessage().contains(SECRETO));
+    }
+
+    @Test
+    void primera_carga_con_respuesta_no_2xx_tambien_activa_la_gracia() throws Exception {
+        responde(503, "{}");
+        final var a = adaptor(Duration.ofMinutes(5));
+
+        assertThrows(ParameterCatalogException.class, () -> a.getParameter("G", "SINACTIVO"));
+        assertThrows(ParameterCatalogException.class, () -> a.getParameter("G", "SINACTIVO"));
+
+        verify(http, times(1)).send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
+    }
+
+    @Test
+    void primera_carga_fallida_reintenta_pasada_la_gracia() throws Exception {
+        final HttpResponse<String> ok = respuesta(200, JSON);
+        when(http.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                .thenThrow(new IOException("conexion rechazada"))
+                .thenReturn(ok);
+        final var a = adaptor(Duration.ofMillis(1));
+
+        assertThrows(ParameterCatalogException.class, () -> a.getParameter("G", "SINACTIVO"));
+        Thread.sleep(10);
+
+        // Con TTL 1 ms la gracia es 1 ms: pasada la gracia la lectura vuelve a cargar de forma sincrona.
+        assertEquals("presente", a.getParameter("G", "SINACTIVO").orElseThrow());
+        verify(http, times(2)).send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
+    }
+
+    @Test
+    void ttl_cero_sin_gracia_reintenta_en_cada_lectura_tras_un_fallo() throws Exception {
+        when(http.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                .thenThrow(new IOException("conexion rechazada"));
+        final var a = adaptor(Duration.ZERO);
+
+        assertThrows(ParameterCatalogException.class, () -> a.getParameter("G", "SINACTIVO"));
+        assertThrows(ParameterCatalogException.class, () -> a.getParameter("G", "SINACTIVO"));
+
+        verify(http, times(2)).send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
+    }
+
+    @Test
+    void lecturas_concurrentes_con_la_primera_carga_fallida_hacen_una_sola_peticion() throws Exception {
+        final java.util.concurrent.CountDownLatch dentro = new java.util.concurrent.CountDownLatch(1);
+        final java.util.concurrent.CountDownLatch soltar = new java.util.concurrent.CountDownLatch(1);
+        when(http.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenAnswer(invocation -> {
+            dentro.countDown();
+            soltar.await();
+            throw new HttpTimeoutException("el catalogo tardo demasiado");
+        });
+        final var a = adaptor(Duration.ofMinutes(5));
+        final java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(2);
+        try {
+            final var primera = pool.submit(() -> a.getParameter("G", "SINACTIVO"));
+            dentro.await();
+            final java.util.concurrent.atomic.AtomicReference<Thread> segundoHilo = new java.util.concurrent.atomic.AtomicReference<>();
+            final var segunda = pool.submit(() -> {
+                segundoHilo.set(Thread.currentThread());
+                return a.getParameter("G", "SINACTIVO");
+            });
+            while (segundoHilo.get() == null || segundoHilo.get().getState() != Thread.State.WAITING) {
+                Thread.sleep(5);
+            }
+            soltar.countDown();
+
+            final var e1 = assertThrows(java.util.concurrent.ExecutionException.class,
+                    () -> primera.get(5, java.util.concurrent.TimeUnit.SECONDS));
+            final var e2 = assertThrows(java.util.concurrent.ExecutionException.class,
+                    () -> segunda.get(5, java.util.concurrent.TimeUnit.SECONDS));
+            assertTrue(e1.getCause() instanceof ParameterCatalogException);
+            assertTrue(e2.getCause() instanceof ParameterCatalogException);
+            // El segundo lector no repite la peticion que acaba de fallar: falla al instante dentro de la gracia.
+            verify(http, times(1)).send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
+        } finally {
+            soltar.countDown();
+            pool.shutdownNow();
+        }
+    }
 }

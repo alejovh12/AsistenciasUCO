@@ -30,7 +30,8 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * <p>Una sola llamada {@code GET {baseUrl}/tokens/{tokenId}/parametros} trae todos los parametros y se conserva en
  * memoria mientras no venza {@code cacheTtl}. La primera carga es sincrona (si falla, propaga
- * {@link ParameterCatalogException} y el decorador DEC-018 aplica el valor por defecto). Cuando la cache vence se siguen
+ * {@link ParameterCatalogException} y el decorador DEC-018 aplica el valor por defecto; durante la misma gracia que el
+ * refresco, las lecturas siguientes fallan al instante sin volver a llamar). Cuando la cache vence se siguen
  * sirviendo los valores vencidos y se refresca en segundo plano con una sola peticion en vuelo: una lectura nunca espera
  * por el componente despues de la primera carga. Si el refresco falla se conservan los valores vencidos, se escribe un
  * WARN y no se reintenta hasta pasada una gracia ({@link #GRACIA_MAXIMA_TRAS_FALLO}, acotada por el TTL), de modo que un
@@ -136,7 +137,11 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
         return ttlNanos > 0 && candidato != null && System.nanoTime() - candidato.cargadoEn() < ttlNanos;
     }
 
-    /** Primera carga (o sin cache): una sola peticion aunque lleguen lecturas concurrentes; un fallo se propaga. */
+    /**
+     * Primera carga (o sin cache): una sola peticion aunque lleguen lecturas concurrentes; un fallo se propaga. Tras un
+     * fallo, durante la gracia las lecturas fallan al instante sin volver a llamar (el decorador DEC-018 aplica el valor
+     * por defecto): asi un Catalogo caido al arrancar no hace esperar el timeout a cada lectura, en serie por el lock.
+     */
     private Map<String, String> cargarBloqueando() {
         lock.lock();
         try {
@@ -144,12 +149,27 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
             if (vigente(recheck)) {
                 return recheck.valores();
             }
-            final Map<String, String> cargados = interpretarRespuesta(enviar());
-            snapshot = new Snapshot(cargados, System.nanoTime());
-            return cargados;
+            if (System.nanoTime() - reintentarDesde < 0) {
+                throw new ParameterCatalogException(
+                        "Catalogo de Parametros no disponible; la carga se reintentara al terminar la gracia.");
+            }
+            try {
+                final Map<String, String> cargados = interpretarRespuesta(enviar());
+                snapshot = new Snapshot(cargados, System.nanoTime());
+                return cargados;
+            } catch (final ParameterCatalogException exception) {
+                registrarFalloDeCarga(exception.getMessage());
+                throw exception;
+            }
         } finally {
             lock.unlock();
         }
+    }
+
+    private void registrarFalloDeCarga(final String detalle) {
+        reintentarDesde = System.nanoTime() + graciaNanos;
+        LOGGER.warn("Catalogo de Parametros no disponible en la carga inicial; se aplican los valores por defecto y no se "
+                + "reintenta durante {} s. causa={}", graciaNanos / 1_000_000_000L, detalle);
     }
 
     /** Cache vencida: un solo refresco en vuelo; mientras tanto (y si falla) se sirven los valores vencidos. */
