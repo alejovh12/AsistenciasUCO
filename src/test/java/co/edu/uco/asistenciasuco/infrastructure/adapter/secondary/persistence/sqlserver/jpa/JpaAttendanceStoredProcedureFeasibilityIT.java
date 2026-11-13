@@ -72,8 +72,6 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @Import(JdbcBaselineTestConfiguration.class)
 @Tag("integration")
-// Cuarentena: el SP no completa (fixture sin horario confirmado). VAL-PRU-04, se corrige en oleada 3.
-@Tag("cuarentena-oleada3")
 @SpringBootTest(properties = {
         "spring.datasource.hikari.maximum-pool-size=1",
         // Solo texto SQL (sin valores enlazados): evidencia de la sintaxis {call ...} que emite Hibernate.

@@ -51,8 +51,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * estudiante y consolidado por sesion de GET /grupos/{id}/asistencias con dos tomas.
  */
 @Tag("integration")
-// Cuarentena: esperado 4 tomas, real 20 (regla de tomas por puntos de control). VAL-PRU-04, se corrige en oleada 3.
-@Tag("cuarentena-oleada3")
 @SpringBootTest
 @MockitoBean(types = JwtDecoder.class)
 class TomaAsistenciaQrSqlServerIT {
@@ -148,7 +146,13 @@ class TomaAsistenciaQrSqlServerIT {
         final ConsultarTomasSesionInputPort.Resultado tomas = consultarTomas.execute(new ConsultarTomasSesionInputPort.Consulta(grupo.sesion(), docente));
         assertEquals(2, tomas.tomas().tomas().size());
         assertTrue(tomas.tomas().ventanaAbierta());
-        assertEquals(4, tomas.tomas().maximoTomas());
+        // DEC-066 (puntos de control): el tope es el parametro TOMA_ASISTENCIA/MAXIMO_TOMAS_POR_SESION (20 desde la
+        // migracion 37, antes 4). Se compara contra el valor vigente de la BD y contra el valor aprobado.
+        final Integer topeParametro = jdbcTemplate.queryForObject(
+                "SELECT CAST(valor AS INT) FROM dbo.uv_parametro WHERE grupo = 'TOMA_ASISTENCIA' AND clave = 'MAXIMO_TOMAS_POR_SESION'",
+                Integer.class);
+        assertEquals(20, topeParametro);
+        assertEquals(topeParametro, tomas.tomas().maximoTomas());
 
         // GET /grupos/{id}/asistencias: una fila por estudiante y sesion con el estado consolidado (e1: AN+AN, e2: AN+SJC, e3: SJC+SJC).
         final List<AsistenciaRepositoryProjection> filas = asistencias.consultarAsistenciasPorGrupo(

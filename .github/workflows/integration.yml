@@ -172,8 +172,8 @@ jobs:
       - name: Run integration profile
         shell: bash
         run: |
-          # VAL-PRU-04: las IT con @Tag("cuarentena-oleada3") se excluyen (pom.xml, failsafe.excludedGroups); se corrigen en oleada 3.
-          echo "::notice::IT en cuarentena (tag cuarentena-oleada3) excluidas de este gate; ver VALIDATION.md de VAL-oleada2-cumplimiento."
+          # VAL-PRU-04: una IT con @Tag("cuarentena-oleada3") se excluiria (pom.xml, failsafe.excludedGroups). La oleada 3 corrigio
+          # las 12 que la tenian y hoy ninguna la lleva: el gate corre todas (docs/work-items/VAL-oleada3-pru04).
           ./mvnw -B -ntp --no-transfer-progress verify -Pintegration
 
       - name: Upload unit test reports

@@ -38,8 +38,6 @@ import static org.mockito.Mockito.when;
  * fail-open del publicador. Limpia sus filas en {@code @AfterEach}.
  */
 @Tag("integration")
-// Cuarentena: Unexpected row count (-1) en el insert JPA de AuditoriaEvento. VAL-PRU-04, se corrige en oleada 3.
-@Tag("cuarentena-oleada3")
 @SpringBootTest
 @MockitoBean(types = JwtDecoder.class)
 class AuditEventJpaParityIT {
