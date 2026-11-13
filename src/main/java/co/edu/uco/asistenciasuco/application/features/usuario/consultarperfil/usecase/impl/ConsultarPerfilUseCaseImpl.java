@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.usuario.consultarperfil.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.usuario.consultarperfil.usecase.ConsultarPerfilUseCase;
 import co.edu.uco.asistenciasuco.application.features.usuario.consultarperfil.usecase.domain.PerfilUsuarioDomain;
@@ -26,10 +27,10 @@ public final class ConsultarPerfilUseCaseImpl implements ConsultarPerfilUseCase 
     @Override
     public PerfilUsuarioDomain execute(final UUID actorUsuarioId) {
         if (actorUsuarioId == null) {
-            throw new ValidationException("El usuario autenticado es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_008);
         }
         final PerfilUsuarioProjection p = port.consultarPerfil(actorUsuarioId)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el perfil del usuario autenticado."));
+                .orElseThrow(() -> new ResourceNotFoundException(MensajeUsuarioErrorCode.NOF_APP_012));
         return new PerfilUsuarioDomain(p.idUsuario(), p.codigoTipoIdentificacion(), p.nombreTipoIdentificacion(),
                 p.numeroIdentificacion(), p.primerNombre(), p.segundoNombre(), p.primerApellido(), p.segundoApellido(),
                 p.nombreCompleto(), p.correo(), p.correoConfirmado(), p.estaActivo(),

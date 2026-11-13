@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.estudiante.consultarhorarios.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarhorarios.usecase.ConsultarHorariosEstudianteUseCase;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarhorarios.usecase.domain.HorarioEstudianteDomain;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarhorarios.usecase.mapper.ConsultarHorariosEstudianteRepositoryMapper;
@@ -16,7 +17,7 @@ public final class ConsultarHorariosEstudianteUseCaseImpl implements ConsultarHo
     @Override public List<HorarioEstudianteDomain> execute(final UUID actorUsuarioId) {
         // CULM-001 A.2-11: sin estudiante, 403; el SP recibe el usuario y solo devuelve matriculas inscritas (A).
         scopePort.findEstudianteIdByUsuario(actorUsuarioId)
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver el estudiante autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_004));
         return queryPort.consultarHorarioEstudiante(actorUsuarioId).stream()
                 .map(ConsultarHorariosEstudianteRepositoryMapper::toDomain)
                 .toList();

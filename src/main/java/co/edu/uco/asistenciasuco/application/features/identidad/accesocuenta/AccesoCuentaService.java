@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.identidad.accesocuenta;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.identidad.accesocuenta.primaryports.AccesoCuentaInputPort;
 import co.edu.uco.asistenciasuco.application.features.identidad.accesocuenta.primaryports.dto.AccesoCuentaDTO;
 import co.edu.uco.asistenciasuco.application.features.identidad.accesocuenta.primaryports.dto.AccesoRolDTO;
@@ -90,17 +91,17 @@ public final class AccesoCuentaService implements AccesoCuentaInputPort {
     private Contexto resolver(final UUID actorUsuario, final String correo) {
         Objects.requireNonNull(actorUsuario, "El usuario autenticado es obligatorio.");
         if (correo == null || correo.isBlank()) {
-            throw new ResourceNotFoundException("La cuenta indicada no existe.");
+            throw new ResourceNotFoundException(MensajeUsuarioErrorCode.NOF_APP_010);
         }
         final Set<InstitutionalRole> alcance = alcanceDelActor(actorUsuario);
         if (alcance.isEmpty()) {
-            throw new ForbiddenException("El usuario autenticado no puede gestionar cuentas de acceso.");
+            throw new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_012);
         }
         final String correoNormalizado = correo.trim().toLowerCase(Locale.ROOT);
         final UUID destino = scope.findUsuarioIdByEmail(correoNormalizado)
-                .orElseThrow(() -> new ResourceNotFoundException("La cuenta indicada no existe."));
+                .orElseThrow(() -> new ResourceNotFoundException(MensajeUsuarioErrorCode.NOF_APP_010));
         if (!scope.canGestionarCuenta(actorUsuario, destino)) {
-            throw new ForbiddenException("La cuenta indicada esta fuera del alcance del usuario autenticado.");
+            throw new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_013);
         }
         final Set<InstitutionalRole> esperado = EnumSet.noneOf(InstitutionalRole.class);
         scope.findRolesActivosByUsuario(destino).stream().filter(alcance::contains).forEach(esperado::add);

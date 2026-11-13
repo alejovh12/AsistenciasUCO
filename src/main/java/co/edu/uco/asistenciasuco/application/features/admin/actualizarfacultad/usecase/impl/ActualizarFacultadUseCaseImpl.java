@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.admin.actualizarfacultad.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.admin.actualizarfacultad.usecase.ActualizarFacultadUseCase;
 import co.edu.uco.asistenciasuco.application.features.admin.actualizarfacultad.usecase.domain.ActualizarFacultadDomain;
@@ -18,20 +19,20 @@ public class ActualizarFacultadUseCaseImpl implements ActualizarFacultadUseCase 
     @Override
     public void execute(final ActualizarFacultadDomain domain) {
         if (domain == null) {
-            throw new ValidationException("Los datos de la facultad son obligatorios.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_001);
         }
         if (domain.id() == null) {
-            throw new ValidationException("El identificador de la facultad es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_002);
         }
         if (domain.nombre() == null && domain.idDecano() == null) {
-            throw new ValidationException("Debe indicar al menos el nombre o el decano de la facultad.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_003);
         }
 
         String nombre = null;
         if (domain.nombre() != null) {
             nombre = domain.nombre().trim();
             if (nombre.length() < 3 || nombre.length() > 50) {
-                throw new ValidationException("El nombre de la facultad debe tener entre 3 y 50 caracteres.");
+                throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_004);
             }
         }
 

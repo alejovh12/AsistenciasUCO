@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.docente.consultarasignaturas.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignaturas.usecase.ConsultarAsignaturasDocenteUseCase;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignaturas.usecase.domain.AsignaturaDocenteDomain;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignaturas.usecase.mapper.ConsultarAsignaturasDocenteRepositoryMapper;
@@ -15,7 +16,7 @@ public final class ConsultarAsignaturasDocenteUseCaseImpl implements ConsultarAs
     }
     @Override public List<AsignaturaDocenteDomain> execute(final UUID actorUsuarioId) {
         final UUID idDocente = scopePort.findDocenteIdByUsuario(actorUsuarioId)
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver el docente autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_003));
         return queryPort.consultarAsignaturasDocente(idDocente).stream()
                 .map(ConsultarAsignaturasDocenteRepositoryMapper::toDomain)
                 .toList();

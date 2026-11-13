@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.ConsultarAsistenciasPorGrupoUseCase;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.domain.ConsultarAsistenciasPorGrupoDomain;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.entity.AsistenciaConsultadaEntity;
@@ -42,7 +43,7 @@ public final class ConsultarAsistenciasPorGrupoUseCaseImpl implements ConsultarA
 
         if (institutionalScopePort.findDocenteIdByUsuario(domain.getUsuarioEjecutor()).isPresent()
                 && !institutionalScopePort.canDocenteAccessGrupo(domain.getUsuarioEjecutor(), domain.getGrupo())) {
-            throw new ForbiddenException("El docente autenticado no tiene titularidad sobre el grupo consultado.");
+            throw new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_001);
         }
 
         return ConsultarAsistenciasPorGrupoRepositoryMapper.toUseCaseEntities(

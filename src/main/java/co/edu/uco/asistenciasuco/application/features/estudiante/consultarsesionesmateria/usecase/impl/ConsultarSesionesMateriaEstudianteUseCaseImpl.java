@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.usecase.ConsultarSesionesMateriaEstudianteUseCase;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.usecase.domain.EstadoAsistenciaSesion;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.usecase.domain.SesionMateriaEstudianteDomain;
@@ -77,7 +78,7 @@ public final class ConsultarSesionesMateriaEstudianteUseCaseImpl implements Cons
     @Override public List<SesionMateriaEstudianteDomain> execute(final UUID actorUsuarioId, final UUID idAsignatura,
                                                                  final Integer pagina, final Integer tamano) {
         final UUID idEstudiante = scopePort.findEstudianteIdByUsuario(actorUsuarioId)
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver el estudiante autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_004));
         final int numeroPagina = pagina == null ? 1 : pagina;
         final int tamanoPagina = tamano == null ? tamanoPorDefecto() : tamano;
         final PaginaResultado<SesionMateriaEstudianteProjection> resultado =

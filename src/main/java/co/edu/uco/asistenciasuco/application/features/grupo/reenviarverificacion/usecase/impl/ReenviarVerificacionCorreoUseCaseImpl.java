@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.reenviarverificacion.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.grupo.reenviarverificacion.usecase.ReenviarVerificacionCorreoUseCase;
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notificacion;
@@ -40,10 +41,10 @@ public final class ReenviarVerificacionCorreoUseCaseImpl implements ReenviarVeri
     @Override
     public void execute(final UUID actorUsuarioId, final UUID grupoId, final UUID estudianteId) {
         if (actorUsuarioId == null) {
-            throw new ValidationException("El usuario autenticado es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_008);
         }
         if (grupoId == null || estudianteId == null) {
-            throw new ValidationException("El grupo y el estudiante son obligatorios.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_053);
         }
 
         final UUID idUsuarioEstudiante = repositorio.consultarReenvio(grupoId, estudianteId, actorUsuarioId);

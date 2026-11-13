@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 
@@ -72,9 +73,6 @@ public final class HttpTemporalParser {
 
     private static ValidationException invalidTemporal(final String fieldName, final String expectedFormat) {
         final String normalizedField = TextHelper.isNullOrBlank(fieldName) ? "valor temporal" : fieldName;
-        return new ValidationException(
-                "ERR_FECHA_HORA_INVALIDA",
-                "El campo " + normalizedField + " debe usar formato ISO local " + expectedFormat + "."
-        );
+        return ValidationException.conParametros(MensajeUsuarioErrorCode.VAL_APP_070, normalizedField, expectedFormat);
     }
 }

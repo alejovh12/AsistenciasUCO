@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.estudiante.consultarofertagrupos.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarofertagrupos.usecase.ConsultarOfertaGruposUseCase;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarofertagrupos.usecase.domain.ConsultarOfertaGruposDomain;
@@ -39,22 +40,22 @@ public final class ConsultarOfertaGruposUseCaseImpl implements ConsultarOfertaGr
     @Override
     public OfertaGruposPaginaDomain execute(final ConsultarOfertaGruposDomain domain) {
         if (domain == null) {
-            throw new ValidationException("Los datos de la consulta son obligatorios.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_011);
         }
         final int pagina = domain.pagina() == null ? PAGINA_POR_DEFECTO : domain.pagina();
         final int tamano = domain.tamano() == null ? TAMANO_POR_DEFECTO : domain.tamano();
         if (pagina < 1) {
-            throw new ValidationException("El numero de pagina debe ser mayor o igual a 1.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_041);
         }
         if (tamano < 1 || tamano > TAMANO_MAXIMO) {
-            throw new ValidationException("El tamano de pagina debe estar entre 1 y " + TAMANO_MAXIMO + ".");
+            throw ValidationException.conParametros(MensajeUsuarioErrorCode.VAL_APP_039, TAMANO_MAXIMO);
         }
         final String busqueda = domain.busqueda() == null || domain.busqueda().isBlank() ? null : domain.busqueda().trim();
         if (busqueda != null && busqueda.length() > BUSQUEDA_MAXIMA) {
-            throw new ValidationException("La busqueda excede la longitud permitida.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_044);
         }
         scopePort.findEstudianteIdByUsuario(domain.actorUsuarioId())
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver el estudiante autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_004));
 
         final OfertaGruposEstudiantePagina oferta = port.consultarOferta(domain.actorUsuarioId(), busqueda, pagina, tamano);
         return new OfertaGruposPaginaDomain(oferta.grupos().stream().map(ConsultarOfertaGruposUseCaseImpl::toDomain).toList(),

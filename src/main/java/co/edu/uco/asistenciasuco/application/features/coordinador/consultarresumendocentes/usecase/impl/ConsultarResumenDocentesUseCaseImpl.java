@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.consultarresumendocentes.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarresumendocentes.usecase.ConsultarResumenDocentesUseCase;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarresumendocentes.usecase.domain.ResumenDocentesProgramaDomain;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarresumendocentes.usecase.domain.ResumenTipoVinculacionDomain;
@@ -28,7 +29,7 @@ public final class ConsultarResumenDocentesUseCaseImpl implements ConsultarResum
     @Override
     public ResumenDocentesProgramaDomain execute(final UUID actorUsuarioId) {
         scopePort.findProgramaIdByCoordinadorUsuario(actorUsuarioId)
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver el programa del coordinador autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_006));
         final List<ResumenTipoVinculacionDomain> porTipo = queryPort.consultarResumen(actorUsuarioId).stream()
                 .map(r -> new ResumenTipoVinculacionDomain(r.idTipoVinculacion(), r.codigoTipoVinculacion(),
                         r.nombreTipoVinculacion(), r.totalActivos(), r.totalInactivos()))

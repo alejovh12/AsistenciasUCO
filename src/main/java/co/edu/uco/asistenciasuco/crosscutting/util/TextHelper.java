@@ -10,6 +10,8 @@ import java.util.Locale;
  */
 public final class TextHelper {
 
+    private static final String MARCADOR = "{}";
+
     private TextHelper() {
     }
 
@@ -118,5 +120,29 @@ public final class TextHelper {
 
     public static boolean isNotNull(final String value) {
         return !isNull(value);
+    }
+
+    /**
+     * Reemplaza, en orden, cada marcador {@code {}} de la plantilla por el argumento correspondiente (VAL-oleada3 MSG-05).
+     * Los marcadores sin argumento quedan tal cual; sin plantilla devuelve la cadena vacia.
+     */
+    public static String reemplazarMarcadores(final String plantilla, final Object... argumentos) {
+        if (isNull(plantilla)) {
+            return "";
+        }
+        if (argumentos == null || argumentos.length == 0) {
+            return plantilla;
+        }
+        final StringBuilder resultado = new StringBuilder(plantilla.length() + 16);
+        int desde = 0;
+        int indice = 0;
+        int marcador = plantilla.indexOf(MARCADOR);
+        while (marcador >= 0 && indice < argumentos.length) {
+            resultado.append(plantilla, desde, marcador).append(argumentos[indice]);
+            indice++;
+            desde = marcador + MARCADOR.length();
+            marcador = plantilla.indexOf(MARCADOR, desde);
+        }
+        return resultado.append(plantilla.substring(desde)).toString();
     }
 }

@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.creargrupo.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.festivos.asegurarfestivos.primaryports.AsegurarFestivosPeriodoInputPort;
 import co.edu.uco.asistenciasuco.application.features.grupo.creargrupo.usecase.CrearGrupoUseCase;
 import co.edu.uco.asistenciasuco.application.features.grupo.creargrupo.usecase.domain.CrearGrupoDomain;
@@ -25,9 +26,7 @@ public final class CrearGrupoUseCaseImpl implements CrearGrupoUseCase {
     @Override
     public CrearGrupoResultadoEntity execute(final CrearGrupoDomain domain) {
         if (domain.generarSesionesAutomaticas()) {
-            throw new FeatureUnavailableException(
-                    "La generacion automatica de sesiones al crear el grupo aun no esta disponible (fase F2: precarga de sesiones)."
-            );
+            throw new FeatureUnavailableException(MensajeUsuarioErrorCode.DIS_APP_001);
         }
         // CULM-001 B.1 (§3.2.3): con horario, la creacion precarga sesiones y la DB las cancela si caen en un festivo;
         // antes de abrir esa transaccion se aseguran los festivos de los anios del periodo (nunca bloquea la creacion).

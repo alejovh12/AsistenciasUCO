@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionesporgrupov2.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.sesion.common.entity.SesionProcedenciaEntity;
 import co.edu.uco.asistenciasuco.application.features.sesion.common.mapper.SesionProcedenciaMapper;
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionesporgrupov2.usecase.ConsultarSesionesPorGrupoV2UseCase;
@@ -36,7 +37,7 @@ public final class ConsultarSesionesPorGrupoV2UseCaseImpl implements ConsultarSe
             throw new CrosscuttingException("El dominio para consultar sesiones v2 por grupo es obligatorio.");
         }
         if (!institutionalScopePort.canDocenteAccessGrupo(domain.getUsuarioEjecutor(), domain.getGrupo())) {
-            throw new ForbiddenException("El docente autenticado no tiene titularidad sobre el grupo consultado.");
+            throw new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_001);
         }
         return sesionProcedenciaQueryPort.consultarSesionesPorGrupo(domain.getGrupo()).stream()
                 .map(SesionProcedenciaMapper::toEntity)

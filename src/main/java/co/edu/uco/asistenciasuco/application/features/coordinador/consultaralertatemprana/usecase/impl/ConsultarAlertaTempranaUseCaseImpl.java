@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.consultaralertatemprana.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.coordinador.indicadores.rule.IndicadoresRules;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultaralertatemprana.primaryports.dto.AlertaTempranaDTO;
@@ -25,13 +26,13 @@ public final class ConsultarAlertaTempranaUseCaseImpl implements ConsultarAlerta
     @Override
     public AlertasPaginaDomain execute(final ConsultarAlertaTempranaDomain domain) {
         if (domain == null) {
-            throw new ValidationException("Los filtros de consulta son obligatorios.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_035);
         }
         final int pagina = IndicadoresRules.pagina(domain.pagina());
         final int tamano = IndicadoresRules.tamano(domain.tamano());
         final String semaforo = IndicadoresRules.textoOpcional(domain.semaforo());
         if (semaforo != null && !IndicadoresRules.SEMAFOROS.contains(semaforo)) {
-            throw new ValidationException("El semaforo debe ser VERDE, AMBAR o ROJO.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_036);
         }
         IndicadoresRules.programaDelCoordinador(scopePort, domain.actorUsuarioId());
         final PaginaAlertasProjection resultado = queryPort.consultarAlertas(domain.actorUsuarioId(), domain.idPeriodoAcademico(), semaforo,

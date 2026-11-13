@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.admin.consultartendenciaausentismo.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AdminIndicadoresQueryPort;
 import co.edu.uco.asistenciasuco.application.features.admin.consultartendenciaausentismo.usecase.ConsultarTendenciaAusentismoUseCase;
@@ -24,12 +25,12 @@ public final class ConsultarTendenciaAusentismoUseCaseImpl implements ConsultarT
     @Override
     public List<PuntoTendenciaDomain> execute(final ConsultarTendenciaAusentismoDomain domain) {
         if (domain == null) {
-            throw new ValidationException("Los datos de la consulta son obligatorios.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_011);
         }
         final String granularidad = domain.granularidad() == null || domain.granularidad().isBlank()
                 ? GRANULARIDAD_POR_DEFECTO : domain.granularidad().trim().toUpperCase();
         if (!GRANULARIDADES.contains(granularidad)) {
-            throw new ValidationException("La granularidad debe ser SEMANA o MES.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_012);
         }
         return queryPort.consultarTendencia(domain.actorUsuarioId(), domain.idPeriodoAcademico(), granularidad).stream()
                 .map(p -> new PuntoTendenciaDomain(p.inicioIntervalo(), p.finIntervalo(), p.sesionesEjecutadas(), p.faltasSinJustaCausa(), p.porcentajeAusentismo(), p.horasDictadasEstudiante(), p.horasFalta()))

@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.decano.consultarprogramas.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.decano.common.mapper.ProgramaAcademicoMapper;
 import co.edu.uco.asistenciasuco.application.features.decano.common.rule.ProgramaAcademicoRules;
@@ -27,12 +28,12 @@ public final class ConsultarProgramasUseCaseImpl implements ConsultarProgramasUs
     @Override
     public ProgramasPaginaDomain execute(final ConsultarProgramasDomain domain) {
         if (domain == null) {
-            throw new ValidationException("Los filtros de consulta son obligatorios.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_035);
         }
         final int pagina = domain.pagina() == null ? PAGINA_POR_DEFECTO : domain.pagina();
         final int tamano = domain.tamano() == null ? TAMANO_POR_DEFECTO : domain.tamano();
         if (pagina < 1 || tamano < 1) {
-            throw new ValidationException("Los parametros de paginacion deben ser mayores o iguales a 1.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_047);
         }
         // HU136 (certificación de Fase 3): el ADMINISTRADOR consulta los programas de su institución para filtrar el
         // directorio de docentes. El ámbito lo fuerza uv_auth_programa en la DB (institución del administrador, facultad

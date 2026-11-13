@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.consultarfichaestudiante.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.coordinador.indicadores.rule.IndicadoresRules;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarfichaestudiante.primaryports.dto.ResumenAsignaturaDTO;
@@ -26,9 +27,9 @@ public final class ConsultarFichaEstudianteUseCaseImpl implements ConsultarFicha
     @Override
     public FichaEstudianteDomain execute(final ConsultarFichaEstudianteDomain domain) {
         if (domain == null) {
-            throw new ValidationException("Los datos de la consulta son obligatorios.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_011);
         }
-        IndicadoresRules.requerido(domain.idEstudiante(), "El identificador del estudiante es obligatorio.");
+        IndicadoresRules.requerido(domain.idEstudiante(), MensajeUsuarioErrorCode.VAL_APP_073);
         IndicadoresRules.programaDelCoordinador(scopePort, domain.actorUsuarioId());
         final FichaEstudianteProjection f = queryPort.consultarFicha(domain.actorUsuarioId(), domain.idEstudiante(), domain.idPrograma());
         final List<ResumenAsignaturaDomain> resumen = queryPort.consultarResumenAsistencia(domain.actorUsuarioId(), domain.idEstudiante(), domain.idPeriodoAcademico(), domain.idPrograma()).stream()

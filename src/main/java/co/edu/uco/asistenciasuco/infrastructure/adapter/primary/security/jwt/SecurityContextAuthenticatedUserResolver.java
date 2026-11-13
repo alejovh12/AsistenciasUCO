@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedPrincipalResolver;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
@@ -43,19 +44,20 @@ public final class SecurityContextAuthenticatedUserResolver
     private Resolved requireAuthentication() {
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ForbiddenException("No fue posible resolver el usuario autenticado.");
+            throw new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_005);
         }
 
         final String principal = authentication.getName();
         if (principal == null || principal.isBlank()) {
-            throw new ForbiddenException("No fue posible resolver el usuario autenticado.");
+            throw new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_005);
         }
 
         final UUID userId;
         try {
             userId = UUID.fromString(principal);
         } catch (IllegalArgumentException exception) {
-            throw new ForbiddenException("El principal autenticado no tiene formato UUID valido.");
+            // Principal sin formato UUID: para el usuario es el mismo caso de usuario no resuelto (VAL-oleada3 MSG-05).
+            throw new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_005);
         }
         return new Resolved(userId, rolesOf(authentication));
     }

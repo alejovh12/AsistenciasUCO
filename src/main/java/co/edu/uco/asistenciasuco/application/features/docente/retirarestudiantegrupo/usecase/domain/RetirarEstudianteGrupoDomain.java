@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.docente.retirarestudiantegrupo.usecase.domain;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 
 import java.util.UUID;
@@ -16,14 +17,14 @@ public record RetirarEstudianteGrupoDomain(UUID actorUsuarioId, UUID grupoId, UU
             final String motivo
     ) {
         if (actorUsuarioId == null) {
-            throw new ValidationException("El usuario autenticado es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_008);
         }
         if (grupoId == null || estudianteId == null) {
-            throw new ValidationException("El grupo y el estudiante son obligatorios.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_053);
         }
         final String motivoNormalizado = motivo == null ? "" : motivo.strip();
         if (motivoNormalizado.isEmpty() || motivoNormalizado.length() > MOTIVO_MAXIMO) {
-            throw new ValidationException("El motivo del retiro es obligatorio y no puede superar 500 caracteres.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_054);
         }
         return new RetirarEstudianteGrupoDomain(actorUsuarioId, grupoId, estudianteId, motivoNormalizado);
     }

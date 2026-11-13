@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesion.v2;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.CommonErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -18,6 +19,6 @@ public final class SesionesV2DisabledInterceptor implements HandlerInterceptor {
             final HttpServletResponse response,
             final Object handler
     ) {
-        throw new ResourceNotFoundException("El recurso solicitado no existe.");
+        throw new ResourceNotFoundException(CommonErrorCode.RESOURCE_NOT_FOUND);
     }
 }

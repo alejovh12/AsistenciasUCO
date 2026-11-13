@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.decano.actualizarprograma.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.decano.actualizarprograma.usecase.ActualizarProgramaUseCase;
@@ -33,17 +34,17 @@ public final class ActualizarProgramaUseCaseImpl implements ActualizarProgramaUs
     @Override
     public ProgramaAcademicoDomain execute(final ActualizarProgramaDomain domain) {
         if (domain == null) {
-            throw new ValidationException("Los datos del programa son obligatorios.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_043);
         }
-        ProgramaAcademicoRules.requerido(domain.id(), "El identificador del programa es obligatorio.");
+        ProgramaAcademicoRules.requerido(domain.id(), MensajeUsuarioErrorCode.VAL_APP_075);
         final String nombre = ProgramaAcademicoRules.nombreNormalizado(domain.nombre());
-        ProgramaAcademicoRules.requerido(domain.idTipoPrograma(), "El tipo de programa es obligatorio.");
-        ProgramaAcademicoRules.requerido(domain.idCoordinador(), "El coordinador del programa es obligatorio.");
+        ProgramaAcademicoRules.requerido(domain.idTipoPrograma(), MensajeUsuarioErrorCode.VAL_APP_064);
+        ProgramaAcademicoRules.requerido(domain.idCoordinador(), MensajeUsuarioErrorCode.VAL_APP_065);
         final UUID facultad = ProgramaAcademicoRules.facultadDelDecano(scopePort, domain.actorUsuarioId());
         commandPort.actualizar(new ProgramaAcademicoCommandPort.ActualizarProgramaCommand(domain.id(), nombre,
                 domain.idTipoPrograma(), domain.idCoordinador(), domain.idModalidad(), domain.idJornada(), domain.actorUsuarioId()));
         return queryPort.consultarPorId(domain.id(), facultad)
                 .map(ProgramaAcademicoMapper::toDomain)
-                .orElseThrow(() -> new ResourceNotFoundException("El programa academico especificado no existe en el sistema."));
+                .orElseThrow(() -> new ResourceNotFoundException(MensajeUsuarioErrorCode.NOF_APP_006));
     }
 }

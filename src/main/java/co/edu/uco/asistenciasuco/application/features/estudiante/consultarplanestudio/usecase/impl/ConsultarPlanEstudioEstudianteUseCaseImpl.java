@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.estudiante.consultarplanestudio.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarplanestudio.usecase.ConsultarPlanEstudioEstudianteUseCase;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarplanestudio.usecase.domain.AsignaturaPlanEstudianteDomain;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarplanestudio.usecase.domain.PlanEstudioEstudianteDomain;
@@ -38,7 +39,7 @@ public final class ConsultarPlanEstudioEstudianteUseCaseImpl implements Consulta
     @Override
     public List<PlanEstudioEstudianteDomain> execute(final UUID actorUsuarioId) {
         scopePort.findEstudianteIdByUsuario(actorUsuarioId)
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver el estudiante autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_004));
         // LinkedHashMap: conserva el orden del SP.
         final Map<UUID, List<AsignaturaPlanEstudianteProjection>> porPlan = new LinkedHashMap<>();
         for (final AsignaturaPlanEstudianteProjection fila : port.consultarPlanEstudio(actorUsuarioId)) {

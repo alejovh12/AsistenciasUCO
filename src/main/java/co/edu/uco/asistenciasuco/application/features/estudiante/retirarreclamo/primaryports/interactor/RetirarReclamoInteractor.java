@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.estudiante.retirarreclamo.primaryports.interactor;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.estudiante.retirarreclamo.primaryports.RetirarReclamoInputPort;
 import co.edu.uco.asistenciasuco.application.features.estudiante.retirarreclamo.primaryports.dto.RetirarReclamoDTO;
@@ -19,7 +20,7 @@ public final class RetirarReclamoInteractor implements RetirarReclamoInputPort {
     @Override
     public String execute(final RetirarReclamoDTO dto) {
         if (dto == null) {
-            throw new ValidationException("Los datos del retiro del reclamo son obligatorios.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_055);
         }
         return useCase.execute(new RetirarReclamoDomain(dto.idReclamo(), dto.actorUsuarioId()));
     }

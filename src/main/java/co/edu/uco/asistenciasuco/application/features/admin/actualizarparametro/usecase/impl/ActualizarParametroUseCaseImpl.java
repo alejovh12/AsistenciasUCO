@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.admin.actualizarparametro.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.admin.actualizarparametro.usecase.ActualizarParametroUseCase;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.ParametroErrorCode;
@@ -49,7 +50,7 @@ public final class ActualizarParametroUseCaseImpl implements ActualizarParametro
         Objects.requireNonNull(comando, "El comando para actualizar el parametro es obligatorio.");
         if (comando.idParametro() == null || comando.valor() == null || comando.fechaModificacionEsperada() == null
                 || comando.motivo() == null || comando.usuarioEjecutor() == null) {
-            throw new ValidationException("Los datos para actualizar el parametro no son validos.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_005);
         }
         if (!capacidad.admiteEdicion()) {
             throw new ConflictException(ParametroErrorCode.PRM_010);

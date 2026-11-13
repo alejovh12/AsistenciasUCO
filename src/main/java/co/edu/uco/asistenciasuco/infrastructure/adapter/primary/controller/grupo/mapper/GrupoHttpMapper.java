@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo.mapper;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.primaryports.dto.ActualizarGrupoDTO;
 import co.edu.uco.asistenciasuco.application.features.grupo.common.dto.FranjaHorarioDTO;
@@ -73,7 +74,7 @@ public final class GrupoHttpMapper {
             final List<FranjaHorarioDTO> resultado = new ArrayList<>();
             for (final FranjaHorarioRequest franja : franjas) {
                 if (franja == null) {
-                    throw new ValidationException("ERR_CAMPO_OBLIGATORIO", "Cada franja del horario es obligatoria.");
+                    throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_067);
                 }
                 resultado.add(toFranja(franja.getDia(), franja.getHoraInicio(), franja.getHoraFin()));
             }
@@ -83,7 +84,7 @@ public final class GrupoHttpMapper {
             return null;
         }
         if (dias == null || dias.isEmpty()) {
-            throw new ValidationException("ERR_CAMPO_OBLIGATORIO", "El campo dias es obligatorio cuando se envia el horario.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_068);
         }
         return dias.stream().map(dia -> toFranja(dia, horaInicio, horaFin)).toList();
     }
@@ -102,7 +103,7 @@ public final class GrupoHttpMapper {
 
     private static <T> T required(final T value, final String fieldName) {
         if (value == null) {
-            throw new ValidationException("ERR_CAMPO_OBLIGATORIO", "El campo " + fieldName + " es obligatorio.");
+            throw ValidationException.conParametros(MensajeUsuarioErrorCode.VAL_APP_069, fieldName);
         }
         return value;
     }
@@ -110,7 +111,7 @@ public final class GrupoHttpMapper {
     private static String requiredText(final String value, final String fieldName) {
         final String normalized = firstTextOrNull(value);
         if (normalized == null) {
-            throw new ValidationException("ERR_CAMPO_OBLIGATORIO", "El campo " + fieldName + " es obligatorio.");
+            throw ValidationException.conParametros(MensajeUsuarioErrorCode.VAL_APP_069, fieldName);
         }
         return normalized;
     }

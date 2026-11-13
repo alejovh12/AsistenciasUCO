@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.usecase.domain.DocenteCandidatoDomain;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.usecase.ConsultarCandidatosDocenteUseCase;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.usecase.mapper.ConsultarCandidatosDocenteRepositoryMapper;
@@ -24,7 +25,7 @@ public final class ConsultarCandidatosDocenteUseCaseImpl implements ConsultarCan
     @Override
     public List<DocenteCandidatoDomain> execute(final UUID actorUsuarioId, final String busqueda) {
         final UUID idPrograma = scopePort.findProgramaIdByCoordinadorUsuario(actorUsuarioId)
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver el programa del coordinador autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_006));
         return queryPort.consultarCandidatos(actorUsuarioId, idPrograma, busqueda).stream()
                 .map(ConsultarCandidatosDocenteRepositoryMapper::toDomain).toList();
     }

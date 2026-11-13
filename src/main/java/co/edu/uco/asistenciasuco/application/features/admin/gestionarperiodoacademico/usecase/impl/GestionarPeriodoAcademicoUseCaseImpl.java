@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.admin.gestionarperiodoacademico.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.admin.gestionarperiodoacademico.usecase.GestionarPeriodoAcademicoUseCase;
 import co.edu.uco.asistenciasuco.application.features.admin.gestionarperiodoacademico.usecase.domain.PeriodoAcademicoDomain;
@@ -41,7 +42,7 @@ public final class GestionarPeriodoAcademicoUseCaseImpl implements GestionarPeri
     @Override
     public PaginaPeriodosAdminProjection consultar(final UUID usuario, final Integer pagina, final Integer tamano) {
         if (ObjectHelper.isNull(usuario)) {
-            throw new ValidationException("El usuario ejecutor es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_016);
         }
         return queryPort.consultarPeriodosAdministrador(usuario,
                 ConsultaPaginadaRules.pagina(pagina), ConsultaPaginadaRules.tamano(tamano));
@@ -51,7 +52,7 @@ public final class GestionarPeriodoAcademicoUseCaseImpl implements GestionarPeri
     public void actualizar(final PeriodoAcademicoDomain domain) {
         validar(domain);
         if (ObjectHelper.isNull(domain.idPeriodo())) {
-            throw new ValidationException("El periodo academico a modificar es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_017);
         }
         commandPort.actualizarPeriodoAcademico(domain.idPeriodo(), domain.nombre().trim(), domain.fechaInicio(),
                 domain.fechaFin(), domain.usuario());
@@ -60,7 +61,7 @@ public final class GestionarPeriodoAcademicoUseCaseImpl implements GestionarPeri
     @Override
     public void eliminar(final UUID idPeriodo, final UUID usuario) {
         if (ObjectHelper.isNull(idPeriodo)) {
-            throw new ValidationException("El periodo academico a eliminar es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_018);
         }
         commandPort.eliminarPeriodoAcademico(idPeriodo, usuario);
     }
@@ -70,11 +71,11 @@ public final class GestionarPeriodoAcademicoUseCaseImpl implements GestionarPeri
             throw new CrosscuttingException("El dominio para guardar periodo academico es obligatorio.");
         }
         if (ObjectHelper.isNull(domain.nombre()) || domain.nombre().isBlank()) {
-            throw new ValidationException("El nombre del periodo academico es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_019);
         }
         if (ObjectHelper.isNull(domain.fechaInicio()) || ObjectHelper.isNull(domain.fechaFin())
                 || !domain.fechaInicio().isBefore(domain.fechaFin())) {
-            throw new ValidationException("La fecha de inicio del periodo debe ser anterior a la fecha de fin.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_020);
         }
     }
 }

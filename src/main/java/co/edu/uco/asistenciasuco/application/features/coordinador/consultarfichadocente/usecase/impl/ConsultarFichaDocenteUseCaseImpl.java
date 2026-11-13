@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.coordinador.consultarfich
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.domain.DocenteProgramaDomain;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.mapper.DocenteProgramaMapper;
@@ -45,20 +46,20 @@ public final class ConsultarFichaDocenteUseCaseImpl implements ConsultarFichaDoc
     @Override
     public FichaDocenteDomain execute(final ConsultarFichaDocenteDomain domain) {
         if (domain == null) {
-            throw new ValidationException("Los datos de la consulta son obligatorios.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_011);
         }
-        final UUID idDocente = IndicadoresRules.requerido(domain.idDocente(), "El identificador del docente es obligatorio.");
+        final UUID idDocente = IndicadoresRules.requerido(domain.idDocente(), MensajeUsuarioErrorCode.VAL_APP_074);
         final int pagina = IndicadoresRules.pagina(domain.pagina());
         final int tamano = IndicadoresRules.tamano(domain.tamano());
         final UUID idPrograma = scopePort.findProgramaIdByCoordinadorUsuario(domain.actorUsuarioId())
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver el programa del coordinador autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_006));
 
         final DocenteProgramaDomain docente = docenteProgramaQueryPort.consultar(domain.actorUsuarioId(),
                         new DocentesProgramaFiltro(idPrograma, 1, 1, null, null, null, idDocente, null))
                 .elementos().stream()
                 .findFirst()
                 .map(DocenteProgramaMapper::toDomain)
-                .orElseThrow(() -> new ResourceNotFoundException("El docente no existe o no esta vinculado a su programa."));
+                .orElseThrow(() -> new ResourceNotFoundException(MensajeUsuarioErrorCode.NOF_APP_004));
 
         final HistorialGruposDocentePagina historial = historialQueryPort.consultarHistorial(
                 domain.actorUsuarioId(), idDocente, domain.idPeriodoAcademico(), pagina, tamano);

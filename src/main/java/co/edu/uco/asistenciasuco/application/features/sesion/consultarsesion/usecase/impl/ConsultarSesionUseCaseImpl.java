@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.us
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.usecase.ConsultarSesionUseCase;
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.usecase.domain.ConsultarSesionDomain;
@@ -50,7 +51,7 @@ public final class ConsultarSesionUseCaseImpl implements ConsultarSesionUseCase 
             throw new ResourceNotFoundException(SesionErrorCode.ERR_SESION_NO_EXISTE);
         }
         if (!puedeConsultar(domain.getUsuarioEjecutor(), sesion.getGrupo())) {
-            throw new ForbiddenException("El usuario autenticado no tiene relacion institucional con la sesion consultada.");
+            throw new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_015);
         }
         return ConsultarSesionRepositoryMapper.toUseCaseEntity(sesion);
     }

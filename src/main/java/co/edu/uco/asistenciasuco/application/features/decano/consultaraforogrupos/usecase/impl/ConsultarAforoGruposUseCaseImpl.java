@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.decano.consultaraforogrupos.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.decano.common.rule.DecanoIndicadoresRules;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DecanoIndicadoresQueryPort;
@@ -28,15 +29,15 @@ public final class ConsultarAforoGruposUseCaseImpl implements ConsultarAforoGrup
     @Override
     public AforoGruposPaginaDomain execute(final ConsultarAforoGruposDomain domain) {
         if (domain == null) {
-            throw new ValidationException("Los filtros de consulta son obligatorios.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_035);
         }
         final int pagina = domain.pagina() == null ? PAGINA_POR_DEFECTO : domain.pagina();
         if (pagina < 1) {
-            throw new ValidationException("El numero de pagina debe ser mayor o igual a 1.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_041);
         }
         final int tamano = domain.tamano() == null ? TAMANO_POR_DEFECTO : domain.tamano();
         if (tamano < 1) {
-            throw new ValidationException("El tamano de pagina debe ser mayor o igual a 1.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_042);
         }
         final boolean soloHabilitados = domain.soloHabilitados() == null || domain.soloHabilitados();
         DecanoIndicadoresRules.facultadDelDecano(scopePort, domain.actorUsuarioId());

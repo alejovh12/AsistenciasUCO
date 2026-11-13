@@ -23,4 +23,13 @@ public final class ValidationException extends BusinessException {
     public ValidationException(final String code, final String message) {
         super(code, message);
     }
+
+    private ValidationException(final ErrorDefinition errorDefinition, final Object[] argumentos) {
+        super(errorDefinition, argumentos);
+    }
+
+    /** Error de catalogo con marcadores {@code {}} que se llenan con {@code argumentos} (VAL-oleada3 MSG-05). */
+    public static ValidationException conParametros(final ErrorDefinition errorDefinition, final Object... argumentos) {
+        return new ValidationException(errorDefinition, argumentos);
+    }
 }

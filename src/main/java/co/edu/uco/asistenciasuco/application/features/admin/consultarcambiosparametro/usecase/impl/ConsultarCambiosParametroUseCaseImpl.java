@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.admin.consultarcambiosparametro.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarcambiosparametro.usecase.ConsultarCambiosParametroUseCase;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.ParametroAdminRepositoryPort;
@@ -21,7 +22,7 @@ public final class ConsultarCambiosParametroUseCaseImpl implements ConsultarCamb
     public Resultado execute(final Comando comando) {
         Objects.requireNonNull(comando, "El comando para consultar los cambios es obligatorio.");
         if (comando.idParametro() == null) {
-            throw new ValidationException("El parametro es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_010);
         }
         final int pagina = comando.pagina() == null ? PAGINA_POR_DEFECTO : comando.pagina();
         final int tamano = comando.tamano() == null ? TAMANO_POR_DEFECTO : comando.tamano();

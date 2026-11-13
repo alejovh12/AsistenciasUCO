@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.consultarkpis.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.coordinador.indicadores.rule.IndicadoresRules;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarkpis.usecase.ConsultarKpisCoordinadorUseCase;
@@ -23,7 +24,7 @@ public final class ConsultarKpisCoordinadorUseCaseImpl implements ConsultarKpisC
     @Override
     public KpisCoordinadorDomain execute(final ConsultarKpisCoordinadorDomain domain) {
         if (domain == null) {
-            throw new ValidationException("Los datos de la consulta son obligatorios.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_011);
         }
         IndicadoresRules.programaDelCoordinador(scopePort, domain.actorUsuarioId());
         final KpisCoordinadorProjection p = queryPort.consultarKpis(domain.actorUsuarioId(), domain.idPeriodoAcademico(), domain.idPrograma());

@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.coordinador.gestionarplan
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarplanestudio.usecase.GestionarPlanEstudioUseCase;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarplanestudio.usecase.domain.PlanEstudioDomain;
@@ -55,7 +56,7 @@ public final class GestionarPlanEstudioUseCaseImpl implements GestionarPlanEstud
         final PlanEstudioProjection plan = queryPort.consultarPlanesPorPrograma(programa).stream()
                 .filter(candidato -> candidato.id().equals(idPlanEstudio))
                 .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("El plan de estudio indicado no existe en el programa del coordinador."));
+                .orElseThrow(() -> new ResourceNotFoundException(MensajeUsuarioErrorCode.NOF_APP_005));
         commandPort.cambiarEstadoPlanEstudio(idPlanEstudio, !plan.estaActivoPlanEstudio(), usuario);
     }
 
@@ -68,7 +69,7 @@ public final class GestionarPlanEstudioUseCaseImpl implements GestionarPlanEstud
     @Override
     public void quitarSemestre(final UUID idPlanEstudio, final Integer numeroSemestre, final UUID usuario) {
         if (ObjectHelper.isNull(numeroSemestre) || numeroSemestre <= 0) {
-            throw new ValidationException("El numero de semestre debe ser un entero positivo.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_040);
         }
         resolverProgramaCoordinador(usuario);
         commandPort.quitarSemestrePlanEstudio(idPlanEstudio, numeroSemestre, usuario);
@@ -76,6 +77,6 @@ public final class GestionarPlanEstudioUseCaseImpl implements GestionarPlanEstud
 
     private UUID resolverProgramaCoordinador(final UUID usuario) {
         return scopePort.findProgramaIdByCoordinadorUsuario(usuario)
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver el programa del coordinador autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_006));
     }
 }

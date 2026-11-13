@@ -9,6 +9,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.JpaProcedureExecutor;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceException;
@@ -71,8 +72,6 @@ public class ProgramaAcademicoJpaRepository implements ProgramaAcademicoCommandP
                  @idTipoPrograma = :idTipoPrograma
             """;
     static final String OP_CONSULTAR = "consultarProgramasAcademicos";
-    static final String MENSAJE_PAGINACION_INVALIDA = "Los parametros de paginacion no son validos.";
-
     static final String HQL_POR_ID = """
             select p
             from UvProgramaEntity p
@@ -150,7 +149,7 @@ public class ProgramaAcademicoJpaRepository implements ProgramaAcademicoCommandP
                             .getResultList();
                     } catch (final PersistenceException exception) {
                         if (esPaginacionInvalida(exception)) {
-                            throw new ValidationException(MENSAJE_PAGINACION_INVALIDA);
+                            throw new ValidationException(MensajeUsuarioErrorCode.PAG_001);
                         }
                         throw exception;
                     }

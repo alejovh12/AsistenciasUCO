@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.consultastransversales.us
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.usecase.ConsultasTransversalesUseCase;
 import co.edu.uco.asistenciasuco.application.features.decano.common.rule.ConsultaPaginadaRules;
@@ -106,7 +107,7 @@ public final class ConsultasTransversalesUseCaseImpl implements ConsultasTransve
         }
         final String normalizado = valor.trim().toUpperCase(java.util.Locale.ROOT);
         if (!ESTADOS_VINCULO.contains(normalizado)) {
-            throw new ValidationException("El estado de vinculo debe ser ACTIVO, SIN_VINCULO o TODOS.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_029);
         }
         return normalizado;
     }
@@ -128,12 +129,12 @@ public final class ConsultasTransversalesUseCaseImpl implements ConsultasTransve
     @Override
     public List<HistorialEstudianteProjection> consultarHistorial(final UUID usuario, final UUID idEstudiante) {
         if (ObjectHelper.isNull(idEstudiante)) {
-            throw new ValidationException("El estudiante es obligatorio.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_030);
         }
         final List<HistorialEstudianteProjection> historial = queryPort.consultarHistorial(exigirUsuario(usuario),
                 idEstudiante);
         if (historial.isEmpty()) {
-            throw new ResourceNotFoundException("El estudiante no existe en su ambito.");
+            throw new ResourceNotFoundException(MensajeUsuarioErrorCode.NOF_APP_003);
         }
         return historial;
     }
@@ -205,17 +206,16 @@ public final class ConsultasTransversalesUseCaseImpl implements ConsultasTransve
         final OffsetDateTime desde = ObjectHelper.isNull(entrada.desde())
                 ? hasta.minus(RANGO_AUDITORIA_POR_DEFECTO) : entrada.desde();
         if (!desde.isBefore(hasta)) {
-            throw new ValidationException("La fecha inicial debe ser anterior a la fecha final.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_031);
         }
         final Duration rangoMaximo = rangoAuditoriaMaximo();
         if (Duration.between(desde, hasta).compareTo(rangoMaximo) > 0) {
-            throw new ValidationException("El rango de fechas no puede superar " + rangoMaximo.toDays()
-                    + " dias.");
+            throw ValidationException.conParametros(MensajeUsuarioErrorCode.VAL_APP_032, rangoMaximo.toDays());
         }
         final String resultado = filtroTexto(entrada.resultado(), "resultado");
         final String resultadoNormalizado = ObjectHelper.isNull(resultado) ? null : resultado.toUpperCase(Locale.ROOT);
         if (!ObjectHelper.isNull(resultadoNormalizado) && !RESULTADOS_AUDITORIA.contains(resultadoNormalizado)) {
-            throw new ValidationException("El resultado debe ser SUCCESS o FAILURE.");
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_033);
         }
         final String accion = filtroTexto(entrada.accion(), "accion");
         return new FiltroAuditoria(desde.withOffsetSameInstant(ZoneOffset.UTC),
@@ -229,14 +229,14 @@ public final class ConsultasTransversalesUseCaseImpl implements ConsultasTransve
     private static String filtroTexto(final String valor, final String nombre) {
         final String filtro = ObjectHelper.isNull(valor) || valor.isBlank() ? null : valor.trim();
         if (!ObjectHelper.isNull(filtro) && filtro.length() > LONGITUD_MAXIMA_FILTRO_AUDITORIA) {
-            throw new ValidationException("El filtro " + nombre + " excede la longitud permitida.");
+            throw ValidationException.conParametros(MensajeUsuarioErrorCode.VAL_APP_034, nombre);
         }
         return filtro;
     }
 
     private static UUID exigirUsuario(final UUID usuario) {
         if (ObjectHelper.isNull(usuario)) {
-            throw new ForbiddenException("No fue posible resolver el usuario autenticado.");
+            throw new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_005);
         }
         return usuario;
     }

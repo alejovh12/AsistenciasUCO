@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.decano.consultargrupos.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.decano.consultargrupos.usecase.ConsultarGruposDecanoUseCase;
 import co.edu.uco.asistenciasuco.application.features.grupo.consultargrupos.usecase.entity.GrupoEntity;
 import co.edu.uco.asistenciasuco.application.features.grupo.consultargrupos.usecase.mapper.ConsultarGruposRepositoryMapper;
@@ -33,7 +34,7 @@ public final class ConsultarGruposDecanoUseCaseImpl implements ConsultarGruposDe
             throw new CrosscuttingException("El usuario autenticado es obligatorio para consultar los grupos del decano.");
         }
         final UUID idFacultad = scopePort.findFacultadIdByDecanoUsuario(actorUsuarioId)
-                .orElseThrow(() -> new ForbiddenException("No fue posible resolver la facultad del decano autenticado."));
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_011));
         return ConsultarGruposRepositoryMapper.toUseCaseEntities(queryPort.consultarGruposPorFacultad(idFacultad));
     }
 }

@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin;
 
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
 import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadodecano.primaryports.dto.CambiarEstadoDecanoDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadodecano.primaryports.CambiarEstadoDecanoInputPort;
@@ -265,7 +266,7 @@ public final class AdminPortalController {
         return consultarFacultadesInputPort.execute().stream()
                 .filter(f -> id.equals(f.id()))
                 .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("La facultad especificada no existe en el sistema."));
+                .orElseThrow(() -> new ResourceNotFoundException(MensajeUsuarioErrorCode.NOF_APP_013));
     }
 
     public record CrearDecanoRequest(
