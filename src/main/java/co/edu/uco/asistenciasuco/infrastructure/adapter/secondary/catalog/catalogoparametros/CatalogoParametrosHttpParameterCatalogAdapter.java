@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -56,7 +57,7 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
     private final long graciaNanos;
     private final ReentrantLock lock = new ReentrantLock();
     private final AtomicBoolean refrescando = new AtomicBoolean();
-    private volatile Snapshot snapshot;
+    private final AtomicReference<Snapshot> snapshot = new AtomicReference<>();
     private volatile long reintentarDesde;
 
     public CatalogoParametrosHttpParameterCatalogAdapter(final HttpClient httpClient,
@@ -113,16 +114,16 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
     /** La respuesta del componente es un unico bloque: invalidar un parametro vacia toda la cache. */
     @Override
     public void invalidateParameter(final String group, final String key) {
-        snapshot = null;
+        snapshot.set(null);
     }
 
     @Override
     public void invalidateAll() {
-        snapshot = null;
+        snapshot.set(null);
     }
 
     private Map<String, String> valores() {
-        final Snapshot actual = snapshot;
+        final Snapshot actual = snapshot.get();
         if (vigente(actual)) {
             return actual.valores();
         }
@@ -145,7 +146,7 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
     private Map<String, String> cargarBloqueando() {
         lock.lock();
         try {
-            final Snapshot recheck = snapshot;
+            final Snapshot recheck = snapshot.get();
             if (vigente(recheck)) {
                 return recheck.valores();
             }
@@ -155,7 +156,7 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
             }
             try {
                 final Map<String, String> cargados = interpretarRespuesta(enviar());
-                snapshot = new Snapshot(cargados, System.nanoTime());
+                snapshot.set(new Snapshot(cargados, System.nanoTime()));
                 return cargados;
             } catch (final ParameterCatalogException exception) {
                 registrarFalloDeCarga(exception.getMessage());
@@ -191,7 +192,7 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
                     registrarFalloDeRefresco(causa(error).getClass().getSimpleName());
                     return;
                 }
-                snapshot = new Snapshot(interpretarRespuesta(response), System.nanoTime());
+                snapshot.set(new Snapshot(interpretarRespuesta(response), System.nanoTime()));
             } catch (final ParameterCatalogException exception) {
                 registrarFalloDeRefresco(exception.getMessage());
             } finally {
