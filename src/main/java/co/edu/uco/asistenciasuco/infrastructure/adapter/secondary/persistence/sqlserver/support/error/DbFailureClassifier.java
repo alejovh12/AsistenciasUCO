@@ -77,6 +77,9 @@ final class DbFailureClassifier {
             case "VAL_006" -> CommonErrorCode.CONFLICT;
             // Asignaturas (decision de John 2026-11-04): creditos obligatorios y mayores que cero.
             case "ASI_001" -> CommonErrorCode.VALIDATION_ERROR;
+            // DEC-073 (migracion 42): creditos por encima de ASIGNATURA/CREDITOS_MAXIMO y codigo de grupo no positivo.
+            case "ASI_008" -> CatalogoErrorCode.ASI_008;
+            case "ERR_CODIGO_GRUPO_INVALIDO" -> GrupoErrorCode.ERR_CODIGO_GRUPO_INVALIDO;
             // COO_001 (HU122): el coordinador coordina un programa activo; hay que reasignarlo o desactivar el programa.
             case "COO_001" -> CoordinadorErrorCode.COO_001;
             // GEN_001 es generico y por defecto queda tecnico; en la gestion del coordinador significa que el
@@ -124,6 +127,8 @@ final class DbFailureClassifier {
             case "MQR_006" -> MatriculaQrErrorCode.MQR_006;
             case "MQR_007" -> MatriculaQrErrorCode.MQR_007;
             case "VCE_001" -> VerificacionCorreoErrorCode.VCE_001;
+            // DEC-073: correo institucional del personal nuevo (decano, coordinador, docente).
+            case "VCE_008" -> VerificacionCorreoErrorCode.VCE_008;
             case "VCE_002" -> VerificacionCorreoErrorCode.VCE_002;
             case "VCE_005" -> VerificacionCorreoErrorCode.VCE_005;
             case "VCE_007" -> VerificacionCorreoErrorCode.VCE_007;
@@ -174,6 +179,8 @@ final class DbFailureClassifier {
             case "REV_026" -> AsistenciaErrorCode.ERR_TOMA_NO_RECLAMABLE;
             case "REV_027" -> AsistenciaErrorCode.ERR_RECLAMO_TOMA_DUPLICADO;
             case "REV_028" -> AsistenciaErrorCode.ERR_RESULTADO_APROBACION_INVALIDO;
+            // DEC-073: respuesta del docente obligatoria al rechazar (RECLAMO/RESPUESTA_*).
+            case "ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA" -> AsistenciaErrorCode.ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA;
             case "REV_029" -> AsistenciaErrorCode.ERR_APROBACION_PRESENTE_SIN_TOMA;
             // CULM-001 A.2-8: no se desactiva al decano de una facultad con programas activos. 409 con su codigo de
             // catalogo (como COO_001) para que el usuario reciba el texto institucional (F-A-S02).
@@ -184,6 +191,8 @@ final class DbFailureClassifier {
             // POST/PATCH/PUT /api/v1/sesiones y POST /api/v2/sesiones declara 400 y no 409 (§8.1 del contrato). Con su
             // codigo de catalogo para que el formulario muestre el texto del solape (A2-F-09, N11, F-A-S04).
             case "SES_017" -> SesionErrorCode.SES_017;
+            // DEC-072/DEC-073: la sesion cruza la medianoche en la zona institucional.
+            case "SES_028" -> SesionErrorCode.SES_028;
             case "ERR_UNICIDAD_DOCUMENTO" -> UsuarioErrorCode.ERR_UNICIDAD_DOCUMENTO;
             case "USU_002" -> UsuarioErrorCode.ERR_USUARIO_INACTIVO;
             case "HOR_001" -> GrupoErrorCode.ERR_CRUCE_HORARIO_ESTUDIANTE;

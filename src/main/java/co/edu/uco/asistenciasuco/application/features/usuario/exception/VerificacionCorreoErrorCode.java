@@ -12,7 +12,9 @@ public enum VerificacionCorreoErrorCode implements ErrorDefinition {
     VCE_001("VCE_001", "El correo del estudiante debe ser institucional.", ErrorKind.VALIDATION),
     VCE_002("VCE_002", "El enlace de verificación no es válido o ya venció.", ErrorKind.VALIDATION),
     VCE_005("VCE_005", "El correo de este estudiante ya fue verificado.", ErrorKind.CONFLICT),
-    VCE_007("VCE_007", "El usuario no existe o no está activo.", ErrorKind.NOT_FOUND);
+    VCE_007("VCE_007", "El usuario no existe o no está activo.", ErrorKind.NOT_FOUND),
+    /** DEC-073: decanos, coordinadores y docentes también usan el correo institucional ({} = dominio). */
+    VCE_008("VCE_008", "El correo debe ser institucional y terminar en {}.", ErrorKind.VALIDATION);
 
     private final String code;
     private final String defaultMessage;

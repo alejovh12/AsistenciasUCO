@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador.request;
 
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.NombrePersona;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.identidad.request.CorreccionDocumentoRequest;
 
 import java.util.UUID;
@@ -14,12 +15,16 @@ public final class ActualizarDocenteProgramaRequest extends CorreccionDocumentoR
     @NonEmptyUuid(message = "El tipo de vinculacion no es valido.")
     private UUID idTipoVinculacion;
     @Size(max = 50, message = "El campo primerNombre excede la longitud permitida.")
+    @NombrePersona
     private String primerNombre;
     @Size(max = 50, message = "El campo segundoNombre excede la longitud permitida.")
+    @NombrePersona
     private String segundoNombre;
     @Size(max = 50, message = "El campo primerApellido excede la longitud permitida.")
+    @NombrePersona
     private String primerApellido;
     @Size(max = 50, message = "El campo segundoApellido excede la longitud permitida.")
+    @NombrePersona
     private String segundoApellido;
 
     public UUID getIdTipoVinculacion() { return idTipoVinculacion; }

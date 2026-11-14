@@ -74,7 +74,7 @@ class ResolverSolicitudRevisionAsistenciaAvisoTest {
         when(destinatariosPort.consultarDestinatariosPorSolicitud(SOLICITUD)).thenReturn(List.of(
                 destinatario("ESTUDIANTE", "", " ")));
 
-        useCase.execute(resolucion(null));
+        useCase.execute(new ResolverSolicitudRevisionAsistenciaDomain(SOLICITUD, "APROBADA", null, USUARIO)); // DEC-073: sin observacion solo al aprobar
 
         final ArgumentCaptor<Notificacion> captor = ArgumentCaptor.forClass(Notificacion.class);
         verify(notificacionPort).notificar(captor.capture());
@@ -89,7 +89,7 @@ class ResolverSolicitudRevisionAsistenciaAvisoTest {
         when(destinatariosPort.consultarDestinatariosPorSolicitud(SOLICITUD)).thenReturn(List.of(
                 destinatario("DOCENTE", "G01", "2026-08-24")));
 
-        useCase.execute(resolucion("x"));
+        useCase.execute(resolucion("No procede"));
 
         verify(notificacionPort, never()).notificar(any());
     }
@@ -99,8 +99,8 @@ class ResolverSolicitudRevisionAsistenciaAvisoTest {
         docenteAutenticado();
         when(destinatariosPort.consultarDestinatariosPorSolicitud(SOLICITUD)).thenReturn(List.of(), (List<DestinatarioReclamoProjection>) null);
 
-        useCase.execute(resolucion("x"));
-        useCase.execute(resolucion("x"));
+        useCase.execute(resolucion("No procede"));
+        useCase.execute(resolucion("No procede"));
 
         verify(notificacionPort, never()).notificar(any());
     }
@@ -110,7 +110,7 @@ class ResolverSolicitudRevisionAsistenciaAvisoTest {
         docenteAutenticado();
         final var sinPuerto = new ResolverSolicitudRevisionAsistenciaUseCaseImpl(repository, scope, notificacionPort, null);
 
-        sinPuerto.execute(resolucion("x"));
+        sinPuerto.execute(resolucion("No procede"));
 
         verify(repository).resolverSolicitudRevisionAsistencia(any());
         verify(notificacionPort, never()).notificar(any());
@@ -123,6 +123,6 @@ class ResolverSolicitudRevisionAsistenciaAvisoTest {
                 destinatario("ESTUDIANTE", "G01", "2026-08-24")));
         doThrow(new IllegalStateException("smtp caido")).when(notificacionPort).notificar(any());
 
-        assertDoesNotThrow(() -> useCase.execute(resolucion("x")));
+        assertDoesNotThrow(() -> useCase.execute(resolucion("No procede")));
     }
 }

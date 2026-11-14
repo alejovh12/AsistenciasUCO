@@ -14,6 +14,8 @@ import java.util.UUID;
 public final class ResolverSolicitudRevisionAsistenciaDomain {
 
     private static final Set<String> ACCIONES_CONTRACTUALES = Set.of("APROBADA", "RECHAZADA");
+    static final int RESPUESTA_RECHAZO_MINIMO = 10;
+    static final int RESPUESTA_MAXIMO = 500;
 
     private final UUID solicitud;
     private final String accion;
@@ -56,11 +58,24 @@ public final class ResolverSolicitudRevisionAsistenciaDomain {
         if (!ACCIONES_CONTRACTUALES.contains(accionContractual)) {
             throw new ValidationException(AsistenciaErrorCode.ERR_ACCION_REVISION_INVALIDA);
         }
+        final String respuestaNormalizada = TextHelper.trim(respuestaDocente);
+        if (!respuestaValida(accionContractual, respuestaNormalizada)) {
+            throw new ValidationException(AsistenciaErrorCode.ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA);
+        }
         this.solicitud = solicitud;
         this.accion = accionContractual;
-        this.respuestaDocente = TextHelper.trim(respuestaDocente);
+        this.respuestaDocente = respuestaNormalizada;
         this.resultado = "APROBADA".equals(accionContractual) ? resultadoValido(resultado) : null;
         this.usuario = usuario;
+    }
+
+    /** DEC-073: al rechazar, la respuesta (sin espacios laterales) va de 10 a 500 caracteres; al aprobar es opcional, hasta 500. */
+    private static boolean respuestaValida(final String accion, final String respuesta) {
+        final int largo = respuesta == null ? 0 : respuesta.length();
+        if (largo > RESPUESTA_MAXIMO) {
+            return false;
+        }
+        return !"RECHAZADA".equals(accion) || largo >= RESPUESTA_RECHAZO_MINIMO;
     }
 
     private static ResultadoAprobacionReclamo resultadoValido(final String resultado) {

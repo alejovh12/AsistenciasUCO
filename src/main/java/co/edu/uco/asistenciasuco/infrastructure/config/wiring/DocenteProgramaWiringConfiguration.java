@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional.CorreoInstitucionalPolicy;
 import co.edu.uco.asistenciasuco.application.features.identidad.sincronizarcuenta.SincronizarCuentaInstitucionalService;
 import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.primaryports.ActualizarDocenteProgramaInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.primaryports.interactor.ActualizarDocenteProgramaInteractor;
@@ -93,8 +94,8 @@ public class DocenteProgramaWiringConfiguration {
                 passwordEncoderPort, identityProviderPort);
     }
 
-    @Bean VincularDocenteProgramaInputPort vincularDocenteProgramaInputPort(final VincularDocenteProgramaUseCase useCase) {
-        return new VincularDocenteProgramaInteractor(useCase);
+    @Bean VincularDocenteProgramaInputPort vincularDocenteProgramaInputPort(final VincularDocenteProgramaUseCase useCase, final CorreoInstitucionalPolicy correoInstitucionalPolicy) {
+        return new VincularDocenteProgramaInteractor(useCase, correoInstitucionalPolicy);
     }
 
     @Bean ActualizarDocenteProgramaUseCase actualizarDocenteProgramaUseCase(

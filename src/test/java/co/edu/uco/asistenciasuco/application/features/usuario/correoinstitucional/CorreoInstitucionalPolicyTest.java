@@ -204,4 +204,20 @@ class CorreoInstitucionalPolicyTest {
             }
         };
     }
+
+    // DEC-073: el personal (decano, coordinador, docente) usa el mismo dominio institucional.
+    @Test
+    void DEC_073_exigirPersonal_acepta_el_dominio_institucional() {
+        assertDoesNotThrow(() -> politica(DOMINIO).exigirPersonal("maria.rostagno@uco.edu.co"));
+    }
+
+    @Test
+    void DEC_073_exigirPersonal_rechaza_otro_dominio_con_VCE_008_y_el_dominio_en_el_mensaje() {
+        final ValidationException exception = assertThrows(ValidationException.class,
+                () -> politica(DOMINIO).exigirPersonal("docente@gmail.com"));
+
+        assertEquals("VCE_008", exception.getCode());
+        assertTrue(exception.getMessage().contains(DOMINIO));
+        assertFalse(exception.getMessage().contains("estudiante"));
+    }
 }

@@ -229,6 +229,6 @@ class AltaCompuestaSpIT {
     }
 
     private static String correoUnico() {
-        return "it-dec065-" + sufijo() + "@example.test";
+        return "it-dec065-" + sufijo() + "@uco.edu.co"; // DEC-073: el personal nuevo usa el dominio institucional
     }
 }

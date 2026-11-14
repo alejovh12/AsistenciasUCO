@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional.CorreoInstitucionalPolicyFixture;
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.dto.CrearDecanoDTO;
@@ -190,7 +191,7 @@ class CrearDecanoConFacultadUseCaseImplTest {
         when(command.crearDecanoConFacultad(any())).thenReturn(
                 new DecanoCommandPort.ResultadoDecanoConFacultad(DECANO_ID, FACULTAD_ID, "Facultad de Ingenieria"));
 
-        final var resultado = new CrearDecanoInteractor(useCase).execute(new CrearDecanoDTO(
+        final var resultado = new CrearDecanoInteractor(useCase, CorreoInstitucionalPolicyFixture.institucional()).execute(new CrearDecanoDTO(
                 TIPO_ID, 123456789, "Ana", "Maria", "Perez", "Gomez", CORREO, RAW, null, EJECUTOR,
                 new FacultadNuevaDTO("Facultad de Ingenieria", "ING", INSTITUCION_ID)));
 

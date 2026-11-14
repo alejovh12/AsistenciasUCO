@@ -28,7 +28,9 @@ public enum SesionErrorCode implements ErrorDefinition {
     SES_025("SES_025", "La sesión no tiene una solicitud de aprobación.", ErrorKind.CONFLICT),
     // CULM-001 A.2-10: sesion solapada en el grupo o con otro grupo del docente. 400 (el OpenAPI de las sesiones declara 400)
     // con su codigo de catalogo para que el usuario reciba el texto institucional; este es el texto de contingencia.
-    SES_017("SES_017", "La sesión se cruza con otra sesión del grupo o del docente en ese horario.", ErrorKind.VALIDATION);
+    SES_017("SES_017", "La sesión se cruza con otra sesión del grupo o del docente en ese horario.", ErrorKind.VALIDATION),
+    /** DEC-072/DEC-073: la sesión empieza y termina el mismo día en la zona institucional (la base de datos lo valida). */
+    SES_028("SES_028", "La sesión debe terminar el mismo día en que empieza; no puede pasar de la medianoche.", ErrorKind.VALIDATION);
 
     private final String code;
     private final String defaultMessage;
