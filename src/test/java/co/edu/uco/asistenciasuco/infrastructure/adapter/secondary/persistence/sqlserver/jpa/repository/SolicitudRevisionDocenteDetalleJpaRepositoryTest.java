@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
+import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.DetalleSolicitudRevisionDocenteProjection;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.SpDetalleSolicitudRevisionDocenteEntity;
@@ -108,6 +110,35 @@ class SolicitudRevisionDocenteDetalleJpaRepositoryTest {
         when(entityManager.createNativeQuery(anyString(), any(Class.class))).thenThrow(new PersistenceException("boom"));
 
         assertThrows(DatabaseOperationException.class, () -> repository.consultarDetalleSolicitudDocente(SOLICITUD, USUARIO));
+    }
+
+    // ---- DBCODE del SP de detalle y del listado: el rechazo del SP no es un fallo tecnico (500) ----
+
+    @Test
+    void un_id_de_solicitud_invalido_rechazado_por_el_sp_con_val_001_se_traduce_a_validacion_400() {
+        CorrelationIdContext.set(UUID.randomUUID());
+        when(entityManager.createNativeQuery(anyString(), any(Class.class)))
+                .thenThrow(new PersistenceException("DBCODE=VAL_001|El campo Solicitud es obligatorio."));
+
+        assertThrows(ValidationException.class, () -> repository.consultarDetalleSolicitudDocente(SOLICITUD, USUARIO));
+    }
+
+    @Test
+    void un_ejecutor_sin_perfil_docente_rechazado_por_el_sp_con_sec_001_se_traduce_a_403() {
+        CorrelationIdContext.set(UUID.randomUUID());
+        when(entityManager.createNativeQuery(anyString(), any(Class.class)))
+                .thenThrow(new PersistenceException("DBCODE=SEC_001|Rol no permitido."));
+
+        assertThrows(ForbiddenException.class, () -> repository.consultarDetalleSolicitudDocente(SOLICITUD, USUARIO));
+    }
+
+    @Test
+    void el_listado_del_docente_traduce_el_dbcode_del_sp_en_lugar_de_responder_500() {
+        CorrelationIdContext.set(UUID.randomUUID());
+        when(entityManager.createNativeQuery(anyString(), any(Class.class)))
+                .thenThrow(new PersistenceException("DBCODE=SEC_001|Rol no permitido."));
+
+        assertThrows(ForbiddenException.class, () -> repository.consultarSolicitudesDocente(USUARIO, null, 1, 10));
     }
 
     // ---- CULM-001 D.2 (CONTRACT D 3.2/3.3): categoria y soportes del detalle del docente ----
