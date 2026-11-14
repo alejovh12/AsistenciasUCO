@@ -48,7 +48,8 @@ if (Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyCon
 function Import-ProcessEnvFile([string]$Path) {
     $values = @{}
     foreach ($line in Get-Content -LiteralPath $Path) {
-        $trimmed = $line.Trim()
+        # Algunos editores dejan un BOM al inicio de la primera clave del .env.
+        $trimmed = $line.Trim().TrimStart([char]0xFEFF)
         if ($trimmed.Length -eq 0 -or $trimmed.StartsWith('#')) { continue }
         $index = $trimmed.IndexOf('=')
         if ($index -lt 1) { continue }
@@ -65,6 +66,12 @@ if ($DatasourceEnv) {
         [Environment]::SetEnvironmentVariable($pair.Key, $pair.Value, 'Process')
     }
     if ($env:SPRING_DATASOURCE_USERNAME -eq 'sa') { throw 'DatasourceEnv usa sa; use un login de minimo privilegio.' }
+}
+
+# El script es de ejecución LOCAL: cargar los defaults de application-local.yml,
+# sin sobrescribir un perfil elegido expresamente por el operador o el .env.
+if ([string]::IsNullOrWhiteSpace($env:SPRING_PROFILES_ACTIVE)) {
+    $env:SPRING_PROFILES_ACTIVE = 'local'
 }
 
 $env:SERVER_PORT = "$Port"
