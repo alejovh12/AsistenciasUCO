@@ -20,6 +20,7 @@ import java.util.UUID;
 /**
  * Solicitudes de revision del docente titular (LB-004D, R2) por {@code usp_consultar_solicitudes_revision_docente}.
  * La paginacion es real (OFFSET/FETCH en SQL) y la titularidad se filtra en la DB por {@code Docente.usuario}.
+ * Los rechazos del SP ({@code THROW 51000} con {@code DBCODE=}: VAL_001, SEC_001...) se traducen con {@link DbCodeTranslator}.
  */
 @Repository
 public class SolicitudRevisionDocenteJpaRepository implements SolicitudRevisionDocenteQueryPort {
@@ -69,7 +70,8 @@ public class SolicitudRevisionDocenteJpaRepository implements SolicitudRevisionD
                         .setParameter("tamanoPagina", tamanoPagina)
                         .getResultList().stream()
                         .map(fila -> toProjection((SpSolicitudRevisionDocenteEntity) fila))
-                        .toList()
+                        .toList(),
+                DbCodeTranslator::traducir
         );
     }
 
@@ -88,7 +90,8 @@ public class SolicitudRevisionDocenteJpaRepository implements SolicitudRevisionD
                         .setParameter("idCorrelacion", correlationId)
                         .getResultList().stream()
                         .map(fila -> toDetalleProjection((SpDetalleSolicitudRevisionDocenteEntity) fila))
-                        .findFirst()
+                        .findFirst(),
+                DbCodeTranslator::traducir
         );
     }
 
