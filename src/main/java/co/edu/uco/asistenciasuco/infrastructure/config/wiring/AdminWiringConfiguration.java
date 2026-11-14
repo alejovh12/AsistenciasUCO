@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional.CorreoInstitucionalPolicy;
 import co.edu.uco.asistenciasuco.application.features.alertainasistencia.common.EvaluadorAlertasInasistencia;
 import co.edu.uco.asistenciasuco.application.features.identidad.sincronizarcuenta.SincronizarCuentaInstitucionalService;
 import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadodecano.usecase.impl.CambiarEstadoDecanoUseCaseImpl;
@@ -90,7 +91,7 @@ public class AdminWiringConfiguration {
         return new CrearDecanoUseCaseImpl(facultadQueryPort, decanoCommandPort,
                 usuarioRepositoryPort, passwordEncoderPort, asegurarCuentaIdentidadService);
     }
-    @Bean CrearDecanoInputPort crearDecanoInputPort(final CrearDecanoUseCase useCase) { return new CrearDecanoInteractor(useCase); }
+    @Bean CrearDecanoInputPort crearDecanoInputPort(final CrearDecanoUseCase useCase, final CorreoInstitucionalPolicy correoInstitucionalPolicy) { return new CrearDecanoInteractor(useCase, correoInstitucionalPolicy); }
     @Bean ConsultarInstitucionesUseCase consultarInstitucionesUseCase(final InstitucionQueryPort port) { return new ConsultarInstitucionesUseCaseImpl(port); }
     @Bean ConsultarInstitucionesInputPort consultarInstitucionesInputPort(final ConsultarInstitucionesUseCase useCase) { return new ConsultarInstitucionesInteractor(useCase); }
     @Bean ConsultarFacultadesUseCase consultarFacultadesUseCase(final FacultadQueryPort port) { return new ConsultarFacultadesUseCaseImpl(port); }

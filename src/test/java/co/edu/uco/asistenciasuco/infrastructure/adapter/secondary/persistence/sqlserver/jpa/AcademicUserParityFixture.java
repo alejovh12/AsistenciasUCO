@@ -21,7 +21,8 @@ final class AcademicUserParityFixture {
 
     static final String IT_PREFIX = "IT-LB008-JPA03-";
     static final String IT_EMAIL_PREFIX = "it-lb008-jpa03-";
-    static final String IT_EMAIL_DOMAIN = "@example.test";
+    /** DEC-073: el personal nuevo usa el dominio institucional (REGISTRO/DOMINIO_CORREO_ESTUDIANTE); la limpieza filtra por el prefijo. */
+    static final String IT_EMAIL_DOMAIN = "@uco.edu.co";
 
     static final String EMAIL_DECANO_EJECUTOR = "decano.ingenieria@uco.edu.co";
     static final String EMAIL_COORDINADOR_EJECUTOR = "coordinador.sistemas@uco.edu.co";

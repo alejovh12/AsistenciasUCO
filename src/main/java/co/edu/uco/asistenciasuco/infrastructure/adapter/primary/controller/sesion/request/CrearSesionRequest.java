@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesion.request;
 
+import jakarta.validation.constraints.Size;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.TextoSeguro;
 import java.util.UUID;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -11,6 +13,8 @@ public final class CrearSesionRequest {
     @NotNull(message = "El grupo es obligatorio.")
     private UUID grupo;
     @NotBlank(message = "El nombre es obligatorio.")
+    @TextoSeguro
+    @Size(max = 50, message = "El campo nombre no puede superar 50 caracteres.")
     private String nombre;
     private String fechaHoraInicio;
     private String fechaHoraFin;

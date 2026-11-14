@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.vinculardocenteprograma.primaryports.interactor;
 
+import co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional.CorreoInstitucionalPolicyFixture;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarcandidatosdocente.usecase.domain.DocenteCandidatoDomain;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.domain.DocenteProgramaDomain;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultardocentesprograma.usecase.domain.DocentesProgramaPaginaDomain;
@@ -36,7 +37,7 @@ class DocentesProgramaInteractorsTest {
 
     @Test
     void constructores_rechazan_caso_de_uso_nulo() {
-        assertThrows(NullPointerException.class, () -> new VincularDocenteProgramaInteractor(null));
+        assertThrows(NullPointerException.class, () -> new VincularDocenteProgramaInteractor(null, CorreoInstitucionalPolicyFixture.institucional()));
         assertThrows(NullPointerException.class, () -> new ConsultarDocentesProgramaInteractor(null));
         assertThrows(NullPointerException.class, () -> new ConsultarCandidatosDocenteInteractor(null));
     }
@@ -48,7 +49,7 @@ class DocentesProgramaInteractorsTest {
         final UUID docente = UUID.randomUUID();
         when(useCase.execute(any())).thenReturn(domain(docente));
 
-        final DocenteProgramaDTO dto = new VincularDocenteProgramaInteractor(useCase).execute(
+        final DocenteProgramaDTO dto = new VincularDocenteProgramaInteractor(useCase, CorreoInstitucionalPolicyFixture.institucional()).execute(
                 new VincularDocenteProgramaDTO(ACTOR, docente, null, null, null, null, null, null, null, null, null, tipo));
 
         final ArgumentCaptor<VincularDocenteProgramaDomain> captor = ArgumentCaptor.forClass(VincularDocenteProgramaDomain.class);
@@ -91,5 +92,22 @@ class DocentesProgramaInteractorsTest {
         return new DocenteProgramaDomain(UUID.randomUUID(), docente, UUID.randomUUID(), "CC", 1017555444, "Jorge", null,
                 "Henao", null, "Jorge Henao", "jorge@uco.edu.co", UUID.randomUUID(), "CAT", "Cátedra",
                 Instant.parse("2026-10-22T10:00:00Z"), 0, true);
+    }
+
+    @Test
+    void DEC_073_vincular_un_docente_nuevo_con_correo_externo_se_rechaza_con_VCE_008_sin_llamar_al_caso_de_uso() {
+        final VincularDocenteProgramaUseCase useCase = mock(VincularDocenteProgramaUseCase.class);
+        final VincularDocenteProgramaInteractor interactor =
+                new VincularDocenteProgramaInteractor(useCase, CorreoInstitucionalPolicyFixture.institucional());
+        final VincularDocenteProgramaDTO conGmail = new VincularDocenteProgramaDTO(ACTOR, null, null, UUID.randomUUID(),
+                1017334455, "Ana", null, "Rios", null, "ana.rios@gmail.com", "Clave-Segura9!", UUID.randomUUID());
+
+        final co.edu.uco.asistenciasuco.application.exception.validation.ValidationException exception =
+                org.junit.jupiter.api.Assertions.assertThrows(
+                        co.edu.uco.asistenciasuco.application.exception.validation.ValidationException.class,
+                        () -> interactor.execute(conGmail));
+
+        assertEquals("VCE_008", exception.getCode());
+        org.mockito.Mockito.verifyNoInteractions(useCase);
     }
 }

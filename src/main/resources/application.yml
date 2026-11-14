@@ -369,6 +369,8 @@ app:
         "[ERR_USUARIO_REQUERIDO]": ERR116
         "[ERR_CORREO_REQUERIDO_MATRICULA]": ERR117
         "[ERR_ANTIVIRUS_NO_DISPONIBLE]": ERR118
+        "[ERR_CODIGO_GRUPO_INVALIDO]": ERR119
+        "[ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA]": ERR120
     # Azure Key Vault y App Configuration (autenticacion por DefaultAzureCredential con Azure CLI).
     # SEC-12: sin nombres de recursos reales por defecto. Con un proveedor Azure activo y el endpoint vacio, el arranque
     # falla con un mensaje claro; los perfiles local/dev usan proveedores sin Azure salvo que se definan las variables.

@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional.CorreoInstitucionalPolicyFixture;
 import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.primaryports.interactor.ActualizarDocenteProgramaInteractor;
 import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.usecase.impl.ActualizarDocenteProgramaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.coordinador.cambiarestadodocenteprograma.primaryports.interactor.CambiarEstadoDocenteProgramaInteractor;
@@ -45,7 +46,7 @@ class DocenteProgramaWiringConfigurationTest {
         final var vincular = config.vincularDocenteProgramaUseCase(scope, mock(DocenteProgramaCommandPort.class), query,
                 mock(UsuarioRepositoryPort.class), mock(PasswordEncoderPort.class), mock(IdentityProviderPort.class));
         assertInstanceOf(VincularDocenteProgramaUseCaseImpl.class, vincular);
-        assertInstanceOf(VincularDocenteProgramaInteractor.class, config.vincularDocenteProgramaInputPort(vincular));
+        assertInstanceOf(VincularDocenteProgramaInteractor.class, config.vincularDocenteProgramaInputPort(vincular, CorreoInstitucionalPolicyFixture.institucional()));
     }
 
     @Test

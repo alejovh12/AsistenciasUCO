@@ -1,9 +1,11 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.decano.request;
 
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.TextoSeguro;
 import java.util.UUID;
 
 /** Cuerpo de alta (POST) y reemplazo completo (PUT) de un programa academico. */
 public final class ProgramaAcademicoRequest {
+    @TextoSeguro
     private String nombre;
     private UUID idTipoPrograma;
     private UUID idCoordinador;

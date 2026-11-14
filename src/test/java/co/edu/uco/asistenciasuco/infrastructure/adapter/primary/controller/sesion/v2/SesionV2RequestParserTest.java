@@ -88,4 +88,55 @@ class SesionV2RequestParserTest {
         missing.put("fechaHoraFin", null);
         assertThrows(RequestValidationException.class, () -> SesionV2RequestParser.parseCrear(missing));
     }
+
+    @Test
+    void DEC_072_rechaza_crear_una_sesion_que_termina_al_dia_siguiente_en_la_zona_del_cliente() {
+        final Map<String, Object> cruzaMedianoche = Map.of(
+                "grupo", UUID.randomUUID().toString(),
+                "nombre", "Test nueva clase",
+                "fechaHoraInicio", "2042-11-13T20:30:00-05:00",
+                "fechaHoraFin", "2042-11-14T10:00:00-05:00");
+
+        final RequestValidationException exception = assertThrows(RequestValidationException.class,
+                () -> SesionV2RequestParser.parseCrear(cruzaMedianoche));
+
+        assertTrue(exception.getValidationResult().issues().stream()
+                .anyMatch(issue -> issue.field().equals("fechaHoraFin") && issue.message().contains("medianoche")));
+    }
+
+    @Test
+    void DEC_072_el_mismo_dia_se_mide_con_el_offset_del_cliente_aunque_en_utc_cambie_la_fecha() {
+        // 20:30 a 22:00 en Bogota son 01:30 y 03:00 UTC del dia siguiente: sigue siendo el mismo dia para el cliente.
+        final SesionV2RequestParser.CrearSesionV2 parsed = SesionV2RequestParser.parseCrear(Map.of(
+                "grupo", UUID.randomUUID().toString(),
+                "nombre", "Nocturna",
+                "fechaHoraInicio", "2042-11-13T20:30:00-05:00",
+                "fechaHoraFin", "2042-11-13T22:00:00-05:00"));
+
+        assertEquals(LocalDateTime.parse("2042-11-14T01:30:00"), parsed.inicioUtc());
+    }
+
+    @Test
+    void DEC_072_editar_conserva_los_instantes_de_una_sesion_antigua_que_cruza_la_medianoche() {
+        final SesionV2RequestParser.ActualizarSesionV2 parsed = SesionV2RequestParser.parseActualizar(Map.of(
+                "nombre", "Renombrada",
+                "fechaHoraInicio", "2042-11-13T22:30:00-05:00",
+                "fechaHoraFin", "2042-11-14T00:35:00-05:00"));
+
+        assertEquals("Renombrada", parsed.nombre());
+    }
+
+    @Test
+    void DEC_073_rechaza_un_nombre_con_html() {
+        final Map<String, Object> conHtml = Map.of(
+                "grupo", UUID.randomUUID().toString(),
+                "nombre", "<script>alert(1)</script>",
+                "fechaHoraInicio", "2042-11-13T08:00:00-05:00",
+                "fechaHoraFin", "2042-11-13T10:00:00-05:00");
+
+        final RequestValidationException exception = assertThrows(RequestValidationException.class,
+                () -> SesionV2RequestParser.parseCrear(conHtml));
+
+        assertTrue(exception.getValidationResult().issues().stream().anyMatch(issue -> issue.field().equals("nombre")));
+    }
 }
