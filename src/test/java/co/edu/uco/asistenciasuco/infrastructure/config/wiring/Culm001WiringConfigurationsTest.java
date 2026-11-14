@@ -15,16 +15,6 @@ import co.edu.uco.asistenciasuco.application.features.alertainasistencia.consult
 import co.edu.uco.asistenciasuco.application.features.alertainasistencia.consultaralertasestudiante.usecase.impl.ConsultarAlertasEstudianteUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.alertainasistencia.evaluaralertasautomatico.primaryports.EvaluarAlertasInasistenciaAutomaticoInputPort;
 import co.edu.uco.asistenciasuco.application.features.alertainasistencia.evaluaralertasautomatico.usecase.impl.EvaluarAlertasInasistenciaAutomaticoUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.features.cargamasiva.primaryports.EjecutarCargaUsuariosInputPort;
-import co.edu.uco.asistenciasuco.application.features.cargamasiva.primaryports.ValidarCargaUsuariosInputPort;
-import co.edu.uco.asistenciasuco.application.features.cargamasiva.primaryports.interactor.EjecutarCargaUsuariosInteractor;
-import co.edu.uco.asistenciasuco.application.features.cargamasiva.primaryports.interactor.ValidarCargaUsuariosInteractor;
-import co.edu.uco.asistenciasuco.application.features.cargamasiva.secondaryports.CargaUsuariosValidacionPort;
-import co.edu.uco.asistenciasuco.application.features.cargamasiva.secondaryports.CsvCargaUsuariosParserPort;
-import co.edu.uco.asistenciasuco.application.features.cargamasiva.usecase.EjecutarCargaUsuariosUseCase;
-import co.edu.uco.asistenciasuco.application.features.cargamasiva.usecase.ValidarCargaUsuariosUseCase;
-import co.edu.uco.asistenciasuco.application.features.cargamasiva.usecase.impl.EjecutarCargaUsuariosUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.features.cargamasiva.usecase.impl.ValidarCargaUsuariosUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.coordinador.vinculardocenteprograma.usecase.VincularDocenteProgramaUseCase;
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.usecase.CrearCoordinadorUseCase;
 import co.edu.uco.asistenciasuco.application.features.identidad.asegurarcuenta.AsegurarCuentaIdentidadService;
@@ -53,7 +43,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.repository.RevisionC
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.cargas.CsvCargaUsuariosParser;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.scheduler.EvaluacionAlertasInasistenciaScheduler;
 import co.edu.uco.asistenciasuco.infrastructure.ratelimit.SlidingWindowRateLimiter;
 import org.junit.jupiter.api.Test;
@@ -68,34 +57,6 @@ import static org.mockito.Mockito.mock;
 
 /** CULM-001: los composition roots entregan el caso de uso correcto, con sus dependencias, y fallan si falta alguna. */
 class Culm001WiringConfigurationsTest {
-
-    @Test
-    void carga_masiva_cablea_parser_casos_de_uso_interactores_y_limitador() {
-        final CargaMasivaWiringConfiguration config = new CargaMasivaWiringConfiguration();
-        final CargaUsuariosValidacionPort validacion = mock(CargaUsuariosValidacionPort.class);
-
-        final CsvCargaUsuariosParserPort parser = config.csvCargaUsuariosParserPort();
-        final ValidarCargaUsuariosUseCase validarUseCase = config.validarCargaUsuariosUseCase(validacion, parser);
-        final ValidarCargaUsuariosInputPort validarPort = config.validarCargaUsuariosInputPort(validarUseCase);
-        final EjecutarCargaUsuariosUseCase ejecutarUseCase = config.ejecutarCargaUsuariosUseCase(validacion, parser,
-                mock(VincularDocenteProgramaUseCase.class), mock(CrearCoordinadorUseCase.class), mock(CrearDecanoUseCase.class),
-                mock(AsegurarCuentaIdentidadService.class));
-        final EjecutarCargaUsuariosInputPort ejecutarPort = config.ejecutarCargaUsuariosInputPort(ejecutarUseCase);
-        final SlidingWindowRateLimiter limitador = config.cargaMasivaRateLimiter(10);
-
-        assertInstanceOf(CsvCargaUsuariosParser.class, parser);
-        assertInstanceOf(ValidarCargaUsuariosUseCaseImpl.class, validarUseCase);
-        assertInstanceOf(ValidarCargaUsuariosInteractor.class, validarPort);
-        assertInstanceOf(EjecutarCargaUsuariosUseCaseImpl.class, ejecutarUseCase);
-        assertInstanceOf(EjecutarCargaUsuariosInteractor.class, ejecutarPort);
-        assertNotNull(limitador);
-        // El limitador usa el maximo de claves configurado: con 3 intentos por minuto el cuarto se rechaza.
-        assertTrue(limitador.tryAcquire("actor", 3));
-        assertTrue(limitador.tryAcquire("actor", 3));
-        assertTrue(limitador.tryAcquire("actor", 3));
-        assertTrue(!limitador.tryAcquire("actor", 3));
-        assertThrows(NullPointerException.class, () -> config.validarCargaUsuariosUseCase(null, parser));
-    }
 
     @Test
     void alertas_de_inasistencia_cablea_evaluador_consulta_job_audiencias_y_avisos() {

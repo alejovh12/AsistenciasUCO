@@ -58,13 +58,14 @@ class MessageUcoLabCatalogoTest {
     }
 
     @Test
-    void el_catalogo_trae_los_497_codigos_de_usuario_de_los_seeds() throws Exception {
+    void el_catalogo_trae_los_482_codigos_de_usuario_de_los_seeds() throws Exception {
         // CULM-001 A.1: - SIG_001..SIG_015 y ERR_SOLICITUD_MATRICULA_NO_IMPLEMENTADA (seeds 23 y 04 retirados).
         // CULM-001 A.2: + SES_017, REV_006, REV_007, REV_008, DEC_002 y DEC_003 (seed 33_culm001_a_mensajes).
         // VAL-oleada3 MSG-03: regenerado desde todos los seeds (291 que ya estaban en la BD) + 107 de MSG-05 (seed 62).
         // VAL-pendientes-rea-msg: + 94 ERR_* (93 de la deuda MSG-03 + ERR_ANTIVIRUS_NO_DISPONIBLE, seed 63 / migracion 42).
         // DEC-073: + VCE_008, SES_028, ASI_008, ERR_CODIGO_GRUPO_INVALIDO y ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA (seed 64 / migracion 43).
-        assertEquals(497, catalogo().size());
+        // DEC-074: - CMA_001..CMA_015 (se retiro la carga masiva, migracion 44 de BD).
+        assertEquals(482, catalogo().size());
     }
 
     @Test
