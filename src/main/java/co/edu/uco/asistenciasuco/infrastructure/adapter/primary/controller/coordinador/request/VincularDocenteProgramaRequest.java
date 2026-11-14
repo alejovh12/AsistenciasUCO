@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador.request;
 
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.NumeroIdentificacionTexto;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.NombrePersona;
 import java.util.UUID;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.BeanValidationPatterns;
 import jakarta.validation.constraints.Pattern;
@@ -15,14 +17,19 @@ public final class VincularDocenteProgramaRequest {
     @NonEmptyUuid(message = "El identificador idTipoIdentificacion no es valido.")
     private UUID idTipoIdentificacion;
     @Pattern(regexp = BeanValidationPatterns.DIGITS_OR_BLANK, message = "El numero de identificacion debe ser numerico.")
+    @NumeroIdentificacionTexto
     private String numeroIdentificacion;
     @Size(max = 50, message = "El campo primerNombre excede la longitud permitida.")
+    @NombrePersona
     private String primerNombre;
     @Size(max = 50, message = "El campo segundoNombre excede la longitud permitida.")
+    @NombrePersona
     private String segundoNombre;
     @Size(max = 50, message = "El campo primerApellido excede la longitud permitida.")
+    @NombrePersona
     private String primerApellido;
     @Size(max = 50, message = "El campo segundoApellido excede la longitud permitida.")
+    @NombrePersona
     private String segundoApellido;
     @Size(max = 100, message = "El correo excede la longitud permitida.")
     private String correo;

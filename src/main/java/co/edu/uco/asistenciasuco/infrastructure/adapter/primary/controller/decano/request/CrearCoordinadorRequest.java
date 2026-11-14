@@ -1,13 +1,20 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.decano.request;
 
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.NumeroIdentificacionTexto;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.NombrePersona;
 import java.util.UUID;
 import jakarta.validation.Valid;
 
 public final class CrearCoordinadorRequest {
+    @NumeroIdentificacionTexto
     private String numeroIdentificacion;
+    @NombrePersona
     private String primerNombre;
+    @NombrePersona
     private String segundoNombre;
+    @NombrePersona
     private String primerApellido;
+    @NombrePersona
     private String segundoApellido;
     private String correo;
     private UUID idPrograma;

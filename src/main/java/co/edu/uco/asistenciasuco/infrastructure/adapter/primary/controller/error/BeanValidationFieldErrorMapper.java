@@ -92,7 +92,8 @@ public final class BeanValidationFieldErrorMapper {
         return switch (constraint) {
             case "NotNull", "NotBlank", "NotEmpty" -> ApiFieldErrorCode.FIELD_REQUIRED;
             case "Size", "Length" -> ApiFieldErrorCode.FIELD_INVALID_LENGTH;
-            case "Pattern", "Email" -> ApiFieldErrorCode.FIELD_INVALID_FORMAT;
+            case "Pattern", "Email", "NombrePersona", "TextoSeguro", "SinEtiquetasHtml", "NumeroIdentificacionTexto" ->
+                    ApiFieldErrorCode.FIELD_INVALID_FORMAT;
             case "NonEmptyUuid" -> ApiFieldErrorCode.FIELD_INVALID_UUID;
             case "Min", "Max", "Positive", "PositiveOrZero", "Negative", "NegativeOrZero", "DecimalMin", "DecimalMax",
                  "Digits", "Range" -> ApiFieldErrorCode.FIELD_OUT_OF_RANGE;

@@ -7,6 +7,8 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.valid
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -56,6 +58,9 @@ final class SesionV2RequestParser {
         final String nombre = nombreRequerido(builder, body);
         final LocalDateTime inicio = instanteRequerido(builder, body, FIELD_INICIO);
         final LocalDateTime fin = instanteRequerido(builder, body, FIELD_FIN);
+        if (inicio != null && fin != null) {
+            exigirMismoDiaLocal(builder, body);
+        }
         RequestValidationGuard.validate(builder.build());
         return new CrearSesionV2(grupo, nombre, inicio, fin);
     }
@@ -119,7 +124,32 @@ final class SesionV2RequestParser {
             builder.add(FIELD_NOMBRE, ValidationErrorType.INVALID_LENGTH, "El nombre debe tener entre 1 y 50 caracteres.");
             return null;
         }
+        if (!ValidationHelper.isSafeText(nombre)) {
+            // DEC-073: letras, numeros, espacios y . , - _ ( ) / # :; sin < > ni comillas.
+            builder.add(FIELD_NOMBRE, ValidationErrorType.INVALID_FORMAT,
+                    "El nombre solo admite letras, numeros, espacios y los signos . , - _ ( ) / # :.");
+            return null;
+        }
         return nombre;
+    }
+
+    /**
+     * DEC-072: una sesion nueva empieza y termina el mismo dia en la zona del cliente (el offset que envia con el inicio).
+     * Solo en la creacion: al editar, el frontend reenvia los instantes originales de una sesion antigua que cruza la
+     * medianoche para poder renombrarla; ese caso lo decide la base de datos, que conoce los valores guardados.
+     */
+    private static void exigirMismoDiaLocal(final ValidationResultBuilder builder, final Map<String, Object> body) {
+        try {
+            final OffsetDateTime inicio = OffsetDateTime.parse((String) body.get(FIELD_INICIO));
+            final OffsetDateTime fin = OffsetDateTime.parse((String) body.get(FIELD_FIN))
+                    .withOffsetSameInstant(inicio.getOffset());
+            if (!inicio.toLocalDate().equals(fin.toLocalDate())) {
+                builder.add(FIELD_FIN, ValidationErrorType.OUT_OF_RANGE,
+                        "La sesion debe terminar el mismo dia en que empieza; no puede pasar de la medianoche.");
+            }
+        } catch (DateTimeParseException ignored) {
+            // El formato ya lo valida HttpUtcInstantCodec; aqui no se repite el error.
+        }
     }
 
     private static LocalDateTime instanteRequerido(

@@ -1,9 +1,13 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin.request;
 
+import jakarta.validation.constraints.Size;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.TextoSeguro;
 import java.time.LocalDate;
 
 /** Cuerpo de {@code POST/PUT /api/v1/admin/periodos-academicos}. Codigo y anio los deriva la DB. */
 public final class GuardarPeriodoAcademicoRequest {
+    @TextoSeguro
+    @Size(max = 50, message = "El campo nombre no puede superar 50 caracteres.")
     private String nombre;
     private LocalDate fechaInicio;
     private LocalDate fechaFin;
