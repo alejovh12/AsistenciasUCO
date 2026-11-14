@@ -29,7 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * CULM-001 D.6 (DEC-022 §4, CONTRACT v2 §7.2): toda mutacion ({@code POST/PUT/PATCH/DELETE}) bajo {@code /api/v1/admin/**}
  * deja un evento de auditoria, es decir, su handler lleva {@link AuditableOperation}. Recorre el
  * {@link RequestMappingHandlerMapping} real de los controladores de produccion. Las unicas excepciones son operaciones sin
- * escritura (vista previa de plantillas y validacion de cargas) y estan listadas aqui, no en el codigo de produccion.
+ * escritura (vista previa de plantillas) y estan listadas aqui, no en el codigo de produccion. DEC-074 retiro la carga masiva
+ * (y su validacion previa, que era la otra excepcion).
  */
 class AdminMutacionesAuditadasTest {
 
@@ -37,8 +38,7 @@ class AdminMutacionesAuditadasTest {
     private static final Set<RequestMethod> MUTACIONES = Set.of(RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE);
     /** Sin escritura: renderizan o validan y no cambian estado (CONTRACT v2 §7.2). */
     private static final Set<String> EXCEPCIONES = Set.of(
-            "POST /api/v1/admin/notificaciones/plantillas/{tipo}/vista-previa",
-            "POST /api/v1/admin/cargas/validacion");
+            "POST /api/v1/admin/notificaciones/plantillas/{tipo}/vista-previa");
 
     @Test
     void toda_mutacion_de_admin_esta_auditada_salvo_las_excepciones_listadas() {
@@ -76,9 +76,9 @@ class AdminMutacionesAuditadasTest {
                 "POST /api/v1/admin/festivos/{anio}/recarga")) {
             assertTrue(claves.contains(esperada), "Falta en el inventario: " + esperada);
         }
-        // Las excepciones deben ser mutaciones reales (o de cargas, que llegan con D.5); no se acepta una excepcion huerfana de otra ruta
+        // Las excepciones deben ser mutaciones reales; no se acepta una excepcion huerfana
         for (final String excepcion : EXCEPCIONES) {
-            assertTrue(claves.contains(excepcion) || excepcion.contains("/cargas/"),
+            assertTrue(claves.contains(excepcion),
                     "Excepcion huerfana: " + excepcion);
         }
     }

@@ -9,8 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
- * CULM-001: los codigos propios de la DB (matricula QR, verificacion de correo, admision, carga masiva, tomas y asistencia QR)
- * se publican tal cual; un mensaje sin informacion cae al codigo no clasificado.
+ * CULM-001: los codigos propios de la DB (matricula QR, verificacion de correo, admision, tomas y asistencia QR) se publican
+ * tal cual; un mensaje sin informacion cae al codigo no clasificado. DEC-074 retiro la carga masiva y sus codigos CMA_*.
  */
 class DbFailureClassifierCatalogoCulm001Test {
 
@@ -19,8 +19,6 @@ class DbFailureClassifierCatalogoCulm001Test {
             "MQR_001", "MQR_004", "MQR_005", "MQR_006", "MQR_007",
             "VCE_001", "VCE_002", "VCE_005", "VCE_007",
             "ADS_002", "ADS_003", "ADS_004", "ADS_005", "ADS_006",
-            "CMA_001", "CMA_002", "CMA_003", "CMA_004", "CMA_005", "CMA_006", "CMA_007",
-            "CMA_008", "CMA_009", "CMA_010", "CMA_011", "CMA_012", "CMA_013", "CMA_014",
             "TOM_001", "TOM_002", "TOM_003", "TOM_004", "TOM_012",
             "AQR_001", "AQR_002", "AQR_003", "AQR_004", "AQR_005", "AQR_006", "AQR_007", "AQR_010"
     })
@@ -29,6 +27,13 @@ class DbFailureClassifierCatalogoCulm001Test {
 
         assertEquals(codigoDb, clasificado.code());
         assertNotNull(clasificado.kind());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"CMA_001", "CMA_009", "CMA_014"})
+    void los_codigos_de_la_carga_masiva_retirada_ya_no_se_clasifican(final String codigoDb) {
+        // DEC-074: la BD ya no emite CMA_*; si llegara uno es un codigo desconocido (fallo tecnico), no un error de negocio.
+        assertEquals(DatabaseErrorCode.ERR_DB_UNCLASSIFIED, DbFailureClassifier.classify("mensaje", "DBCODE=" + codigoDb + "|detalle", "operacion"));
     }
 
     @Test
