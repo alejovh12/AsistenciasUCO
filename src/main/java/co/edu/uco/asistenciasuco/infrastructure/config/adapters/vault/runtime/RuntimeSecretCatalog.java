@@ -33,6 +33,7 @@ public final class RuntimeSecretCatalog {
         catalogo.put("app.providers.smtp-notification.username", "asistencias-smtp-username");
         catalogo.put("app.providers.smtp-notification.password", "asistencias-smtp-password");
         catalogo.put("app.security.azure-events.webhook-token", "asistencias-eventgrid-webhook-token");
+        catalogo.put("app.providers.catalogo-parametros.secreto", "asistencias-catalogo-parametros-secreto");
         PROPIEDAD_A_SECRETO = Collections.unmodifiableMap(catalogo);
     }
 
