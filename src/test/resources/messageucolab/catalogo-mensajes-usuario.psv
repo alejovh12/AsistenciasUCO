@@ -397,8 +397,102 @@ NOF_APP_012|NOFAPP012|Funcional|Error|NOF_APP_012 - No se encontró el perfil de
 NOF_APP_013|NOFAPP013|Funcional|Error|NOF_APP_013 - La facultad especificada no existe…|La facultad especificada no existe en el sistema.
 NOF_APP_014|NOFAPP014|Funcional|Error|NOF_APP_014 - El archivo solicitado no existe.|El archivo solicitado no existe.
 DIS_APP_001|DISAPP001|Funcional|Error|DIS_APP_001 - La generación automática de…|La generación automática de sesiones al crear el grupo aún no está disponible (fase F2: precarga de sesiones).
+ERR_ACCION_REVISION_INVALIDA|ERR025|Funcional|Error|ERR_ACCION_REVISION_INVALIDA - La acción sobre…|La acción sobre el reclamo debe ser APROBADA o RECHAZADA.
+ERR_ACCION_REVISION_REQUERIDA|ERR026|Funcional|Error|ERR_ACCION_REVISION_REQUERIDA - La acción sobre…|La acción sobre la solicitud es obligatoria.
+ERR_APROBACION_PRESENTE_SIN_TOMA|ERR027|Funcional|Error|ERR_APROBACION_PRESENTE_SIN_TOMA|La aprobación como presente solo aplica a reclamos de una toma.
+ERR_ASISTENCIA_REQUERIDA|ERR028|Funcional|Error|ERR_ASISTENCIA_REQUERIDA - La asistencia es…|La asistencia es obligatoria.
+ERR_BUSQUEDA_CANDIDATOS_CORTA|ERR029|Funcional|Error|ERR_BUSQUEDA_CANDIDATOS_CORTA - La búsqueda de…|La búsqueda de candidatos requiere al menos 3 caracteres.
+ERR_CATEGORIA_JUSTIFICACION_INVALIDA|ERR030|Funcional|Error|ERR_CATEGORIA_JUSTIFICACION_INVALIDA|La categoría de justificación no es válida.
+ERR_CATEGORIA_REVISION_REQUERIDA|ERR031|Funcional|Error|ERR_CATEGORIA_REVISION_REQUERIDA|La categoría de la revisión es obligatoria.
+ERR_CODIGO_VERIFICACION_REQUERIDO|ERR032|Funcional|Error|ERR_CODIGO_VERIFICACION_REQUERIDO|El código de verificación es obligatorio.
+ERR_CONFIGURACION_PLAZO_JUSTIFICACION|ERR033|Técnico|Error|ERR_CONFIGURACION_PLAZO_JUSTIFICACION|No es posible validar el plazo de justificación en este momento. Intente más tarde.
+ERR_CORREO_FORMATO_INVALIDO|ERR034|Funcional|Error|ERR_CORREO_FORMATO_INVALIDO - Ingrese un correo…|Ingrese un correo válido, por ejemplo nombre@dominio.com.
+ERR_CORREO_LONGITUD_INVALIDA|ERR035|Funcional|Error|ERR_CORREO_LONGITUD_INVALIDA - El correo puede…|El correo puede tener máximo 100 caracteres.
+ERR_CORREO_REQUERIDO|ERR036|Funcional|Error|ERR_CORREO_REQUERIDO - El correo es obligatorio.|El correo es obligatorio.
+ERR_DESCRIPCION_SESION_LONGITUD_INVALIDA|ERR037|Funcional|Error|ERR_DESCRIPCION_SESION_LONGITUD_INVALIDA|Cuando se indique una descripción, debe tener entre 10 y 250 caracteres.
+ERR_DOCENTE_INACTIVO|ERR038|Funcional|Error|ERR_DOCENTE_INACTIVO - El docente se encuentra…|El docente se encuentra inactivo.
+ERR_DOCENTE_INVALIDO|ERR039|Funcional|Error|ERR_DOCENTE_INVALIDO - El identificador del…|El identificador del docente no es válido.
+ERR_DOCENTE_NO_VINCULADO_PROGRAMA|ERR040|Funcional|Error|ERR_DOCENTE_NO_VINCULADO_PROGRAMA|El docente no está vinculado a este programa.
+ERR_DOCENTE_REQUERIDO|ERR041|Funcional|Error|ERR_DOCENTE_REQUERIDO - El docente es obligatorio.|El docente es obligatorio.
+ERR_DOCENTE_SIN_TITULARIDAD_SESION|ERR042|Funcional|Error|ERR_DOCENTE_SIN_TITULARIDAD_SESION|El docente autenticado no tiene titularidad sobre la sesión indicada.
+ERR_DOCENTE_SIN_VINCULO_ACTIVO|ERR043|Funcional|Error|ERR_DOCENTE_SIN_VINCULO_ACTIVO - El docente no…|El docente no tiene una vinculación activa con el programa.
+ERR_DOCENTE_YA_REGISTRADO|ERR044|Funcional|Error|ERR_DOCENTE_YA_REGISTRADO - El usuario ya se…|El usuario ya se encuentra registrado como docente.
+ERR_DOCENTE_YA_VINCULADO_PROGRAMA|ERR045|Funcional|Error|ERR_DOCENTE_YA_VINCULADO_PROGRAMA|El docente ya está vinculado a este programa.
+ERR_ESTADO_ASISTENCIA_INVALIDO|ERR046|Funcional|Error|ERR_ESTADO_ASISTENCIA_INVALIDO - El estado de…|El estado de asistencia debe ser AN, SJC o EX.
+ERR_ESTADO_ASISTENCIA_REQUERIDO|ERR047|Funcional|Error|ERR_ESTADO_ASISTENCIA_REQUERIDO|El estado de asistencia es obligatorio.
+ERR_ESTUDIANTE_ID_INVALIDO|ERR048|Funcional|Error|ERR_ESTUDIANTE_ID_INVALIDO - El identificador…|El identificador del estudiante no es válido.
+ERR_ESTUDIANTE_ID_REQUERIDO|ERR049|Funcional|Error|ERR_ESTUDIANTE_ID_REQUERIDO - El estudiante es…|El estudiante es obligatorio.
+ERR_ESTUDIANTE_INACTIVO|ERR050|Funcional|Error|ERR_ESTUDIANTE_INACTIVO - El estudiante se…|El estudiante se encuentra inactivo.
+ERR_FACULTAD_INVALIDA|ERR051|Funcional|Error|ERR_FACULTAD_INVALIDA - El identificador de la…|El identificador de la facultad no es válido.
+ERR_GRUPO_INVALIDO|ERR052|Funcional|Error|ERR_GRUPO_INVALIDO - El identificador del grupo…|El identificador del grupo no es válido.
+ERR_GRUPO_REQUERIDO|ERR053|Funcional|Error|ERR_GRUPO_REQUERIDO - El grupo es obligatorio.|El grupo es obligatorio.
+ERR_IDENTIDAD_USUARIO_CONFLICTO|ERR054|Funcional|Error|ERR_IDENTIDAD_USUARIO_CONFLICTO|El correo y el documento no corresponden al mismo usuario.
+ERR_INSTITUCION_INVALIDA|ERR055|Funcional|Error|ERR_INSTITUCION_INVALIDA - El identificador de…|El identificador de la institución no es válido.
+ERR_JUSTIFICACION_REVISION_REQUERIDA|ERR056|Funcional|Error|ERR_JUSTIFICACION_REVISION_REQUERIDA|La justificación de la revisión es obligatoria.
+ERR_MAXIMO_SOPORTES_RECLAMO|ERR057|Funcional|Error|ERR_MAXIMO_SOPORTES_RECLAMO - Se superó el…|Se superó el máximo de soportes permitido por reclamo.
+ERR_MODO_VINCULACION_INVALIDO|ERR058|Funcional|Error|ERR_MODO_VINCULACION_INVALIDO - Indique un…|Indique un docente existente o los datos de un docente nuevo, pero no ambos.
+ERR_MOTIVO_REVISION_LONGITUD_INVALIDA|ERR059|Funcional|Error|ERR_MOTIVO_REVISION_LONGITUD_INVALIDA|El motivo de la revisión debe tener entre 10 y 300 caracteres.
+ERR_MOTIVO_REVISION_REQUERIDO|ERR060|Funcional|Error|ERR_MOTIVO_REVISION_REQUERIDO - El motivo de la…|El motivo de la revisión es obligatorio.
+ERR_NOMBRE_COMPLETO_DOCENTE_REQUERIDO|ERR061|Funcional|Error|ERR_NOMBRE_COMPLETO_DOCENTE_REQUERIDO|El nombre completo del docente es obligatorio.
+ERR_NOMBRE_PERSONA_INVALIDO|ERR062|Funcional|Error|ERR_NOMBRE_PERSONA_INVALIDO - Los nombres y…|Los nombres y apellidos solo pueden contener letras, espacios, apóstrofes y guiones.
+ERR_NOMBRE_PERSONA_LONGITUD_INVALIDA|ERR063|Funcional|Error|ERR_NOMBRE_PERSONA_LONGITUD_INVALIDA|Cada nombre o apellido puede tener máximo 50 caracteres.
+ERR_NOMBRE_SESION_LONGITUD_INVALIDA|ERR064|Funcional|Error|ERR_NOMBRE_SESION_LONGITUD_INVALIDA|El nombre de la sesión debe tener entre 1 y 50 caracteres.
+ERR_NOMBRE_SESION_REQUERIDO|ERR065|Funcional|Error|ERR_NOMBRE_SESION_REQUERIDO - El nombre de la…|El nombre de la sesión es obligatorio.
+ERR_NUMERO_IDENTIFICACION_DOCENTE_REQUERIDO|ERR066|Funcional|Error|ERR_NUMERO_IDENTIFICACION_DOCENTE_REQUERIDO|El número de identificación del docente es obligatorio.
+ERR_NUMERO_IDENTIFICACION_INVALIDO|ERR067|Funcional|Error|ERR_NUMERO_IDENTIFICACION_INVALIDO|El número de identificación debe ser positivo y tener entre 6 y 10 dígitos.
+ERR_NUMERO_IDENTIFICACION_REQUERIDO|ERR068|Funcional|Error|ERR_NUMERO_IDENTIFICACION_REQUERIDO|El número de identificación es obligatorio.
+ERR_OBSERVACION_ASISTENCIA_LONGITUD_INVALIDA|ERR069|Funcional|Error|ERR_OBSERVACION_ASISTENCIA_LONGITUD_INVALIDA|Cuando se indique una observación de asistencia, debe tener entre 5 y 250 caracteres.
+ERR_OBSERVACION_ASISTENCIA_REQUERIDA|ERR070|Funcional|Error|ERR_OBSERVACION_ASISTENCIA_REQUERIDA|Debe indicar una observación cuando el estudiante no asiste.
+ERR_OBSERVACION_CIERRE_LONGITUD_INVALIDA|ERR071|Funcional|Error|ERR_OBSERVACION_CIERRE_LONGITUD_INVALIDA|La observación de cierre debe tener entre 10 y 250 caracteres.
+ERR_OBSERVACION_CIERRE_REQUERIDA|ERR072|Funcional|Error|ERR_OBSERVACION_CIERRE_REQUERIDA|La observación de cierre es obligatoria.
+ERR_PASSWORD_IGUAL_IDENTIFICACION|ERR073|Funcional|Error|ERR_PASSWORD_IGUAL_IDENTIFICACION|La clave no puede ser igual al número de identificación.
+ERR_PASSWORD_LONGITUD_INVALIDA|ERR074|Funcional|Error|ERR_PASSWORD_LONGITUD_INVALIDA - La clave puede…|La clave puede tener máximo 255 caracteres.
+ERR_PASSWORD_NUMERO_IDENTIFICACION_REQUERIDO|ERR075|Funcional|Error|ERR_PASSWORD_NUMERO_IDENTIFICACION_REQUERIDO|El número de identificación es obligatorio para validar la clave.
+ERR_PASSWORD_POLITICA_INVALIDA|ERR076|Funcional|Error|ERR_PASSWORD_POLITICA_INVALIDA - La clave debe…|La clave debe tener mínimo 8 caracteres, con mayúscula, minúscula, número y carácter especial.
+ERR_PASSWORD_REQUERIDO|ERR077|Funcional|Error|ERR_PASSWORD_REQUERIDO - La clave es obligatoria.|La clave es obligatoria.
+ERR_PERSONA_YA_REGISTRADA|ERR078|Funcional|Error|ERR_PERSONA_YA_REGISTRADA - Ya existe una…|Ya existe una persona con ese documento o correo. Use "Vincular docente existente".
+ERR_PLAZO_JUSTIFICACION_VENCIDO|ERR079|Funcional|Error|ERR_PLAZO_JUSTIFICACION_VENCIDO|El plazo para justificar esta inasistencia ya venció.
+ERR_PRESENTE_REQUERIDO|ERR080|Funcional|Error|ERR_PRESENTE_REQUERIDO - Debe indicar si el…|Debe indicar si el estudiante asistió.
+ERR_PRIMER_APELLIDO_REQUERIDO|ERR081|Funcional|Error|ERR_PRIMER_APELLIDO_REQUERIDO - El primer…|El primer apellido es obligatorio.
+ERR_PRIMER_NOMBRE_REQUERIDO|ERR082|Funcional|Error|ERR_PRIMER_NOMBRE_REQUERIDO - El primer nombre…|El primer nombre es obligatorio.
+ERR_PROGRAMA_INVALIDO|ERR083|Funcional|Error|ERR_PROGRAMA_INVALIDO - El identificador del…|El identificador del programa no es válido.
+ERR_RANGO_FECHAS_SESION_INVALIDO|ERR084|Funcional|Error|ERR_RANGO_FECHAS_SESION_INVALIDO|El rango de fechas de la sesión no es válido.
+ERR_RECLAMO_ASISTENCIA_NO_JUSTIFICABLE|ERR085|Funcional|Error|ERR_RECLAMO_ASISTENCIA_NO_JUSTIFICABLE|La asistencia del reclamo no es una inasistencia justificable.
+ERR_RECLAMO_NO_EXISTE|ERR086|Funcional|Error|ERR_RECLAMO_NO_EXISTE - El reclamo indicado no…|El reclamo indicado no existe.
+ERR_RECLAMO_SIN_DETALLE_ASISTENCIA|ERR087|Funcional|Error|ERR_RECLAMO_SIN_DETALLE_ASISTENCIA|El reclamo no tiene un registro de asistencia que se pueda justificar.
+ERR_RECLAMO_TOMA_DUPLICADO|ERR088|Funcional|Error|ERR_RECLAMO_TOMA_DUPLICADO - Ya existe un…|Ya existe un reclamo para esta toma.
+ERR_RECLAMO_YA_RESUELTO|ERR089|Funcional|Error|ERR_RECLAMO_YA_RESUELTO - El reclamo ya fue…|El reclamo ya fue resuelto con una decisión distinta.
+ERR_REGISTROS_ASISTENCIA_REQUERIDOS|ERR090|Funcional|Error|ERR_REGISTROS_ASISTENCIA_REQUERIDOS|Los registros de asistencia son obligatorios.
+ERR_RESULTADO_APROBACION_INVALIDO|ERR091|Funcional|Error|ERR_RESULTADO_APROBACION_INVALIDO|El resultado de la aprobación debe ser PRESENTE o JUSTIFICADA.
+ERR_SESION_ASISTENCIA_REQUERIDA|ERR092|Funcional|Error|ERR_SESION_ASISTENCIA_REQUERIDA|La sesión de asistencia es obligatoria.
+ERR_SESION_CANCELADA|ERR093|Funcional|Error|ERR_SESION_CANCELADA - La sesión fue cancelada…|La sesión fue cancelada; no admite registro de asistencia.
+ERR_SESION_CERRADA|ERR094|Funcional|Error|ERR_SESION_CERRADA - La sesión ya finalizó; la…|La sesión ya finalizó; la asistencia solo puede modificarse mediante un reclamo.
+ERR_SESION_HORARIO_INDETERMINADO|ERR095|Funcional|Error|ERR_SESION_HORARIO_INDETERMINADO|El horario de la sesión no está confirmado; no es posible registrar asistencia.
+ERR_SESION_NO_INICIADA|ERR096|Funcional|Error|ERR_SESION_NO_INICIADA - La sesión aún no ha…|La sesión aún no ha iniciado; la asistencia solo se registra durante la sesión.
+ERR_SESION_REQUERIDA|ERR097|Funcional|Error|ERR_SESION_REQUERIDA - La sesión es obligatoria.|La sesión es obligatoria.
+ERR_SOLICITUD_REVISION_REQUERIDA|ERR098|Funcional|Error|ERR_SOLICITUD_REVISION_REQUERIDA|La solicitud de revisión es obligatoria.
+ERR_SOPORTE_OBLIGATORIO_CATEGORIA|ERR099|Funcional|Error|ERR_SOPORTE_OBLIGATORIO_CATEGORIA|La categoría seleccionada exige adjuntar al menos un soporte.
+ERR_SOPORTE_RECLAMO_DUPLICADO|ERR100|Funcional|Error|ERR_SOPORTE_RECLAMO_DUPLICADO - Un mismo soporte…|Un mismo soporte no se puede adjuntar dos veces.
+ERR_SOPORTE_RECLAMO_INVALIDO|ERR101|Funcional|Error|ERR_SOPORTE_RECLAMO_INVALIDO - La lista de…|La lista de soportes contiene un identificador no válido.
+ERR_TIPO_IDENTIFICACION_CODIGO_LONGITUD_INVALIDA|ERR102|Funcional|Error|ERR_TIPO_IDENTIFICACION_CODIGO_LONGITUD_INVALIDA|El código del tipo de identificación puede tener máximo 5 caracteres.
+ERR_TIPO_IDENTIFICACION_CODIGO_REQUERIDO|ERR103|Funcional|Error|ERR_TIPO_IDENTIFICACION_CODIGO_REQUERIDO|El código del tipo de identificación es obligatorio.
+ERR_TIPO_IDENTIFICACION_INVALIDA|ERR104|Funcional|Error|ERR_TIPO_IDENTIFICACION_INVALIDA|El tipo de identificación no es válido.
+ERR_TIPO_IDENTIFICACION_NOMBRE_LONGITUD_INVALIDA|ERR105|Funcional|Error|ERR_TIPO_IDENTIFICACION_NOMBRE_LONGITUD_INVALIDA|El nombre del tipo de identificación puede tener máximo 50 caracteres.
+ERR_TIPO_IDENTIFICACION_NOMBRE_REQUERIDO|ERR106|Funcional|Error|ERR_TIPO_IDENTIFICACION_NOMBRE_REQUERIDO|El nombre del tipo de identificación es obligatorio.
+ERR_TIPO_IDENTIFICACION_NO_EXISTE|ERR107|Funcional|Error|ERR_TIPO_IDENTIFICACION_NO_EXISTE|El tipo de identificación no existe.
+ERR_TIPO_IDENTIFICACION_REQUERIDA|ERR108|Funcional|Error|ERR_TIPO_IDENTIFICACION_REQUERIDA|El tipo de identificación es obligatorio.
+ERR_TIPO_VINCULACION_INVALIDO|ERR109|Funcional|Error|ERR_TIPO_VINCULACION_INVALIDO - El tipo de…|El tipo de vinculación indicado no existe o está inactivo.
+ERR_TOMA_NO_RECLAMABLE|ERR110|Funcional|Error|ERR_TOMA_NO_RECLAMABLE - Solo puedes reclamar…|Solo puedes reclamar una toma en la que quedaste ausente.
+ERR_USUARIO_DOCENTE_INVALIDO|ERR111|Funcional|Error|ERR_USUARIO_DOCENTE_INVALIDO - El identificador…|El identificador del usuario asociado al docente no es válido.
+ERR_USUARIO_DOCENTE_REQUERIDO|ERR112|Funcional|Error|ERR_USUARIO_DOCENTE_REQUERIDO - El usuario del…|El usuario del docente es obligatorio.
+ERR_USUARIO_EJECUTOR_ASISTENCIA_REQUERIDO|ERR113|Funcional|Error|ERR_USUARIO_EJECUTOR_ASISTENCIA_REQUERIDO|El usuario autenticado que registra las asistencias es obligatorio.
+ERR_USUARIO_INACTIVO|ERR114|Funcional|Error|ERR_USUARIO_INACTIVO - El usuario se encuentra…|El usuario se encuentra inactivo.
+ERR_USUARIO_INVALIDO|ERR115|Funcional|Error|ERR_USUARIO_INVALIDO - El identificador del…|El identificador del usuario no es válido.
+ERR_USUARIO_REQUERIDO|ERR116|Funcional|Error|ERR_USUARIO_REQUERIDO - El usuario es obligatorio.|El usuario es obligatorio.
+ERR_CORREO_REQUERIDO_MATRICULA|ERR117|Funcional|Error|ERR_CORREO_REQUERIDO_MATRICULA - El correo es…|El correo es obligatorio: no hay un estudiante registrado que se pueda matricular con ese documento.
+ERR_ANTIVIRUS_NO_DISPONIBLE|ERR118|Técnico|Error|ERR_ANTIVIRUS_NO_DISPONIBLE - El antivirus no…|El antivirus no está disponible; el archivo no se guardó. Intente de nuevo en unos minutos.
 VCE_008|VCE008|Funcional|Error|VCE_008 - El correo debe ser institucional y…|El correo debe ser institucional y terminar en {}.
 SES_028|SES028|Funcional|Error|SES_028 - La sesión debe terminar el mismo día…|La sesión debe terminar el mismo día en que empieza; no puede pasar de la medianoche.
 ASI_008|ASI008|Funcional|Error|ASI_008 - Los créditos de la asignatura no…|Los créditos de la asignatura no pueden superar {}.
-ERR_CODIGO_GRUPO_INVALIDO|ERR025|Funcional|Error|ERR_CODIGO_GRUPO_INVALIDO - El código del grupo…|El código del grupo debe ser un número entero mayor que cero.
-ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA|ERR026|Funcional|Error|ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA|Al rechazar un reclamo la respuesta es obligatoria y debe tener entre {} y {} caracteres; al aprobarlo es opcional y no puede superar ese máximo.
+ERR_CODIGO_GRUPO_INVALIDO|ERR119|Funcional|Error|ERR_CODIGO_GRUPO_INVALIDO - El código del grupo…|El código del grupo debe ser un número entero mayor que cero.
+ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA|ERR120|Funcional|Error|ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA|Al rechazar, la respuesta es obligatoria ({} a {} caracteres); al aprobar es opcional (máx. {}).

@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.application.features.archivo.subirarchivo.usec
 import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
+import co.edu.uco.asistenciasuco.application.features.archivo.exception.ArchivoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.archivo.shared.contentsecurity.ChecksumCalculator;
 import co.edu.uco.asistenciasuco.application.features.archivo.shared.contentsecurity.CompressionDecision;
 import co.edu.uco.asistenciasuco.application.features.archivo.shared.contentsecurity.CompressionPolicy;
@@ -181,8 +182,9 @@ public final class SubirArchivoUseCaseImpl implements SubirArchivoUseCase {
         try {
             scanResult = malwareScanPort.scan(content);
         } catch (final MalwareScanPort.MalwareScanException exception) {
-            throw new InternalApplicationException(
-                    "No fue posible completar el control de seguridad del archivo.", exception);
+            // VAL H3: antivirus caido, timeout, respuesta invalida o breaker abierto. Falla cerrado (no se almacena) y responde 503
+            // ERR_ANTIVIRUS_NO_DISPONIBLE en lugar de 500.
+            throw InternalApplicationException.servicioNoDisponible(ArchivoErrorCode.ERR_ANTIVIRUS_NO_DISPONIBLE, exception);
         }
         if (scanResult.isInfected()) {
             throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_028);
