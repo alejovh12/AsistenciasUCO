@@ -10,6 +10,8 @@ import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorKind;
  */
 public enum CatalogoErrorCode implements ErrorDefinition {
     TPR_001("TPR_001", "El tipo de programa especificado no existe en el sistema.", ErrorKind.NOT_FOUND),
+    /** DEC-073: los créditos de la asignatura no superan ASIGNATURA/CREDITOS_MAXIMO ({} = máximo vigente). */
+    ASI_008("ASI_008", "Los créditos de la asignatura no pueden superar {}.", ErrorKind.VALIDATION),
     TPR_002("TPR_002", "Ya existe un tipo de programa con el mismo codigo o nombre.", ErrorKind.CONFLICT),
     ARE_001("ARE_001", "El area de conocimiento especificada no existe en el sistema.", ErrorKind.NOT_FOUND),
     ARE_002("ARE_002", "Ya existe un area de conocimiento con el mismo codigo o nombre.", ErrorKind.CONFLICT);

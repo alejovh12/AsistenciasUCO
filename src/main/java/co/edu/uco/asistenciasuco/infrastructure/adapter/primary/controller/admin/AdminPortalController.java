@@ -57,6 +57,7 @@ import jakarta.validation.constraints.Size;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.BeanValidationCodes;
 import jakarta.validation.constraints.Positive;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.NonEmptyUuid;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.TextoSeguro;
 
 @RestController
 @RequestMapping("/api/v1/admin")
@@ -293,15 +294,15 @@ public final class AdminPortalController {
     }
 
     public record CrearFacultadRequest(
-            @NotBlank(message = "El nombre de la facultad es obligatorio.") @Size(min = 3, max = 50, message = "El nombre de la facultad debe tener entre 3 y 50 caracteres.") String nombre,
-            String codigo,
+            @NotBlank(message = "El nombre de la facultad es obligatorio.") @Size(min = 3, max = 50, message = "El nombre de la facultad debe tener entre 3 y 50 caracteres.") @TextoSeguro String nombre,
+            @TextoSeguro @Size(max = 50, message = "El codigo de la facultad no puede superar 50 caracteres.") String codigo,
             UUID idInstitucion,
             @NotNull(message = "El decano titular de la facultad es obligatorio.") @NonEmptyUuid(message = "El decano titular de la facultad es obligatorio.", payload = BeanValidationCodes.Required.class) UUID idDecano
     ) {
     }
 
     public record ActualizarFacultadRequest(
-            @Size(max = 50, message = "El nombre de la facultad debe tener entre 3 y 50 caracteres.") String nombre,
+            @Size(max = 50, message = "El nombre de la facultad debe tener entre 3 y 50 caracteres.") @TextoSeguro String nombre,
             UUID idDecano
     ) {
     }

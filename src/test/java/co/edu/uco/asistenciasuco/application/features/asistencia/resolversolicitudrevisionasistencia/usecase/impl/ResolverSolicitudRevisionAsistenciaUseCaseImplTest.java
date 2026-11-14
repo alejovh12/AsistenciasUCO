@@ -60,7 +60,7 @@ class ResolverSolicitudRevisionAsistenciaUseCaseImplTest {
         when(scope.findDocenteIdByUsuario(USUARIO)).thenReturn(Optional.empty());
 
         assertThrows(ForbiddenException.class, () -> useCase.execute(
-                new ResolverSolicitudRevisionAsistenciaDomain(SOLICITUD, "RECHAZADA", null, USUARIO)));
+                new ResolverSolicitudRevisionAsistenciaDomain(SOLICITUD, "RECHAZADA", "No presentó soporte.", USUARIO)));
 
         verifyNoInteractions(repository);
     }
@@ -72,7 +72,7 @@ class ResolverSolicitudRevisionAsistenciaUseCaseImplTest {
         doThrow(yaResuelto).when(repository).resolverSolicitudRevisionAsistencia(any());
 
         final ConflictException exception = assertThrows(ConflictException.class, () -> useCase.execute(
-                new ResolverSolicitudRevisionAsistenciaDomain(SOLICITUD, "RECHAZADA", null, USUARIO)));
+                new ResolverSolicitudRevisionAsistenciaDomain(SOLICITUD, "RECHAZADA", "No presentó soporte.", USUARIO)));
 
         assertSame(yaResuelto, exception);
     }

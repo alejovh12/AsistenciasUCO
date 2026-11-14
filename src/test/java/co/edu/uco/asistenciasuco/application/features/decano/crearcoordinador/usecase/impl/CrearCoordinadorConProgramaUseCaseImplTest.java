@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional.CorreoInstitucionalPolicyFixture;
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
@@ -198,7 +199,7 @@ class CrearCoordinadorConProgramaUseCaseImplTest {
         when(commandPort.crearCoordinadorConPrograma(any())).thenReturn(
                 new CoordinadorCommandPort.ResultadoCoordinadorConPrograma(COORDINADOR, PROGRAMA, "Ingenieria de Sistemas"));
 
-        final var resultado = new CrearCoordinadorInteractor(useCase).execute(new CrearCoordinadorDTO(
+        final var resultado = new CrearCoordinadorInteractor(useCase, CorreoInstitucionalPolicyFixture.institucional()).execute(new CrearCoordinadorDTO(
                 TIPO_ID, "1017555444", "JORGE", "LUIS", "HENAO", "PEREZ", CORREO, null, CLAVE, DECANO,
                 new ProgramaNuevoDTO("Ingenieria de Sistemas", TIPO_PROGRAMA, MODALIDAD, JORNADA)));
 

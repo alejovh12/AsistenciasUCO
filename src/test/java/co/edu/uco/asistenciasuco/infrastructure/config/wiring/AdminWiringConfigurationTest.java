@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional.CorreoInstitucionalPolicyFixture;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarareas.primaryports.interactor.ConsultarAreasInteractor;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarareas.usecase.impl.ConsultarAreasUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.admin.consultardecanos.primaryports.interactor.ConsultarDecanosInteractor;
@@ -42,7 +43,7 @@ class AdminWiringConfigurationTest {
                 mock(UsuarioRepositoryPort.class), mock(PasswordEncoderPort.class),
                 mock(co.edu.uco.asistenciasuco.application.features.identidad.asegurarcuenta.AsegurarCuentaIdentidadService.class));
         assertInstanceOf(CrearDecanoUseCaseImpl.class, crearDecanoUseCase);
-        assertInstanceOf(CrearDecanoInteractor.class, config.crearDecanoInputPort(crearDecanoUseCase));
+        assertInstanceOf(CrearDecanoInteractor.class, config.crearDecanoInputPort(crearDecanoUseCase, CorreoInstitucionalPolicyFixture.institucional()));
 
         final var consultarInstitucionesUseCase = config.consultarInstitucionesUseCase(mock(InstitucionQueryPort.class));
         assertInstanceOf(ConsultarInstitucionesUseCaseImpl.class, consultarInstitucionesUseCase);

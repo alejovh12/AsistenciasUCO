@@ -151,8 +151,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/docentes/**").hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
                 .requestMatchers("/api/v1/estudiante/**").hasRole(ROLE_ESTUDIANTE)
                 // IDENT-001: dominio institucional vigente para validar el formulario de registro manual del estudiante.
+                // DEC-073: tambien lo leen ADMINISTRADOR (alta de decanos) y DECANO (alta de coordinadores); solo expone el dominio.
                 .requestMatchers(HttpMethod.GET, "/api/v1/configuracion/registro-estudiante")
-                    .hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR)
+                    .hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR, ROLE_DECANO, ROLE_ADMINISTRADOR)
                 // Directorio de estudiantes (golden path 1.2.0, DEC-027/DEC-032): DOCENTE, COORDINADOR y ADMINISTRADOR; el ambito
                 // (grupos propios, programas, institucion) lo aplica usp_consultar_directorio_estudiantes_paginado.
                 .requestMatchers("/api/v1/estudiantes/**").hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR, ROLE_ADMINISTRADOR)

@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.decano.request;
 
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.NombrePersona;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.identidad.request.CorreccionDocumentoRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.BeanValidationPatterns;
 import jakarta.validation.constraints.NotBlank;
@@ -13,13 +14,17 @@ import jakarta.validation.constraints.Size;
 public final class ActualizarCoordinadorRequest extends CorreccionDocumentoRequest {
     @NotBlank(message = "El primer nombre es obligatorio.")
     @Size(max = 50, message = "El campo primerNombre no puede superar 50 caracteres.")
+    @NombrePersona
     private String primerNombre;
     @Size(max = 50, message = "El campo segundoNombre no puede superar 50 caracteres.")
+    @NombrePersona
     private String segundoNombre;
     @NotBlank(message = "El primer apellido es obligatorio.")
     @Size(max = 50, message = "El campo primerApellido no puede superar 50 caracteres.")
+    @NombrePersona
     private String primerApellido;
     @Size(max = 50, message = "El campo segundoApellido no puede superar 50 caracteres.")
+    @NombrePersona
     private String segundoApellido;
     @NotBlank(message = "El correo electronico es obligatorio.")
     @Pattern(regexp = BeanValidationPatterns.EMAIL_OR_BLANK, message = "El correo electronico no tiene un formato valido.")

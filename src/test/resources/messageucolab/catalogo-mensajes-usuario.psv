@@ -491,3 +491,8 @@ ERR_USUARIO_INVALIDO|ERR115|Funcional|Error|ERR_USUARIO_INVALIDO - El identifica
 ERR_USUARIO_REQUERIDO|ERR116|Funcional|Error|ERR_USUARIO_REQUERIDO - El usuario es obligatorio.|El usuario es obligatorio.
 ERR_CORREO_REQUERIDO_MATRICULA|ERR117|Funcional|Error|ERR_CORREO_REQUERIDO_MATRICULA - El correo es…|El correo es obligatorio: no hay un estudiante registrado que se pueda matricular con ese documento.
 ERR_ANTIVIRUS_NO_DISPONIBLE|ERR118|Técnico|Error|ERR_ANTIVIRUS_NO_DISPONIBLE - El antivirus no…|El antivirus no está disponible; el archivo no se guardó. Intente de nuevo en unos minutos.
+VCE_008|VCE008|Funcional|Error|VCE_008 - El correo debe ser institucional y…|El correo debe ser institucional y terminar en {}.
+SES_028|SES028|Funcional|Error|SES_028 - La sesión debe terminar el mismo día…|La sesión debe terminar el mismo día en que empieza; no puede pasar de la medianoche.
+ASI_008|ASI008|Funcional|Error|ASI_008 - Los créditos de la asignatura no…|Los créditos de la asignatura no pueden superar {}.
+ERR_CODIGO_GRUPO_INVALIDO|ERR119|Funcional|Error|ERR_CODIGO_GRUPO_INVALIDO - El código del grupo…|El código del grupo debe ser un número entero mayor que cero.
+ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA|ERR120|Funcional|Error|ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA|Al rechazar, la respuesta es obligatoria ({} a {} caracteres); al aprobar es opcional (máx. {}).

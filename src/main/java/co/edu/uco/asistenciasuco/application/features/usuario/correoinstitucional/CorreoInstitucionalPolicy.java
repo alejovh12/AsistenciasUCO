@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucion
 
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort;
+import co.edu.uco.asistenciasuco.application.features.usuario.exception.VerificacionCorreoErrorCode;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
 
 import java.util.Locale;
@@ -42,6 +43,23 @@ public final class CorreoInstitucionalPolicy {
         final String dominio = dominio();
         if (!cumple(correo, dominio)) {
             throw new ValidationException(CODIGO_MENSAJE, conDominio(mensajes.getUserMessage(CODIGO_MENSAJE, dominio), dominio));
+        }
+    }
+
+    /**
+     * DEC-073: decanos, coordinadores y docentes usan el mismo dominio institucional que el estudiante. Lanza
+     * {@link ValidationException} (VCE_008) con el mensaje del catálogo; si el catálogo aún no tiene VCE_008 se usa el
+     * respaldo del código, siempre con el dominio vigente.
+     */
+    public void exigirPersonal(final String correo) {
+        final String dominio = dominio();
+        if (!cumple(correo, dominio)) {
+            final String codigo = VerificacionCorreoErrorCode.VCE_008.code();
+            final String delCatalogo = conDominio(mensajes.getUserMessage(codigo, dominio), dominio);
+            final String mensaje = delCatalogo == null || delCatalogo.isBlank() || !delCatalogo.contains(dominio)
+                    ? VerificacionCorreoErrorCode.VCE_008.defaultMessage().replace("{}", dominio)
+                    : delCatalogo;
+            throw new ValidationException(codigo, mensaje);
         }
     }
 

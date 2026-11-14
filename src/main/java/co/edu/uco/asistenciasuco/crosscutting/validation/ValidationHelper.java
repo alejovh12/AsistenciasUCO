@@ -30,6 +30,32 @@ public final class ValidationHelper {
         return ValidationPatterns.EMAIL.matcher(value.trim()).matches();
     }
 
+    /** DEC-073: nombre o codigo de entidad con caracteres seguros; vacio o nulo es valido (la obligatoriedad va aparte). */
+    public static boolean isSafeText(final String value) {
+        if (!hasText(value)) {
+            return true;
+        }
+        return ValidationPatterns.SAFE_TEXT.matcher(value.trim()).matches();
+    }
+
+    /** DEC-073: texto libre sin delimitadores de etiquetas HTML ({@code <} y {@code >}); nulo es valido. */
+    public static boolean isWithoutHtmlTags(final String value) {
+        return value == null || !ValidationPatterns.HTML_TAG_DELIMITER.matcher(value).find();
+    }
+
+    /**
+     * DEC-073: numero de identificacion recibido como texto: solo digitos, sin cero inicial y dentro del rango de un INT de
+     * SQL Server (la columna es INT; un valor mayor llegaba a la BD y fallaba con 500). Vacio o nulo es valido.
+     */
+    public static boolean isIdentificationNumberText(final String value) {
+        if (!hasText(value)) {
+            return true;
+        }
+        final String limpio = value.trim();
+        return ValidationPatterns.IDENTIFICATION_DIGITS.matcher(limpio).matches()
+                && Long.parseLong(limpio) <= Integer.MAX_VALUE;
+    }
+
     public static boolean isNonEmptyUuid(final UUID value) {
         return value == null || !EMPTY_UUID.equals(value);
     }

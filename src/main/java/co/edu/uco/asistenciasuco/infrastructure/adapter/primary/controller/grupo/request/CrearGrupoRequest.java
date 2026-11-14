@@ -1,5 +1,8 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo.request;
 
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Positive;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.TextoSeguro;
 import java.util.List;
 import java.util.UUID;
 
@@ -9,7 +12,10 @@ public final class CrearGrupoRequest {
     private UUID asignaturaId;
     private UUID idPeriodoAcademico;
     private UUID periodoAcademicoId;
+    @Positive(message = "El codigo del grupo debe ser un entero positivo.")
     private Integer codigo;
+    @TextoSeguro
+    @Size(max = 50, message = "El campo nombre no puede superar 50 caracteres.")
     private String nombre;
     private UUID idDocente;
     private UUID docenteId;
