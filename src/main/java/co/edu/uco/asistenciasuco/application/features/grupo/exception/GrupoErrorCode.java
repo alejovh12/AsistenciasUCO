@@ -1,10 +1,10 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.exception;
 
-import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorDefinition;
 import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorKind;
 import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorSpec;
+import co.edu.uco.asistenciasuco.crosscutting.exception.SpecErrorDefinition;
 
-public enum GrupoErrorCode implements ErrorDefinition {
+public enum GrupoErrorCode implements SpecErrorDefinition {
     ERR_MATRICULA_DUPLICADA(new ErrorSpec("ERR_MATRICULA_DUPLICADA", "La matricula ya se encuentra registrada para este grupo.", ErrorKind.CONFLICT)),
     ERR_CUPO_SUPERADO(new ErrorSpec("ERR_CUPO_SUPERADO", "No hay cupos disponibles para el grupo.", ErrorKind.CONFLICT)),
     ERR_CRUCE_HORARIO_ESTUDIANTE(new ErrorSpec("ERR_CRUCE_HORARIO_ESTUDIANTE", "Existe cruce de horario para el estudiante.", ErrorKind.CONFLICT)),
@@ -23,18 +23,8 @@ public enum GrupoErrorCode implements ErrorDefinition {
     }
 
     @Override
-    public String code() {
-        return spec.code();
-    }
-
-    @Override
-    public String defaultMessage() {
-        return spec.defaultMessage();
-    }
-
-    @Override
-    public ErrorKind kind() {
-        return spec.kind();
+    public ErrorSpec spec() {
+        return spec;
     }
 
     /**

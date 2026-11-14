@@ -75,3 +75,10 @@ de campos, constructor y getters que comparten los otros 24 enums de error (y el
 | JaCoCo | `All coverage checks have been met` (líneas 94,98 %, ramas 86,39 %) |
 
 Pendiente: el nuevo análisis de SonarCloud y el Backend Quality Gate en el CI del PR. No se dan por aprobados hasta verlos.
+
+### Segunda corrida de Sonar (duplicación 3,1 %)
+
+- **Problema:** `ArchivoErrorCode` y `GrupoErrorCode` repetían entre sí el bloque que delega en `ErrorSpec` (16 líneas).
+- **Corrección:** nueva interfaz `crosscutting/exception/SpecErrorDefinition`, que extiende `ErrorDefinition` y trae por defecto `code()`, `defaultMessage()` y `kind()` a partir de `spec()`. Cada enum ahora solo guarda su `ErrorSpec` y lo expone con `spec()`. Los códigos, textos y tipos no cambian.
+- **Pruebas dirigidas** (ErrorCode, catálogo, servicio no disponible, subir archivo, reglas de arquitectura): exit 0.
+- **Verify completo:** queda a cargo del CI.
