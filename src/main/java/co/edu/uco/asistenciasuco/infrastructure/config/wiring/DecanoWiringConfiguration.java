@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional.CorreoInstitucionalPolicy;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.primaryports.ConsultarCoordinadoresInputPort;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.primaryports.interactor.ConsultarCoordinadoresInteractor;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.usecase.ConsultarCoordinadoresUseCase;
@@ -31,5 +32,5 @@ public class DecanoWiringConfiguration {
     ) {
         return new CrearCoordinadorUseCaseImpl(commandPort, scopePort, usuarioRepositoryPort, passwordEncoderPort, identityProviderPort);
     }
-    @Bean CrearCoordinadorInputPort crearCoordinadorInputPort(final CrearCoordinadorUseCase useCase) { return new CrearCoordinadorInteractor(useCase); }
+    @Bean CrearCoordinadorInputPort crearCoordinadorInputPort(final CrearCoordinadorUseCase useCase, final CorreoInstitucionalPolicy correoInstitucionalPolicy) { return new CrearCoordinadorInteractor(useCase, correoInstitucionalPolicy); }
 }
