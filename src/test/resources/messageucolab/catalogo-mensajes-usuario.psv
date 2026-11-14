@@ -255,21 +255,6 @@ ADS_003|ADS003|Funcional|Error|ADS_003 - El programa no existe o no pertenece a�
 ADS_004|ADS004|Funcional|Error|ADS_004 - El documento y el correo corresponden…|El documento y el correo corresponden a personas distintas.
 ADS_005|ADS005|Funcional|Error|ADS_005 - El correo debe ser institucional (…).|El correo debe ser institucional ({}).
 ADS_006|ADS006|Funcional|Error|ADS_006 - Indica una contraseña inicial para el…|Indica una contraseña inicial para el estudiante nuevo.
-CMA_001|CMA001|Funcional|Error|CMA_001 - El archivo supera … filas.|El archivo supera {} filas.
-CMA_002|CMA002|Funcional|Error|CMA_002 - El archivo supera el tamaño permitido.|El archivo supera el tamaño permitido.
-CMA_003|CMA003|Funcional|Error|CMA_003 - El archivo cambió desde la validación…|El archivo cambió desde la validación. Valídalo de nuevo.
-CMA_004|CMA004|Funcional|Error|CMA_004 - La cabecera no coincide con la…|La cabecera no coincide con la plantilla: {}.
-CMA_005|CMA005|Funcional|Error|CMA_005 - Número de documento inválido.|Número de documento inválido.
-CMA_006|CMA006|Funcional|Error|CMA_006 - Código de … desconocido: ….|Código de {} desconocido: {}.
-CMA_007|CMA007|Funcional|Error|CMA_007 - «…» no está en tu ámbito.|«{}» no está en tu ámbito.
-CMA_008|CMA008|Funcional|Error|CMA_008 - El documento y el correo corresponden…|El documento y el correo corresponden a personas distintas.
-CMA_009|CMA009|Funcional|Error|CMA_009 - Tu rol no puede cargar este tipo de…|Tu rol no puede cargar este tipo de cuentas.
-CMA_010|CMA010|Funcional|Error|CMA_010 - Fila repetida en el archivo (línea …).|Fila repetida en el archivo (línea {}).
-CMA_011|CMA011|Funcional|Error|CMA_011 - Valor no permitido en la columna ….|Valor no permitido en la columna {}.
-CMA_012|CMA012|Funcional|Error|CMA_012 - Falta la clave inicial para una…|Falta la clave inicial para una persona nueva.
-CMA_013|CMA013|Funcional|Error|CMA_013 - El archivo no es un CSV UTF-8 válido.|El archivo no es un CSV UTF-8 válido.
-CMA_014|CMA014|Funcional|Error|CMA_014 - Has superado el número de cargas por…|Has superado el número de cargas por minuto.
-CMA_015|CMA015|Funcional|Confirmación|CMA_015 - Carga procesada: … creadas, … ya…|Carga procesada: {} creadas, {} ya existentes, {} con error.
 AUD_001|AUD001|Funcional|Error|AUD_001 - La consulta de auditoría requiere una…|La consulta de auditoría requiere una sola institución activa.
 AUD_002|AUD002|Funcional|Error|AUD_002 - Los filtros de solo asistencia y solo…|Los filtros de solo asistencia y solo administración no se pueden combinar.
 DEC_020|DEC020|Funcional|Error|DEC_020 - La persona ya está registrada como…|La persona ya está registrada como decano.
