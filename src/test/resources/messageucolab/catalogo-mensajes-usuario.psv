@@ -397,3 +397,8 @@ NOF_APP_012|NOFAPP012|Funcional|Error|NOF_APP_012 - No se encontró el perfil de
 NOF_APP_013|NOFAPP013|Funcional|Error|NOF_APP_013 - La facultad especificada no existe…|La facultad especificada no existe en el sistema.
 NOF_APP_014|NOFAPP014|Funcional|Error|NOF_APP_014 - El archivo solicitado no existe.|El archivo solicitado no existe.
 DIS_APP_001|DISAPP001|Funcional|Error|DIS_APP_001 - La generación automática de…|La generación automática de sesiones al crear el grupo aún no está disponible (fase F2: precarga de sesiones).
+VCE_008|VCE008|Funcional|Error|VCE_008 - El correo debe ser institucional y…|El correo debe ser institucional y terminar en {}.
+SES_028|SES028|Funcional|Error|SES_028 - La sesión debe terminar el mismo día…|La sesión debe terminar el mismo día en que empieza; no puede pasar de la medianoche.
+ASI_008|ASI008|Funcional|Error|ASI_008 - Los créditos de la asignatura no…|Los créditos de la asignatura no pueden superar {}.
+ERR_CODIGO_GRUPO_INVALIDO|ERR025|Funcional|Error|ERR_CODIGO_GRUPO_INVALIDO - El código del grupo…|El código del grupo debe ser un número entero mayor que cero.
+ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA|ERR026|Funcional|Error|ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA|Al rechazar un reclamo la respuesta es obligatoria y debe tener entre {} y {} caracteres; al aprobarlo es opcional y no puede superar ese máximo.

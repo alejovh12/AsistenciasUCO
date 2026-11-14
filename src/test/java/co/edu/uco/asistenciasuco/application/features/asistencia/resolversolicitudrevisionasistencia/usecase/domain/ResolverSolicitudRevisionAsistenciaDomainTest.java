@@ -68,7 +68,7 @@ class ResolverSolicitudRevisionAsistenciaDomainTest {
     @ValueSource(strings = {"APROBADA", "RECHAZADA", " rechazada "})
     void constructor_acepta_y_normaliza_las_acciones_contractuales(final String accion) {
         final ResolverSolicitudRevisionAsistenciaDomain domain =
-                new ResolverSolicitudRevisionAsistenciaDomain(SOLICITUD, accion, null, USUARIO);
+                new ResolverSolicitudRevisionAsistenciaDomain(SOLICITUD, accion, "No presentó soporte.", USUARIO);
 
         assertEquals(accion.trim().toUpperCase(java.util.Locale.ROOT), domain.getAccion());
     }
@@ -101,9 +101,54 @@ class ResolverSolicitudRevisionAsistenciaDomainTest {
     @Test
     void rechazada_ignora_el_resultado() {
         final ResolverSolicitudRevisionAsistenciaDomain domain =
-                new ResolverSolicitudRevisionAsistenciaDomain(SOLICITUD, "RECHAZADA", null, "PRESENTE", USUARIO);
+                new ResolverSolicitudRevisionAsistenciaDomain(SOLICITUD, "RECHAZADA", "No presentó soporte.", "PRESENTE", USUARIO);
 
         assertNull(domain.getResultado());
         assertNull(domain.getCodigoResultadoAprobacion());
+    }
+
+    // DEC-073: al rechazar la respuesta es obligatoria (10 a 500); al aprobar es opcional (hasta 500).
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   ", "Muy corta"})
+    void DEC_073_rechazar_exige_una_respuesta_de_al_menos_diez_caracteres(final String respuesta) {
+        final ValidationException exception = assertThrows(ValidationException.class,
+                () -> new ResolverSolicitudRevisionAsistenciaDomain(SOLICITUD, "RECHAZADA", respuesta, USUARIO));
+
+        assertEquals(AsistenciaErrorCode.ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA.code(), exception.getCode());
+    }
+
+    @Test
+    void DEC_073_rechazar_sin_respuesta_tambien_se_rechaza() {
+        final ValidationException exception = assertThrows(ValidationException.class,
+                () -> new ResolverSolicitudRevisionAsistenciaDomain(SOLICITUD, "RECHAZADA", null, USUARIO));
+
+        assertEquals(AsistenciaErrorCode.ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA.code(), exception.getCode());
+    }
+
+    @Test
+    void DEC_073_rechazar_con_diez_caracteres_o_mas_es_valido_y_se_recorta() {
+        final ResolverSolicitudRevisionAsistenciaDomain domain = new ResolverSolicitudRevisionAsistenciaDomain(
+                SOLICITUD, "RECHAZADA", "  No presentó soporte.  ", USUARIO);
+
+        assertEquals("No presentó soporte.", domain.getRespuestaDocente());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"APROBADA", "RECHAZADA"})
+    void DEC_073_una_respuesta_de_mas_de_quinientos_caracteres_se_rechaza(final String accion) {
+        final String larga = "A".repeat(501);
+
+        final ValidationException exception = assertThrows(ValidationException.class,
+                () -> new ResolverSolicitudRevisionAsistenciaDomain(SOLICITUD, accion, larga, USUARIO));
+
+        assertEquals(AsistenciaErrorCode.ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA.code(), exception.getCode());
+    }
+
+    @Test
+    void DEC_073_aprobar_sin_respuesta_sigue_siendo_valido() {
+        final ResolverSolicitudRevisionAsistenciaDomain domain =
+                new ResolverSolicitudRevisionAsistenciaDomain(SOLICITUD, "APROBADA", "   ", USUARIO);
+
+        assertEquals("APROBADA", domain.getAccion());
     }
 }

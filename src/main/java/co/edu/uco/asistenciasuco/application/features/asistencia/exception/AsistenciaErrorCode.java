@@ -17,6 +17,8 @@ public enum AsistenciaErrorCode implements ErrorDefinition {
     ERR_ACCION_REVISION_REQUERIDA("ERR_ACCION_REVISION_REQUERIDA", "La accion sobre la solicitud es obligatoria.", ErrorKind.VALIDATION),
     // SES-04: resolucion del reclamo de inasistencia (DB: REV_001..REV_005).
     ERR_ACCION_REVISION_INVALIDA("ERR_ACCION_REVISION_INVALIDA", "La accion sobre el reclamo debe ser APROBADA o RECHAZADA.", ErrorKind.VALIDATION),
+    /** DEC-073: al rechazar un reclamo la respuesta del docente es obligatoria (10 a 500 caracteres); al aprobar es opcional (hasta 500). */
+    ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA("ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA", "Al rechazar, la respuesta es obligatoria (10 a 500 caracteres); al aprobar es opcional (máx. 500).", ErrorKind.VALIDATION),
     ERR_RECLAMO_YA_RESUELTO("ERR_RECLAMO_YA_RESUELTO", "El reclamo ya fue resuelto con una decision distinta.", ErrorKind.CONFLICT),
     ERR_RECLAMO_ASISTENCIA_NO_JUSTIFICABLE("ERR_RECLAMO_ASISTENCIA_NO_JUSTIFICABLE", "La asistencia del reclamo no es una inasistencia justificable.", ErrorKind.CONFLICT),
     ERR_RECLAMO_SIN_DETALLE_ASISTENCIA("ERR_RECLAMO_SIN_DETALLE_ASISTENCIA", "El reclamo no tiene un registro de asistencia que se pueda justificar.", ErrorKind.CONFLICT),

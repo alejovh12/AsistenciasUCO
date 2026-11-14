@@ -42,7 +42,7 @@ class ResolverSolicitudRevisionAlertasUseCaseImplTest {
 
     private void resolver(final String accion) {
         when(scope.findDocenteIdByUsuario(USUARIO)).thenReturn(Optional.of(DOCENTE));
-        useCase.execute(new ResolverSolicitudRevisionAsistenciaDomain(SOLICITUD, accion, "respuesta", USUARIO));
+        useCase.execute(new ResolverSolicitudRevisionAsistenciaDomain(SOLICITUD, accion, "Respuesta del docente.", USUARIO));
     }
 
     @Test

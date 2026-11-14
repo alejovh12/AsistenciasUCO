@@ -153,6 +153,12 @@ public final class DbExceptionTranslator {
             DocenteErrorCode.ERR_MODO_VINCULACION_INVALIDO,
             DocenteErrorCode.ERR_BUSQUEDA_CANDIDATOS_CORTA,
             SesionErrorCode.SES_017,
+            // DEC-073 (migracion 42): reglas de formularios que tambien valida la BD (400).
+            SesionErrorCode.SES_028,
+            VerificacionCorreoErrorCode.VCE_008,
+            AsistenciaErrorCode.ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA,
+            CatalogoErrorCode.ASI_008,
+            GrupoErrorCode.ERR_CODIGO_GRUPO_INVALIDO,
             // CULM-001 B.1: motivo de cancelacion y datos de festivos.
             SesionErrorCode.SES_013,
             SesionErrorCode.SES_019,
@@ -181,7 +187,11 @@ public final class DbExceptionTranslator {
             AsistenciaErrorCode.ERR_PLAZO_JUSTIFICACION_VENCIDO,
             AsistenciaErrorCode.ERR_SOPORTE_OBLIGATORIO_CATEGORIA,
             AsistenciaErrorCode.ERR_MAXIMO_SOPORTES_RECLAMO,
-            TomaAsistenciaErrorCode.TOM_012
+            TomaAsistenciaErrorCode.TOM_012,
+            // DEC-073: la BD sustituye el dominio, los limites del parametro y el maximo de creditos vigentes.
+            VerificacionCorreoErrorCode.VCE_008,
+            AsistenciaErrorCode.ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA,
+            CatalogoErrorCode.ASI_008
     );
 
     private static final Map<Set<ErrorDefinition>, ExceptionFactory> EXCEPTION_BY_CODES = Map.of(
