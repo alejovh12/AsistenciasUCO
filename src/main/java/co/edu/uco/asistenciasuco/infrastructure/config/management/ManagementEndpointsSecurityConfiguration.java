@@ -18,7 +18,7 @@ import org.springframework.security.web.SecurityFilterChain;
  * {@code /actuator/prometheus}, asi que el scrape de Prometheus (Infra, {@code components/observability/prometheus/prometheus.yml},
  * {@code host.docker.internal:8090/actuator/prometheus}, sin credenciales) recibia 401. Esta cadena va primero y SOLO aplica a
  * peticiones que entraron por el puerto de gestion ({@link ManagementPortRequestMatcher}): ahi deja leer {@code health} y
- * {@code prometheus} con GET y niega todo lo demas. En el puerto de la API nada cambia: Prometheus no existe ahi y la ruta sigue
+ * {@code prometheus} con GET y niega el resto de peticiones. En el puerto de la API nada cambia: Prometheus no existe ahi y la ruta sigue
  * protegida por la cadena de la API.</p>
  *
  * <p>La proteccion del puerto de gestion es de red: escucha en loopback por defecto ({@code MANAGEMENT_SERVER_ADDRESS=127.0.0.1})
@@ -38,7 +38,7 @@ public class ManagementEndpointsSecurityConfiguration {
     public SecurityFilterChain managementPortSecurityFilterChain(
             final HttpSecurity http,
             final Environment environment
-    ) throws Exception {
+    ) {
         http
             .securityMatcher(new ManagementPortRequestMatcher(environment))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

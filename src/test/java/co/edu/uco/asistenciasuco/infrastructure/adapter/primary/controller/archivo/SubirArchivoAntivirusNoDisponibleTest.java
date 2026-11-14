@@ -55,7 +55,7 @@ class SubirArchivoAntivirusNoDisponibleTest {
     private final List<String> codigosConsultados = new ArrayList<>();
 
     private MockMvc mvc(final MalwareScanPort antivirus) {
-        final AuthenticatedUserResolver identidad = () -> UUID.randomUUID();
+        final AuthenticatedUserResolver identidad = UUID::randomUUID;
         final ArchivoController archivos = new ArchivoController(
                 new SubirArchivoInteractor(new SubirArchivoUseCaseImpl(almacen, antivirus, metadata)),
                 mock(DescargarArchivoInputPort.class), identidad);
@@ -114,7 +114,7 @@ class SubirArchivoAntivirusNoDisponibleTest {
             final Thread aceptador = new Thread(() -> {
                 try {
                     aceptado.set(colgado.accept());
-                } catch (final IOException ignorada) {
+                } catch (final IOException _) {
                     // el servidor se cierra al terminar la prueba
                 }
             });

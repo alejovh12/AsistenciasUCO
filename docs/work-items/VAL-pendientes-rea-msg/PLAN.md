@@ -34,8 +34,9 @@ OBS-08, REA-02, REA-06, MSG-03 y MSG-05 (la lista no se edita desde aquí). Pare
   `malwareScan` abierto) en `InternalApplicationException` → 500 `INTERNAL_APPLICATION_ERROR`.
 - Cambio:
   - `ErrorKind.SERVICE_UNAVAILABLE` (nuevo) → `ApiErrorCatalog` lo publica como 503.
-  - `application/exception/internal/ServiceUnavailableException` (subclase de `InternalApplicationException`; solo acepta
-    definiciones `SERVICE_UNAVAILABLE`, conserva la causa).
+  - Fábrica `InternalApplicationException.servicioNoDisponible(definicion, causa)` (solo acepta definiciones
+    `SERVICE_UNAVAILABLE`, conserva la causa). Primero fue la subclase `ServiceUnavailableException`; se retiró por Sonar
+    java:S110 (6 ancestros) y porque `SubirArchivoUseCaseImplTest` exige `InternalApplicationException`.
   - `application/features/archivo/exception/ArchivoErrorCode.ERR_ANTIVIRUS_NO_DISPONIBLE` (código público y de catálogo).
   - El caso de uso lanza esa excepción. Sigue fallando cerrado: no se guardan bytes ni metadata. El decorador del circuit breaker
     no cambia (mismas reglas de conteo y apertura).
@@ -70,7 +71,7 @@ OBS-08, REA-02, REA-06, MSG-03 y MSG-05 (la lista no se edita desde aquí). Pare
 | `ManagementPortActuatorSecurityTest` (Tomcat real en dos puertos aleatorios, cadena real de la API) | Prometheus 200 en gestión, health 200, API 401 en `/actuator/prometheus`, otras rutas/POST de gestión 403 | Sin la cadena nueva: `expected 200 but was 401` y `expected 403 but was 401` |
 | `ManagementPortRequestMatcherTest` | puerto de gestión ausente, igual al de la API o distinto | — (unidad nueva) |
 | `SubirArchivoAntivirusNoDisponibleTest` (ClamAV real por socket + breaker real + controlador y manejador reales) | conexión rechazada, timeout de lectura, breaker abierto, fallos que abren el breaker, respaldo sin catálogo; nada se guarda | Con el código anterior: 5 de 5 `Status expected 503 but was 500` |
-| `ServiceUnavailableExceptionTest` | causa, tipo 503 obligatorio, `messageCode` de la matrícula sin correo | — |
+| `ServicioNoDisponibleTest` (antes `ServiceUnavailableExceptionTest`) | causa, tipo 503 obligatorio, `messageCode` de la matrícula sin correo | — |
 | `MensajeUsuarioErrorCodeCatalogoTest` (existente) | ningún código de Application sin catálogo, deuda vacía | — (compuerta ya existente; ahora sin deuda) |
 | `MessageUcoLabCatalogoTest` (existente, conteos 492 y 120) | fixture y alias consistentes | — |
 

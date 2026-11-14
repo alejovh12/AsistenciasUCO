@@ -2,40 +2,43 @@ package co.edu.uco.asistenciasuco.application.exception.internal;
 
 import co.edu.uco.asistenciasuco.application.features.archivo.exception.ArchivoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
+import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorDefinition;
 import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorKind;
 import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.CommonErrorCode;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * VAL H3 y MSG-03: la excepcion de dependencia no disponible conserva la causa, solo acepta definiciones 503 y sigue siendo un
- * fallo interno; ERR_CORREO_REQUERIDO_MATRICULA conserva el codigo publico FIELD_REQUIRED y busca su texto por su propio codigo.
+ * VAL H3 y MSG-03: el fallo por dependencia no disponible conserva la causa, solo acepta definiciones 503 y sigue siendo un
+ * fallo interno ({@link InternalApplicationException}); ERR_CORREO_REQUERIDO_MATRICULA conserva el codigo publico FIELD_REQUIRED
+ * y busca su texto por su propio codigo.
  */
-class ServiceUnavailableExceptionTest {
+class ServicioNoDisponibleTest {
 
     @Test
     void conserva_definicion_codigo_y_causa() {
         final RuntimeException causa = new IllegalStateException("clamd caido");
 
-        final ServiceUnavailableException error =
-                new ServiceUnavailableException(ArchivoErrorCode.ERR_ANTIVIRUS_NO_DISPONIBLE, causa);
+        final InternalApplicationException error =
+                InternalApplicationException.servicioNoDisponible(ArchivoErrorCode.ERR_ANTIVIRUS_NO_DISPONIBLE, causa);
 
         assertEquals("ERR_ANTIVIRUS_NO_DISPONIBLE", error.getCode());
         assertSame(ArchivoErrorCode.ERR_ANTIVIRUS_NO_DISPONIBLE, error.getErrorDefinition().orElseThrow());
         assertSame(causa, error.getCause());
+        assertEquals(ArchivoErrorCode.ERR_ANTIVIRUS_NO_DISPONIBLE.defaultMessage(), error.getMessage());
         assertEquals(ErrorKind.SERVICE_UNAVAILABLE, ArchivoErrorCode.ERR_ANTIVIRUS_NO_DISPONIBLE.kind());
-        assertInstanceOf(InternalApplicationException.class, error, "Sigue siendo un fallo interno (fail-closed)");
     }
 
     @Test
     void rechaza_definiciones_que_no_son_503() {
-        assertThrows(IllegalArgumentException.class,
-                () -> new ServiceUnavailableException(CommonErrorCode.INTERNAL_ERROR, new RuntimeException()));
-        assertThrows(NullPointerException.class, () -> new ServiceUnavailableException(null, new RuntimeException()));
+        final RuntimeException causa = new RuntimeException();
+        final ErrorDefinition no503 = CommonErrorCode.INTERNAL_ERROR;
+
+        assertThrows(IllegalArgumentException.class, () -> InternalApplicationException.servicioNoDisponible(no503, causa));
+        assertThrows(NullPointerException.class, () -> InternalApplicationException.servicioNoDisponible(null, causa));
     }
 
     @Test
