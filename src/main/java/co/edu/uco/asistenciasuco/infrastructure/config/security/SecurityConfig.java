@@ -121,6 +121,10 @@ public class SecurityConfig {
                 // (sin comodin /public/**): la credencial es el token/PIN rotativo; el limite de intentos lo aplica
                 // MatriculaQrRateLimitFilter y la red del campus y el interruptor los exige el caso de uso.
                 .requestMatchers(HttpMethod.POST, SecurityPublicEndpoints.MATRICULA_QR_VALIDAR, SecurityPublicEndpoints.MATRICULA_QR_REGISTRO).permitAll()
+                // INT-003 (MessageUcoLab 0.3.0, paso 12): textos de la interfaz (tambien en el login). Solo GET y su preflight,
+                // un segmento ({codigo}); el caso de uso solo responde codigos UI### y MensajesInterfazRateLimitFilter limita por IP.
+                .requestMatchers(HttpMethod.GET, SecurityPublicEndpoints.MENSAJES_INTERFAZ).permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, SecurityPublicEndpoints.MENSAJES_INTERFAZ).permitAll()
                 // Solo lectura de documentación runtime. La propiedad de Swagger UI controla
                 // si estos handlers existen; ningún endpoint de negocio se abre por esta regla.
                 .requestMatchers(
