@@ -15,9 +15,11 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -147,6 +149,62 @@ class MessageUcoLabEventListenerTest {
 
         verify(puerto, never()).reconciliarTodo();
         assertFalse(listener.isRunning());
+    }
+
+    /**
+     * Regresion del modo contenedores (2026-11-15): el Backend arranco antes de que Pulsar terminara de cargar sus topics,
+     * la primera suscripcion vencio y el listener no volvia a intentarlo; los avisos no llegaban hasta reiniciar el Backend.
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    void si_la_primera_suscripcion_falla_se_reintenta_hasta_lograrla() {
+        final ConsumerBuilder<String> builder = mock(ConsumerBuilder.class, invocacion ->
+                invocacion.getMethod().getReturnType().isInstance(invocacion.getMock()) ? invocacion.getMock() : null);
+        final Consumer<String> consumer = mock(Consumer.class);
+        when(client.newConsumer(Schema.STRING)).thenReturn(builder);
+        when(builder.subscribeAsync())
+                .thenReturn(CompletableFuture.failedFuture(new IllegalStateException("broker cargando")))
+                .thenReturn(CompletableFuture.failedFuture(new IllegalStateException("broker cargando")))
+                .thenReturn(CompletableFuture.completedFuture(consumer));
+        when(consumer.closeAsync()).thenReturn(CompletableFuture.completedFuture(null));
+
+        final MessageUcoLabEventListener listener = new MessageUcoLabEventListener(client, puerto, JsonMapper.builder().build(),
+                TOPIC, "asistencias", false, Duration.ofMillis(10));
+        listener.start();
+
+        verify(builder, timeout(3000).times(3)).subscribeAsync();
+        listener.stop();
+        verify(consumer, timeout(2000)).closeAsync();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void stop_cancela_los_reintentos_pendientes() throws InterruptedException {
+        final ConsumerBuilder<String> builder = mock(ConsumerBuilder.class, invocacion ->
+                invocacion.getMethod().getReturnType().isInstance(invocacion.getMock()) ? invocacion.getMock() : null);
+        when(client.newConsumer(Schema.STRING)).thenReturn(builder);
+        doAnswer(invocacion -> CompletableFuture.failedFuture(new IllegalStateException("sin broker"))).when(builder).subscribeAsync();
+
+        final MessageUcoLabEventListener listener = new MessageUcoLabEventListener(client, puerto, JsonMapper.builder().build(),
+                TOPIC, "asistencias", false, Duration.ofMillis(50));
+        listener.start();
+        listener.stop();
+        Thread.sleep(300);
+
+        verify(builder, times(1)).subscribeAsync();
+    }
+
+    @Test
+    void la_espera_entre_reintentos_crece_hasta_un_tope() {
+        final MessageUcoLabEventListener listener = new MessageUcoLabEventListener(client, puerto, JsonMapper.builder().build(),
+                TOPIC, "asistencias", false, Duration.ofSeconds(15));
+        assertEquals(Duration.ofSeconds(15), listener.esperaAntesDelIntento(1));
+        assertEquals(Duration.ofSeconds(30), listener.esperaAntesDelIntento(2));
+        assertEquals(Duration.ofSeconds(60), listener.esperaAntesDelIntento(3));
+        assertEquals(Duration.ofMinutes(5), listener.esperaAntesDelIntento(10));
+        assertEquals(Duration.ofMinutes(5), listener.esperaAntesDelIntento(500));
+        assertThrows(IllegalArgumentException.class, () -> new MessageUcoLabEventListener(client, puerto,
+                JsonMapper.builder().build(), TOPIC, "asistencias", false, Duration.ZERO));
     }
 
     @Test
