@@ -84,12 +84,18 @@ def main():
             ("DOCENTE", "PATCH", f"/api/v1/docente/reclamos/{UID}", {}),
             ("DOCENTE", "PUT", f"/api/v1/sesiones/{UID}", {}),
             ("ESTUDIANTE", "DELETE", f"/api/v1/estudiante/reclamos/{UID}", None),
-            ("COORDINADOR", "DELETE", f"/api/v1/coordinador/grupos/{UID}/estudiantes/{UID}", None)):
+            # CULM-001 A.1 retiró DELETE /coordinador/grupos/{id}/estudiantes/{id} (la matrícula es solo del docente
+            # titular); la ruta vigente del coordinador con DELETE y variables es la de asignaturas del plan.
+            ("COORDINADOR", "DELETE", f"/api/v1/coordinador/planes-estudio/{UID}/asignaturas/{UID}", None)):
         status, headers, _ = request(base, method, path, token=tokens[role], body=body)
         check(f"{role} {method} {path.replace(UID, '<uuid>')} atraviesa Spring+PEP", status not in (401, 403, 503)
               and "X-Decision-Id" in headers, status)
     status, _, _ = request(base, "DELETE", f"/api/v1/estudiante/reclamos/{UID}", token=tokens["DOCENTE"])
     check("DOCENTE DELETE /estudiante/reclamos/<uuid> -> 403", status == 403, status)
+    # Ruta retirada por contrato (CULM-001 A.1, docs/contracts/HTTP_AS_IS_MATRIX.md): responde 404 aun con un rol válido.
+    status, _, _ = request(base, "DELETE", f"/api/v1/coordinador/grupos/{UID}/estudiantes/{UID}",
+                           token=tokens["COORDINADOR"])
+    check("COORDINADOR DELETE /coordinador/grupos/<uuid>/estudiantes/<uuid> (retirada) -> 404", status == 404, status)
 
     # Identidad: vínculo issuer+subject -> Usuario.id estable (segunda petición no depende del correo)
     status, _, _ = request(base, "GET", "/api/v1/docente/horarios", token=tokens["DOCENTE"])
