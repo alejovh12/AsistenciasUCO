@@ -1,14 +1,14 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin.request;
 
 import java.util.UUID;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.BeanValidationCodes;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.BeanValidationPatterns;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.LongitudTrasTrim;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.NonEmptyUuid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.BeanValidationCodes;
 import jakarta.validation.constraints.Positive;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.NonEmptyUuid;
 
 /**
  * Cuerpo de {@code POST /api/v1/admin/estudiantes/admision} (CULM-001 D.4, HU156). {@code password} es opcional: solo se exige
@@ -22,17 +22,22 @@ public final class AdmitirEstudianteRequest {
     @Positive(message = "El numero de identificacion es obligatorio y debe ser positivo.", payload = BeanValidationCodes.InvalidFormat.class)
     private Integer numeroIdentificacion;
     @NotBlank(message = "El campo primerNombre es obligatorio.")
-    @Size(max = 50, message = "El campo primerNombre no puede superar 50 caracteres.")
+    @LongitudTrasTrim(max = 50, message = "El campo primerNombre no puede superar 50 caracteres.",
+            payload = BeanValidationCodes.InvalidLength.class)
     private String primerNombre;
-    @Size(max = 50, message = "El campo segundoNombre no puede superar 50 caracteres.")
+    @LongitudTrasTrim(max = 50, message = "El campo segundoNombre no puede superar 50 caracteres.",
+            payload = BeanValidationCodes.InvalidLength.class)
     private String segundoNombre;
     @NotBlank(message = "El campo primerApellido es obligatorio.")
-    @Size(max = 50, message = "El campo primerApellido no puede superar 50 caracteres.")
+    @LongitudTrasTrim(max = 50, message = "El campo primerApellido no puede superar 50 caracteres.",
+            payload = BeanValidationCodes.InvalidLength.class)
     private String primerApellido;
-    @Size(max = 50, message = "El campo segundoApellido no puede superar 50 caracteres.")
+    @LongitudTrasTrim(max = 50, message = "El campo segundoApellido no puede superar 50 caracteres.",
+            payload = BeanValidationCodes.InvalidLength.class)
     private String segundoApellido;
     @NotBlank(message = "El correo es obligatorio.")
-    @Size(max = 255, message = "El correo no puede superar 255 caracteres.")
+    @LongitudTrasTrim(max = 255, message = "El correo no puede superar 255 caracteres.",
+            payload = BeanValidationCodes.InvalidLength.class)
     @Pattern(regexp = BeanValidationPatterns.EMAIL_OR_BLANK, message = "El correo no tiene un formato valido.")
     private String correo;
     private String password;
