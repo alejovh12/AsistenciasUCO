@@ -209,6 +209,86 @@ class SecurityBaselinePepClientTest {
         assertEquals(PepDecision.Outcome.UNAVAILABLE, client.evaluate(bearerRequest(), "corr-123").outcome());
     }
 
+    /**
+     * VAL-oleada7 (H4): con el PEP deteniéndose, una petición en vuelo esperó más de 30 s pese a {@code request-timeout}.
+     * Se reproducen las dos formas de quedarse colgado con un socket crudo y el mismo cliente HTTP/1.1 de producción:
+     * conexión aceptada sin respuesta, y encabezados enviados con el cuerpo a medias. En ambos casos la decisión debe ser
+     * UNAVAILABLE dentro de {@code request-timeout} más un margen, nunca esperar a que el PEP cierre la conexión.
+     */
+    @Test
+    void pep_que_acepta_la_conexion_y_no_responde_se_corta_en_request_timeout() throws Exception {
+        assertCorteEnRequestTimeout(socket -> { });
+    }
+
+    @Test
+    void pep_que_envia_encabezados_y_deja_el_cuerpo_a_medias_se_corta_en_request_timeout() throws Exception {
+        assertCorteEnRequestTimeout(socket -> {
+            final java.io.OutputStream out = socket.getOutputStream();
+            out.write(("HTTP/1.1 204 No Content\r\nX-Decision-Id: decision-1\r\n").getBytes(
+                    java.nio.charset.StandardCharsets.US_ASCII));
+            out.flush();
+        });
+        assertCorteEnRequestTimeout(socket -> {
+            final java.io.OutputStream out = socket.getOutputStream();
+            out.write(("HTTP/1.1 200 OK\r\nX-Decision-Id: decision-1\r\nContent-Length: 64\r\n\r\nparcial").getBytes(
+                    java.nio.charset.StandardCharsets.US_ASCII));
+            out.flush();
+        });
+    }
+
+    private void assertCorteEnRequestTimeout(final SocketColgado comportamiento) throws Exception {
+        final Duration requestTimeout = Duration.ofMillis(500);
+        try (java.net.ServerSocket colgado = new java.net.ServerSocket(0, 50,
+                java.net.InetAddress.getLoopbackAddress())) {
+            final java.util.concurrent.CopyOnWriteArrayList<java.net.Socket> abiertos =
+                    new java.util.concurrent.CopyOnWriteArrayList<>();
+            final Thread aceptador = Thread.ofVirtual().start(() -> {
+                try {
+                    while (!colgado.isClosed()) {
+                        final java.net.Socket socket = colgado.accept();
+                        abiertos.add(socket);
+                        comportamiento.aplicar(socket);
+                    }
+                } catch (final IOException ignored) {
+                    // El ServerSocket se cerró al terminar la prueba.
+                }
+            });
+            try {
+                final SecurityBaselinePepClient client = new SecurityBaselinePepClient(
+                        HttpClient.newBuilder()
+                                .connectTimeout(Duration.ofSeconds(1))
+                                .version(HttpClient.Version.HTTP_1_1)
+                                .followRedirects(HttpClient.Redirect.NEVER)
+                                .build(),
+                        JsonMapper.builder().build(),
+                        new SecurityBaselinePepProperties(
+                                java.net.URI.create("http://127.0.0.1:" + colgado.getLocalPort()),
+                                "asistencias-uco", "lab", "test-credential", Duration.ofSeconds(1), requestTimeout));
+
+                final long inicio = System.nanoTime();
+                final PepDecision decision = org.junit.jupiter.api.Assertions.assertTimeoutPreemptively(
+                        Duration.ofSeconds(5), () -> client.evaluate(bearerRequest(), "corr-h4"),
+                        "el cliente del PEP siguió esperando después de request-timeout");
+                final Duration espera = Duration.ofNanos(System.nanoTime() - inicio);
+
+                assertEquals(PepDecision.Outcome.UNAVAILABLE, decision.outcome());
+                assertTrue(espera.compareTo(requestTimeout.plusMillis(1_500)) < 0,
+                        "esperó " + espera.toMillis() + " ms con request-timeout de " + requestTimeout.toMillis() + " ms");
+            } finally {
+                colgado.close();
+                for (final java.net.Socket socket : abiertos) {
+                    socket.close();
+                }
+                aceptador.join(Duration.ofSeconds(2));
+            }
+        }
+    }
+
+    @FunctionalInterface
+    private interface SocketColgado {
+        void aplicar(java.net.Socket socket) throws IOException;
+    }
+
     private MockHttpServletRequest bearerRequest() {
         final MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/protegido");
         request.addHeader("Authorization", "Bearer token-value");
