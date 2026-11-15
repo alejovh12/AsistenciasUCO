@@ -105,6 +105,16 @@ class CatalogoSqlCacheVencimientoTest {
         assertThrows(NullPointerException.class, () -> new MessageCatalogJpaRepository(manager, reloj, null));
     }
 
+    @Test
+    void el_ttl_de_la_configuracion_se_interpreta_como_texto_sin_servicio_de_conversion() {
+        new ParameterCatalogJpaRepository(manager, "90s");
+        new MessageCatalogJpaRepository(manager, "2m");
+        new ParameterCatalogJpaRepository(manager, "PT1M");
+        assertThrows(IllegalArgumentException.class, () -> new ParameterCatalogJpaRepository(manager, "sesenta"));
+        assertThrows(IllegalArgumentException.class, () -> new MessageCatalogJpaRepository(manager, "0s"));
+        assertThrows(IllegalArgumentException.class, () -> new MessageCatalogJpaRepository(manager, "25h"));
+    }
+
     /** Reloj que solo avanza cuando la prueba lo pide. */
     private static final class RelojManual extends Clock {
         private Instant ahora;

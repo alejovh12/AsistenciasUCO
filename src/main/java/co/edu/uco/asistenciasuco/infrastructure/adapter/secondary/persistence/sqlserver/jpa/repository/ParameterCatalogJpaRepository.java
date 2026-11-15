@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import jakarta.persistence.EntityManager;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.convert.DurationStyle;
 import org.springframework.stereotype.Repository;
 import java.time.Clock;
 import java.time.Duration;
@@ -47,9 +48,10 @@ public class ParameterCatalogJpaRepository implements ParameterCatalogPort,
     @Autowired
     public ParameterCatalogJpaRepository(
             final EntityManager entityManager,
-            @Value("${app.adapters.sql-catalog-cache.ttl:60s}") final Duration ttl
+            @Value("${app.adapters.sql-catalog-cache.ttl:60s}") final String ttl
     ) {
-        this(entityManager, Clock.systemUTC(), ttl);
+        // Texto y DurationStyle: no depende del servicio de conversion de Spring Boot (contextos minimos de prueba).
+        this(entityManager, Clock.systemUTC(), DurationStyle.detectAndParse(ttl));
     }
 
     ParameterCatalogJpaRepository(final EntityManager entityManager, final Clock reloj, final Duration ttl) {
