@@ -52,6 +52,7 @@ F2B no tiene RED Java mientras siga DOCUMENTATION_ONLY. Para F2A, snapshots RED 
 ## Evidencias remotas/manuales pendientes
 
 - PR #154 (Fase 2A) está abierto como draft, sin merge; su develop remoto está delante del snapshot local.
+- PR #155 de Fase 2B se abrió como draft hacia `fix/phase-2a-identity-conflict` (stacked sobre F2A); al consultar GitHub estaba open, unmerged y mergeable. No se solicitó merge.
 - La corrida local controlada se cerró sin cambios de datos. Para continuar se requiere que el entorno vuelva a exponer el navegador integrado (o autorización explícita para un navegador alterno); entonces abrir la SPA y solicitar login manual DOCENTE antes de cualquier lectura autenticada.
 - Login manual DOCENTE y luego las demás cuentas solo con nueva solicitud manual por rol; todos siguen NOT_RUN.
 - Actualizar estado escenario por escenario y MANUAL_VALIDATION_LEDGER.md; no inventar capturas.
