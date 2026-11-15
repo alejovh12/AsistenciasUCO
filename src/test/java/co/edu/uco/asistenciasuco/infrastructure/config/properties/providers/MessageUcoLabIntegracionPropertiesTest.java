@@ -33,8 +33,9 @@ class MessageUcoLabIntegracionPropertiesTest {
         assertThrows(IllegalStateException.class, () -> new MessageUcoLabServiceIdentityProperties(TOKEN, "svc", null, null));
         assertThrows(IllegalStateException.class, () -> new MessageUcoLabServiceIdentityProperties(TOKEN, "svc", "", null));
         assertThrows(IllegalStateException.class, () -> new MessageUcoLabServiceIdentityProperties(TOKEN, "svc", "s", Duration.ZERO));
+        final Duration negativa = Duration.ofSeconds(-1);
         assertThrows(IllegalStateException.class,
-                () -> new MessageUcoLabServiceIdentityProperties(TOKEN, "svc", "s", Duration.ofSeconds(-1)));
+                () -> new MessageUcoLabServiceIdentityProperties(TOKEN, "svc", "s", negativa));
     }
 
     @Test

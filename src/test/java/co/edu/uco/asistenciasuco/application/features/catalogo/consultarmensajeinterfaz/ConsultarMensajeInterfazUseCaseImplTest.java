@@ -21,7 +21,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/** INT-003 (paso 12): solo codigos UI### de la interfaz; todo lo demas responde como inexistente (GEN_001). */
+/** INT-003 (paso 12): solo codigos UI### de la interfaz; cualquier otro responde como inexistente (GEN_001). */
 class ConsultarMensajeInterfazUseCaseImplTest {
 
     private final MessageCatalogPort catalogo = mock(MessageCatalogPort.class);

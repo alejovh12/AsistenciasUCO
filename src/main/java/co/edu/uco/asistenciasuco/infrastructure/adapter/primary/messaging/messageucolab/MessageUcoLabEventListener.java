@@ -21,6 +21,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * INT-003: adaptador primario de los avisos de MessageUcoLab 0.3.0 por Pulsar.
@@ -31,7 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * devuelve al broker para reintento. Un aviso ilegible se confirma y se descarta (reintentarlo no lo arregla).</p>
  *
  * <p>La suscripcion es asincrona: si Pulsar no responde, el backend arranca igual y sigue leyendo mensajes con su cache.
- * Al arrancar se reconcilia todo el catalogo en segundo plano (cubre avisos perdidos o emitidos con el backend apagado).</p>
+ * Al arrancar se reconcilia el catalogo completo en segundo plano (cubre avisos perdidos o emitidos con el backend apagado).</p>
  */
 public class MessageUcoLabEventListener implements SmartLifecycle {
 
@@ -45,7 +46,8 @@ public class MessageUcoLabEventListener implements SmartLifecycle {
     private final boolean reconcileOnStartup;
     private final AtomicBoolean running = new AtomicBoolean(false);
 
-    private volatile CompletableFuture<Consumer<String>> consumer;
+    /** Suscripcion vigente; start y stop pueden correr en hilos distintos del ciclo de vida. */
+    private final AtomicReference<CompletableFuture<Consumer<String>>> consumer = new AtomicReference<>();
 
     public MessageUcoLabEventListener(
             final PulsarClient pulsarClient,
@@ -68,14 +70,15 @@ public class MessageUcoLabEventListener implements SmartLifecycle {
         if (!running.compareAndSet(false, true)) {
             return;
         }
-        consumer = pulsarClient.newConsumer(Schema.STRING)
+        final CompletableFuture<Consumer<String>> suscripcion = pulsarClient.newConsumer(Schema.STRING)
                 .topic(topic)
                 .subscriptionName(subscriptionName)
                 .subscriptionType(SubscriptionType.Failover)
                 .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
                 .messageListener(this::recibir)
                 .subscribeAsync();
-        consumer.whenComplete((suscrito, error) -> {
+        consumer.set(suscripcion);
+        suscripcion.whenComplete((suscrito, error) -> {
             if (error != null) {
                 LOGGER.warn("No fue posible suscribirse a los avisos de MessageUcoLab; se sigue leyendo con cache. topic={}, causa={}",
                         topic, error.getClass().getSimpleName());
@@ -93,7 +96,7 @@ public class MessageUcoLabEventListener implements SmartLifecycle {
         if (!running.compareAndSet(true, false)) {
             return;
         }
-        final CompletableFuture<Consumer<String>> actual = consumer;
+        final CompletableFuture<Consumer<String>> actual = consumer.getAndSet(null);
         if (actual != null) {
             actual.thenCompose(Consumer::closeAsync).exceptionally(error -> null);
         }

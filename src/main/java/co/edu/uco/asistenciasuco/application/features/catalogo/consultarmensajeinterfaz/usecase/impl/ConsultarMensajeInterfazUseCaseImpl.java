@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
  */
 public final class ConsultarMensajeInterfazUseCaseImpl implements ConsultarMensajeInterfazUseCase {
 
-    private static final Pattern CODIGO_INTERFAZ = Pattern.compile("^UI[0-9]{3,8}$");
+    private static final Pattern CODIGO_INTERFAZ = Pattern.compile("^UI\\d{3,8}$");
     private static final String RECURSO = "mensaje";
 
     private final MessageCatalogPort catalogo;

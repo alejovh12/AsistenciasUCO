@@ -128,7 +128,8 @@ class MensajesInterfazRateLimitFilterTest {
     void rechaza_configuracion_invalida() {
         assertThrows(IllegalArgumentException.class, () -> filtro(0, 10));
         assertThrows(IllegalArgumentException.class, () -> filtro(5, 0));
-        assertThrows(NullPointerException.class, () -> new MensajesInterfazRateLimitFilter(1, 1, null, new SecurityErrorResponseWriter()));
+        final SecurityErrorResponseWriter writer = new SecurityErrorResponseWriter();
+        assertThrows(NullPointerException.class, () -> new MensajesInterfazRateLimitFilter(1, 1, null, writer));
         assertThrows(NullPointerException.class, () -> new MensajesInterfazRateLimitFilter(1, 1, reloj, null));
     }
 

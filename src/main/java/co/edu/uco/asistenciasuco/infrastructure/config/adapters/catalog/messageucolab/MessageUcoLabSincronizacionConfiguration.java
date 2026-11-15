@@ -76,13 +76,20 @@ public class MessageUcoLabSincronizacionConfiguration {
         return new SincronizarMensajesCatalogoUseCaseImpl(fuente, repositorio, invalidacion, realtime);
     }
 
-    /** Avisos de cambio por Pulsar (MessageUcoLab 0.3.0, paso 13 de la guia de actualizacion). */
+    /**
+     * Avisos de cambio por Pulsar (MessageUcoLab 0.3.0, paso 13 de la guia de actualizacion).
+     *
+     * <p>El escaneo de componentes registra esta clase anidada por si sola, sin pasar por la condicion de la externa: por
+     * eso repite la condicion del provider (si no, con {@code sqlserver} o {@code azure} el contexto fallaba al pedir
+     * {@code MessageUcoLabEventsProperties}). La condicion de los avisos va en cada bean.</p>
+     */
     @Configuration(proxyBeanMethods = false)
-    @ConditionalOnProperty(prefix = "app.providers.messageucolab.events", name = "enabled", havingValue = "true",
-            matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "app.adapters.message-catalog", name = "provider", havingValue = "messageucolab")
     static class Eventos {
 
         @Bean(destroyMethod = "close")
+        @ConditionalOnProperty(prefix = "app.providers.messageucolab.events", name = "enabled", havingValue = "true",
+                matchIfMissing = true)
         PulsarClient messageUcoLabPulsarClient(final MessageUcoLabEventsProperties eventos) throws PulsarClientException {
             return PulsarClient.builder()
                     .serviceUrl(eventos.serviceUrl())
@@ -91,6 +98,8 @@ public class MessageUcoLabSincronizacionConfiguration {
         }
 
         @Bean
+        @ConditionalOnProperty(prefix = "app.providers.messageucolab.events", name = "enabled", havingValue = "true",
+                matchIfMissing = true)
         MessageUcoLabEventListener messageUcoLabEventListener(
                 final PulsarClient messageUcoLabPulsarClient,
                 final SincronizarMensajesCatalogoUseCase sincronizacion,

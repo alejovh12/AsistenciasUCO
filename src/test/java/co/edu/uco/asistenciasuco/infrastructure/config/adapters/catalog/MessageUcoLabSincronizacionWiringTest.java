@@ -21,6 +21,7 @@ import org.springframework.core.NestedExceptionUtils;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
@@ -65,7 +66,7 @@ class MessageUcoLabSincronizacionWiringTest {
                         "app.providers.messageucolab.events.service-url=pulsar://127.0.0.1:1",
                         "app.providers.messageucolab.events.reconcile-on-startup=false")
                 .run(context -> {
-                    assertTrue(context.getStartupFailure() == null);
+                    assertNull(context.getStartupFailure());
                     assertNotNull(context.getBean(PulsarClient.class));
                     assertTrue(context.getBean(MessageUcoLabEventListener.class).isRunning());
                 });
@@ -81,6 +82,40 @@ class MessageUcoLabSincronizacionWiringTest {
                     assertTrue(NestedExceptionUtils.getMostSpecificCause(context.getStartupFailure()).getMessage()
                             .contains("client-secret"));
                 });
+    }
+
+    /**
+     * Regresion del Backend Integration Gate del PR #150: el escaneo de componentes encuentra la clase anidada
+     * {@code Eventos} por si sola. Con otro provider el contexto completo fallaba al pedir
+     * {@code MessageUcoLabEventsProperties}, que solo registra la clase externa.
+     */
+    @Test
+    void con_otro_provider_la_configuracion_de_avisos_escaneada_sola_no_registra_nada() {
+        new ApplicationContextRunner()
+                .withUserConfiguration(eventosAnidada())
+                .withPropertyValues("app.adapters.message-catalog.provider=sqlserver")
+                .run(context -> {
+                    assertNull(context.getStartupFailure());
+                    assertTrue(context.getBeansOfType(PulsarClient.class).isEmpty());
+                    assertTrue(context.getBeansOfType(MessageUcoLabEventListener.class).isEmpty());
+                });
+    }
+
+    @Test
+    void sin_provider_la_configuracion_de_avisos_escaneada_sola_no_registra_nada() {
+        new ApplicationContextRunner()
+                .withUserConfiguration(eventosAnidada())
+                .run(context -> {
+                    assertNull(context.getStartupFailure());
+                    assertTrue(context.getBeansOfType(PulsarClient.class).isEmpty());
+                });
+    }
+
+    private static Class<?> eventosAnidada() {
+        return java.util.Arrays.stream(MessageUcoLabSincronizacionConfiguration.class.getDeclaredClasses())
+                .filter(c -> c.getSimpleName().equals("Eventos"))
+                .findFirst()
+                .orElseThrow();
     }
 
     @Test

@@ -215,6 +215,17 @@
         <dependency>
             <groupId>org.apache.pulsar</groupId>
             <artifactId>pulsar-client</artifactId>
+            <exclusions>
+                <!--
+                    bouncy-castle-bc (clasificador pkg) empaqueta un bcprov-jdk18on-1.78.1.jar anidado (CVE-2025-14813,
+                    CVE-2026-8763, CVE-2026-13506, CVE-2026-5598; Trivy del PR #150). El cliente usa el bcprov directo,
+                    alineado por bc-jdk18on-bom (SEC-002). Lo vigila BouncyCastleClasspathTest.
+                -->
+                <exclusion>
+                    <groupId>org.apache.pulsar</groupId>
+                    <artifactId>bouncy-castle-bc</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!--
             LB-004B.2: MinIO Java SDK oficial, solo en Infrastructure (MinioFileStorageAdapter).

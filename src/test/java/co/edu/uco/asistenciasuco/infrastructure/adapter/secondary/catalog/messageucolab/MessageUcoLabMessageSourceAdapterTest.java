@@ -109,8 +109,9 @@ class MessageUcoLabMessageSourceAdapterTest {
     @Test
     void dependencias_obligatorias() {
         final MessageUcoLabCodeMapper mapper = new MessageUcoLabCodeMapper("MSG_", Map.of());
-        assertThrows(NullPointerException.class, () -> new MessageUcoLabMessageSourceAdapter(null, mapper, Duration.ofSeconds(1)));
-        assertThrows(NullPointerException.class, () -> new MessageUcoLabMessageSourceAdapter(reader, null, Duration.ofSeconds(1)));
+        final Duration unSegundo = Duration.ofSeconds(1);
+        assertThrows(NullPointerException.class, () -> new MessageUcoLabMessageSourceAdapter(null, mapper, unSegundo));
+        assertThrows(NullPointerException.class, () -> new MessageUcoLabMessageSourceAdapter(reader, null, unSegundo));
         assertThrows(NullPointerException.class, () -> new MessageUcoLabMessageSourceAdapter(reader, mapper, null));
     }
 }

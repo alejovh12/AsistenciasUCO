@@ -107,7 +107,8 @@ class MessageUcoLabServiceIdentityTokenProviderTest {
     @Test
     void el_mono_propaga_el_error() throws Exception {
         responde(500, "{}");
-        assertThrows(IllegalStateException.class, () -> provider.token().block());
+        final var token = provider.token();
+        assertThrows(IllegalStateException.class, token::block);
     }
 
     @Test
