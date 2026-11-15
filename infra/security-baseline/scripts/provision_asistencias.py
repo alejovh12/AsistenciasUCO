@@ -21,6 +21,9 @@ pdp       PDP: aplicación `asistencias-uco`, recursos, roles, concesiones y per
 users     Usuarios de prueba por rol (correo verificado = correo de las semillas SQL, atributo idUsuario), sesión BFF
           para aprovisionar su identidad en el PDP y asignación de su perfil (--migrate-direct retira la asignación
           directa del rol que el perfil ya cubre).
+dataset-users <json>  Usuarios del conjunto de datos de prueba de la BD (scripts/datos-prueba/usuarios_datos_prueba.json):
+          cuenta, contraseña común (variable ASISTENCIAS_DATASET_PASSWORD), roles, identidad y perfiles en el PDP;
+          desactiva (no borra) las cuentas con idUsuario que ya no están en el conjunto.
 verify    Solo lectura: PDP vs catálogo; código 1 si falta o sobra algo.
 verify-decisions  Solo lectura: decisión real PEP→PDP (ALLOW/DENY) por endpoint del catálogo y rol.
 """
@@ -647,9 +650,126 @@ def provision_users(env, migrate_direct=False):
     return evidence
 
 
+DATASET_PASSWORD_ENV = "ASISTENCIAS_DATASET_PASSWORD"  # contraseña común de laboratorio; solo en el entorno del proceso
+
+
+def _kc_all_users(kc):
+    users, first = [], 0
+    while True:
+        _, _, page = kc.call("GET", f"/users?first={first}&max=100&briefRepresentation=false")
+        users += page or []
+        if not page or len(page) < 100:
+            return users
+        first += 100
+
+
+def provision_dataset_users(env, path):
+    """Usuarios del conjunto de datos de prueba (GestioAsistenciaDB/scripts/datos-prueba/usuarios_datos_prueba.json).
+
+    Keycloak: crea o actualiza cada cuenta (correo verificado, idUsuario, nombres, estado), le pone la contraseña común de
+    laboratorio (variable de entorno ASISTENCIAS_DATASET_PASSWORD, nunca impresa) y deja exactamente sus roles del cliente
+    de recurso. Las cuentas con idUsuario que ya no existen en el conjunto se DESACTIVAN (no se borran).
+    PDP: sesión BFF por usuario (aprovisiona la identidad) y asignación del perfil de cada rol. Una cuenta inactiva se
+    habilita solo durante su aprovisionamiento, para que al reactivarla desde la aplicación ya tenga su perfil.
+    """
+    password = os.environ.get(DATASET_PASSWORD_ENV)
+    if not password:
+        raise SystemExit(f"Defina {DATASET_PASSWORD_ENV} con la contraseña común de laboratorio (AGENTS.md, sección 7).")
+    dataset = json.load(open(path, encoding="utf-8"))["usuarios"]
+    env = dict(env, _DATASET_PASSWORD=password)
+    kc = Keycloak(env)
+    api = kc.client(API_CLIENT)
+    _, _, api_roles = kc.call("GET", f"/clients/{api['id']}/roles")
+    role_rep = {r["name"]: r for r in api_roles}
+    evidence = {"creados": 0, "actualizados": 0, "desactivados_obsoletos": [], "errores": []}
+    existing = _kc_all_users(kc)
+    by_username = {u["username"].lower(): u for u in existing}
+    by_email = {(u.get("email") or "").lower(): u for u in existing}
+    wanted_ids = {u["idUsuario"].lower() for u in dataset}
+    kc_ids = {}
+    kc_login = {}  # usuario real de Keycloak (una cuenta previa puede tener otro, p. ej. la cédula)
+    for u in dataset:
+        current = by_username.get(u["username"].lower()) or by_email.get(u["email"].lower())
+        rep = {"username": u["username"], "email": u["email"], "emailVerified": True, "enabled": True,
+               "firstName": u["firstName"], "lastName": u["lastName"], "requiredActions": [],
+               "attributes": {USER_ID_ATTRIBUTE: [u["idUsuario"].lower()]}}
+        if current:
+            merged = dict(current)
+            merged.update(rep)
+            merged["attributes"] = dict(current.get("attributes") or {}, **rep["attributes"])
+            if current["username"].lower() != u["username"].lower():
+                merged["username"] = current["username"]  # Keycloak no renombra; se conserva el usuario existente
+            kc.call("PUT", f"/users/{current['id']}", merged)
+            uid = current["id"]
+            evidence["actualizados"] += 1
+        else:
+            kc.call("POST", "/users", rep)
+            _, _, found = kc.call("GET", f"/users?username={urllib.parse.quote(u['username'])}&exact=true")
+            uid = found[0]["id"]
+            evidence["creados"] += 1
+        kc_ids[u["username"]] = uid
+        kc_login[u["username"]] = current["username"] if current else u["username"]
+        kc.call("PUT", f"/users/{uid}/reset-password", {"type": "password", "value": password, "temporary": False})
+        _, _, held = kc.call("GET", f"/users/{uid}/role-mappings/clients/{api['id']}")
+        held_names = {r["name"] for r in held or []}
+        add = [role_rep[r] for r in u["roles"] if r not in held_names]
+        drop = [r for r in held or [] if r["name"] not in u["roles"]]
+        if add:
+            kc.call("POST", f"/users/{uid}/role-mappings/clients/{api['id']}", add)
+        if drop:
+            kc.call("DELETE", f"/users/{uid}/role-mappings/clients/{api['id']}", drop)
+    for u in existing:
+        ids = [x.lower() for x in (u.get("attributes") or {}).get(USER_ID_ATTRIBUTE, [])]
+        if ids and not (set(ids) & wanted_ids) and u.get("enabled"):
+            kc.call("PUT", f"/users/{u['id']}", dict(u, enabled=False))
+            evidence["desactivados_obsoletos"].append(u["username"])
+
+    catalog = load_catalog()
+    pdp = Pdp(env)
+    app_id = env["ASISTENCIAS_PDP_APPLICATION_ID"]
+    for u in dataset:
+        _, _, status, _, _ = L.bff_session(env, kc_login[u["username"]], "_DATASET_PASSWORD")
+        if status != 200:
+            evidence["errores"].append(f"{u['username']}: sesión BFF HTTP {status}")
+    pdp_ids = {x["email"].lower(): x["id"] for x in pdp.paged("/api/v1/users")}
+    asignados = {}
+    profile_holders = {}
+    for u in dataset:
+        user_id = pdp_ids.get(u["email"].lower())
+        if not user_id:
+            evidence["errores"].append(f"{u['username']}: el PDP no conoce al usuario")
+            continue
+        for role in u["roles"]:
+            profile = profile_for(catalog, role)
+            profile_id = env.get("ASISTENCIAS_PDP_PROFILE_" + re.sub(r"[^A-Z0-9]", "_", (profile or "").upper()) + "_ID")
+            if not profile_id:
+                evidence["errores"].append(f"{role}: perfil sin id en lab.env")
+                continue
+            if profile_id not in profile_holders:
+                profile_holders[profile_id] = {a.get("userId") for a in pdp.paged(f"/api/v1/profiles/{profile_id}/assignments")}
+            if user_id in profile_holders[profile_id]:
+                asignados[role] = asignados.get(role, 0) + 1
+                continue
+            status, body = pdp.call("POST", f"/api/v1/profiles/{profile_id}/assignments",
+                                    {"profileId": profile_id, "userId": user_id, "applicationId": app_id})
+            if status == 201:
+                profile_holders[profile_id].add(user_id)
+                asignados[role] = asignados.get(role, 0) + 1
+            else:
+                evidence["errores"].append(f"{u['username']} {role}: HTTP {status} {body.get('code')}")
+    kc = Keycloak(env)  # el token de administración vence durante las sesiones BFF
+    for u in dataset:
+        if not u.get("enabled", True):
+            _, _, current = kc.call("GET", f"/users/{kc_ids[u['username']]}")
+            kc.call("PUT", f"/users/{current['id']}", dict(current, enabled=False))
+    evidence["perfiles_asignados"] = asignados
+    evidence["inactivos"] = [u["username"] for u in dataset if not u.get("enabled", True)]
+    return evidence
+
+
 def main():
     args = sys.argv[1:]
-    commands = ("keycloak", "pdp", "users", "catalog", "verify", "verify-decisions")
+    commands = ("keycloak", "pdp", "users", "dataset-users", "catalog", "verify", "verify-decisions")
     if not args or args[0] not in commands:
         raise SystemExit(__doc__)
     if args[0] == "catalog":  # offline: no necesita lab.env
@@ -659,6 +779,10 @@ def main():
         result = provision_pdp(env, prune="--prune" in args)
     elif args[0] == "users":
         result = provision_users(env, migrate_direct="--migrate-direct" in args)
+    elif args[0] == "dataset-users":
+        if len(args) < 2:
+            raise SystemExit("Uso: dataset-users <ruta a usuarios_datos_prueba.json>")
+        result = provision_dataset_users(env, args[1])
     elif args[0] == "verify":
         result = verify_pdp(env)
     elif args[0] == "verify-decisions":
