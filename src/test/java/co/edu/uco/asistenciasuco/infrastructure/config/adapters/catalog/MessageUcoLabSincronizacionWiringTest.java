@@ -90,7 +90,7 @@ class MessageUcoLabSincronizacionWiringTest {
      * {@code MessageUcoLabEventsProperties}, que solo registra la clase externa.
      */
     @Test
-    void con_otro_provider_la_configuracion_de_avisos_escaneada_sola_no_registra_nada() {
+    void con_otro_provider_la_configuracion_de_avisos_escaneada_sola_no_registra_nada() throws ClassNotFoundException {
         new ApplicationContextRunner()
                 .withUserConfiguration(eventosAnidada())
                 .withPropertyValues("app.adapters.message-catalog.provider=sqlserver")
@@ -102,7 +102,7 @@ class MessageUcoLabSincronizacionWiringTest {
     }
 
     @Test
-    void sin_provider_la_configuracion_de_avisos_escaneada_sola_no_registra_nada() {
+    void sin_provider_la_configuracion_de_avisos_escaneada_sola_no_registra_nada() throws ClassNotFoundException {
         new ApplicationContextRunner()
                 .withUserConfiguration(eventosAnidada())
                 .run(context -> {
@@ -111,11 +111,9 @@ class MessageUcoLabSincronizacionWiringTest {
                 });
     }
 
-    private static Class<?> eventosAnidada() {
-        return java.util.Arrays.stream(MessageUcoLabSincronizacionConfiguration.class.getDeclaredClasses())
-                .filter(c -> c.getSimpleName().equals("Eventos"))
-                .findFirst()
-                .orElseThrow();
+    /** {@code Eventos} es de paquete; se carga por su nombre binario, como lo hace el escaneo de componentes. */
+    private static Class<?> eventosAnidada() throws ClassNotFoundException {
+        return Class.forName(MessageUcoLabSincronizacionConfiguration.class.getName() + "$Eventos");
     }
 
     @Test
