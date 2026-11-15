@@ -96,6 +96,29 @@ class SincronizarMensajesCatalogoUseCaseImplTest {
     }
 
     @Test
+    void si_la_fuente_no_responde_el_aviso_falla_sin_vencer_la_cache_ni_quedar_procesado() {
+        when(fuente.obtener("MSG_VAL001"))
+                .thenThrow(new MessageCatalogSourcePort.FuenteNoDisponibleException("429", null))
+                .thenReturn(Optional.of(new MensajeExterno("VAL_001", "Texto")));
+        when(repositorio.sincronizarMensajeUsuario("VAL_001", "Texto")).thenReturn(ResultadoSincronizacion.SIN_CAMBIOS);
+        final AvisoCambioMensaje aviso = new AvisoCambioMensaje("e-429", "MessageUpdated", "MSG_VAL001");
+
+        assertThrows(MessageCatalogSourcePort.FuenteNoDisponibleException.class, () -> useCase.procesarAviso(aviso));
+        verifyNoInteractions(invalidacion, repositorio);
+
+        assertEquals(new ResumenSincronizacion(1, 0, 1, 0, 0), useCase.procesarAviso(aviso));
+    }
+
+    @Test
+    void si_la_fuente_no_entrega_el_catalogo_la_reconciliacion_falla_en_vez_de_quedar_vacia() {
+        when(fuente.listar()).thenThrow(new MessageCatalogSourcePort.FuenteNoDisponibleException("caido", null));
+
+        assertThrows(MessageCatalogSourcePort.FuenteNoDisponibleException.class,
+                () -> useCase.procesarAviso(new AvisoCambioMensaje("e-all", "MessagesChanged", null)));
+        verifyNoInteractions(repositorio);
+    }
+
+    @Test
     void mensaje_eliminado_solo_vence_la_cache_y_conserva_la_bd() {
         assertEquals(ResumenSincronizacion.vacio(),
                 useCase.procesarAviso(new AvisoCambioMensaje("e5", "MessageDeleted", "MSG_VAL001")));

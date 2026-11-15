@@ -1,7 +1,10 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.messageucolab;
 
+import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogSourcePort.FuenteNoDisponibleException;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogSourcePort.MensajeExterno;
 import co.edu.uco.messageucolab.client.api.MessageReader;
+import co.edu.uco.messageucolab.client.api.exception.MessageClientResponseException;
+import co.edu.uco.messageucolab.client.api.exception.MessageClientTransportException;
 import co.edu.uco.messageucolab.client.api.model.MessageCollection;
 import co.edu.uco.messageucolab.client.api.model.MessageDetails;
 import org.junit.jupiter.api.Test;
@@ -68,15 +71,34 @@ class MessageUcoLabMessageSourceAdapterTest {
     }
 
     @Test
-    void codigo_vacio_no_consulta_y_un_fallo_devuelve_vacio() {
+    void codigo_vacio_no_consulta_y_un_mensaje_inexistente_devuelve_vacio() {
         assertTrue(adapter.obtener(null).isEmpty());
         assertTrue(adapter.obtener(" ").isEmpty());
         verifyNoInteractions(reader);
 
-        when(reader.getDetails("MSG_VAL001")).thenReturn(Mono.error(new IllegalStateException("401")));
+        when(reader.getDetails("MSG_VAL001")).thenReturn(Mono.error(new MessageClientResponseException(404, null)));
         assertTrue(adapter.obtener("MSG_VAL001").isEmpty());
         when(reader.getDetails("MSG_VAL002")).thenReturn(Mono.empty());
         assertTrue(adapter.obtener("MSG_VAL002").isEmpty());
+    }
+
+    /**
+     * Regresion de la carga de 358 mensajes (2026-11-15): el limite de Kong (120/min) respondio 429 y el adaptador lo
+     * tomaba como "mensaje inexistente": el aviso se confirmaba sin copiar el texto. Un fallo transitorio debe propagarse
+     * para que el aviso vuelva a Pulsar.
+     */
+    @Test
+    void un_fallo_transitorio_no_se_confunde_con_un_mensaje_inexistente() {
+        for (final int estado : new int[] {429, 401, 500, 503}) {
+            when(reader.getDetails("MSG_VAL001")).thenReturn(Mono.error(new MessageClientResponseException(estado, null)));
+            final FuenteNoDisponibleException error =
+                    assertThrows(FuenteNoDisponibleException.class, () -> adapter.obtener("MSG_VAL001"));
+            assertTrue(error.getMessage().contains(String.valueOf(estado)), error::getMessage);
+        }
+        when(reader.getDetails("MSG_VAL002")).thenReturn(Mono.error(new MessageClientTransportException(new IllegalStateException("caido"))));
+        assertThrows(FuenteNoDisponibleException.class, () -> adapter.obtener("MSG_VAL002"));
+        when(reader.getDetails("MSG_VAL003")).thenReturn(Mono.error(new IllegalStateException("inesperado")));
+        assertThrows(FuenteNoDisponibleException.class, () -> adapter.obtener("MSG_VAL003"));
     }
 
     @Test
@@ -91,11 +113,13 @@ class MessageUcoLabMessageSourceAdapterTest {
     }
 
     @Test
-    void listar_sin_respuesta_o_con_fallo_devuelve_lista_vacia() {
+    void listar_sin_respuesta_devuelve_lista_vacia_y_un_fallo_se_propaga() {
         when(reader.getAll()).thenReturn(Mono.empty());
         assertEquals(List.of(), adapter.listar());
+        when(reader.getAll()).thenReturn(Mono.error(new MessageClientResponseException(429, null)));
+        assertThrows(FuenteNoDisponibleException.class, adapter::listar);
         when(reader.getAll()).thenReturn(Mono.error(new IllegalStateException("caido")));
-        assertEquals(List.of(), adapter.listar());
+        assertThrows(FuenteNoDisponibleException.class, adapter::listar);
     }
 
     @Test

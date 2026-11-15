@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.messa
 
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogSourcePort;
 import co.edu.uco.messageucolab.client.api.MessageReader;
+import co.edu.uco.messageucolab.client.api.exception.MessageClientResponseException;
 import co.edu.uco.messageucolab.client.api.model.MessageCollection;
 import co.edu.uco.messageucolab.client.api.model.MessageDetails;
 import org.slf4j.Logger;
@@ -27,6 +28,7 @@ public class MessageUcoLabMessageSourceAdapter implements MessageCatalogSourcePo
 
     static final String SEPARADOR_TITULO = " - ";
     static final Duration TIMEOUT_MINIMO_LISTADO = Duration.ofSeconds(30);
+    private static final int HTTP_NOT_FOUND = 404;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageUcoLabMessageSourceAdapter.class);
 
@@ -48,14 +50,18 @@ public class MessageUcoLabMessageSourceAdapter implements MessageCatalogSourcePo
         if (codigoExterno == null || codigoExterno.isBlank()) {
             return Optional.empty();
         }
+        final MessageDetails details;
         try {
-            final MessageDetails details = reader.getDetails(codigoExterno.trim()).block(timeout);
-            return traducir(details);
+            details = reader.getDetails(codigoExterno.trim()).block(timeout);
+        } catch (final MessageClientResponseException e) {
+            if (e.getStatusCode() == HTTP_NOT_FOUND) {
+                return Optional.empty();
+            }
+            throw noDisponible("el mensaje " + codigoExterno.trim(), "HTTP " + e.getStatusCode(), e);
         } catch (final RuntimeException e) {
-            LOGGER.warn("MessageUcoLab no entrego el mensaje del aviso. codigo={}, causa={}",
-                    codigoExterno, e.getClass().getSimpleName());
-            return Optional.empty();
+            throw noDisponible("el mensaje " + codigoExterno.trim(), e.getClass().getSimpleName(), e);
         }
+        return traducir(details);
     }
 
     @Override
@@ -63,9 +69,10 @@ public class MessageUcoLabMessageSourceAdapter implements MessageCatalogSourcePo
         final MessageCollection coleccion;
         try {
             coleccion = reader.getAll().block(listTimeout);
+        } catch (final MessageClientResponseException e) {
+            throw noDisponible("el catalogo", "HTTP " + e.getStatusCode(), e);
         } catch (final RuntimeException e) {
-            LOGGER.warn("MessageUcoLab no entrego el catalogo para reconciliar. causa={}", e.getClass().getSimpleName());
-            return List.of();
+            throw noDisponible("el catalogo", e.getClass().getSimpleName(), e);
         }
         if (coleccion == null) {
             return List.of();
@@ -90,6 +97,12 @@ public class MessageUcoLabMessageSourceAdapter implements MessageCatalogSourcePo
             return Optional.empty();
         }
         return Optional.of(new MensajeExterno(candidato, details.content()));
+    }
+
+    /** Fallo transitorio (limite de peticiones, 5xx, red): se propaga para que el aviso se reintente. */
+    private static FuenteNoDisponibleException noDisponible(final String que, final String causa, final RuntimeException e) {
+        LOGGER.warn("MessageUcoLab no entrego {}; se reintentara. causa={}", que, causa);
+        return new FuenteNoDisponibleException("MessageUcoLab no entrego " + que + " (" + causa + ").", e);
     }
 
     private static boolean blank(final String value) {
