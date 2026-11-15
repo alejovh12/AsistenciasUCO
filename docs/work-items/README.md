@@ -72,3 +72,7 @@ Ejemplo de work item técnico cerrado: [TECH-001](TECH-001-restaurar-gate-arquit
 ## FASE 2A — 2026-11-14
 
 - [Arranque controlado, altas individuales e IDENTITY_DRIFT](FASE-2A-altas-identity-drift/PLAN.md): autorización explícita del usuario para validación funcional en navegador integrado y corrección de defectos propios del Backend demostrados. No autoriza cambios en Frontend, DB/SP ni providers externos; el arranque espera preflight seguro.
+
+## FASE 2B — 2026-11-15
+
+- [Certificación integral de sesiones, tomas, asistencia, matrícula y reclamos](FASE-2B-certificacion-integral/PLAN.md): lecturas reales desde navegador integrado con login manual. Escrituras y cambios de comportamiento siguen NOT_READY por falta de fixture seguro y conflictos contractuales documentados.

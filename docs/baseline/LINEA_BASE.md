@@ -29,7 +29,9 @@ Ninguna fase autoriza automÃ¡ticamente la siguiente. No combinar JPA, negocio,
 
 Trabajo correctivo activo: [privacidad de logs de notificaciones](../work-items/FIX-log-privacidad-notificaciones/PLAN.md), acotado a los adaptadores log y su evidencia.
 
-Fase funcional activa por autorización explícita del usuario (2026-11-14): [FASE 2A — arranque controlado, altas individuales e IDENTITY_DRIFT](../work-items/FASE-2A-altas-identity-drift/PLAN.md). El preflight de seguridad de arranque sigue pendiente; las correcciones de Backend requieren su DoR/RED por defecto reproducible.
+Fase funcional activa por autorización explícita del usuario (2026-11-14): [FASE 2A — arranque controlado, altas individuales e IDENTITY_DRIFT](../work-items/FASE-2A-altas-identity-drift/PLAN.md). El preflight de respaldo/workers y arranque controlado se completó en FASE 2B; auth y validación live de altas siguen NOT_RUN porque el navegador integrado no está disponible en esta sesión. Las correcciones Backend permanecen en PR #154 draft, sin merge.
+
+Fase funcional autorizada adicional (2026-11-15): [FASE 2B — certificación integral de sesiones, tomas, asistencia, matrícula y reclamos](../work-items/FASE-2B-certificacion-integral/PLAN.md). FASE 2A permanece IN_PROGRESS; FASE 2B está NOT_READY para escrituras y cambios de comportamiento, pero puede ejecutar lecturas en navegador tras aplicar el preflight de workers.
 
 ## Golden Path actual
 
