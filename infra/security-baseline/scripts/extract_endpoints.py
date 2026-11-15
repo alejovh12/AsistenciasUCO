@@ -6,7 +6,9 @@ Lee `src/main/java/**` y toma todo tipo anotado con `@RestController`/`@Controll
 clase con los `@Get/Post/Put/Patch/DeleteMapping` y los `@RequestMapping(method = ...)` de cada método (varios métodos
 y varias rutas por anotación) y devuelve las rutas tal como las ve el PEP (`{variable}`, sin expresiones regulares).
 
-No adivina: una ruta que no sea un literal de texto (constante, concatenación) o un `@RequestMapping` de método sin
+Una ruta puede ser un literal de texto o una constante `static final String` con valor literal declarada en el mismo
+archivo, referida por su nombre (`RUTA`) o calificada con el tipo que la declara (`Controlador.RUTA`).
+No adivina: cualquier otra ruta (constante de otra clase, concatenación, expresión) o un `@RequestMapping` de método sin
 verbo HTTP detiene la extracción con error, porque un endpoint ignorado en silencio quedaría fuera del catálogo.
 La referencia autoritativa de lo que Spring MVC registra es la prueba `AccessCatalogConsistencyTest`
 (`RequestMappingHandlerMapping`); este script es su espejo ejecutable sin JVM para el aprovisionamiento.
@@ -21,7 +23,9 @@ SOURCES = os.path.join(ROOT, "src", "main", "java")
 
 MAPPING = re.compile(r"@(Get|Post|Put|Patch|Delete|Request)Mapping\b")
 CONTROLLER = re.compile(r"@(?:Rest)?Controller\b")
-TYPE_DECLARATION = re.compile(r"\b(?:class|record|interface)\s+\w+")
+TYPE_DECLARATION = re.compile(r"\b(?:class|record|interface)\s+(\w+)")
+CONSTANT = re.compile(r'((?:\b(?:public|protected|private|static|final)\s+)+)String\s+(\w+)\s*=\s*("(?:\\.|[^"\\])*")\s*;')
+STRING_OR_NAME = re.compile(r'"(?:\\.|[^"\\])*"|(?<![\w.])[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*')
 STRING = re.compile(r'"((?:\\.|[^"\\])*)"')
 REGEX_VARIABLE = re.compile(r"\{([^}:]+):[^}]*}")
 VERB = re.compile(r"RequestMethod\.([A-Z]+)")
@@ -95,7 +99,25 @@ def split_top_level(text):
     return parts
 
 
-def mapping_paths(args, where):
+def string_constants(source):
+    """Constantes `static final String X = "...";` del archivo, por nombre simple y calificado con su tipo."""
+    types = TYPE_DECLARATION.findall(source)
+    constants = {}
+    for match in CONSTANT.finditer(source):
+        modifiers = match.group(1).split()
+        if "static" in modifiers and "final" in modifiers:
+            constants[match.group(2)] = match.group(3)
+            for name in types:
+                constants[f"{name}.{match.group(2)}"] = match.group(3)
+    return constants
+
+
+def resolve_constants(value, constants):
+    """Sustituye las constantes conocidas por su literal; lo demás queda igual y la validación lo rechaza."""
+    return STRING_OR_NAME.sub(lambda m: constants.get(m.group(0), m.group(0)), value)
+
+
+def mapping_paths(args, where, constants=None):
     """Rutas declaradas en `value`/`path` o en el primer argumento posicional; [''] si no hay ninguna."""
     values = []
     for part in split_top_level(args):
@@ -108,6 +130,7 @@ def mapping_paths(args, where):
         return [""]
     paths = []
     for value in values:
+        value = resolve_constants(value, constants or {})
         literals = STRING.findall(value)
         if re.sub(r"[{},\s]", "", STRING.sub("", value)):
             raise ExtractionError(f"{where}: la ruta no es un literal de texto ({value.strip()[:60]})")
@@ -142,16 +165,16 @@ def file_endpoints(path):
     if not declaration:
         return set()
     where = os.path.relpath(path, ROOT)
-    bases, found = [""], set()
+    bases, found, constants = [""], set(), string_constants(source)
     for match in MAPPING.finditer(source):
         args, _ = annotation_arguments(source, match.end())
         if match.start() < declaration.start():
             if match.group(1) == "Request":
-                bases = mapping_paths(args, where)
+                bases = mapping_paths(args, where, constants)
             continue
         verbs = mapping_verbs(match.group(1), args, where)
         for base in bases:
-            for suffix in mapping_paths(args, where):
+            for suffix in mapping_paths(args, where, constants):
                 for verb in verbs:
                     found.add((verb, join_path(base, suffix)))
     return found

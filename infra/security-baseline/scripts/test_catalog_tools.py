@@ -75,6 +75,28 @@ class ExtractEndpointsTest(unittest.TestCase):
     def test_non_controllers_are_ignored(self):
         self.assertEqual(endpoints_of('@Service class X { @GetMapping("/no") void a() {} }'), set())
 
+    def test_static_final_string_constants_of_the_same_file_are_resolved(self):
+        found = endpoints_of('''
+            @RestController
+            @RequestMapping(SampleController.RUTA_BASE)
+            public final class SampleController {
+                public static final String RUTA_BASE = "/api/v1/public/demo";
+                private static final String DETALLE = "/{codigo}";
+                @GetMapping(DETALLE) void a() {}
+                @PostMapping({SampleController.DETALLE, "/otro"}) void b() {}
+            }''')
+        self.assertEqual(found, {
+            ("GET", "/api/v1/public/demo/{codigo}"), ("POST", "/api/v1/public/demo/{codigo}"),
+            ("POST", "/api/v1/public/demo/otro")})
+
+    def test_unresolvable_constants_still_fail_loudly(self):
+        with self.assertRaises(X.ExtractionError):  # sin `final`: Spring no la acepta y no es fiable
+            endpoints_of('@RestController @RequestMapping(S.R) class S { static String R = "/a"; @GetMapping void a() {} }')
+        with self.assertRaises(X.ExtractionError):  # constante de otro tipo
+            endpoints_of('@RestController @RequestMapping(Otra.R) class S { static final String R = "/a"; @GetMapping void a() {} }')
+        with self.assertRaises(X.ExtractionError):  # concatenación de constantes
+            endpoints_of('@RestController class S { static final String R = "/a"; @GetMapping(R + R) void a() {} }')
+
     def test_non_literal_paths_and_missing_verbs_fail_loudly(self):
         with self.assertRaises(X.ExtractionError):
             endpoints_of('@RestController @RequestMapping("/api/v1/d") class S { @GetMapping(Paths.ITEMS) void a() {} }')
