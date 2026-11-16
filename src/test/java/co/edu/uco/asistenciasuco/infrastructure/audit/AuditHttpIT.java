@@ -6,6 +6,7 @@ import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoFacultadQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.PadronGrupoQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository.AuditEventJpaRepository;
@@ -76,7 +77,7 @@ class AuditHttpIT {
     @MockitoBean
     private AsistenciaRepositoryPort asistenciaRepositoryPort;
 
-    @MockitoBean(extraInterfaces = GrupoFacultadQueryPort.class)
+    @MockitoBean(extraInterfaces = {GrupoFacultadQueryPort.class, PadronGrupoQueryPort.class})
     private GrupoRepositoryPort grupoRepositoryPort;
 
     @MockitoBean
