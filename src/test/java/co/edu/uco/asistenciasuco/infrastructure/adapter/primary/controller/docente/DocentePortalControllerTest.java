@@ -98,6 +98,45 @@ class DocentePortalControllerTest {
                 .andExpect(jsonPath("$.datos").isEmpty());
     }
 
+    // CIERRE-W1A: busqueda y grupoId opcionales viajan al caso de uso; el total es el del servidor.
+    @Test
+    void consultarReclamos_con_busqueda_y_grupo_los_delega_y_devuelve_el_total_filtrado() throws Exception {
+        final UUID grupo = UUID.randomUUID();
+        when(reclamos.execute(new ConsultarReclamosDocenteDTO(ACTOR, null, 1, 10, "ana", grupo)))
+                .thenReturn(new ReclamosDocentePaginaDTO(List.of(), 4));
+
+        mvc.perform(get("/api/v1/docente/reclamos").param("pagina", "1").param("tamano", "10")
+                        .param("busqueda", "ana").param("grupoId", grupo.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(4))
+                .andExpect(jsonPath("$.datos").isEmpty());
+    }
+
+    @Test
+    void consultarReclamos_con_busqueda_de_mas_de_100_caracteres_es_400() throws Exception {
+        mvc.perform(get("/api/v1/docente/reclamos").param("busqueda", "x".repeat(101)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details[0].field").value("busqueda"));
+
+        org.mockito.Mockito.verifyNoInteractions(reclamos);
+    }
+
+    @Test
+    void consultarReclamos_con_grupoId_que_no_es_uuid_es_400() throws Exception {
+        mvc.perform(get("/api/v1/docente/reclamos").param("grupoId", "no-es-uuid"))
+                .andExpect(status().isBadRequest());
+
+        org.mockito.Mockito.verifyNoInteractions(reclamos);
+    }
+
+    @Test
+    void consultarReclamos_con_paginacion_invalida_sigue_siendo_400_aunque_haya_busqueda() throws Exception {
+        mvc.perform(get("/api/v1/docente/reclamos").param("busqueda", "ana").param("tamano", "101"))
+                .andExpect(status().isBadRequest());
+
+        org.mockito.Mockito.verifyNoInteractions(reclamos);
+    }
+
     // CT-01 (AC-05/06): 200 con ApiDataResponse, causal, soporte y UTC v2.
     @Test
     void consultarDetalleReclamo_devuelve_api_data_response_con_causal_y_soporte() throws Exception {

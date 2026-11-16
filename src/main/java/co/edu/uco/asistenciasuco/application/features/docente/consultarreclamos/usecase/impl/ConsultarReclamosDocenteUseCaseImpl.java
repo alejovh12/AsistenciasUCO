@@ -37,7 +37,8 @@ public final class ConsultarReclamosDocenteUseCaseImpl implements ConsultarRecla
                 .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_003));
 
         final List<SolicitudRevisionDocenteProjection> filas = queryPort.consultarSolicitudesDocente(
-                domain.actorUsuarioId(), domain.codigoEstado(), domain.pagina(), domain.tamano());
+                domain.actorUsuarioId(), domain.codigoEstado(), domain.pagina(), domain.tamano(),
+                domain.busqueda(), domain.grupoId());
         final int total = filas.isEmpty() ? 0 : filas.getFirst().totalRegistros();
         return new ReclamosDocentePaginaDomain(
                 filas.stream().map(ConsultarReclamosDocenteRepositoryMapper::toDomain).toList(), total);

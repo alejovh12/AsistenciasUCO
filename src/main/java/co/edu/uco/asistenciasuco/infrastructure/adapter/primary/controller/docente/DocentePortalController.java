@@ -25,6 +25,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docen
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.response.ReclamoDocenteResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.BusquedaRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.PaginacionRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import jakarta.validation.Valid;
@@ -73,18 +74,24 @@ public final class DocentePortalController {
 
     /**
      * Solicitudes de revision del docente titular (paginadas en SQL) con los datos minimos del soporte. El
-     * soporte se descarga por {@code GET /api/v1/archivos/{fileId}} con Bearer; nunca por un enlace del storage.
+     * soporte se descarga por {@code GET /api/v1/archivos/{fileId}} con Bearer; nunca por un enlace del storage. CIERRE-W1A:
+     * {@code busqueda} (texto) y {@code grupoId} (solo ese grupo) filtran en el servidor; el {@code total} los respeta.
      */
     @GetMapping("/reclamos")
     public ResponseEntity<ApiListResponse<ReclamoDocenteResponse>> consultarReclamos(
             @RequestParam(name = "estado", required = false) final String estado,
             @RequestParam(name = "pagina", required = false) final Integer pagina,
-            @RequestParam(name = "tamano", required = false) final Integer tamano
+            @RequestParam(name = "tamano", required = false) final Integer tamano,
+            @RequestParam(name = "busqueda", required = false) final String busqueda,
+            @RequestParam(name = "grupoId", required = false) final UUID grupoId
     ) {
         // CULM-001 D.9-a (F-ADM-023, F-EST-022): pagina < 1 o tamano fuera de 1..100 es 400 PAG_001, no se acota en silencio.
         PaginacionRequestValidator.resolver(pagina, tamano);
+        // CIERRE-W1A: busqueda opcional (max. 100); grupoId opcional (un UUID invalido es 400 por el tipo del parametro).
+        RequestValidationGuard.validate(BusquedaRequestValidator.validate(busqueda));
         final ReclamosDocentePaginaDTO resultado = consultarReclamosDocenteInputPort.execute(
-                new ConsultarReclamosDocenteDTO(authenticatedUserResolver.requireAuthenticatedUserId(), estado, pagina, tamano));
+                new ConsultarReclamosDocenteDTO(authenticatedUserResolver.requireAuthenticatedUserId(), estado, pagina, tamano,
+                        busqueda, grupoId));
         return ResponseEntity.ok(new ApiListResponse<>(
                 true,
                 resultado.reclamos().stream().map(ReclamoDocenteHttpMapper::toResponse).toList(),
