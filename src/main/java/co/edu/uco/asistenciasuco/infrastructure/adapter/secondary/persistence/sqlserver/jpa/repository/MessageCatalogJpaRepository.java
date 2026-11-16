@@ -1,16 +1,19 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
 import jakarta.persistence.EntityManager;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.convert.DurationStyle;
 import org.springframework.stereotype.Repository;
+import java.time.Clock;
+import java.time.Duration;
 import java.util.List;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort;
 import java.text.MessageFormat;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 
 /**
@@ -18,7 +21,9 @@ import java.util.regex.Matcher;
  * (vistas uv_mensaje_usuario y uv_mensaje_tecnico, JPA-only desde LB-008 JPA-06).
  *
  * <p>Mantiene una cache en memoria para evitar consultas recurrentes a la base de datos.
- * Solo se cachean resultados positivos: codigos inexistentes o contenido nulo no se cachean.</p>
+ * Solo se cachean resultados positivos: codigos inexistentes o contenido nulo no se cachean.
+ * VAL-oleada7: las entradas vencen tras {@code app.adapters.sql-catalog-cache.ttl}, asi un mensaje editado llega a todas
+ * las replicas sin reiniciarlas.</p>
  */
 @Repository
 @ConditionalOnProperty(prefix = "app.adapters.message-catalog", name = "provider", havingValue = "sqlserver")
@@ -27,11 +32,26 @@ public class MessageCatalogJpaRepository implements MessageCatalogPort {
     static final String HQL_MENSAJE_USUARIO = "select m.contenido from UvMensajeUsuarioEntity m where m.codigo = :codigo";
     static final String HQL_MENSAJE_TECNICO = "select m.contenido from UvMensajeTecnicoEntity m where m.codigo = :codigo";
     private final EntityManager entityManager;
-    private final Map<String, String> userMessageCache = new ConcurrentHashMap<>();
-    private final Map<String, String> technicalMessageCache = new ConcurrentHashMap<>();
+    private final CacheConVencimiento<String, String> userMessageCache;
+    private final CacheConVencimiento<String, String> technicalMessageCache;
 
     public MessageCatalogJpaRepository(final EntityManager entityManager) {
+        this(entityManager, Clock.systemUTC(), CacheConVencimiento.TTL_POR_DEFECTO);
+    }
+
+    @Autowired
+    public MessageCatalogJpaRepository(
+            final EntityManager entityManager,
+            @Value("${app.adapters.sql-catalog-cache.ttl:60s}") final String ttl
+    ) {
+        // Texto y DurationStyle: no depende del servicio de conversion de Spring Boot (contextos minimos de prueba).
+        this(entityManager, Clock.systemUTC(), DurationStyle.detectAndParse(ttl));
+    }
+
+    MessageCatalogJpaRepository(final EntityManager entityManager, final Clock reloj, final Duration ttl) {
         this.entityManager = Objects.requireNonNull(entityManager, "El EntityManager de mensajes es obligatorio.");
+        this.userMessageCache = new CacheConVencimiento<>(reloj, ttl);
+        this.technicalMessageCache = new CacheConVencimiento<>(reloj, ttl);
     }
 
     @Override
@@ -53,13 +73,14 @@ public class MessageCatalogJpaRepository implements MessageCatalogPort {
         }
 
         final String cleanCode = code.trim();
-        if (userMessageCache.containsKey(cleanCode)) {
-            return Optional.ofNullable(userMessageCache.get(cleanCode));
+        final Optional<String> enCache = userMessageCache.obtener(cleanCode);
+        if (enCache.isPresent()) {
+            return enCache;
         }
 
         try {
             final Optional<String> contenido = buscarMensajeUsuario(cleanCode);
-            contenido.ifPresent(valor -> userMessageCache.put(cleanCode, valor));
+            contenido.ifPresent(valor -> userMessageCache.guardar(cleanCode, valor));
             return contenido;
         } catch (final Exception e) {
             throw new MessageCatalogException("Error al consultar mensaje de usuario para el codigo: " + code, e);
@@ -72,13 +93,14 @@ public class MessageCatalogJpaRepository implements MessageCatalogPort {
         }
 
         final String cleanCode = code.trim();
-        if (technicalMessageCache.containsKey(cleanCode)) {
-            return Optional.ofNullable(technicalMessageCache.get(cleanCode));
+        final Optional<String> enCache = technicalMessageCache.obtener(cleanCode);
+        if (enCache.isPresent()) {
+            return enCache;
         }
 
         try {
             final Optional<String> contenido = buscarMensajeTecnico(cleanCode);
-            contenido.ifPresent(valor -> technicalMessageCache.put(cleanCode, valor));
+            contenido.ifPresent(valor -> technicalMessageCache.guardar(cleanCode, valor));
             return contenido;
         } catch (final Exception e) {
             throw new MessageCatalogException("Error al consultar mensaje tecnico para el codigo: " + code, e);

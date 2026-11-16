@@ -5,7 +5,6 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import jakarta.servlet.http.HttpServletRequest;
 import tools.jackson.databind.ObjectMapper;
 
-import java.io.IOException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -13,6 +12,10 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 
 /**
@@ -114,12 +117,30 @@ public class SecurityBaselinePepClient {
                     .header(CORRELATION_ID, isIdentifier(correlationId) ? correlationId : requestId)
                     .POST(HttpRequest.BodyPublishers.ofString(body))
                     .build();
-            return mapResponse(httpClient.send(pepRequest, HttpResponse.BodyHandlers.discarding()));
+            return mapResponse(enviarConLimiteTotal(pepRequest));
         } catch (final InterruptedException exception) {
             Thread.currentThread().interrupt();
             return unavailable();
-        } catch (final IOException | RuntimeException exception) {
+        } catch (final ExecutionException | TimeoutException | RuntimeException exception) {
             return unavailable();
+        }
+    }
+
+    /**
+     * VAL-oleada7 (H4): {@code HttpRequest.timeout} solo cubre la espera de la respuesta completa en algunos casos; con
+     * el PEP deteniéndose, una respuesta a medias (encabezados incompletos o cuerpo sin terminar) dejaba el hilo de la
+     * petición esperando hasta que el PEP cerrara la conexión. {@code request-timeout} es ahora el límite total de la
+     * llamada: al vencer se cancela el intercambio (cierra la conexión) y la decisión es UNAVAILABLE (fail-closed).
+     */
+    private HttpResponse<Void> enviarConLimiteTotal(final HttpRequest pepRequest)
+            throws InterruptedException, ExecutionException, TimeoutException {
+        final CompletableFuture<HttpResponse<Void>> enCurso =
+                httpClient.sendAsync(pepRequest, HttpResponse.BodyHandlers.discarding());
+        try {
+            return enCurso.get(properties.requestTimeout().toMillis(), TimeUnit.MILLISECONDS);
+        } catch (final TimeoutException | InterruptedException exception) {
+            enCurso.cancel(true);
+            throw exception;
         }
     }
 

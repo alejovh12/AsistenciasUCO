@@ -216,6 +216,10 @@ app:
       # azure (predeterminado) | messageucolab (componente del equipo de mensajeria) | sqlserver.
       # Guia: AsistenciasUCO-Infra/docs/hardening/MESSAGE_CATALOG_SWITCH_GUIDE.md
       provider: ${APP_ADAPTERS_MESSAGE_CATALOG_PROVIDER:azure}
+    sql-catalog-cache:
+      # VAL-oleada7: vencimiento de la cache de los proveedores sqlserver de parametros y mensajes (mayor que 0, maximo
+      # 24 h). Con varias replicas, un valor editado llega a las demas a mas tardar en este tiempo.
+      ttl: ${ASISTENCIAS_CATALOGO_SQL_CACHE_TTL:60s}
     storage:
       # LB-004B.2: minio es el unico provider soportado (decision humana, ver
       # docs/work-items/LB-004-stateless-serverless-readiness/PROFESSOR_DECISION.md). No hay
