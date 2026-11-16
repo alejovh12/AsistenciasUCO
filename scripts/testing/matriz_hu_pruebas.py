@@ -39,7 +39,9 @@ def recolectar():
     por_hu = {}
     con_hu = 0
     total = 0
-    for archivo in sorted(PRUEBAS.rglob("*.java")):
+    # Orden por la ruta como texto (sensible a mayusculas): igual en Windows y en Linux (CI). sorted() sobre Path compara sin
+    # distinguir mayusculas en Windows y daba otro orden que el runner.
+    for archivo in sorted(PRUEBAS.rglob("*.java"), key=lambda ruta: ruta.relative_to(RAIZ).as_posix()):
         texto = archivo.read_text(encoding="utf-8")
         casos = len(CASO.findall(texto))
         if casos == 0:
