@@ -102,7 +102,7 @@ public final class SubirArchivoUseCaseImpl implements SubirArchivoUseCase {
                 Instant.now()
         );
 
-        fileStoragePort.store(new FileStoragePort.StoreObjectCommand(fileId.toString(), compression.storedContent(), metadata));
+        almacenarFailClosed(new FileStoragePort.StoreObjectCommand(fileId.toString(), compression.storedContent(), metadata));
 
         registrarBorradorDurable(new SoporteArchivoMetadataPort.RegistrarSoporteBorrador(
                 fileId,
@@ -174,6 +174,16 @@ public final class SubirArchivoUseCaseImpl implements SubirArchivoUseCase {
         } catch (final RuntimeException exception) {
             // Best-effort: si falla queda un huerfano tecnico sin fila, atendido por la reconciliacion.
             LOGGER.warn("Compensacion de objeto de soporte no completada. fileId={}", fileId);
+        }
+    }
+
+    private void almacenarFailClosed(final FileStoragePort.StoreObjectCommand comando) {
+        try {
+            fileStoragePort.store(comando);
+        } catch (final FileStoragePort.StorageUnavailableException exception) {
+            // REA-02 (VAL-oleada9): MinIO caido o breaker fileStorage abierto. No se registra metadata y se responde 503
+            // ERR_ALMACENAMIENTO_NO_DISPONIBLE (antes caia en el 500 generico), igual que el antivirus (H3).
+            throw InternalApplicationException.servicioNoDisponible(ArchivoErrorCode.ERR_ALMACENAMIENTO_NO_DISPONIBLE, exception);
         }
     }
 

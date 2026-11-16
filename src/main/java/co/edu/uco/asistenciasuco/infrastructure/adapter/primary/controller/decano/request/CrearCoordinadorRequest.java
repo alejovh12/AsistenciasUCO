@@ -6,6 +6,8 @@ import java.util.UUID;
 import jakarta.validation.Valid;
 
 public final class CrearCoordinadorRequest {
+    /** Tipo de documento elegido; si falta, la BD aplica el tipo por defecto del parametro IDENTIDAD. */
+    private UUID tipoIdentificacionId;
     @NumeroIdentificacionTexto
     private String numeroIdentificacion;
     @NombrePersona
@@ -20,6 +22,8 @@ public final class CrearCoordinadorRequest {
     private UUID idPrograma;
     @Valid
     private ProgramaNuevoRequest programaNuevo;
+    public UUID getTipoIdentificacionId() { return tipoIdentificacionId; }
+    public void setTipoIdentificacionId(final UUID tipoIdentificacionId) { this.tipoIdentificacionId = tipoIdentificacionId; }
     public String getNumeroIdentificacion() { return numeroIdentificacion; }
     public void setNumeroIdentificacion(final String numeroIdentificacion) { this.numeroIdentificacion = numeroIdentificacion; }
     public String getPrimerNombre() { return primerNombre; }
