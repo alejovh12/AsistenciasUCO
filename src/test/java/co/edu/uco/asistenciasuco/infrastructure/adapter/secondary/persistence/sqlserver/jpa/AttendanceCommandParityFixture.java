@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.SesionDePruebaMismoDia;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.TomaAsistenciaTestSql;
 import co.edu.uco.asistenciasuco.application.features.sesion.common.ContratoHorarioSesion;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
@@ -106,7 +107,9 @@ final class AttendanceCommandParityFixture {
         final String nombreUnico = IT_PREFIX + tag + UUID.randomUUID().toString().substring(0, 12);
         // SES-01: el registro ordinario exige la sesion activa con procedencia UTC confirmada (contrato v2).
         final LocalDateTime inicio = LocalDateTime.now(ZoneOffset.UTC).minusHours(1);
-        final LocalDateTime libre = primerHuecoLibreDelDocente(LocalDateTime.now(ZoneOffset.UTC).plusHours(1));
+        // SES_028 (DEC-073): la reserva no puede cruzar la medianoche de Bogota (fallaba con el CI entre las 21:00 y las 24:00).
+        final LocalDateTime libre = SesionDePruebaMismoDia.inicioSinCruzarMedianoche(
+                primerHuecoLibreDelDocente(LocalDateTime.now(ZoneOffset.UTC).plusHours(1)), java.time.Duration.ofHours(2));
         sesionRepositoryPort.crearSesion(new CrearSesionRepositoryDTO(
                 grupoId, nombreUnico, libre, libre.plusHours(2), docenteUsuarioId, ContratoHorarioSesion.UTC_CONFIRMADO_V2));
         final List<UUID> encontrada = jdbcTemplate.query(

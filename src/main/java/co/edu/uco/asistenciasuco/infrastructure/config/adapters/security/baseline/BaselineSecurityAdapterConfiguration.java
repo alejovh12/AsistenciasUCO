@@ -7,6 +7,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.bas
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.contract.JwtClaimsExtractor;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.validation.AudienceValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.validation.InstitutionalIssuerValidator;
+import co.edu.uco.asistenciasuco.infrastructure.config.health.EmisorIdentidadHealthIndicator;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.SecurityBaselineProviderProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -55,5 +56,11 @@ public class BaselineSecurityAdapterConfiguration {
         decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
                 timestampValidator, issuerValidator, audienceValidator));
         return decoder;
+    }
+
+    /** OBS-10: componente {@code emisorIdentidad} de /actuator/health (fuera de readiness). */
+    @Bean
+    public EmisorIdentidadHealthIndicator emisorIdentidadHealthIndicator(final SecurityBaselineProviderProperties properties) {
+        return new EmisorIdentidadHealthIndicator(properties.issuerUri());
     }
 }

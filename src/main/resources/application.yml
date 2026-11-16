@@ -47,7 +47,8 @@ spring:
       file-size-threshold: 5MB
 
 server:
-  port: 8080
+  # F12-07 (asignacion de puertos): el puerto HTTP de la API se fija por entorno; 8080 por defecto.
+  port: ${SERVER_PORT:8080}
   # F12-09 (desechabilidad): ante SIGTERM se deja de aceptar trafico y se terminan las peticiones en curso, con el tope
   # por fase de spring.lifecycle.timeout-per-shutdown-phase. Los schedulers y el dispatcher ya paran en SmartLifecycle.stop().
   shutdown: graceful

@@ -36,6 +36,12 @@ roles, `access`, ownership contextual), de los perfiles del PDP y de las exencio
 | El código = catálogo, y esqueleto de lo que falte | `provision_asistencias.py catalog` |
 | PDP = catálogo (recursos, concesiones, perfiles) | `provision_asistencias.py verify` |
 | Decisión real PEP→PDP ALLOW/DENY por endpoint y rol, rutas no registradas y sin Bearer | `provision_asistencias.py verify-decisions` |
+| La vista legible en Infra (`AsistenciasUCO-Infra/docs/architecture/rutas-por-rol.md`) se **genera** desde este archivo; no es una copia editable | `AsistenciasUCO-Infra/scripts/docs/generar-rutas-por-rol.ps1 -Check` (paso 3 de `infra.ps1 verify`) |
+
+**Copias en otros repositorios (F12-01, VAL-oleada8):** ninguna. Infra no versiona un `access-catalog.json` propio: lee este
+desde el checkout hermano del backend y solo guarda la tabla generada, cuyo `-Check` falla si se desfasa. El espejo de reglas
+del frontend (`ROLE_SCOPE_RULES` de `role-scope.interceptor.ts`) es una defensa de interfaz con prueba propia, no una fuente de
+autorización. Un cambio de ruta se hace aquí y luego se regenera la tabla de Infra.
 
 **Una HU nueva**: (1) controlador + regla en `SecurityConfig`; (2) `catalog` o la prueba Maven fallan hasta que exista su
 fila; (3) completar `roles`/`access`/`ownership`; (4) `pdp` registra solo lo que falta; (5) `verify` + `verify-decisions`;
