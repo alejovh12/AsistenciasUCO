@@ -31,6 +31,8 @@ Trabajo correctivo activo: [privacidad de logs de notificaciones](../work-items/
 
 Fase funcional activa por autorización explícita del usuario (2026-11-14): [FASE 2A — arranque controlado, altas individuales e IDENTITY_DRIFT](../work-items/FASE-2A-altas-identity-drift/PLAN.md). El preflight de seguridad de arranque sigue pendiente; las correcciones de Backend requieren su DoR/RED por defecto reproducible.
 
+Fase funcional autorizada adicional (2026-11-15): [FASE 2B — certificación integral de sesiones, tomas, asistencia, matrícula y reclamos](../work-items/FASE-2B-certificacion-integral/PLAN.md). Recorrido manual completo con login real de los 5 roles (ADMINISTRADOR, DECANO, COORDINADOR, DOCENTE, ESTUDIANTE) documentado en VALIDATION.md; NOT_READY para escrituras y cambios de comportamiento hasta dictamen de los hallazgos P1/P2 reportados.
+
 ## Golden Path actual
 
 ```text
