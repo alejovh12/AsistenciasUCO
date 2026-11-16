@@ -8,6 +8,8 @@ last-reviewed: 2026-10-26
 
 # Arquitectura de Runtime Security (independiente del proveedor)
 
+> **Nota (2026-11-16): decisión del responsable sobre la sesión web.** Se confirma el access token Bearer solo en memoria con Authorization Code + PKCE (modo `baseline`), tal como describe este documento. La migración a cookies `HttpOnly` con CSRF, o a un BFF, se evaluó y se difirió a producción: el PEP de Security Baseline exige el Bearer del usuario, haría falta un cliente confidencial y tres contratos congelados fijan Bearer. Queda registrada como TD-110 en `AsistenciasUCO-Infra/docs/baseline/TECHNICAL_DEBT.md`. No cambia nada de lo que sigue.
+
 ## 1. Alcance
 
 Este documento describe la seguridad **runtime** de AsistenciasUCO:
