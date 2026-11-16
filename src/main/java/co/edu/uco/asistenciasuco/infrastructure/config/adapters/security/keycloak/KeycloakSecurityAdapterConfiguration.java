@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.adapters.security.keycloak;
 
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.keycloak.KeycloakJwtClaimsExtractor;
+import co.edu.uco.asistenciasuco.infrastructure.config.health.EmisorIdentidadHealthIndicator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.contract.JwtClaimsExtractor;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.validation.AudienceValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.validation.InstitutionalIssuerValidator;
@@ -65,5 +66,11 @@ public class KeycloakSecurityAdapterConfiguration {
                 userIdClaimValidator
         ));
         return jwtDecoder;
+    }
+
+    /** OBS-10: componente {@code emisorIdentidad} de /actuator/health (fuera de readiness). */
+    @Bean
+    public EmisorIdentidadHealthIndicator emisorIdentidadHealthIndicator(final KeycloakSecurityProviderProperties properties) {
+        return new EmisorIdentidadHealthIndicator(properties.issuerUri());
     }
 }

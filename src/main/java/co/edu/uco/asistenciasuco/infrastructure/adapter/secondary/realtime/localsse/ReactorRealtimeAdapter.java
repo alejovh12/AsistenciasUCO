@@ -13,6 +13,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -36,14 +37,28 @@ public final class ReactorRealtimeAdapter implements RealtimePublisherPort {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReactorRealtimeAdapter.class);
 
+    /** OBS-07: hechos de negocio publicados, por tipo ({@code asistencias_negocio_eventos_total{tipo}} en Prometheus). */
+    static final String METRICA_EVENTOS_NEGOCIO = "asistencias.negocio.eventos";
+    /**
+     * OBS-07: tipos de evento que cuentan como hecho de negocio. Lista cerrada para acotar la cardinalidad: los eventos tecnicos
+     * (rotacion del QR, cambios de catalogos) no crean series.
+     */
+    static final Set<String> TIPOS_NEGOCIO = Set.of(
+            "TOMA_ABIERTA", "TOMA_CERRADA", "ASISTENCIAS_TOMA_ACTUALIZADAS", "ASISTENCIA_QR_REGISTRADA",
+            "RECLAMO_ASISTENCIA_RADICADO", "RECLAMO_ASISTENCIA_RESUELTO", "SESION_CANCELADA", "SESION_MANUAL_CREADA",
+            "REVISION_CANCELACION_RESUELTA", "ALERTA_RIESGO_INASISTENCIA", "ALERTA_PERDIDA_INASISTENCIA"
+    );
+
     private final Sinks.Many<RealtimeEvent> sink = Sinks.many().multicast().directBestEffort();
     private final AtomicInteger activeSubscribers = new AtomicInteger();
     private final Flux<RealtimeEvent> events;
     private final Counter publishedCounter;
     private final Counter droppedCounter;
+    private final MeterRegistry meterRegistry;
 
     public ReactorRealtimeAdapter(final MeterRegistry meterRegistry) {
         Objects.requireNonNull(meterRegistry, "MeterRegistry es obligatorio.");
+        this.meterRegistry = meterRegistry;
 
         this.events = sink.asFlux()
                 .doOnSubscribe(subscription -> activeSubscribers.incrementAndGet())
@@ -70,6 +85,8 @@ public final class ReactorRealtimeAdapter implements RealtimePublisherPort {
             return;
         }
 
+        contarEventoDeNegocio(event.type());
+
         final TraceContextSnapshot traceContext = TraceContextSnapshot.current();
         final RealtimeEvent enriched = event.withObservabilityContext(
                 CorrelationIdContext.getAsString(),
@@ -88,6 +105,16 @@ public final class ReactorRealtimeAdapter implements RealtimePublisherPort {
                 "Evento realtime descartado. type={} eventId={} correlationId={} emitResult={}",
                 event.type(), event.eventId(), enriched.correlationId(), result
         );
+    }
+
+    private void contarEventoDeNegocio(final String tipo) {
+        if (tipo != null && TIPOS_NEGOCIO.contains(tipo)) {
+            Counter.builder(METRICA_EVENTOS_NEGOCIO)
+                    .description("Hechos de negocio publicados (tomas, registros por QR, reclamos, sesiones y alertas).")
+                    .tag("tipo", tipo)
+                    .register(meterRegistry)
+                    .increment();
+        }
     }
 
     /**

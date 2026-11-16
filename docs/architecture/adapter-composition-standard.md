@@ -426,7 +426,8 @@ Antes de incorporar una segunda DB debe hacerse provider-specific también el ow
 No se modifica la regla contractual actual:
 
 - Java productivo invoca procedimientos públicos `usp_*`;
-- no invoca `usp_*_interno`;
+- no invoca `usp_*_interno` (ni `usp_internal_*`); lo hace cumplir `ProduccionSoloInvocaProcedimientosPublicosTest`
+  (HEX-09, VAL-oleada8, 2026-11-15), que recorre `src/main/java` y `src/main/resources`;
 - lecturas respetan las views/contratos definidos;
 - la DB no se modifica desde esta fase de infraestructura.
 

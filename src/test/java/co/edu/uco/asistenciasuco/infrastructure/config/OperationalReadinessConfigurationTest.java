@@ -50,6 +50,11 @@ class OperationalReadinessConfigurationTest {
     }
 
     @Test
+    void f12_07_puerto_http_se_asigna_por_variable_con_8080_por_defecto() {
+        assertEquals("${SERVER_PORT:8080}", valor("server.port"));
+    }
+
+    @Test
     void obs_10_sondas_de_liveness_y_readiness_con_bd_y_breakers() {
         assertEquals("true", valor("management.endpoint.health.probes.enabled"));
         assertEquals("livenessState", valor("management.endpoint.health.group.liveness.include"));
@@ -81,6 +86,19 @@ class OperationalReadinessConfigurationTest {
         assertTrue(dockerfile.contains("HEALTHCHECK"), "el Dockerfile declara HEALTHCHECK");
         assertTrue(dockerfile.contains("http://127.0.0.1:${MANAGEMENT_SERVER_PORT:-8090}/actuator/health/readiness"));
         assertTrue(dockerfile.contains("ENTRYPOINT [\"java\""), "exec form: la JVM recibe SIGTERM");
+    }
+
+    @Test
+    void f12_02_cada_imagen_base_del_dockerfile_esta_fijada_por_digest() throws IOException {
+        final List<String> imagenes = Files.readAllLines(Path.of("Dockerfile"), StandardCharsets.UTF_8).stream()
+                .map(String::trim)
+                .filter(linea -> linea.startsWith("FROM "))
+                .map(linea -> linea.split("\\s+")[1])
+                .toList();
+
+        assertEquals(2, imagenes.size(), "build y runtime");
+        imagenes.forEach(imagen -> assertTrue(imagen.matches("[^@\\s]+:[^@\\s]+@sha256:[0-9a-f]{64}"),
+                () -> "la imagen base debe llevar etiqueta y digest (Dependabot actualiza ambos): " + imagen));
     }
 
     @Test

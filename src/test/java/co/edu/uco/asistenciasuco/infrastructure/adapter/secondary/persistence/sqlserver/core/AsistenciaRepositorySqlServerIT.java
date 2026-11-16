@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.core;
 
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.SesionDePruebaMismoDia;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.TomaAsistenciaTestSql;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
@@ -259,7 +260,9 @@ class AsistenciaRepositorySqlServerIT {
         // v1 (procedencia NULL) se rechaza con SES_009. SES_017: se crea en el primer hueco libre del docente y luego se
         // lleva a la ventana viva reafirmando la procedencia, igual que AttendanceCommandParityFixture.
         final LocalDateTime inicio = LocalDateTime.now(ZoneOffset.UTC).minusHours(1);
-        final LocalDateTime libre = primerHuecoLibreDelDocente(LocalDateTime.now(ZoneOffset.UTC).plusHours(1));
+        // SES_028 (DEC-073): la reserva no puede cruzar la medianoche de Bogota (fallaba con el CI entre las 21:00 y las 24:00).
+        final LocalDateTime libre = SesionDePruebaMismoDia.inicioSinCruzarMedianoche(
+                primerHuecoLibreDelDocente(LocalDateTime.now(ZoneOffset.UTC).plusHours(1)), java.time.Duration.ofHours(2));
         sesionRepositoryPort.crearSesion(new CrearSesionRepositoryDTO(
                 grupoId,
                 nombreUnico,
