@@ -90,3 +90,22 @@ versión nueva: una lectura sin versión de un secreto cuya última versión est
 
 - Contraseñas de usuarios finales y su recuperación: son de Keycloak y Security Baseline.
 - La prueba contra un Key Vault real (SEC-11): `.\mvnw.cmd -Pazure-integration verify` con `az login`; sigue pendiente.
+
+## 6. Credencial de build: GitHub Packages (F12-02)
+
+No es un secreto de ejecución (no está en `SECRETS_INVENTORY.md` ni en el Key Vault): solo se usa para descargar el starter de
+MessageUcoLab, que se publica en GitHub Packages (`https://maven.pkg.github.com/CamiloGarcia09/MessageUcolab--Backend`,
+servidor `github` del `pom.xml`).
+
+| Dónde | Nombre | Uso |
+| :--- | :--- | :--- |
+| Secretos de Actions del repositorio | `MESSAGEUCOLAB_PACKAGES_USER`, `MESSAGEUCOLAB_PACKAGES_TOKEN` | `backend-ci.yml` e `integration.yml`: `setup-java` arma el `settings.xml`; el build de la imagen lo recibe como secreto de BuildKit (`--secret id=m2settings`) y no queda en ninguna capa. |
+| Secretos de Dependabot del repositorio | `MESSAGEUCOLAB_PACKAGES_TOKEN` | Registro Maven de `.github/dependabot.yml`, para revisar versiones del starter. |
+| Equipo de cada desarrollador | `~/.m2/settings.xml` con un servidor `github` | Build local. Nunca dentro del repositorio. |
+
+- **Tipo de token:** personal access token clásico con **solo** `read:packages`, de una cuenta con acceso de lectura al
+  repositorio de MessageUcoLab. Sin `repo` ni `write:packages`.
+- **Rotación:** cada 90 días o al salir del equipo quien lo emitió. Crear el token nuevo, reemplazar los dos secretos de Actions y
+  el de Dependabot, correr el `Backend CI` y revocar el anterior.
+- **Si falta o vence:** el build solo falla cuando necesita el starter (`required=false` en el Dockerfile); el error es de
+  resolución de la dependencia `messageucolab` (401 de `maven.pkg.github.com`).
