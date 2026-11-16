@@ -62,7 +62,7 @@ public final class DecanoPortalController {
     public ResponseEntity<ApiDataResponse<CrearCoordinadorResponse>> crearCoordinador(@Valid @RequestBody final CrearCoordinadorRequest request) {
         final var programa = request == null ? null : request.getProgramaNuevo();
         final var resultado = crearCoordinadorInputPort.execute(new CrearCoordinadorDTO(
-                null,
+                request == null ? null : request.getTipoIdentificacionId(),
                 request == null ? null : request.getNumeroIdentificacion(),
                 request == null ? null : request.getPrimerNombre(),
                 request == null ? null : request.getSegundoNombre(),

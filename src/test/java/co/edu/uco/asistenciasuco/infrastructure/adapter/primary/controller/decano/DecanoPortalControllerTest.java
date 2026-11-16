@@ -71,7 +71,7 @@ class DecanoPortalControllerTest {
     void crearCoordinador_mapea_cuerpo_de_la_peticion_al_dto() throws Exception {
         final String body = "{\"numeroIdentificacion\":\"123456789\",\"primerNombre\":\"Ana\",\"segundoNombre\":\"Maria\","
                 + "\"primerApellido\":\"Perez\",\"segundoApellido\":\"Gomez\",\"correo\":\"ana@uco.edu.co\","
-                + "\"idPrograma\":\"" + PROGRAMA + "\",\"password\":\"Clave123!\"}";
+                + "\"idPrograma\":\"" + PROGRAMA + "\"}";
         final UUID idCoordinador = UUID.randomUUID();
         when(crearCoordinador.execute(any())).thenReturn(new CrearCoordinadorResultadoDTO(idCoordinador, PROGRAMA, null));
 
@@ -89,6 +89,23 @@ class DecanoPortalControllerTest {
         assertEquals(PROGRAMA, captor.getValue().idPrograma());
         assertEquals(ACTOR, captor.getValue().usuario());
         assertNull(captor.getValue().programaNuevo());
+    }
+
+    /** El tipo de documento elegido en el formulario llega al caso de uso (antes el controlador pasaba null y se guardaba CC). */
+    @Test
+    void crearCoordinador_traslada_el_tipo_de_documento_elegido() throws Exception {
+        final UUID tipoPasaporte = UUID.randomUUID();
+        final String body = "{\"tipoIdentificacionId\":\"" + tipoPasaporte + "\",\"numeroIdentificacion\":\"123456789\","
+                + "\"primerNombre\":\"Ana\",\"primerApellido\":\"Perez\",\"correo\":\"ana@uco.edu.co\","
+                + "\"idPrograma\":\"" + PROGRAMA + "\"}";
+        when(crearCoordinador.execute(any())).thenReturn(new CrearCoordinadorResultadoDTO(UUID.randomUUID(), PROGRAMA, null));
+
+        mvc.perform(post("/api/v1/decano/coordinadores").contentType("application/json").content(body))
+                .andExpect(status().isOk());
+
+        final ArgumentCaptor<CrearCoordinadorDTO> captor = ArgumentCaptor.forClass(CrearCoordinadorDTO.class);
+        verify(crearCoordinador).execute(captor.capture());
+        assertEquals(tipoPasaporte, captor.getValue().tipoIdentificacionId());
     }
 
     @Test
