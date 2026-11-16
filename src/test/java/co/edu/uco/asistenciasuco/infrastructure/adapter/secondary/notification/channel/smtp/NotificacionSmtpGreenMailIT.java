@@ -664,7 +664,7 @@ class NotificacionSmtpGreenMailIT {
 
     @Test
     @Order(11)
-    @DisplayName("IT-E11: Modo de pruebas (GreenMail): solo los buzones de redirect-to reciben el correo; los buzones reales quedan vacíos; asunto [PRUEBA] y aviso con N correcto")
+    @DisplayName("IT-E11: Modo de pruebas (GreenMail): solo los buzones de redirect-to reciben el correo; los buzones reales quedan vacíos; asunto [PRUEBA para …] y aviso con N y la lista de destinatarios")
     void ITE11_modo_pruebas_redirige_solo_a_redirect_to_y_omite_reales() throws Exception {
         UUID real1 = crearUsuarioPrueba("real1.ite11@uco.edu.co", true, true);
         UUID real2 = crearUsuarioPrueba("real2.ite11@uco.edu.co", true, true);
@@ -739,16 +739,29 @@ class NotificacionSmtpGreenMailIT {
             );
 
             MimeMessage msg = greenMail.getReceivedMessages()[0];
-            assertEquals("[PRUEBA] Retiro del grupo G-11", msg.getSubject());
+            // Enmienda D15 (2026-11-15): el asunto y el aviso nombran a los destinatarios reales; el orden depende de la
+            // consulta de contactos, por eso se acepta cualquiera de los dos.
+            String asunto = msg.getSubject();
+            assertTrue(
+                    asunto.equals("[PRUEBA para real1.ite11@uco.edu.co, real2.ite11@uco.edu.co] Retiro del grupo G-11")
+                            || asunto.equals("[PRUEBA para real2.ite11@uco.edu.co, real1.ite11@uco.edu.co] Retiro del grupo G-11"),
+                    "Asunto inesperado: " + asunto
+            );
             String textoPlano = extraerParteTexto(msg, "text/plain");
             String html = extraerParteTexto(msg, "text/html");
-            String avisoEsperado = "MODO DE PRUEBAS: este correo no se envió a los destinatarios reales. Destinatarios originales omitidos: 2.";
+            String avisoEsperado = "MODO DE PRUEBAS: este correo no se envió a los destinatarios reales. Destinatarios originales (2): ";
             assertTrue(textoPlano.startsWith(avisoEsperado));
-            assertTrue(html.contains("<p>" + avisoEsperado + "</p>"));
-            assertFalse(textoPlano.contains("real1.ite11@uco.edu.co"));
-            assertFalse(textoPlano.contains("real2.ite11@uco.edu.co"));
-            assertFalse(html.contains("real1.ite11@uco.edu.co"));
-            assertFalse(html.contains("real2.ite11@uco.edu.co"));
+            assertTrue(html.contains("<p>" + avisoEsperado));
+            assertTrue(textoPlano.contains("real1.ite11@uco.edu.co"));
+            assertTrue(textoPlano.contains("real2.ite11@uco.edu.co"));
+            assertTrue(html.contains("real1.ite11@uco.edu.co"));
+            assertTrue(html.contains("real2.ite11@uco.edu.co"));
+            String cabecerasEnvio = String.join(",",
+                    java.util.Objects.requireNonNullElse(msg.getHeader("To"), new String[0]))
+                    + String.join(",", java.util.Objects.requireNonNullElse(msg.getHeader("Cc"), new String[0]))
+                    + String.join(",", java.util.Objects.requireNonNullElse(msg.getHeader("Bcc"), new String[0]));
+            assertFalse(cabecerasEnvio.contains("real1.ite11@uco.edu.co"));
+            assertFalse(cabecerasEnvio.contains("real2.ite11@uco.edu.co"));
         } finally {
             dispatcher.start();
         }
