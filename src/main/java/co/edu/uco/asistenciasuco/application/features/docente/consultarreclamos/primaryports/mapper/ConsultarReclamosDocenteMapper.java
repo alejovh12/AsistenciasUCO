@@ -19,7 +19,9 @@ public final class ConsultarReclamosDocenteMapper {
                 dto == null ? null : dto.actorUsuarioId(),
                 dto == null ? null : dto.estado(),
                 dto == null ? null : dto.pagina(),
-                dto == null ? null : dto.tamano());
+                dto == null ? null : dto.tamano(),
+                dto == null ? null : dto.busqueda(),
+                dto == null ? null : dto.grupoId());
     }
 
     public static ReclamosDocentePaginaDTO toDTO(final ReclamosDocentePaginaDomain domain) {

@@ -33,7 +33,9 @@ public class SolicitudRevisionDocenteJpaRepository implements SolicitudRevisionD
                  @idCorrelacion = :idCorrelacion,
                  @codigoEstado = :codigoEstado,
                  @numeroPagina = :numeroPagina,
-                 @tamanoPagina = :tamanoPagina
+                 @tamanoPagina = :tamanoPagina,
+                 @busqueda = :busqueda,
+                 @idGrupo = :idGrupo
             """;
 
     static final String OP_DETALLE = "consultarDetalleSolicitudRevisionDocente";
@@ -56,7 +58,9 @@ public class SolicitudRevisionDocenteJpaRepository implements SolicitudRevisionD
             final UUID usuarioEjecutor,
             final String codigoEstado,
             final int numeroPagina,
-            final int tamanoPagina
+            final int tamanoPagina,
+            final String busqueda,
+            final UUID idGrupo
     ) {
         final UUID correlationId = CorrelationIdContext.require();
         return JpaQueryExecutor.execute(
@@ -68,6 +72,8 @@ public class SolicitudRevisionDocenteJpaRepository implements SolicitudRevisionD
                         .setParameter("codigoEstado", codigoEstado)
                         .setParameter("numeroPagina", numeroPagina)
                         .setParameter("tamanoPagina", tamanoPagina)
+                        .setParameter("busqueda", busqueda)
+                        .setParameter("idGrupo", idGrupo)
                         .getResultList().stream()
                         .map(fila -> toProjection((SpSolicitudRevisionDocenteEntity) fila))
                         .toList(),

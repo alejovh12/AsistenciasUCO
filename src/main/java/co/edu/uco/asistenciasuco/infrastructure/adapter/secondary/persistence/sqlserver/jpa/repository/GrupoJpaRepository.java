@@ -8,10 +8,12 @@ import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.Franj
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarEstudianteRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoFacultadQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.PadronGrupoQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.EstudianteGrupoRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.FranjaHorarioRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.GrupoCommandRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.GrupoRepositoryProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.PadronGrupoPaginaProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.RegistrarEstudianteRepositoryProjection;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
@@ -39,7 +41,7 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
 @Repository
-public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQueryPort {
+public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQueryPort, PadronGrupoQueryPort {
 
     static final String SQL_CREAR_GRUPO = """
             EXEC dbo.usp_crear_grupo
@@ -111,6 +113,17 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
                  @tamanoPagina = NULL
             """;
     static final int COLUMNAS_ESTUDIANTES_GRUPO = 8;
+
+    // CIERRE-W1A: padron paginado del docente titular (mismo SP; @busqueda opcional; la 8.a columna es totalRegistros).
+    static final String SQL_PADRON_GRUPO = """
+            EXEC dbo.usp_consultar_estudiantes_grupo_ambito_paginado
+                 @idGrupo = :idGrupo,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor,
+                 @idCorrelacion = :idCorrelacion,
+                 @numeroPagina = :numeroPagina,
+                 @tamanoPagina = :tamanoPagina,
+                 @busqueda = :busqueda
+            """;
 
     // CULM-001 A.2-15 (DEC-027): busqueda exacta por documento, titularidad dentro del SP (SEC_002 -> 403).
     static final String SQL_BUSCAR_ESTUDIANTE_POR_DOCUMENTO = """
@@ -277,6 +290,38 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
                         .map(Object[].class::cast)
                         .map(GrupoJpaRepository::toEstudianteGrupo)
                         .toList(),
+                DbCodeTranslator::traducir
+        );
+    }
+
+    @Override
+    public PadronGrupoPaginaProjection consultarPadronPagina(
+            final UUID grupoId,
+            final UUID usuarioEjecutor,
+            final int numeroPagina,
+            final int tamanoPagina,
+            final String busqueda
+    ) {
+        require(grupoId, "El grupo del padron es obligatorio.");
+        require(usuarioEjecutor, "El usuario ejecutor de la consulta del padron es obligatorio.");
+        final UUID correlationId = CorrelationIdContext.require();
+        return JpaQueryExecutor.execute(
+                "consultarPadronGrupoPaginado",
+                "No fue posible consultar el padron del grupo.",
+                () -> {
+                    final List<Object[]> filas = ((List<?>) entityManager.createNativeQuery(SQL_PADRON_GRUPO)
+                            .setParameter(P_GRUPO, grupoId)
+                            .setParameter(P_USUARIO, usuarioEjecutor)
+                            .setParameter(P_CORRELACION, correlationId)
+                            .setParameter("numeroPagina", numeroPagina)
+                            .setParameter("tamanoPagina", tamanoPagina)
+                            .setParameter("busqueda", busqueda)
+                            .getResultList()).stream().map(Object[].class::cast).toList();
+                    // toEstudianteGrupo valida el numero de columnas antes de leer la ultima (totalRegistros)
+                    final List<EstudianteGrupoRepositoryProjection> estudiantes = filas.stream().map(GrupoJpaRepository::toEstudianteGrupo).toList();
+                    final long total = filas.isEmpty() ? 0L : NativeRowValues.entero(filas.getFirst()[COLUMNAS_ESTUDIANTES_GRUPO - 1]);
+                    return new PadronGrupoPaginaProjection(estudiantes, total);
+                },
                 DbCodeTranslator::traducir
         );
     }

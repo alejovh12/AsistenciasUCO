@@ -346,12 +346,15 @@ class SqlStoredProcedureContractIT {
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@idUsuarioEjecutor", "uniqueidentifier")
                 )),
+                // CIERRE-W1A: busqueda y filtro por grupo en servidor (parametros opcionales al final).
                 Arguments.of("usp_consultar_solicitudes_revision_docente", List.of(
                         input("@idUsuarioEjecutor", "uniqueidentifier"),
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@codigoEstado", "nvarchar"),
                         input("@numeroPagina", "int"),
-                        input("@tamanoPagina", "int")
+                        input("@tamanoPagina", "int"),
+                        input("@busqueda", "nvarchar"),
+                        input("@idGrupo", "uniqueidentifier")
                 )),
                 // CULM-001 C.1: alertas de inasistencia, revision de cancelacion y audiencias del SSE.
                 Arguments.of("usp_evaluar_alertas_inasistencia_grupo", List.of(

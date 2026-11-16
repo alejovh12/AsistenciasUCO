@@ -83,7 +83,7 @@ class ConsultarReclamosDocenteFeatureTest {
         final UUID soporte = UUID.randomUUID();
         final Instant inicio = Instant.parse("2026-10-19T15:30:45.1234567Z");
         when(scope.findDocenteIdByUsuario(ACTOR)).thenReturn(Optional.of(UUID.randomUUID()));
-        when(query.consultarSolicitudesDocente(ACTOR, "P", 2, 5)).thenReturn(List.of(
+        when(query.consultarSolicitudesDocente(ACTOR, "P", 2, 5, null, null)).thenReturn(List.of(
                 fila(soporte, inicio, 12), fila(null, null, 12)));
 
         final ReclamosDocentePaginaDTO pagina = interactor.execute(new ConsultarReclamosDocenteDTO(ACTOR, "pendiente", 2, 5));
@@ -103,12 +103,12 @@ class ConsultarReclamosDocenteFeatureTest {
     @Test
     void sin_filas_el_total_es_cero() {
         when(scope.findDocenteIdByUsuario(ACTOR)).thenReturn(Optional.of(UUID.randomUUID()));
-        when(query.consultarSolicitudesDocente(any(), any(), anyInt(), anyInt())).thenReturn(List.of());
+        when(query.consultarSolicitudesDocente(any(), any(), anyInt(), anyInt(), any(), any())).thenReturn(List.of());
 
         final ReclamosDocentePaginaDTO pagina = interactor.execute(new ConsultarReclamosDocenteDTO(ACTOR, null, null, null));
 
         assertEquals(0, pagina.totalRegistros());
-        verify(query).consultarSolicitudesDocente(ACTOR, null, 1, 10);
+        verify(query).consultarSolicitudesDocente(ACTOR, null, 1, 10, null, null);
     }
 
     // PC (puntos de control): la bandeja trae la toma reclamada (numero y punto de control); nula en un reclamo de la sesion completa.
@@ -117,7 +117,7 @@ class ConsultarReclamosDocenteFeatureTest {
         final UUID toma = UUID.randomUUID();
         final Instant puntoControl = Instant.parse("2026-10-14T13:40:00Z");
         when(scope.findDocenteIdByUsuario(ACTOR)).thenReturn(Optional.of(UUID.randomUUID()));
-        when(query.consultarSolicitudesDocente(any(), any(), anyInt(), anyInt())).thenReturn(List.of(
+        when(query.consultarSolicitudesDocente(any(), any(), anyInt(), anyInt(), any(), any())).thenReturn(List.of(
                 fila(null, null, 2, toma, 3, puntoControl), fila(null, null, 2, null, null, null)));
 
         final ReclamosDocentePaginaDTO pagina = interactor.execute(new ConsultarReclamosDocenteDTO(ACTOR, null, null, null));
@@ -128,6 +128,47 @@ class ConsultarReclamosDocenteFeatureTest {
         assertNull(pagina.reclamos().get(1).idToma());
         assertNull(pagina.reclamos().get(1).numeroToma());
         assertNull(pagina.reclamos().get(1).fechaPuntoControlUtc());
+    }
+
+    // CIERRE-W1A: busqueda y grupo viajan hasta el puerto de consulta (el SP los resuelve); la busqueda se recorta.
+    @Test
+    void la_busqueda_y_el_grupo_llegan_al_puerto_de_consulta_y_el_total_es_el_filtrado() {
+        final UUID grupo = UUID.randomUUID();
+        when(scope.findDocenteIdByUsuario(ACTOR)).thenReturn(Optional.of(UUID.randomUUID()));
+        when(query.consultarSolicitudesDocente(ACTOR, "P", 1, 10, "ana", grupo)).thenReturn(List.of(fila(null, null, 3)));
+
+        final ReclamosDocentePaginaDTO pagina =
+                interactor.execute(new ConsultarReclamosDocenteDTO(ACTOR, "P", 1, 10, "  ana  ", grupo));
+
+        assertEquals(3, pagina.totalRegistros());
+        assertEquals(1, pagina.reclamos().size());
+        assertEquals("REC-1", pagina.reclamos().get(0).nombre());
+        verify(query).consultarSolicitudesDocente(ACTOR, "P", 1, 10, "ana", grupo);
+    }
+
+    @Test
+    void la_busqueda_vacia_o_de_espacios_no_filtra() {
+        assertNull(ConsultarReclamosDocenteDomain.of(ACTOR, null, 1, 10, "   ", null).busqueda());
+        assertNull(ConsultarReclamosDocenteDomain.of(ACTOR, null, 1, 10, "", null).busqueda());
+        assertNull(ConsultarReclamosDocenteDomain.of(ACTOR, null, 1, 10, null, null).busqueda());
+        assertEquals("a b", ConsultarReclamosDocenteDomain.of(ACTOR, null, 1, 10, " a b ", null).busqueda());
+    }
+
+    @Test
+    void el_grupo_se_conserva_en_el_dominio_y_es_opcional() {
+        final UUID grupo = UUID.randomUUID();
+        assertEquals(grupo, ConsultarReclamosDocenteDomain.of(ACTOR, null, 1, 10, null, grupo).grupoId());
+        assertNull(ConsultarReclamosDocenteDomain.of(ACTOR, null, 1, 10).grupoId());
+    }
+
+    @Test
+    void el_titular_sigue_siendo_requisito_con_busqueda_y_grupo() {
+        when(scope.findDocenteIdByUsuario(ACTOR)).thenReturn(Optional.empty());
+
+        assertThrows(ForbiddenException.class, () -> interactor.execute(
+                new ConsultarReclamosDocenteDTO(ACTOR, null, 1, 10, "ana", UUID.randomUUID())));
+
+        verifyNoInteractions(query);
     }
 
     private static SolicitudRevisionDocenteProjection fila(final UUID soporte, final Instant inicio, final int total) {

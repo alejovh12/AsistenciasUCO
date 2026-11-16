@@ -13,11 +13,27 @@ import java.util.UUID;
  */
 public interface SolicitudRevisionDocenteQueryPort {
 
-    List<SolicitudRevisionDocenteProjection> consultarSolicitudesDocente(
+    /** Sin busqueda ni filtro de grupo (consumidores anteriores a CIERRE-W1A). */
+    default List<SolicitudRevisionDocenteProjection> consultarSolicitudesDocente(
             UUID usuarioEjecutor,
             String codigoEstado,
             int numeroPagina,
             int tamanoPagina
+    ) {
+        return consultarSolicitudesDocente(usuarioEjecutor, codigoEstado, numeroPagina, tamanoPagina, null, null);
+    }
+
+    /**
+     * CIERRE-W1A: {@code busqueda} (subcadena en estudiante, asignatura y justificacion) e {@code idGrupo} son opcionales; los
+     * resuelve el SP, que mantiene la titularidad del docente (un grupo ajeno da cero filas).
+     */
+    List<SolicitudRevisionDocenteProjection> consultarSolicitudesDocente(
+            UUID usuarioEjecutor,
+            String codigoEstado,
+            int numeroPagina,
+            int tamanoPagina,
+            String busqueda,
+            UUID idGrupo
     );
 
     /** Detalle con causal de una solicitud; vacio si no existe o no pertenece a un grupo del docente (indistinguible). */
