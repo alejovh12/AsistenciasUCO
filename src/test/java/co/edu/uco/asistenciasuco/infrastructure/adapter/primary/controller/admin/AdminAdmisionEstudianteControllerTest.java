@@ -15,13 +15,18 @@ import co.edu.uco.asistenciasuco.application.features.admin.exception.AdmisionEs
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.PaginaResultado;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
+import co.edu.uco.asistenciasuco.infrastructure.config.jackson.JacksonInputConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
 import java.util.Optional;
@@ -36,6 +41,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -52,18 +58,31 @@ class AdminAdmisionEstudianteControllerTest {
     private static final UUID ADMIN = UUID.randomUUID();
     private static final UUID TIPO = UUID.randomUUID();
     private static final UUID PROGRAMA = UUID.randomUUID();
-    /** IDENT-002: un cliente anterior aun puede enviar {@code password}; el backend lo ignora. */
-    private static final String CLAVE = "ClaveSecretaUnica123!";
     private static final String CUERPO = "{\"tipoIdentificacionId\":\"" + TIPO + "\",\"numeroIdentificacion\":1017123456,"
             + "\"primerNombre\":\" Ana \",\"segundoNombre\":\"\",\"primerApellido\":\"Perez\",\"correo\":\" Ana.Perez@uco.edu.co \","
-            + "\"password\":\"" + CLAVE + "\",\"idPrograma\":\"" + PROGRAMA + "\"}";
+            + "\"idPrograma\":\"" + PROGRAMA + "\"}";
+    /** IDENT-002: la admision ya no recibe contrasena; un cliente anterior que la envie usa un campo desconocido. */
+    private static final String CLAVE = "ClaveSecretaUnica123!";
+    private static final String CUERPO_CON_CLAVE = CUERPO.replace("\"idPrograma\"", "\"password\":\"" + CLAVE + "\",\"idPrograma\"");
 
     private final AdmitirEstudianteInputPort admitir = mock(AdmitirEstudianteInputPort.class);
     private final ConsultarProgramasInstitucionInputPort programas = mock(ConsultarProgramasInstitucionInputPort.class);
     private final AuthenticatedUserResolver identidad = () -> ADMIN;
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(new AdminAdmisionEstudianteController(admitir, programas, identidad))
             .setControllerAdvice(new GlobalExceptionHandler(codigo -> Optional.empty())).build();
+    /** Con el JsonMapper de la aplicacion (entrada estricta: campos desconocidos rechazados). */
+    private final MockMvc mvcEstricto = MockMvcBuilders.standaloneSetup(new AdminAdmisionEstudianteController(admitir, programas, identidad))
+            .setControllerAdvice(new GlobalExceptionHandler(codigo -> Optional.empty()))
+            .setMessageConverters(new JacksonJsonHttpMessageConverter(mapperEstricto())).build();
     private ListAppender<ILoggingEvent> logs;
+
+    private static JsonMapper mapperEstricto() {
+        final JsonMapper.Builder builder = JsonMapper.builder();
+        try (var context = new AnnotationConfigApplicationContext(JacksonInputConfig.class)) {
+            context.getBean(JsonMapperBuilderCustomizer.class).customize(builder);
+        }
+        return builder.build();
+    }
     private Logger raiz;
 
     @BeforeEach
@@ -105,7 +124,6 @@ class AdminAdmisionEstudianteControllerTest {
         assertEquals("Ana", captor.getValue().primerNombre());
         assertEquals(null, captor.getValue().segundoNombre());
         assertEquals("ana.perez@uco.edu.co", captor.getValue().correo());
-        assertFalse(captor.getValue().toString().contains(CLAVE));
         assertEquals(PROGRAMA, captor.getValue().idPrograma());
         assertEquals(ADMIN, captor.getValue().usuarioEjecutor());
     }
@@ -115,7 +133,7 @@ class AdminAdmisionEstudianteControllerTest {
         when(admitir.execute(any())).thenReturn(admision("ACTIVA", true));
 
         mvc.perform(post("/api/v1/admin/estudiantes/admision").contentType("application/json")
-                        .content(CUERPO.replace("\"password\":\"" + CLAVE + "\",", "")))
+                        .content(CUERPO))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.datos.estadoCuenta").value("ACTIVA"))
                 .andExpect(jsonPath("$.datos.cuentaReparada").value(true));
@@ -167,17 +185,16 @@ class AdminAdmisionEstudianteControllerTest {
                 .andExpect(jsonPath("$.code").value("ADS_004"));
     }
 
-    /** OBS-12: la clave no aparece en ningun evento de log ni en el 400 ni en el 500. */
+    /**
+     * IDENT-002 y OBS-12: con la entrada estricta de la aplicacion, un {@code password} de un cliente anterior es un campo
+     * desconocido: responde 400 sin llegar al caso de uso, y la clave no aparece en ningun evento de log.
+     */
     @Test
-    void la_clave_no_llega_a_los_logs_ni_en_el_400_ni_en_el_500() throws Exception {
-        mvc.perform(post("/api/v1/admin/estudiantes/admision").contentType("application/json")
-                        .content(CUERPO.replace("Ana.Perez@uco.edu.co", "no-es-correo")))
+    void un_password_de_un_cliente_anterior_responde_400_sin_admitir_y_no_llega_a_los_logs() throws Exception {
+        mvcEstricto.perform(post("/api/v1/admin/estudiantes/admision").contentType("application/json").content(CUERPO_CON_CLAVE))
                 .andExpect(status().isBadRequest());
-        when(admitir.execute(any())).thenThrow(new IllegalStateException("fallo inesperado"));
-        mvc.perform(post("/api/v1/admin/estudiantes/admision").contentType("application/json").content(CUERPO))
-                .andExpect(status().isInternalServerError());
+        verifyNoInteractions(admitir);
 
-        assertFalse(logs.list.isEmpty());
         for (final ILoggingEvent evento : logs.list) {
             assertFalse(evento.getFormattedMessage().contains(CLAVE), evento.getFormattedMessage());
             assertFalse(String.valueOf(evento.getThrowableProxy()).contains(CLAVE));

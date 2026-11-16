@@ -12,7 +12,8 @@ import jakarta.validation.constraints.Positive;
 
 /**
  * Cuerpo de {@code POST /api/v1/admin/estudiantes/admision} (CULM-001 D.4, HU156). IDENT-002: sin contrasena (el estudiante la
- * define al activar su cuenta); un {@code password} de un cliente anterior se ignora. Su representacion de texto no imprime
+ * define al activar su cuenta); como el resto de la entrada es estricta, un {@code password} de un cliente anterior es un
+ * campo desconocido y responde 400. Su representacion de texto no imprime
  * datos personales (OBS-12).
  */
 public final class AdmitirEstudianteRequest {

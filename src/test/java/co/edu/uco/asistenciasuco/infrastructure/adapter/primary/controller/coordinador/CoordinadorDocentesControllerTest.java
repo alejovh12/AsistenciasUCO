@@ -130,12 +130,12 @@ class CoordinadorDocentesControllerTest {
     }
 
     @Test
-    void T_091_01_post_modo_nuevo_responde_201_arma_el_dto_con_el_actor_e_ignora_un_password_de_un_cliente_anterior() throws Exception {
+    void T_091_01_post_modo_nuevo_responde_201_y_arma_el_dto_con_el_actor() throws Exception {
         when(vincular.execute(any())).thenReturn(dto());
 
         mvc.perform(post("/api/v1/coordinador/docentes").contentType(MediaType.APPLICATION_JSON).content("""
                         {"idTipoIdentificacion":"%s","numeroIdentificacion":"1017555444","primerNombre":"Jorge",
-                         "primerApellido":"Henao","correo":"jorge.henao@uco.edu.co","password":"ClienteViejo1!",
+                         "primerApellido":"Henao","correo":"jorge.henao@uco.edu.co",
                          "idTipoVinculacion":"%s"}""".formatted(UUID.randomUUID(), TIPO)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.exitoso").value(true))
