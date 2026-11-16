@@ -108,6 +108,19 @@ class SecurityErrorResponseWriterTest {
         assertThat(body.get("path").asString()).isEmpty();
     }
 
+    @Test
+    void nullRequestIsWrittenAsEmptyPathWithoutNullPointer() throws Exception {
+        // EST-02 (Sonar javabugs:S2259): storeErrorCode tolera una peticion nula, asi que el path tambien debe tolerarla.
+        final MockHttpServletResponse response = new MockHttpServletResponse();
+
+        writer.write(null, response, HttpStatus.UNAUTHORIZED, definition());
+
+        assertThat(response.getStatus()).isEqualTo(401);
+        final JsonNode body = MAPPER.readTree(response.getContentAsString(StandardCharsets.UTF_8));
+        assertThat(body.get("path").asString()).isEmpty();
+        assertThat(body.get("code").asString()).isEqualTo("SEC_TEST");
+    }
+
     private JsonNode writeFor(final String path, final HttpStatus status) throws Exception {
         final MockHttpServletRequest request = new MockHttpServletRequest("GET", path);
         request.setRequestURI(path);

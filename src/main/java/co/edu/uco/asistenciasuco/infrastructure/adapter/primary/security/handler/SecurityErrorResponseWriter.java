@@ -46,6 +46,10 @@ public final class SecurityErrorResponseWriter {
     }
 
     private String safePath(final HttpServletRequest request) {
+        // EST-02 (Sonar javabugs:S2259): storeErrorCode tolera una peticion nula; el path reflejado tambien.
+        if (request == null) {
+            return "";
+        }
         final String sanitized = SensitiveDataSanitizer.sanitizeForLog(request.getRequestURI(), 240);
         // sanitizeForLog devuelve null si el URI es null; el path reflejado nunca debe propagar null.
         return sanitized == null ? "" : sanitized;
