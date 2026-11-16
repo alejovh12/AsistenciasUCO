@@ -2,10 +2,11 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coor
 
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.NumeroIdentificacionTexto;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.NombrePersona;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.BeanValidationCodes;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.LongitudTrasTrim;
 import java.util.UUID;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.BeanValidationPatterns;
 import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.NonEmptyUuid;
 
 /** Cuerpo de {@code POST /api/v1/coordinador/docentes}. El programa NO viaja: sale del ambito del coordinador. */
@@ -19,19 +20,24 @@ public final class VincularDocenteProgramaRequest {
     @Pattern(regexp = BeanValidationPatterns.DIGITS_OR_BLANK, message = "El numero de identificacion debe ser numerico.")
     @NumeroIdentificacionTexto
     private String numeroIdentificacion;
-    @Size(max = 50, message = "El campo primerNombre excede la longitud permitida.")
+    @LongitudTrasTrim(max = 50, message = "El campo primerNombre excede la longitud permitida.",
+            payload = BeanValidationCodes.InvalidLength.class)
     @NombrePersona
     private String primerNombre;
-    @Size(max = 50, message = "El campo segundoNombre excede la longitud permitida.")
+    @LongitudTrasTrim(max = 50, message = "El campo segundoNombre excede la longitud permitida.",
+            payload = BeanValidationCodes.InvalidLength.class)
     @NombrePersona
     private String segundoNombre;
-    @Size(max = 50, message = "El campo primerApellido excede la longitud permitida.")
+    @LongitudTrasTrim(max = 50, message = "El campo primerApellido excede la longitud permitida.",
+            payload = BeanValidationCodes.InvalidLength.class)
     @NombrePersona
     private String primerApellido;
-    @Size(max = 50, message = "El campo segundoApellido excede la longitud permitida.")
+    @LongitudTrasTrim(max = 50, message = "El campo segundoApellido excede la longitud permitida.",
+            payload = BeanValidationCodes.InvalidLength.class)
     @NombrePersona
     private String segundoApellido;
-    @Size(max = 100, message = "El correo excede la longitud permitida.")
+    @LongitudTrasTrim(max = 100, message = "El correo excede la longitud permitida.",
+            payload = BeanValidationCodes.InvalidLength.class)
     private String correo;
     @NonEmptyUuid(message = "El identificador idTipoVinculacion no es valido.")
     private UUID idTipoVinculacion;

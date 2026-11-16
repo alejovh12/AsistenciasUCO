@@ -28,6 +28,9 @@ Application y Domain no dependen de `jakarta.validation` (ArchUnit). Reglas:
 - Bean Validation es la primera barrera y replica las reglas simples por campo del validator propio (obligatoriedad,
   longitud maxima de la columna, formato). Nunca debe rechazar algo que el validator propio acepta: los patrones de
   `BeanValidationPatterns` toleran espacios alrededor y la cadena vacia en campos opcionales.
+- Si el validator propio calcula una longitud sobre `valor.trim()`, la request usa `@LongitudTrasTrim(max = ...)` de
+  `infrastructure/adapter/primary/controller/validation` con `payload = BeanValidationCodes.InvalidLength.class`. `@Size`
+  se reserva para reglas cuyo contrato mide la cadena cruda; no sustituye a una regla normalizada tras `trim()`.
 - Los validators propios se conservan para las reglas condicionales o entre campos (modos excluyentes, documento y tipo
   juntos, alias legados) y siguen siendo la autoridad de esas reglas.
 - `MethodArgumentNotValidException` responde con el mismo contrato que `RequestValidationException`: 400

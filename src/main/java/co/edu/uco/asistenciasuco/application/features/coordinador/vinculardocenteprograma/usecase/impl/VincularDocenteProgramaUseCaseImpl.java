@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.vinculardocenteprograma.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
@@ -7,6 +8,7 @@ import co.edu.uco.asistenciasuco.application.features.coordinador.common.domain.
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.mapper.DocenteProgramaMapper;
 import co.edu.uco.asistenciasuco.application.features.coordinador.vinculardocenteprograma.usecase.VincularDocenteProgramaUseCase;
 import co.edu.uco.asistenciasuco.application.features.coordinador.vinculardocenteprograma.usecase.domain.VincularDocenteProgramaDomain;
+import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DocenteProgramaCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DocenteProgramaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.command.VincularDocenteProgramaCommand;
@@ -81,6 +83,9 @@ public final class VincularDocenteProgramaUseCaseImpl implements VincularDocente
         final String correo = domain.correo() == null ? null : domain.correo().trim();
         final Optional<UsuarioIdentidadRepositoryProjection> preexistente = usuarioRepositoryPort.consultarUsuarioPorCorreo(correo);
         if (preexistente.isPresent()) {
+            if (!esMismaIdentidad(preexistente.get(), domain)) {
+                throw new ConflictException(DocenteErrorCode.ERR_PERSONA_YA_REGISTRADA);
+            }
             final Optional<DocenteProgramaProjection> yaVinculado = releer(domain.actorUsuarioId(), idPrograma, null, preexistente.get().id());
             if (yaVinculado.isPresent()) {
                 return yaVinculado.get();
@@ -94,6 +99,15 @@ public final class VincularDocenteProgramaUseCaseImpl implements VincularDocente
                 .orElseThrow(() -> new InternalApplicationException(
                         "No fue posible leer la persona registrada despues de vincular al docente."));
         return releer(domain.actorUsuarioId(), idPrograma, null, usuario.id()).orElseThrow(this::vinculoNoEncontrado);
+    }
+
+    private boolean esMismaIdentidad(
+            final UsuarioIdentidadRepositoryProjection existente, final VincularDocenteProgramaDomain solicitud) {
+        return Objects.equals(existente.tipoIdentificacionId(), solicitud.idTipoIdentificacion())
+                && Objects.equals(existente.numeroIdentificacion(), solicitud.numeroIdentificacion())
+                && existente.correo() != null
+                && solicitud.correo() != null
+                && existente.correo().trim().equalsIgnoreCase(solicitud.correo().trim());
     }
 
     private DocenteProgramaProjection vincularExistente(final VincularDocenteProgramaDomain domain, final UUID idPrograma) {
