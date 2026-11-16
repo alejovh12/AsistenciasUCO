@@ -19,6 +19,11 @@ public final class SecurityPublicEndpoints {
     /** HU176B: validacion y alta publicas de la matricula por QR/PIN; su credencial es el token/PIN rotativo. */
     public static final String MATRICULA_QR_VALIDAR = "/api/v1/public/matricula-qr/validar";
     public static final String MATRICULA_QR_REGISTRO = "/api/v1/public/matricula-qr/registro";
+    /**
+     * INT-003 (MessageUcoLab 0.3.0, paso 12): textos de la interfaz por codigo ({@code UI###}), solo lectura y sin sesion.
+     * Un solo segmento tras la base: no abre subrutas.
+     */
+    public static final String MENSAJES_INTERFAZ = "/api/v1/public/mensajes-interfaz/*";
     private static final String[] DOCUMENTATION_GET = {
             "/swagger-ui",
             "/swagger-ui/**",
@@ -50,6 +55,8 @@ public final class SecurityPublicEndpoints {
                 paths.matcher(HttpMethod.OPTIONS, MATRICULA_QR_VALIDAR),
                 paths.matcher(HttpMethod.POST, MATRICULA_QR_REGISTRO),
                 paths.matcher(HttpMethod.OPTIONS, MATRICULA_QR_REGISTRO),
+                paths.matcher(HttpMethod.GET, MENSAJES_INTERFAZ),
+                paths.matcher(HttpMethod.OPTIONS, MENSAJES_INTERFAZ),
                 paths.matcher(ERROR_VIEW),
                 new OrRequestMatcher(documentation)
         );

@@ -37,7 +37,11 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SmtpNotificacionChannelSender.class);
     private static final int MAX_SUBJECT_LENGTH = 200;
-    private static final String PREFIJO_ASUNTO_PRUEBA = "[PRUEBA] ";
+    private static final String PREFIJO_ASUNTO_PRUEBA = "[PRUEBA para ";
+    private static final String CIERRE_PREFIJO_ASUNTO_PRUEBA = "] ";
+    private static final String SEPARADOR_DESTINATARIOS = ", ";
+    /** Tope del prefijo "[PRUEBA para ...] " para que el asunto original siga visible (CONTRACT §4.6, enmienda D15). */
+    static final int MAX_PREFIJO_ASUNTO_PRUEBA = 120;
     private static final String METRIC_EMAIL_SEND = "notification.email.send.total";
     private static final String TAG_OUTCOME = "outcome";
 
@@ -168,7 +172,8 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
 
         if (modoPrueba) {
             final String avisoModoPrueba = "MODO DE PRUEBAS: este correo no se envió a los destinatarios reales. "
-                    + "Destinatarios originales omitidos: " + correosValidos.size() + ".";
+                    + "Destinatarios originales (" + correosValidos.size() + "): "
+                    + String.join(SEPARADOR_DESTINATARIOS, correosValidos) + ".";
             contenido = plantillaRenderer.renderizar(
                     notificacion.tipo(),
                     datos,
@@ -176,7 +181,7 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
                     notificacion.mensaje(),
                     avisoModoPrueba
             );
-            asuntoSaneado = sanearAsunto(PREFIJO_ASUNTO_PRUEBA + sanearAsunto(contenido.asunto()));
+            asuntoSaneado = sanearAsunto(prefijoAsuntoPrueba(correosValidos) + sanearAsunto(contenido.asunto()));
             destinatariosEfectivos = properties.testMode().redirectTo();
         } else {
             contenido = plantillaRenderer.renderizar(
@@ -286,6 +291,31 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
 
     static boolean esCorreoSeguro(final String correo) {
         return SmtpNotificationProperties.esCorreoSeguro(correo);
+    }
+
+    /**
+     * Prefijo de asunto del modo de pruebas con los destinatarios que habrian recibido el correo (enmienda D15).
+     * Muestra siempre el primero y luego los que quepan sin pasar de {@link #MAX_PREFIJO_ASUNTO_PRUEBA}; el resto se
+     * resume como " y M más". Las direcciones ya pasaron {@link #esCorreoSeguro(String)}: no traen saltos de linea.
+     */
+    static String prefijoAsuntoPrueba(final List<String> destinatariosOriginales) {
+        final StringBuilder lista = new StringBuilder(destinatariosOriginales.getFirst());
+        int mostrados = 1;
+        for (int idx = 1; idx < destinatariosOriginales.size(); idx++) {
+            final String candidata = lista + SEPARADOR_DESTINATARIOS + destinatariosOriginales.get(idx);
+            final int restantes = destinatariosOriginales.size() - (idx + 1);
+            if (componerPrefijoPrueba(candidata, restantes).length() > MAX_PREFIJO_ASUNTO_PRUEBA) {
+                break;
+            }
+            lista.append(SEPARADOR_DESTINATARIOS).append(destinatariosOriginales.get(idx));
+            mostrados++;
+        }
+        return componerPrefijoPrueba(lista.toString(), destinatariosOriginales.size() - mostrados);
+    }
+
+    private static String componerPrefijoPrueba(final String lista, final int restantes) {
+        final String resumen = restantes > 0 ? " y " + restantes + " más" : "";
+        return PREFIJO_ASUNTO_PRUEBA + lista + resumen + CIERRE_PREFIJO_ASUNTO_PRUEBA;
     }
 
     static String sanearAsunto(final String asunto) {

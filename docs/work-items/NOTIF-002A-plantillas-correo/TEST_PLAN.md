@@ -109,9 +109,10 @@ Registro en `test_suite.sql` y excepciones en `test_contract_closure.sql` solo s
 | BE-P06 | `enabled=true` con `redirect-to` vacío, con una dirección insegura (`a@b.co,c.com`, `<a@b.co>`, con espacios o CR/LF) o con más de 5 direcciones → `IllegalArgumentException` (fail-fast) |
 | BE-P07 | `redirect-to` con `"a@x.co, b@x.co ,a@x.co"` → 2 direcciones recortadas y sin duplicados; con `enabled=false` el valor se ignora sin error |
 | BE-R14 | Sobrecarga del renderizador con aviso: el aviso aparece como primer párrafo en texto plano y en HTML (escapado); sin aviso, la salida es idéntica a la de la firma de 4 argumentos |
-| BE-S11 | Modo activo: el transporte recibe como BCC solo `redirect-to`; ninguna dirección original aparece en BCC, `To`, asunto, texto ni HTML |
-| BE-S12 | Modo activo: el asunto empieza por `[PRUEBA] ` y no supera 200 caracteres ni contiene saltos de línea |
-| BE-S13 | Modo activo: el aviso indica el número `N` de destinatarios originales omitidos y no contiene direcciones ni nombres |
+| BE-S11 | Modo activo: el transporte recibe como BCC solo `redirect-to`; ninguna dirección original aparece en BCC ni `To`; el asunto y el aviso sí las nombran (enmienda D15) |
+| BE-S12 | Modo activo: el asunto empieza por `[PRUEBA para {correo}] ` y no supera 200 caracteres ni contiene saltos de línea |
+| BE-S13 | Modo activo: el aviso indica el número `N` de destinatarios originales y lista todos sus correos |
+| BE-S20 | Modo activo con muchos destinatarios: el prefijo del asunto muestra los primeros que caben en 120 caracteres y termina en ` y {M} más`; el aviso del cuerpo los lista todos |
 | BE-S14 | Modo activo: cada mensaje incrementa `notification.email.redirected.total`; con el modo apagado el contador no se incrementa |
 | BE-S15 | Modo apagado: sin prefijo ni aviso; comportamiento idéntico al de BE-S01 |
 | BE-S16 | Modo activo sin destinatarios válidos → `NotificacionNoEntregableException` y **nada** se envía a `redirect-to` |
@@ -147,7 +148,7 @@ Antes de escribir las IT, guardar el **baseline** de `mvnw -Pintegration failsaf
 | IT-E07 | SMTP caído → reintentos con backoff → recupera al volver el servidor; fila `ENTREGADA` |
 | IT-E08 | Tope de envíos agotado → filas quedan `PENDIENTE` sin consumir intentos; se despachan al liberarse cupo |
 | IT-E09 | Los 4 tipos producen correo legible y distinguible |
-| IT-E11 | Modo de pruebas (GreenMail): solo los buzones de `redirect-to` reciben el correo; los buzones de los destinatarios reales quedan vacíos; el asunto lleva `[PRUEBA]` y el cuerpo el aviso con `N` correcto |
+| IT-E11 | Modo de pruebas (GreenMail): solo los buzones de `redirect-to` reciben el correo; los buzones de los destinatarios reales quedan vacíos; el asunto lleva `[PRUEBA para …]` con los dos destinatarios reales y el cuerpo el aviso con `N` y la lista correctos |
 | IT-E10 | Ningún log del contexto contiene correos ni cuerpo (captura de logs) |
 
 ## 5. Compatibilidad
@@ -167,7 +168,7 @@ Con un **sumidero SMTP local sin Docker** (scratch, no versionado: una clase Jav
 | E2E-M05 | Cambiar la plantilla en BD (script de prueba, versión nueva activa) y verificar el siguiente correo; **restaurar** la semilla al terminar |
 | E2E-M06 | Sumidero detenido → el retiro responde 2xx, la fila queda reintentable y se entrega al volver el sumidero |
 | E2E-M07 | Métricas `notification.email.send.total` y `notification.template.render.total` presentes |
-| E2E-M09 | Modo de pruebas (`SMTP_NOTIFICATION_TEST_MODE_ENABLED=true`, `SMTP_NOTIFICATION_TEST_MODE_REDIRECT_TO` con 2 direcciones ficticias): el retiro HU051 produce un único correo cuyo BCC es solo `redirect-to`, con asunto `[PRUEBA]` y aviso; **ninguna** dirección real de los destinatarios aparece en ningún `.eml`; arranque con `WARN` de modo de pruebas sin direcciones; métrica `notification.email.redirected.total` presente |
+| E2E-M09 | Modo de pruebas (`SMTP_NOTIFICATION_TEST_MODE_ENABLED=true`, `SMTP_NOTIFICATION_TEST_MODE_REDIRECT_TO` con 2 direcciones ficticias): el retiro HU051 produce un único correo cuyo BCC es solo `redirect-to`, con asunto `[PRUEBA para …]` y aviso con la lista de destinatarios reales; **ninguna** dirección real aparece en las cabeceras `To`/`Cc`/`Bcc` de ningún `.eml` (enmienda D15: sí en asunto y aviso); arranque con `WARN` de modo de pruebas sin direcciones; métrica `notification.email.redirected.total` presente |
 | E2E-M08 | Cero residuos: filas de prueba en `NotificacionSaliente` eliminadas, matrícula restaurada, plantilla restaurada, sumidero detenido y su directorio temporal eliminado, puerto 8090 libre |
 
 Cualquier caso que exija alterar la BD compartida de forma no restaurable se declara `NO_EJECUTADO` con su razón.

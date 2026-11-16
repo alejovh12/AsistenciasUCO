@@ -205,7 +205,27 @@
         <dependency>
             <groupId>co.edu.uco</groupId>
             <artifactId>messageucolab-spring-boot-starter</artifactId>
-            <version>0.1.1</version>
+            <version>0.1.3</version>
+        </dependency>
+        <!--
+            INT-003: avisos de cambio de MessageUcoLab 0.3.0 (topic persistent://public/default/message-events-<clientId>).
+            Version gestionada por Spring Boot (pulsar.version 4.1.x): el protocolo binario es compatible con el broker 3.2.2
+            del kit y evita fijar una linea vieja del cliente. Solo Infrastructure (adaptador primario de mensajeria).
+        -->
+        <dependency>
+            <groupId>org.apache.pulsar</groupId>
+            <artifactId>pulsar-client</artifactId>
+            <exclusions>
+                <!--
+                    bouncy-castle-bc (clasificador pkg) empaqueta un bcprov-jdk18on-1.78.1.jar anidado (CVE-2025-14813,
+                    CVE-2026-8763, CVE-2026-13506, CVE-2026-5598; Trivy del PR #150). El cliente usa el bcprov directo,
+                    alineado por bc-jdk18on-bom (SEC-002). Lo vigila BouncyCastleClasspathTest.
+                -->
+                <exclusion>
+                    <groupId>org.apache.pulsar</groupId>
+                    <artifactId>bouncy-castle-bc</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!--
             LB-004B.2: MinIO Java SDK oficial, solo en Infrastructure (MinioFileStorageAdapter).
@@ -268,6 +288,16 @@
                 <groupId>org.xerial.snappy</groupId>
                 <artifactId>snappy-java</artifactId>
                 <version>${snappy-java.version}</version>
+            </dependency>
+            <!--
+                INT-003: pulsar-client 4.1.x trae opentelemetry-api-incubator 1.56.0-alpha, incompatible con el SDK 1.62.0
+                (SdkConfigProvider llama a DeclarativeConfigProperties.get(String)): el Backend no arrancaba. Se alinea con el
+                resto de la familia OpenTelemetry (SEC-002). Lo vigila OpenTelemetryClasspathAlignmentTest.
+            -->
+            <dependency>
+                <groupId>io.opentelemetry</groupId>
+                <artifactId>opentelemetry-api-incubator</artifactId>
+                <version>${opentelemetry.version}-alpha</version>
             </dependency>
             <!-- SEC-002: keep all Bouncy Castle jdk18on artifacts aligned; CVE-2026-8763. -->
             <dependency>
