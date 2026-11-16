@@ -1,10 +1,26 @@
 ---
-status: active
+status: historical
 type: ledger
 scope: backend
 owner: backend-team
-last-reviewed: 2026-09-29
+last-reviewed: 2026-11-16
 ---
+
+> ## AVISO (2026-11-16): este registro es HISTÓRICO y está congelado al 2026-11-12
+>
+> El registro **único y vigente** de deuda técnica es [`AsistenciasUCO-Infra/docs/baseline/TECHNICAL_DEBT.md`](https://github.com/AsistenciasUCO/AsistenciasUCO-Infra/blob/develop/docs/baseline/TECHNICAL_DEBT.md). No se actualiza aquí: abra y cierre deudas allá. Este archivo se conserva solo como historial.
+>
+> Varios IDs de este archivo se reutilizaron en Infra con otro significado. Equivalencias de los que chocan o solo existían aquí:
+>
+> | ID en este archivo | Significado aquí | ID vigente en Infra |
+> |---|---|---|
+> | TD-055 | JDBC directo residual en `src/main` (cerrada, LB-008 JPA-07) | **TD-094** (cerrada). El TD-055 de Infra es de MessageUcoLab |
+> | TD-056 | `usp_registrar_asistencia_estudiante_autonomo` sin frontera transaccional (cerrada) | **TD-095** (cerrada). El TD-056 de Infra es de MessageUcoLab |
+> | TD-057 | Catálogo `dbo.Estado` sin códigos de revisión (cerrada) | **TD-096** (cerrada) |
+> | TD-058 | `usp_ejecutar_cierre_masivo_periodo` con fallback al período más reciente (aquí figura cerrada, pero el fallback sigue en `develop` de BD) | **TD-097** (en corrección en el PR de BD `fix/cierre-masivo-decano-acciones`) |
+> | TD-062 a TD-082 | Notificaciones (NOTIF-001/002A) e identidad (IDENT-001); **significan otra cosa** en Infra y no tienen equivalente allí todavía | sin ID en Infra (pendiente de decisión del responsable); léalas aquí con sus IDs de origen |
+>
+> TD-059 a TD-061 coinciden en significado con las de Infra (allí figuran cerradas).
 
 # Ledger único de deuda técnica
 
