@@ -78,3 +78,20 @@ Carpeta "Asistencias UCO" (20 paneles tras OBS-07; detalle en `AsistenciasUCO-In
 - El Quality Gate de SonarCloud (EST-02 cerrado en Sonar) solo se puede ver en el análisis del PR.
 - La IT se corrió contra la BD del laboratorio, no contra una efímera. En el CI la corre el `Backend Integration Gate`.
 - PRU-15 queda bloqueado (ver PLAN.md): falta la regla de negocio de "periodo cerrado".
+
+## Corrección del Backend Integration Gate del PR #158 (2026-11-15, noche)
+
+- **Síntoma:** el gate falló con 77 errores en 11 clases IT, todos con `SES_028` ("La sesión debe terminar el mismo día en que
+  empieza; no puede pasar de la medianoche"). El PR `feat/activacion-cuentas` falló igual a la misma hora: el problema era de
+  `develop`, no de esta oleada.
+- **Causa raíz:** `AttendanceCommandParityFixture`, `AttendanceCommandFixture` y `AsistenciaRepositorySqlServerIT` crean una
+  sesión de reserva en "ahora (UTC) + 1 h" durante 2 h y luego la llevan por SQL a la ventana viva. Desde DEC-072/DEC-073
+  (2026-11-13), `usp_validar_sesion_mismo_dia_interno` rechaza una sesión que cruce la medianoche de Bogotá, así que entre las
+  21:00 y las 24:00 de Bogotá (02:00–05:00 UTC) la reserva cruzaba de día. El CI verde de las 00:43 UTC (19:43 en Bogotá) y el
+  rojo de las 02:18 UTC (21:18) lo confirman.
+- **Corrección (solo pruebas, por el cambio formal de contrato DEC-073):** `SesionDePruebaMismoDia.inicioSinCruzarMedianoche`
+  conserva el primer hueco libre y, si la reserva cruzaría la medianoche local, la corre al primer minuto del día siguiente
+  (siempre hacia adelante, sin solapes). Ninguna aserción cambió.
+- **Evidencia:** a las 21:44 de Bogotá, dentro del rango que fallaba, las 11 clases que fallaron pasan contra el SQL Server del
+  laboratorio (88 pruebas, 0 fallos, exit 0) y `SesionDePruebaMismoDiaTest` pasa 8 de 8 (bordes 21:59, 22:00, 22:18, 23:59 y
+  00:30 de Bogotá).
