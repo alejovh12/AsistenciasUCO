@@ -4,7 +4,8 @@ Uso: python -X utf8 -I infra/security-baseline/scripts/e2e_baseline.py [--backen
 Usuarios: E2E_USUARIO_<ROL> (usuario o correo) y E2E_USER_PASSWORD (opcionales; por defecto uco-<rol> y lab.env).
 Requisitos: instalación infra/security-baseline arriba, `provision_asistencias.py keycloak|pdp|users` ejecutado y el
 backend en modo baseline. Sale con código 0 solo si TODAS las comprobaciones pasan. No imprime tokens ni secretos.
---pep-down detiene el contenedor del PEP durante la comprobación de fail-closed y lo vuelve a arrancar.
+--pep-down detiene el contenedor del PEP durante la comprobación de fail-closed y lo vuelve a arrancar. El contenedor es
+E2E_PEP_CONTAINER (por defecto asistencias-security-lab-pep-1; en el stack por secciones es ext-seguridad-pep).
 """
 import json
 import os
@@ -54,6 +55,12 @@ def usuarios_por_rol(environ=None):
     """
     environ = os.environ if environ is None else environ
     return [(role, environ.get("E2E_USUARIO_" + role) or "uco-" + role.lower()) for role in ROLES]
+
+
+def contenedor_pep(environ=None):
+    """REA-02 (VAL-oleada9): contenedor del PEP para --pep-down; el stack por secciones lo llama ext-seguridad-pep."""
+    environ = os.environ if environ is None else environ
+    return environ.get("E2E_PEP_CONTAINER") or "asistencias-security-lab-pep-1"
 
 
 def main():
@@ -116,13 +123,14 @@ def main():
     check("petición repetida con vínculo existente -> 200", status == 200, status)
 
     if "--pep-down" in sys.argv:
-        subprocess.run(["docker", "stop", "asistencias-security-lab-pep-1"], check=True, capture_output=True)
+        pep = contenedor_pep()
+        subprocess.run(["docker", "stop", pep], check=True, capture_output=True)
         try:
             time.sleep(2)
             status, _, _ = request(base, "GET", "/api/v1/docente/horarios", token=tokens["DOCENTE"])
             check("PEP caído -> 503 sin bypass", status == 503, status)
         finally:
-            subprocess.run(["docker", "start", "asistencias-security-lab-pep-1"], check=True, capture_output=True)
+            subprocess.run(["docker", "start", pep], check=True, capture_output=True)
             for _ in range(30):
                 time.sleep(2)
                 status, _, _ = request(base, "GET", "/api/v1/docente/horarios", token=tokens["DOCENTE"])

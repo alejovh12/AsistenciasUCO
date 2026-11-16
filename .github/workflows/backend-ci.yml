@@ -67,6 +67,13 @@ jobs:
           chmod +x mvnw
           ./mvnw -version
 
+      # VAL PRU-09: la matriz HU -> pruebas versionada coincide con las pruebas actuales.
+      - name: HU test matrix is up to date
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -X utf8 -I scripts/testing/matriz_hu_pruebas.py
+
       # ============================================================
       # QUALITY GATE
       # Unit tests + ArchUnit + package + JaCoCo

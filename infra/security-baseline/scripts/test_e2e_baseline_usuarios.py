@@ -35,5 +35,14 @@ class UsuariosPorRolTest(unittest.TestCase):
         self.assertEqual("uco-coordinador", dict(E2E.usuarios_por_rol({"E2E_USUARIO_COORDINADOR": ""}))["COORDINADOR"])
 
 
+class ContenedorPepTest(unittest.TestCase):
+
+    def test_por_defecto_usa_el_nombre_de_la_instalacion_unica(self):
+        self.assertEqual("asistencias-security-lab-pep-1", E2E.contenedor_pep({}))
+
+    def test_el_stack_por_secciones_lo_fija_por_variable(self):
+        self.assertEqual("ext-seguridad-pep", E2E.contenedor_pep({"E2E_PEP_CONTAINER": "ext-seguridad-pep"}))
+
+
 if __name__ == "__main__":
     unittest.main()

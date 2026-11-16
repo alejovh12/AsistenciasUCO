@@ -16,6 +16,13 @@ public enum ArchivoErrorCode implements SpecErrorDefinition {
      */
     ERR_ANTIVIRUS_NO_DISPONIBLE(new ErrorSpec("ERR_ANTIVIRUS_NO_DISPONIBLE",
             "El antivirus no está disponible; el archivo no se guardó. Intente de nuevo en unos minutos.",
+            ErrorKind.SERVICE_UNAVAILABLE)),
+    /**
+     * REA-02 (VAL-oleada9): el almacenamiento de objetos (MinIO) no respondio o su circuit breaker esta abierto, al subir o al
+     * descargar un soporte. Al subir, la metadata no se registra. Se publica como 503, igual que el antivirus.
+     */
+    ERR_ALMACENAMIENTO_NO_DISPONIBLE(new ErrorSpec("ERR_ALMACENAMIENTO_NO_DISPONIBLE",
+            "El almacenamiento de soportes no está disponible en este momento. Intente de nuevo en unos minutos.",
             ErrorKind.SERVICE_UNAVAILABLE));
 
     private final ErrorSpec spec;
