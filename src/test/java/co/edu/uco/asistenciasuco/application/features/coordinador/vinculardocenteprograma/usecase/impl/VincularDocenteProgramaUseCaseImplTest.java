@@ -1,10 +1,12 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.vinculardocenteprograma.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.domain.DocenteProgramaDomain;
 import co.edu.uco.asistenciasuco.application.features.coordinador.vinculardocenteprograma.usecase.domain.VincularDocenteProgramaDomain;
+import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DocenteProgramaCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DocenteProgramaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.command.VincularDocenteProgramaCommand;
@@ -204,6 +206,20 @@ class VincularDocenteProgramaUseCaseImplTest {
         verify(identityProviderPort).crearCuenta(cuenta.capture());
         assertEquals("Clave1234!", cuenta.getValue().passwordInicial());
         assertEquals(ID_DOCENTE, resultado.idDocente());
+    }
+
+    @Test
+    void F2A_DEF_001_mismo_correo_y_vinculo_con_documento_distinto_es_conflicto_sin_mutaciones_ni_iam() {
+        when(usuarioRepositoryPort.consultarUsuarioPorCorreo(CORREO)).thenReturn(Optional.of(usuario()));
+        when(queryPort.consultar(eq(ACTOR), any())).thenReturn(pagina(fila()));
+        final VincularDocenteProgramaDomain solicitud = new VincularDocenteProgramaDomain(
+                ACTOR, null, null, TIPO_ID, 1017555445, "Jorge", null, "Henao", null,
+                CORREO, "Clave1234!", TIPO_VINCULACION);
+
+        final ConflictException error = assertThrows(ConflictException.class, () -> useCase.execute(solicitud));
+
+        assertEquals(DocenteErrorCode.ERR_PERSONA_YA_REGISTRADA.code(), error.getCode());
+        verifyNoInteractions(commandPort, identityProviderPort);
     }
 
     @Test

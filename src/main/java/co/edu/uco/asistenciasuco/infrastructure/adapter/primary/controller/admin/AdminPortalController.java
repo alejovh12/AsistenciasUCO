@@ -49,6 +49,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.BeanValidationPatterns;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.LongitudTrasTrim;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -273,11 +274,11 @@ public final class AdminPortalController {
     public record CrearDecanoRequest(
             @NotNull(message = "El tipo de identificacion es obligatorio.") @NonEmptyUuid(message = "El tipo de identificacion es obligatorio.", payload = BeanValidationCodes.Required.class) UUID tipoIdentificacionId,
             @NotNull(message = "El numero de identificacion es obligatorio y debe ser positivo.") @Positive(message = "El numero de identificacion es obligatorio y debe ser positivo.", payload = BeanValidationCodes.InvalidFormat.class) Integer numeroIdentificacion,
-            @NotBlank(message = "El campo primerNombre es obligatorio.") @Size(max = 50, message = "El campo primerNombre no puede superar 50 caracteres.") String primerNombre,
-            @Size(max = 50, message = "El campo segundoNombre no puede superar 50 caracteres.") String segundoNombre,
-            @NotBlank(message = "El campo primerApellido es obligatorio.") @Size(max = 50, message = "El campo primerApellido no puede superar 50 caracteres.") String primerApellido,
-            @Size(max = 50, message = "El campo segundoApellido no puede superar 50 caracteres.") String segundoApellido,
-            @NotBlank(message = "El correo es obligatorio.") @Size(max = 255, message = "El correo no puede superar 255 caracteres.") @Pattern(regexp = BeanValidationPatterns.EMAIL_OR_BLANK, message = "El correo no tiene un formato valido.") String correo,
+            @NotBlank(message = "El campo primerNombre es obligatorio.") @LongitudTrasTrim(max = 50, message = "El campo primerNombre no puede superar 50 caracteres.", payload = BeanValidationCodes.InvalidLength.class) String primerNombre,
+            @LongitudTrasTrim(max = 50, message = "El campo segundoNombre no puede superar 50 caracteres.", payload = BeanValidationCodes.InvalidLength.class) String segundoNombre,
+            @NotBlank(message = "El campo primerApellido es obligatorio.") @LongitudTrasTrim(max = 50, message = "El campo primerApellido no puede superar 50 caracteres.", payload = BeanValidationCodes.InvalidLength.class) String primerApellido,
+            @LongitudTrasTrim(max = 50, message = "El campo segundoApellido no puede superar 50 caracteres.", payload = BeanValidationCodes.InvalidLength.class) String segundoApellido,
+            @NotBlank(message = "El correo es obligatorio.") @LongitudTrasTrim(max = 255, message = "El correo no puede superar 255 caracteres.", payload = BeanValidationCodes.InvalidLength.class) @Pattern(regexp = BeanValidationPatterns.EMAIL_OR_BLANK, message = "El correo no tiene un formato valido.") String correo,
             String password,
             UUID idFacultad,
             @Valid FacultadNuevaRequest facultadNueva
