@@ -42,6 +42,7 @@ responsable hoy aparece entre paréntesis.
 | `app.providers.smtp-notification.password` | `SMTP_NOTIFICATION_PASSWORD` | `asistencias-smtp-password` | Dueño de notificaciones (Sergio) | 180 días o la política del proveedor de correo |
 | `app.security.azure-events.webhook-token` | `AZURE_EVENTGRID_WEBHOOK_TOKEN` | `asistencias-eventgrid-webhook-token` | Dueño de Azure (José Alejandro) | 90 días |
 | `app.providers.catalogo-parametros.secreto` | `CATALOGO_PARAMETROS_SECRETO` | `asistencias-catalogo-parametros-secreto` | Dueño de la integración del Catálogo de Parámetros (Sergio), con el equipo del Catálogo (tercero) | 90 días o la política del Catálogo; solo se usa con `APP_ADAPTERS_PARAMETER_CATALOG_PROVIDER=catalogoparametros` |
+| `app.providers.messageucolab.service-identity.client-secret` | `MESSAGEUCOLAB_CLIENT_SECRET` | `asistencias-messageucolab-client-secret` | Dueño de la integración de MessageUcoLab (Sergio); la identidad la emite el componente de Seguridad (tercero) | Al rotar la identidad en la consola de Seguridad (el secreto se ve una sola vez); solo se usa con `APP_ADAPTERS_MESSAGE_CATALOG_PROVIDER=messageucolab` (INT-003) |
 
 ## Secretos que se leen en caliente
 

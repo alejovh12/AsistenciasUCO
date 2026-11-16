@@ -533,6 +533,22 @@ class RbacSecurityFilterChainTest {
         mockMvc.perform(post("/api/v1/public/matricula-qr/registro")).andExpect(status().isOk());
     }
 
+    // --- INT-003 (MessageUcoLab 0.3.0, paso 12): textos de la interfaz, solo GET de un segmento y sin token ---
+
+    @Test
+    void INT003_los_textos_de_la_interfaz_se_leen_sin_token() throws Exception {
+        mockMvc.perform(get("/api/v1/public/mensajes-interfaz/UI012")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/public/mensajes-interfaz/UI012").header(HttpHeaders.AUTHORIZATION, bearer("ESTUDIANTE")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void INT003_la_ruta_de_textos_no_abre_escrituras_ni_subrutas() throws Exception {
+        mockMvc.perform(post("/api/v1/public/mensajes-interfaz/UI012")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/public/mensajes-interfaz/UI012/otra")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/public/otra")).andExpect(status().isUnauthorized());
+    }
+
     @Test
     void T31_no_hay_comodin_publico_otra_ruta_public_sin_token_recibe_401() throws Exception {
         mockMvc.perform(post("/api/v1/public/otra")).andExpect(status().isUnauthorized());
@@ -804,6 +820,17 @@ class RbacSecurityFilterChainTest {
 
     @RestController
     static final class RbacProbeController {
+
+        @GetMapping({"/api/v1/public/mensajes-interfaz/{codigo}", "/api/v1/public/mensajes-interfaz/{codigo}/otra",
+                "/api/v1/public/otra"})
+        String mensajesInterfaz() {
+            return "ok";
+        }
+
+        @PostMapping("/api/v1/public/mensajes-interfaz/{codigo}")
+        String escribirMensajeInterfaz() {
+            return "ok";
+        }
 
         @GetMapping("/swagger-ui/index.html")
         String swaggerUi() {

@@ -184,8 +184,8 @@ resilience4j:
 
 messageucolab:
   url: ${MESSAGEUCOLAB_URL:http://localhost:8000}
-  application-id: ${MESSAGEUCOLAB_APPLICATION_ID:}
-  environment-id: ${MESSAGEUCOLAB_ENVIRONMENT_ID:}
+  # INT-003 (MessageUcoLab 0.3.0): ya no hay application-id ni environment-id; el ambiente sale de la identidad de servicio
+  # (app.providers.messageucolab.service-identity).
 
 app:
   # MAINT-003F: contrato UTC v2 de sesiones. Activo por defecto en local; el verificador comprueba
@@ -246,6 +246,20 @@ app:
       cache-ttl: ${MESSAGEUCOLAB_CACHE_TTL:5m}   # 0 desactiva; el gateway limita a 120 peticiones/min por IP
       fallback: ${MESSAGEUCOLAB_FALLBACK:azure}   # azure | none
       code-prefix: ${MESSAGEUCOLAB_CODE_PREFIX:MSG_}
+      # INT-003: identidad de servicio (rol MESSAGE_CONSUMER) creada en la consola de Seguridad y asociada al ambiente en
+      # MessageUcoLab. El secreto sale del baul (asistencias-messageucolab-client-secret) o del .env local; nunca de Git.
+      service-identity:
+        token-uri: ${MESSAGEUCOLAB_TOKEN_URI:http://localhost:19090/realms/security-baseline/protocol/openid-connect/token}
+        client-id: ${MESSAGEUCOLAB_CLIENT_ID:}
+        client-secret: ${MESSAGEUCOLAB_CLIENT_SECRET:}
+        request-timeout: ${MESSAGEUCOLAB_TOKEN_TIMEOUT:10s}
+      # INT-003: avisos de cambio por Pulsar -> cache y dbo.CatalogoMensajeUsuario (usp_sincronizar_mensaje_usuario).
+      events:
+        enabled: ${MESSAGEUCOLAB_EVENTS_ENABLED:true}
+        service-url: ${MESSAGEUCOLAB_PULSAR_URL:pulsar://localhost:6800}
+        topic-prefix: ${MESSAGEUCOLAB_EVENTS_TOPIC_PREFIX:persistent://public/default/message-events}
+        subscription-name: ${MESSAGEUCOLAB_EVENTS_SUBSCRIPTION:asistencias-uco-backend}
+        reconcile-on-startup: ${MESSAGEUCOLAB_RECONCILE_ON_STARTUP:true}
       # Codigos canonicos de mas de 10 caracteres -> codigo corto de MessageUcoLab (el nombre canonico va en el titulo).
       # Generado por AsistenciasUCO-Infra/components/messages/build-message-catalog.py; la prueba MessageUcoLabCatalogoTest lo valida.
       code-aliases:

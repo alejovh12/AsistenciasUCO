@@ -34,6 +34,8 @@ public final class RuntimeSecretCatalog {
         catalogo.put("app.providers.smtp-notification.password", "asistencias-smtp-password");
         catalogo.put("app.security.azure-events.webhook-token", "asistencias-eventgrid-webhook-token");
         catalogo.put("app.providers.catalogo-parametros.secreto", "asistencias-catalogo-parametros-secreto");
+        // INT-003: secreto de la identidad de servicio con que el backend lee MessageUcoLab 0.3.0.
+        catalogo.put("app.providers.messageucolab.service-identity.client-secret", "asistencias-messageucolab-client-secret");
         PROPIEDAD_A_SECRETO = Collections.unmodifiableMap(catalogo);
     }
 
