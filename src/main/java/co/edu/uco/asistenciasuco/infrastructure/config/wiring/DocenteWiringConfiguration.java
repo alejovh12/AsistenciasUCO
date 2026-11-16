@@ -8,6 +8,11 @@ import co.edu.uco.asistenciasuco.application.features.docente.consultardetallere
 import co.edu.uco.asistenciasuco.application.features.docente.consultardetallereclamo.primaryports.interactor.ConsultarDetalleReclamoDocenteInteractor;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardetallereclamo.usecase.ConsultarDetalleReclamoDocenteUseCase;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardetallereclamo.usecase.impl.ConsultarDetalleReclamoDocenteUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarpadrongrupo.primaryports.ConsultarPadronGrupoInputPort;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarpadrongrupo.primaryports.interactor.ConsultarPadronGrupoInteractor;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarpadrongrupo.usecase.ConsultarPadronGrupoUseCase;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarpadrongrupo.usecase.impl.ConsultarPadronGrupoUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.PadronGrupoQueryPort;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarreclamos.primaryports.ConsultarReclamosDocenteInputPort;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarreclamos.primaryports.interactor.ConsultarReclamosDocenteInteractor;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarreclamos.usecase.ConsultarReclamosDocenteUseCase;
@@ -51,6 +56,19 @@ public class DocenteWiringConfiguration {
     @Bean
     ConsultarReclamosDocenteInputPort consultarReclamosDocenteInputPort(final ConsultarReclamosDocenteUseCase useCase) {
         return new ConsultarReclamosDocenteInteractor(useCase);
+    }
+
+    @Bean
+    ConsultarPadronGrupoUseCase consultarPadronGrupoUseCase(
+            final InstitutionalScopePort scopePort,
+            final PadronGrupoQueryPort queryPort
+    ) {
+        return new ConsultarPadronGrupoUseCaseImpl(scopePort, queryPort);
+    }
+
+    @Bean
+    ConsultarPadronGrupoInputPort consultarPadronGrupoInputPort(final ConsultarPadronGrupoUseCase useCase) {
+        return new ConsultarPadronGrupoInteractor(useCase);
     }
 
     @Bean

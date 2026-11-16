@@ -9,9 +9,11 @@ import java.util.UUID;
 
 /**
  * Criterios normalizados: estado opcional (P/A/R o PENDIENTE/APROBADA/RECHAZADA), pagina minima 1 y tamano
- * entre 1 y 100 (valores fuera de rango se acotan; un estado desconocido es un error de validacion).
+ * entre 1 y 100 (valores fuera de rango se acotan; un estado desconocido es un error de validacion). CIERRE-W1A: {@code busqueda}
+ * se recorta y pasa a nulo si queda vacia; {@code grupoId} nulo = todos los grupos del docente.
  */
-public record ConsultarReclamosDocenteDomain(UUID actorUsuarioId, String codigoEstado, int pagina, int tamano) {
+public record ConsultarReclamosDocenteDomain(
+        UUID actorUsuarioId, String codigoEstado, int pagina, int tamano, String busqueda, UUID grupoId) {
 
     public static final int TAMANO_PREDETERMINADO = 10;
     public static final int TAMANO_MAXIMO = 100;
@@ -29,6 +31,17 @@ public record ConsultarReclamosDocenteDomain(UUID actorUsuarioId, String codigoE
             final Integer pagina,
             final Integer tamano
     ) {
+        return of(actorUsuarioId, estado, pagina, tamano, null, null);
+    }
+
+    public static ConsultarReclamosDocenteDomain of(
+            final UUID actorUsuarioId,
+            final String estado,
+            final Integer pagina,
+            final Integer tamano,
+            final String busqueda,
+            final UUID grupoId
+    ) {
         if (actorUsuarioId == null) {
             throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_008);
         }
@@ -39,6 +52,8 @@ public record ConsultarReclamosDocenteDomain(UUID actorUsuarioId, String codigoE
         }
         final int paginaSegura = pagina == null || pagina < 1 ? 1 : pagina;
         final int tamanoSeguro = tamano == null || tamano < 1 ? TAMANO_PREDETERMINADO : Math.min(tamano, TAMANO_MAXIMO);
-        return new ConsultarReclamosDocenteDomain(actorUsuarioId, codigo, paginaSegura, tamanoSeguro);
+        final String busquedaNormalizada = busqueda == null || busqueda.isBlank() ? null : busqueda.trim();
+        return new ConsultarReclamosDocenteDomain(
+                actorUsuarioId, codigo, paginaSegura, tamanoSeguro, busquedaNormalizada, grupoId);
     }
 }

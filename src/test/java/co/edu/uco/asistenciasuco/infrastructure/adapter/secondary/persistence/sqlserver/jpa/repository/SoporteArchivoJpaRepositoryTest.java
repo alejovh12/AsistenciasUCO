@@ -177,6 +177,32 @@ class SoporteArchivoJpaRepositoryTest {
         assertEquals(LocalDate.of(2026, 10, 19), filas.get(0).fechaSolicitud());
     }
 
+    // CIERRE-W1A: busqueda e idGrupo se envian al SP (nulos si no se piden).
+    @Test
+    void reclamos_docente_envia_busqueda_e_idGrupo_al_sp() throws Exception {
+        final SolicitudRevisionDocenteJpaRepository docente = new SolicitudRevisionDocenteJpaRepository(entityManager);
+        final UUID grupo = UUID.randomUUID();
+        when(query.getResultList()).thenReturn(List.of());
+
+        final List<SolicitudRevisionDocenteProjection> filas = docente.consultarSolicitudesDocente(USER, "P", 1, 10, "ana", grupo);
+
+        assertTrue(filas.isEmpty());
+        verify(entityManager).createNativeQuery(contains("@busqueda = :busqueda"), any(Class.class));
+        verify(query).setParameter("busqueda", "ana");
+        verify(query).setParameter("idGrupo", grupo);
+    }
+
+    @Test
+    void reclamos_docente_sin_filtros_nuevos_envia_nulos_al_sp() throws Exception {
+        final SolicitudRevisionDocenteJpaRepository docente = new SolicitudRevisionDocenteJpaRepository(entityManager);
+        when(query.getResultList()).thenReturn(List.of());
+
+        docente.consultarSolicitudesDocente(USER, null, 1, 10);
+
+        verify(query).setParameter("busqueda", null);
+        verify(query).setParameter("idGrupo", null);
+    }
+
     // PC (puntos de control): la bandeja del docente mapea la toma reclamada; sin toma (reclamo de la sesion) quedan nulas.
     @Test
     void reclamos_docente_mapea_la_toma_reclamada_y_deja_nula_la_de_la_sesion_completa() throws Exception {
