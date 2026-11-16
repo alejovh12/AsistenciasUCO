@@ -68,3 +68,7 @@ Ejemplo de work item técnico cerrado: [TECH-001](TECH-001-restaurar-gate-arquit
 - [HU177 (recuperar contraseña): retiro del flujo propio](HU177-recuperar-contrasena/PLAN.md): recuperar la contraseña es del servicio de seguridad de terceros (decisión de John, 2026-11-11). Se revierte el flujo propio; HU177 queda pendiente de terceros.
 - [CERT-CULM001 (correcciones de la certificación de CULM-001)](CERT-CULM001-CORRECCIONES/PLAN.md): motor de alertas (HU026C), carga CSV de docentes (HU171), estado con varias tomas (`PARCIAL`) y marcadores `{}` del catálogo de mensajes. Sin subir.
 - [HU112/HU128/HU143/HU157 (consultas del decano y del administrador)](HU112-HU128-HU143-HU157-consultas-transversales/PLAN.md): tabla de programas y créditos, docentes de la facultad por programa, búsqueda de asignaturas (decano: su facultad; administrador: su institución) y ficha unificada del estudiante con historial. En `develop` (BD #79, backend #77, frontend #36, Infra #9; CI remoto en verde); PENDIENTE de reaprovisionar el PDP con 7 rutas y de MV-012.
+
+## FASE 2A — 2026-11-14
+
+- [Arranque controlado, altas individuales e IDENTITY_DRIFT](FASE-2A-altas-identity-drift/PLAN.md): autorización explícita del usuario para validación funcional en navegador integrado y corrección de defectos propios del Backend demostrados. No autoriza cambios en Frontend, DB/SP ni providers externos; el arranque espera preflight seguro.
