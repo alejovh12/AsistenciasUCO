@@ -1,6 +1,7 @@
 """E2E real del modo baseline: PKCE → Bearer → backend (Spring) → PEP/PDP → SQL Server.
 
 Uso: python -X utf8 -I infra/security-baseline/scripts/e2e_baseline.py [--backend http://127.0.0.1:8080] [--pep-down]
+Usuarios: E2E_USUARIO_<ROL> (usuario o correo) y E2E_USER_PASSWORD (opcionales; por defecto uco-<rol> y lab.env).
 Requisitos: instalación infra/security-baseline arriba, `provision_asistencias.py keycloak|pdp|users` ejecutado y el
 backend en modo baseline. Sale con código 0 solo si TODAS las comprobaciones pasan. No imprime tokens ni secretos.
 --pep-down detiene el contenedor del PEP durante la comprobación de fail-closed y lo vuelve a arrancar.
@@ -42,14 +43,27 @@ def request(base, method, path, token=None, body=None, headers=None):
         return error.code, dict(error.headers), error.read()
 
 
+ROLES = ("ADMINISTRADOR", "DECANO", "COORDINADOR", "DOCENTE", "ESTUDIANTE")
+
+
+def usuarios_por_rol(environ=None):
+    """Usuario de laboratorio por rol: `E2E_USUARIO_<ROL>` (usuario o correo) o la cuenta `uco-<rol>` por defecto.
+
+    ROL-12 (VAL-oleada8): desde el conjunto de datos variado del 2026-11-15 las cuentas `uco-*` (salvo `uco-administrador`)
+    están desactivadas; con estas variables el E2E corre con un usuario activo de cada rol sin editar el script.
+    """
+    environ = os.environ if environ is None else environ
+    return [(role, environ.get("E2E_USUARIO_" + role) or "uco-" + role.lower()) for role in ROLES]
+
+
 def main():
     base = "http://127.0.0.1:8080"
     if "--backend" in sys.argv:
         base = sys.argv[sys.argv.index("--backend") + 1]
     env = L.read_env()
-    tokens = {role: spa_token.get_token(env, user)["access_token"] for role, user in (
-        ("ADMINISTRADOR", "uco-administrador"), ("DECANO", "uco-decano"), ("COORDINADOR", "uco-coordinador"),
-        ("DOCENTE", "uco-docente"), ("ESTUDIANTE", "uco-estudiante"))}
+    # E2E_USER_PASSWORD (opcional): clave común de los usuarios de prueba; sin ella se usa la de lab.env de cada cuenta.
+    password = os.environ.get("E2E_USER_PASSWORD") or None
+    tokens = {role: spa_token.get_token(env, user, password)["access_token"] for role, user in usuarios_por_rol()}
 
     # 401: sin credencial y con credenciales inválidas (nunca 200)
     status, _, _ = request(base, "GET", "/api/v1/docente/horarios")
