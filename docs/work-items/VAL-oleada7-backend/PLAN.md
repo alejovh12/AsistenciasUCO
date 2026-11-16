@@ -1,6 +1,16 @@
+---
+status: active
+type: work-item
+scope: backend
+owner: backend-team
+last-reviewed: 2026-11-16
+---
+
 # VAL-oleada7-backend - PLAN
 
-Fecha: 2026-11-15. Rama `fix/VAL-oleada7-backend` desde `repo-antiguo/develop` (aa553578). Plan completo de la oleada en
+Fecha: 2026-11-15. Rama `fix/VAL-oleada7-backend` desde `repo-antiguo/develop` (aa553578); el 2026-11-16 pasa a
+`fix/VAL-oleada7-cache-pep` sobre develop 8530bd54. El ajuste de la ruta literal del inventario del PDP se retiró: lo cubre
+el PR #153 (el extractor ya resuelve constantes). Plan completo de la oleada en
 Infra: `docs/work-items/VAL-oleada7-pendientes-transversales/PLAN.md` (pasos C y D). Sin cambios de contratos, de BD ni
 de frontend.
 
