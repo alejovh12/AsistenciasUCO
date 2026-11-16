@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinad
 
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.primaryports.dto.CoordinadorDTO;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.usecase.domain.CoordinadorDomain;
+import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 
 public final class ConsultarCoordinadoresMapper {
 
@@ -13,6 +14,7 @@ public final class ConsultarCoordinadoresMapper {
                 domain.idPrograma(), domain.nombrePrograma(), domain.estaActivoCoordinador(),
                 domain.primerNombre(), domain.segundoNombre(), domain.primerApellido(), domain.segundoApellido(),
                 domain.correo(), domain.estaActivoRolCoordinador(), domain.nombreFacultad(), domain.totalDocentes(),
-                domain.totalGrupos());
+                domain.totalGrupos(), TextHelper.unirNombres(domain.primerNombre(), domain.segundoNombre()),
+                TextHelper.unirNombres(domain.primerApellido(), domain.segundoApellido()));
     }
 }

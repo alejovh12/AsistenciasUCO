@@ -89,6 +89,12 @@ class ViewEntityProjectionMappingTest {
                 "nombreCompleto", "Luz Mar", "idFacultad", C, "nombreFacultad", "Ingenieria", "estaActivoDecano", 1);
         assertEquals(new DecanoProjection(A, B, "1037", "Luz Mar", C, "Ingenieria", true),
                 AcademicViewJpaProjectionMapper.toDecano(HydratedViewRow.of(UvDecanoEntity.class, decano)));
+        decano.put("primerNombre", "Luz");
+        decano.put("segundoNombre", "Ana");
+        decano.put("primerApellido", "Mar");
+        decano.put("segundoApellido", "Paz");
+        assertEquals(new DecanoProjection(A, B, "1037", "Luz Mar", C, "Ingenieria", true, "Luz", "Ana", "Mar", "Paz"),
+                AcademicViewJpaProjectionMapper.toDecano(HydratedViewRow.of(UvDecanoEntity.class, decano)));
         decano.put("estaActivoDecano", 0);
         assertFalse(AcademicViewJpaProjectionMapper.toDecano(
                 HydratedViewRow.of(UvDecanoEntity.class, decano)).estaActivoDecano());

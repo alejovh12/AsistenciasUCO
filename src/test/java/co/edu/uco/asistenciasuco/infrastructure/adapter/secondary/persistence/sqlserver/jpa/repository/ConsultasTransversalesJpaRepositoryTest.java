@@ -95,6 +95,38 @@ class ConsultasTransversalesJpaRepositoryTest {
     }
 
     @Test
+    void W1B_NOM_PAT_01_docentes_mapea_nombres_separados_y_tipo_de_documento() {
+        final UUID tipo = UUID.randomUUID();
+        when(query.getResultList()).thenReturn(filas(fila(ID, ID, 1017000111L, "Ana Maria Perez Gomez", "ana@uco.edu.co", 1,
+                "Sistemas", 1, 3, 1, 1, "Ana", "Maria", "Perez", "Gomez", tipo.toString(), "CC")));
+
+        final var docente = repository.consultarDocentes(EJECUTOR, new FiltroConsulta(null, null, null), 1, 10)
+                .elementos().getFirst();
+
+        assertEquals("Ana", docente.primerNombre());
+        assertEquals("Maria", docente.segundoNombre());
+        assertEquals("Perez", docente.primerApellido());
+        assertEquals("Gomez", docente.segundoApellido());
+        assertEquals(tipo, docente.idTipoIdentificacion());
+        assertEquals("CC", docente.codigoTipoIdentificacion());
+        assertTrue(docente.tieneVinculoActivo());
+    }
+
+    @Test
+    void W1B_NOM_PAT_02_estudiantes_mapea_nombres_separados() {
+        when(query.getResultList()).thenReturn(filas(fila(ID, ID, 101, "Ana Perez", null, true, "Ingenieria",
+                "Sistemas", 2, 1, "Ana", null, "Perez", "Gomez")));
+
+        final var estudiante = repository.buscarEstudiantes(EJECUTOR, new FiltroConsulta(null, null, null), 1, 10)
+                .elementos().getFirst();
+
+        assertEquals("Ana", estudiante.primerNombre());
+        assertNull(estudiante.segundoNombre());
+        assertEquals("Perez", estudiante.primerApellido());
+        assertEquals("Gomez", estudiante.segundoApellido());
+    }
+
+    @Test
     void T_143_PAT_01_asignaturas_mapea_planes_y_total_planes() {
         // CULM-001 B2NM (CONTRACT B2 fila 114): 1 fila por asignatura con planes y totalPlanes
         when(query.getResultList()).thenReturn(filas(fila(ID, "CAL1", "Calculo", 3, "Ciencias", "Basico",

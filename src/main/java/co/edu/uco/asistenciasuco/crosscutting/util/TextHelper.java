@@ -53,6 +53,15 @@ public final class TextHelper {
         return isNull(trimmed) ? null : trimmed.toLowerCase(Locale.ROOT);
     }
 
+    /**
+     * CIERRE-W1B: une dos partes de un nombre (primer y segundo nombre o apellido) con un espacio, sin espacios sobrantes;
+     * {@code null} si ninguna trae texto (un segundo nombre ausente no se rellena).
+     */
+    public static String unirNombres(final String primero, final String segundo) {
+        final String unido = (trimToEmpty(primero) + " " + trimToEmpty(segundo)).trim();
+        return unido.isEmpty() ? null : unido;
+    }
+
     public static boolean isNull(final String value) {
         return value == null;
     }

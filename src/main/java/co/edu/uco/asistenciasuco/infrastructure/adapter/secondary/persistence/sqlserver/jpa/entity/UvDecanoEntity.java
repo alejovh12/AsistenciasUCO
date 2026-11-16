@@ -43,6 +43,18 @@ public class UvDecanoEntity {
     @Column(name = "estaActivoDecano")
     private Integer estaActivoDecano;
 
+    @Column(name = "primerNombre")
+    private String primerNombre;
+
+    @Column(name = "segundoNombre")
+    private String segundoNombre;
+
+    @Column(name = "primerApellido")
+    private String primerApellido;
+
+    @Column(name = "segundoApellido")
+    private String segundoApellido;
+
     protected UvDecanoEntity() {
         // requerido por JPA
     }
@@ -73,6 +85,22 @@ public class UvDecanoEntity {
 
     public Integer estaActivoDecano() {
         return estaActivoDecano;
+    }
+
+    public String primerNombre() {
+        return primerNombre;
+    }
+
+    public String segundoNombre() {
+        return segundoNombre;
+    }
+
+    public String primerApellido() {
+        return primerApellido;
+    }
+
+    public String segundoApellido() {
+        return segundoApellido;
     }
 }
 

@@ -103,10 +103,23 @@ public interface ConsultasTransversalesQueryPort {
                                       int totalSemestres, int totalAsignaturas, int totalCreditos) {
     }
 
-    /** HU136: {@code tieneVinculoActivo} es falso para un docente retirado de todos sus programas (solo administrador). */
+    /**
+     * HU136: {@code tieneVinculoActivo} es falso para un docente retirado de todos sus programas (solo administrador).
+     * CIERRE-W1B: nombres separados y tipo de documento tal como los guarda la BD.
+     */
     record DocenteFacultadProjection(UUID idDocente, String numeroIdentificacion, String nombreCompleto, String correo,
                                      boolean activo, String programas, int totalProgramas, int totalGrupos,
-                                     boolean tieneVinculoActivo) {
+                                     boolean tieneVinculoActivo, String primerNombre, String segundoNombre,
+                                     String primerApellido, String segundoApellido, UUID idTipoIdentificacion,
+                                     String codigoTipoIdentificacion) {
+
+        public DocenteFacultadProjection(final UUID idDocente, final String numeroIdentificacion, final String nombreCompleto,
+                                         final String correo, final boolean activo, final String programas,
+                                         final int totalProgramas, final int totalGrupos,
+                                         final boolean tieneVinculoActivo) {
+            this(idDocente, numeroIdentificacion, nombreCompleto, correo, activo, programas, totalProgramas, totalGrupos,
+                    tieneVinculoActivo, null, null, null, null, null, null);
+        }
 
         public DocenteFacultadProjection(final UUID idDocente, final String numeroIdentificacion, final String nombreCompleto,
                                          final String correo, final boolean activo, final String programas,
@@ -119,9 +132,18 @@ public interface ConsultasTransversalesQueryPort {
                                 String nombreComponente, String planes, Integer totalPlanes, boolean activa) {
     }
 
+    /** CIERRE-W1B: nombres separados tal como los guarda la BD. */
     record EstudianteInstitucionProjection(UUID idEstudiante, String numeroIdentificacion, String nombreCompleto,
                                            String correo, boolean activo, String facultades, String programas,
-                                           int totalGrupos) {
+                                           int totalGrupos, String primerNombre, String segundoNombre,
+                                           String primerApellido, String segundoApellido) {
+
+        public EstudianteInstitucionProjection(final UUID idEstudiante, final String numeroIdentificacion,
+                                               final String nombreCompleto, final String correo, final boolean activo,
+                                               final String facultades, final String programas, final int totalGrupos) {
+            this(idEstudiante, numeroIdentificacion, nombreCompleto, correo, activo, facultades, programas, totalGrupos,
+                    null, null, null, null);
+        }
     }
 
     record HistorialEstudianteProjection(UUID idEstudiante, String tipoIdentificacion, String numeroIdentificacion,

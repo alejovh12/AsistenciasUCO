@@ -116,9 +116,10 @@ class JpaQueryAdapterContractTest {
         final UUID decano2 = UUID.randomUUID();
         final UUID decano3 = UUID.randomUUID();
         query(DecanoJpaRepository.HQL_LISTAR, Object[].class, List.of(
-                new Object[]{ID, OTHER, 1037600111, "Ana Perez", ID, "Ingenieria", 1},
-                new Object[]{decano2, OTHER, null, "Luis Gomez", null, null, 0},
-                new Object[]{decano3, OTHER, 987654321, "Carlos Ruiz", null, null, null}
+                new Object[]{ID, OTHER, 1037600111, "Ana Maria Perez Gomez", ID, "Ingenieria", 1,
+                        "Ana", "Maria", "Perez", "Gomez"},
+                new Object[]{decano2, OTHER, null, "Luis Gomez", null, null, 0, "Luis", null, "Gomez", null},
+                new Object[]{decano3, OTHER, 987654321, "Carlos Ruiz", null, null, null, "Carlos", null, "Ruiz", null}
         ));
         final DecanoJpaRepository decanos = new DecanoJpaRepository(manager, new JpaProcedureExecutor(manager));
 
@@ -126,6 +127,11 @@ class JpaQueryAdapterContractTest {
 
         assertEquals(3, resultado.size());
         assertEquals("1037600111", resultado.get(0).numeroIdentificacion());
+        assertEquals("Ana", resultado.get(0).primerNombre());
+        assertEquals("Maria", resultado.get(0).segundoNombre());
+        assertEquals("Perez", resultado.get(0).primerApellido());
+        assertEquals("Gomez", resultado.get(0).segundoApellido());
+        assertNull(resultado.get(1).segundoNombre());
         assertEquals(ID, resultado.get(0).idFacultad());
         assertEquals("Ingenieria", resultado.get(0).nombreFacultad());
         assertTrue(resultado.get(0).estaActivoDecano());
