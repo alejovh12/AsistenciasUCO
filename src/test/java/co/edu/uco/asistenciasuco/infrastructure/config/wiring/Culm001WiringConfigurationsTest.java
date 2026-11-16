@@ -42,7 +42,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.repository.AlertaIna
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.RevisionCancelacionRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.scheduler.EvaluacionAlertasInasistenciaScheduler;
 import co.edu.uco.asistenciasuco.infrastructure.ratelimit.SlidingWindowRateLimiter;
 import org.junit.jupiter.api.Test;
@@ -109,8 +108,8 @@ class Culm001WiringConfigurationsTest {
         final AdmisionEstudianteWiringConfiguration config = new AdmisionEstudianteWiringConfiguration();
 
         final AdmitirEstudianteUseCase admitir = config.admitirEstudianteUseCase(mock(AdmisionEstudianteCommandPort.class), mock(UsuarioRepositoryPort.class),
-                mock(PasswordEncoderPort.class), mock(CorreoInstitucionalPolicy.class), mock(AsegurarCuentaIdentidadService.class),
-                mock(InstitutionalScopePort.class), mock(NotificacionPort.class));
+                mock(CorreoInstitucionalPolicy.class), mock(AsegurarCuentaIdentidadService.class),
+                mock(InstitutionalScopePort.class), mock(co.edu.uco.asistenciasuco.application.features.identidad.activacioncuenta.ActivacionCuentaService.class));
         final AdmitirEstudianteInputPort admitirPort = config.admitirEstudianteInputPort(admitir);
         final ConsultarProgramasInstitucionUseCase programas = config.consultarProgramasInstitucionUseCase(mock(ProgramaInstitucionQueryPort.class));
         final ConsultarProgramasInstitucionInputPort programasPort = config.consultarProgramasInstitucionInputPort(programas);

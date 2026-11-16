@@ -11,7 +11,6 @@ public record AdmitirEstudianteCommandDTO(
         String primerApellido,
         String segundoApellido,
         String correo,
-        String password,
         UUID idPrograma,
         UUID usuarioEjecutor
 ) {

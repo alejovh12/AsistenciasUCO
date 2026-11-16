@@ -21,6 +21,11 @@ public record Notificacion(
     public static final String TIPO_RETIRO_ESTUDIANTE_GRUPO = "RETIRO_ESTUDIANTE_GRUPO";
     /** IDENT-001: aviso al estudiante registrado por el docente para verificar su correo (el enlace lo emite el canal al entregar). */
     public static final String TIPO_VERIFICACION_CORREO = "VERIFICACION_CORREO";
+    /**
+     * IDENT-002: aviso a una persona registrada por otra (decano, coordinador, docente o estudiante) para activar su cuenta
+     * y definir su contrasena. Usa el mismo token de un solo uso que {@link #TIPO_VERIFICACION_CORREO}.
+     */
+    public static final String TIPO_ACTIVACION_CUENTA = "ACTIVACION_CUENTA";
     /** HU010/HU035: el estudiante radica una solicitud de revision de asistencia (aviso al docente titular). */
     public static final String TIPO_RECLAMO_ASISTENCIA_RADICADO = "RECLAMO_ASISTENCIA_RADICADO";
     /** HU037/HU042/HU146: el docente resuelve la solicitud de revision (aviso al estudiante). */

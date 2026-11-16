@@ -70,7 +70,6 @@ public final class DecanoPortalController {
                 request == null ? null : request.getSegundoApellido(),
                 request == null ? null : request.getCorreo(),
                 request == null ? null : request.getIdPrograma(),
-                request == null ? null : request.getPassword(),
                 authenticatedUserResolver.requireAuthenticatedUserId(),
                 programa == null ? null : new ProgramaNuevoDTO(
                         programa.nombre(), programa.idTipoPrograma(), programa.idModalidad(), programa.idJornada())

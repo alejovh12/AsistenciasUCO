@@ -19,7 +19,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.TipoVincula
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -44,7 +43,7 @@ class DocenteProgramaWiringConfigurationTest {
         assertInstanceOf(ConsultarCandidatosDocenteInteractor.class, config.consultarCandidatosDocenteInputPort(candidatos));
 
         final var vincular = config.vincularDocenteProgramaUseCase(scope, mock(DocenteProgramaCommandPort.class), query,
-                mock(UsuarioRepositoryPort.class), mock(PasswordEncoderPort.class), mock(IdentityProviderPort.class));
+                mock(UsuarioRepositoryPort.class), mock(co.edu.uco.asistenciasuco.application.features.identidad.activacioncuenta.ActivacionCuentaService.class), mock(IdentityProviderPort.class));
         assertInstanceOf(VincularDocenteProgramaUseCaseImpl.class, vincular);
         assertInstanceOf(VincularDocenteProgramaInteractor.class, config.vincularDocenteProgramaInputPort(vincular, CorreoInstitucionalPolicyFixture.institucional()));
     }

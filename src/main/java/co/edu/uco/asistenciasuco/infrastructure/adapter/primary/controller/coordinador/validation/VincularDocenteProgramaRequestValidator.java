@@ -1,7 +1,5 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador.validation;
 
-import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
-import co.edu.uco.asistenciasuco.application.features.usuario.domain.rules.PasswordRegistroRule;
 import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationErrorType;
 import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationResult;
 import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationResultBuilder;
@@ -30,7 +28,7 @@ public final class VincularDocenteProgramaRequestValidator implements Validator<
         validarUuid(builder, "idUsuario", request.getIdUsuario(), false, null);
 
         final boolean hayDatosNuevos = hayTexto(request.getNumeroIdentificacion()) || hayTexto(request.getPrimerNombre())
-                || hayTexto(request.getPrimerApellido()) || hayTexto(request.getCorreo()) || hayTexto(request.getPassword())
+                || hayTexto(request.getPrimerApellido()) || hayTexto(request.getCorreo())
                 || request.getIdTipoIdentificacion() != null;
         final int modos = (request.getIdDocente() != null ? 1 : 0) + (request.getIdUsuario() != null ? 1 : 0) + (hayDatosNuevos ? 1 : 0);
         if (modos == 0) {
@@ -51,7 +49,6 @@ public final class VincularDocenteProgramaRequestValidator implements Validator<
 
     private static void validarPersonaNueva(final ValidationResultBuilder builder, final VincularDocenteProgramaRequest request) {
         validarUuid(builder, "idTipoIdentificacion", request.getIdTipoIdentificacion(), true, "El tipo de identificacion es obligatorio.");
-        Integer numero = null;
         final String documento = request.getNumeroIdentificacion() == null ? null : request.getNumeroIdentificacion().trim();
         if (!hayTexto(documento)) {
             builder.add("numeroIdentificacion", ValidationErrorType.REQUIRED, "El numero de identificacion es obligatorio.");
@@ -59,7 +56,7 @@ public final class VincularDocenteProgramaRequestValidator implements Validator<
             builder.add("numeroIdentificacion", ValidationErrorType.INVALID_FORMAT, "El numero de identificacion debe ser numerico.");
         } else {
             try {
-                numero = Integer.valueOf(documento);
+                Integer.parseInt(documento);
             } catch (final NumberFormatException exception) {
                 builder.add("numeroIdentificacion", ValidationErrorType.OUT_OF_RANGE, "El numero de identificacion excede el rango permitido.");
             }
@@ -78,15 +75,6 @@ public final class VincularDocenteProgramaRequestValidator implements Validator<
             builder.add("correo", ValidationErrorType.INVALID_FORMAT, "El correo no tiene un formato valido.");
         }
 
-        if (request.getPassword() == null || request.getPassword().isEmpty()) {
-            builder.add("password", ValidationErrorType.REQUIRED, "La contrasena inicial es obligatoria.");
-        } else {
-            try {
-                PasswordRegistroRule.resolverCredencialNueva(request.getPassword(), numero == null ? 0 : numero);
-            } catch (final ValidationException exception) {
-                builder.add("password", ValidationErrorType.INVALID_FORMAT, "La contrasena no cumple la politica de seguridad.");
-            }
-        }
     }
 
     private static void requeridoConLongitud(final ValidationResultBuilder builder, final String campo, final String valor,

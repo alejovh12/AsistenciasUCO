@@ -32,6 +32,7 @@ import co.edu.uco.asistenciasuco.application.features.admin.consultarinstitucion
 import co.edu.uco.asistenciasuco.application.features.admin.consultarinstituciones.usecase.ConsultarInstitucionesUseCase;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarinstituciones.usecase.impl.ConsultarInstitucionesUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.CrearDecanoInputPort;
+import co.edu.uco.asistenciasuco.application.features.identidad.activacioncuenta.ActivacionCuentaService;
 import co.edu.uco.asistenciasuco.application.features.identidad.asegurarcuenta.AsegurarCuentaIdentidadService;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.interactor.CrearDecanoInteractor;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.CrearDecanoUseCase;
@@ -85,11 +86,11 @@ public class AdminWiringConfiguration {
             final FacultadQueryPort facultadQueryPort,
             final DecanoCommandPort decanoCommandPort,
             final UsuarioRepositoryPort usuarioRepositoryPort,
-            final PasswordEncoderPort passwordEncoderPort,
-            final AsegurarCuentaIdentidadService asegurarCuentaIdentidadService
+            final AsegurarCuentaIdentidadService asegurarCuentaIdentidadService,
+            final ActivacionCuentaService activacionCuentaService
     ) {
         return new CrearDecanoUseCaseImpl(facultadQueryPort, decanoCommandPort,
-                usuarioRepositoryPort, passwordEncoderPort, asegurarCuentaIdentidadService);
+                usuarioRepositoryPort, asegurarCuentaIdentidadService, activacionCuentaService);
     }
     @Bean CrearDecanoInputPort crearDecanoInputPort(final CrearDecanoUseCase useCase, final CorreoInstitucionalPolicy correoInstitucionalPolicy) { return new CrearDecanoInteractor(useCase, correoInstitucionalPolicy); }
     @Bean ConsultarInstitucionesUseCase consultarInstitucionesUseCase(final InstitucionQueryPort port) { return new ConsultarInstitucionesUseCaseImpl(port); }

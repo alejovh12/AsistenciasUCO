@@ -135,7 +135,7 @@ class CoordinadorDocentesControllerTest {
 
         mvc.perform(post("/api/v1/coordinador/docentes").contentType(MediaType.APPLICATION_JSON).content("""
                         {"idTipoIdentificacion":"%s","numeroIdentificacion":"1017555444","primerNombre":"Jorge",
-                         "primerApellido":"Henao","correo":"jorge.henao@uco.edu.co","password":"Clave1234!",
+                         "primerApellido":"Henao","correo":"jorge.henao@uco.edu.co",
                          "idTipoVinculacion":"%s"}""".formatted(UUID.randomUUID(), TIPO)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.exitoso").value(true))
@@ -145,7 +145,6 @@ class CoordinadorDocentesControllerTest {
         verify(vincular).execute(captor.capture());
         assertEquals(ACTOR, captor.getValue().actorUsuarioId());
         assertEquals(1017555444, captor.getValue().numeroIdentificacion());
-        assertEquals("Clave1234!", captor.getValue().password());
         assertEquals(TIPO, captor.getValue().idTipoVinculacion());
         assertNull(captor.getValue().idDocente());
     }

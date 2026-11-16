@@ -54,9 +54,6 @@ public final class RegistrarEstudianteInteractor implements RegistrarEstudianteI
             dto.setPrimerNombre(datos.primerNombre());
             dto.setSegundoNombre(datos.segundoNombre());
             dto.setCorreo(datos.correo());
-            if (dto.getPassword() == null || dto.getPassword().isBlank()) {
-                dto.setPassword("Temporal2026*");
-            }
         }
         // CULM-001 A.2-15 (REVIEW-3 B1): ya no se resuelve el estudiante por un documento libre con
         // consultarUsuarioPorIdentificacion (no exigia fila Estudiante ni la misma institucion). Sin correo, el caso de

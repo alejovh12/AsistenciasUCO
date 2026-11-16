@@ -122,7 +122,6 @@ class AltaRequestLengthParityTest {
         request.setPrimerNombre("Jorge");
         request.setPrimerApellido("Henao");
         request.setCorreo("jorge.henao@uco.edu.co");
-        request.setPassword("Clave1234!");
         request.setIdTipoVinculacion(UUID.randomUUID());
         return request;
     }
@@ -131,7 +130,7 @@ class AltaRequestLengthParityTest {
                                                                    final String primerApellido, final String segundoApellido,
                                                                    final String correo) {
         return new AdminPortalController.CrearDecanoRequest(UUID.randomUUID(), 123456789, primerNombre, segundoNombre,
-                primerApellido, segundoApellido, correo, null, UUID.randomUUID(), null);
+                primerApellido, segundoApellido, correo, UUID.randomUUID(), null);
     }
 
     private static String nombre(final int longitud) {

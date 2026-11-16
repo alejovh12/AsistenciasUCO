@@ -6,14 +6,13 @@ import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudiantee
 import co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional.CorreoInstitucionalPolicy;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CuentaIdentidadDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
+import co.edu.uco.asistenciasuco.application.features.identidad.activacioncuenta.ActivacionCuentaService;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarEstudianteRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.EstudianteBusquedaRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.RegistrarEstudianteRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.UsuarioIdentidadRepositoryProjection;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -45,12 +44,11 @@ class RegistrarEstudianteSinCorreoUseCaseImplTest {
 
     private final GrupoRepositoryPort grupos = mock(GrupoRepositoryPort.class);
     private final UsuarioRepositoryPort usuarios = mock(UsuarioRepositoryPort.class);
-    private final PasswordEncoderPort encoder = mock(PasswordEncoderPort.class);
     private final IdentityProviderPort identidad = mock(IdentityProviderPort.class);
     private final CorreoInstitucionalPolicy correoPolicy = mock(CorreoInstitucionalPolicy.class);
-    private final NotificacionPort notificaciones = mock(NotificacionPort.class);
+    private final ActivacionCuentaService activacion = mock(ActivacionCuentaService.class);
     private final RegistrarEstudianteUseCaseImpl useCase =
-            new RegistrarEstudianteUseCaseImpl(grupos, usuarios, encoder, identidad, correoPolicy, notificaciones);
+            new RegistrarEstudianteUseCaseImpl(grupos, usuarios, identidad, correoPolicy, activacion);
 
     private static RegistrarEstudianteDomain pendiente() {
         return RegistrarEstudianteDomain.pendienteDeResolverPorDocumento(TIPO, DOCUMENTO, null, GRUPO, DOCENTE);
@@ -80,10 +78,10 @@ class RegistrarEstudianteSinCorreoUseCaseImplTest {
         assertEquals("ANA", dto.getValue().getPrimerNombre());
         assertEquals("PEREZ", dto.getValue().getPrimerApellido());
         assertEquals(GRUPO, dto.getValue().getGrupoId());
-        // Usuario existente: no se revalida el dominio, no se cifra clave nueva ni se envia verificacion.
+        // Usuario existente: no se revalida el dominio, no se genera credencial nueva ni se envia activacion.
         verify(correoPolicy, never()).exigir(any());
-        verify(encoder, never()).encode(any());
-        verify(notificaciones, never()).notificar(any());
+        verify(activacion, never()).credencialLegadaInutilizable();
+        verify(activacion, never()).avisar(any(), any(), any());
     }
 
     @Test

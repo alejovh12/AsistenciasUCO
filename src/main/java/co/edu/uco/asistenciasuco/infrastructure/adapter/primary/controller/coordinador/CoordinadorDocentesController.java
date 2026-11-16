@@ -136,7 +136,6 @@ public final class CoordinadorDocentesController {
                 trim(request.getPrimerApellido()),
                 trim(request.getSegundoApellido()),
                 trim(request.getCorreo()),
-                request.getPassword(),
                 request.getIdTipoVinculacion()));
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiDataResponse<>(true, resultado));
     }

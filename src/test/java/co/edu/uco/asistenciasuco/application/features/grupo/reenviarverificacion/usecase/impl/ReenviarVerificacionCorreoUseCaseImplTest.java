@@ -3,11 +3,15 @@ package co.edu.uco.asistenciasuco.application.features.grupo.reenviarverificacio
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CrearCuentaIdentidadDTO;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CuentaIdentidadDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notificacion;
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.VerificacionCorreoRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.UsuarioIdentidadRepositoryProjection;
+import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -21,7 +25,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** IDENT-001 CA-09: el reenvio valida en la DB y solo entonces registra un aviso sin token ni correo. */
+/**
+ * IDENT-001 CA-09: el reenvio valida en la DB y solo entonces registra un aviso sin token ni correo. IDENT-002: si la cuenta
+ * no tiene contrasena el aviso es de activacion; si la tiene, no existe o no se puede consultar, el de verificacion.
+ */
 class ReenviarVerificacionCorreoUseCaseImplTest {
 
     private static final UUID ACTOR = UUID.randomUUID();
@@ -52,6 +59,47 @@ class ReenviarVerificacionCorreoUseCaseImplTest {
                     throw rechazo;
                 }
                 return USUARIO_ESTUDIANTE;
+            }
+
+            @Override
+            public UUID consultarReenvioActivacion(final UUID idUsuario, final UUID actorUsuarioId) {
+                throw new UnsupportedOperationException();
+            }
+        };
+    }
+
+    /** Estado de la cuenta del estudiante en el proveedor de identidad. */
+    private enum Cuenta { CON_CLAVE, SIN_CLAVE, SIN_CUENTA, FALLA }
+
+    private static IdentityProviderPort identidad(final Cuenta cuenta) {
+        return new IdentityProviderPort() {
+            @Override
+            public CuentaIdentidadDTO crearCuenta(final CrearCuentaIdentidadDTO dto) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void eliminarCuenta(final String idExterno) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void asignarRol(final String idExterno, final InstitutionalRole rol) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Optional<CuentaIdentidadDTO> buscarCuentaPorIdUsuario(final UUID idUsuario) {
+                assertEquals(USUARIO_ESTUDIANTE, idUsuario);
+                if (cuenta == Cuenta.FALLA) {
+                    throw new IdentityProviderException("Keycloak no disponible.");
+                }
+                return cuenta == Cuenta.SIN_CUENTA ? Optional.empty() : Optional.of(new CuentaIdentidadDTO("kc-1", false));
+            }
+
+            @Override
+            public boolean tieneContrasena(final String idExterno) {
+                return cuenta == Cuenta.CON_CLAVE;
             }
         };
     }
@@ -91,7 +139,38 @@ class ReenviarVerificacionCorreoUseCaseImplTest {
             final Optional<UsuarioIdentidadRepositoryProjection> usuario,
             final NotificacionPort notificacionPort
     ) {
-        return new ReenviarVerificacionCorreoUseCaseImpl(repositorio(rechazo), usuarios(usuario), notificacionPort);
+        return useCase(rechazo, usuario, notificacionPort, Cuenta.CON_CLAVE);
+    }
+
+    private ReenviarVerificacionCorreoUseCaseImpl useCase(
+            final RuntimeException rechazo,
+            final Optional<UsuarioIdentidadRepositoryProjection> usuario,
+            final NotificacionPort notificacionPort,
+            final Cuenta cuenta
+    ) {
+        return new ReenviarVerificacionCorreoUseCaseImpl(repositorio(rechazo), usuarios(usuario), notificacionPort, identidad(cuenta));
+    }
+
+    @Test
+    void IDENT002_cuenta_sin_contrasena_recibe_el_aviso_de_activacion() {
+        useCase(null, ana(), avisos::add, Cuenta.SIN_CLAVE).execute(ACTOR, GRUPO, ESTUDIANTE);
+
+        assertEquals(1, avisos.size());
+        final Notificacion aviso = avisos.getFirst();
+        assertEquals(Notificacion.TIPO_ACTIVACION_CUENTA, aviso.tipo());
+        assertEquals(USUARIO_ESTUDIANTE, aviso.destinatarios().getFirst().idUsuario());
+        assertNull(aviso.destinatarios().getFirst().correo());
+        assertEquals("Ana Maria", aviso.datos().get("nombre"));
+        assertEquals("estudiante", aviso.datos().get("rol"));
+    }
+
+    @Test
+    void IDENT002_sin_cuenta_o_si_el_proveedor_falla_se_conserva_el_aviso_de_verificacion() {
+        useCase(null, ana(), avisos::add, Cuenta.SIN_CUENTA).execute(ACTOR, GRUPO, ESTUDIANTE);
+        useCase(null, ana(), avisos::add, Cuenta.FALLA).execute(ACTOR, GRUPO, ESTUDIANTE);
+
+        assertEquals(2, avisos.size());
+        assertTrue(avisos.stream().allMatch(aviso -> Notificacion.TIPO_VERIFICACION_CORREO.equals(aviso.tipo())));
     }
 
     @Test
@@ -157,9 +236,11 @@ class ReenviarVerificacionCorreoUseCaseImplTest {
         final UsuarioRepositoryPort usuariosPort = usuarios(ana());
         final VerificacionCorreoRepositoryPort repoPort = repositorio(null);
         final NotificacionPort notifPort = avisos::add;
+        final IdentityProviderPort idPort = identidad(Cuenta.CON_CLAVE);
 
-        assertThrows(NullPointerException.class, () -> new ReenviarVerificacionCorreoUseCaseImpl(null, usuariosPort, notifPort));
-        assertThrows(NullPointerException.class, () -> new ReenviarVerificacionCorreoUseCaseImpl(repoPort, null, notifPort));
-        assertThrows(NullPointerException.class, () -> new ReenviarVerificacionCorreoUseCaseImpl(repoPort, usuariosPort, null));
+        assertThrows(NullPointerException.class, () -> new ReenviarVerificacionCorreoUseCaseImpl(null, usuariosPort, notifPort, idPort));
+        assertThrows(NullPointerException.class, () -> new ReenviarVerificacionCorreoUseCaseImpl(repoPort, null, notifPort, idPort));
+        assertThrows(NullPointerException.class, () -> new ReenviarVerificacionCorreoUseCaseImpl(repoPort, usuariosPort, null, idPort));
+        assertThrows(NullPointerException.class, () -> new ReenviarVerificacionCorreoUseCaseImpl(repoPort, usuariosPort, notifPort, null));
     }
 }

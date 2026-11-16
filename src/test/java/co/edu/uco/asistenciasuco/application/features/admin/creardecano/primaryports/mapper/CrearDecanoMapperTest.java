@@ -21,7 +21,7 @@ class CrearDecanoMapperTest {
 
     private static CrearDecanoDTO dto(final UUID tipo, final UUID ejecutor) {
         return new CrearDecanoDTO(tipo, 123456, "Ana", "Maria", "Perez", "Gomez",
-                "ana.perez@uco.edu.co", "Secreta#123", FACULTAD, ejecutor);
+                "ana.perez@uco.edu.co", FACULTAD, ejecutor);
     }
 
     @Test

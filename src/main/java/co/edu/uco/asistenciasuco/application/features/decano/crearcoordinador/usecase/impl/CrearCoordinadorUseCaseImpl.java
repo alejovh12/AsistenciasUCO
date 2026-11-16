@@ -9,14 +9,14 @@ import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.us
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.usecase.domain.CrearCoordinadorDomain;
 import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.usecase.domain.CrearCoordinadorResultado;
 import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
-import co.edu.uco.asistenciasuco.application.features.usuario.domain.rules.PasswordRegistroRule;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.CoordinadorCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CrearCuentaIdentidadDTO;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CuentaIdentidadDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.UsuarioIdentidadRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
+import co.edu.uco.asistenciasuco.application.features.identidad.activacioncuenta.ActivacionCuentaService;
 import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
@@ -29,7 +29,7 @@ public final class CrearCoordinadorUseCaseImpl implements CrearCoordinadorUseCas
     private final CoordinadorCommandPort commandPort;
     private final InstitutionalScopePort scopePort;
     private final UsuarioRepositoryPort usuarioRepositoryPort;
-    private final PasswordEncoderPort passwordEncoderPort;
+    private final ActivacionCuentaService activacion;
     private final IdentityProviderPort identityProviderPort;
 
     public CrearCoordinadorUseCaseImpl(final CoordinadorCommandPort commandPort, final InstitutionalScopePort scopePort) {
@@ -40,13 +40,13 @@ public final class CrearCoordinadorUseCaseImpl implements CrearCoordinadorUseCas
             final CoordinadorCommandPort commandPort,
             final InstitutionalScopePort scopePort,
             final UsuarioRepositoryPort usuarioRepositoryPort,
-            final PasswordEncoderPort passwordEncoderPort,
+            final ActivacionCuentaService activacion,
             final IdentityProviderPort identityProviderPort
     ) {
         this.commandPort = Objects.requireNonNull(commandPort, "CoordinadorCommandPort es obligatorio.");
         this.scopePort = Objects.requireNonNull(scopePort, "InstitutionalScopePort es obligatorio.");
         this.usuarioRepositoryPort = usuarioRepositoryPort;
-        this.passwordEncoderPort = passwordEncoderPort;
+        this.activacion = activacion;
         this.identityProviderPort = identityProviderPort;
     }
 
@@ -68,19 +68,11 @@ public final class CrearCoordinadorUseCaseImpl implements CrearCoordinadorUseCas
         final Optional<UsuarioIdentidadRepositoryProjection> usuarioPreexistente =
                 resolverUsuarioPreexistente(domain);
 
-        validarContrasenaObligatoria(domain, usuarioPreexistente.isPresent());
-
-        final String credencialInicial = passwordEncoderPort == null
-                ? domain.getPassword()
-                : resolverCredencialInicial(domain);
-        final String passwordParaPersistir;
-        if (usuarioPreexistente.isPresent()) {
-            passwordParaPersistir = null;
-        } else if (passwordEncoderPort == null) {
-            passwordParaPersistir = domain.getPassword();
-        } else {
-            passwordParaPersistir = passwordEncoderPort.encode(credencialInicial);
-        }
+        // IDENT-002: el alta no recibe contrasena; la columna legada guarda un secreto inutilizable y el coordinador define
+        // su contrasena al activar la cuenta con el enlace del correo.
+        final String passwordParaPersistir = usuarioPreexistente.isPresent() || activacion == null
+                ? null
+                : activacion.credencialLegadaInutilizable();
 
         final UUID idCoordinador = UUID.randomUUID();
         final CrearCoordinadorResultado resultado;
@@ -106,20 +98,25 @@ public final class CrearCoordinadorUseCaseImpl implements CrearCoordinadorUseCas
 
         if (identityProviderPort != null && usuarioRepositoryPort != null) {
             final UsuarioIdentidadRepositoryProjection u = resolverUsuarioPostCommand(domain, usuarioPreexistente);
+            final CuentaIdentidadDTO cuenta;
             try {
-                identityProviderPort.crearCuenta(new CrearCuentaIdentidadDTO(
+                cuenta = identityProviderPort.crearCuenta(new CrearCuentaIdentidadDTO(
                         String.valueOf(u.numeroIdentificacion()),
                         u.id(),
                         u.correo(),
                         u.primerNombre(),
                         u.primerApellido(),
-                        credencialInicial,
+                        null,
                         InstitutionalRole.COORDINADOR
-                ));
+                ).conVerificacionCorreo());
             } catch (final IdentityProviderPort.IdentityProviderException exception) {
                 throw new InternalApplicationException(
                         "No fue posible completar el aprovisionamiento de identidad del coordinador registrado.", exception
                 );
+            }
+            // Una cuenta nueva nace deshabilitada y sin credencial; una persona que ya tenia cuenta no recibe correo.
+            if (cuenta != null && cuenta.newlyCreated() && activacion != null) {
+                activacion.avisar(u.id(), u.primerNombre(), InstitutionalRole.COORDINADOR);
             }
         }
         return resultado;
@@ -210,27 +207,4 @@ public final class CrearCoordinadorUseCaseImpl implements CrearCoordinadorUseCas
         return value != null && !value.isBlank();
     }
 
-    /**
-     * HU121-HU122 D5: la contrasena se asigna siempre en la creacion; no existe una por defecto derivada del documento.
-     * Un usuario ya registrado (por correo) no necesita contrasena nueva.
-     */
-    private void validarContrasenaObligatoria(final CrearCoordinadorDomain domain, final boolean usuarioPreexistente) {
-        final boolean sinContrasena = domain.getPassword() == null || domain.getPassword().isBlank();
-        if (sinContrasena && !usuarioPreexistente && passwordEncoderPort != null) {
-            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_050);
-        }
-    }
-
-    private static String resolverCredencialInicial(final CrearCoordinadorDomain domain) {
-        Integer numeroId = null;
-        if (domain.getNumeroIdentificacion() != null && !domain.getNumeroIdentificacion().isBlank()) {
-            try {
-                numeroId = Integer.valueOf(domain.getNumeroIdentificacion().trim());
-            } catch (final NumberFormatException _) {
-                numeroId = null;
-            }
-        }
-        final String rawPassword = domain.getPassword() == null ? "" : domain.getPassword().trim();
-        return PasswordRegistroRule.resolverCredencialNueva(rawPassword, numeroId != null ? numeroId : 10000000);
-    }
 }

@@ -47,6 +47,13 @@ public class VerificacionCorreoJpaRepository implements VerificacionCorreoReposi
                  @idCorrelacion = :idCorrelacion
             """;
     static final String OP_REENVIO = "consultarReenvioVerificacionCorreo";
+    static final String SQL_REENVIO_ACTIVACION = """
+            EXEC dbo.usp_consultar_reenvio_activacion_cuenta
+                 @idUsuario = :idUsuario,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor,
+                 @idCorrelacion = :idCorrelacion
+            """;
+    static final String OP_REENVIO_ACTIVACION = "consultarReenvioActivacionCuenta";
 
     private final EntityManager entityManager;
     private final JpaProcedureExecutor procedureExecutor;
@@ -103,6 +110,31 @@ public class VerificacionCorreoJpaRepository implements VerificacionCorreoReposi
                     }
                     if (filas.isEmpty()) {
                         throw new PersistenceException("El SP de reenvio no devolvio el usuario del estudiante.");
+                    }
+                    return aUuid(filas.getFirst());
+                }
+        );
+    }
+
+    @Override
+    public UUID consultarReenvioActivacion(final UUID idUsuario, final UUID actorUsuarioId) {
+        final UUID correlationId = CorrelationIdContext.require();
+        return JpaQueryExecutor.execute(
+                OP_REENVIO_ACTIVACION,
+                "No fue posible validar el reenvio de activacion de la cuenta desde base de datos.",
+                () -> {
+                    final List<?> filas;
+                    try {
+                        filas = entityManager.createNativeQuery(SQL_REENVIO_ACTIVACION)
+                                .setParameter("idUsuario", idUsuario)
+                                .setParameter("idUsuarioEjecutor", actorUsuarioId)
+                                .setParameter(PARAM_ID_CORRELACION, correlationId)
+                                .getResultList();
+                    } catch (final PersistenceException exception) {
+                        throw DbCodeTranslator.traducir(exception);
+                    }
+                    if (filas.isEmpty()) {
+                        throw new PersistenceException("El SP de reenvio de activacion no devolvio el usuario.");
                     }
                     return aUuid(filas.getFirst());
                 }

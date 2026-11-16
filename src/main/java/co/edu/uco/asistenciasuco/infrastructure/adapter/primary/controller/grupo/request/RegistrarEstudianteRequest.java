@@ -30,7 +30,6 @@ public final class RegistrarEstudianteRequest {
     @Pattern(regexp = BeanValidationPatterns.EMAIL_OR_BLANK, message = HttpValidationMessages.INVALID_EMAIL)
     private String correo;
 
-    private String password;
 
     public UUID getIdPrograma() {
         return idPrograma;
@@ -104,11 +103,4 @@ public final class RegistrarEstudianteRequest {
         this.correo = correo;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(final String password) {
-        this.password = password;
-    }
 }

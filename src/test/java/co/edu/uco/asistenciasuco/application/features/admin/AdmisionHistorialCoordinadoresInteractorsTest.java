@@ -52,7 +52,7 @@ class AdmisionHistorialCoordinadoresInteractorsTest {
         final UUID admin = UUID.randomUUID();
 
         final AdmisionEstudianteDTO dto = new AdmitirEstudianteInteractor(useCase).execute(new AdmitirEstudianteCommandDTO(
-                tipo, 1017123456, "Ana", null, "Perez", "Gomez", "ana@uco.edu.co", "Clave123!", programa, admin));
+                tipo, 1017123456, "Ana", null, "Perez", "Gomez", "ana@uco.edu.co", programa, admin));
 
         final ArgumentCaptor<AdmitirEstudianteDomain> domain = ArgumentCaptor.forClass(AdmitirEstudianteDomain.class);
         verify(useCase).execute(domain.capture());
@@ -60,7 +60,6 @@ class AdmisionHistorialCoordinadoresInteractorsTest {
         assertEquals(1017123456, domain.getValue().numeroIdentificacion());
         assertEquals("Ana", domain.getValue().primerNombre());
         assertNull(domain.getValue().segundoNombre());
-        assertEquals("Clave123!", domain.getValue().password());
         assertEquals(programa, domain.getValue().idPrograma());
         assertEquals(admin, domain.getValue().usuarioEjecutor());
         assertEquals(estudiante, dto.idEstudiante());

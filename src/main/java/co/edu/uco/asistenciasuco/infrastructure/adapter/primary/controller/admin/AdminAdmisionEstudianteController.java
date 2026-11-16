@@ -64,7 +64,6 @@ public final class AdminAdmisionEstudianteController {
                 trim(request.getPrimerApellido()),
                 trim(request.getSegundoApellido()),
                 request.getCorreo().trim().toLowerCase(Locale.ROOT),
-                blankToNull(request.getPassword()),
                 request.getIdPrograma(),
                 authenticatedUserResolver.requireAuthenticatedUserId()));
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiDataResponse<>(true, resultado));

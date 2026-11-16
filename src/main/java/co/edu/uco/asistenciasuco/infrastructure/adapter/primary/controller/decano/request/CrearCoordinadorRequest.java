@@ -18,7 +18,6 @@ public final class CrearCoordinadorRequest {
     private String segundoApellido;
     private String correo;
     private UUID idPrograma;
-    private String password;
     @Valid
     private ProgramaNuevoRequest programaNuevo;
     public String getNumeroIdentificacion() { return numeroIdentificacion; }
@@ -35,8 +34,6 @@ public final class CrearCoordinadorRequest {
     public void setCorreo(final String correo) { this.correo = correo; }
     public UUID getIdPrograma() { return idPrograma; }
     public void setIdPrograma(final UUID idPrograma) { this.idPrograma = idPrograma; }
-    public String getPassword() { return password; }
-    public void setPassword(final String password) { this.password = password; }
     public ProgramaNuevoRequest getProgramaNuevo() { return programaNuevo; }
     public void setProgramaNuevo(final ProgramaNuevoRequest programaNuevo) { this.programaNuevo = programaNuevo; }
 }
