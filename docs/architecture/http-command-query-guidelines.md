@@ -25,8 +25,6 @@ una migración exige análisis de compatibilidad. El PUT de sesión del Golden P
 
 Rutas canonicas de consulta:
 
-- `GET /api/v1/docentes/{docenteId}`
-- `GET /api/v1/docentes/{docenteId}/asignaciones`
 - `GET /api/v1/sesiones/{sesionId}`
 - `GET /api/v1/grupos/{grupoId}/asistencias`
 

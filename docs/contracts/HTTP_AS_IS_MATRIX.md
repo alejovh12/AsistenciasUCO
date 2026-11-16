@@ -220,11 +220,6 @@ Extraído de annotations presentes; excluye endpoints de framework (Actuator). S
 | GET | `/api/v1/admin/indicadores` | [AdminIndicadoresController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/admin/AdminIndicadoresController.java) |
 | GET | `/api/v1/admin/comparativa-facultades` | [AdminIndicadoresController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/admin/AdminIndicadoresController.java) |
 | GET | `/api/v1/admin/tendencia-ausentismo` | [AdminIndicadoresController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/admin/AdminIndicadoresController.java) |
-| GET | `/api/v1/docentes` | [DocenteController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/docente/DocenteController.java) |
-| GET | `/api/v1/docentes/{docenteId}` | [DocenteController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/docente/DocenteController.java) |
-| POST | `/api/v1/docentes/consultas/id` | [DocenteController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/docente/DocenteController.java) |
-| GET | `/api/v1/docentes/{docenteId}/asignaciones` | [DocenteController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/docente/DocenteController.java) |
-| POST | `/api/v1/docentes/consultas/asignaciones` | [DocenteController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/docente/DocenteController.java) |
 | POST | `/api/v1/docente/grupos/{grupoId}/estudiantes/{estudianteId}/retiro` | [DocenteGrupoEstudianteController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/docente/DocenteGrupoEstudianteController.java) |
 | GET | `/api/v1/estudiante/oferta-academica` | [EstudianteOfertaAcademicaController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/estudiante/EstudianteOfertaAcademicaController.java) |
 | GET | `/api/v1/estudiante/plan-estudio` | [EstudiantePlanEstudioController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/estudiante/EstudiantePlanEstudioController.java) |

@@ -120,64 +120,21 @@ class ViewEntityProjectionMappingTest {
     }
 
     @Test
-    void docente_proyecta_asignacion_academica_y_asignatura() {
+    void docente_proyecta_asignatura() {
         final UvDocenteEntity docente = HydratedViewRow.of(UvDocenteEntity.class, docenteColumns());
 
         assertEquals(new AsignaturaDocenteProjection(C, "Calculo", D, "G1", B, "Sistemas", null, null, 7),
                 AcademicViewJpaProjectionMapper.toAsignaturaDocente(docente, null, 7));
-
-        final DocenteAsignacionAcademicaRepositoryProjection asignacion =
-                CoreViewJpaProjectionMapper.toDocenteAsignacion(docente);
-        assertEquals(A, asignacion.getId());
-        assertEquals(E, asignacion.getIdUsuario());
-        assertEquals(1037, asignacion.getNumeroIdentificacion());
-        assertEquals("Luz Mar", asignacion.getNombreCompleto());
-        assertTrue(asignacion.isEstaActivoUsuario());
-        assertEquals("UCO", asignacion.getNombreInstitucion());
-        assertEquals("Ingenieria", asignacion.getNombreFacultad());
-        assertEquals(B, asignacion.getIdPrograma());
-        assertEquals("Sistemas", asignacion.getNombrePrograma());
-        assertEquals("77", asignacion.getInpPlanEstudio());
-        assertEquals(C, asignacion.getIdAsignatura());
-        assertEquals("Calculo", asignacion.getNombreAsignatura());
-        assertEquals(D, asignacion.getIdGrupo());
-        assertEquals("G1", asignacion.getNombreGrupo());
-        assertEquals("DOC", asignacion.getCodigoPerfil());
-        assertEquals("Docente", asignacion.getNombrePerfil());
-        assertEquals(1, asignacion.getEstaActivoDocente());
-        assertEquals("Activo", asignacion.getEstaActivoTextoDocente());
     }
 
     @Test
-    void docente_sin_plan_ni_usuario_activo_no_fabrica_valores() {
-        final Map<String, Object> columns = docenteColumns();
-        columns.put("inpPlanEstudio", null);
-        columns.put("estaActivoUsuario", null);
-
-        final DocenteAsignacionAcademicaRepositoryProjection asignacion =
-                CoreViewJpaProjectionMapper.toDocenteAsignacion(HydratedViewRow.of(UvDocenteEntity.class, columns));
-
-        assertNull(asignacion.getInpPlanEstudio());
-        assertFalse(asignacion.isEstaActivoUsuario());
-    }
-
-    @Test
-    void identidades_de_usuario_docente_y_tipo_identificacion() {
+    void identidades_de_usuario_y_tipo_identificacion() {
         assertEquals(new UsuarioIdentidadRepositoryProjection(A, B, 1037, "Luz", "Mar", "luz@uco.edu.co"),
                 CoreViewJpaProjectionMapper.toUsuario(HydratedViewRow.of(UvUsuarioEntity.class,
                         cols("id", A, "idTipoIdentificacion", B, "numeroIdentificacion", 1037,
                                 "primerApellido", "Mar", "segundoApellido", "Paz", "primerNombre", "Luz",
                                 "segundoNombre", "Ana", "nombreCompleto", "Luz Ana Mar Paz",
                                 "correo", "luz@uco.edu.co", "estaActivoUsuario", Boolean.TRUE))));
-
-        final DocenteIdentidadRepositoryProjection identidad = CoreViewJpaProjectionMapper.toDocenteIdentidad(
-                HydratedViewRow.of(UvDocenteIdentidadEntity.class, cols("id", A, "idUsuario", B,
-                        "numeroIdentificacion", 1037, "nombreCompleto", "Luz Mar", "estaActivoUsuario", null)));
-        assertEquals(A, identidad.getId());
-        assertEquals(B, identidad.getIdUsuario());
-        assertEquals(1037, identidad.getNumeroIdentificacion());
-        assertEquals("Luz Mar", identidad.getNombreCompleto());
-        assertFalse(identidad.isEstaActivoUsuario());
 
         final TipoIdentificacionRepositoryProjection tipo = CoreViewJpaProjectionMapper.toTipoIdentificacion(
                 HydratedViewRow.of(UvTipoIdentificacionEntity.class,
