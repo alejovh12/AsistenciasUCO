@@ -442,7 +442,7 @@ class SmtpNotificacionChannelSenderTest {
     }
 
     @Test
-    @DisplayName("BE-S11: modo activo: el transporte recibe como BCC solo redirect-to; ninguna direccion original aparece en BCC, To, asunto, texto ni HTML")
+    @DisplayName("BE-S11: modo activo: el transporte recibe como BCC solo redirect-to; ninguna direccion original aparece en BCC ni To; el asunto y el aviso si las nombran (enmienda D15)")
     void BE_S11_modo_activo_bcc_solo_redirect_to_sin_direcciones_originales() throws Exception {
         final UUID u1 = UUID.randomUUID();
         final UUID u2 = UUID.randomUUID();
@@ -467,15 +467,16 @@ class SmtpNotificacionChannelSenderTest {
         assertFalse(enviado.bccAddresses().contains(real1));
         assertFalse(enviado.bccAddresses().contains(real2));
         assertFalse(enviado.toAddress().contains(real1));
-        assertFalse(enviado.asunto().contains(real1));
-        assertFalse(enviado.textoPlano().contains(real1));
-        assertFalse(enviado.textoPlano().contains(real2));
-        assertFalse(enviado.html().contains(real1));
-        assertFalse(enviado.html().contains(real2));
+        assertFalse(enviado.toAddress().contains(real2));
+        assertTrue(enviado.asunto().startsWith("[PRUEBA para " + real1 + ", " + real2 + "] "));
+        assertTrue(enviado.textoPlano().contains(real1));
+        assertTrue(enviado.textoPlano().contains(real2));
+        assertTrue(enviado.html().contains(real1));
+        assertTrue(enviado.html().contains(real2));
     }
 
     @Test
-    @DisplayName("BE-S12: modo activo: el asunto empieza por '[PRUEBA] ' y no supera 200 caracteres ni contiene saltos de linea")
+    @DisplayName("BE-S12: modo activo: el asunto empieza por '[PRUEBA para {correo}] ' y no supera 200 caracteres ni contiene saltos de linea")
     void BE_S12_modo_activo_asunto_prefijado_prueba_y_truncado_200_sin_saltos() throws Exception {
         final UUID u1 = UUID.randomUUID();
         when(contactoResolver.consultarContactos(any())).thenReturn(List.of(
@@ -512,15 +513,15 @@ class SmtpNotificacionChannelSenderTest {
 
         assertEquals(1, transport.enviados.size());
         final String asunto = transport.enviados.getFirst().asunto();
-        assertTrue(asunto.startsWith("[PRUEBA] Retiro del grupo "));
+        assertTrue(asunto.startsWith("[PRUEBA para u1@uco.edu.co] Retiro del grupo "));
         assertEquals(200, asunto.length());
         assertFalse(asunto.contains("\r"));
         assertFalse(asunto.contains("\n"));
     }
 
     @Test
-    @DisplayName("BE-S13: modo activo: el aviso indica el numero N de destinatarios originales omitidos y no contiene direcciones ni nombres")
-    void BE_S13_modo_activo_aviso_indica_n_omitidos_sin_direcciones_ni_nombres() throws Exception {
+    @DisplayName("BE-S13: modo activo: el aviso indica el numero N de destinatarios originales y lista todos sus correos")
+    void BE_S13_modo_activo_aviso_indica_n_y_lista_destinatarios_originales() throws Exception {
         final UUID u1 = UUID.randomUUID();
         final UUID u2 = UUID.randomUUID();
         final UUID u3 = UUID.randomUUID();
@@ -553,11 +554,63 @@ class SmtpNotificacionChannelSenderTest {
         sender.enviar(notif);
 
         final CorreoSaliente enviado = transport.enviados.getFirst();
-        final String avisoEsperado = "MODO DE PRUEBAS: este correo no se envió a los destinatarios reales. Destinatarios originales omitidos: 3.";
+        final String avisoEsperado = "MODO DE PRUEBAS: este correo no se envió a los destinatarios reales. "
+                + "Destinatarios originales (3): real1@uco.edu.co, real2@uco.edu.co, real3@uco.edu.co.";
         assertTrue(enviado.textoPlano().startsWith(avisoEsperado + "\n\n"));
         assertTrue(enviado.html().contains("<p>" + avisoEsperado + "</p>"));
-        assertFalse(enviado.textoPlano().contains("real1@uco.edu.co"));
-        assertFalse(enviado.html().contains("real1@uco.edu.co"));
+        assertEquals(List.of("qa@prueba.test"), enviado.bccAddresses());
+    }
+
+    @Test
+    @DisplayName("BE-S20: modo activo con muchos destinatarios: el asunto muestra los primeros que caben en 120 caracteres y ' y M más'; el aviso los lista todos")
+    void BE_S20_modo_activo_muchos_destinatarios_asunto_resumido_y_aviso_completo() throws Exception {
+        final List<UUID> ids = new java.util.ArrayList<>();
+        final List<ContactoDestinatario> contactos = new java.util.ArrayList<>();
+        final List<String> correos = new java.util.ArrayList<>();
+        for (int i = 1; i <= 40; i++) {
+            final UUID id = UUID.randomUUID();
+            final String correo = String.format("estudiante%02d@uco.edu.co", i);
+            ids.add(id);
+            correos.add(correo);
+            contactos.add(new ContactoDestinatario(id, correo, true));
+        }
+        when(contactoResolver.consultarContactos(any())).thenReturn(contactos);
+        when(plantillaRepository.consultarActiva("RETIRO_ESTUDIANTE_GRUPO", "es")).thenReturn(Optional.empty());
+
+        final SmtpNotificacionChannelSender sender = crearSender(
+                crearPropsModoPrueba(50, "qa@prueba.test"),
+                new TopeEnvios(60, 500, Clock.systemUTC(), meterRegistry)
+        );
+        sender.enviar(notificacionRetiro(ids));
+
+        assertEquals(1, transport.enviados.size());
+        final CorreoSaliente enviado = transport.enviados.getFirst();
+        final String asunto = enviado.asunto();
+        final int finPrefijo = asunto.indexOf("] ");
+        final String prefijo = asunto.substring(0, finPrefijo + 2);
+        // Cada correo ocupa 23 caracteres (+2 del separador): en 120 caben 3 correos y " y 37 más" (97); con 4 serian 122.
+        assertEquals("[PRUEBA para estudiante01@uco.edu.co, estudiante02@uco.edu.co, estudiante03@uco.edu.co y 37 más] ", prefijo);
+        assertTrue(prefijo.length() <= 120);
+        assertEquals(prefijo + "Retiro del grupo G01 de Software", asunto);
+        assertFalse(asunto.contains("estudiante04@uco.edu.co"));
+
+        final String avisoEsperado = "MODO DE PRUEBAS: este correo no se envió a los destinatarios reales. "
+                + "Destinatarios originales (40): " + String.join(", ", correos) + ".";
+        assertTrue(enviado.textoPlano().startsWith(avisoEsperado + "\n\n"));
+        assertTrue(enviado.html().contains("<p>" + avisoEsperado + "</p>"));
+        assertEquals(List.of("qa@prueba.test"), enviado.bccAddresses());
+    }
+
+    @Test
+    @DisplayName("BE-S21: prefijo de asunto de prueba: un correo mas largo que el tope se muestra completo; la lista que cabe entera no lleva ' y M más'")
+    void BE_S21_prefijo_asunto_prueba_casos_limite() {
+        final String largo = "a".repeat(130) + "@uco.edu.co";
+        assertEquals("[PRUEBA para " + largo + " y 1 más] ",
+                SmtpNotificacionChannelSender.prefijoAsuntoPrueba(List.of(largo, "b@uco.edu.co")));
+        assertEquals("[PRUEBA para a@uco.edu.co, b@uco.edu.co] ",
+                SmtpNotificacionChannelSender.prefijoAsuntoPrueba(List.of("a@uco.edu.co", "b@uco.edu.co")));
+        assertEquals("[PRUEBA para a@uco.edu.co] ",
+                SmtpNotificacionChannelSender.prefijoAsuntoPrueba(List.of("a@uco.edu.co")));
     }
 
     @Test
@@ -603,7 +656,7 @@ class SmtpNotificacionChannelSenderTest {
 
         final CorreoSaliente enviado = transport.enviados.getFirst();
         assertEquals(List.of("u1@uco.edu.co"), enviado.bccAddresses());
-        assertFalse(enviado.asunto().startsWith("[PRUEBA]"));
+        assertFalse(enviado.asunto().startsWith("[PRUEBA"));
         assertFalse(enviado.textoPlano().contains("MODO DE PRUEBAS:"));
         assertFalse(enviado.html().contains("MODO DE PRUEBAS:"));
     }
