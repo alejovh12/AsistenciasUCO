@@ -143,4 +143,11 @@ public class SmtpNotificacionAdapterConfiguration {
                 marcadorDinamicoProvider
         );
     }
+
+    /** OBS-10: componente {@code smtp} de /actuator/health (fuera de readiness: el outbox reintenta). */
+    @Bean
+    public SmtpHealthIndicator smtpHealthIndicator(final CorreoTransport correoTransport,
+                                                   final SmtpNotificationProperties properties) {
+        return new SmtpHealthIndicator(correoTransport, properties.host(), properties.port());
+    }
 }

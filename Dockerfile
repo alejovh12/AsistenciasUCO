@@ -7,7 +7,8 @@
 # El starter de MessageUcoLab vive en GitHub Packages (repositorio privado del equipo de mensajeria). Las credenciales
 # entran como secreto de BuildKit (docker build --secret id=m2settings,src=<settings.xml>) y no quedan en ninguna capa
 # de la imagen. El secreto es opcional (required=false): sin el, el build solo falla si realmente necesita el starter.
-FROM eclipse-temurin:25-jdk-alpine AS build
+# F12-02: etiqueta + digest (reproducible); Dependabot (ecosistema docker en "/") actualiza ambos.
+FROM eclipse-temurin:25-jdk-alpine@sha256:c7c3d0bdf7f2bbc5a05a6712ed334d198360105634ea9adf76fca94f381b1e3f AS build
 WORKDIR /workspace
 
 COPY .mvn/ .mvn/
@@ -25,7 +26,7 @@ COPY docs/security/SECRETS_INVENTORY.md docs/security/SECRETS_INVENTORY.md
 COPY Dockerfile Dockerfile
 RUN --mount=type=secret,id=m2settings,target=/root/.m2/settings.xml,required=false ./mvnw -B -ntp clean verify
 
-FROM eclipse-temurin:25-jre-alpine
+FROM eclipse-temurin:25-jre-alpine@sha256:e1898fd6a11fc965a994d8ace186fd3585aeb636cf8f05f47a723fcfee0b0918
 WORKDIR /app
 COPY --from=build /workspace/target/AsistenciasUCO-0.0.1-SNAPSHOT.jar app.jar
 # SEC-002: Alpine CVE-2026-46675 (libpng), CVE-2026-85091 (zlib).
