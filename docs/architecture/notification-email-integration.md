@@ -105,7 +105,7 @@ sequenceDiagram
         S->>T: renderizar(tipo, datos) → asunto + cuerpo
         Note over T: 1) plantilla activa en BD<br/>2) plantilla por defecto del backend<br/>3) asunto/mensaje guardados
         alt modo de pruebas activo
-            S->>M: BCC = redirect-to · asunto [PRUEBA] · aviso inicial
+            S->>M: BCC = redirect-to · asunto [PRUEBA para …] · aviso con destinatarios originales
         else producción
             S->>M: BCC = destinatarios reales
         end
@@ -141,7 +141,7 @@ Las credenciales van **solo** en variables de entorno (o el `.env` local ignorad
 
 1. Completar el bloque SMTP del `.env` del backend y activar el modo de pruebas con tu correo.
 2. Arrancar el backend (p. ej. `:8090`, `legacy`) y ejecutar una acción que notifique (HU051, retiro de un estudiante).
-3. Verificar: el log registra `Notificacion enviada por SMTP … outcome=sent`, la fila de `NotificacionSaliente` pasa a `ENTREGADA` y el correo llega con asunto `[PRUEBA]` y el aviso inicial.
+3. Verificar: el log registra `Notificacion enviada por SMTP … outcome=sent`, la fila de `NotificacionSaliente` pasa a `ENTREGADA` y el correo llega con asunto `[PRUEBA para <destinatarios>]` y el aviso inicial con la lista completa.
 4. Restaurar los datos de prueba (matrícula del estudiante y filas del outbox).
 
 ### 3.3 Agregar un nuevo tipo de notificación
@@ -157,7 +157,7 @@ Las credenciales van **solo** en variables de entorno (o el `.env` local ignorad
 flowchart LR
     A["Notificación<br/>3 destinatarios reales"] --> B{"test-mode.enabled?"}
     B -->|"false (producción)"| C["BCC = 3 destinatarios reales"]
-    B -->|"true"| D["BCC = solo redirect-to<br/>asunto [PRUEBA] ...<br/>aviso: omitidos N=3"]
+    B -->|"true"| D["BCC = solo redirect-to<br/>asunto [PRUEBA para a, b, c] ...<br/>aviso: originales (3): a, b, c"]
     D --> E["Ninguna dirección real<br/>en cabeceras ni cuerpo"]
 ```
 
