@@ -6,7 +6,6 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.AreaProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.AsignaturaDocenteProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.AsignaturaProjection;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.CoordinadorProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.DecanoProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.FacultadProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.HorarioDocenteProjection;
@@ -120,14 +119,7 @@ class AcademicQueryJpaParityIT {
     }
 
     @Test
-    void coordinadores_y_planes_conservan_flags_int_y_texto_numerico() {
-        final List<CoordinadorProjection> coordinadoresBefore = coordinadoresBefore();
-        assumeTrue(!coordinadoresBefore.isEmpty(), "No hay coordinadores vivos.");
-        final UUID idFacultad = facultadDeCoordinador();
-        assertEquals(new CoordinadorJdbcBaseline(named, new CoordinadorJpaRepository(entityManager, new JpaProcedureExecutor(entityManager)))
-                        .consultarCoordinadoresPorFacultad(idFacultad),
-                new CoordinadorJpaRepository(entityManager, new JpaProcedureExecutor(entityManager)).consultarCoordinadoresPorFacultad(idFacultad));
-
+    void planes_conservan_flags_int_y_texto_numerico() {
         final UUID idPrograma = uuidDe("SELECT TOP 1 idPrograma FROM dbo.uv_plan_estudio ORDER BY id");
         assumeTrue(idPrograma != null, "No hay planes de estudio vivos.");
         final List<PlanEstudioProjection> planesBefore = new PlanEstudioJdbcBaseline(named,
@@ -222,19 +214,6 @@ class AcademicQueryJpaParityIT {
         assertEquals(before.size(), pagina.totalElementos());
         assertFalse(before.isEmpty(), "Debe existir al menos una sesion viva.");
         assertTrue(before.getFirst().fechaHoraInicio() != null, "fechaHoraInicio debe conservar valor UTC.");
-    }
-
-    private List<CoordinadorProjection> coordinadoresBefore() {
-        final UUID idFacultad = facultadDeCoordinador();
-        if (idFacultad == null) {
-            return List.of();
-        }
-        return new CoordinadorJdbcBaseline(named, new CoordinadorJpaRepository(entityManager, new JpaProcedureExecutor(entityManager)))
-                .consultarCoordinadoresPorFacultad(idFacultad);
-    }
-
-    private UUID facultadDeCoordinador() {
-        return uuidDe("SELECT TOP 1 idFacultad FROM dbo.uv_coordinador ORDER BY id");
     }
 
     private UUID uuidDe(final String sql) {

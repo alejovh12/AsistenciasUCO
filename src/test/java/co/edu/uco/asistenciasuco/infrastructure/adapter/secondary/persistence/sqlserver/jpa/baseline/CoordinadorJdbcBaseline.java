@@ -4,8 +4,6 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 
 
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.CoordinadorCommandPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.CoordinadorQueryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.CoordinadorProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResultadoGestionCoordinadorProjection;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository.CoordinadorJpaRepository;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.mapping.JdbcBaselineValueMapper;
@@ -22,7 +20,7 @@ import java.util.UUID;
  * <p>COMMAND (alta de coordinador) delega en {@link CoordinadorJpaRepository} sobre {@code EntityManager}
  * (LB-008 JPA-03). La QUERY sigue en JDBC temporal hasta JPA-05.</p>
  */
-public final class CoordinadorJdbcBaseline implements CoordinadorQueryPort, CoordinadorCommandPort {
+public final class CoordinadorJdbcBaseline implements CoordinadorCommandPort {
 
     private final NamedParameterJdbcOperations jdbcOperations;
     private final CoordinadorJpaRepository commands;
@@ -70,32 +68,6 @@ public final class CoordinadorJdbcBaseline implements CoordinadorQueryPort, Coor
             final UUID idCoordinador, final boolean estaActivo, final UUID idFacultad, final UUID usuarioEjecutor
     ) {
         return commands.cambiarEstadoCoordinador(idCoordinador, estaActivo, idFacultad, usuarioEjecutor);
-    }
-
-    @Override
-    public List<CoordinadorProjection> consultarCoordinadoresPorFacultad(final UUID idFacultad) {
-        return jdbcOperations.query("""
-                SELECT id, idUsuario, numeroIdentificacion, nombreCompleto, idPrograma, nombrePrograma,
-                       estaActivoCoordinador, primerNombre, segundoNombre, primerApellido, segundoApellido,
-                       correo, estaActivoRolCoordinador
-                FROM dbo.uv_coordinador
-                WHERE idFacultad = :idFacultad
-                ORDER BY nombrePrograma, nombreCompleto, id
-                """, new MapSqlParameterSource("idFacultad", idFacultad), (rs, rowNum) -> new CoordinadorProjection(
-                JdbcBaselineValueMapper.toUuid(rs.getObject("id")),
-                JdbcBaselineValueMapper.toUuid(rs.getObject("idUsuario")),
-                JdbcBaselineValueMapper.toString(rs.getObject("numeroIdentificacion")),
-                JdbcBaselineValueMapper.toString(rs.getObject("nombreCompleto")),
-                JdbcBaselineValueMapper.toUuid(rs.getObject("idPrograma")),
-                JdbcBaselineValueMapper.toString(rs.getObject("nombrePrograma")),
-                JdbcBaselineValueMapper.toBoolean(rs.getObject("estaActivoCoordinador")),
-                JdbcBaselineValueMapper.toString(rs.getObject("primerNombre")),
-                JdbcBaselineValueMapper.toString(rs.getObject("segundoNombre")),
-                JdbcBaselineValueMapper.toString(rs.getObject("primerApellido")),
-                JdbcBaselineValueMapper.toString(rs.getObject("segundoApellido")),
-                JdbcBaselineValueMapper.toString(rs.getObject("correo")),
-                JdbcBaselineValueMapper.toBoolean(rs.getObject("estaActivoRolCoordinador"))
-        ));
     }
 
     @Override

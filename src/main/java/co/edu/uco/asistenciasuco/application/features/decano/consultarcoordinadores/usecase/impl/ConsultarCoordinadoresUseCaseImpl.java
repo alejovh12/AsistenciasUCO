@@ -1,55 +1,35 @@
 package co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.usecase.impl;
 
-import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
-import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
+import co.edu.uco.asistenciasuco.application.features.asistencia.common.PaginaResultado;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.usecase.ConsultarCoordinadoresUseCase;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.usecase.domain.CoordinadorDomain;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.usecase.mapper.ConsultarCoordinadoresRepositoryMapper;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.CoordinadorQueryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.CoordinadorProjection;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResumenCoordinacionProjection;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
+/**
+ * CIERRE-W1B: lista paginada de coordinadores de la facultad del decano. La paginacion, los filtros y el ambito se
+ * resuelven en {@code usp_consultar_coordinadores_facultad_paginado}; aqui solo se orquesta la consulta.
+ */
 public final class ConsultarCoordinadoresUseCaseImpl implements ConsultarCoordinadoresUseCase {
-    private final InstitutionalScopePort scopePort;
+
     private final CoordinadorQueryPort coordinadorQueryPort;
-    public ConsultarCoordinadoresUseCaseImpl(final InstitutionalScopePort scopePort, final CoordinadorQueryPort coordinadorQueryPort) {
-        this.scopePort = Objects.requireNonNull(scopePort);
+
+    public ConsultarCoordinadoresUseCaseImpl(final CoordinadorQueryPort coordinadorQueryPort) {
         this.coordinadorQueryPort = Objects.requireNonNull(coordinadorQueryPort);
     }
-    @Override public List<CoordinadorDomain> execute(final UUID actorUsuarioId) {
-        final UUID idFacultad = scopePort.findFacultadIdByDecanoUsuario(actorUsuarioId)
-                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_011));
-        final Map<UUID, CoordinadorProjection> consolidado = new LinkedHashMap<>();
-        for (final CoordinadorProjection item : coordinadorQueryPort.consultarCoordinadoresPorFacultad(idFacultad)) {
-            if (item != null && item.id() != null) {
-                consolidado.putIfAbsent(item.id(), item);
-            }
-        }
-        for (final CoordinadorProjection item : coordinadorQueryPort.consultarCoordinadoresSinPrograma(idFacultad)) {
-            if (item != null && item.id() != null) {
-                consolidado.putIfAbsent(item.id(), item);
-            }
-        }
-        // Certificacion F3: facultad y conteos reales por programa (antes la pantalla inventaba "Sin Facultad" y 0/0).
-        final Map<UUID, ResumenCoordinacionProjection> resumenes = new LinkedHashMap<>();
-        String nombreFacultad = null;
-        for (final ResumenCoordinacionProjection resumen : coordinadorQueryPort.consultarResumenProgramasFacultad(idFacultad)) {
-            if (resumen != null && resumen.idPrograma() != null) {
-                resumenes.putIfAbsent(resumen.idPrograma(), resumen);
-                nombreFacultad = nombreFacultad == null ? resumen.nombreFacultad() : nombreFacultad;
-            }
-        }
-        final String facultad = nombreFacultad;
-        return consolidado.values().stream()
-                .map(c -> ConsultarCoordinadoresRepositoryMapper.toDomain(c, facultad,
-                        c.idPrograma() == null ? null : resumenes.get(c.idPrograma())))
-                .toList();
+
+    @Override
+    public PaginaResultado<CoordinadorDomain> execute(final UUID actorUsuarioId, final String busqueda,
+                                                      final Boolean estaActivo, final Boolean sinPrograma,
+                                                      final int pagina, final int tamano) {
+        final var filas = coordinadorQueryPort.consultarCoordinadoresFacultad(
+                Objects.requireNonNull(actorUsuarioId, "El usuario ejecutor es obligatorio."),
+                busqueda, estaActivo, sinPrograma, pagina, tamano);
+        return new PaginaResultado<>(
+                filas.elementos().stream().map(ConsultarCoordinadoresRepositoryMapper::toDomain).toList(),
+                pagina, tamano, filas.total());
     }
 }
