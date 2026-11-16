@@ -41,5 +41,7 @@ RUN chmod 0555 /usr/local/bin/minio /usr/local/bin/mc /usr/local/bin/minio-init 
 USER minio
 VOLUME ["/data"]
 EXPOSE 9000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD curl -fsS http://127.0.0.1:9000/minio/health/live || exit 1
 ENTRYPOINT ["/usr/local/bin/minio"]
 CMD ["server", "/data"]
