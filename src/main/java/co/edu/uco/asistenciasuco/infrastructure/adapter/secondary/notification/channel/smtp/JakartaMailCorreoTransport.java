@@ -61,6 +61,14 @@ public class JakartaMailCorreoTransport implements CorreoTransport {
     }
 
     @Override
+    public void verificarConexion() throws MessagingException {
+        if (!(mailSender instanceof JavaMailSenderImpl impl)) {
+            throw new UnsupportedOperationException("El JavaMailSender configurado no permite verificar la conexion.");
+        }
+        impl.testConnection();
+    }
+
+    @Override
     public void enviar(final CorreoSaliente correo) throws NotificacionNoEntregableException {
         Objects.requireNonNull(correo, "CorreoSaliente es obligatorio.");
         try {
