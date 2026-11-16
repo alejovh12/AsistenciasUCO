@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.identidad.activacioncuenta.ActivacionCuentaService;
 import co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional.CorreoInstitucionalPolicy;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.primaryports.ConsultarCoordinadoresInputPort;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.primaryports.interactor.ConsultarCoordinadoresInteractor;
@@ -14,7 +15,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.Coordinador
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -27,10 +27,10 @@ public class DecanoWiringConfiguration {
             final CoordinadorCommandPort commandPort,
             final InstitutionalScopePort scopePort,
             final UsuarioRepositoryPort usuarioRepositoryPort,
-            final PasswordEncoderPort passwordEncoderPort,
+            final ActivacionCuentaService activacionCuentaService,
             final IdentityProviderPort identityProviderPort
     ) {
-        return new CrearCoordinadorUseCaseImpl(commandPort, scopePort, usuarioRepositoryPort, passwordEncoderPort, identityProviderPort);
+        return new CrearCoordinadorUseCaseImpl(commandPort, scopePort, usuarioRepositoryPort, activacionCuentaService, identityProviderPort);
     }
     @Bean CrearCoordinadorInputPort crearCoordinadorInputPort(final CrearCoordinadorUseCase useCase, final CorreoInstitucionalPolicy correoInstitucionalPolicy) { return new CrearCoordinadorInteractor(useCase, correoInstitucionalPolicy); }
 }

@@ -22,7 +22,7 @@ public final class AdmitirEstudianteInteractor implements AdmitirEstudianteInput
         Objects.requireNonNull(command, "El comando para admitir un estudiante es obligatorio.");
         final AdmisionEstudianteResultadoDomain resultado = useCase.execute(new AdmitirEstudianteDomain(
                 command.tipoIdentificacionId(), command.numeroIdentificacion(), command.primerNombre(), command.segundoNombre(),
-                command.primerApellido(), command.segundoApellido(), command.correo(), command.password(), command.idPrograma(),
+                command.primerApellido(), command.segundoApellido(), command.correo(), command.idPrograma(),
                 command.usuarioEjecutor()));
         return new AdmisionEstudianteDTO(resultado.idEstudiante(), resultado.idUsuario(), resultado.esUsuarioNuevo(),
                 resultado.estadoCuenta().name(), resultado.cuentaReparada());

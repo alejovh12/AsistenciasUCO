@@ -22,7 +22,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.Institucion
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.PeriodoAcademicoQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -40,8 +39,9 @@ class AdminWiringConfigurationTest {
 
         final var crearDecanoUseCase = config.crearDecanoUseCase(
                 mock(FacultadQueryPort.class), mock(DecanoCommandPort.class),
-                mock(UsuarioRepositoryPort.class), mock(PasswordEncoderPort.class),
-                mock(co.edu.uco.asistenciasuco.application.features.identidad.asegurarcuenta.AsegurarCuentaIdentidadService.class));
+                mock(UsuarioRepositoryPort.class),
+                mock(co.edu.uco.asistenciasuco.application.features.identidad.asegurarcuenta.AsegurarCuentaIdentidadService.class),
+                mock(co.edu.uco.asistenciasuco.application.features.identidad.activacioncuenta.ActivacionCuentaService.class));
         assertInstanceOf(CrearDecanoUseCaseImpl.class, crearDecanoUseCase);
         assertInstanceOf(CrearDecanoInteractor.class, config.crearDecanoInputPort(crearDecanoUseCase, CorreoInstitucionalPolicyFixture.institucional()));
 

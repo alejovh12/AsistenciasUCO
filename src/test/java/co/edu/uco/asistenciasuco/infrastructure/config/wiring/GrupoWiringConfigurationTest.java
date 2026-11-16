@@ -15,7 +15,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityPro
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -37,11 +36,11 @@ class GrupoWiringConfigurationTest {
         assertInstanceOf(ActualizarGrupoInteractor.class, config.actualizarGrupoInputPort(actualizarGrupoUseCase));
 
         final var registrarEstudianteUseCase = config.registrarEstudianteUseCase(
-                grupoRepositoryPort, mock(UsuarioRepositoryPort.class), mock(PasswordEncoderPort.class), mock(IdentityProviderPort.class),
+                grupoRepositoryPort, mock(UsuarioRepositoryPort.class), mock(IdentityProviderPort.class),
                 config.correoInstitucionalPolicy(
                         mock(co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort.class),
                         mock(co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort.class)),
-                mock(co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort.class));
+                mock(co.edu.uco.asistenciasuco.application.features.identidad.activacioncuenta.ActivacionCuentaService.class));
         assertInstanceOf(RegistrarEstudianteUseCaseImpl.class, registrarEstudianteUseCase);
         assertInstanceOf(RegistrarEstudianteInteractor.class, config.registrarEstudianteInputPort(
                 registrarEstudianteUseCase, mock(co.edu.uco.asistenciasuco.application.secondaryports.repository.EstudianteRepositoryPort.class)));

@@ -50,7 +50,7 @@ class DocentesProgramaInteractorsTest {
         when(useCase.execute(any())).thenReturn(domain(docente));
 
         final DocenteProgramaDTO dto = new VincularDocenteProgramaInteractor(useCase, CorreoInstitucionalPolicyFixture.institucional()).execute(
-                new VincularDocenteProgramaDTO(ACTOR, docente, null, null, null, null, null, null, null, null, null, tipo));
+                new VincularDocenteProgramaDTO(ACTOR, docente, null, null, null, null, null, null, null, null, tipo));
 
         final ArgumentCaptor<VincularDocenteProgramaDomain> captor = ArgumentCaptor.forClass(VincularDocenteProgramaDomain.class);
         verify(useCase).execute(captor.capture());
@@ -100,7 +100,7 @@ class DocentesProgramaInteractorsTest {
         final VincularDocenteProgramaInteractor interactor =
                 new VincularDocenteProgramaInteractor(useCase, CorreoInstitucionalPolicyFixture.institucional());
         final VincularDocenteProgramaDTO conGmail = new VincularDocenteProgramaDTO(ACTOR, null, null, UUID.randomUUID(),
-                1017334455, "Ana", null, "Rios", null, "ana.rios@gmail.com", "Clave-Segura9!", UUID.randomUUID());
+                1017334455, "Ana", null, "Rios", null, "ana.rios@gmail.com", UUID.randomUUID());
 
         final co.edu.uco.asistenciasuco.application.exception.validation.ValidationException exception =
                 org.junit.jupiter.api.Assertions.assertThrows(

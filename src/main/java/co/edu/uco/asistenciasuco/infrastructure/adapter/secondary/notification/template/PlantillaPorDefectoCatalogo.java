@@ -24,6 +24,7 @@ public class PlantillaPorDefectoCatalogo {
     public static final List<String> TIPOS_CONOCIDOS = List.of(
             Notificacion.TIPO_RETIRO_ESTUDIANTE_GRUPO,
             Notificacion.TIPO_VERIFICACION_CORREO,
+            Notificacion.TIPO_ACTIVACION_CUENTA,
             Notificacion.TIPO_RECLAMO_ASISTENCIA_RADICADO,
             Notificacion.TIPO_RECLAMO_ASISTENCIA_RESUELTO,
             Notificacion.TIPO_ALERTA_RIESGO_INASISTENCIA,

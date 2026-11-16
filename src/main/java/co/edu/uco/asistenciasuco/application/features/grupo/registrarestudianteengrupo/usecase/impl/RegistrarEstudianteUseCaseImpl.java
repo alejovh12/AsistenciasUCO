@@ -13,25 +13,20 @@ import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudiantee
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.entity.RegistrarEstudianteResultadoEntity;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.mapper.RegistrarEstudianteIdentityMapper;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.mapper.RegistrarEstudianteRepositoryMapper;
+import co.edu.uco.asistenciasuco.application.features.identidad.activacioncuenta.ActivacionCuentaService;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CrearCuentaIdentidadDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notificacion;
-import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CuentaIdentidadDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.RegistrarEstudianteRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.UsuarioIdentidadRepositoryProjection;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
-import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Objects;
 import java.util.UUID;
@@ -52,25 +47,22 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
 
     private final GrupoRepositoryPort grupoRepositoryPort;
     private final UsuarioRepositoryPort usuarioRepositoryPort;
-    private final PasswordEncoderPort passwordEncoderPort;
     private final IdentityProviderPort identityProviderPort;
     private final CorreoInstitucionalPolicy dominioCorreoPolicy;
-    private final NotificacionPort notificacionPort;
+    private final ActivacionCuentaService activacion;
 
     public RegistrarEstudianteUseCaseImpl(
             final GrupoRepositoryPort grupoRepositoryPort,
             final UsuarioRepositoryPort usuarioRepositoryPort,
-            final PasswordEncoderPort passwordEncoderPort,
             final IdentityProviderPort identityProviderPort,
             final CorreoInstitucionalPolicy dominioCorreoPolicy,
-            final NotificacionPort notificacionPort
+            final ActivacionCuentaService activacion
     ) {
         this.grupoRepositoryPort = Objects.requireNonNull(grupoRepositoryPort, "El puerto de salida GrupoRepositoryPort es obligatorio.");
         this.usuarioRepositoryPort = Objects.requireNonNull(usuarioRepositoryPort, "El puerto de salida UsuarioRepositoryPort es obligatorio.");
-        this.passwordEncoderPort = Objects.requireNonNull(passwordEncoderPort, "El puerto PasswordEncoderPort es obligatorio.");
         this.identityProviderPort = Objects.requireNonNull(identityProviderPort, "El puerto IdentityProviderPort es obligatorio.");
         this.dominioCorreoPolicy = Objects.requireNonNull(dominioCorreoPolicy, "CorreoInstitucionalPolicy es obligatoria.");
-        this.notificacionPort = Objects.requireNonNull(notificacionPort, "El puerto NotificacionPort es obligatorio.");
+        this.activacion = Objects.requireNonNull(activacion, "ActivacionCuentaService es obligatorio.");
     }
 
     @Override
@@ -93,9 +85,11 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
 
         // DB SUCCESS a partir de aqui: Identity nunca se invoca antes de este punto.
         final UsuarioIdentidadRepositoryProjection usuarioCanonico = resolverUsuarioPostCommand(domain);
-        provisionarIdentidad(domain, usuarioCanonico, !usuarioExistente);
-        if (!usuarioExistente) {
-            avisarVerificacionCorreo(domain, usuarioCanonico);
+        // IDENT-002: sin contrasena en el registro. Una cuenta nueva nace deshabilitada y sin credencial y el estudiante la
+        // activa con el enlace del correo; una cuenta existente no cambia.
+        final CuentaIdentidadDTO cuenta = provisionarIdentidad(domain, usuarioCanonico, !usuarioExistente);
+        if (cuenta != null && cuenta.newlyCreated()) {
+            activacion.avisar(usuarioCanonico.id(), usuarioCanonico.primerNombre(), ROL_ESTUDIANTE);
         }
 
         return RegistrarEstudianteRepositoryMapper.toUseCaseEntity(resultado);
@@ -126,29 +120,6 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
     }
 
     /**
-     * IDENT-001: avisa al estudiante nuevo que debe verificar su correo. El aviso es de mejor esfuerzo: el registro ya
-     * quedo confirmado y un fallo de la cola nunca lo revierte. No lleva correo ni token (el enlace lo emite el canal al
-     * entregar el correo).
-     */
-    private void avisarVerificacionCorreo(
-            final RegistrarEstudianteDomain domain,
-            final UsuarioIdentidadRepositoryProjection usuarioCanonico
-    ) {
-        try {
-            notificacionPort.notificar(new Notificacion(
-                    Notificacion.TIPO_VERIFICACION_CORREO,
-                    "Verifique su correo institucional",
-                    "Se registro una cuenta a su nombre en la plataforma de asistencia. Verifique su correo institucional.",
-                    List.of(new Notificacion.Destinatario(ROL_ESTUDIANTE.name(), usuarioCanonico.id(), null, null)),
-                    Map.of("nombre", TextHelper.toNombrePropio(domain.getPrimerNombre()))
-            ));
-        } catch (final RuntimeException exception) {
-            LOGGER.warn("No fue posible registrar el aviso de verificacion de correo del usuario {}: {}",
-                    usuarioCanonico.id(), exception.getClass().getSimpleName());
-        }
-    }
-
-    /**
      * Resuelve el UUID institucional definitivo DESPUES del command, usando la identificacion
      * (tipo + numero) como referencia. El SP solo reutiliza un usuario cuando correo y documento
      * ya apuntaban al mismo usuario (o crea uno nuevo si ninguno existia); un usuario identificado
@@ -169,15 +140,16 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
      * de Application — nunca se intenta deshacer el command de DB ni se invoca
      * {@link IdentityProviderPort#eliminarCuenta(String)} como compensacion distribuida.
      */
-    private void provisionarIdentidad(
+    private CuentaIdentidadDTO provisionarIdentidad(
             final RegistrarEstudianteDomain domain,
             final UsuarioIdentidadRepositoryProjection usuarioCanonico,
             final boolean requiereVerificacionCorreo
     ) {
         try {
-            final CrearCuentaIdentidadDTO cuenta =
-                    RegistrarEstudianteIdentityMapper.toCrearCuentaIdentidadDTO(domain, usuarioCanonico, ROL_ESTUDIANTE);
-            identityProviderPort.crearCuenta(requiereVerificacionCorreo ? cuenta.conVerificacionCorreo() : cuenta);
+            // IDENT-002: siempre con verificacion; sin contrasena, una cuenta que falte en el proveedor solo se habilita
+            // cuando su titular la activa (una cuenta existente se devuelve sin modificarla).
+            return identityProviderPort.crearCuenta(RegistrarEstudianteIdentityMapper
+                    .toCrearCuentaIdentidadDTO(domain, usuarioCanonico, ROL_ESTUDIANTE).conVerificacionCorreo());
         } catch (final IdentityProviderPort.IdentityProviderException exception) {
             if (!requiereVerificacionCorreo) {
                 // CULM-001 A (E2E): la persona ya existia en BD con su cuenta y sus credenciales; que el proveedor no
@@ -187,7 +159,7 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
                         .addKeyValue("eventType", "IDENTITY_PROVISIONING_DRIFT")
                         .addKeyValue("idUsuario", usuarioCanonico.id())
                         .log("La cuenta de identidad del estudiante existente no pudo reconciliarse; la matricula se conserva.");
-                return;
+                return null;
             }
             throw new InternalApplicationException(
                     "No fue posible completar el aprovisionamiento de identidad del estudiante registrado.",
@@ -228,6 +200,6 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
         if (usuarioExistente) {
             return null;
         }
-        return passwordEncoderPort.encode(domain.resolverCredencialNueva());
+        return activacion.credencialLegadaInutilizable();
     }
 }

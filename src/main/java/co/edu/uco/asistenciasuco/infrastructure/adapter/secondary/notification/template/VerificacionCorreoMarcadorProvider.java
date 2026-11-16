@@ -16,12 +16,14 @@ import java.util.UUID;
 /**
  * IDENT-001: emite el enlace de verificacion de correo <b>al entregar</b> el aviso. El token (32 bytes de
  * {@link SecureRandom} en base64url) nunca se persiste ni se registra en logs: solo su SHA-256 llega a la base de datos.
+ * IDENT-002: el aviso de activacion ({@code ACTIVACION_CUENTA}) usa el mismo token con la ruta {@code /activar-cuenta}.
  * El enlace usa el fragmento {@code #token=} para que el token no viaje en la peticion HTTP de la pagina ni en
  * {@code Referer}. Un correo ya verificado o un usuario inexistente es un fallo permanente; cualquier otro, reintentable.
  */
 public final class VerificacionCorreoMarcadorProvider implements MarcadorDinamicoProvider {
 
     static final String RUTA_VERIFICACION = "/verificar-correo#token=";
+    static final String RUTA_ACTIVACION = "/activar-cuenta#token=";
     static final String MARCADOR_ENLACE = "enlace";
     private static final int BYTES_TOKEN = 32;
 
@@ -42,7 +44,12 @@ public final class VerificacionCorreoMarcadorProvider implements MarcadorDinamic
     @Override
     public Map<String, String> resolver(final String tipo, final List<UUID> idsUsuarios)
             throws NotificacionNoEntregableException {
-        if (!Notificacion.TIPO_VERIFICACION_CORREO.equals(tipo)) {
+        final String ruta;
+        if (Notificacion.TIPO_VERIFICACION_CORREO.equals(tipo)) {
+            ruta = RUTA_VERIFICACION;
+        } else if (Notificacion.TIPO_ACTIVACION_CUENTA.equals(tipo)) {
+            ruta = RUTA_ACTIVACION;
+        } else {
             return Map.of();
         }
         if (idsUsuarios == null || idsUsuarios.size() != 1) {
@@ -64,7 +71,7 @@ public final class VerificacionCorreoMarcadorProvider implements MarcadorDinamic
             throw new NotificacionNoEntregableException(
                     "El usuario ya verifico su correo o no esta disponible para verificarlo.", exception);
         }
-        return Map.of(MARCADOR_ENLACE, baseSinBarraFinal() + RUTA_VERIFICACION + token);
+        return Map.of(MARCADOR_ENLACE, baseSinBarraFinal() + ruta + token);
     }
 
     private String baseSinBarraFinal() {

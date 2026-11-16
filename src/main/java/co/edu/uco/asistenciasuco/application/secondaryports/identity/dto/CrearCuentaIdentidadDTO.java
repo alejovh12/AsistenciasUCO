@@ -13,7 +13,8 @@ import java.util.UUID;
  * @param correo                    Correo electrónico institucional.
  * @param primerNombre              Primer nombre del usuario.
  * @param primerApellido            Primer apellido del usuario.
- * @param passwordInicial           Contraseña inicial asignada por el sistema. Solo se aplica si el
+ * @param passwordInicial           Contraseña inicial asignada por el sistema (o {@code null}: IDENT-002, la cuenta nace
+ *                                  sin credencial y su titular la define al activarla). Solo se aplica si el
  *                                  IdP determina que la cuenta es nueva; nunca se usa para resetear
  *                                  la contraseña de una cuenta ya existente.
  * @param rolInstitucional          Rol institucional a asignar en el IdP. El adapter traduce este enum

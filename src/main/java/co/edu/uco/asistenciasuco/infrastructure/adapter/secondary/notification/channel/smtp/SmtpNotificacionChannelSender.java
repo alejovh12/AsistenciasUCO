@@ -143,7 +143,9 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
                 ? List.of()
                 : contactoResolver.consultarContactos(idsSolicitados);
 
-        final boolean exentoDeConfirmacion = Notificacion.TIPO_VERIFICACION_CORREO.equals(notificacion.tipo());
+        // IDENT-001/IDENT-002: la verificacion y la activacion llegan precisamente a un correo aun sin confirmar.
+        final boolean exentoDeConfirmacion = Notificacion.TIPO_VERIFICACION_CORREO.equals(notificacion.tipo())
+                || Notificacion.TIPO_ACTIVACION_CUENTA.equals(notificacion.tipo());
         final List<String> correosValidos = filtrarCorreosValidos(contactos, exentoDeConfirmacion);
         final int omitidos = Math.max(0, totalSolicitados - correosValidos.size());
         if (omitidos > 0) {

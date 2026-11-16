@@ -12,10 +12,9 @@ import co.edu.uco.asistenciasuco.application.features.identidad.asegurarcuenta.A
 import co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional.CorreoInstitucionalPolicy;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AdmisionEstudianteCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ProgramaInstitucionQueryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
+import co.edu.uco.asistenciasuco.application.features.identidad.activacioncuenta.ActivacionCuentaService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -27,14 +26,13 @@ public class AdmisionEstudianteWiringConfiguration {
     AdmitirEstudianteUseCase admitirEstudianteUseCase(
             final AdmisionEstudianteCommandPort comandoPort,
             final UsuarioRepositoryPort usuarioRepositoryPort,
-            final PasswordEncoderPort passwordEncoderPort,
             final CorreoInstitucionalPolicy correoInstitucionalPolicy,
             final AsegurarCuentaIdentidadService asegurarCuentaIdentidadService,
             final InstitutionalScopePort scopePort,
-            final NotificacionPort notificacionPort
+            final ActivacionCuentaService activacionCuentaService
     ) {
-        return new AdmitirEstudianteUseCaseImpl(comandoPort, usuarioRepositoryPort, passwordEncoderPort, correoInstitucionalPolicy,
-                asegurarCuentaIdentidadService, scopePort, notificacionPort);
+        return new AdmitirEstudianteUseCaseImpl(comandoPort, usuarioRepositoryPort, correoInstitucionalPolicy,
+                asegurarCuentaIdentidadService, scopePort, activacionCuentaService);
     }
 
     @Bean

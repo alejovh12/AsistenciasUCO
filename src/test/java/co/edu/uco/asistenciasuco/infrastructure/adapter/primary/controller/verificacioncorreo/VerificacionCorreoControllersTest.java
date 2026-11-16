@@ -52,7 +52,7 @@ class VerificacionCorreoControllersTest {
 
     @Test
     void verificar_con_token_valido_responde_200_con_el_mensaje_del_catalogo() throws Exception {
-        when(verificar.execute(TOKEN)).thenReturn("Su correo fue verificado. Ya puede iniciar sesión.");
+        when(verificar.execute(TOKEN, null)).thenReturn("Su correo fue verificado. Ya puede iniciar sesión.");
 
         mvc.perform(post("/api/v1/public/verificar-correo").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"token\":\"" + TOKEN + "\"}"))
@@ -62,8 +62,29 @@ class VerificacionCorreoControllersTest {
     }
 
     @Test
+    void IDENT002_activar_envia_la_contrasena_definida_por_el_titular() throws Exception {
+        when(verificar.execute(TOKEN, "Activa-2026x")).thenReturn("Su correo fue verificado. Ya puede iniciar sesión.");
+
+        mvc.perform(post("/api/v1/public/verificar-correo").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"token\":\"" + TOKEN + "\",\"password\":\"Activa-2026x\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.datos.mensaje").value("Su correo fue verificado. Ya puede iniciar sesión."));
+    }
+
+    @Test
+    void IDENT002_cuenta_sin_contrasena_y_sin_clave_responde_400_VCE_009() throws Exception {
+        when(verificar.execute(TOKEN, null)).thenThrow(new ValidationException("VCE_009", "Defina su contraseña para activar su cuenta."));
+
+        mvc.perform(post("/api/v1/public/verificar-correo").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"token\":\"" + TOKEN + "\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VCE_009"))
+                .andExpect(jsonPath("$.message").value("Defina su contraseña para activar su cuenta."));
+    }
+
+    @Test
     void verificar_con_token_invalido_responde_400_con_el_mensaje_uniforme() throws Exception {
-        when(verificar.execute(TOKEN)).thenThrow(new ValidationException("VCE_002", "El enlace de verificación no es válido o ya venció."));
+        when(verificar.execute(TOKEN, null)).thenThrow(new ValidationException("VCE_002", "El enlace de verificación no es válido o ya venció."));
 
         mvc.perform(post("/api/v1/public/verificar-correo").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"token\":\"" + TOKEN + "\"}"))
@@ -73,7 +94,7 @@ class VerificacionCorreoControllersTest {
 
     @Test
     void verificar_sin_cuerpo_o_sin_token_delega_nulo_para_que_Application_responda_igual() throws Exception {
-        when(verificar.execute(null)).thenThrow(new ValidationException("VCE_002", "El enlace de verificación no es válido o ya venció."));
+        when(verificar.execute(null, null)).thenThrow(new ValidationException("VCE_002", "El enlace de verificación no es válido o ya venció."));
 
         mvc.perform(post("/api/v1/public/verificar-correo").contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isBadRequest())

@@ -13,7 +13,10 @@ public final class CrearDecanoIdentityMapper {
     private CrearDecanoIdentityMapper() {
     }
 
-    /** Solicitud de cuenta del decano; el administrador responde por el correo, asi que no queda pendiente de verificacion. */
+    /**
+     * Solicitud de cuenta del decano. IDENT-002: sin contrasena; una cuenta nueva queda pendiente hasta que su titular la
+     * activa con el enlace del correo (una persona que ya tenia cuenta no cambia).
+     */
     public static SolicitudCuentaIdentidad toSolicitudCuentaIdentidad(
             final CrearDecanoDomain domain,
             final UsuarioIdentidadRepositoryProjection usuarioCanonico
@@ -26,9 +29,9 @@ public final class CrearDecanoIdentityMapper {
                 usuarioCanonico.correo(),
                 usuarioCanonico.primerNombre(),
                 usuarioCanonico.primerApellido(),
-                domain.getPassword(),
+                null,
                 InstitutionalRole.DECANO,
-                false
+                true
         );
     }
 }

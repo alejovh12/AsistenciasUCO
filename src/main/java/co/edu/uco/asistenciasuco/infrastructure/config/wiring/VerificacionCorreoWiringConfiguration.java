@@ -39,9 +39,11 @@ public class VerificacionCorreoWiringConfiguration {
     public VerificarCorreoUseCase verificarCorreoUseCase(
             final VerificacionCorreoRepositoryPort verificacionCorreoRepositoryPort,
             final IdentityProviderPort identityProviderPort,
+            final UsuarioRepositoryPort usuarioRepositoryPort,
             final MessageCatalogPort messageCatalogPort
     ) {
-        return new VerificarCorreoUseCaseImpl(verificacionCorreoRepositoryPort, identityProviderPort, messageCatalogPort);
+        return new VerificarCorreoUseCaseImpl(verificacionCorreoRepositoryPort, identityProviderPort, usuarioRepositoryPort,
+                messageCatalogPort);
     }
 
     @Bean
@@ -53,9 +55,11 @@ public class VerificacionCorreoWiringConfiguration {
     public ReenviarVerificacionCorreoUseCase reenviarVerificacionCorreoUseCase(
             final VerificacionCorreoRepositoryPort verificacionCorreoRepositoryPort,
             final UsuarioRepositoryPort usuarioRepositoryPort,
-            final NotificacionPort notificacionPort
+            final NotificacionPort notificacionPort,
+            final IdentityProviderPort identityProviderPort
     ) {
-        return new ReenviarVerificacionCorreoUseCaseImpl(verificacionCorreoRepositoryPort, usuarioRepositoryPort, notificacionPort);
+        return new ReenviarVerificacionCorreoUseCaseImpl(verificacionCorreoRepositoryPort, usuarioRepositoryPort, notificacionPort,
+                identityProviderPort);
     }
 
     @Bean

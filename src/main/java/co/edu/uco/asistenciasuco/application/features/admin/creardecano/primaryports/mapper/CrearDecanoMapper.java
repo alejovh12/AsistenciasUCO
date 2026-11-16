@@ -38,7 +38,6 @@ public final class CrearDecanoMapper {
                 dto.primerApellido(),
                 dto.segundoApellido(),
                 dto.correo(),
-                dto.password(),
                 dto.idFacultad(),
                 dto.usuarioEjecutor(),
                 dto.facultadNueva() == null ? null : new FacultadNuevaDomain(

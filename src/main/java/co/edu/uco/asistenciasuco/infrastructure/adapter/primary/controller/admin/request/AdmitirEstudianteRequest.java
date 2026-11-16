@@ -11,8 +11,10 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 
 /**
- * Cuerpo de {@code POST /api/v1/admin/estudiantes/admision} (CULM-001 D.4, HU156). {@code password} es opcional: solo se exige
- * para una persona nueva y la decide el caso de uso. Su representacion de texto no imprime la clave (OBS-12).
+ * Cuerpo de {@code POST /api/v1/admin/estudiantes/admision} (CULM-001 D.4, HU156). IDENT-002: sin contrasena (el estudiante la
+ * define al activar su cuenta); como el resto de la entrada es estricta, un {@code password} de un cliente anterior es un
+ * campo desconocido y responde 400. Su representacion de texto no imprime
+ * datos personales (OBS-12).
  */
 public final class AdmitirEstudianteRequest {
     @NonEmptyUuid(message = "El tipo de identificacion es obligatorio.", payload = BeanValidationCodes.Required.class)
@@ -40,7 +42,6 @@ public final class AdmitirEstudianteRequest {
             payload = BeanValidationCodes.InvalidLength.class)
     @Pattern(regexp = BeanValidationPatterns.EMAIL_OR_BLANK, message = "El correo no tiene un formato valido.")
     private String correo;
-    private String password;
     @NonEmptyUuid(message = "El programa es obligatorio.", payload = BeanValidationCodes.Required.class)
     @NotNull(message = "El programa es obligatorio.")
     private UUID idPrograma;
@@ -59,8 +60,6 @@ public final class AdmitirEstudianteRequest {
     public void setSegundoApellido(final String segundoApellido) { this.segundoApellido = segundoApellido; }
     public String getCorreo() { return correo; }
     public void setCorreo(final String correo) { this.correo = correo; }
-    public String getPassword() { return password; }
-    public void setPassword(final String password) { this.password = password; }
     public UUID getIdPrograma() { return idPrograma; }
     public void setIdPrograma(final UUID idPrograma) { this.idPrograma = idPrograma; }
 

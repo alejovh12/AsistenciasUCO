@@ -15,7 +15,7 @@ class CrearDecanoIdentityMapperTest {
     void usa_perfil_canonico_y_role_decano() {
         final UUID idUsuario = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
         final CrearDecanoDomain domain = new CrearDecanoDomain(
-                UUID.randomUUID(), 123456789, "Ana", "Maria", "Perez", "Gomez", "nuevo@uco.edu.co", "Clave123!",
+                UUID.randomUUID(), 123456789, "Ana", "Maria", "Perez", "Gomez", "nuevo@uco.edu.co",
                 UUID.randomUUID(), UUID.randomUUID()
         );
         final var dto = CrearDecanoIdentityMapper.toSolicitudCuentaIdentidad(
@@ -29,8 +29,8 @@ class CrearDecanoIdentityMapperTest {
         assertEquals("viejo@uco.edu.co", dto.correo());
         assertEquals("JOSE", dto.primerNombre());
         assertEquals("ROJAS", dto.primerApellido());
-        assertEquals("Clave123!", dto.passwordInicial());
+        assertEquals(null, dto.passwordInicial());
         assertEquals(InstitutionalRole.DECANO, dto.rol());
-        assertEquals(false, dto.requiereVerificacionCorreo());
+        assertEquals(true, dto.requiereVerificacionCorreo());
     }
 }

@@ -6,30 +6,23 @@ import co.edu.uco.asistenciasuco.application.features.admin.admitirestudiante.us
 import co.edu.uco.asistenciasuco.application.features.admin.admitirestudiante.usecase.domain.AdmisionEstudianteResultadoDomain;
 import co.edu.uco.asistenciasuco.application.features.admin.admitirestudiante.usecase.domain.AdmitirEstudianteDomain;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.AdmisionEstudianteErrorCode;
+import co.edu.uco.asistenciasuco.application.features.identidad.activacioncuenta.ActivacionCuentaService;
 import co.edu.uco.asistenciasuco.application.features.identidad.asegurarcuenta.AsegurarCuentaIdentidadService;
+import co.edu.uco.asistenciasuco.application.features.identidad.asegurarcuenta.EstadoCuentaAprovisionada;
 import co.edu.uco.asistenciasuco.application.features.identidad.asegurarcuenta.ResultadoCuentaIdentidad;
 import co.edu.uco.asistenciasuco.application.features.identidad.asegurarcuenta.SolicitudCuentaIdentidad;
 import co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional.CorreoInstitucionalPolicy;
-import co.edu.uco.asistenciasuco.application.features.usuario.domain.rules.PasswordRegistroRule;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AdmisionEstudianteCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.AdmisionEstudianteCommand;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.AdmisionEstudianteResultadoProjection;
-import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notificacion;
-import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.UsuarioIdentidadRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
-import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -45,34 +38,29 @@ import java.util.UUID;
  */
 public final class AdmitirEstudianteUseCaseImpl implements AdmitirEstudianteUseCase {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AdmitirEstudianteUseCaseImpl.class);
-
     private static final InstitutionalRole ROL_ESTUDIANTE = InstitutionalRole.ESTUDIANTE;
 
     private final AdmisionEstudianteCommandPort comandoPort;
     private final UsuarioRepositoryPort usuarioRepositoryPort;
-    private final PasswordEncoderPort passwordEncoderPort;
     private final CorreoInstitucionalPolicy dominioCorreoPolicy;
     private final AsegurarCuentaIdentidadService cuentas;
     private final InstitutionalScopePort scopePort;
-    private final NotificacionPort notificacionPort;
+    private final ActivacionCuentaService activacion;
 
     public AdmitirEstudianteUseCaseImpl(
             final AdmisionEstudianteCommandPort comandoPort,
             final UsuarioRepositoryPort usuarioRepositoryPort,
-            final PasswordEncoderPort passwordEncoderPort,
             final CorreoInstitucionalPolicy dominioCorreoPolicy,
             final AsegurarCuentaIdentidadService cuentas,
             final InstitutionalScopePort scopePort,
-            final NotificacionPort notificacionPort
+            final ActivacionCuentaService activacion
     ) {
         this.comandoPort = Objects.requireNonNull(comandoPort, "AdmisionEstudianteCommandPort es obligatorio.");
         this.usuarioRepositoryPort = Objects.requireNonNull(usuarioRepositoryPort, "UsuarioRepositoryPort es obligatorio.");
-        this.passwordEncoderPort = Objects.requireNonNull(passwordEncoderPort, "PasswordEncoderPort es obligatorio.");
         this.dominioCorreoPolicy = Objects.requireNonNull(dominioCorreoPolicy, "CorreoInstitucionalPolicy es obligatoria.");
         this.cuentas = Objects.requireNonNull(cuentas, "AsegurarCuentaIdentidadService es obligatorio.");
         this.scopePort = Objects.requireNonNull(scopePort, "InstitutionalScopePort es obligatorio.");
-        this.notificacionPort = Objects.requireNonNull(notificacionPort, "NotificacionPort es obligatorio.");
+        this.activacion = Objects.requireNonNull(activacion, "ActivacionCuentaService es obligatorio.");
     }
 
     @Override
@@ -101,9 +89,11 @@ public final class AdmitirEstudianteUseCaseImpl implements AdmitirEstudianteUseC
                 .filter(usuario -> usuario.id() != null && usuario.correo() != null && !usuario.correo().isBlank())
                 .orElseThrow(() -> new InternalApplicationException(
                         "No fue posible resolver la identidad institucional canonica del estudiante despues de admitirlo."));
-        final ResultadoCuentaIdentidad cuenta = cuentas.asegurar(solicitud(domain, canonico, admitido.esUsuarioNuevo()));
-        if (admitido.esUsuarioNuevo()) {
-            avisarVerificacionCorreo(canonico, domain);
+        // IDENT-002: sin contrasena, toda cuenta que se cree nace pendiente (una cuenta existente no cambia).
+        final ResultadoCuentaIdentidad cuenta = cuentas.asegurar(solicitud(domain, canonico));
+        // IDENT-002: la cuenta nueva nace sin contrasena; el estudiante la define al activarla con el enlace del correo.
+        if (cuenta.estado() == EstadoCuentaAprovisionada.PENDIENTE_VERIFICACION) {
+            activacion.avisar(canonico.id(), canonico.primerNombre(), ROL_ESTUDIANTE);
         }
         return new AdmisionEstudianteResultadoDomain(admitido.idEstudiante(), admitido.idUsuario(), admitido.esUsuarioNuevo(),
                 cuenta.estado(), cuenta.cuentaReparada());
@@ -116,11 +106,13 @@ public final class AdmitirEstudianteUseCaseImpl implements AdmitirEstudianteUseC
         return porCorreo || porDocumento;
     }
 
-    /** Persona nueva: correo institucional (VCE_001) y clave inicial valida (ERR_PASSWORD_*); devuelve el hash. */
+    /**
+     * Persona nueva: correo institucional (VCE_001). IDENT-002: sin contrasena en el registro; devuelve el valor de la
+     * columna legada (hash de un secreto inutilizable).
+     */
     private String exigirReglasDeAltaNueva(final AdmitirEstudianteDomain domain, final String correo) {
         dominioCorreoPolicy.exigir(correo);
-        final String clave = PasswordRegistroRule.resolverCredencialNueva(domain.password(), domain.numeroIdentificacion());
-        return passwordEncoderPort.encode(clave);
+        return activacion.credencialLegadaInutilizable();
     }
 
     private AdmisionEstudianteResultadoDomain repararCuentaDelYaAdmitido(final AdmitirEstudianteDomain domain) {
@@ -132,32 +124,19 @@ public final class AdmitirEstudianteUseCaseImpl implements AdmitirEstudianteUseC
         final UUID idEstudiante = scopePort.findEstudianteIdByUsuario(canonico.id())
                 .orElseThrow(() -> new InternalApplicationException(
                         "No fue posible resolver el estudiante ya admitido a partir de su usuario."));
-        final ResultadoCuentaIdentidad cuenta = cuentas.repararOFallar(solicitud(domain, canonico, false));
+        final ResultadoCuentaIdentidad cuenta = cuentas.repararOFallar(solicitud(domain, canonico));
+        if (cuenta.estado() == EstadoCuentaAprovisionada.PENDIENTE_VERIFICACION) {
+            activacion.avisar(canonico.id(), canonico.primerNombre(), ROL_ESTUDIANTE);
+        }
         return new AdmisionEstudianteResultadoDomain(idEstudiante, canonico.id(), false, cuenta.estado(), cuenta.cuentaReparada());
     }
 
     private static SolicitudCuentaIdentidad solicitud(
             final AdmitirEstudianteDomain domain,
-            final UsuarioIdentidadRepositoryProjection canonico,
-            final boolean requiereVerificacionCorreo
+            final UsuarioIdentidadRepositoryProjection canonico
     ) {
         return new SolicitudCuentaIdentidad(canonico.id(), String.valueOf(domain.numeroIdentificacion()), canonico.correo(),
-                canonico.primerNombre(), canonico.primerApellido(), domain.password(), ROL_ESTUDIANTE, requiereVerificacionCorreo);
+                canonico.primerNombre(), canonico.primerApellido(), null, ROL_ESTUDIANTE, true);
     }
 
-    /** IDENT-001: avisa al estudiante nuevo que debe verificar su correo; de mejor esfuerzo, nunca revierte la admision. */
-    private void avisarVerificacionCorreo(final UsuarioIdentidadRepositoryProjection canonico, final AdmitirEstudianteDomain domain) {
-        try {
-            notificacionPort.notificar(new Notificacion(
-                    Notificacion.TIPO_VERIFICACION_CORREO,
-                    "Verifique su correo institucional",
-                    "Se registro una cuenta a su nombre en la plataforma de asistencia. Verifique su correo institucional.",
-                    List.of(new Notificacion.Destinatario(ROL_ESTUDIANTE.name(), canonico.id(), null, null)),
-                    Map.of("nombre", TextHelper.toNombrePropio(domain.primerNombre()))
-            ));
-        } catch (final RuntimeException exception) {
-            LOGGER.warn("No fue posible registrar el aviso de verificacion de correo del usuario {}: {}",
-                    canonico.id(), exception.getClass().getSimpleName());
-        }
-    }
 }

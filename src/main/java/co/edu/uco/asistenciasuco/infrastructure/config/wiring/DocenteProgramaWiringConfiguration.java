@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.identidad.activacioncuenta.ActivacionCuentaService;
 import co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional.CorreoInstitucionalPolicy;
 import co.edu.uco.asistenciasuco.application.features.identidad.sincronizarcuenta.SincronizarCuentaInstitucionalService;
 import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.primaryports.ActualizarDocenteProgramaInputPort;
@@ -37,7 +38,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.ResumenDoce
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -88,10 +88,10 @@ public class DocenteProgramaWiringConfiguration {
             final DocenteProgramaCommandPort commandPort,
             final DocenteProgramaQueryPort queryPort,
             final UsuarioRepositoryPort usuarioRepositoryPort,
-            final PasswordEncoderPort passwordEncoderPort,
+            final ActivacionCuentaService activacionCuentaService,
             final IdentityProviderPort identityProviderPort) {
         return new VincularDocenteProgramaUseCaseImpl(scopePort, commandPort, queryPort, usuarioRepositoryPort,
-                passwordEncoderPort, identityProviderPort);
+                activacionCuentaService, identityProviderPort);
     }
 
     @Bean VincularDocenteProgramaInputPort vincularDocenteProgramaInputPort(final VincularDocenteProgramaUseCase useCase, final CorreoInstitucionalPolicy correoInstitucionalPolicy) {
