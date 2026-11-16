@@ -30,7 +30,6 @@ public final class CrearCoordinadorMapper {
                 dto.segundoApellido(),
                 dto.correo(),
                 dto.idPrograma(),
-                dto.password(),
                 dto.usuario(),
                 dto.programaNuevo() == null ? null : new ProgramaNuevoDomain(dto.programaNuevo().nombre(),
                         dto.programaNuevo().idTipoPrograma(), dto.programaNuevo().idModalidad(), dto.programaNuevo().idJornada())

@@ -14,7 +14,7 @@ public final class VerificarCorreoInteractor implements VerificarCorreoInputPort
     }
 
     @Override
-    public String execute(final String token) {
-        return useCase.execute(token);
+    public String execute(final String token, final String contrasena) {
+        return useCase.execute(token, contrasena);
     }
 }

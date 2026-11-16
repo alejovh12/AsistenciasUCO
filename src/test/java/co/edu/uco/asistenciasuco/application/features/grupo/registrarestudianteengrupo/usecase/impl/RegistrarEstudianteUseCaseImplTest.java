@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.grupo.registrarestudiante
 
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
+import co.edu.uco.asistenciasuco.application.features.identidad.activacioncuenta.ActivacionCuentaService;
 import co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional.CorreoInstitucionalPolicy;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
@@ -27,6 +28,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEnc
 import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
 import org.junit.jupiter.api.Test;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -62,11 +64,11 @@ class RegistrarEstudianteUseCaseImplTest {
     private static final UUID USUARIO_EJECUTOR = UUID.fromString("53641bab-e3cd-485c-b275-47e7b731e18c");
 
     // -------------------------------------------------------------------------
-    // Caso A / F: DB success + Identity success, usuario nuevo — hash a DB, raw a Identity
+    // Caso A / F: DB success + Identity success, usuario nuevo — IDENT-002: secreto inutilizable a DB, sin clave a Identity
     // -------------------------------------------------------------------------
 
     @Test
-    void caso_A_F_usuario_nuevo_db_e_identity_exitosos_hash_a_db_raw_a_identity() {
+    void caso_A_F_usuario_nuevo_persiste_un_secreto_inutilizable_e_identity_no_recibe_contrasena() {
         final AtomicReference<RegistrarEstudianteRepositoryDTO> dtoCapturado = new AtomicReference<>();
         final AtomicInteger spLlamadas = new AtomicInteger();
         final FakePasswordEncoderPort passwordEncoderPort = new FakePasswordEncoderPort();
@@ -91,17 +93,17 @@ class RegistrarEstudianteUseCaseImplTest {
         assertEquals(GRUPO, dtoCapturado.get().getGrupoId());
         assertEquals("ana.perez@uco.edu.co", dtoCapturado.get().getCorreo());
 
-        // DB recibe hash
+        // DB recibe el hash de un secreto aleatorio, nunca la clave que un cliente anterior pudiera enviar.
         assertEquals(1, passwordEncoderPort.encodeCount.get());
-        assertEquals("Clave123!", passwordEncoderPort.rawPassword.get());
+        assertNotEquals("Clave123!", passwordEncoderPort.rawPassword.get());
+        assertTrue(passwordEncoderPort.rawPassword.get().length() >= 40);
         assertEquals("HASH_CONTROLADO", dtoCapturado.get().getPassword());
-        assertNotEquals("Clave123!", dtoCapturado.get().getPassword());
 
-        // Identity llamado exactamente una vez, con el raw password — nunca el hash
+        // Identity llamado exactamente una vez, sin credencial y con la cuenta pendiente de activacion.
         assertEquals(1, identityProviderPort.crearCuentaCount.get());
         final CrearCuentaIdentidadDTO identidadEnviada = identityProviderPort.dtoCapturado.get();
-        assertEquals("Clave123!", identidadEnviada.passwordInicial());
-        assertNotEquals("HASH_CONTROLADO", identidadEnviada.passwordInicial());
+        assertNull(identidadEnviada.passwordInicial());
+        assertTrue(identidadEnviada.requiereVerificacionCorreo());
         assertEquals("ana.perez@uco.edu.co", identidadEnviada.correo());
     }
 
@@ -211,12 +213,11 @@ class RegistrarEstudianteUseCaseImplTest {
     }
 
     // -------------------------------------------------------------------------
-    // Caso G: usuario DB existente — encoder no invocado, password DB null,
-    // Identity recibe el raw password disponible (no null-forzado, no hash)
+    // Caso G: usuario DB existente — encoder no invocado, password DB null, Identity sin contrasena
     // -------------------------------------------------------------------------
 
     @Test
-    void caso_G_usuario_existente_no_invoca_encoder_password_db_null_identity_recibe_raw_disponible() {
+    void caso_G_usuario_existente_no_invoca_encoder_password_db_null_e_identity_no_recibe_contrasena() {
         final AtomicReference<RegistrarEstudianteRepositoryDTO> dtoCapturado = new AtomicReference<>();
         final FakePasswordEncoderPort passwordEncoderPort = new FakePasswordEncoderPort();
         final FakeIdentityProviderPort identityProviderPort = FakeIdentityProviderPort.exitoso(USUARIO_NUEVO_ID, false);
@@ -235,8 +236,8 @@ class RegistrarEstudianteUseCaseImplTest {
 
         assertEquals(0, passwordEncoderPort.encodeCount.get());
         assertNull(dtoCapturado.get().getPassword());
-        // Identity no depende del password persistido en DB; recibe el raw enviado en el dominio.
-        assertEquals("Clave123!", identityProviderPort.dtoCapturado.get().passwordInicial());
+        // IDENT-002: la clave que traiga el dominio (cliente anterior) se ignora; una cuenta existente no cambia.
+        assertNull(identityProviderPort.dtoCapturado.get().passwordInicial());
         assertEquals(1, identityProviderPort.crearCuentaCount.get());
     }
 
@@ -376,7 +377,7 @@ class RegistrarEstudianteUseCaseImplTest {
     }
 
     // -------------------------------------------------------------------------
-    // IDENT-001: correo institucional obligatorio en altas nuevas + aviso de verificacion
+    // IDENT-001: correo institucional obligatorio en altas nuevas; IDENT-002: aviso de activacion de cuenta
     // -------------------------------------------------------------------------
 
     @Test
@@ -422,7 +423,8 @@ class RegistrarEstudianteUseCaseImplTest {
         assertTrue(identityProviderPort.dtoCapturado.get().requiereVerificacionCorreo());
         assertEquals(1, avisos.size());
         final Notificacion aviso = avisos.getFirst();
-        assertEquals(Notificacion.TIPO_VERIFICACION_CORREO, aviso.tipo());
+        assertEquals(Notificacion.TIPO_ACTIVACION_CUENTA, aviso.tipo());
+        assertEquals("estudiante", aviso.datos().get("rol"));
         assertEquals(1, aviso.destinatarios().size());
         assertEquals("ESTUDIANTE", aviso.destinatarios().getFirst().rol());
         assertEquals(USUARIO_NUEVO_ID, aviso.destinatarios().getFirst().idUsuario());
@@ -435,7 +437,7 @@ class RegistrarEstudianteUseCaseImplTest {
     }
 
     @Test
-    void BE_U03_usuario_existente_no_revalida_el_dominio_ni_pide_verificacion_ni_notifica() {
+    void BE_U03_usuario_existente_con_cuenta_no_revalida_el_dominio_ni_notifica() {
         final FakeIdentityProviderPort identityProviderPort = FakeIdentityProviderPort.exitoso(USUARIO_NUEVO_ID, false);
         final List<Notificacion> avisos = new ArrayList<>();
         final RegistrarEstudianteUseCaseImpl useCase = useCase(
@@ -449,8 +451,30 @@ class RegistrarEstudianteUseCaseImplTest {
         useCase.execute(domainConCorreo("ana.perez@gmail.com"));
 
         assertEquals(1, identityProviderPort.crearCuentaCount.get());
-        assertFalse(identityProviderPort.dtoCapturado.get().requiereVerificacionCorreo());
+        // IDENT-002: la solicitud siempre pide verificacion (sin clave), pero una cuenta existente no cambia ni se avisa.
+        assertTrue(identityProviderPort.dtoCapturado.get().requiereVerificacionCorreo());
         assertTrue(avisos.isEmpty());
+    }
+
+    @Test
+    void IDENT002_usuario_existente_sin_cuenta_en_el_proveedor_recibe_el_aviso_de_activacion() {
+        final FakeIdentityProviderPort identityProviderPort = FakeIdentityProviderPort.exitoso(USUARIO_NUEVO_ID, true);
+        final List<Notificacion> avisos = new ArrayList<>();
+        final FakePasswordEncoderPort passwordEncoderPort = new FakePasswordEncoderPort();
+        final RegistrarEstudianteUseCaseImpl useCase = useCase(
+                grupoRepositoryPort(dto -> new RegistrarEstudianteRepositoryProjection("Estudiante registrado.")),
+                usuarioRepositoryPort(USUARIO_NUEVO_ID, Arrays.asList(USUARIO_NUEVO_ID, USUARIO_NUEVO_ID)),
+                passwordEncoderPort,
+                identityProviderPort,
+                avisos::add
+        );
+
+        useCase.execute(domainValido());
+
+        assertEquals(0, passwordEncoderPort.encodeCount.get());
+        assertEquals(1, avisos.size());
+        assertEquals(Notificacion.TIPO_ACTIVACION_CUENTA, avisos.getFirst().tipo());
+        assertEquals(USUARIO_NUEVO_ID, avisos.getFirst().destinatarios().getFirst().idUsuario());
     }
 
     @Test
@@ -489,7 +513,7 @@ class RegistrarEstudianteUseCaseImplTest {
         assertTrue(avisos.isEmpty());
     }
 
-    /** Colaboradores de IDENT-001 permisivos: dominio institucional {@code @uco.edu.co} y aviso descartado. */
+    /** Colaboradores permisivos: dominio institucional {@code @uco.edu.co} y aviso de activacion descartado. */
     private static RegistrarEstudianteUseCaseImpl useCase(
             final GrupoRepositoryPort grupoRepositoryPort,
             final UsuarioRepositoryPort usuarioRepositoryPort,
@@ -539,8 +563,9 @@ class RegistrarEstudianteUseCaseImplTest {
             }
         };
         return new RegistrarEstudianteUseCaseImpl(
-                grupoRepositoryPort, usuarioRepositoryPort, passwordEncoderPort, identityProviderPort,
-                new CorreoInstitucionalPolicy(parametros, mensajes), notificacionPort
+                grupoRepositoryPort, usuarioRepositoryPort, identityProviderPort,
+                new CorreoInstitucionalPolicy(parametros, mensajes),
+                new ActivacionCuentaService(notificacionPort, passwordEncoderPort, new SecureRandom())
         );
     }
 

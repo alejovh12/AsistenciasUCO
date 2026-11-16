@@ -97,4 +97,11 @@ class DbCodeTranslatorTest {
         };
         assertThrows(DatabaseOperationException.class, () -> JpaQueryExecutor.execute("op", "msg", falla, e -> null));
     }
+
+    @Test
+    void IDENT002_vce_007_es_404_y_act_002_es_409() {
+        assertInstanceOf(ResourceNotFoundException.class, DbCodeTranslator.traducir(con("DBCODE=VCE_007|usuario inexistente")));
+        assertInstanceOf(co.edu.uco.asistenciasuco.application.exception.business.ConflictException.class,
+                DbCodeTranslator.traducir(con("DBCODE=ACT_002|cuenta activa")));
+    }
 }

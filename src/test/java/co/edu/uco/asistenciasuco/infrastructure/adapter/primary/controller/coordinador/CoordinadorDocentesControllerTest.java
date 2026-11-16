@@ -130,12 +130,12 @@ class CoordinadorDocentesControllerTest {
     }
 
     @Test
-    void T_091_01_post_modo_nuevo_responde_201_y_arma_el_dto_con_el_actor() throws Exception {
+    void T_091_01_post_modo_nuevo_responde_201_arma_el_dto_con_el_actor_e_ignora_un_password_de_un_cliente_anterior() throws Exception {
         when(vincular.execute(any())).thenReturn(dto());
 
         mvc.perform(post("/api/v1/coordinador/docentes").contentType(MediaType.APPLICATION_JSON).content("""
                         {"idTipoIdentificacion":"%s","numeroIdentificacion":"1017555444","primerNombre":"Jorge",
-                         "primerApellido":"Henao","correo":"jorge.henao@uco.edu.co","password":"Clave1234!",
+                         "primerApellido":"Henao","correo":"jorge.henao@uco.edu.co","password":"ClienteViejo1!",
                          "idTipoVinculacion":"%s"}""".formatted(UUID.randomUUID(), TIPO)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.exitoso").value(true))
@@ -145,7 +145,6 @@ class CoordinadorDocentesControllerTest {
         verify(vincular).execute(captor.capture());
         assertEquals(ACTOR, captor.getValue().actorUsuarioId());
         assertEquals(1017555444, captor.getValue().numeroIdentificacion());
-        assertEquals("Clave1234!", captor.getValue().password());
         assertEquals(TIPO, captor.getValue().idTipoVinculacion());
         assertNull(captor.getValue().idDocente());
     }

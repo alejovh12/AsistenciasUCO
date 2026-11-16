@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.identidad.activacioncuenta.ActivacionCuentaService;
 import co.edu.uco.asistenciasuco.application.features.grupo.buscarestudiantepordocumento.usecase.impl.BuscarEstudiantePorDocumentoUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.grupo.buscarestudiantepordocumento.usecase.BuscarEstudiantePorDocumentoUseCase;
 import co.edu.uco.asistenciasuco.application.features.grupo.buscarestudiantepordocumento.primaryports.interactor.BuscarEstudiantePorDocumentoInteractor;
@@ -8,7 +9,6 @@ import co.edu.uco.asistenciasuco.application.features.festivos.asegurarfestivos.
 import co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional.CorreoInstitucionalPolicy;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.primaryports.ActualizarGrupoInputPort;
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.primaryports.interactor.ActualizarGrupoInteractor;
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.usecase.ActualizarGrupoUseCase;
@@ -34,7 +34,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.repository.Estudiant
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -79,14 +78,13 @@ public class GrupoWiringConfiguration {
     public RegistrarEstudianteUseCase registrarEstudianteUseCase(
             final GrupoRepositoryPort grupoRepositoryPort,
             final UsuarioRepositoryPort usuarioRepositoryPort,
-            final PasswordEncoderPort passwordEncoderPort,
             final IdentityProviderPort identityProviderPort,
             final CorreoInstitucionalPolicy correoInstitucionalPolicy,
-            final NotificacionPort notificacionPort
+            final ActivacionCuentaService activacionCuentaService
     ) {
         return new RegistrarEstudianteUseCaseImpl(
-                grupoRepositoryPort, usuarioRepositoryPort, passwordEncoderPort, identityProviderPort,
-                correoInstitucionalPolicy, notificacionPort
+                grupoRepositoryPort, usuarioRepositoryPort, identityProviderPort,
+                correoInstitucionalPolicy, activacionCuentaService
         );
     }
 

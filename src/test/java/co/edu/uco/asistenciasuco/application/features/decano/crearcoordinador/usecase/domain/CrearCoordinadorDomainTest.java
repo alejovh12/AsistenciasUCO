@@ -15,7 +15,7 @@ class CrearCoordinadorDomainTest {
 
         final CrearCoordinadorDomain domain = new CrearCoordinadorDomain(
                 "123456789", "ANA", "MARIA", "PEREZ", "GOMEZ",
-                "ana@uco.edu.co", programa, "HASH", usuario);
+                "ana@uco.edu.co", programa, usuario);
 
         assertEquals("123456789", domain.getNumeroIdentificacion());
         assertEquals("ANA", domain.getPrimerNombre());
@@ -24,7 +24,6 @@ class CrearCoordinadorDomainTest {
         assertEquals("GOMEZ", domain.getSegundoApellido());
         assertEquals("ana@uco.edu.co", domain.getCorreo());
         assertEquals(programa, domain.getIdPrograma());
-        assertEquals("HASH", domain.getPassword());
         assertEquals(usuario, domain.getUsuario());
     }
 }

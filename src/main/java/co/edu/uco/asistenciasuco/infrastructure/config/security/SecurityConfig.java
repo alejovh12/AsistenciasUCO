@@ -167,6 +167,10 @@ public class SecurityConfig {
                 // programa) y los roles gestionables se validan en Application (AccesoCuentaService).
                 .requestMatchers(HttpMethod.POST, "/api/v1/identidad/cuentas/acceso/*")
                     .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_DECANO, ROLE_COORDINADOR)
+                // IDENT-002: reenvio del enlace de activacion; el alcance se valida en Application y la cuenta pendiente
+                // y la espera minima en la base de datos.
+                .requestMatchers(HttpMethod.POST, "/api/v1/identidad/cuentas/activacion/reenvios")
+                    .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_DECANO, ROLE_COORDINADOR)
                 .requestMatchers(HttpMethod.POST, "/api/v1/sesiones/**").hasRole(ROLE_DOCENTE)
                 .requestMatchers(HttpMethod.PUT, "/api/v1/sesiones/**").hasRole(ROLE_DOCENTE)
                 .requestMatchers(HttpMethod.PATCH, "/api/v1/sesiones/**").hasRole(ROLE_DOCENTE)

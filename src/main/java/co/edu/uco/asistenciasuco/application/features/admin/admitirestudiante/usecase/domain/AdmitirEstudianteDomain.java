@@ -3,8 +3,8 @@ package co.edu.uco.asistenciasuco.application.features.admin.admitirestudiante.u
 import java.util.UUID;
 
 /**
- * Datos de la admision de un estudiante por el administrador (CULM-001 D.4, HU156). {@code password} es la clave inicial en claro
- * (opcional: solo se exige para una persona nueva) y su representacion de texto no la imprime (OBS-12).
+ * Datos de la admision de un estudiante por el administrador (CULM-001 D.4, HU156). IDENT-002: sin contrasena; la persona
+ * nueva la define al activar su cuenta. La representacion de texto no imprime datos personales (OBS-12).
  */
 public record AdmitirEstudianteDomain(
         UUID tipoIdentificacionId,
@@ -14,7 +14,6 @@ public record AdmitirEstudianteDomain(
         String primerApellido,
         String segundoApellido,
         String correo,
-        String password,
         UUID idPrograma,
         UUID usuarioEjecutor
 ) {

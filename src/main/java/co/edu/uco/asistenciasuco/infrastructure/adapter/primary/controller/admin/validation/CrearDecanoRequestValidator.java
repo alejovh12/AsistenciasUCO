@@ -9,8 +9,8 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin
 
 /**
  * Validacion de forma de {@code POST /api/v1/admin/decanos} (CULM-001 D.9-a, F-ADM-025): cada incumplimiento llega al cliente como
- * un {@code details[]} con el campo y la regla. La politica de la clave inicial NO se evalua aqui: vive solo en el backend
- * (PasswordRegistroRule) y el cliente no la duplica; la unicidad y el correo institucional los decide el caso de uso. Los mensajes
+ * un {@code details[]} con el campo y la regla. IDENT-002: el alta ya no recibe contrasena (el decano la define al activar su
+ * cuenta); la unicidad y el correo institucional los decide el caso de uso. Los mensajes
  * nunca incluyen los valores recibidos.
  */
 public final class CrearDecanoRequestValidator implements Validator<CrearDecanoRequest> {

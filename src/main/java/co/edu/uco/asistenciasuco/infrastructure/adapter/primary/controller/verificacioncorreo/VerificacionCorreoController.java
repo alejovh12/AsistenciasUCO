@@ -30,7 +30,9 @@ public final class VerificacionCorreoController {
 
     @PostMapping
     public ResponseEntity<ApiDataResponse<MensajeResponse>> verificar(@Valid @RequestBody(required = false) final VerificarCorreoRequest request) {
-        final String mensaje = verificarCorreoInputPort.execute(request == null ? null : request.getToken());
+        final String mensaje = verificarCorreoInputPort.execute(
+                request == null ? null : request.getToken(),
+                request == null ? null : request.getPassword());
         return ResponseEntity.ok(new ApiDataResponse<>(true, new MensajeResponse(mensaje)));
     }
 }

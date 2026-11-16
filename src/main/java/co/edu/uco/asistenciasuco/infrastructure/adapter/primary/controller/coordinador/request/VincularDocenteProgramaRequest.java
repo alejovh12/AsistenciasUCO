@@ -33,7 +33,6 @@ public final class VincularDocenteProgramaRequest {
     private String segundoApellido;
     @Size(max = 100, message = "El correo excede la longitud permitida.")
     private String correo;
-    private String password;
     @NonEmptyUuid(message = "El identificador idTipoVinculacion no es valido.")
     private UUID idTipoVinculacion;
 
@@ -55,8 +54,6 @@ public final class VincularDocenteProgramaRequest {
     public void setSegundoApellido(final String segundoApellido) { this.segundoApellido = segundoApellido; }
     public String getCorreo() { return correo; }
     public void setCorreo(final String correo) { this.correo = correo; }
-    public String getPassword() { return password; }
-    public void setPassword(final String password) { this.password = password; }
     public UUID getIdTipoVinculacion() { return idTipoVinculacion; }
     public void setIdTipoVinculacion(final UUID idTipoVinculacion) { this.idTipoVinculacion = idTipoVinculacion; }
 }

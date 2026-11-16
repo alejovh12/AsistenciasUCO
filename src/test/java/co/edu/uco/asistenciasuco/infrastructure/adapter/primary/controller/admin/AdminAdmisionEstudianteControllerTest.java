@@ -52,6 +52,7 @@ class AdminAdmisionEstudianteControllerTest {
     private static final UUID ADMIN = UUID.randomUUID();
     private static final UUID TIPO = UUID.randomUUID();
     private static final UUID PROGRAMA = UUID.randomUUID();
+    /** IDENT-002: un cliente anterior aun puede enviar {@code password}; el backend lo ignora. */
     private static final String CLAVE = "ClaveSecretaUnica123!";
     private static final String CUERPO = "{\"tipoIdentificacionId\":\"" + TIPO + "\",\"numeroIdentificacion\":1017123456,"
             + "\"primerNombre\":\" Ana \",\"segundoNombre\":\"\",\"primerApellido\":\"Perez\",\"correo\":\" Ana.Perez@uco.edu.co \","
@@ -104,7 +105,7 @@ class AdminAdmisionEstudianteControllerTest {
         assertEquals("Ana", captor.getValue().primerNombre());
         assertEquals(null, captor.getValue().segundoNombre());
         assertEquals("ana.perez@uco.edu.co", captor.getValue().correo());
-        assertEquals(CLAVE, captor.getValue().password());
+        assertFalse(captor.getValue().toString().contains(CLAVE));
         assertEquals(PROGRAMA, captor.getValue().idPrograma());
         assertEquals(ADMIN, captor.getValue().usuarioEjecutor());
     }
@@ -185,11 +186,11 @@ class AdminAdmisionEstudianteControllerTest {
     }
 
     @Test
-    void la_peticion_no_expone_la_clave_en_to_string() {
+    void la_peticion_no_expone_datos_personales_en_to_string() {
         final var request = new co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin.request.AdmitirEstudianteRequest();
-        request.setPassword(CLAVE);
+        request.setCorreo("ana.perez@uco.edu.co");
         request.setPrimerNombre("Ana");
-        assertFalse(request.toString().contains(CLAVE));
+        assertFalse(request.toString().contains("ana.perez@uco.edu.co"));
         assertTrue(request.toString().contains("Ana") || !request.toString().isEmpty());
     }
 

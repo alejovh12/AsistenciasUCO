@@ -13,7 +13,6 @@ public record VincularDocenteProgramaDomain(
         String primerApellido,
         String segundoApellido,
         String correo,
-        String password,
         UUID idTipoVinculacion
 ) {
 }

@@ -17,7 +17,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CuentaI
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.UsuarioIdentidadRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
+import co.edu.uco.asistenciasuco.application.features.identidad.activacioncuenta.ActivacionCuentaService;
 import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,33 +58,33 @@ class VincularDocenteProgramaUseCaseImplTest {
     private final DocenteProgramaCommandPort commandPort = mock(DocenteProgramaCommandPort.class);
     private final DocenteProgramaQueryPort queryPort = mock(DocenteProgramaQueryPort.class);
     private final UsuarioRepositoryPort usuarioRepositoryPort = mock(UsuarioRepositoryPort.class);
-    private final PasswordEncoderPort passwordEncoderPort = mock(PasswordEncoderPort.class);
+    private final ActivacionCuentaService activacion = mock(ActivacionCuentaService.class);
     private final IdentityProviderPort identityProviderPort = mock(IdentityProviderPort.class);
     private VincularDocenteProgramaUseCaseImpl useCase;
 
     @BeforeEach
     void preparar() {
         useCase = new VincularDocenteProgramaUseCaseImpl(scopePort, commandPort, queryPort,
-                usuarioRepositoryPort, passwordEncoderPort, identityProviderPort);
+                usuarioRepositoryPort, activacion, identityProviderPort);
         when(scopePort.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.of(PROGRAMA));
-        when(passwordEncoderPort.encode(anyString())).thenReturn("HASH_GENERADO");
+        when(activacion.credencialLegadaInutilizable()).thenReturn("HASH_GENERADO");
         when(identityProviderPort.crearCuenta(any())).thenReturn(new CuentaIdentidadDTO("kc-1", true));
     }
 
     @Test
     void constructor_rechaza_dependencias_nulas() {
         assertThrows(NullPointerException.class, () -> new VincularDocenteProgramaUseCaseImpl(null, commandPort,
-                queryPort, usuarioRepositoryPort, passwordEncoderPort, identityProviderPort));
+                queryPort, usuarioRepositoryPort, activacion, identityProviderPort));
         assertThrows(NullPointerException.class, () -> new VincularDocenteProgramaUseCaseImpl(scopePort, null,
-                queryPort, usuarioRepositoryPort, passwordEncoderPort, identityProviderPort));
+                queryPort, usuarioRepositoryPort, activacion, identityProviderPort));
         assertThrows(NullPointerException.class, () -> new VincularDocenteProgramaUseCaseImpl(scopePort, commandPort,
-                null, usuarioRepositoryPort, passwordEncoderPort, identityProviderPort));
+                null, usuarioRepositoryPort, activacion, identityProviderPort));
         assertThrows(NullPointerException.class, () -> new VincularDocenteProgramaUseCaseImpl(scopePort, commandPort,
-                queryPort, null, passwordEncoderPort, identityProviderPort));
+                queryPort, null, activacion, identityProviderPort));
         assertThrows(NullPointerException.class, () -> new VincularDocenteProgramaUseCaseImpl(scopePort, commandPort,
                 queryPort, usuarioRepositoryPort, null, identityProviderPort));
         assertThrows(NullPointerException.class, () -> new VincularDocenteProgramaUseCaseImpl(scopePort, commandPort,
-                queryPort, usuarioRepositoryPort, passwordEncoderPort, null));
+                queryPort, usuarioRepositoryPort, activacion, null));
     }
 
     @Test
@@ -97,19 +97,19 @@ class VincularDocenteProgramaUseCaseImplTest {
         final UUID otro = UUID.randomUUID();
         when(scopePort.findProgramaIdByCoordinadorUsuario(otro)).thenReturn(Optional.empty());
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(dominioNuevo(otro, "Clave1234!")));
+        assertThrows(ForbiddenException.class, () -> useCase.execute(dominioNuevo(otro)));
 
-        verifyNoInteractions(commandPort, identityProviderPort, passwordEncoderPort);
+        verifyNoInteractions(commandPort, identityProviderPort, activacion);
     }
 
     @Test
-    void T_091_01_modo_nuevo_codifica_password_persiste_hash_y_aprovisiona_rol_docente_con_password_en_claro() {
+    void T_091_01_modo_nuevo_sin_contrasena_persiste_secreto_inutilizable_cuenta_pendiente_y_aviso_de_activacion() {
         when(usuarioRepositoryPort.consultarUsuarioPorCorreo(CORREO))
                 .thenReturn(Optional.empty())
                 .thenReturn(Optional.of(usuario()));
         when(queryPort.consultar(eq(ACTOR), any())).thenReturn(pagina(fila()));
 
-        final DocenteProgramaDomain resultado = useCase.execute(dominioNuevo(ACTOR, "Clave1234!"));
+        final DocenteProgramaDomain resultado = useCase.execute(dominioNuevo(ACTOR));
 
         final ArgumentCaptor<VincularDocenteProgramaCommand> comando = ArgumentCaptor.forClass(VincularDocenteProgramaCommand.class);
         verify(commandPort).vincular(comando.capture());
@@ -125,19 +125,22 @@ class VincularDocenteProgramaUseCaseImplTest {
         assertEquals(ID_USUARIO, cuenta.getValue().idUsuario());
         assertEquals("1017555444", cuenta.getValue().username());
         assertEquals(CORREO, cuenta.getValue().correo());
-        assertEquals("Clave1234!", cuenta.getValue().passwordInicial());
+        // IDENT-002: la cuenta nace sin credencial y pendiente; el docente define la clave al activarla.
+        assertNull(cuenta.getValue().passwordInicial());
+        assertTrue(cuenta.getValue().requiereVerificacionCorreo());
         assertEquals(InstitutionalRole.DOCENTE, cuenta.getValue().rolInstitucional());
         assertEquals(ID_DOCENTE, resultado.idDocente());
+        verify(activacion).avisar(ID_USUARIO, "Jorge", InstitutionalRole.DOCENTE);
     }
 
     @Test
-    void T_091_20_modo_nuevo_sin_password_no_deriva_una_por_defecto_y_falla_antes_de_la_db() {
-        when(usuarioRepositoryPort.consultarUsuarioPorCorreo(CORREO)).thenReturn(Optional.empty());
+    void IDENT002_cuenta_ya_existente_en_el_proveedor_no_recibe_aviso_de_activacion() {
+        when(queryPort.consultar(eq(ACTOR), any())).thenReturn(pagina(fila()));
+        when(identityProviderPort.crearCuenta(any())).thenReturn(new CuentaIdentidadDTO("kc-1", false));
 
-        assertThrows(ValidationException.class, () -> useCase.execute(dominioNuevo(ACTOR, null)));
-        assertThrows(ValidationException.class, () -> useCase.execute(dominioNuevo(ACTOR, "débil")));
+        useCase.execute(dominioDocente(ID_DOCENTE));
 
-        verifyNoInteractions(commandPort, identityProviderPort);
+        verify(activacion, never()).avisar(any(), any(), any());
     }
 
     @Test
@@ -150,7 +153,7 @@ class VincularDocenteProgramaUseCaseImplTest {
         verify(commandPort).vincular(comando.capture());
         assertEquals(ID_DOCENTE, comando.getValue().idDocente());
         assertNull(comando.getValue().passwordHash());
-        verify(passwordEncoderPort, never()).encode(anyString());
+        verify(activacion, never()).credencialLegadaInutilizable();
 
         final ArgumentCaptor<DocentesProgramaFiltro> filtro = ArgumentCaptor.forClass(DocentesProgramaFiltro.class);
         verify(queryPort).consultar(eq(ACTOR), filtro.capture());
@@ -169,7 +172,7 @@ class VincularDocenteProgramaUseCaseImplTest {
         when(queryPort.consultar(eq(ACTOR), any())).thenReturn(pagina(fila()));
 
         useCase.execute(new VincularDocenteProgramaDomain(ACTOR, null, ID_USUARIO, null, null, null, null, null, null,
-                null, null, TIPO_VINCULACION));
+                null, TIPO_VINCULACION));
 
         final ArgumentCaptor<VincularDocenteProgramaCommand> comando = ArgumentCaptor.forClass(VincularDocenteProgramaCommand.class);
         verify(commandPort).vincular(comando.capture());
@@ -197,12 +200,12 @@ class VincularDocenteProgramaUseCaseImplTest {
         when(usuarioRepositoryPort.consultarUsuarioPorCorreo(CORREO)).thenReturn(Optional.of(usuario()));
         when(queryPort.consultar(eq(ACTOR), any())).thenReturn(pagina(fila()));
 
-        final DocenteProgramaDomain resultado = useCase.execute(dominioNuevo(ACTOR, "Clave1234!"));
+        final DocenteProgramaDomain resultado = useCase.execute(dominioNuevo(ACTOR));
 
         verify(commandPort, never()).vincular(any());
         final ArgumentCaptor<CrearCuentaIdentidadDTO> cuenta = ArgumentCaptor.forClass(CrearCuentaIdentidadDTO.class);
         verify(identityProviderPort).crearCuenta(cuenta.capture());
-        assertEquals("Clave1234!", cuenta.getValue().passwordInicial());
+        assertNull(cuenta.getValue().passwordInicial());
         assertEquals(ID_DOCENTE, resultado.idDocente());
     }
 
@@ -212,7 +215,7 @@ class VincularDocenteProgramaUseCaseImplTest {
         when(queryPort.consultar(eq(ACTOR), any())).thenReturn(new DocentesProgramaPagina(List.of(), 0))
                 .thenReturn(pagina(fila()));
 
-        useCase.execute(dominioNuevo(ACTOR, "Clave1234!"));
+        useCase.execute(dominioNuevo(ACTOR));
 
         verify(commandPort).vincular(any());
     }
@@ -226,14 +229,14 @@ class VincularDocenteProgramaUseCaseImplTest {
         verifyNoInteractions(identityProviderPort);
     }
 
-    private static VincularDocenteProgramaDomain dominioNuevo(final UUID actor, final String password) {
+    private static VincularDocenteProgramaDomain dominioNuevo(final UUID actor) {
         return new VincularDocenteProgramaDomain(actor, null, null, TIPO_ID, 1017555444, "Jorge", null, "Henao", null,
-                CORREO, password, TIPO_VINCULACION);
+                CORREO, TIPO_VINCULACION);
     }
 
     private static VincularDocenteProgramaDomain dominioDocente(final UUID idDocente) {
         return new VincularDocenteProgramaDomain(ACTOR, idDocente, null, null, null, null, null, null, null,
-                null, null, TIPO_VINCULACION);
+                null, TIPO_VINCULACION);
     }
 
     private static UsuarioIdentidadRepositoryProjection usuario() {

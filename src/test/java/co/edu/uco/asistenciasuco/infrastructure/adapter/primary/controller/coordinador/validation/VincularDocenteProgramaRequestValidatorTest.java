@@ -39,14 +39,12 @@ class VincularDocenteProgramaRequestValidatorTest {
     }
 
     @Test
-    void T_091_14_modo_nuevo_exige_password_y_que_cumpla_la_politica() {
-        final VincularDocenteProgramaRequest sinPassword = nuevo();
-        sinPassword.setPassword(null);
-        assertIssue(validator.validate(sinPassword), "password", ValidationErrorType.REQUIRED);
+    void IDENT002_modo_nuevo_sin_contrasena_es_valido_y_no_reporta_el_campo_password() {
+        // IDENT-002: el alta ya no recibe contrasena (antes T_091_14 la exigia); el docente la define al activar su cuenta.
+        final ValidationResult resultado = validator.validate(nuevo());
 
-        final VincularDocenteProgramaRequest debil = nuevo();
-        debil.setPassword("abc");
-        assertIssue(validator.validate(debil), "password", ValidationErrorType.INVALID_FORMAT);
+        assertTrue(resultado.isValid());
+        assertTrue(resultado.issues().stream().noneMatch(issue -> "password".equals(issue.field())));
     }
 
     @Test
@@ -115,7 +113,6 @@ class VincularDocenteProgramaRequestValidatorTest {
         request.setPrimerNombre("Jorge");
         request.setPrimerApellido("Henao");
         request.setCorreo("jorge.henao@uco.edu.co");
-        request.setPassword("Clave1234!");
         request.setIdTipoVinculacion(UUID.randomUUID());
         return request;
     }

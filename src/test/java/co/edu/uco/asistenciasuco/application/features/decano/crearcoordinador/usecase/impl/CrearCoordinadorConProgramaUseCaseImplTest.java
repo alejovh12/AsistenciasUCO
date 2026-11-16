@@ -16,7 +16,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CuentaI
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.UsuarioIdentidadRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
+import co.edu.uco.asistenciasuco.application.features.identidad.activacioncuenta.ActivacionCuentaService;
 import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,12 +54,11 @@ class CrearCoordinadorConProgramaUseCaseImplTest {
     private static final UUID PROGRAMA = UUID.fromString("77777777-3333-4444-5555-666666666666");
     private static final UUID USUARIO = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
     private static final String CORREO = "jorge.henao@uco.edu.co";
-    private static final String CLAVE = "Clave12345678!";
 
     private CoordinadorCommandPort commandPort;
     private InstitutionalScopePort scopePort;
     private UsuarioRepositoryPort usuarios;
-    private PasswordEncoderPort encoder;
+    private ActivacionCuentaService activacion;
     private IdentityProviderPort identity;
     private CrearCoordinadorUseCaseImpl useCase;
 
@@ -68,12 +67,12 @@ class CrearCoordinadorConProgramaUseCaseImplTest {
         commandPort = mock(CoordinadorCommandPort.class);
         scopePort = mock(InstitutionalScopePort.class);
         usuarios = mock(UsuarioRepositoryPort.class);
-        encoder = mock(PasswordEncoderPort.class);
+        activacion = mock(ActivacionCuentaService.class);
         identity = mock(IdentityProviderPort.class);
         when(scopePort.findFacultadIdByDecanoUsuario(DECANO)).thenReturn(Optional.of(FACULTAD));
-        when(encoder.encode(anyString())).thenReturn("HASH");
+        when(activacion.credencialLegadaInutilizable()).thenReturn("HASH");
         when(identity.crearCuenta(any())).thenReturn(new CuentaIdentidadDTO("kc-1", true));
-        useCase = new CrearCoordinadorUseCaseImpl(commandPort, scopePort, usuarios, encoder, identity);
+        useCase = new CrearCoordinadorUseCaseImpl(commandPort, scopePort, usuarios, activacion, identity);
     }
 
     @Test
@@ -135,7 +134,7 @@ class CrearCoordinadorConProgramaUseCaseImplTest {
 
         assertThrows(ValidationException.class, () -> useCase.execute(ambos));
 
-        verifyNoInteractions(commandPort, usuarios, encoder, identity, scopePort);
+        verifyNoInteractions(commandPort, usuarios, activacion, identity, scopePort);
     }
 
     @Test
@@ -144,7 +143,7 @@ class CrearCoordinadorConProgramaUseCaseImplTest {
 
         assertThrows(ValidationException.class, () -> useCase.execute(sinTipo));
 
-        verifyNoInteractions(commandPort, usuarios, encoder, identity, scopePort);
+        verifyNoInteractions(commandPort, usuarios, activacion, identity, scopePort);
     }
 
     @Test
@@ -182,7 +181,7 @@ class CrearCoordinadorConProgramaUseCaseImplTest {
     @Test
     void sin_tipo_de_identificacion_ni_programa_usa_el_comando_clasico_y_resultado_sin_programa() {
         when(usuarios.consultarUsuarioPorNumeroIdentificacion(1017555444)).thenReturn(Optional.empty(), Optional.of(usuario()));
-        final var domain = new CrearCoordinadorDomain(null, "1017555444", "JORGE", "LUIS", "HENAO", "PEREZ", CORREO, null, CLAVE, DECANO);
+        final var domain = new CrearCoordinadorDomain(null, "1017555444", "JORGE", "LUIS", "HENAO", "PEREZ", CORREO, null, DECANO);
 
         final var resultado = useCase.execute(domain);
 
@@ -200,7 +199,7 @@ class CrearCoordinadorConProgramaUseCaseImplTest {
                 new CoordinadorCommandPort.ResultadoCoordinadorConPrograma(COORDINADOR, PROGRAMA, "Ingenieria de Sistemas"));
 
         final var resultado = new CrearCoordinadorInteractor(useCase, CorreoInstitucionalPolicyFixture.institucional()).execute(new CrearCoordinadorDTO(
-                TIPO_ID, "1017555444", "JORGE", "LUIS", "HENAO", "PEREZ", CORREO, null, CLAVE, DECANO,
+                TIPO_ID, "1017555444", "JORGE", "LUIS", "HENAO", "PEREZ", CORREO, null, DECANO,
                 new ProgramaNuevoDTO("Ingenieria de Sistemas", TIPO_PROGRAMA, MODALIDAD, JORNADA)));
 
         assertEquals(COORDINADOR, resultado.idCoordinador());
@@ -209,7 +208,7 @@ class CrearCoordinadorConProgramaUseCaseImplTest {
     }
 
     private static CrearCoordinadorDomain dominio(final UUID idPrograma, final ProgramaNuevoDomain programaNuevo) {
-        return new CrearCoordinadorDomain(TIPO_ID, "1017555444", "JORGE", "LUIS", "HENAO", "PEREZ", CORREO, idPrograma, CLAVE, DECANO,
+        return new CrearCoordinadorDomain(TIPO_ID, "1017555444", "JORGE", "LUIS", "HENAO", "PEREZ", CORREO, idPrograma, DECANO,
                 programaNuevo);
     }
 

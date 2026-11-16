@@ -100,6 +100,22 @@ public interface IdentityProviderPort {
         throw operacionNoSoportada();
     }
 
+    /**
+     * IDENT-002: indica si la cuenta ya tiene una contrasena. Una cuenta registrada por otra persona nace sin credencial
+     * hasta que su titular la activa. Capacidad opcional del proveedor: si no la implementa falla de forma controlada.
+     */
+    default boolean tieneContrasena(final String idExterno) {
+        throw operacionNoSoportada();
+    }
+
+    /**
+     * IDENT-002: fija la contrasena definitiva (no temporal) que el titular definio al activar su cuenta. La contrasena
+     * nunca se registra en logs. Capacidad opcional del proveedor: si no la implementa falla de forma controlada.
+     */
+    default void establecerContrasena(final String idExterno, final String contrasena) {
+        throw operacionNoSoportada();
+    }
+
     /** Retira un rol institucional de la cuenta. Idempotente: si no lo tiene, no falla. */
     default void retirarRol(final String idExterno, final InstitutionalRole rol) {
         throw operacionNoSoportada();
