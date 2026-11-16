@@ -2,7 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.coordinador.vinculardocen
 
 import java.util.UUID;
 
-/** {@code password} viaja en claro solo dentro de la aplicacion: el caso de uso lo codifica antes de persistir. */
+/** IDENT-002: el alta de una persona nueva no lleva contrasena; el docente la define al activar su cuenta. */
 public record VincularDocenteProgramaDTO(
         UUID actorUsuarioId,
         UUID idDocente,
@@ -14,7 +14,6 @@ public record VincularDocenteProgramaDTO(
         String primerApellido,
         String segundoApellido,
         String correo,
-        String password,
         UUID idTipoVinculacion
 ) {
 }

@@ -110,8 +110,9 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
         final UserResolution resolution = resolverUsuario(adminToken, dto);
 
         try {
-            if (resolution.newlyCreated()) {
-                establecerPassword(adminToken, resolution.externalId(), dto.passwordInicial());
+            if (resolution.newlyCreated() && dto.passwordInicial() != null) {
+                // IDENT-002: sin contrasena inicial la cuenta nace sin credencial; su titular la define al activarla.
+                establecerPassword(adminToken, resolution.externalId(), dto.passwordInicial(), true);
             }
             ensureClientRole(adminToken, resolution.externalId(), institutionalRoleName);
         } catch (final IdentityProviderException exception) {
@@ -563,12 +564,41 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
     // Password (solo para cuentas nuevas)
     // -------------------------------------------------------------------------
 
-    private void establecerPassword(final String adminToken, final String externalId, final String password) {
+    /** IDENT-002: la cuenta tiene una credencial de tipo password. */
+    @Override
+    public boolean tieneContrasena(final String idExterno) {
+        final String externalId = requireValidExternalUserId(idExterno, "externalUserId es obligatorio para consultar credenciales.");
+        final HttpResponse<String> response = send(authorizedRequestBuilder(
+                adminUrl("/users/" + externalId + "/credentials"), obtenerAdminToken()).GET().build());
+        if (response.statusCode() != 200) {
+            throw new IdentityProviderException("No fue posible consultar las credenciales en Keycloak. HTTP " + response.statusCode());
+        }
+        final StoredCredential[] credenciales = readJson(response.body(), StoredCredential[].class);
+        return credenciales != null && java.util.Arrays.stream(credenciales)
+                .anyMatch(credencial -> credencial != null && "password".equals(credencial.type()));
+    }
+
+    /** IDENT-002: contrasena definitiva (no temporal) que el titular definio al activar su cuenta. */
+    @Override
+    public void establecerContrasena(final String idExterno, final String contrasena) {
+        final String externalId = requireValidExternalUserId(idExterno, "externalUserId es obligatorio para establecer la contrasena.");
+        if (contrasena == null || contrasena.isBlank()) {
+            throw new IdentityProviderException("La contrasena a establecer es obligatoria.");
+        }
+        establecerPassword(obtenerAdminToken(), externalId, contrasena, false);
+        LOGGER.atInfo()
+                .addKeyValue("operation", "IDENTITY_SET_PASSWORD")
+                .addKeyValue("externalUserId", externalId)
+                .log("Contrasena definitiva establecida en Keycloak.");
+    }
+
+    private void establecerPassword(final String adminToken, final String externalId, final String password,
+                                    final boolean temporal) {
         final String validatedExternalId = requireValidExternalUserId(
                 externalId,
                 "externalUserId es obligatorio para establecer password en Keycloak."
         );
-        final CredentialRepresentation credential = new CredentialRepresentation("password", password, true);
+        final CredentialRepresentation credential = new CredentialRepresentation("password", password, temporal);
         final HttpRequest request = authorizedRequestBuilder(
                 adminUrl("/users/" + validatedExternalId + "/reset-password"), adminToken)
                 .header("Content-Type", CONTENT_TYPE_JSON)
@@ -843,6 +873,10 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
     }
 
     private record CredentialRepresentation(String type, String value, boolean temporary) {
+    }
+
+    /** Credencial almacenada (GET /users/{id}/credentials): solo interesa su tipo, nunca el secreto. */
+    private record StoredCredential(String id, String type) {
     }
 
     private record EnabledRequest(boolean enabled) {

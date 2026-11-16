@@ -1,6 +1,9 @@
 package co.edu.uco.asistenciasuco.application.features.usuario.verificarcorreo.usecase;
 
-/** IDENT-001: verifica el correo de un usuario con el token de un solo uso recibido por correo. */
+/**
+ * IDENT-001: verifica el correo de un usuario con el token de un solo uso recibido por correo. IDENT-002: si la cuenta
+ * fue registrada por otra persona (sin contrasena), la activacion exige la contrasena que define su titular.
+ */
 public interface VerificarCorreoUseCase {
 
     /**
@@ -8,5 +11,5 @@ public interface VerificarCorreoUseCase {
      * @throws co.edu.uco.asistenciasuco.application.exception.validation.ValidationException con el mismo mensaje para
      *         cualquier token invalido.
      */
-    String execute(String token);
+    String execute(String token, String contrasena);
 }

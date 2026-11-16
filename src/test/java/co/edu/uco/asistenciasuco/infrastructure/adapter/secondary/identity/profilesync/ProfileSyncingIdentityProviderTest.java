@@ -159,4 +159,15 @@ class ProfileSyncingIdentityProviderTest {
         verify(delegate).confirmarCorreoCuenta("kc-1");
         verify(profiles, never()).sincronizar(anyString(), any());
     }
+
+    @Test
+    void IDENT002_la_consulta_y_el_establecimiento_de_contrasena_se_delegan_sin_sincronizar_perfiles() {
+        org.mockito.Mockito.when(delegate.tieneContrasena("kc-1")).thenReturn(true);
+
+        org.junit.jupiter.api.Assertions.assertTrue(provider.tieneContrasena("kc-1"));
+        provider.establecerContrasena("kc-1", "MiClaveSegura2026!");
+
+        org.mockito.Mockito.verify(delegate).establecerContrasena("kc-1", "MiClaveSegura2026!");
+        org.mockito.Mockito.verifyNoInteractions(profiles, desfases);
+    }
 }

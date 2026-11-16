@@ -11,7 +11,6 @@ public record CrearCoordinadorDTO(
         String segundoApellido,
         String correo,
         UUID idPrograma,
-        String password,
         UUID usuario,
         ProgramaNuevoDTO programaNuevo
 ) {
@@ -25,11 +24,10 @@ public record CrearCoordinadorDTO(
             String segundoApellido,
             String correo,
             UUID idPrograma,
-            String password,
             UUID usuario
     ) {
         this(tipoIdentificacionId, numeroIdentificacion, primerNombre, segundoNombre, primerApellido, segundoApellido, correo,
-                idPrograma, password, usuario, null);
+                idPrograma, usuario, null);
     }
 
     public CrearCoordinadorDTO(
@@ -40,9 +38,8 @@ public record CrearCoordinadorDTO(
             String segundoApellido,
             String correo,
             UUID idPrograma,
-            String password,
             UUID usuario
     ) {
-        this(null, numeroIdentificacion, primerNombre, segundoNombre, primerApellido, segundoApellido, correo, idPrograma, password, usuario);
+        this(null, numeroIdentificacion, primerNombre, segundoNombre, primerApellido, segundoApellido, correo, idPrograma, usuario);
     }
 }

@@ -42,6 +42,9 @@ final class DbCodeTranslator {
             case "VCE_003" -> new ConflictException("VCE_003", "Debe esperar unos minutos antes de volver a enviar el enlace de verificacion.");
             case "VCE_004" -> new ResourceNotFoundException("VCE_004", "El estudiante no pertenece a un grupo a su cargo.");
             case "VCE_005" -> new ConflictException("VCE_005", "El correo de este estudiante ya fue verificado.");
+            // IDENT-002: reenvio del enlace de activacion de una cuenta registrada por otra persona.
+            case "VCE_007" -> new ResourceNotFoundException("VCE_007", "El usuario no existe o no esta activo.");
+            case "ACT_002" -> new ConflictException("ACT_002", "La cuenta ya esta activa; no es necesario enviar el enlace de activacion.");
             // HU176B: validacion publica del token. MQR_001 es el mismo error para cualquier token invalido.
             case "MQR_001" -> new ResourceNotFoundException(MatriculaQrErrorCode.MQR_001);
             case "MQR_007" -> new ValidationException(MatriculaQrErrorCode.MQR_007.code(), MatriculaQrErrorCode.MQR_007.defaultMessage());

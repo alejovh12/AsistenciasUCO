@@ -15,7 +15,6 @@ public final class CrearCoordinadorDomain {
     private final String segundoApellido;
     private final String correo;
     private final UUID idPrograma;
-    private final String password;
     private final UUID usuario;
     private final ProgramaNuevoDomain programaNuevo;
 
@@ -28,11 +27,10 @@ public final class CrearCoordinadorDomain {
             final String segundoApellido,
             final String correo,
             final UUID idPrograma,
-            final String password,
             final UUID usuario
     ) {
         this(tipoIdentificacionId, numeroIdentificacion, primerNombre, segundoNombre, primerApellido, segundoApellido, correo,
-                idPrograma, password, usuario, null);
+                idPrograma, usuario, null);
     }
 
     public CrearCoordinadorDomain(
@@ -44,7 +42,6 @@ public final class CrearCoordinadorDomain {
             final String segundoApellido,
             final String correo,
             final UUID idPrograma,
-            final String password,
             final UUID usuario,
             final ProgramaNuevoDomain programaNuevo
     ) {
@@ -56,7 +53,6 @@ public final class CrearCoordinadorDomain {
         this.segundoApellido = segundoApellido;
         this.correo = correo;
         this.idPrograma = idPrograma;
-        this.password = password;
         this.usuario = usuario;
         this.programaNuevo = programaNuevo;
     }
@@ -69,10 +65,9 @@ public final class CrearCoordinadorDomain {
             final String segundoApellido,
             final String correo,
             final UUID idPrograma,
-            final String password,
             final UUID usuario
     ) {
-        this(null, numeroIdentificacion, primerNombre, segundoNombre, primerApellido, segundoApellido, correo, idPrograma, password, usuario);
+        this(null, numeroIdentificacion, primerNombre, segundoNombre, primerApellido, segundoApellido, correo, idPrograma, usuario);
     }
 
     public UUID getTipoIdentificacionId() {
@@ -107,9 +102,6 @@ public final class CrearCoordinadorDomain {
         return idPrograma;
     }
 
-    public String getPassword() {
-        return password;
-    }
 
     public UUID getUsuario() {
         return usuario;

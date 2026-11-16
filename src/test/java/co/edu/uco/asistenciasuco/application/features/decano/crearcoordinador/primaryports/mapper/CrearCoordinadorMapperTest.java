@@ -22,7 +22,7 @@ class CrearCoordinadorMapperTest {
         final UUID programa = UUID.randomUUID();
         final UUID usuario = UUID.randomUUID();
         final CrearCoordinadorDTO dto = new CrearCoordinadorDTO(
-                "123456789", "ANA", "MARIA", "PEREZ", "GOMEZ", "ana@uco.edu.co", programa, "HASH", usuario);
+                "123456789", "ANA", "MARIA", "PEREZ", "GOMEZ", "ana@uco.edu.co", programa, usuario);
 
         final CrearCoordinadorDomain domain = CrearCoordinadorMapper.toDomain(dto);
 

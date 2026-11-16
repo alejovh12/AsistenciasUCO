@@ -655,7 +655,9 @@ public class AdministracionNotificacionJpaAdapter implements AdministracionNotif
 
         // VERIFICACION_CORREO emite un token real por usuario y solo aplica a estudiantes sin verificar: un
         // envio de prueba del administrador no debe tocar ese flujo, asi que viaja como un tipo de prueba aparte.
-        final boolean esVerificacion = Notificacion.TIPO_VERIFICACION_CORREO.equals(tipoEfectivo);
+        // IDENT-002: la activacion de cuenta usa el mismo token real; su prueba tampoco debe emitirlo.
+        final boolean esVerificacion = Notificacion.TIPO_VERIFICACION_CORREO.equals(tipoEfectivo)
+                || Notificacion.TIPO_ACTIVACION_CUENTA.equals(tipoEfectivo);
         final Notificacion notificacion = new Notificacion(
                 esVerificacion ? TIPO_PRUEBA_VERIFICACION_CORREO : tipoEfectivo,
                 esVerificacion ? "Prueba de verificación de correo institucional" : asunto,

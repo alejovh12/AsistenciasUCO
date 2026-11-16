@@ -32,7 +32,7 @@ public final class RegistrarEstudianteIdentityMapper {
                 usuarioCanonico.correo(),
                 domain.getPrimerNombre(),
                 domain.getPrimerApellido(),
-                domain.getPassword(),
+                null,
                 rolInstitucional
         );
     }

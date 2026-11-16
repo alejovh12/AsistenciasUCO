@@ -18,7 +18,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CrearCu
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CuentaIdentidadDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.UsuarioIdentidadRepositoryProjection;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
+import co.edu.uco.asistenciasuco.application.features.identidad.activacioncuenta.ActivacionCuentaService;
 import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
@@ -54,13 +55,12 @@ class CrearDecanoConFacultadUseCaseImplTest {
     private static final UUID USUARIO_ID = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
     private static final UUID EJECUTOR = UUID.fromString("99999999-8888-7777-6666-555555555555");
     private static final String CORREO = "nuevo@uco.edu.co";
-    private static final String RAW = "Clave123!";
     private static final String HASH = "HASH_CONTROLADO";
 
     private FacultadQueryPort facultad;
     private DecanoCommandPort command;
     private UsuarioRepositoryPort usuarios;
-    private PasswordEncoderPort encoder;
+    private ActivacionCuentaService activacion;
     private IdentityProviderPort identity;
     private CrearDecanoUseCaseImpl useCase;
 
@@ -69,16 +69,16 @@ class CrearDecanoConFacultadUseCaseImplTest {
         facultad = mock(FacultadQueryPort.class);
         command = mock(DecanoCommandPort.class);
         usuarios = mock(UsuarioRepositoryPort.class);
-        encoder = mock(PasswordEncoderPort.class);
+        activacion = mock(ActivacionCuentaService.class);
+        when(activacion.credencialLegadaInutilizable()).thenReturn(HASH);
         identity = mock(IdentityProviderPort.class);
         when(identity.crearCuenta(any())).thenReturn(new CuentaIdentidadDTO("kc-1", true));
-        useCase = new CrearDecanoUseCaseImpl(facultad, command, usuarios, encoder,
-                new AsegurarCuentaIdentidadService(identity, mock(UsuarioSincronizacionIdentidadPort.class)));
+        useCase = new CrearDecanoUseCaseImpl(facultad, command, usuarios,
+                new AsegurarCuentaIdentidadService(identity, mock(UsuarioSincronizacionIdentidadPort.class)), activacion);
     }
 
     @Test
     void facultad_nueva_usa_el_comando_compuesto_y_devuelve_los_ids_de_la_base() {
-        when(encoder.encode(RAW)).thenReturn(HASH);
         when(usuarios.consultarUsuarioPorIdentificacion(TIPO_ID, 123456789))
                 .thenReturn(Optional.empty(), Optional.of(usuario()));
         when(command.crearDecanoConFacultad(any())).thenReturn(
@@ -109,7 +109,9 @@ class CrearDecanoConFacultadUseCaseImplTest {
         assertEquals("ING", db.getValue().codigoFacultad());
         assertEquals(INSTITUCION_ID, db.getValue().idInstitucion());
         assertEquals(EJECUTOR, db.getValue().usuarioEjecutor());
-        assertEquals(RAW, idp.getValue().passwordInicial());
+        // IDENT-002: sin contrasena en el registro; la cuenta nueva queda pendiente de activacion.
+        assertNull(idp.getValue().passwordInicial());
+        assertTrue(idp.getValue().requiereVerificacionCorreo());
         assertEquals(InstitutionalRole.DECANO, idp.getValue().rolInstitucional());
         verify(command, never()).crearDecano(any());
         verifyNoInteractions(facultad);
@@ -130,7 +132,7 @@ class CrearDecanoConFacultadUseCaseImplTest {
         verify(command).crearDecanoConFacultad(db.capture());
         assertNull(db.getValue().password());
         assertNull(db.getValue().codigoFacultad());
-        verifyNoInteractions(encoder);
+        verify(activacion, never()).credencialLegadaInutilizable();
     }
 
     @Test
@@ -139,12 +141,11 @@ class CrearDecanoConFacultadUseCaseImplTest {
 
         assertThrows(ValidationException.class, () -> useCase.execute(ambos));
 
-        verifyNoInteractions(command, usuarios, encoder, identity, facultad);
+        verifyNoInteractions(command, usuarios, activacion, identity, facultad);
     }
 
     @Test
     void rechazo_de_la_base_impide_la_cuenta_de_identidad() {
-        when(encoder.encode(RAW)).thenReturn(HASH);
         doThrow(new ConflictException("Ya existe una facultad con ese nombre.")).when(command).crearDecanoConFacultad(any());
 
         assertThrows(ConflictException.class,
@@ -158,7 +159,6 @@ class CrearDecanoConFacultadUseCaseImplTest {
     void con_id_facultad_existente_el_resultado_trae_la_facultad_vinculada() {
         when(facultad.consultarFacultadPorId(FACULTAD_ID)).thenReturn(Optional.of(new FacultadProjection(
                 FACULTAD_ID, "Facultad existente", null, null, null, null, true, "Activa")));
-        when(encoder.encode(RAW)).thenReturn(HASH);
         when(usuarios.consultarUsuarioPorIdentificacion(TIPO_ID, 123456789))
                 .thenReturn(Optional.empty(), Optional.of(usuario()));
 
@@ -172,7 +172,6 @@ class CrearDecanoConFacultadUseCaseImplTest {
 
     @Test
     void sin_facultad_el_resultado_trae_facultad_nula() {
-        when(encoder.encode(RAW)).thenReturn(HASH);
         when(usuarios.consultarUsuarioPorIdentificacion(TIPO_ID, 123456789))
                 .thenReturn(Optional.empty(), Optional.of(usuario()));
 
@@ -185,14 +184,13 @@ class CrearDecanoConFacultadUseCaseImplTest {
 
     @Test
     void el_interactor_convierte_dto_a_dominio_y_resultado_a_dto() {
-        when(encoder.encode(RAW)).thenReturn(HASH);
         when(usuarios.consultarUsuarioPorIdentificacion(TIPO_ID, 123456789))
                 .thenReturn(Optional.empty(), Optional.of(usuario()));
         when(command.crearDecanoConFacultad(any())).thenReturn(
                 new DecanoCommandPort.ResultadoDecanoConFacultad(DECANO_ID, FACULTAD_ID, "Facultad de Ingenieria"));
 
         final var resultado = new CrearDecanoInteractor(useCase, CorreoInstitucionalPolicyFixture.institucional()).execute(new CrearDecanoDTO(
-                TIPO_ID, 123456789, "Ana", "Maria", "Perez", "Gomez", CORREO, RAW, null, EJECUTOR,
+                TIPO_ID, 123456789, "Ana", "Maria", "Perez", "Gomez", CORREO, null, EJECUTOR,
                 new FacultadNuevaDTO("Facultad de Ingenieria", "ING", INSTITUCION_ID)));
 
         assertEquals(DECANO_ID, resultado.idDecano());
@@ -201,7 +199,7 @@ class CrearDecanoConFacultadUseCaseImplTest {
     }
 
     private static CrearDecanoDomain dominio(final UUID idFacultad, final FacultadNuevaDomain facultadNueva) {
-        return new CrearDecanoDomain(TIPO_ID, 123456789, "Ana", "Maria", "Perez", "Gomez", CORREO, RAW, idFacultad, EJECUTOR,
+        return new CrearDecanoDomain(TIPO_ID, 123456789, "Ana", "Maria", "Perez", "Gomez", CORREO, idFacultad, EJECUTOR,
                 facultadNueva);
     }
 

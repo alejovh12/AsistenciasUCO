@@ -9,7 +9,6 @@ import co.edu.uco.asistenciasuco.application.features.coordinador.common.mapper.
 import co.edu.uco.asistenciasuco.application.features.coordinador.vinculardocenteprograma.usecase.VincularDocenteProgramaUseCase;
 import co.edu.uco.asistenciasuco.application.features.coordinador.vinculardocenteprograma.usecase.domain.VincularDocenteProgramaDomain;
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
-import co.edu.uco.asistenciasuco.application.features.usuario.domain.rules.PasswordRegistroRule;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DocenteProgramaCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DocenteProgramaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.command.VincularDocenteProgramaCommand;
@@ -17,10 +16,11 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.DocentesProgramaFiltro;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CrearCuentaIdentidadDTO;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CuentaIdentidadDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.UsuarioIdentidadRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
+import co.edu.uco.asistenciasuco.application.features.identidad.activacioncuenta.ActivacionCuentaService;
 import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
@@ -40,7 +40,7 @@ public final class VincularDocenteProgramaUseCaseImpl implements VincularDocente
     private final DocenteProgramaCommandPort commandPort;
     private final DocenteProgramaQueryPort queryPort;
     private final UsuarioRepositoryPort usuarioRepositoryPort;
-    private final PasswordEncoderPort passwordEncoderPort;
+    private final ActivacionCuentaService activacion;
     private final IdentityProviderPort identityProviderPort;
 
     public VincularDocenteProgramaUseCaseImpl(
@@ -48,14 +48,14 @@ public final class VincularDocenteProgramaUseCaseImpl implements VincularDocente
             final DocenteProgramaCommandPort commandPort,
             final DocenteProgramaQueryPort queryPort,
             final UsuarioRepositoryPort usuarioRepositoryPort,
-            final PasswordEncoderPort passwordEncoderPort,
+            final ActivacionCuentaService activacion,
             final IdentityProviderPort identityProviderPort
     ) {
         this.scopePort = Objects.requireNonNull(scopePort, "InstitutionalScopePort es obligatorio.");
         this.commandPort = Objects.requireNonNull(commandPort, "DocenteProgramaCommandPort es obligatorio.");
         this.queryPort = Objects.requireNonNull(queryPort, "DocenteProgramaQueryPort es obligatorio.");
         this.usuarioRepositoryPort = Objects.requireNonNull(usuarioRepositoryPort, "UsuarioRepositoryPort es obligatorio.");
-        this.passwordEncoderPort = Objects.requireNonNull(passwordEncoderPort, "PasswordEncoderPort es obligatorio.");
+        this.activacion = Objects.requireNonNull(activacion, "ActivacionCuentaService es obligatorio.");
         this.identityProviderPort = Objects.requireNonNull(identityProviderPort, "IdentityProviderPort es obligatorio.");
     }
 
@@ -68,21 +68,18 @@ public final class VincularDocenteProgramaUseCaseImpl implements VincularDocente
         final UUID idPrograma = scopePort.findProgramaIdByCoordinadorUsuario(actor)
                 .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_006));
 
+        // IDENT-002: el alta no recibe contrasena; el docente la define al activar su cuenta con el enlace del correo.
         final boolean modoNuevo = domain.idDocente() == null && domain.idUsuario() == null;
-        final String passwordInicial = modoNuevo
-                ? PasswordRegistroRule.resolverCredencialNueva(domain.password(), domain.numeroIdentificacion())
-                : null;
-
         final DocenteProgramaProjection vinculo = modoNuevo
-                ? vincularPersonaNueva(domain, idPrograma, passwordInicial)
+                ? vincularPersonaNueva(domain, idPrograma)
                 : vincularExistente(domain, idPrograma);
 
-        aprovisionarIdentidad(vinculo, passwordInicial);
+        aprovisionarIdentidad(vinculo);
         return DocenteProgramaMapper.toDomain(vinculo);
     }
 
     private DocenteProgramaProjection vincularPersonaNueva(
-            final VincularDocenteProgramaDomain domain, final UUID idPrograma, final String passwordInicial) {
+            final VincularDocenteProgramaDomain domain, final UUID idPrograma) {
         final String correo = domain.correo() == null ? null : domain.correo().trim();
         final Optional<UsuarioIdentidadRepositoryProjection> preexistente = usuarioRepositoryPort.consultarUsuarioPorCorreo(correo);
         if (preexistente.isPresent()) {
@@ -96,7 +93,7 @@ public final class VincularDocenteProgramaUseCaseImpl implements VincularDocente
         }
         commandPort.vincular(new VincularDocenteProgramaCommand(null, null, domain.idTipoIdentificacion(),
                 domain.numeroIdentificacion(), domain.primerNombre(), domain.segundoNombre(), domain.primerApellido(),
-                domain.segundoApellido(), correo, passwordEncoderPort.encode(passwordInicial),
+                domain.segundoApellido(), correo, activacion.credencialLegadaInutilizable(),
                 domain.idTipoVinculacion(), idPrograma, domain.actorUsuarioId()));
         final UsuarioIdentidadRepositoryProjection usuario = usuarioRepositoryPort.consultarUsuarioPorCorreo(correo)
                 .orElseThrow(() -> new InternalApplicationException(
@@ -126,19 +123,24 @@ public final class VincularDocenteProgramaUseCaseImpl implements VincularDocente
                 .elementos().stream().findFirst();
     }
 
-    private void aprovisionarIdentidad(final DocenteProgramaProjection vinculo, final String passwordInicial) {
+    /** Una cuenta nueva nace deshabilitada y sin credencial (aviso de activacion); una existente solo suma el rol. */
+    private void aprovisionarIdentidad(final DocenteProgramaProjection vinculo) {
+        final CuentaIdentidadDTO cuenta;
         try {
-            identityProviderPort.crearCuenta(new CrearCuentaIdentidadDTO(
+            cuenta = identityProviderPort.crearCuenta(new CrearCuentaIdentidadDTO(
                     String.valueOf(vinculo.numeroIdentificacion()),
                     vinculo.idUsuario(),
                     vinculo.correo(),
                     vinculo.primerNombre(),
                     vinculo.primerApellido(),
-                    passwordInicial,
-                    InstitutionalRole.DOCENTE));
+                    null,
+                    InstitutionalRole.DOCENTE).conVerificacionCorreo());
         } catch (final IdentityProviderPort.IdentityProviderException exception) {
             throw new InternalApplicationException(
                     "El docente quedo vinculado, pero no fue posible completar el aprovisionamiento de su identidad.", exception);
+        }
+        if (cuenta != null && cuenta.newlyCreated()) {
+            activacion.avisar(vinculo.idUsuario(), vinculo.primerNombre(), InstitutionalRole.DOCENTE);
         }
     }
 

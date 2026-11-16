@@ -33,7 +33,8 @@ class RegistrarEstudianteIdentityMapperTest {
         assertEquals("ana.perez@uco.edu.co", dto.correo());
         assertEquals("ANA", dto.primerNombre());
         assertEquals("PEREZ", dto.primerApellido());
-        assertEquals("Clave123!", dto.passwordInicial());
+        // IDENT-002: la cuenta nace sin credencial; la clave del dominio (cliente anterior) no viaja al proveedor.
+        org.junit.jupiter.api.Assertions.assertNull(dto.passwordInicial());
         assertEquals(InstitutionalRole.ESTUDIANTE, dto.rolInstitucional());
     }
 

@@ -24,7 +24,6 @@ class RegistrarEstudianteHttpMapperTest {
         request.setPrimerNombre("Ana");
         request.setSegundoNombre("Maria");
         request.setCorreo("ana.perez@uco.edu.co");
-        request.setPassword("Clave123!");
 
         final RegistrarEstudianteDTO dto = RegistrarEstudianteHttpMapper.toApplicationDTO(GRUPO, request, USUARIO_EJECUTOR);
 
@@ -35,7 +34,8 @@ class RegistrarEstudianteHttpMapperTest {
         assertEquals("Ana", dto.getPrimerNombre());
         assertEquals("Maria", dto.getSegundoNombre());
         assertEquals("ana.perez@uco.edu.co", dto.getCorreo());
-        assertEquals("Clave123!", dto.getPassword());
+        // IDENT-002: el registro no lleva contrasena; el estudiante la define al activar su cuenta.
+        org.junit.jupiter.api.Assertions.assertNull(dto.getPassword());
         assertEquals(GRUPO, dto.getGrupoId());
         assertEquals(USUARIO_EJECUTOR, dto.getUsuarioEjecutor());
     }

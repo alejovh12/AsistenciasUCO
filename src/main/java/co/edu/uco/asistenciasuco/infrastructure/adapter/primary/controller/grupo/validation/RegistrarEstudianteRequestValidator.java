@@ -17,8 +17,6 @@ public final class RegistrarEstudianteRequestValidator implements Validator<Regi
     private static final int MAX_EMAIL_LENGTH = 100;
     private static final int MIN_IDENTIFICATION_DIGITS = 6;
     private static final int MAX_IDENTIFICATION_DIGITS = 10;
-    private static final int MIN_PASSWORD_LENGTH = 8;
-    private static final int MAX_PASSWORD_LENGTH = 255;
     private static final String REQUIRED_STUDENT_INFORMATION = "La informacion del estudiante es obligatoria.";
 
     @Override
@@ -54,7 +52,6 @@ public final class RegistrarEstudianteRequestValidator implements Validator<Regi
         validateRequiredPersonName("primerNombre", request.getPrimerNombre(), builder);
         validateOptionalPersonName("segundoNombre", request.getSegundoNombre(), builder);
         validateCorreo(request.getCorreo(), builder);
-        validatePassword(request.getPassword(), builder);
         return builder.build();
     }
 
@@ -158,19 +155,6 @@ public final class RegistrarEstudianteRequestValidator implements Validator<Regi
                 "correo",
                 ValidationErrorType.INVALID_FORMAT,
                 HttpValidationMessages.INVALID_EMAIL
-        );
-    }
-
-    private static void validatePassword(final String value, final ValidationResultBuilder builder) {
-        if (value == null) {
-            return;
-        }
-        final int length = value.length();
-        builder.addIf(
-                length < MIN_PASSWORD_LENGTH || length > MAX_PASSWORD_LENGTH,
-                "password",
-                ValidationErrorType.INVALID_LENGTH,
-                "La clave debe tener entre 8 y 255 caracteres."
         );
     }
 

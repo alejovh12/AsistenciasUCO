@@ -9,6 +9,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.DecanoComma
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.FacultadProjection;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.DecanoErrorCode;
+import co.edu.uco.asistenciasuco.application.features.identidad.activacioncuenta.ActivacionCuentaService;
 import co.edu.uco.asistenciasuco.application.features.identidad.asegurarcuenta.AsegurarCuentaIdentidadService;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.UsuarioSincronizacionIdentidadPort;
@@ -16,7 +17,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CrearCu
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CuentaIdentidadDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.UsuarioIdentidadRepositoryProjection;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,10 +27,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -48,13 +48,12 @@ class CrearDecanoUseCaseImplTest {
     private static final UUID USUARIO_ID = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
     private static final UUID USUARIO_EJECUTOR = UUID.fromString("99999999-8888-7777-6666-555555555555");
     private static final String CORREO = "nuevo@uco.edu.co";
-    private static final String RAW = "Clave123!";
     private static final String HASH = "HASH_CONTROLADO";
 
     private FacultadQueryPort facultad;
     private DecanoCommandPort command;
     private UsuarioRepositoryPort usuarios;
-    private PasswordEncoderPort encoder;
+    private ActivacionCuentaService activacion;
     private IdentityProviderPort identity;
     private UsuarioSincronizacionIdentidadPort desfases;
     private CrearDecanoUseCaseImpl useCase;
@@ -64,23 +63,23 @@ class CrearDecanoUseCaseImplTest {
         facultad = mock(FacultadQueryPort.class);
         command = mock(DecanoCommandPort.class);
         usuarios = mock(UsuarioRepositoryPort.class);
-        encoder = mock(PasswordEncoderPort.class);
+        activacion = mock(ActivacionCuentaService.class);
+        when(activacion.credencialLegadaInutilizable()).thenReturn(HASH);
         identity = mock(IdentityProviderPort.class);
         when(facultad.consultarFacultadPorId(FACULTAD_ID)).thenReturn(Optional.of(new FacultadProjection(
                 FACULTAD_ID, "Facultad", null, null, null, null, true, "Activa"
         )));
         when(identity.crearCuenta(any())).thenReturn(new CuentaIdentidadDTO("kc-1", true));
         desfases = mock(UsuarioSincronizacionIdentidadPort.class);
-        useCase = new CrearDecanoUseCaseImpl(facultad, command, usuarios, encoder,
-                new AsegurarCuentaIdentidadService(identity, desfases));
+        useCase = new CrearDecanoUseCaseImpl(facultad, command, usuarios,
+                new AsegurarCuentaIdentidadService(identity, desfases), activacion);
     }
 
     @Test
-    void usuario_nuevo_es_db_first_db_recibe_hash_identity_raw_y_role_decano() {
+    void usuario_nuevo_es_db_first_sin_contrasena_cuenta_pendiente_y_aviso_de_activacion() {
         final UsuarioIdentidadRepositoryProjection canonico = usuario(USUARIO_ID, 123456789, CORREO);
         when(usuarios.consultarUsuarioPorIdentificacion(TIPO_ID, 123456789))
                 .thenReturn(Optional.empty(), Optional.of(canonico));
-        when(encoder.encode(RAW)).thenReturn(HASH);
 
         useCase.execute(domain(123456789, CORREO));
 
@@ -94,18 +93,31 @@ class CrearDecanoUseCaseImplTest {
         assertEquals(HASH, db.getValue().password());
         assertEquals(TIPO_ID, db.getValue().tipoIdentificacionId());
         assertEquals(USUARIO_EJECUTOR, db.getValue().usuarioEjecutor());
-        assertNotEquals(RAW, db.getValue().password());
-        assertEquals(RAW, idp.getValue().passwordInicial());
-        assertNotEquals(HASH, idp.getValue().passwordInicial());
+        // IDENT-002: la BD guarda el secreto inutilizable; la cuenta nace sin credencial y pendiente de activacion.
+        assertNull(idp.getValue().passwordInicial());
+        assertTrue(idp.getValue().requiereVerificacionCorreo());
         assertEquals(USUARIO_ID, idp.getValue().idUsuario());
         assertEquals("123456789", idp.getValue().username());
         assertEquals(CORREO, idp.getValue().correo());
         assertEquals(InstitutionalRole.DECANO, idp.getValue().rolInstitucional());
+        verify(activacion).avisar(USUARIO_ID, "ANA", InstitutionalRole.DECANO);
+    }
+
+    @Test
+    void IDENT002_cuenta_que_ya_existe_en_el_proveedor_no_recibe_aviso_de_activacion() {
+        final UsuarioIdentidadRepositoryProjection canonico = usuario(USUARIO_ID, 123456789, CORREO);
+        when(usuarios.consultarUsuarioPorIdentificacion(TIPO_ID, 123456789))
+                .thenReturn(Optional.empty(), Optional.of(canonico));
+        when(identity.crearCuenta(any())).thenReturn(new CuentaIdentidadDTO("kc-1", false));
+
+        useCase.execute(domain(123456789, CORREO));
+
+        verify(identity).crearCuenta(any());
+        verify(activacion, never()).avisar(any(), any(), any());
     }
 
     @Test
     void fallo_db_impide_identity() {
-        when(encoder.encode(RAW)).thenReturn(HASH);
         doThrow(new IllegalStateException("Fallo DB")).when(command).crearDecano(any());
 
         assertThrows(IllegalStateException.class, () -> useCase.execute(domain(123456789, CORREO)));
@@ -125,7 +137,7 @@ class CrearDecanoUseCaseImplTest {
                 () -> useCase.execute(domain(123456789, CORREO)));
 
         assertEquals("ERR_IDENTIDAD_USUARIO_CONFLICTO", exception.getCode());
-        verifyNoInteractions(command, encoder, identity);
+        verifyNoInteractions(command, activacion, identity);
     }
 
     @Test
@@ -136,7 +148,7 @@ class CrearDecanoUseCaseImplTest {
                 () -> useCase.execute(domain(123456789, CORREO)));
 
         assertEquals("ERR_UNICIDAD_CORREO", exception.getCode());
-        verifyNoInteractions(command, encoder, identity);
+        verifyNoInteractions(command, activacion, identity);
     }
 
     @Test
@@ -149,7 +161,7 @@ class CrearDecanoUseCaseImplTest {
                 () -> useCase.execute(domain(123456789, CORREO)));
 
         assertEquals("ERR_UNICIDAD_DOCUMENTO", exception.getCode());
-        verifyNoInteractions(command, encoder, identity);
+        verifyNoInteractions(command, activacion, identity);
     }
 
     @Test
@@ -174,10 +186,10 @@ class CrearDecanoUseCaseImplTest {
         assertEquals("JOSE", idp.getValue().primerNombre());
         assertEquals("PEREZ", idp.getValue().primerApellido());
         assertEquals("  Usuario@Test.com  ", idp.getValue().correo());
-        assertEquals(RAW, idp.getValue().passwordInicial());
+        assertNull(idp.getValue().passwordInicial());
         assertEquals(InstitutionalRole.DECANO, idp.getValue().rolInstitucional());
         verify(usuarios).consultarUsuarioPorId(USUARIO_ID);
-        verifyNoInteractions(encoder);
+        verify(activacion, never()).credencialLegadaInutilizable();
     }
 
     @Test
@@ -204,7 +216,6 @@ class CrearDecanoUseCaseImplTest {
         when(usuarios.consultarUsuarioPorIdentificacion(TIPO_ID, 123456789)).thenReturn(
                 Optional.empty(), Optional.of(usuario(USUARIO_ID, 123456789, CORREO))
         );
-        when(encoder.encode(RAW)).thenReturn(HASH);
         when(identity.crearCuenta(any())).thenThrow(fallo);
 
         useCase.execute(domain(123456789, CORREO));
@@ -231,7 +242,6 @@ class CrearDecanoUseCaseImplTest {
 
     @Test
     void usuario_nuevo_sin_proyeccion_post_command_falla_sin_identity() {
-        when(encoder.encode(RAW)).thenReturn(HASH);
 
         assertThrows(InternalApplicationException.class, () -> useCase.execute(domain(123456789, CORREO)));
 
@@ -244,7 +254,6 @@ class CrearDecanoUseCaseImplTest {
         when(usuarios.consultarUsuarioPorIdentificacion(TIPO_ID, 123456789)).thenReturn(
                 Optional.empty(), Optional.of(usuario(USUARIO_ID, 123456789, "otro@uco.edu.co"))
         );
-        when(encoder.encode(RAW)).thenReturn(HASH);
 
         assertThrows(InternalApplicationException.class, () -> useCase.execute(domain(123456789, CORREO)));
 
@@ -259,7 +268,6 @@ class CrearDecanoUseCaseImplTest {
                         USUARIO_ID, TIPO_ID, 123456789, null, "PEREZ", CORREO
                 ))
         );
-        when(encoder.encode(RAW)).thenReturn(HASH);
 
         assertThrows(InternalApplicationException.class, () -> useCase.execute(domain(123456789, CORREO)));
 
@@ -270,12 +278,12 @@ class CrearDecanoUseCaseImplTest {
     @Test
     void tipo_identificacion_requerido_antes_de_cualquier_dependencia() {
         final CrearDecanoDomain sinTipo = new CrearDecanoDomain(
-                null, 123456789, "Ana", "Maria", "Perez", "Gomez", CORREO, RAW, FACULTAD_ID, USUARIO_EJECUTOR
+                null, 123456789, "Ana", "Maria", "Perez", "Gomez", CORREO, FACULTAD_ID, USUARIO_EJECUTOR
         );
 
         assertThrows(ValidationException.class, () -> useCase.execute(sinTipo));
 
-        verifyNoInteractions(command, usuarios, encoder, identity);
+        verifyNoInteractions(command, usuarios, activacion, identity);
     }
 
     @Test
@@ -283,10 +291,9 @@ class CrearDecanoUseCaseImplTest {
         final UsuarioIdentidadRepositoryProjection canonico = usuario(USUARIO_ID, 123456789, CORREO);
         when(usuarios.consultarUsuarioPorIdentificacion(TIPO_ID, 123456789))
                 .thenReturn(Optional.empty(), Optional.of(canonico));
-        when(encoder.encode(RAW)).thenReturn(HASH);
 
         final CrearDecanoDomain sinFacultad = new CrearDecanoDomain(
-                TIPO_ID, 123456789, "Ana", "Maria", "Perez", "Gomez", CORREO, RAW, null, USUARIO_EJECUTOR
+                TIPO_ID, 123456789, "Ana", "Maria", "Perez", "Gomez", CORREO, null, USUARIO_EJECUTOR
         );
 
         useCase.execute(sinFacultad);
@@ -306,16 +313,16 @@ class CrearDecanoUseCaseImplTest {
         when(facultad.consultarFacultadPorId(facultadInexistente)).thenReturn(Optional.empty());
 
         final CrearDecanoDomain conFacultadInexistente = new CrearDecanoDomain(
-                TIPO_ID, 123456789, "Ana", "Maria", "Perez", "Gomez", CORREO, RAW, facultadInexistente, USUARIO_EJECUTOR
+                TIPO_ID, 123456789, "Ana", "Maria", "Perez", "Gomez", CORREO, facultadInexistente, USUARIO_EJECUTOR
         );
 
         assertThrows(ResourceNotFoundException.class, () -> useCase.execute(conFacultadInexistente));
-        verifyNoInteractions(command, usuarios, encoder, identity);
+        verifyNoInteractions(command, usuarios, activacion, identity);
     }
 
     private CrearDecanoDomain domain(final int numero, final String correo) {
         return new CrearDecanoDomain(
-                TIPO_ID, numero, "Ana", "Maria", "Perez", "Gomez", correo, RAW, FACULTAD_ID, USUARIO_EJECUTOR
+                TIPO_ID, numero, "Ana", "Maria", "Perez", "Gomez", correo, FACULTAD_ID, USUARIO_EJECUTOR
         );
     }
 

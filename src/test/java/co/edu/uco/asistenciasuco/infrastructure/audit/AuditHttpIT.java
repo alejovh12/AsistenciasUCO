@@ -157,8 +157,7 @@ class AuditHttpIT {
                   "segundoApellido":"GOMEZ",
                   "primerNombre":"ANA",
                   "segundoNombre":"MARIA",
-                  "correo":"audit.failure.%s@uco.edu.co",
-                  "password":"Clave123!"
+                  "correo":"audit.failure.%s@uco.edu.co"
                 }
                 """.formatted(UUID.randomUUID().toString().replace("-", "").substring(0, 12));
 

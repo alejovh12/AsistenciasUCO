@@ -29,4 +29,12 @@ public interface VerificacionCorreoRepositoryPort {
      * @return el usuario del estudiante al que se le registrara el aviso.
      */
     UUID consultarReenvio(UUID grupoId, UUID estudianteId, UUID actorUsuarioId);
+
+    /**
+     * IDENT-002: elegibilidad del reenvio del enlace de activacion de la cuenta {@code idUsuario} (RBAC del ejecutor, cuenta
+     * aun sin activar y espera minima). El alcance jerarquico lo valida la aplicacion antes de invocarlo.
+     *
+     * @return el usuario destino.
+     */
+    UUID consultarReenvioActivacion(UUID idUsuario, UUID actorUsuarioId);
 }

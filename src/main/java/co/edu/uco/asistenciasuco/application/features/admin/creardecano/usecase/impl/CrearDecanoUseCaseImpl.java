@@ -9,16 +9,18 @@ import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.domain.CrearDecanoResultado;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.mapper.CrearDecanoRepositoryMapper;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.mapper.CrearDecanoIdentityMapper;
-import co.edu.uco.asistenciasuco.application.features.usuario.domain.rules.PasswordRegistroRule;
 import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.exception.TipoIdentificacionErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DecanoCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadQueryPort;
+import co.edu.uco.asistenciasuco.application.features.identidad.activacioncuenta.ActivacionCuentaService;
 import co.edu.uco.asistenciasuco.application.features.identidad.asegurarcuenta.AsegurarCuentaIdentidadService;
+import co.edu.uco.asistenciasuco.application.features.identidad.asegurarcuenta.EstadoCuentaAprovisionada;
+import co.edu.uco.asistenciasuco.application.features.identidad.asegurarcuenta.ResultadoCuentaIdentidad;
+import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.UsuarioIdentidadRepositoryProjection;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -29,21 +31,21 @@ public final class CrearDecanoUseCaseImpl implements CrearDecanoUseCase {
     private final FacultadQueryPort facultadQueryPort;
     private final DecanoCommandPort decanoCommandPort;
     private final UsuarioRepositoryPort usuarioRepositoryPort;
-    private final PasswordEncoderPort passwordEncoderPort;
     private final AsegurarCuentaIdentidadService cuentas;
+    private final ActivacionCuentaService activacion;
 
     public CrearDecanoUseCaseImpl(
             final FacultadQueryPort facultadQueryPort,
             final DecanoCommandPort decanoCommandPort,
             final UsuarioRepositoryPort usuarioRepositoryPort,
-            final PasswordEncoderPort passwordEncoderPort,
-            final AsegurarCuentaIdentidadService cuentas
+            final AsegurarCuentaIdentidadService cuentas,
+            final ActivacionCuentaService activacion
     ) {
         this.facultadQueryPort = Objects.requireNonNull(facultadQueryPort, "FacultadQueryPort es obligatorio.");
         this.decanoCommandPort = Objects.requireNonNull(decanoCommandPort, "DecanoCommandPort es obligatorio.");
         this.usuarioRepositoryPort = Objects.requireNonNull(usuarioRepositoryPort, "UsuarioRepositoryPort es obligatorio.");
-        this.passwordEncoderPort = Objects.requireNonNull(passwordEncoderPort, "PasswordEncoderPort es obligatorio.");
         this.cuentas = Objects.requireNonNull(cuentas, "AsegurarCuentaIdentidadService es obligatorio.");
+        this.activacion = Objects.requireNonNull(activacion, "ActivacionCuentaService es obligatorio.");
     }
 
     @Override
@@ -61,11 +63,10 @@ public final class CrearDecanoUseCaseImpl implements CrearDecanoUseCase {
                 : facultadQueryPort.consultarFacultadPorId(domain.getIdFacultad())
                         .orElseThrow(() -> new ResourceNotFoundException(MensajeUsuarioErrorCode.NOF_APP_002));
         final Optional<UUID> idUsuarioPreexistente = resolverUsuarioPreexistente(domain);
+        // IDENT-002: el alta no recibe contrasena; la columna legada guarda un secreto inutilizable.
         final String passwordParaPersistir = idUsuarioPreexistente.isPresent()
                 ? null
-                : passwordEncoderPort.encode(PasswordRegistroRule.resolverCredencialNueva(
-                        domain.getPassword(), domain.getNumeroIdentificacion()
-                ));
+                : activacion.credencialLegadaInutilizable();
 
         final UUID idDecano = UUID.randomUUID();
         final CrearDecanoResultado resultado;
@@ -85,7 +86,11 @@ public final class CrearDecanoUseCaseImpl implements CrearDecanoUseCase {
         final UsuarioIdentidadRepositoryProjection usuarioCanonico = resolverUsuarioPostCommand(domain, idUsuarioPreexistente);
         // CULM-001 D.9-a (F-ADM-024): la base de datos ya confirmo el alta; un fallo del proveedor de identidad deja la cuenta
         // PENDIENTE_SINCRONIZACION (desfase registrado) en lugar de un 500, y repetir el alta ya no reporta exito (DEC_020).
-        cuentas.asegurar(CrearDecanoIdentityMapper.toSolicitudCuentaIdentidad(domain, usuarioCanonico));
+        final ResultadoCuentaIdentidad cuenta = cuentas.asegurar(
+                CrearDecanoIdentityMapper.toSolicitudCuentaIdentidad(domain, usuarioCanonico));
+        if (cuenta.estado() == EstadoCuentaAprovisionada.PENDIENTE_VERIFICACION) {
+            activacion.avisar(usuarioCanonico.id(), usuarioCanonico.primerNombre(), InstitutionalRole.DECANO);
+        }
         return resultado;
     }
 

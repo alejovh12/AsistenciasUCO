@@ -110,6 +110,16 @@ public final class ProfileSyncingIdentityProvider implements IdentityProviderPor
         return delegate.rolesDeCuenta(idExterno);
     }
 
+    @Override
+    public boolean tieneContrasena(final String idExterno) {
+        return delegate.tieneContrasena(idExterno);
+    }
+
+    @Override
+    public void establecerContrasena(final String idExterno, final String contrasena) {
+        delegate.establecerContrasena(idExterno, contrasena);
+    }
+
     private Optional<String> correo(final String idExterno) {
         try {
             return delegate.correoDeCuenta(idExterno);

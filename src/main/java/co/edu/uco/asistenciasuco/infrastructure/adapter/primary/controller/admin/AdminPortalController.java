@@ -143,7 +143,7 @@ public final class AdminPortalController {
         final var resultado = crearDecanoInputPort.execute(new CrearDecanoDTO(
                 request.tipoIdentificacionId(), request.numeroIdentificacion(), request.primerNombre(),
                 request.segundoNombre(), request.primerApellido(), request.segundoApellido(), request.correo(),
-                request.password(), request.idFacultad(), authenticatedUserResolver.requireAuthenticatedUserId(),
+                request.idFacultad(), authenticatedUserResolver.requireAuthenticatedUserId(),
                 facultadNueva == null ? null : new FacultadNuevaDTO(
                         facultadNueva.nombre(), facultadNueva.codigo(), facultadNueva.idInstitucion())
         ));
@@ -279,7 +279,6 @@ public final class AdminPortalController {
             @NotBlank(message = "El campo primerApellido es obligatorio.") @LongitudTrasTrim(max = 50, message = "El campo primerApellido no puede superar 50 caracteres.", payload = BeanValidationCodes.InvalidLength.class) String primerApellido,
             @LongitudTrasTrim(max = 50, message = "El campo segundoApellido no puede superar 50 caracteres.", payload = BeanValidationCodes.InvalidLength.class) String segundoApellido,
             @NotBlank(message = "El correo es obligatorio.") @LongitudTrasTrim(max = 255, message = "El correo no puede superar 255 caracteres.", payload = BeanValidationCodes.InvalidLength.class) @Pattern(regexp = BeanValidationPatterns.EMAIL_OR_BLANK, message = "El correo no tiene un formato valido.") String correo,
-            String password,
             UUID idFacultad,
             @Valid FacultadNuevaRequest facultadNueva
     ) {
