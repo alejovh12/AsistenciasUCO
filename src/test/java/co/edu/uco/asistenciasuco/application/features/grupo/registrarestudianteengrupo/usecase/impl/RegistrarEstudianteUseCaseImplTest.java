@@ -145,7 +145,8 @@ class RegistrarEstudianteUseCaseImplTest {
                 identityProviderPort
         );
 
-        final ConflictException exception = assertThrows(ConflictException.class, () -> useCase.execute(domainValido()));
+        final var domainValido4 = domainValido();
+        final ConflictException exception = assertThrows(ConflictException.class, () -> useCase.execute(domainValido4));
 
         assertEquals("Matricula duplicada.", exception.getMessage());
         assertEquals(0, identityProviderPort.crearCuentaCount.get());
@@ -172,7 +173,8 @@ class RegistrarEstudianteUseCaseImplTest {
                 identityProviderPort
         );
 
-        final ConflictException exception = assertThrows(ConflictException.class, () -> useCase.execute(domainValido()));
+        final var domainValido3 = domainValido();
+        final ConflictException exception = assertThrows(ConflictException.class, () -> useCase.execute(domainValido3));
 
         assertEquals("ERR_IDENTIDAD_USUARIO_CONFLICTO", exception.getCode());
         assertFalse(spEjecutado.get());
@@ -204,7 +206,8 @@ class RegistrarEstudianteUseCaseImplTest {
                 identityProviderPort
         );
 
-        final ConflictException exception = assertThrows(ConflictException.class, () -> useCase.execute(domainValido()));
+        final var domainValido2 = domainValido();
+        final ConflictException exception = assertThrows(ConflictException.class, () -> useCase.execute(domainValido2));
 
         assertEquals("ERR_IDENTIDAD_USUARIO_CONFLICTO", exception.getCode());
         assertFalse(spEjecutado.get());
@@ -292,8 +295,9 @@ class RegistrarEstudianteUseCaseImplTest {
                 identityProviderPort
         );
 
+        final var domainValido = domainValido();
         final InternalApplicationException exception = assertThrows(
-                InternalApplicationException.class, () -> useCase.execute(domainValido())
+                InternalApplicationException.class, () -> useCase.execute(domainValido)
         );
 
         assertEquals(1, spLlamadas.get());

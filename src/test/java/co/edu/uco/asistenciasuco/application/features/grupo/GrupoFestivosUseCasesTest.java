@@ -59,8 +59,8 @@ class GrupoFestivosUseCasesTest {
                 UUID.randomUUID()));
         verifyNoInteractions(asegurar);
 
-        assertThrows(FeatureUnavailableException.class, () -> useCase.execute(new CrearGrupoDomain(UUID.randomUUID(),
-                UUID.randomUUID(), 1, "G1", UUID.randomUUID(), true, UUID.randomUUID(), FRANJAS)));
+        final var crearGrupoDomain = new CrearGrupoDomain(UUID.randomUUID(), UUID.randomUUID(), 1, "G1", UUID.randomUUID(), true, UUID.randomUUID(), FRANJAS);
+        assertThrows(FeatureUnavailableException.class, () -> useCase.execute(crearGrupoDomain));
         verifyNoInteractions(asegurar);
         assertThrows(NullPointerException.class, () -> new CrearGrupoUseCaseImpl(repositorio, null));
     }

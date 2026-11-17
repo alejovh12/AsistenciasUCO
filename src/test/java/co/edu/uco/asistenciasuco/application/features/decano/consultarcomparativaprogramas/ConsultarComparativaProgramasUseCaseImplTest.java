@@ -85,7 +85,8 @@ class ConsultarComparativaProgramasUseCaseImplTest {
     void T_BE_01_sin_facultad_de_decano_responde_forbidden_sin_tocar_la_db() {
         when(scopePort.findFacultadIdByDecanoUsuario(ACTOR)).thenReturn(Optional.empty());
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(new ConsultarComparativaProgramasDomain(ACTOR, null)));
+        final var consultarComparativaProgramasDomain = new ConsultarComparativaProgramasDomain(ACTOR, null);
+        assertThrows(ForbiddenException.class, () -> useCase.execute(consultarComparativaProgramasDomain));
 
         verifyNoInteractions(queryPort);
     }

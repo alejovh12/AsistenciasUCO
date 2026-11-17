@@ -240,8 +240,9 @@ class VerificarCorreoUseCaseImplTest {
 
         final ValidationException debil = assertThrows(ValidationException.class, () -> useCase.execute(TOKEN, "corta1A"));
         assertEquals("ERR_PASSWORD_POLITICA_INVALIDA", debil.getCode());
+        final var documentoTexto = String.valueOf(DOCUMENTO);
         final ValidationException igualDocumento = assertThrows(ValidationException.class,
-                () -> useCase.execute(TOKEN, String.valueOf(DOCUMENTO)));
+                () -> useCase.execute(TOKEN, documentoTexto));
         assertEquals("ERR_PASSWORD_IGUAL_IDENTIFICACION", igualDocumento.getCode());
 
         assertTrue(orden.stream().noneMatch(paso -> paso.startsWith("confirmar:") || paso.startsWith("idp:")

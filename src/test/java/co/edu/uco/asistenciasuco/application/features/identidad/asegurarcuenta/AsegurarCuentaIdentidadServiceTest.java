@@ -93,7 +93,8 @@ class AsegurarCuentaIdentidadServiceTest {
     void reparar_con_la_cuenta_existente_es_conflicto_ADS_002() {
         when(proveedor.buscarCuentaPorIdUsuario(USUARIO)).thenReturn(Optional.of(new CuentaIdentidadDTO("ext-1", false)));
 
-        final ConflictException conflicto = assertThrows(ConflictException.class, () -> servicio.repararOFallar(solicitud(false)));
+        final var solicitud2 = solicitud(false);
+        final ConflictException conflicto = assertThrows(ConflictException.class, () -> servicio.repararOFallar(solicitud2));
 
         assertEquals(AdmisionEstudianteErrorCode.ADS_002.code(), conflicto.getCode());
         verify(proveedor, never()).crearCuenta(any());
@@ -116,7 +117,8 @@ class AsegurarCuentaIdentidadServiceTest {
         when(proveedor.buscarCuentaPorIdUsuario(USUARIO))
                 .thenThrow(new IdentityProviderPort.IdentityProviderException("operacion no soportada"));
 
-        final ConflictException conflicto = assertThrows(ConflictException.class, () -> servicio.repararOFallar(solicitud(false)));
+        final var solicitud = solicitud(false);
+        final ConflictException conflicto = assertThrows(ConflictException.class, () -> servicio.repararOFallar(solicitud));
 
         assertEquals(AdmisionEstudianteErrorCode.ADS_002.code(), conflicto.getCode());
         verify(proveedor, never()).crearCuenta(any());

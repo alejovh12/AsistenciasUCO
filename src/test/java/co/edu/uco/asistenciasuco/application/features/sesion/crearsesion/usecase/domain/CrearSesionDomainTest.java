@@ -67,8 +67,8 @@ class CrearSesionDomainTest {
         assertEquals("A", new CrearSesionDomain(GRUPO, "A", INICIO, FIN, USUARIO_EJECUTOR).getNombre());
         assertEquals("X".repeat(50),
                 new CrearSesionDomain(GRUPO, "X".repeat(50), INICIO, FIN, USUARIO_EJECUTOR).getNombre());
-        final ValidationException ex = assertThrows(ValidationException.class, () -> new CrearSesionDomain(
-                GRUPO, "X".repeat(51), INICIO, FIN, USUARIO_EJECUTOR));
+        final var textoLargo = "X".repeat(51);
+        final ValidationException ex = assertThrows(ValidationException.class, () -> new CrearSesionDomain(GRUPO, textoLargo, INICIO, FIN, USUARIO_EJECUTOR));
         assertEquals("ERR_NOMBRE_SESION_LONGITUD_INVALIDA", ex.getCode());
         assertEquals("El nombre de la sesion debe tener entre 1 y 50 caracteres.", ex.getMessage());
     }

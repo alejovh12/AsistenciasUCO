@@ -213,8 +213,9 @@ class CorreoInstitucionalPolicyTest {
 
     @Test
     void DEC_073_exigirPersonal_rechaza_otro_dominio_con_VCE_008_y_el_dominio_en_el_mensaje() {
+        final var politica = politica(DOMINIO);
         final ValidationException exception = assertThrows(ValidationException.class,
-                () -> politica(DOMINIO).exigirPersonal("docente@gmail.com"));
+                () -> politica.exigirPersonal("docente@gmail.com"));
 
         assertEquals("VCE_008", exception.getCode());
         assertTrue(exception.getMessage().contains(DOMINIO));

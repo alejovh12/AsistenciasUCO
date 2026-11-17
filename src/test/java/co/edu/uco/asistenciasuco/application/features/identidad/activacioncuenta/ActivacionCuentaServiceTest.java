@@ -96,8 +96,10 @@ class ActivacionCuentaServiceTest {
 
     @Test
     void los_colaboradores_son_obligatorios() {
-        assertThrows(NullPointerException.class, () -> new ActivacionCuentaService(null, codificador, new SecureRandom()));
-        assertThrows(NullPointerException.class, () -> new ActivacionCuentaService(notificaciones, null, new SecureRandom()));
+        final var secureRandom2 = new SecureRandom();
+        assertThrows(NullPointerException.class, () -> new ActivacionCuentaService(null, codificador, secureRandom2));
+        final var secureRandom = new SecureRandom();
+        assertThrows(NullPointerException.class, () -> new ActivacionCuentaService(notificaciones, null, secureRandom));
         assertThrows(NullPointerException.class, () -> new ActivacionCuentaService(notificaciones, codificador, null));
     }
 }

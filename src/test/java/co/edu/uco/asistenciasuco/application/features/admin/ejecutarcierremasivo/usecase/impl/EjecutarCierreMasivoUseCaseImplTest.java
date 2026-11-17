@@ -33,8 +33,9 @@ class EjecutarCierreMasivoUseCaseImplTest {
     void periodo_inexistente_falla_sin_invocar_command() {
         when(periodoAcademicoQueryPort.consultarPeriodoAcademicoPorId(PERIODO_ID)).thenReturn(Optional.empty());
 
+        final var ejecutarCierreMasivoDomain = new EjecutarCierreMasivoDomain(PERIODO_ID, ACTOR_USUARIO_ID);
         assertThrows(ResourceNotFoundException.class,
-                () -> useCase.execute(new EjecutarCierreMasivoDomain(PERIODO_ID, ACTOR_USUARIO_ID)));
+                () -> useCase.execute(ejecutarCierreMasivoDomain));
 
         verifyNoInteractions(cierrePeriodoCommandPort);
     }

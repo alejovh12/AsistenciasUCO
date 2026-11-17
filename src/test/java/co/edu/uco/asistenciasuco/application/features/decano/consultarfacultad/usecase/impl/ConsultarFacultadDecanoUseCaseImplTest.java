@@ -83,8 +83,9 @@ class ConsultarFacultadDecanoUseCaseImplTest {
         useCase.consultarEstudiantes(DECANO, "  ", null, null, 2, 5);
 
         verify(queryPort).consultarEstudiantes(DECANO, null, null, null, 2, 5);
+        final var textoLargo = "x".repeat(101);
         assertThrows(ValidationException.class,
-                () -> useCase.consultarEstudiantes(DECANO, "x".repeat(101), null, null, 1, 10));
+                () -> useCase.consultarEstudiantes(DECANO, textoLargo, null, null, 1, 10));
     }
 
     @Test
@@ -176,7 +177,8 @@ class ConsultarFacultadDecanoUseCaseImplTest {
         assertNull(dominio.fechaHoraFinUtc());
         assertThrows(NullPointerException.class,
                 () -> dominio(null, null, EstadoHorarioSesion.INDETERMINADA));
-        assertThrows(NullPointerException.class, () -> dominio(UUID.randomUUID(), null, null));
+        final var idAleatorio = UUID.randomUUID();
+        assertThrows(NullPointerException.class, () -> dominio(idAleatorio, null, null));
     }
 
     private static SesionFacultadHorarioDomain dominio(final UUID id, final LocalDateTime utc,

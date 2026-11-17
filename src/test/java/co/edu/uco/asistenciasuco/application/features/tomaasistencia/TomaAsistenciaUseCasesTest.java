@@ -138,24 +138,29 @@ class TomaAsistenciaUseCasesTest {
     void abrir_rechaza_modo_vacio_sesion_inexistente_ajena_y_cancelada_sin_escribir_ni_publicar() {
         final AbrirTomaAsistenciaUseCaseImpl useCase = new AbrirTomaAsistenciaUseCaseImpl(sesionTitular, repositorio, acceso, eventos);
 
+        final var comando9 = new AbrirTomaAsistenciaInputPort.Comando(SESION, " ", USUARIO);
         assertEquals("TOM_002", assertThrows(ValidationException.class,
-                () -> useCase.execute(new AbrirTomaAsistenciaInputPort.Comando(SESION, " ", USUARIO))).getCode());
+                () -> useCase.execute(comando9)).getCode());
+        final var comando8 = new AbrirTomaAsistenciaInputPort.Comando(SESION, null, USUARIO);
         assertEquals("TOM_002", assertThrows(ValidationException.class,
-                () -> useCase.execute(new AbrirTomaAsistenciaInputPort.Comando(SESION, null, USUARIO))).getCode());
+                () -> useCase.execute(comando8)).getCode());
 
         when(sesiones.consultarSesion(SESION)).thenReturn(Optional.empty());
+        final var comando7 = new AbrirTomaAsistenciaInputPort.Comando(SESION, "MANUAL", USUARIO);
         assertThrows(ResourceNotFoundException.class,
-                () -> useCase.execute(new AbrirTomaAsistenciaInputPort.Comando(SESION, "MANUAL", USUARIO)));
+                () -> useCase.execute(comando7));
 
         when(sesiones.consultarSesion(SESION)).thenReturn(Optional.of(sesion(null)));
         final UUID otro = UUID.randomUUID();
+        final var comando6 = new AbrirTomaAsistenciaInputPort.Comando(SESION, "MANUAL", otro);
         assertThrows(ForbiddenException.class,
-                () -> useCase.execute(new AbrirTomaAsistenciaInputPort.Comando(SESION, "MANUAL", otro)));
+                () -> useCase.execute(comando6));
 
         when(sesiones.consultarSesion(SESION)).thenReturn(Optional.of(sesion(
                 new CancelacionSesionProjection("DOCENTE", "Calamidad", null, LocalDateTime.of(2026, 11, 6, 10, 0)))));
+        final var comando5 = new AbrirTomaAsistenciaInputPort.Comando(SESION, "MANUAL", USUARIO);
         assertEquals("ERR_SESION_CANCELADA", assertThrows(ConflictException.class,
-                () -> useCase.execute(new AbrirTomaAsistenciaInputPort.Comando(SESION, "MANUAL", USUARIO))).getCode());
+                () -> useCase.execute(comando5)).getCode());
 
         verify(repositorio, never()).abrir(any(), any(), any());
         verifyNoInteractions(realtime);
@@ -168,8 +173,9 @@ class TomaAsistenciaUseCasesTest {
         when(repositorio.abrir(SESION, "MANUAL", USUARIO)).thenThrow(new ConflictException("TOM_003", "Ya hay una toma abierta."));
         final AbrirTomaAsistenciaUseCaseImpl useCase = new AbrirTomaAsistenciaUseCaseImpl(sesionTitular, repositorio, acceso, eventos);
 
+        final var comando4 = new AbrirTomaAsistenciaInputPort.Comando(SESION, "MANUAL", USUARIO);
         assertEquals("TOM_003", assertThrows(ConflictException.class,
-                () -> useCase.execute(new AbrirTomaAsistenciaInputPort.Comando(SESION, "MANUAL", USUARIO))).getCode());
+                () -> useCase.execute(comando4)).getCode());
         verifyNoInteractions(realtime);
 
         doReturn(new TomaAsistenciaRepositoryPort.TomaAbierta(TOMA, 2, "MANUAL", APERTURA)).when(repositorio).abrir(SESION, "MANUAL", USUARIO);
@@ -212,13 +218,15 @@ class TomaAsistenciaUseCasesTest {
         final ConsultarResumenTomasSesionUseCaseImpl useCase = new ConsultarResumenTomasSesionUseCaseImpl(sesionTitular, repositorio);
 
         when(sesiones.consultarSesion(SESION)).thenReturn(Optional.empty());
+        final var consulta3 = new ConsultarResumenTomasSesionInputPort.Consulta(SESION, USUARIO);
         assertThrows(ResourceNotFoundException.class,
-                () -> useCase.execute(new ConsultarResumenTomasSesionInputPort.Consulta(SESION, USUARIO)));
+                () -> useCase.execute(consulta3));
         verify(repositorio, never()).consultarResumenTomasSesion(any(), any());
 
         when(sesiones.consultarSesion(SESION)).thenReturn(Optional.of(sesion(null)));
+        final var consulta2 = new ConsultarResumenTomasSesionInputPort.Consulta(SESION, UUID.randomUUID());
         assertThrows(ForbiddenException.class,
-                () -> useCase.execute(new ConsultarResumenTomasSesionInputPort.Consulta(SESION, UUID.randomUUID())));
+                () -> useCase.execute(consulta2));
         assertSame(filas, useCase.execute(new ConsultarResumenTomasSesionInputPort.Consulta(SESION, USUARIO)));
         assertThrows(NullPointerException.class, () -> useCase.execute(null));
         assertThrows(NullPointerException.class, () -> new ConsultarResumenTomasSesionUseCaseImpl(null, repositorio));
@@ -269,12 +277,14 @@ class TomaAsistenciaUseCasesTest {
         final CerrarTomaAsistenciaUseCaseImpl useCase = new CerrarTomaAsistenciaUseCaseImpl(acceso, repositorio, eventos);
         when(repositorio.consultarToma(TOMA)).thenReturn(Optional.empty());
 
+        final var comando3 = new CerrarTomaAsistenciaInputPort.Comando(TOMA, null, USUARIO);
         assertEquals("TOM_001", assertThrows(ResourceNotFoundException.class,
-                () -> useCase.execute(new CerrarTomaAsistenciaInputPort.Comando(TOMA, null, USUARIO))).getCode());
+                () -> useCase.execute(comando3)).getCode());
 
         when(repositorio.consultarToma(TOMA)).thenReturn(Optional.of(toma("ABIERTA", 0)));
+        final var comando2 = new CerrarTomaAsistenciaInputPort.Comando(TOMA, null, UUID.randomUUID());
         assertThrows(ForbiddenException.class,
-                () -> useCase.execute(new CerrarTomaAsistenciaInputPort.Comando(TOMA, null, UUID.randomUUID())));
+                () -> useCase.execute(comando2));
         verify(repositorio, never()).cerrar(any(), any(), any());
         verifyNoInteractions(realtime);
         assertThrows(NullPointerException.class, () -> useCase.execute(null));
@@ -330,8 +340,9 @@ class TomaAsistenciaUseCasesTest {
                 List.of(new RegistrarAsistenciasTomaInputPort.Registro(e1, "AN"), new RegistrarAsistenciasTomaInputPort.Registro(e1, "EX"))));
         invalidos.add(null);
         for (final List<RegistrarAsistenciasTomaInputPort.Registro> registros : invalidos) {
+            final var comando = new RegistrarAsistenciasTomaInputPort.Comando(TOMA, registros, USUARIO);
             assertEquals("VALIDATION_ERROR", assertThrows(ValidationException.class,
-                    () -> useCase.execute(new RegistrarAsistenciasTomaInputPort.Comando(TOMA, registros, USUARIO))).getCode());
+                    () -> useCase.execute(comando)).getCode());
         }
         verifyNoInteractions(repositorio, realtime);
         assertThrows(NullPointerException.class, () -> useCase.execute(null));
@@ -355,10 +366,13 @@ class TomaAsistenciaUseCasesTest {
         assertTrue(resultado.elementos().isEmpty());
 
         final UUID ajeno = UUID.randomUUID();
-        assertThrows(ForbiddenException.class, () -> new ConsultarFaltantesTomaUseCaseImpl(acceso, repositorio)
-                .execute(new ConsultarFaltantesTomaInputPort.Consulta(TOMA, 1, 50, ajeno)));
-        assertThrows(NullPointerException.class, () -> new ConsultarAsistenciasTomaUseCaseImpl(acceso, repositorio).execute(null));
-        assertThrows(NullPointerException.class, () -> new ConsultarFaltantesTomaUseCaseImpl(acceso, repositorio).execute(null));
+        final var consultarFaltantesTomaUseCaseImpl2 = new ConsultarFaltantesTomaUseCaseImpl(acceso, repositorio);
+        final var consulta = new ConsultarFaltantesTomaInputPort.Consulta(TOMA, 1, 50, ajeno);
+        assertThrows(ForbiddenException.class, () -> consultarFaltantesTomaUseCaseImpl2.execute(consulta));
+        final var consultarAsistenciasTomaUseCaseImpl = new ConsultarAsistenciasTomaUseCaseImpl(acceso, repositorio);
+        assertThrows(NullPointerException.class, () -> consultarAsistenciasTomaUseCaseImpl.execute(null));
+        final var consultarFaltantesTomaUseCaseImpl = new ConsultarFaltantesTomaUseCaseImpl(acceso, repositorio);
+        assertThrows(NullPointerException.class, () -> consultarFaltantesTomaUseCaseImpl.execute(null));
     }
 
     // ------------------------------------------------------------------ cierre automatico

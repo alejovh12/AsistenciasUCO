@@ -73,27 +73,33 @@ class CasosDeUsoCulm001AUseCaseImplTest {
         when(scope.findEstudianteIdByUsuario(ACTOR)).thenReturn(Optional.of(UUID.randomUUID()));
         final ResourceNotFoundException ajeno = new ResourceNotFoundException("La solicitud de revision no existe.");
         when(asistencias.retirarSolicitudRevision(ID, ACTOR)).thenThrow(ajeno);
-        assertSame(ajeno, assertThrows(ResourceNotFoundException.class, () -> retirar.execute(new RetirarReclamoDomain(ID, ACTOR))));
+        final var retirarReclamoDomain5 = new RetirarReclamoDomain(ID, ACTOR);
+        assertSame(ajeno, assertThrows(ResourceNotFoundException.class, () -> retirar.execute(retirarReclamoDomain5)));
 
         final UUID otro = UUID.randomUUID();
         when(asistencias.retirarSolicitudRevision(otro, ACTOR)).thenThrow(new ConflictException("no pendiente"));
-        assertThrows(ConflictException.class, () -> retirar.execute(new RetirarReclamoDomain(otro, ACTOR)));
+        final var retirarReclamoDomain4 = new RetirarReclamoDomain(otro, ACTOR);
+        assertThrows(ConflictException.class, () -> retirar.execute(retirarReclamoDomain4));
     }
 
     @Test
     void retirar_reclamo_sin_estudiante_es_403_sin_tocar_el_sp() {
         when(scope.findEstudianteIdByUsuario(ACTOR)).thenReturn(Optional.empty());
 
-        assertThrows(ForbiddenException.class, () -> retirar.execute(new RetirarReclamoDomain(ID, ACTOR)));
+        final var retirarReclamoDomain3 = new RetirarReclamoDomain(ID, ACTOR);
+        assertThrows(ForbiddenException.class, () -> retirar.execute(retirarReclamoDomain3));
         verifyNoInteractions(asistencias);
     }
 
     @Test
     void retirar_reclamo_valida_la_entrada() {
         assertThrows(ValidationException.class, () -> retirar.execute(null));
-        assertThrows(ValidationException.class, () -> retirar.execute(new RetirarReclamoDomain(null, ACTOR)));
-        assertThrows(ValidationException.class, () -> retirar.execute(new RetirarReclamoDomain(ID, null)));
-        assertThrows(ValidationException.class, () -> new RetirarReclamoInteractor(retirar).execute(null));
+        final var retirarReclamoDomain2 = new RetirarReclamoDomain(null, ACTOR);
+        assertThrows(ValidationException.class, () -> retirar.execute(retirarReclamoDomain2));
+        final var retirarReclamoDomain = new RetirarReclamoDomain(ID, null);
+        assertThrows(ValidationException.class, () -> retirar.execute(retirarReclamoDomain));
+        final var retirarReclamoInteractor = new RetirarReclamoInteractor(retirar);
+        assertThrows(ValidationException.class, () -> retirarReclamoInteractor.execute(null));
         assertThrows(NullPointerException.class, () -> new RetirarReclamoInteractor(null));
         assertThrows(NullPointerException.class, () -> new RetirarReclamoUseCaseImpl(null, asistencias));
         assertThrows(NullPointerException.class, () -> new RetirarReclamoUseCaseImpl(scope, null));
@@ -143,22 +149,27 @@ class CasosDeUsoCulm001AUseCaseImplTest {
     @Test
     void decano_con_programas_activos_es_409_sin_sincronizar_y_si_no_reaparece_es_404() {
         when(comandos.cambiarEstadoDecano(ID, null, ACTOR)).thenThrow(new ConflictException("DEC_002"));
-        assertThrows(ConflictException.class, () -> decano.execute(new CambiarEstadoDecanoDomain(ID, ACTOR)));
+        final var cambiarEstadoDecanoDomain4 = new CambiarEstadoDecanoDomain(ID, ACTOR);
+        assertThrows(ConflictException.class, () -> decano.execute(cambiarEstadoDecanoDomain4));
         verifyNoInteractions(sincronizacion);
 
         final UUID otro = UUID.randomUUID();
         when(comandos.cambiarEstadoDecano(otro, null, ACTOR))
                 .thenReturn(new DecanoCommandPort.ResultadoCambioEstadoDecano(UUID.randomUUID(), false, true));
         when(consultas.consultarDecanos()).thenReturn(List.of());
-        assertThrows(ResourceNotFoundException.class, () -> decano.execute(new CambiarEstadoDecanoDomain(otro, ACTOR)));
+        final var cambiarEstadoDecanoDomain3 = new CambiarEstadoDecanoDomain(otro, ACTOR);
+        assertThrows(ResourceNotFoundException.class, () -> decano.execute(cambiarEstadoDecanoDomain3));
     }
 
     @Test
     void estado_decano_valida_la_entrada_y_las_dependencias() {
         assertThrows(ValidationException.class, () -> decano.execute(null));
-        assertThrows(ValidationException.class, () -> decano.execute(new CambiarEstadoDecanoDomain(null, ACTOR)));
-        assertThrows(ValidationException.class, () -> decano.execute(new CambiarEstadoDecanoDomain(ID, null)));
-        assertThrows(ValidationException.class, () -> new CambiarEstadoDecanoInteractor(decano).execute(null));
+        final var cambiarEstadoDecanoDomain2 = new CambiarEstadoDecanoDomain(null, ACTOR);
+        assertThrows(ValidationException.class, () -> decano.execute(cambiarEstadoDecanoDomain2));
+        final var cambiarEstadoDecanoDomain = new CambiarEstadoDecanoDomain(ID, null);
+        assertThrows(ValidationException.class, () -> decano.execute(cambiarEstadoDecanoDomain));
+        final var cambiarEstadoDecanoInteractor = new CambiarEstadoDecanoInteractor(decano);
+        assertThrows(ValidationException.class, () -> cambiarEstadoDecanoInteractor.execute(null));
         assertThrows(NullPointerException.class, () -> new CambiarEstadoDecanoInteractor(null));
         assertThrows(NullPointerException.class, () -> new CambiarEstadoDecanoUseCaseImpl(null, consultas, sincronizacion));
         assertThrows(NullPointerException.class, () -> new CambiarEstadoDecanoUseCaseImpl(comandos, null, sincronizacion));
@@ -195,18 +206,25 @@ class CasosDeUsoCulm001AUseCaseImplTest {
         assertTrue(buscar.execute(new BuscarEstudiantePorDocumentoDomain(ID, TIPO, 123456, ACTOR)).isEmpty());
 
         when(grupos.buscarEstudiantePorDocumento(ID, TIPO, 654321, ACTOR)).thenThrow(new ForbiddenException("SEC_002", "No titular."));
-        assertThrows(ForbiddenException.class, () -> buscar.execute(new BuscarEstudiantePorDocumentoDomain(ID, TIPO, 654321, ACTOR)));
+        final var buscarEstudiantePorDocumentoDomain6 = new BuscarEstudiantePorDocumentoDomain(ID, TIPO, 654321, ACTOR);
+        assertThrows(ForbiddenException.class, () -> buscar.execute(buscarEstudiantePorDocumentoDomain6));
     }
 
     @Test
     void busqueda_valida_la_entrada_sin_consultar() {
         assertThrows(ValidationException.class, () -> buscar.execute(null));
-        assertThrows(ValidationException.class, () -> buscar.execute(new BuscarEstudiantePorDocumentoDomain(null, TIPO, 1, ACTOR)));
-        assertThrows(ValidationException.class, () -> buscar.execute(new BuscarEstudiantePorDocumentoDomain(ID, null, 1, ACTOR)));
-        assertThrows(ValidationException.class, () -> buscar.execute(new BuscarEstudiantePorDocumentoDomain(ID, TIPO, null, ACTOR)));
-        assertThrows(ValidationException.class, () -> buscar.execute(new BuscarEstudiantePorDocumentoDomain(ID, TIPO, 0, ACTOR)));
-        assertThrows(ValidationException.class, () -> buscar.execute(new BuscarEstudiantePorDocumentoDomain(ID, TIPO, 1, null)));
-        assertThrows(ValidationException.class, () -> new BuscarEstudiantePorDocumentoInteractor(buscar).execute(null));
+        final var buscarEstudiantePorDocumentoDomain5 = new BuscarEstudiantePorDocumentoDomain(null, TIPO, 1, ACTOR);
+        assertThrows(ValidationException.class, () -> buscar.execute(buscarEstudiantePorDocumentoDomain5));
+        final var buscarEstudiantePorDocumentoDomain4 = new BuscarEstudiantePorDocumentoDomain(ID, null, 1, ACTOR);
+        assertThrows(ValidationException.class, () -> buscar.execute(buscarEstudiantePorDocumentoDomain4));
+        final var buscarEstudiantePorDocumentoDomain3 = new BuscarEstudiantePorDocumentoDomain(ID, TIPO, null, ACTOR);
+        assertThrows(ValidationException.class, () -> buscar.execute(buscarEstudiantePorDocumentoDomain3));
+        final var buscarEstudiantePorDocumentoDomain2 = new BuscarEstudiantePorDocumentoDomain(ID, TIPO, 0, ACTOR);
+        assertThrows(ValidationException.class, () -> buscar.execute(buscarEstudiantePorDocumentoDomain2));
+        final var buscarEstudiantePorDocumentoDomain = new BuscarEstudiantePorDocumentoDomain(ID, TIPO, 1, null);
+        assertThrows(ValidationException.class, () -> buscar.execute(buscarEstudiantePorDocumentoDomain));
+        final var buscarEstudiantePorDocumentoInteractor = new BuscarEstudiantePorDocumentoInteractor(buscar);
+        assertThrows(ValidationException.class, () -> buscarEstudiantePorDocumentoInteractor.execute(null));
         assertThrows(NullPointerException.class, () -> new BuscarEstudiantePorDocumentoInteractor(null));
         assertThrows(NullPointerException.class, () -> new BuscarEstudiantePorDocumentoUseCaseImpl(null));
         verifyNoInteractions(grupos);

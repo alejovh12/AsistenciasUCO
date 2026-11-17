@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -62,7 +63,8 @@ class ActualizarDocenteProgramaUseCaseImplTest {
     void sin_programa_del_coordinador_lanza_forbidden_y_no_llama_a_la_db() {
         when(scopePort.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.empty());
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(dominio()));
+        final var dominio2 = dominio();
+        assertThrows(ForbiddenException.class, () -> useCase.execute(dominio2));
 
         verifyNoInteractions(commandPort, queryPort);
     }
@@ -106,7 +108,8 @@ class ActualizarDocenteProgramaUseCaseImplTest {
         when(scopePort.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.of(PROGRAMA));
         when(queryPort.consultar(eq(ACTOR), any())).thenReturn(new DocentesProgramaPagina(List.of(), 0));
 
-        assertThrows(InternalApplicationException.class, () -> useCase.execute(dominio()));
+        final var dominio = dominio();
+        assertThrows(InternalApplicationException.class, () -> useCase.execute(dominio));
     }
 
     private static ActualizarDocenteProgramaDomain dominio() {
@@ -132,7 +135,7 @@ class ActualizarDocenteProgramaUseCaseImplTest {
                 ACTOR, DOCENTE, null, null, null, null, null, tipoDocumento, 915900041, "Cedula mal digitada"));
 
         final ArgumentCaptor<ActualizarDocenteProgramaCommand> comando = ArgumentCaptor.forClass(ActualizarDocenteProgramaCommand.class);
-        org.mockito.Mockito.verify(commandPort, org.mockito.Mockito.times(2)).actualizar(comando.capture());
+        verify(commandPort, times(2)).actualizar(comando.capture());
         assertEquals(915900041, comando.getValue().documento().numeroIdentificacion());
         assertEquals("Cedula mal digitada", comando.getValue().documento().motivo());
         final ArgumentCaptor<co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.ActualizarCuentaIdentidadDTO> cuenta =

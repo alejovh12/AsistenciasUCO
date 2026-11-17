@@ -74,9 +74,12 @@ class ConsultarProgramasUseCaseImplTest {
 
     @Test
     void T_108_04_rechaza_paginacion_no_positiva_sin_llamar_a_la_db() {
-        assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarProgramasDomain(ACTOR, null, null, null, 0, 10)));
-        assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarProgramasDomain(ACTOR, null, null, null, 1, 0)));
-        assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarProgramasDomain(ACTOR, null, null, null, -1, -5)));
+        final var consultarProgramasDomain4 = new ConsultarProgramasDomain(ACTOR, null, null, null, 0, 10);
+        assertThrows(ValidationException.class, () -> useCase.execute(consultarProgramasDomain4));
+        final var consultarProgramasDomain3 = new ConsultarProgramasDomain(ACTOR, null, null, null, 1, 0);
+        assertThrows(ValidationException.class, () -> useCase.execute(consultarProgramasDomain3));
+        final var consultarProgramasDomain2 = new ConsultarProgramasDomain(ACTOR, null, null, null, -1, -5);
+        assertThrows(ValidationException.class, () -> useCase.execute(consultarProgramasDomain2));
         assertThrows(ValidationException.class, () -> useCase.execute(null));
         verify(queryPort, never()).consultar(any());
     }
@@ -85,8 +88,9 @@ class ConsultarProgramasUseCaseImplTest {
     void T_SEC_01_sin_facultad_de_decano_responde_forbidden() {
         when(scopePort.findFacultadIdByDecanoUsuario(ACTOR)).thenReturn(Optional.empty());
 
+        final var consultarProgramasDomain = new ConsultarProgramasDomain(ACTOR, null, null, null, 1, 10);
         assertThrows(ForbiddenException.class,
-                () -> useCase.execute(new ConsultarProgramasDomain(ACTOR, null, null, null, 1, 10)));
+                () -> useCase.execute(consultarProgramasDomain));
 
         verifyNoInteractions(queryPort);
     }

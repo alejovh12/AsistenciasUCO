@@ -61,7 +61,8 @@ class ConsultarSesionesMateriaEstudianteInteractorTest {
         final var vacia = new SesionesMateriaEstudiantePaginaDTO(null, 0);
 
         assertEquals(List.of(), vacia.sesiones());
-        assertThrows(UnsupportedOperationException.class, () -> vacia.sesiones().add(null));
+        final var sesiones = vacia.sesiones();
+        assertThrows(UnsupportedOperationException.class, () -> sesiones.add(null));
     }
 
     @Test

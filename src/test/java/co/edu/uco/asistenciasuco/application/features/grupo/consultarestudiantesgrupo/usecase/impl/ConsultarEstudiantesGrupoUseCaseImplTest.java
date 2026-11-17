@@ -47,8 +47,9 @@ class ConsultarEstudiantesGrupoUseCaseImplTest {
         when(institutionalScopePort.findDocenteIdByUsuario(DOCENTE_B)).thenReturn(Optional.of(UUID.randomUUID()));
         when(institutionalScopePort.canDocenteAccessGrupo(DOCENTE_B, GRUPO_AJENO)).thenReturn(false);
 
+        final var consultarEstudiantesGrupoDomain = new ConsultarEstudiantesGrupoDomain(GRUPO_AJENO, DOCENTE_B);
         assertThrows(ForbiddenException.class,
-                () -> useCase.execute(new ConsultarEstudiantesGrupoDomain(GRUPO_AJENO, DOCENTE_B)));
+                () -> useCase.execute(consultarEstudiantesGrupoDomain));
     }
 
     @Test

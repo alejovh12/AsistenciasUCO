@@ -31,6 +31,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -309,9 +310,9 @@ class AccesoCuentaServiceTest {
         service.reconciliar(ACTOR, CORREO);
         service.reconciliar(ACTOR, CORREO);
 
-        verify(identity, org.mockito.Mockito.times(2)).asignarRol(EXTERNO, InstitutionalRole.DOCENTE);
-        verify(profiles, org.mockito.Mockito.times(2)).sincronizar(CORREO, InstitutionalRole.DOCENTE);
-        verify(identity, org.mockito.Mockito.times(2)).habilitarCuenta(EXTERNO);
+        verify(identity, times(2)).asignarRol(EXTERNO, InstitutionalRole.DOCENTE);
+        verify(profiles, times(2)).sincronizar(CORREO, InstitutionalRole.DOCENTE);
+        verify(identity, times(2)).habilitarCuenta(EXTERNO);
     }
 
     @Test

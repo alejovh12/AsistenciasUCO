@@ -84,7 +84,8 @@ class CrearProgramaUseCaseImplTest {
     void T_SEC_01_sin_facultad_de_decano_responde_forbidden_sin_tocar_la_db() {
         when(scopePort.findFacultadIdByDecanoUsuario(ACTOR)).thenReturn(Optional.empty());
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(domain("Sistemas", TIPO, COORDINADOR)));
+        final var domain6 = domain("Sistemas", TIPO, COORDINADOR);
+        assertThrows(ForbiddenException.class, () -> useCase.execute(domain6));
 
         verifyNoInteractions(commandPort, queryPort);
     }
@@ -92,11 +93,16 @@ class CrearProgramaUseCaseImplTest {
     @Test
     void T_076_12_valida_forma_antes_de_llamar_al_puerto() {
         assertThrows(ValidationException.class, () -> useCase.execute(null));
-        assertThrows(ValidationException.class, () -> useCase.execute(domain(null, TIPO, COORDINADOR)));
-        assertThrows(ValidationException.class, () -> useCase.execute(domain("   ", TIPO, COORDINADOR)));
-        assertThrows(ValidationException.class, () -> useCase.execute(domain("X".repeat(51), TIPO, COORDINADOR)));
-        assertThrows(ValidationException.class, () -> useCase.execute(domain("Sistemas", null, COORDINADOR)));
-        assertThrows(ValidationException.class, () -> useCase.execute(domain("Sistemas", TIPO, null)));
+        final var domain5 = domain(null, TIPO, COORDINADOR);
+        assertThrows(ValidationException.class, () -> useCase.execute(domain5));
+        final var domain4 = domain("   ", TIPO, COORDINADOR);
+        assertThrows(ValidationException.class, () -> useCase.execute(domain4));
+        final var textoLargo = domain("X".repeat(51), TIPO, COORDINADOR);
+        assertThrows(ValidationException.class, () -> useCase.execute(textoLargo));
+        final var domain3 = domain("Sistemas", null, COORDINADOR);
+        assertThrows(ValidationException.class, () -> useCase.execute(domain3));
+        final var domain2 = domain("Sistemas", TIPO, null);
+        assertThrows(ValidationException.class, () -> useCase.execute(domain2));
         verify(commandPort, never()).crear(any());
     }
 
@@ -113,7 +119,8 @@ class CrearProgramaUseCaseImplTest {
     void si_el_programa_no_se_puede_releer_tras_crear_es_un_error_interno() {
         when(queryPort.consultarPorId(any(), any())).thenReturn(Optional.empty());
 
-        assertThrows(InternalApplicationException.class, () -> useCase.execute(domain("Sistemas", TIPO, COORDINADOR)));
+        final var domain = domain("Sistemas", TIPO, COORDINADOR);
+        assertThrows(InternalApplicationException.class, () -> useCase.execute(domain));
     }
 
     @Test

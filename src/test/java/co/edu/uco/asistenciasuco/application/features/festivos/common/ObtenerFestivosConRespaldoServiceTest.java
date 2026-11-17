@@ -149,16 +149,17 @@ class ObtenerFestivosConRespaldoServiceTest {
 
     @Test
     void si_ningun_proveedor_entrega_un_conjunto_valido_falla_con_fes_010() {
+        final var servicio2 = servicio(Proveedor.fallido("CALENDARIOS_NACIONALES"), new Proveedor("CALCULO_LOCAL", festivos(ANIO, 2)));
         final InternalApplicationException error = assertThrows(InternalApplicationException.class,
-                () -> servicio(Proveedor.fallido("CALENDARIOS_NACIONALES"), new Proveedor("CALCULO_LOCAL", festivos(ANIO, 2)))
-                        .obtener(ANIO));
+                () -> servicio2.obtener(ANIO));
         assertEquals("FES_010", error.getCode());
     }
 
     @Test
     void sin_calculo_local_y_con_todos_los_proveedores_caidos_tambien_falla_con_fes_010() {
+        final var servicio = servicio(Proveedor.fallido("CALENDARIOS_NACIONALES"));
         assertEquals("FES_010", assertThrows(InternalApplicationException.class,
-                () -> servicio(Proveedor.fallido("CALENDARIOS_NACIONALES")).obtener(ANIO)).getCode());
+                () -> servicio.obtener(ANIO)).getCode());
         assertTrue(new ResultadoObtencionFestivos("CALCULO_LOCAL", null, true, 0).festivos().isEmpty());
     }
 

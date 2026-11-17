@@ -101,14 +101,14 @@ class ConsultasConsolidadoAuditoriaUseCaseImplTest {
     @Test
     void T_172_UC_04_auditoria_rechaza_rangos_invalidos_y_resultado_fuera_de_contrato() {
         final OffsetDateTime hasta = AHORA_UTC;
-        assertThrows(ValidationException.class, () -> useCase.consultarAuditoria(USUARIO,
-                new FiltroAuditoria(hasta, hasta, null, null, null, null, null, true, null, false), 1, 10));
-        assertThrows(ValidationException.class, () -> useCase.consultarAuditoria(USUARIO,
-                new FiltroAuditoria(hasta.minusDays(91), hasta, null, null, null, null, null, true, null, false), 1, 10));
-        assertThrows(ValidationException.class, () -> useCase.consultarAuditoria(USUARIO,
-                new FiltroAuditoria(null, null, null, null, null, null, "OK", true, null, false), 1, 10));
-        assertThrows(ValidationException.class, () -> useCase.consultarAuditoria(USUARIO,
-                new FiltroAuditoria(null, null, "A".repeat(121), null, null, null, null, true, null, false), 1, 10));
+        final var filtroAuditoria4 = new FiltroAuditoria(hasta, hasta, null, null, null, null, null, true, null, false);
+        assertThrows(ValidationException.class, () -> useCase.consultarAuditoria(USUARIO, filtroAuditoria4, 1, 10));
+        final var filtroAuditoria3 = new FiltroAuditoria(hasta.minusDays(91), hasta, null, null, null, null, null, true, null, false);
+        assertThrows(ValidationException.class, () -> useCase.consultarAuditoria(USUARIO, filtroAuditoria3, 1, 10));
+        final var filtroAuditoria2 = new FiltroAuditoria(null, null, null, null, null, null, "OK", true, null, false);
+        assertThrows(ValidationException.class, () -> useCase.consultarAuditoria(USUARIO, filtroAuditoria2, 1, 10));
+        final var filtroAuditoria = new FiltroAuditoria(null, null, "A".repeat(121), null, null, null, null, true, null, false);
+        assertThrows(ValidationException.class, () -> useCase.consultarAuditoria(USUARIO, filtroAuditoria, 1, 10));
         verifyNoInteractions(port);
     }
 

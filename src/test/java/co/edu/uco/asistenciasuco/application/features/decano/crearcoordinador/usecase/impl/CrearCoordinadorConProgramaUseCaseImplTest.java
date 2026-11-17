@@ -150,8 +150,9 @@ class CrearCoordinadorConProgramaUseCaseImplTest {
     void programa_nuevo_sin_facultad_del_decano_es_prohibido() {
         when(scopePort.findFacultadIdByDecanoUsuario(DECANO)).thenReturn(Optional.empty());
 
+        final var dominio2 = dominio(null, new ProgramaNuevoDomain("P", TIPO_PROGRAMA, null, null));
         assertThrows(ForbiddenException.class,
-                () -> useCase.execute(dominio(null, new ProgramaNuevoDomain("P", TIPO_PROGRAMA, null, null))));
+                () -> useCase.execute(dominio2));
 
         verifyNoInteractions(commandPort, identity);
     }
@@ -160,8 +161,9 @@ class CrearCoordinadorConProgramaUseCaseImplTest {
     void rechazo_de_la_base_impide_la_cuenta_de_identidad() {
         doThrow(new ConflictException("Ya existe un programa con ese nombre.")).when(commandPort).crearCoordinadorConPrograma(any());
 
+        final var dominio = dominio(null, new ProgramaNuevoDomain("P", TIPO_PROGRAMA, null, null));
         assertThrows(ConflictException.class,
-                () -> useCase.execute(dominio(null, new ProgramaNuevoDomain("P", TIPO_PROGRAMA, null, null))));
+                () -> useCase.execute(dominio));
 
         verifyNoInteractions(identity);
     }

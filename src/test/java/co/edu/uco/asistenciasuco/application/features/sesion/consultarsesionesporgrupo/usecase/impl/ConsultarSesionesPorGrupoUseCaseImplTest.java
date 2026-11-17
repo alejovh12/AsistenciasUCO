@@ -72,7 +72,8 @@ class ConsultarSesionesPorGrupoUseCaseImplTest {
     void docente_ajeno_al_grupo_es_rechazado_con_forbidden() {
         when(institutionalScopePort.canDocenteAccessGrupo(DOCENTE_B, GRUPO_AJENO)).thenReturn(false);
 
+        final var consultarSesionesPorGrupoDomain = new ConsultarSesionesPorGrupoDomain(GRUPO_AJENO, DOCENTE_B);
         assertThrows(ForbiddenException.class,
-                () -> useCase.execute(new ConsultarSesionesPorGrupoDomain(GRUPO_AJENO, DOCENTE_B)));
+                () -> useCase.execute(consultarSesionesPorGrupoDomain));
     }
 }

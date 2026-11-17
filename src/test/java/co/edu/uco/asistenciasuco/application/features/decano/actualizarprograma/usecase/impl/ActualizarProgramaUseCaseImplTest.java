@@ -64,7 +64,8 @@ class ActualizarProgramaUseCaseImplTest {
     void T_SEC_01_sin_facultad_de_decano_responde_forbidden() {
         when(scopePort.findFacultadIdByDecanoUsuario(ACTOR)).thenReturn(Optional.empty());
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(domain(PROGRAMA, "Sistemas", TIPO, COORDINADOR)));
+        final var domain7 = domain(PROGRAMA, "Sistemas", TIPO, COORDINADOR);
+        assertThrows(ForbiddenException.class, () -> useCase.execute(domain7));
 
         verifyNoInteractions(commandPort, queryPort);
     }
@@ -72,12 +73,18 @@ class ActualizarProgramaUseCaseImplTest {
     @Test
     void valida_forma_antes_de_llamar_al_puerto() {
         assertThrows(ValidationException.class, () -> useCase.execute(null));
-        assertThrows(ValidationException.class, () -> useCase.execute(domain(null, "Sistemas", TIPO, COORDINADOR)));
-        assertThrows(ValidationException.class, () -> useCase.execute(domain(PROGRAMA, " ", TIPO, COORDINADOR)));
-        assertThrows(ValidationException.class, () -> useCase.execute(domain(PROGRAMA, null, TIPO, COORDINADOR)));
-        assertThrows(ValidationException.class, () -> useCase.execute(domain(PROGRAMA, "X".repeat(51), TIPO, COORDINADOR)));
-        assertThrows(ValidationException.class, () -> useCase.execute(domain(PROGRAMA, "Sistemas", null, COORDINADOR)));
-        assertThrows(ValidationException.class, () -> useCase.execute(domain(PROGRAMA, "Sistemas", TIPO, null)));
+        final var domain6 = domain(null, "Sistemas", TIPO, COORDINADOR);
+        assertThrows(ValidationException.class, () -> useCase.execute(domain6));
+        final var domain5 = domain(PROGRAMA, " ", TIPO, COORDINADOR);
+        assertThrows(ValidationException.class, () -> useCase.execute(domain5));
+        final var domain4 = domain(PROGRAMA, null, TIPO, COORDINADOR);
+        assertThrows(ValidationException.class, () -> useCase.execute(domain4));
+        final var textoLargo = domain(PROGRAMA, "X".repeat(51), TIPO, COORDINADOR);
+        assertThrows(ValidationException.class, () -> useCase.execute(textoLargo));
+        final var domain3 = domain(PROGRAMA, "Sistemas", null, COORDINADOR);
+        assertThrows(ValidationException.class, () -> useCase.execute(domain3));
+        final var domain2 = domain(PROGRAMA, "Sistemas", TIPO, null);
+        assertThrows(ValidationException.class, () -> useCase.execute(domain2));
         verify(commandPort, never()).actualizar(any());
     }
 
@@ -85,7 +92,8 @@ class ActualizarProgramaUseCaseImplTest {
     void si_el_programa_no_aparece_tras_actualizar_responde_no_encontrado() {
         when(queryPort.consultarPorId(PROGRAMA, FACULTAD)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> useCase.execute(domain(PROGRAMA, "Sistemas", TIPO, COORDINADOR)));
+        final var domain = domain(PROGRAMA, "Sistemas", TIPO, COORDINADOR);
+        assertThrows(ResourceNotFoundException.class, () -> useCase.execute(domain));
     }
 
     @Test

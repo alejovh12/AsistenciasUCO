@@ -23,7 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -68,8 +67,9 @@ class CambiarEstadoCoordinadorUseCaseImplTest {
     void execute_lanza_forbidden_sin_tocar_db_ni_identidad_cuando_no_hay_facultad_de_decano() {
         when(scopePort.findFacultadIdByDecanoUsuario(DECANO)).thenReturn(Optional.empty());
 
+        final var cambiarEstadoCoordinadorDomain2 = new CambiarEstadoCoordinadorDomain(COORDINADOR, false, DECANO);
         assertThrows(ForbiddenException.class,
-                () -> useCase.execute(new CambiarEstadoCoordinadorDomain(COORDINADOR, false, DECANO)));
+                () -> useCase.execute(cambiarEstadoCoordinadorDomain2));
 
         verifyNoInteractions(commandPort, sincronizacion);
     }
@@ -77,13 +77,13 @@ class CambiarEstadoCoordinadorUseCaseImplTest {
     @Test
     void execute_desactivar_persona_sin_otros_roles_deshabilita_la_cuenta() {
         dbCambiaEstado(false, true);
-        when(sincronizacion.desactivar(eq(USUARIO_COORDINADOR), eq(InstitutionalRole.COORDINADOR), eq(true)))
+        when(sincronizacion.desactivar(USUARIO_COORDINADOR, InstitutionalRole.COORDINADOR, true))
                 .thenReturn(ResultadoSincronizacion.OK);
 
         final ResultadoGestionCoordinadorDomain resultado =
                 useCase.execute(new CambiarEstadoCoordinadorDomain(COORDINADOR, false, DECANO));
 
-        verify(sincronizacion).desactivar(eq(USUARIO_COORDINADOR), eq(InstitutionalRole.COORDINADOR), eq(true));
+        verify(sincronizacion).desactivar(USUARIO_COORDINADOR, InstitutionalRole.COORDINADOR, true);
         verify(sincronizacion, never()).reactivar(any(), any());
         assertEquals(COORDINADOR, resultado.idCoordinador());
         assertFalse(resultado.sincronizacionPendiente());
@@ -92,30 +92,30 @@ class CambiarEstadoCoordinadorUseCaseImplTest {
     @Test
     void execute_desactivar_persona_con_otro_rol_activo_no_deshabilita_la_cuenta() {
         dbCambiaEstado(false, false);
-        when(sincronizacion.desactivar(eq(USUARIO_COORDINADOR), eq(InstitutionalRole.COORDINADOR), eq(false)))
+        when(sincronizacion.desactivar(USUARIO_COORDINADOR, InstitutionalRole.COORDINADOR, false))
                 .thenReturn(ResultadoSincronizacion.OK);
 
         useCase.execute(new CambiarEstadoCoordinadorDomain(COORDINADOR, false, DECANO));
 
-        verify(sincronizacion).desactivar(eq(USUARIO_COORDINADOR), eq(InstitutionalRole.COORDINADOR), eq(false));
+        verify(sincronizacion).desactivar(USUARIO_COORDINADOR, InstitutionalRole.COORDINADOR, false);
     }
 
     @Test
     void execute_reactivar_habilita_la_cuenta_y_reasigna_el_rol() {
         dbCambiaEstado(true, false);
-        when(sincronizacion.reactivar(eq(USUARIO_COORDINADOR), eq(InstitutionalRole.COORDINADOR)))
+        when(sincronizacion.reactivar(USUARIO_COORDINADOR, InstitutionalRole.COORDINADOR))
                 .thenReturn(ResultadoSincronizacion.OK);
 
         useCase.execute(new CambiarEstadoCoordinadorDomain(COORDINADOR, true, DECANO));
 
-        verify(sincronizacion).reactivar(eq(USUARIO_COORDINADOR), eq(InstitutionalRole.COORDINADOR));
+        verify(sincronizacion).reactivar(USUARIO_COORDINADOR, InstitutionalRole.COORDINADOR);
         verify(sincronizacion, never()).desactivar(any(), any(), anyBoolean());
     }
 
     @Test
     void execute_con_identidad_pendiente_responde_exito_con_advertencia_iam_002() {
         dbCambiaEstado(false, true);
-        when(sincronizacion.desactivar(eq(USUARIO_COORDINADOR), eq(InstitutionalRole.COORDINADOR), eq(true)))
+        when(sincronizacion.desactivar(USUARIO_COORDINADOR, InstitutionalRole.COORDINADOR, true))
                 .thenReturn(ResultadoSincronizacion.PENDIENTE);
         when(messageCatalog.getUserMessage("IAM_002")).thenReturn(MENSAJE_IAM_002);
 
@@ -132,8 +132,9 @@ class CambiarEstadoCoordinadorUseCaseImplTest {
         when(commandPort.cambiarEstadoCoordinador(COORDINADOR, false, FACULTAD, DECANO))
                 .thenThrow(new ConflictException("COO_001"));
 
+        final var cambiarEstadoCoordinadorDomain = new CambiarEstadoCoordinadorDomain(COORDINADOR, false, DECANO);
         assertThrows(ConflictException.class,
-                () -> useCase.execute(new CambiarEstadoCoordinadorDomain(COORDINADOR, false, DECANO)));
+                () -> useCase.execute(cambiarEstadoCoordinadorDomain));
 
         verifyNoInteractions(sincronizacion);
     }

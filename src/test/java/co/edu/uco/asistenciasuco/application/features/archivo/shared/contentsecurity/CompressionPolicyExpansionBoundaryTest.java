@@ -34,8 +34,10 @@ class CompressionPolicyExpansionBoundaryTest {
         final CompressionDecision compressed = CompressionPolicy.evaluate(originalExcesivo);
 
         assertTrue(compressed.compressed(), "La prueba requiere bytes comprimidos de entrada.");
+        final var storedContent = compressed.storedContent();
+        final var algorithm = compressed.algorithm();
         assertThrows(InternalApplicationException.class,
-                () -> CompressionPolicy.decompress(compressed.storedContent(), compressed.algorithm()),
+                () -> CompressionPolicy.decompress(storedContent, algorithm),
                 "Ninguna descarga debe descomprimir un soporte sobre el limite contractual.");
     }
 

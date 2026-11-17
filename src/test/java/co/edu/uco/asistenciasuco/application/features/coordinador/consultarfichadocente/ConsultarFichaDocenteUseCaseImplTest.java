@@ -125,9 +125,12 @@ class ConsultarFichaDocenteUseCaseImplTest {
     @Test
     void FD05_validaciones_de_entrada() {
         assertThrows(ValidationException.class, () -> useCase.execute(null));
-        assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarFichaDocenteDomain(ACTOR, null, null, 1, 10)));
-        assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarFichaDocenteDomain(ACTOR, DOCENTE, null, 0, 10)));
-        assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarFichaDocenteDomain(ACTOR, DOCENTE, null, 1, 0)));
+        final var consultarFichaDocenteDomain3 = new ConsultarFichaDocenteDomain(ACTOR, null, null, 1, 10);
+        assertThrows(ValidationException.class, () -> useCase.execute(consultarFichaDocenteDomain3));
+        final var consultarFichaDocenteDomain2 = new ConsultarFichaDocenteDomain(ACTOR, DOCENTE, null, 0, 10);
+        assertThrows(ValidationException.class, () -> useCase.execute(consultarFichaDocenteDomain2));
+        final var consultarFichaDocenteDomain = new ConsultarFichaDocenteDomain(ACTOR, DOCENTE, null, 1, 0);
+        assertThrows(ValidationException.class, () -> useCase.execute(consultarFichaDocenteDomain));
         verifyNoInteractions(scope, directorio, historial);
     }
 

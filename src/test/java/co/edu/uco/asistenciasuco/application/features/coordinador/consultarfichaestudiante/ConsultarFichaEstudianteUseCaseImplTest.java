@@ -64,7 +64,8 @@ class ConsultarFichaEstudianteUseCaseImplTest {
     @Test
     void T_BE_02_valida_la_forma_antes_de_llamar_al_puerto() {
         assertThrows(ValidationException.class, () -> useCase.execute(null));
-        assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarFichaEstudianteDomain(ACTOR, null, null)));
+        final var consultarFichaEstudianteDomain2 = new ConsultarFichaEstudianteDomain(ACTOR, null, null);
+        assertThrows(ValidationException.class, () -> useCase.execute(consultarFichaEstudianteDomain2));
         verify(queryPort, never()).consultarFicha(ACTOR, null, null);
     }
 
@@ -72,7 +73,8 @@ class ConsultarFichaEstudianteUseCaseImplTest {
     void T_BE_01_sin_programa_de_coordinador_responde_forbidden() {
         when(scopePort.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.empty());
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(new ConsultarFichaEstudianteDomain(ACTOR, ESTUDIANTE, null)));
+        final var consultarFichaEstudianteDomain = new ConsultarFichaEstudianteDomain(ACTOR, ESTUDIANTE, null);
+        assertThrows(ForbiddenException.class, () -> useCase.execute(consultarFichaEstudianteDomain));
 
         verifyNoInteractions(queryPort);
     }

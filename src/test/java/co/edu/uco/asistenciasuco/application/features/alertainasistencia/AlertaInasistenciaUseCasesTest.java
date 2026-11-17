@@ -37,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -224,8 +225,8 @@ class AlertaInasistenciaUseCasesTest {
         assertEquals(0, useCase.execute());
 
         // sin resolutor posible: solo el evento
-        org.mockito.Mockito.doReturn(List.of()).when(repositorio).consultarGruposPendientes(null, null);
-        org.mockito.Mockito.doReturn(new ResultadoResolutores(1, 0, 0, List.of(
+        doReturn(List.of()).when(repositorio).consultarGruposPendientes(null, null);
+        doReturn(new ResultadoResolutores(1, 0, 0, List.of(
                 new NovedadResolutores(revision, GRUPO, "G01", "Bases", EG, null, "REASIGNAR", null, null, "m", "E", "D", null, USUARIO_EST, List.of()))))
                 .when(repositorio).actualizarResolutores(null);
         useCase.execute();

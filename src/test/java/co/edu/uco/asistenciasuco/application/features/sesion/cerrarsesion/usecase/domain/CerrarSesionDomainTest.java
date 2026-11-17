@@ -34,7 +34,8 @@ class CerrarSesionDomainTest {
                 () -> new CerrarSesionDomain(SESION, DOCENTE, "Observacion valida", null));
         assertThrows(ValidationException.class, () -> new CerrarSesionDomain(SESION, DOCENTE, null, USUARIO_EJECUTOR));
         assertThrows(ValidationException.class, () -> new CerrarSesionDomain(SESION, DOCENTE, "corta", USUARIO_EJECUTOR));
+        final var textoLargo = "a".repeat(251);
         assertThrows(ValidationException.class,
-                () -> new CerrarSesionDomain(SESION, DOCENTE, "a".repeat(251), USUARIO_EJECUTOR));
+                () -> new CerrarSesionDomain(SESION, DOCENTE, textoLargo, USUARIO_EJECUTOR));
     }
 }

@@ -145,7 +145,8 @@ class SolicitarRevisionAsistenciaAvisoTest {
         final ConflictException vencido = new ConflictException(AsistenciaErrorCode.ERR_PLAZO_JUSTIFICACION_VENCIDO);
         doThrow(vencido).when(repository).solicitarRevisionAsistencia(any());
 
-        final ConflictException lanzada = assertThrows(ConflictException.class, () -> useCase.execute(domain()));
+        final var domain = domain();
+        final ConflictException lanzada = assertThrows(ConflictException.class, () -> useCase.execute(domain));
 
         assertEquals("ERR_PLAZO_JUSTIFICACION_VENCIDO", lanzada.getCode());
         assertEquals(AsistenciaErrorCode.ERR_PLAZO_JUSTIFICACION_VENCIDO.defaultMessage(), lanzada.getMessage());
