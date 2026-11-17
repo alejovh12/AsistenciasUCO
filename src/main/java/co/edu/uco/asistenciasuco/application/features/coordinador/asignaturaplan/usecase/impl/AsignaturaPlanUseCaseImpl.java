@@ -64,9 +64,9 @@ public final class AsignaturaPlanUseCaseImpl implements AsignaturaPlanUseCase {
 
     @Override
     public PaginaAsignaturasPlanProjection consultarAsignaturasCoordinador(final UUID idUsuarioEjecutor, final UUID idPrograma, final String busqueda,
-                                                                           final Boolean estaActiva, final int pagina, final int tamano) {
+                                                                           final Boolean estaActiva, final String codigoCaracter, final int pagina, final int tamano) {
         exigir(idUsuarioEjecutor, "El usuario ejecutor es obligatorio.");
-        return port.consultarAsignaturasCoordinador(idUsuarioEjecutor, idPrograma, busqueda, estaActiva, acotarPagina(pagina), acotarTamano(tamano));
+        return port.consultarAsignaturasCoordinador(idUsuarioEjecutor, idPrograma, busqueda, estaActiva, codigoCaracter, acotarPagina(pagina), acotarTamano(tamano));
     }
 
     @Override

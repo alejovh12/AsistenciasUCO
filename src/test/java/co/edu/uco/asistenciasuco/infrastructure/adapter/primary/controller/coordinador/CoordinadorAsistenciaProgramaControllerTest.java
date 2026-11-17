@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coor
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.primaryports.ConsultarAsistenciaProgramaInputPort;
+import co.edu.uco.asistenciasuco.application.features.grupo.common.dto.FranjaHorarioDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.primaryports.dto.ConsultasAsistenciaProgramaDTO.AsistenciaSesionDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.primaryports.dto.ConsultasAsistenciaProgramaDTO.GrupoProgramaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.primaryports.dto.ConsultasAsistenciaProgramaDTO.PaginaDTO;
@@ -48,15 +49,21 @@ class CoordinadorAsistenciaProgramaControllerTest {
     void T_064_01_get_grupos_usa_actor_y_filtros() throws Exception {
         when(inputPort.consultarGrupos(ACTOR, PERIODO, "calc", 2, 5)).thenReturn(new PaginaDTO<>(List.of(
                 new GrupoProgramaDTO(GRUPO, 1, "Grupo 1", UUID.randomUUID(), "Calculo", UUID.randomUUID(), 30, 20, 10,
-                        true, LocalDate.of(2026, 1, 20), LocalDate.of(2026, 6, 5))), 9, 2, 5));
+                        true, LocalDate.of(2026, 1, 20), LocalDate.of(2026, 6, 5),
+                        List.of(new FranjaHorarioDTO("LU", "Lunes", "08:00", "10:00")))), 9, 2, 5));
 
         mvc.perform(get("/api/v1/coordinador/grupos").param("idPeriodo", PERIODO.toString())
                         .param("busqueda", "calc").param("pagina", "2").param("tamano", "5"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exitoso").value(true))
-                .andExpect(jsonPath("$.total").value(9))
-                .andExpect(jsonPath("$.datos[0].nombreAsignatura").value("Calculo"))
-                .andExpect(jsonPath("$.datos[0].cuposDisponibles").value(10));
+                .andExpect(jsonPath("$.totalElementos").value(9))
+                .andExpect(jsonPath("$.numeroPagina").value(2))
+                .andExpect(jsonPath("$.tamanoPagina").value(5))
+                .andExpect(jsonPath("$.totalPaginas").value(2))
+                .andExpect(jsonPath("$.elementos[0].nombreAsignatura").value("Calculo"))
+                .andExpect(jsonPath("$.elementos[0].cuposDisponibles").value(10))
+                .andExpect(jsonPath("$.elementos[0].franjas[0].codigoDia").value("LU"))
+                .andExpect(jsonPath("$.elementos[0].franjas[0].horaInicio").value("08:00"));
     }
 
     @Test
@@ -65,7 +72,8 @@ class CoordinadorAsistenciaProgramaControllerTest {
                 .thenReturn(new PaginaDTO<>(List.of(), 0, 1, 10));
 
         mvc.perform(get("/api/v1/coordinador/grupos")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.total").value(0));
+                .andExpect(jsonPath("$.totalElementos").value(0))
+                .andExpect(jsonPath("$.elementos").isEmpty());
     }
 
     @Test

@@ -40,10 +40,10 @@ class AsignaturaPlanConsultasUseCaseImplTest {
     @Test
     void asignaturas_del_coordinador_traslada_el_programa_elegido() {
         final var pagina = new PaginaAsignaturasPlanProjection(List.of(), 0);
-        when(port.consultarAsignaturasCoordinador(usuario, programa, "b", true, 3, 10)).thenReturn(pagina);
+        when(port.consultarAsignaturasCoordinador(usuario, programa, "b", true, "OPT", 3, 10)).thenReturn(pagina);
 
-        assertSame(pagina, useCase.consultarAsignaturasCoordinador(usuario, programa, "b", true, 3, 10));
-        assertThrows(CrosscuttingException.class, () -> useCase.consultarAsignaturasCoordinador(null, programa, null, null, 1, 10));
+        assertSame(pagina, useCase.consultarAsignaturasCoordinador(usuario, programa, "b", true, "OPT", 3, 10));
+        assertThrows(CrosscuttingException.class, () -> useCase.consultarAsignaturasCoordinador(null, programa, null, null, null, 1, 10));
     }
 
     @Test

@@ -68,15 +68,28 @@ class CoordinadorPortalControllerTest {
             .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
 
     @Test
+    void periodosAcademicosTrasladanElFiltroDeEstadoYElTotalEsElDeLaListaFiltrada() throws Exception {
+        when(periods.execute("ACTIVO")).thenReturn(List.of(new PeriodoAcademicoDTO(UUID.randomUUID(), UUID.randomUUID(),
+                "UCO", "2026-2", "2026-2", LocalDate.of(2026, 7, 1), LocalDate.of(2026, 12, 1), 2026, "ACTIVO")));
+
+        mvc.perform(get("/api/v1/coordinador/periodos-academicos").param("estado", "ACTIVO"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.datos[0].estado").value("ACTIVO"));
+        verify(periods).execute("ACTIVO");
+    }
+
+    @Test
     void queryEndpointsPassActorAndSerializePortResults() throws Exception {
-        when(periods.execute()).thenReturn(List.of(new PeriodoAcademicoDTO(UUID.randomUUID(), UUID.randomUUID(),
-                "UCO", "2026-1", "2026-1", LocalDate.of(2026, 1, 1), LocalDate.of(2026, 6, 1), 2026)));
+        when(periods.execute((String) null)).thenReturn(List.of(new PeriodoAcademicoDTO(UUID.randomUUID(), UUID.randomUUID(),
+                "UCO", "2026-1", "2026-1", LocalDate.of(2026, 1, 1), LocalDate.of(2026, 6, 1), 2026, "CERRADO")));
         final UUID programa = UUID.randomUUID();
         when(students.execute(any())).thenReturn(new PaginaEstudiantesProgramaDTO(List.of(new EstudianteProgramaDTO(
                 UUID.randomUUID(), UUID.randomUUID(), "123456", "Ana", "ana@example.com", programa, "Ingeniería")), 41));
 
         mvc.perform(get("/api/v1/coordinador/periodos-academicos"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.datos[0].nombre").value("2026-1"));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.datos[0].nombre").value("2026-1"))
+                .andExpect(jsonPath("$.datos[0].estado").value("CERRADO"));
         // CULM-001 B2NM (S4, O2-B2): estudiantes paginado por el SP de directorio; programaId opcional
         mvc.perform(get("/api/v1/coordinador/estudiantes").param("programaId", programa.toString())
                         .param("busqueda", "ana").param("estaActivo", "true").param("pagina", "2").param("tamano", "10"))

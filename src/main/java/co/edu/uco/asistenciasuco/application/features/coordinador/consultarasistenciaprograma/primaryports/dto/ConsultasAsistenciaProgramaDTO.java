@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.primaryports.dto;
 
+import co.edu.uco.asistenciasuco.application.features.grupo.common.dto.FranjaHorarioDTO;
 import co.edu.uco.asistenciasuco.application.features.sesion.common.entity.EstadoSesion;
 import co.edu.uco.asistenciasuco.application.features.sesion.common.dto.CancelacionSesionDTO;
 import java.time.LocalDate;
@@ -19,7 +20,20 @@ public final class ConsultasAsistenciaProgramaDTO {
     public record GrupoProgramaDTO(UUID id, Integer codigo, String nombre, UUID idAsignatura, String nombreAsignatura,
                                    UUID idDocente, Integer capacidadMaxima, Integer estudiantesActivos,
                                    Integer cuposDisponibles, boolean habilitado, LocalDate inicioPeriodo,
-                                   LocalDate finPeriodo) {
+                                   LocalDate finPeriodo, List<FranjaHorarioDTO> franjas) {
+
+        /** Sin horario: solo para pruebas y consumidores que no lo necesitan. */
+        public GrupoProgramaDTO(UUID id, Integer codigo, String nombre, UUID idAsignatura, String nombreAsignatura,
+                                UUID idDocente, Integer capacidadMaxima, Integer estudiantesActivos,
+                                Integer cuposDisponibles, boolean habilitado, LocalDate inicioPeriodo,
+                                LocalDate finPeriodo) {
+            this(id, codigo, nombre, idAsignatura, nombreAsignatura, idDocente, capacidadMaxima, estudiantesActivos,
+                    cuposDisponibles, habilitado, inicioPeriodo, finPeriodo, List.of());
+        }
+
+        public GrupoProgramaDTO {
+            franjas = franjas == null ? List.of() : List.copyOf(franjas);
+        }
     }
 
     /**
