@@ -57,8 +57,8 @@ public final class AsignaturaPlanInteractor implements AsignaturaPlanInputPort {
 
     @Override
     public PaginaAsignaturasPlanDTO consultarAsignaturasCoordinador(final UUID idUsuarioEjecutor, final UUID idPrograma, final String busqueda,
-                                                                    final Boolean estaActiva, final int pagina, final int tamano) {
-        return aDto(useCase.consultarAsignaturasCoordinador(idUsuarioEjecutor, idPrograma, busqueda, estaActiva, pagina, tamano));
+                                                                    final Boolean estaActiva, final String codigoCaracter, final int pagina, final int tamano) {
+        return aDto(useCase.consultarAsignaturasCoordinador(idUsuarioEjecutor, idPrograma, busqueda, estaActiva, codigoCaracter, pagina, tamano));
     }
 
     @Override

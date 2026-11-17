@@ -17,7 +17,8 @@ public final class ConsultarPeriodosAcademicosMapper {
                 domain.codigo(),
                 domain.fechaInicio(),
                 domain.fechaFin(),
-                domain.anio()
+                domain.anio(),
+                domain.estado()
         );
     }
 }

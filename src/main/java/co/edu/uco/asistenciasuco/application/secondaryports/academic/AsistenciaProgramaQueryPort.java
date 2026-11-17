@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.secondaryports.academic;
 
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.FranjaHorarioRepositoryProjection;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,7 +28,20 @@ public interface AsistenciaProgramaQueryPort {
     record GrupoProgramaProjection(UUID id, Integer codigo, String nombre, UUID idAsignatura, String nombreAsignatura,
                                    UUID idDocente, Integer capacidadMaxima, Integer estudiantesActivos,
                                    Integer cuposDisponibles, boolean habilitado, LocalDate inicioPeriodo,
-                                   LocalDate finPeriodo) {
+                                   LocalDate finPeriodo, List<FranjaHorarioRepositoryProjection> franjas) {
+
+        /** Sin horario: solo para pruebas y consumidores que no lo necesitan. */
+        public GrupoProgramaProjection(UUID id, Integer codigo, String nombre, UUID idAsignatura, String nombreAsignatura,
+                                       UUID idDocente, Integer capacidadMaxima, Integer estudiantesActivos,
+                                       Integer cuposDisponibles, boolean habilitado, LocalDate inicioPeriodo,
+                                       LocalDate finPeriodo) {
+            this(id, codigo, nombre, idAsignatura, nombreAsignatura, idDocente, capacidadMaxima, estudiantesActivos,
+                    cuposDisponibles, habilitado, inicioPeriodo, finPeriodo, List.of());
+        }
+
+        public GrupoProgramaProjection {
+            franjas = franjas == null ? List.of() : List.copyOf(franjas);
+        }
     }
 
     record SesionGrupoProjection(UUID id, UUID idGrupo, Integer codigoGrupo, String nombreGrupo, String nombre,

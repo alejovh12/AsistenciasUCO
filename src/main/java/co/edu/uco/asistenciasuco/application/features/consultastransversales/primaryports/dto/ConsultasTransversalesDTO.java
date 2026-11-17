@@ -124,6 +124,14 @@ public final class ConsultasTransversalesDTO {
     public record CategoriaJustificacionDTO(UUID id, String codigo, String nombre, String descripcion, boolean requiereSoporte) {
     }
 
+    /** CIERRE-W2A: una opcion (id y nombre) de los filtros de materia y docente del consolidado. */
+    public record OpcionFiltroDTO(UUID id, String nombre) {
+    }
+
+    /** CIERRE-W2A: opciones de los filtros del consolidado, completas y dentro del ambito del usuario. */
+    public record OpcionesConsolidadoDTO(List<OpcionFiltroDTO> asignaturas, List<OpcionFiltroDTO> docentes) {
+    }
+
     public record ComponenteFormacionDTO(UUID idComponente, String codigo, String nombre, int totalAsignaturas) {
     }
 }

@@ -73,18 +73,33 @@ class AsignaturaPlanControllerConsultasTest {
 
     @Test
     void asignaturas_del_coordinador_filtra_por_programa_y_estado() throws Exception {
-        when(inputPort.consultarAsignaturasCoordinador(ACTOR, PROGRAMA, "x", false, 1, 20)).thenReturn(new PaginaAsignaturasPlanDTO(List.of(fila()), 1));
+        when(inputPort.consultarAsignaturasCoordinador(ACTOR, PROGRAMA, "x", false, null, 1, 20)).thenReturn(new PaginaAsignaturasPlanDTO(List.of(fila()), 1));
 
         mvc.perform(get("/api/v1/coordinador/asignaturas").param("programaId", PROGRAMA.toString()).param("busqueda", "x").param("estaActiva", "false"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElementos").value(1))
                 .andExpect(jsonPath("$.elementos[0].codigo").value("MAT1"));
-        verify(inputPort).consultarAsignaturasCoordinador(ACTOR, PROGRAMA, "x", false, 1, 20);
+        verify(inputPort).consultarAsignaturasCoordinador(ACTOR, PROGRAMA, "x", false, null, 1, 20);
+    }
+
+    @Test
+    void asignaturas_del_coordinador_traslada_el_caracter_recortado_y_ignora_el_vacio() throws Exception {
+        when(inputPort.consultarAsignaturasCoordinador(ACTOR, null, null, null, "OPT", 1, 20)).thenReturn(new PaginaAsignaturasPlanDTO(List.of(fila()), 1));
+        when(inputPort.consultarAsignaturasCoordinador(ACTOR, null, null, null, null, 1, 20)).thenReturn(new PaginaAsignaturasPlanDTO(List.of(), 0));
+
+        mvc.perform(get("/api/v1/coordinador/asignaturas").param("caracter", " OPT "))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElementos").value(1));
+        mvc.perform(get("/api/v1/coordinador/asignaturas").param("caracter", "   "))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElementos").value(0));
+        verify(inputPort).consultarAsignaturasCoordinador(ACTOR, null, null, null, "OPT", 1, 20);
+        verify(inputPort).consultarAsignaturasCoordinador(ACTOR, null, null, null, null, 1, 20);
     }
 
     @Test
     void asignaturas_de_programa_ajeno_es_403() throws Exception {
-        when(inputPort.consultarAsignaturasCoordinador(ACTOR, PROGRAMA, null, null, 1, 20)).thenThrow(new ForbiddenException("COO_003"));
+        when(inputPort.consultarAsignaturasCoordinador(ACTOR, PROGRAMA, null, null, null, 1, 20)).thenThrow(new ForbiddenException("COO_003"));
 
         mvc.perform(get("/api/v1/coordinador/asignaturas").param("programaId", PROGRAMA.toString())).andExpect(status().isForbidden());
     }

@@ -4,11 +4,14 @@ import co.edu.uco.asistenciasuco.application.exception.validation.ValidationExce
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.SpAsistenciaSesionPaginadoEntity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.SpGrupoProgramaPaginadoEntity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.SpSesionGrupoPaginadoEntity;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvHorarioEntity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.DatabaseOperationException;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
+import java.time.LocalTime;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,6 +48,7 @@ class AsistenciaProgramaJpaRepositoryTest {
 
     private final EntityManager entityManager = mock(EntityManager.class);
     private final Query query = mock(Query.class);
+    private final TypedQuery<UvHorarioEntity> horarios = mock(TypedQuery.class);
     private AsistenciaProgramaJpaRepository repository;
 
     @BeforeEach
@@ -53,6 +57,9 @@ class AsistenciaProgramaJpaRepositoryTest {
         repository = new AsistenciaProgramaJpaRepository(entityManager);
         when(entityManager.createNativeQuery(anyString(), any(Class.class))).thenReturn(query);
         when(query.setParameter(anyString(), any())).thenReturn(query);
+        when(entityManager.createQuery(anyString(), eq(UvHorarioEntity.class))).thenReturn(horarios);
+        when(horarios.setParameter(anyString(), any())).thenReturn(horarios);
+        when(horarios.getResultList()).thenReturn(Collections.emptyList());
     }
 
     @AfterEach
@@ -92,6 +99,36 @@ class AsistenciaProgramaJpaRepositoryTest {
         assertEquals(5, grupo.cuposDisponibles());
         assertTrue(grupo.habilitado());
         assertEquals(LocalDate.of(2026, 1, 20), grupo.inicioPeriodo());
+    }
+
+    @Test
+    void W2A_PAT_01_grupos_agrega_el_horario_ordenado_de_cada_grupo_de_la_pagina() {
+        final UUID otro = UUID.fromString("77777777-7777-7777-7777-777777777777");
+        when(query.getResultList()).thenReturn(List.of(
+                entidad(SpGrupoProgramaPaginadoEntity.class, Map.of("id", GRUPO, "codigo", 1, "nombre", "G1", "totalRegistros", 2)),
+                entidad(SpGrupoProgramaPaginadoEntity.class, Map.of("id", otro, "codigo", 2, "nombre", "G2", "totalRegistros", 2))));
+        when(horarios.getResultList()).thenReturn(List.of(
+                entidad(UvHorarioEntity.class, Map.of("idGrupo", GRUPO, "codigoDia", "MI", "nombreDia", "Miercoles",
+                        "horaInicio", LocalTime.of(14, 0), "horaFin", LocalTime.of(16, 0))),
+                entidad(UvHorarioEntity.class, Map.of("idGrupo", GRUPO, "codigoDia", "LU", "nombreDia", "Lunes",
+                        "horaInicio", LocalTime.of(8, 0), "horaFin", LocalTime.of(10, 0)))));
+
+        final var pagina = repository.consultarGrupos(EJECUTOR, null, null, 1, 10);
+
+        assertEquals(2, pagina.total());
+        assertEquals(List.of("LU", "MI"), pagina.elementos().getFirst().franjas().stream().map(f -> f.codigoDia()).toList());
+        assertEquals("Lunes", pagina.elementos().getFirst().franjas().getFirst().nombreDia());
+        assertTrue(pagina.elementos().get(1).franjas().isEmpty(), "un grupo sin horario trae lista vacia");
+        verify(horarios).setParameter("idsGrupo", List.of(GRUPO, otro));
+    }
+
+    @Test
+    void W2A_PAT_02_sin_grupos_no_consulta_el_horario() {
+        when(query.getResultList()).thenReturn(Collections.emptyList());
+
+        repository.consultarGrupos(EJECUTOR, null, null, 1, 10);
+
+        org.mockito.Mockito.verify(entityManager, org.mockito.Mockito.never()).createQuery(anyString(), eq(UvHorarioEntity.class));
     }
 
     @Test

@@ -94,7 +94,7 @@ public final class AcademicViewJpaProjectionMapper {
 
     public static PeriodoAcademicoProjection toPeriodoAcademico(final UvPeriodoAcademicoEntity row) {
         return new PeriodoAcademicoProjection(row.id(), row.idInstitucion(), row.nombreInstitucion(), row.nombre(),
-                text(row.codigo()), row.fechaInicio(), row.fechaFin(), row.anio());
+                text(row.codigo()), row.fechaInicio(), row.fechaFin(), row.anio(), row.estado());
     }
 
     public static DecanoProjection toDecano(final UvDecanoEntity row) {

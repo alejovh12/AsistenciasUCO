@@ -80,9 +80,11 @@ public final class AsignaturaPlanController {
             @RequestParam(name = "programaId", required = false) final UUID programaId,
             @RequestParam(name = "busqueda", required = false) final String busqueda,
             @RequestParam(name = "estaActiva", required = false) final Boolean estaActiva,
+            @RequestParam(name = "caracter", required = false) final String caracter,
             @RequestParam(name = "pagina", defaultValue = "1") final int pagina,
             @RequestParam(name = "tamano", defaultValue = "20") final int tamano) {
-        final var page = inputPort.consultarAsignaturasCoordinador(authenticatedUserResolver.requireAuthenticatedUserId(), programaId, busqueda, estaActiva, pagina, tamano);
+        final var page = inputPort.consultarAsignaturasCoordinador(authenticatedUserResolver.requireAuthenticatedUserId(), programaId, busqueda, estaActiva,
+                caracter == null || caracter.isBlank() ? null : caracter.trim(), pagina, tamano);
         return ResponseEntity.ok(ApiPageResponse.of(page.elementos(), pagina, tamano, page.total()));
     }
 

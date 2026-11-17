@@ -60,7 +60,7 @@ public class AsignaturaPlanEstudioJpaRepository implements AsignaturaPlanPort {
             EXEC dbo.usp_consultar_asignaturas_coordinador_paginado
                  @idUsuarioEjecutor = :idUsuarioEjecutor, @idCorrelacion = :idCorrelacion,
                  @numeroPagina = :numeroPagina, @tamanoPagina = :tamanoPagina,
-                 @idPrograma = :idPrograma, @busqueda = :busqueda, @estaActiva = :estaActiva
+                 @idPrograma = :idPrograma, @busqueda = :busqueda, @estaActiva = :estaActiva, @codigoCaracter = :codigoCaracter
             """;
     static final String SQL_PLANES = """
             EXEC dbo.usp_consultar_planes_estudio_programa_paginado
@@ -165,11 +165,12 @@ public class AsignaturaPlanEstudioJpaRepository implements AsignaturaPlanPort {
 
     @Override
     public PaginaAsignaturasPlanProjection consultarAsignaturasCoordinador(final UUID idUsuarioEjecutor, final UUID idPrograma, final String busqueda,
-                                                                           final Boolean estaActiva, final int pagina, final int tamano) {
+                                                                           final Boolean estaActiva, final String codigoCaracter, final int pagina, final int tamano) {
         final Map<String, Object> p = paginado(idUsuarioEjecutor, pagina, tamano);
         p.put("idPrograma", idPrograma);
         p.put("busqueda", busqueda);
         p.put("estaActiva", estaActiva);
+        p.put("codigoCaracter", codigoCaracter);
         return JpaQueryExecutor.execute("consultarAsignaturasCoordinador", "No fue posible consultar las asignaturas del coordinador.", () -> asignaturasPlan(SQL_ASIGNATURAS_COORDINADOR, p));
     }
 

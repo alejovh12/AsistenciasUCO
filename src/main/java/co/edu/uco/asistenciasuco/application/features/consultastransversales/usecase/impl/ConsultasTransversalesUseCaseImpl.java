@@ -16,6 +16,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTr
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.EventoAuditoriaProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.FiltroAuditoria;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.FiltroConsolidado;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.OpcionesConsolidadoProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.DocenteFacultadProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.EstudianteInstitucionProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.FiltroConsulta;
@@ -147,6 +148,11 @@ public final class ConsultasTransversalesUseCaseImpl implements ConsultasTransve
         return queryPort.consultarConsolidadoAsistencia(exigirUsuario(usuario),
                 ObjectHelper.isNull(filtro) ? new FiltroConsolidado(null, null, null, null) : filtro,
                 ConsultaPaginadaRules.pagina(pagina), ConsultaPaginadaRules.tamano(tamano));
+    }
+
+    @Override
+    public OpcionesConsolidadoProjection consultarOpcionesConsolidado(final UUID usuario, final UUID idPeriodoAcademico) {
+        return queryPort.consultarOpcionesConsolidado(exigirUsuario(usuario), idPeriodoAcademico);
     }
 
     @Override

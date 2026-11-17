@@ -7,6 +7,7 @@ import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasist
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.primaryports.dto.ConsultasAsistenciaProgramaDTO.PaginaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.primaryports.dto.ConsultasAsistenciaProgramaDTO.SesionGrupoDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.usecase.ConsultarAsistenciaProgramaUseCase;
+import co.edu.uco.asistenciasuco.application.features.grupo.common.mapper.FranjaHorarioMapper;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsistenciaProgramaQueryPort.Pagina;
 
 import java.time.LocalDate;
@@ -29,7 +30,8 @@ public final class ConsultarAsistenciaProgramaInteractor implements ConsultarAsi
         return aDTO(useCase.consultarGrupos(usuario, idPeriodoAcademico, busqueda, pagina, tamano), pagina, tamano,
                 g -> new GrupoProgramaDTO(g.id(), g.codigo(), g.nombre(), g.idAsignatura(), g.nombreAsignatura(),
                         g.idDocente(), g.capacidadMaxima(), g.estudiantesActivos(), g.cuposDisponibles(),
-                        g.habilitado(), g.inicioPeriodo(), g.finPeriodo()));
+                        g.habilitado(), g.inicioPeriodo(), g.finPeriodo(),
+                        FranjaHorarioMapper.toDTOs(FranjaHorarioMapper.fromProjections(g.franjas()))));
     }
 
     @Override

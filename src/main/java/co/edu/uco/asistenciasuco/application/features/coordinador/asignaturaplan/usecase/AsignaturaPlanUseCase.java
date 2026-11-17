@@ -12,7 +12,7 @@ public interface AsignaturaPlanUseCase {
     List<CaracterAsignaturaProjection> consultarCaracteres();
     List<ProgramaGrupoProjection> consultarProgramasGrupo(UUID idUsuarioEjecutor, UUID idGrupo);
     PaginaAsignaturasPlanProjection consultarMalla(UUID idUsuarioEjecutor, UUID idPlanEstudio, Integer numeroSemestre, String codigoCaracter, String busqueda, int pagina, int tamano);
-    PaginaAsignaturasPlanProjection consultarAsignaturasCoordinador(UUID idUsuarioEjecutor, UUID idPrograma, String busqueda, Boolean estaActiva, int pagina, int tamano);
+    PaginaAsignaturasPlanProjection consultarAsignaturasCoordinador(UUID idUsuarioEjecutor, UUID idPrograma, String busqueda, Boolean estaActiva, String codigoCaracter, int pagina, int tamano);
     PaginaPlanesEstudioProjection consultarPlanes(UUID idUsuarioEjecutor, UUID idPrograma, Boolean estaActivo, int pagina, int tamano);
     PaginaGruposFacultadProjection consultarGruposFacultad(UUID idUsuarioEjecutor, UUID idPeriodoAcademico, UUID idPrograma, String busqueda, int pagina, int tamano);
 

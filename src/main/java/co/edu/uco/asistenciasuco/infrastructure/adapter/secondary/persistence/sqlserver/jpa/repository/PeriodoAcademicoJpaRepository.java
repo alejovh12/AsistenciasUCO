@@ -27,12 +27,26 @@ public class PeriodoAcademicoJpaRepository implements PeriodoAcademicoQueryPort 
             from UvPeriodoAcademicoEntity p
             """;
     static final String HQL_LISTAR = HQL_SELECT + "order by p.nombre, p.id";
+    static final String HQL_LISTAR_POR_ESTADO = HQL_SELECT + "where p.estado = :estado order by p.nombre, p.id";
     static final String HQL_POR_ID = HQL_SELECT + "where p.id = :idPeriodoAcademico";
 
     private final EntityManager entityManager;
 
     public PeriodoAcademicoJpaRepository(final EntityManager entityManager) {
         this.entityManager = Objects.requireNonNull(entityManager, "El EntityManager de periodos es obligatorio.");
+    }
+
+    @Override
+    public List<PeriodoAcademicoProjection> consultarPeriodosAcademicosPorEstado(final String estado) {
+        return JpaQueryExecutor.execute(
+                "consultarPeriodosAcademicosPorEstado",
+                "No fue posible consultar los periodos desde base de datos.",
+                () -> entityManager.createQuery(HQL_LISTAR_POR_ESTADO, UvPeriodoAcademicoEntity.class)
+                        .setParameter("estado", estado)
+                        .getResultList().stream()
+                        .map(AcademicViewJpaProjectionMapper::toPeriodoAcademico)
+                        .toList()
+        );
     }
 
     @Override
