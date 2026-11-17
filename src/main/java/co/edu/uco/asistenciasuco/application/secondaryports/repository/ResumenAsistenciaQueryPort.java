@@ -24,7 +24,9 @@ public interface ResumenAsistenciaQueryPort {
         }
     }
 
-    PaginaResultado<FilaResumen> consultarResumenGrupoDocente(UUID grupoId, int numeroPagina, int tamanoPagina, UUID usuarioEjecutor);
+    /** CIERRE-W3M: {@code busqueda} opcional (subcadena del nombre o del documento); {@code null} = sin filtro. */
+    PaginaResultado<FilaResumen> consultarResumenGrupoDocente(UUID grupoId, int numeroPagina, int tamanoPagina, String busqueda,
+                                                              UUID usuarioEjecutor);
 
     List<FilaResumen> consultarResumenEstudiante(UUID usuarioEjecutor);
 }

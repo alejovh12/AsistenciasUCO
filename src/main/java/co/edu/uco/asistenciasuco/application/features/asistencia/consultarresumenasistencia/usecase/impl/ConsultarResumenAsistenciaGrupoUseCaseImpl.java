@@ -33,7 +33,9 @@ public final class ConsultarResumenAsistenciaGrupoUseCaseImpl implements Consult
         }
         final PaginaResultado<ResumenAsistenciaQueryPort.FilaResumen> pagina = resumen.consultarResumenGrupoDocente(
                 consulta.grupoId(), ParametrosPaginacion.pagina(consulta.pagina()),
-                ParametrosPaginacion.tamano(consulta.tamano()), consulta.usuarioEjecutor());
+                ParametrosPaginacion.tamano(consulta.tamano()),
+                consulta.busqueda() == null || consulta.busqueda().isBlank() ? null : consulta.busqueda().trim(),
+                consulta.usuarioEjecutor());
         return new PaginaResultado<>(
                 pagina.elementos().stream()
                         .map(fila -> new ResumenAsistenciaEstudianteDTO(fila.idEstudiante(), fila.nombreCompleto(),

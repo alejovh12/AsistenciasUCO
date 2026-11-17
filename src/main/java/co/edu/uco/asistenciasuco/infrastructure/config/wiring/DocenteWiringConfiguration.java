@@ -31,6 +31,14 @@ import co.edu.uco.asistenciasuco.application.features.docente.retirarestudianteg
 import co.edu.uco.asistenciasuco.application.features.docente.retirarestudiantegrupo.primaryports.interactor.RetirarEstudianteGrupoInteractor;
 import co.edu.uco.asistenciasuco.application.features.docente.retirarestudiantegrupo.usecase.RetirarEstudianteGrupoUseCase;
 import co.edu.uco.asistenciasuco.application.features.docente.retirarestudiantegrupo.usecase.impl.RetirarEstudianteGrupoUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarmatrizasistencia.primaryports.ConsultarMatrizAsistenciaGrupoInputPort;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarmatrizasistencia.usecase.ConsultarMatrizAsistenciaGrupoUseCase;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarmatrizasistencia.usecase.impl.ConsultarMatrizAsistenciaGrupoUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarresumensesiones.primaryports.ConsultarResumenSesionesGrupoInputPort;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarresumensesiones.usecase.ConsultarResumenSesionesGrupoUseCase;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarresumensesiones.usecase.impl.ConsultarResumenSesionesGrupoUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.MatrizAsistenciaQueryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.ResumenSesionesGrupoQueryPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -114,5 +122,26 @@ public class DocenteWiringConfiguration {
     @Bean
     RetirarEstudianteGrupoInputPort retirarEstudianteGrupoInputPort(final RetirarEstudianteGrupoUseCase useCase) {
         return new RetirarEstudianteGrupoInteractor(useCase);
+    }
+
+    /** CIERRE-W3M (punto 1): matriz de asistencia del grupo cruzada en la base, paginada por estudiante. */
+    @Bean
+    ConsultarMatrizAsistenciaGrupoInputPort consultarMatrizAsistenciaGrupoInputPort(
+            final InstitutionalScopePort scopePort,
+            final MatrizAsistenciaQueryPort matrizPort,
+            final ResumenSesionesGrupoQueryPort sesionesPort
+    ) {
+        final ConsultarMatrizAsistenciaGrupoUseCase useCase = new ConsultarMatrizAsistenciaGrupoUseCaseImpl(scopePort, matrizPort, sesionesPort);
+        return useCase;
+    }
+
+    /** CIERRE-W3M (puntos 2 y 3): resumen de sesiones del grupo con estado temporal y conteos resueltos en la base. */
+    @Bean
+    ConsultarResumenSesionesGrupoInputPort consultarResumenSesionesGrupoInputPort(
+            final InstitutionalScopePort scopePort,
+            final ResumenSesionesGrupoQueryPort sesionesPort
+    ) {
+        final ConsultarResumenSesionesGrupoUseCase useCase = new ConsultarResumenSesionesGrupoUseCaseImpl(scopePort, sesionesPort);
+        return useCase;
     }
 }

@@ -83,7 +83,7 @@ class ResumenAsistenciaJpaRepositoryTest {
         f.put("totalRegistros", 31);
         when(query.getResultList()).thenReturn(List.of(TomaAsistenciaJpaRepositoryTest.tupla(f)));
 
-        final PaginaResultado<ResumenAsistenciaQueryPort.FilaResumen> pagina = repository.consultarResumenGrupoDocente(GRUPO, 1, 50, USUARIO);
+        final PaginaResultado<ResumenAsistenciaQueryPort.FilaResumen> pagina = repository.consultarResumenGrupoDocente(GRUPO, 1, 50, null, USUARIO);
 
         assertEquals(31, pagina.totalElementos());
         assertEquals(new ResumenAsistenciaQueryPort.FilaResumen(GRUPO, ESTUDIANTE, "Ana Perez", "A", new IndicadoresAsistenciaDTO(10,
@@ -93,7 +93,7 @@ class ResumenAsistenciaJpaRepositoryTest {
         verify(query).setParameter("idGrupo", GRUPO);
 
         when(query.getResultList()).thenReturn(List.of());
-        assertEquals(0, repository.consultarResumenGrupoDocente(GRUPO, 1, 50, USUARIO).totalElementos());
+        assertEquals(0, repository.consultarResumenGrupoDocente(GRUPO, 1, 50, null, USUARIO).totalElementos());
     }
 
     private ResumenAsistenciaQueryPort.FilaResumen filaDelGrupo(final Map<String, Object> extra) {
@@ -102,7 +102,7 @@ class ResumenAsistenciaJpaRepositoryTest {
         f.put("totalRegistros", 1);
         f.putAll(extra);
         when(query.getResultList()).thenReturn(List.of(TomaAsistenciaJpaRepositoryTest.tupla(f)));
-        return repository.consultarResumenGrupoDocente(GRUPO, 1, 50, USUARIO).elementos().getFirst();
+        return repository.consultarResumenGrupoDocente(GRUPO, 1, 50, null, USUARIO).elementos().getFirst();
     }
 
     @Test
@@ -164,7 +164,7 @@ class ResumenAsistenciaJpaRepositoryTest {
         assertEquals(GRUPO, resumen.idGrupo());
 
         when(query.getResultList()).thenThrow(new PersistenceException("DBCODE=SEC_002|ajeno"));
-        assertThrows(ForbiddenException.class, () -> repository.consultarResumenGrupoDocente(GRUPO, 1, 50, USUARIO));
+        assertThrows(ForbiddenException.class, () -> repository.consultarResumenGrupoDocente(GRUPO, 1, 50, null, USUARIO));
         assertThrows(NullPointerException.class, () -> new ResumenAsistenciaJpaRepository(null));
     }
 }
