@@ -138,7 +138,7 @@ public final class ConsultarSesionesMateriaEstudianteUseCaseImpl implements Cons
         if (minutos != null && minutos.codigoEstadoSesion() != null) {
             try {
                 return EstadoAsistenciaSesion.valueOf(minutos.codigoEstadoSesion().strip().toUpperCase(Locale.ROOT));
-            } catch (final IllegalArgumentException ignorado) {
+            } catch (final IllegalArgumentException _) {
                 LOGGER.warn("Estado de sesion desconocido {}; se usa el respaldo por marcas.", minutos.codigoEstadoSesion());
             }
         }
@@ -178,7 +178,7 @@ public final class ConsultarSesionesMateriaEstudianteUseCaseImpl implements Cons
             final int valor = parametros.getParameter(GRUPO_PAGINACION, CLAVE_TAMANO_MAXIMO)
                     .map(String::strip).filter(texto -> !texto.isEmpty()).map(Integer::parseInt).orElse(TAMANO_MAXIMO_SEMILLA);
             return valor < 1 ? TAMANO_MAXIMO_SEMILLA : valor;
-        } catch (final NumberFormatException | ParameterCatalogPort.ParameterCatalogException exception) {
+        } catch (final NumberFormatException | ParameterCatalogPort.ParameterCatalogException _) {
             return TAMANO_MAXIMO_SEMILLA;
         }
     }

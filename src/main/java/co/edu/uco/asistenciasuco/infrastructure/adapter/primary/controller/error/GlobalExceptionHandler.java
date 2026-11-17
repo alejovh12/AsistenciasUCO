@@ -301,7 +301,7 @@ public final class GlobalExceptionHandler {
                     && !(catalogMessage.get().contains("{}") && !TextHelper.isNullOrBlank(descriptor.message()))) {
                 return catalogMessage.get();
             }
-        } catch (final RuntimeException e) {
+        } catch (final RuntimeException _) {
             LOGGER.debug("No se pudo resolver mensaje de usuario para codigo: {}", descriptor.code());
         }
         return TextHelper.isNullOrBlank(descriptor.message()) ? descriptor.status().getReasonPhrase() : descriptor.message();

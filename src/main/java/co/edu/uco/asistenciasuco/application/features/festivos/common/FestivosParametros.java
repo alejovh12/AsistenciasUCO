@@ -57,7 +57,7 @@ public final class FestivosParametros {
         }
         try {
             return Integer.parseInt(texto.get().strip());
-        } catch (final NumberFormatException exception) {
+        } catch (final NumberFormatException _) {
             return defecto;
         }
     }
@@ -76,7 +76,7 @@ public final class FestivosParametros {
     private Optional<String> valor(final String clave) {
         try {
             return Objects.requireNonNullElse(parametros.getParameter(GRUPO, clave), Optional.empty());
-        } catch (final RuntimeException exception) {
+        } catch (final RuntimeException _) {
             return Optional.empty();
         }
     }

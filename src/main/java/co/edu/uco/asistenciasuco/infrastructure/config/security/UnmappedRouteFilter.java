@@ -83,7 +83,7 @@ public class UnmappedRouteFilter extends OncePerRequestFilter {
     private static boolean atiende(final RequestMappingHandlerMapping mapping, final HttpServletRequest request) {
         try {
             return mapping.getHandler(request) != null;
-        } catch (final Exception coincidenciaParcial) {
+        } catch (final Exception _) {
             // 405, 415, 406 o parametros ausentes: la ruta existe; el DispatcherServlet produce el error propio.
             return true;
         }

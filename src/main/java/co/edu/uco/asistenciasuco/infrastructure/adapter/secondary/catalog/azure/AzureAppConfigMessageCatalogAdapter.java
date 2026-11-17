@@ -85,11 +85,11 @@ public class AzureAppConfigMessageCatalogAdapter implements MessageCatalogPort {
             ConfigurationSetting setting = null;
             try {
                 setting = client.getConfigurationSetting(key, LABEL_ES);
-            } catch (final ResourceNotFoundException notFoundWithLabel) {
+            } catch (final ResourceNotFoundException _) {
                 // Fallback sin label si no se especifico
                 try {
                     setting = client.getConfigurationSetting(key, null);
-                } catch (final ResourceNotFoundException ignored) {
+                } catch (final ResourceNotFoundException _) {
                     // No existe en Azure
                 }
             }
@@ -123,7 +123,7 @@ public class AzureAppConfigMessageCatalogAdapter implements MessageCatalogPort {
                 return Optional.of(setting.getValue());
             }
             return Optional.empty();
-        } catch (final ResourceNotFoundException e) {
+        } catch (final ResourceNotFoundException _) {
             return Optional.empty();
         } catch (final Exception e) {
             throw new MessageCatalogException("Error al consultar mensaje técnico en Azure App Configuration para código: " + cleanCode, e);
@@ -170,7 +170,7 @@ public class AzureAppConfigMessageCatalogAdapter implements MessageCatalogPort {
 
         try {
             return MessageFormat.format(normalized, args);
-        } catch (final Exception e) {
+        } catch (final Exception _) {
             return normalized;
         }
     }

@@ -88,7 +88,7 @@ public final class ReenviarVerificacionCorreoUseCaseImpl implements ReenviarVeri
                     .map(CuentaIdentidadDTO::idExterno)
                     .map(idExterno -> !identityProviderPort.tieneContrasena(idExterno))
                     .orElse(false);
-        } catch (final IdentityProviderPort.IdentityProviderException exception) {
+        } catch (final IdentityProviderPort.IdentityProviderException _) {
             return false;
         }
     }

@@ -118,10 +118,10 @@ public class SecurityBaselinePepClient {
                     .POST(HttpRequest.BodyPublishers.ofString(body))
                     .build();
             return mapResponse(enviarConLimiteTotal(pepRequest));
-        } catch (final InterruptedException exception) {
+        } catch (final InterruptedException _) {
             Thread.currentThread().interrupt();
             return unavailable();
-        } catch (final ExecutionException | TimeoutException | RuntimeException exception) {
+        } catch (final ExecutionException | TimeoutException | RuntimeException _) {
             return unavailable();
         }
     }

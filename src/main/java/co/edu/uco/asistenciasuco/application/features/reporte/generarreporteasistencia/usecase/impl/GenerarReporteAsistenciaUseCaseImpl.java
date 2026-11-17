@@ -9,7 +9,7 @@ import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasis
 import co.edu.uco.asistenciasuco.application.secondaryports.report.ReporteAsistenciaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
-import java.util.List; import java.util.Objects; import java.util.UUID;
+import java.util.List; import java.util.Objects;
 import java.util.Set;
 
 public final class GenerarReporteAsistenciaUseCaseImpl implements GenerarReporteAsistenciaUseCase {

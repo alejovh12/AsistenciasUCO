@@ -128,7 +128,7 @@ public class MessageCatalogJpaRepository implements MessageCatalogPort {
         }
         try {
             return MessageFormat.format(pattern, args);
-        } catch (final Exception e) {
+        } catch (final Exception _) {
             return pattern;
         }
     }

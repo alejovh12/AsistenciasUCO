@@ -252,7 +252,7 @@ public final class AccesoCuentaService implements AccesoCuentaInputPort {
     private void registrarDesfase(final UUID usuario, final String detalle) {
         try {
             desfases.registrar(usuario, OPERACION_RECONCILIAR, detalle);
-        } catch (final RuntimeException exception) {
+        } catch (final RuntimeException _) {
             // Registrar el desfase nunca oculta el resultado de la reconciliacion.
         }
     }

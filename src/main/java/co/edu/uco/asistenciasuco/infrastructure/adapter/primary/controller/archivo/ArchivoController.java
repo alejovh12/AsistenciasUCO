@@ -95,7 +95,7 @@ public final class ArchivoController {
         }
         try {
             return archivo.getBytes();
-        } catch (final IOException exception) {
+        } catch (final IOException _) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno al leer el archivo adjunto.");
         }
     }
@@ -103,7 +103,7 @@ public final class ArchivoController {
     private UUID parseFileId(final String fileId) {
         try {
             return UUID.fromString(fileId);
-        } catch (final IllegalArgumentException exception) {
+        } catch (final IllegalArgumentException _) {
             throw new ResourceNotFoundException(MensajeUsuarioErrorCode.NOF_APP_014);
         }
     }

@@ -1,9 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadCommandPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadCommandPort.ActualizarFacultadCommand;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadCommandPort.CambiarEstadoFacultadCommand;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadCommandPort.CrearFacultadCommand;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.FacultadProjection;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.mapper.AcademicViewJpaProjectionMapper;

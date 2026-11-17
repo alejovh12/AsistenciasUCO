@@ -7,9 +7,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePub
 import co.edu.uco.asistenciasuco.application.features.alertainasistencia.common.NovedadResolutores;
 import co.edu.uco.asistenciasuco.application.features.alertainasistencia.common.Resolutor;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.RevisionCancelacionRepositoryPort;
-import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.common.DestinatarioRevision;
-import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.common.ResultadoDecision;
-import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.common.ResultadoResolucion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

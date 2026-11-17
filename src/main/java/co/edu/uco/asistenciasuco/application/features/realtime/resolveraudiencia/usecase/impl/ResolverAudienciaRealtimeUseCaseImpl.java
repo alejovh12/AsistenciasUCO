@@ -1,7 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.realtime.resolveraudiencia.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.features.realtime.resolveraudiencia.AudienciaRealtimeGrupo;
-import co.edu.uco.asistenciasuco.application.features.realtime.resolveraudiencia.primaryports.ResolverAudienciaRealtimeInputPort;
 import co.edu.uco.asistenciasuco.application.features.realtime.resolveraudiencia.usecase.ResolverAudienciaRealtimeUseCase;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimeAudienciaQueryPort;

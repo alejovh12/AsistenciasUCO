@@ -1,7 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.projection;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 /**
  * Fila JPQL del reporte de asistencia por grupo (LB-008 JPA-05). {@code asistio} y {@code nombreRazonCausa}

@@ -3,10 +3,8 @@ package co.edu.uco.asistenciasuco.application.features.coordinador.consultaraler
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultaralertatemprana.primaryports.dto.AlertaTempranaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultaralertatemprana.primaryports.dto.AlertasPaginaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultaralertatemprana.primaryports.dto.ConsultarAlertaTempranaDTO;
-import co.edu.uco.asistenciasuco.application.features.coordinador.consultaralertatemprana.usecase.domain.AlertaTempranaDomain;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultaralertatemprana.usecase.domain.AlertasPaginaDomain;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultaralertatemprana.usecase.domain.ConsultarAlertaTempranaDomain;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PaginaAlertasProjection;
 import java.util.List;
 
 public final class ConsultarAlertaTempranaMapper {

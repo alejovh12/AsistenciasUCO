@@ -500,7 +500,7 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
                 return null;
             }
             return externalId;
-        } catch (final IllegalArgumentException exception) {
+        } catch (final IllegalArgumentException _) {
             return null;
         }
     }

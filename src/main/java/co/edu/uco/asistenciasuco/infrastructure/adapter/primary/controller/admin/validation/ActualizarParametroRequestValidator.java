@@ -46,7 +46,7 @@ public final class ActualizarParametroRequestValidator implements Validator<Actu
         try {
             Instant.parse(texto.strip());
             return true;
-        } catch (final DateTimeParseException exception) {
+        } catch (final DateTimeParseException _) {
             return false;
         }
     }

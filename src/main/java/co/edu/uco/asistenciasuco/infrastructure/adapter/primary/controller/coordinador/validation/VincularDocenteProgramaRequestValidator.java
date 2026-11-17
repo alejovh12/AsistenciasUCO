@@ -57,7 +57,7 @@ public final class VincularDocenteProgramaRequestValidator implements Validator<
         } else {
             try {
                 Integer.parseInt(documento);
-            } catch (final NumberFormatException exception) {
+            } catch (final NumberFormatException _) {
                 builder.add("numeroIdentificacion", ValidationErrorType.OUT_OF_RANGE, "El numero de identificacion excede el rango permitido.");
             }
         }

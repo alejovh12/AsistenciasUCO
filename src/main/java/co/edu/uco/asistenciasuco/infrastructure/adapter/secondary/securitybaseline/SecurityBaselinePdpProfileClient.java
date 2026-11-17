@@ -117,7 +117,7 @@ public final class SecurityBaselinePdpProfileClient implements AccessProfilePort
             return new Resultado(exception.estado, exception.getMessage());
         } catch (final IOException exception) {
             return new Resultado(Estado.PENDIENTE_NO_DISPONIBLE, "El PDP no respondio: " + exception.getClass().getSimpleName());
-        } catch (final InterruptedException exception) {
+        } catch (final InterruptedException _) {
             Thread.currentThread().interrupt();
             return new Resultado(Estado.PENDIENTE_NO_DISPONIBLE, "Operacion interrumpida");
         } catch (final RuntimeException exception) {
@@ -332,7 +332,7 @@ public final class SecurityBaselinePdpProfileClient implements AccessProfilePort
         }
         try {
             return Instant.parse(until).isAfter(now);
-        } catch (final java.time.format.DateTimeParseException exception) {
+        } catch (final java.time.format.DateTimeParseException _) {
             return false;
         }
     }

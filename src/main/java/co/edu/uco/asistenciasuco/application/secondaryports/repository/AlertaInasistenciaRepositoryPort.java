@@ -3,8 +3,6 @@ package co.edu.uco.asistenciasuco.application.secondaryports.repository;
 import co.edu.uco.asistenciasuco.application.features.alertainasistencia.common.ResultadoEvaluacion;
 import co.edu.uco.asistenciasuco.application.features.alertainasistencia.common.PaginaAlertas;
 import co.edu.uco.asistenciasuco.application.features.alertainasistencia.common.ResultadoResolutores;
-import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 

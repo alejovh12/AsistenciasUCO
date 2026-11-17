@@ -130,7 +130,7 @@ public final class AprobarSolicitudSesionUseCaseImpl implements AprobarSolicitud
         try {
             return sesiones.consultarSesion(aprobada.idSesion()).map(AvisoSesionSupport::fechaHoraInicio)
                     .orElseGet(() -> valorAlmacenado(aprobada));
-        } catch (final RuntimeException exception) {
+        } catch (final RuntimeException _) {
             return valorAlmacenado(aprobada);
         }
     }

@@ -5,8 +5,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notific
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimeEvent;
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AlertaInasistenciaRepositoryPort;
-import co.edu.uco.asistenciasuco.application.features.alertainasistencia.common.NovedadAlerta;
-import co.edu.uco.asistenciasuco.application.features.alertainasistencia.common.ResultadoEvaluacion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

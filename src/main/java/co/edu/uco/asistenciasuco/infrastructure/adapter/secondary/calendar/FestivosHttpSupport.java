@@ -49,7 +49,7 @@ final class FestivosHttpSupport {
                     .map(String::strip)
                     .filter(v -> !v.isEmpty())
                     .orElse(defecto);
-        } catch (final RuntimeException exception) {
+        } catch (final RuntimeException _) {
             return defecto;
         }
     }
@@ -58,7 +58,7 @@ final class FestivosHttpSupport {
         try {
             final int segundos = Integer.parseInt(parametro(CLAVE_TIMEOUT, String.valueOf(TIMEOUT_POR_DEFECTO)));
             return Duration.ofSeconds(segundos > 0 ? segundos : TIMEOUT_POR_DEFECTO);
-        } catch (final NumberFormatException exception) {
+        } catch (final NumberFormatException _) {
             return Duration.ofSeconds(TIMEOUT_POR_DEFECTO);
         }
     }

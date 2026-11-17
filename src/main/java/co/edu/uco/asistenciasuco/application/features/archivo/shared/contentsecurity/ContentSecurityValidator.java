@@ -122,7 +122,7 @@ public final class ContentSecurityValidator {
         try {
             final Path path = Paths.get(filename);
             return !path.isAbsolute() && path.getNameCount() == 1;
-        } catch (final InvalidPathException exception) {
+        } catch (final InvalidPathException _) {
             return false;
         }
     }

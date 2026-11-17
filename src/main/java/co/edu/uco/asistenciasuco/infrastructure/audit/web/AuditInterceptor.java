@@ -216,7 +216,7 @@ public final class AuditInterceptor implements HandlerInterceptor {
             try {
                 final java.lang.reflect.Method metodo = target.getClass().getMethod(nombre);
                 return metodo.invoke(target);
-            } catch (final ReflectiveOperationException | IllegalArgumentException ignorada) {
+            } catch (final ReflectiveOperationException | IllegalArgumentException _) {
                 // prueba el siguiente nombre
             }
         }

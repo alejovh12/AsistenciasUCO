@@ -62,7 +62,7 @@ public class AzureAppConfigParameterCatalogAdapter implements ParameterCatalogPo
                 return Optional.of(setting.getValue());
             }
             return Optional.empty();
-        } catch (final ResourceNotFoundException e) {
+        } catch (final ResourceNotFoundException _) {
             // Intentar con formato alternativo grupo/clave o clave simple si aplica
             return fallbackSearch(group, key, normalizedKey);
         } catch (final Exception e) {
@@ -81,7 +81,7 @@ public class AzureAppConfigParameterCatalogAdapter implements ParameterCatalogPo
                     return Optional.of(setting.getValue());
                 }
             }
-        } catch (final ResourceNotFoundException ignored) {
+        } catch (final ResourceNotFoundException _) {
             // No existe
         }
         return Optional.empty();

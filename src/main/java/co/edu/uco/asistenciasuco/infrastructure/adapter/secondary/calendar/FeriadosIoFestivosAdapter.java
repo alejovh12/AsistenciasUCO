@@ -65,7 +65,7 @@ public final class FeriadosIoFestivosAdapter implements CalendarioFestivosPort {
                             secretos.getSecret(http.parametro(CLAVE_NOMBRE_SECRETO, NOMBRE_SECRETO_POR_DEFECTO)),
                             Optional.<String>empty())
                     .filter(key -> !key.isBlank());
-        } catch (final RuntimeException exception) {
+        } catch (final RuntimeException _) {
             return Optional.empty();
         }
     }

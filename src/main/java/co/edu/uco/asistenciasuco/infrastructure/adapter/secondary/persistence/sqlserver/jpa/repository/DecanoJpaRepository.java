@@ -5,7 +5,6 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.NativeRowValues;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.ProcedureRow;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DecanoCommandPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.DecanoCommandPort.CrearDecanoCommand;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DecanoQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.DecanoProjection;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.JpaProcedureExecutor;
