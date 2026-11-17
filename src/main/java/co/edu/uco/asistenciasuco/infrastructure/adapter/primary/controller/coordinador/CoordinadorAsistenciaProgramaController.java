@@ -6,6 +6,7 @@ import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasist
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.primaryports.dto.ConsultasAsistenciaProgramaDTO.PaginaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.primaryports.dto.ConsultasAsistenciaProgramaDTO.SesionGrupoDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiPageResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -37,13 +38,14 @@ public final class CoordinadorAsistenciaProgramaController {
     }
 
     @GetMapping("/grupos")
-    public ResponseEntity<ApiListResponse<GrupoProgramaDTO>> consultarGrupos(
+    public ResponseEntity<ApiPageResponse<GrupoProgramaDTO>> consultarGrupos(
             @RequestParam(name = "idPeriodo", required = false) final UUID idPeriodo,
             @RequestParam(name = "busqueda", required = false) final String busqueda,
             @RequestParam(name = "pagina", required = false) final Integer pagina,
             @RequestParam(name = "tamano", required = false) final Integer tamano
     ) {
-        return respuesta(inputPort.consultarGrupos(usuario(), idPeriodo, busqueda, pagina, tamano));
+        final PaginaDTO<GrupoProgramaDTO> grupos = inputPort.consultarGrupos(usuario(), idPeriodo, busqueda, pagina, tamano);
+        return ResponseEntity.ok(ApiPageResponse.of(grupos.elementos(), grupos.pagina(), grupos.tamano(), grupos.total()));
     }
 
     @GetMapping("/grupos/{grupoId}/sesiones")

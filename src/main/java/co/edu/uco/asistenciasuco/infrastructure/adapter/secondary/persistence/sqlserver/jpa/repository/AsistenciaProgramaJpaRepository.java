@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsistenciaProgramaQueryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.FranjaHorarioRepositoryProjection;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.SpAsistenciaSesionPaginadoEntity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.SpGrupoProgramaPaginadoEntity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.SpSesionGrupoPaginadoEntity;
@@ -13,6 +14,7 @@ import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Query;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
@@ -67,14 +69,30 @@ public class AsistenciaProgramaJpaRepository implements AsistenciaProgramaQueryP
     @Override
     public Pagina<GrupoProgramaProjection> consultarGrupos(final UUID idUsuarioEjecutor, final UUID idPeriodoAcademico,
                                                             final String busqueda, final int pagina, final int tamano) {
-        return consultar("consultarGruposPrograma", "No fue posible consultar los grupos del programa.",
+        return conFranjas(consultar("consultarGruposPrograma", "No fue posible consultar los grupos del programa.",
                 SQL_GRUPOS, SpGrupoProgramaPaginadoEntity.class, idUsuarioEjecutor, pagina, tamano,
                 q -> q.setParameter("idPeriodoAcademico", idPeriodoAcademico).setParameter("filtroTexto", busqueda),
                 SpGrupoProgramaPaginadoEntity::totalRegistros,
                 e -> new GrupoProgramaProjection(e.id(), e.codigo(), e.nombre(), e.idAsignatura(), e.nombreAsignatura(),
                         e.idDocente(), e.capacidadMaximaPermitida(), e.estudiantesActivos(), e.cuposDisponibles(),
                         Boolean.TRUE.equals(e.grupoEstaHablitado()), e.fechaInicioPeriodoAcademico(),
-                        e.fechaFinPeriodoAcademico()));
+                        e.fechaFinPeriodoAcademico())));
+    }
+
+    /** CIERRE-W2A: agrega a cada grupo de la pagina su horario semanal (una sola consulta para toda la pagina). */
+    private Pagina<GrupoProgramaProjection> conFranjas(final Pagina<GrupoProgramaProjection> grupos) {
+        if (grupos.elementos().isEmpty()) {
+            return grupos;
+        }
+        final Map<UUID, List<FranjaHorarioRepositoryProjection>> porGrupo = JpaQueryExecutor.execute(
+                "consultarHorarioGruposPrograma", "No fue posible consultar el horario de los grupos del programa.",
+                () -> GrupoHorariosJpaSupport.franjasPorGrupo(entityManager,
+                        grupos.elementos().stream().map(GrupoProgramaProjection::id).toList()));
+        return new Pagina<>(grupos.elementos().stream()
+                .map(g -> new GrupoProgramaProjection(g.id(), g.codigo(), g.nombre(), g.idAsignatura(), g.nombreAsignatura(),
+                        g.idDocente(), g.capacidadMaxima(), g.estudiantesActivos(), g.cuposDisponibles(), g.habilitado(),
+                        g.inicioPeriodo(), g.finPeriodo(), porGrupo.getOrDefault(g.id(), List.of())))
+                .toList(), grupos.total());
     }
 
     @Override
