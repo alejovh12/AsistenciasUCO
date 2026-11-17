@@ -21,6 +21,9 @@ public final class EjecutarCierreMasivoUseCaseImpl implements EjecutarCierreMasi
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EjecutarCierreMasivoUseCaseImpl.class);
 
+    /** Estado que {@code uv_periodo_academico} calcula para un periodo cuya fecha de fin ya paso (FIX-CIERRE-002). */
+    private static final String ESTADO_PERIODO_TERMINADO = "CERRADO";
+
     private final PeriodoAcademicoQueryPort periodoAcademicoQueryPort;
     private final CierrePeriodoCommandPort cierrePeriodoCommandPort;
     private final NotificacionPort notificacionPort;
@@ -59,7 +62,11 @@ public final class EjecutarCierreMasivoUseCaseImpl implements EjecutarCierreMasi
         final var periodo = periodoAcademicoQueryPort.consultarPeriodoAcademicoPorId(domain.getIdPeriodoAcademico())
                 .orElseThrow(() -> new ResourceNotFoundException(MensajeUsuarioErrorCode.PER_001));
         final String codigoPeriodo = EjecutarCierreMasivoRepositoryMapper.toCodigoPeriodo(periodo);
-        evaluador.evaluarPeriodoYAvisar(domain.getIdPeriodoAcademico());
+        // FIX-CIERRE-002: un periodo que aun no termino lo rechaza el SP (PER_007); no se evalua ni avisa antes para no crear
+        // alertas, revisiones ni notificaciones de un cierre que no se va a ejecutar. Sin estado conocido se conserva el flujo anterior.
+        if (periodo.estado() == null || ESTADO_PERIODO_TERMINADO.equals(periodo.estado())) {
+            evaluador.evaluarPeriodoYAvisar(domain.getIdPeriodoAcademico());
+        }
         cierrePeriodoCommandPort.ejecutarCierreMasivoPeriodo(
                 codigoPeriodo,
                 domain.getActorUsuarioId().toString(),

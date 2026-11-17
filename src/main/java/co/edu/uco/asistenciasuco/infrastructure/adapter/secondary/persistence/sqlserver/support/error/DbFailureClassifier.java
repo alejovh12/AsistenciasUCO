@@ -13,6 +13,7 @@ import co.edu.uco.asistenciasuco.application.features.admin.exception.CatalogoEr
 import co.edu.uco.asistenciasuco.application.features.admin.exception.DecanoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.FacultadErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.ParametroErrorCode;
+import co.edu.uco.asistenciasuco.application.features.admin.exception.PeriodoAcademicoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.decano.exception.CoordinadorErrorCode;
 import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
@@ -99,6 +100,8 @@ final class DbFailureClassifier {
             case "PER_002" -> CommonErrorCode.VALIDATION_ERROR;
             case "PER_003", "PER_004" -> CommonErrorCode.CONFLICT;
             case "PER_005" -> SecurityErrorCode.FORBIDDEN;
+            // FIX-CIERRE-002: el cierre masivo solo se ejecuta sobre un periodo terminado (409 con la fecha de fin que arma la DB).
+            case "PER_007" -> PeriodoAcademicoErrorCode.PER_007;
             // HU051: retiro de un estudiante por el docente titular. RET_001 (grupo inexistente o ajeno) y RET_002
             // (sin matricula activa) son no encontrado; periodo terminado es conflicto; motivo invalido es validacion.
             case "RET_001", "RET_002" -> CommonErrorCode.RESOURCE_NOT_FOUND;

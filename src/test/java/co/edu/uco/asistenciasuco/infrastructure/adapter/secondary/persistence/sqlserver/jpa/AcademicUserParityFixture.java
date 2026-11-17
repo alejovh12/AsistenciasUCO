@@ -136,9 +136,10 @@ final class AcademicUserParityFixture {
         final UUID eg1 = UUID.randomUUID();
         final UUID eg2 = UUID.randomUUID();
 
+        // FIX-CIERRE-002: el cierre masivo solo admite un periodo que ya termino; el fixture es un periodo pasado (antes 2099).
         jdbc.update("""
                 INSERT INTO dbo.PeriodoAcademico (id, institucion, nombre, codigo, fechaInicio, fechaFin, anio)
-                VALUES (?, ?, ?, ?, '2099-01-01', '2099-06-30', 2099)
+                VALUES (?, ?, ?, ?, '1999-01-01', '1999-06-30', 1999)
                 """, periodo.toString(), s.institucion().toString(), token, codigoEnteroUnico());
         periodos.add(periodo.toString());
 
