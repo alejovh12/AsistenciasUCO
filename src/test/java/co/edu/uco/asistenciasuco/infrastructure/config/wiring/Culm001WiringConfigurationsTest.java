@@ -8,15 +8,12 @@ import co.edu.uco.asistenciasuco.application.features.admin.consultarprogramasin
 import co.edu.uco.asistenciasuco.application.features.admin.consultarprogramasinstitucion.primaryports.interactor.ConsultarProgramasInstitucionInteractor;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarprogramasinstitucion.usecase.ConsultarProgramasInstitucionUseCase;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarprogramasinstitucion.usecase.impl.ConsultarProgramasInstitucionUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.CrearDecanoUseCase;
 import co.edu.uco.asistenciasuco.application.features.alertainasistencia.common.AvisoAlertasInasistenciaService;
 import co.edu.uco.asistenciasuco.application.features.alertainasistencia.common.EvaluadorAlertasInasistencia;
 import co.edu.uco.asistenciasuco.application.features.alertainasistencia.consultaralertasestudiante.primaryports.ConsultarAlertasEstudianteInputPort;
 import co.edu.uco.asistenciasuco.application.features.alertainasistencia.consultaralertasestudiante.usecase.impl.ConsultarAlertasEstudianteUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.alertainasistencia.evaluaralertasautomatico.primaryports.EvaluarAlertasInasistenciaAutomaticoInputPort;
 import co.edu.uco.asistenciasuco.application.features.alertainasistencia.evaluaralertasautomatico.usecase.impl.EvaluarAlertasInasistenciaAutomaticoUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.features.coordinador.vinculardocenteprograma.usecase.VincularDocenteProgramaUseCase;
-import co.edu.uco.asistenciasuco.application.features.decano.crearcoordinador.usecase.CrearCoordinadorUseCase;
 import co.edu.uco.asistenciasuco.application.features.identidad.asegurarcuenta.AsegurarCuentaIdentidadService;
 import co.edu.uco.asistenciasuco.application.features.realtime.resolveraudiencia.primaryports.ResolverAudienciaRealtimeInputPort;
 import co.edu.uco.asistenciasuco.application.features.realtime.resolveraudiencia.usecase.impl.ResolverAudienciaRealtimeUseCaseImpl;
@@ -43,7 +40,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.repository.RevisionC
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.scheduler.EvaluacionAlertasInasistenciaScheduler;
-import co.edu.uco.asistenciasuco.infrastructure.ratelimit.SlidingWindowRateLimiter;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -51,7 +47,6 @@ import java.time.Duration;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 /** CULM-001: los composition roots entregan el caso de uso correcto, con sus dependencias, y fallan si falta alguna. */

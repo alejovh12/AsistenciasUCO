@@ -6,7 +6,6 @@ import ch.qos.logback.core.read.ListAppender;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.FilterChain;
 import org.junit.jupiter.api.Test;
-import org.slf4j.event.KeyValuePair;
 import org.slf4j.MDC;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;

@@ -1,7 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
-import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.PaginaResultado;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.AsistenciaTomaFila;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.FaltanteTomaFila;
