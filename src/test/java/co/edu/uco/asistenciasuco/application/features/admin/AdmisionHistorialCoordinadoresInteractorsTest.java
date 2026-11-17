@@ -72,7 +72,8 @@ class AdmisionHistorialCoordinadoresInteractorsTest {
     @Test
     void admitir_exige_caso_de_uso_y_comando() {
         assertThrows(NullPointerException.class, () -> new AdmitirEstudianteInteractor(null));
-        assertThrows(NullPointerException.class, () -> new AdmitirEstudianteInteractor(mock(AdmitirEstudianteUseCase.class)).execute(null));
+        final var admitirEstudianteInteractor = new AdmitirEstudianteInteractor(mock(AdmitirEstudianteUseCase.class));
+        assertThrows(NullPointerException.class, () -> admitirEstudianteInteractor.execute(null));
     }
 
     // ---- historial de cierres ----
@@ -148,7 +149,8 @@ class AdmisionHistorialCoordinadoresInteractorsTest {
 
         assertThrows(ValidationException.class, () -> interactor.execute(decano, null, null, null, 0, 10));
         assertThrows(ValidationException.class, () -> interactor.execute(decano, null, null, null, 1, 101));
-        assertThrows(ValidationException.class, () -> interactor.execute(decano, "x".repeat(101), null, null, 1, 10));
+        final var textoLargo = "x".repeat(101);
+        assertThrows(ValidationException.class, () -> interactor.execute(decano, textoLargo, null, null, 1, 10));
         assertThrows(NullPointerException.class, () -> new ConsultarCoordinadoresInteractor(null));
     }
 }

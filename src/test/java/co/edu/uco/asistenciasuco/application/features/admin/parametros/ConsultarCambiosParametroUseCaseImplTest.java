@@ -57,7 +57,8 @@ class ConsultarCambiosParametroUseCaseImplTest {
 
     @Test
     void el_parametro_es_obligatorio_y_las_dependencias_tambien() {
-        assertThrows(ValidationException.class, () -> useCase.execute(new Comando(null, 1, 20, ADMIN)));
+        final var comando = new Comando(null, 1, 20, ADMIN);
+        assertThrows(ValidationException.class, () -> useCase.execute(comando));
         assertThrows(NullPointerException.class, () -> useCase.execute(null));
         assertThrows(NullPointerException.class, () -> new ConsultarCambiosParametroUseCaseImpl(null));
     }

@@ -54,7 +54,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -177,13 +176,15 @@ class AsistenciaQrUseCasesTest {
         assertEquals(3, llamadas.get());
 
         doThrow(new ConflictException("AQR_006", "PIN repetido")).when(repositorio).abrir(any(), any(), any(), any());
+        final var comando15 = new AbrirQrTomaInputPort.Comando(TOMA, USUARIO);
         assertEquals("AQR_006", assertThrows(ConflictException.class,
-                () -> useCase.execute(new AbrirQrTomaInputPort.Comando(TOMA, USUARIO))).getCode());
+                () -> useCase.execute(comando15)).getCode());
         verify(generador, times(3 + AsistenciaQrCredencialesEmisor.MAX_INTENTOS)).generarPin();
 
         doThrow(new ConflictException("AQR_003", "Toma manual")).when(repositorio).abrir(any(), any(), any(), any());
+        final var comando14 = new AbrirQrTomaInputPort.Comando(TOMA, USUARIO);
         assertEquals("AQR_003", assertThrows(ConflictException.class,
-                () -> useCase.execute(new AbrirQrTomaInputPort.Comando(TOMA, USUARIO))).getCode());
+                () -> useCase.execute(comando14)).getCode());
         verify(realtime, times(1)).publish(any());
     }
 
@@ -191,15 +192,19 @@ class AsistenciaQrUseCasesTest {
     void abrir_con_interruptor_apagado_o_parametro_ausente_o_catalogo_caido_es_aqr_010_y_ajeno_es_403() {
         final AbrirQrTomaUseCaseImpl useCase = new AbrirQrTomaUseCaseImpl(acceso, tomaAcceso, emisor, presentador, repositorio, eventos);
         when(parametros.getParameter("ASISTENCIA_QR", "HABILITADA")).thenReturn(Optional.of("false"));
+        final var comando13 = new AbrirQrTomaInputPort.Comando(TOMA, USUARIO);
         assertEquals("AQR_010", assertThrows(ResourceNotFoundException.class,
-                () -> useCase.execute(new AbrirQrTomaInputPort.Comando(TOMA, USUARIO))).getCode());
+                () -> useCase.execute(comando13)).getCode());
         when(parametros.getParameter("ASISTENCIA_QR", "HABILITADA")).thenReturn(Optional.empty());
-        assertThrows(ResourceNotFoundException.class, () -> useCase.execute(new AbrirQrTomaInputPort.Comando(TOMA, USUARIO)));
+        final var comando12 = new AbrirQrTomaInputPort.Comando(TOMA, USUARIO);
+        assertThrows(ResourceNotFoundException.class, () -> useCase.execute(comando12));
         when(parametros.getParameter("ASISTENCIA_QR", "HABILITADA")).thenThrow(new ParameterCatalogPort.ParameterCatalogException("caido"));
-        assertThrows(ResourceNotFoundException.class, () -> useCase.execute(new AbrirQrTomaInputPort.Comando(TOMA, USUARIO)));
+        final var comando11 = new AbrirQrTomaInputPort.Comando(TOMA, USUARIO);
+        assertThrows(ResourceNotFoundException.class, () -> useCase.execute(comando11));
 
         doReturn(Optional.of(" TRUE ")).when(parametros).getParameter("ASISTENCIA_QR", "HABILITADA");
-        assertThrows(ForbiddenException.class, () -> useCase.execute(new AbrirQrTomaInputPort.Comando(TOMA, UUID.randomUUID())));
+        final var comando10 = new AbrirQrTomaInputPort.Comando(TOMA, UUID.randomUUID());
+        assertThrows(ForbiddenException.class, () -> useCase.execute(comando10));
         verifyNoInteractions(repositorio, realtime);
         assertThrows(NullPointerException.class, () -> useCase.execute(null));
     }
@@ -216,8 +221,8 @@ class AsistenciaQrUseCasesTest {
         assertEquals(SESION, resultado.idSesion());
         assertEquals(45, resultado.rotacionSegundos());
         assertEquals("ASISTENCIA_QR_ROTADO", publicados().getFirst().type());
-        assertThrows(NullPointerException.class, () -> new RotarQrTomaUseCaseImpl(acceso, tomaAcceso, emisor, presentador, repositorio, eventos)
-                .execute(null));
+        final var rotarQrTomaUseCaseImpl = new RotarQrTomaUseCaseImpl(acceso, tomaAcceso, emisor, presentador, repositorio, eventos);
+        assertThrows(NullPointerException.class, () -> rotarQrTomaUseCaseImpl.execute(null));
     }
 
     @Test
@@ -245,7 +250,8 @@ class AsistenciaQrUseCasesTest {
         final CerrarQrTomaUseCaseImpl useCase = new CerrarQrTomaUseCaseImpl(tomaAcceso, repositorio);
 
         assertEquals("Se dejó de proyectar el código QR.", useCase.execute(new CerrarQrTomaInputPort.Comando(TOMA, USUARIO)));
-        assertThrows(ForbiddenException.class, () -> useCase.execute(new CerrarQrTomaInputPort.Comando(TOMA, UUID.randomUUID())));
+        final var comando9 = new CerrarQrTomaInputPort.Comando(TOMA, UUID.randomUUID());
+        assertThrows(ForbiddenException.class, () -> useCase.execute(comando9));
         assertThrows(NullPointerException.class, () -> useCase.execute(null));
         verify(repositorio, times(1)).cerrar(any(), any());
     }
@@ -305,8 +311,8 @@ class AsistenciaQrUseCasesTest {
         assertEquals(Map.of("grupo", GRUPO.toString(), "sesion", SESION.toString(), "toma", TOMA.toString(),
                 "estudiante", ESTUDIANTE.toString(), "totalPresentes", 29), publicados().getFirst().payload());
         verify(limitador).permitir("asistencia-qr:estudiante:" + USUARIO, 5);
-        verify(limitador).permitir(eq("asistencia-qr:token:" + java.util.HexFormat.of().formatHex(
-                co.edu.uco.asistenciasuco.crosscutting.util.TokenHashHelper.sha256(TOKEN))), eq(120));
+        verify(limitador).permitir("asistencia-qr:token:" + java.util.HexFormat.of().formatHex(
+                co.edu.uco.asistenciasuco.crosscutting.util.TokenHashHelper.sha256(TOKEN)), 120);
     }
 
     @Test
@@ -333,30 +339,37 @@ class AsistenciaQrUseCasesTest {
         final RegistrarAsistenciaPorTokenUseCaseImpl useCase = registrar();
 
         when(parametros.getParameter("ASISTENCIA_QR", "HABILITADA")).thenReturn(Optional.of("false"));
+        final var comando8 = new RegistrarAsistenciaPorTokenInputPort.Comando(TOKEN, null, IP, USUARIO);
         assertEquals("AQR_010", assertThrows(ResourceNotFoundException.class,
-                () -> useCase.execute(new RegistrarAsistenciaPorTokenInputPort.Comando(TOKEN, null, IP, USUARIO))).getCode());
+                () -> useCase.execute(comando8)).getCode());
         verifyNoInteractions(limitador);
 
         when(parametros.getParameter("ASISTENCIA_QR", "HABILITADA")).thenReturn(Optional.of("true"));
+        final var comando7 = new RegistrarAsistenciaPorTokenInputPort.Comando(TOKEN, null, "8.8.8.8", USUARIO);
         assertEquals("AQR_002", assertThrows(ForbiddenException.class,
-                () -> useCase.execute(new RegistrarAsistenciaPorTokenInputPort.Comando(TOKEN, null, "8.8.8.8", USUARIO))).getCode());
+                () -> useCase.execute(comando7)).getCode());
+        final var comando6 = new RegistrarAsistenciaPorTokenInputPort.Comando(TOKEN, null, null, USUARIO);
         assertEquals("AQR_002", assertThrows(ForbiddenException.class,
-                () -> useCase.execute(new RegistrarAsistenciaPorTokenInputPort.Comando(TOKEN, null, null, USUARIO))).getCode());
+                () -> useCase.execute(comando6)).getCode());
         verifyNoInteractions(limitador);
 
         when(limitador.permitir("asistencia-qr:estudiante:" + USUARIO, 5)).thenReturn(false);
+        final var comando5 = new RegistrarAsistenciaPorTokenInputPort.Comando(TOKEN, null, IP, USUARIO);
         assertEquals("AQR_011", assertThrows(TooManyRequestsException.class,
-                () -> useCase.execute(new RegistrarAsistenciaPorTokenInputPort.Comando(TOKEN, null, IP, USUARIO))).getCode());
+                () -> useCase.execute(comando5)).getCode());
 
         when(limitador.permitir("asistencia-qr:estudiante:" + USUARIO, 5)).thenReturn(true);
+        final var comando4 = new RegistrarAsistenciaPorTokenInputPort.Comando(TOKEN, "482913", IP, USUARIO);
         assertEquals("AQR_007", assertThrows(ValidationException.class,
-                () -> useCase.execute(new RegistrarAsistenciaPorTokenInputPort.Comando(TOKEN, "482913", IP, USUARIO))).getCode());
+                () -> useCase.execute(comando4)).getCode());
+        final var comando3 = new RegistrarAsistenciaPorTokenInputPort.Comando(" ", null, IP, USUARIO);
         assertEquals("AQR_007", assertThrows(ValidationException.class,
-                () -> useCase.execute(new RegistrarAsistenciaPorTokenInputPort.Comando(" ", null, IP, USUARIO))).getCode());
+                () -> useCase.execute(comando3)).getCode());
 
         when(limitador.permitir("asistencia-qr:pin:482913", 120)).thenReturn(false);
+        final var comando2 = new RegistrarAsistenciaPorTokenInputPort.Comando(null, "482913", IP, USUARIO);
         assertEquals("AQR_011", assertThrows(TooManyRequestsException.class,
-                () -> useCase.execute(new RegistrarAsistenciaPorTokenInputPort.Comando(null, "482913", IP, USUARIO))).getCode());
+                () -> useCase.execute(comando2)).getCode());
         verify(repositorio, never()).registrarPorToken(any(), any(), any());
         assertThrows(NullPointerException.class, () -> useCase.execute(null));
     }
@@ -386,8 +399,10 @@ class AsistenciaQrUseCasesTest {
     void un_error_del_sp_se_propaga_sin_evento() {
         when(repositorio.registrarPorToken(TOKEN, null, USUARIO)).thenThrow(new ResourceNotFoundException("AQR_001", "Codigo invalido"));
 
+        final var registrar = registrar();
+        final var comando = new RegistrarAsistenciaPorTokenInputPort.Comando(TOKEN, null, IP, USUARIO);
         assertEquals("AQR_001", assertThrows(ResourceNotFoundException.class,
-                () -> registrar().execute(new RegistrarAsistenciaPorTokenInputPort.Comando(TOKEN, null, IP, USUARIO))).getCode());
+                () -> registrar.execute(comando)).getCode());
         verifyNoInteractions(realtime);
     }
 

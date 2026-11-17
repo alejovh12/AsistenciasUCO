@@ -76,7 +76,8 @@ class SesionConsultadaEntityTest {
         assertThrows(ValidationException.class, () -> entidad(SESION, null, "Clase inicial"));
         assertThrows(ValidationException.class, () -> entidad(SESION, GRUPO, null));
         assertThrows(ValidationException.class, () -> entidad(SESION, GRUPO, "   "));
-        assertThrows(ValidationException.class, () -> entidad(SESION, GRUPO, "a".repeat(51)));
+        final var textoLargo3 = "a".repeat(51);
+        assertThrows(ValidationException.class, () -> entidad(SESION, GRUPO, textoLargo3));
     }
 
     /** LB-001B.4A: los codigos ERR_TEMA_SESION_* se renombran a ERR_NOMBRE_SESION_*. */
@@ -84,8 +85,9 @@ class SesionConsultadaEntityTest {
     void usa_codigos_de_nombre_de_sesion() {
         assertEquals("ERR_NOMBRE_SESION_REQUERIDO",
                 assertThrows(ValidationException.class, () -> entidad(SESION, GRUPO, "   ")).getCode());
+        final var textoLargo2 = "a".repeat(51);
         assertEquals("ERR_NOMBRE_SESION_LONGITUD_INVALIDA",
-                assertThrows(ValidationException.class, () -> entidad(SESION, GRUPO, "a".repeat(51))).getCode());
+                assertThrows(ValidationException.class, () -> entidad(SESION, GRUPO, textoLargo2)).getCode());
     }
 
     /** LB-001B.4B (TD-048): contrato de lectura maximo 50 (dbo.Sesion.nombre NVARCHAR(50)). */
@@ -93,8 +95,9 @@ class SesionConsultadaEntityTest {
     void nombre_acepta_50_y_rechaza_51() {
         assertEquals("a".repeat(50), entidad(SESION, GRUPO, "a".repeat(50)).getNombre());
         assertEquals("a", entidad(SESION, GRUPO, "a").getNombre());
+        final var textoLargo = "a".repeat(51);
         assertEquals("ERR_NOMBRE_SESION_LONGITUD_INVALIDA",
-                assertThrows(ValidationException.class, () -> entidad(SESION, GRUPO, "a".repeat(51))).getCode());
+                assertThrows(ValidationException.class, () -> entidad(SESION, GRUPO, textoLargo)).getCode());
     }
 
     private SesionConsultadaEntity entidad(final UUID sesion, final UUID grupo, final String nombre) {

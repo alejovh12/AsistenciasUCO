@@ -101,7 +101,8 @@ class ConsultarKpisDecanoUseCaseImplTest {
     void T_BE_01_sin_facultad_de_decano_responde_forbidden_sin_tocar_la_db() {
         when(scopePort.findFacultadIdByDecanoUsuario(ACTOR)).thenReturn(Optional.empty());
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(new ConsultarKpisDecanoDomain(ACTOR, null)));
+        final var consultarKpisDecanoDomain = new ConsultarKpisDecanoDomain(ACTOR, null);
+        assertThrows(ForbiddenException.class, () -> useCase.execute(consultarKpisDecanoDomain));
 
         verifyNoInteractions(queryPort);
     }

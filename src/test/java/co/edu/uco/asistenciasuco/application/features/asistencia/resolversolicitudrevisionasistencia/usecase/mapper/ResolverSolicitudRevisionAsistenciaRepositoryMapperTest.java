@@ -14,8 +14,9 @@ class ResolverSolicitudRevisionAsistenciaRepositoryMapperTest {
 
     @Test
     void toRepositoryDTO_rechaza_dominio_nulo() {
+        final var idAleatorio = UUID.randomUUID();
         assertThrows(CrosscuttingException.class,
-                () -> ResolverSolicitudRevisionAsistenciaRepositoryMapper.toRepositoryDTO(null, UUID.randomUUID()));
+                () -> ResolverSolicitudRevisionAsistenciaRepositoryMapper.toRepositoryDTO(null, idAleatorio));
     }
 
     @Test

@@ -31,8 +31,10 @@ class RegistrarAsistenciasSesionDomainTest {
         final RegistroAsistenciaSesionDomain registro =
                 new RegistroAsistenciaSesionDomain(UUID.randomUUID(), "AN");
 
+        final var registrosPrimero = List.of(registro);
+        final var idAleatorio2 = UUID.randomUUID();
         assertThrows(ValidationException.class,
-                () -> new RegistrarAsistenciasSesionDomain(null, List.of(registro), UUID.randomUUID()));
+                () -> new RegistrarAsistenciasSesionDomain(null, registrosPrimero, idAleatorio2));
     }
 
     @Test
@@ -49,7 +51,9 @@ class RegistrarAsistenciasSesionDomainTest {
         final RegistroAsistenciaSesionDomain registro =
                 new RegistroAsistenciaSesionDomain(UUID.randomUUID(), "AN");
 
+        final var idAleatorio = UUID.randomUUID();
+        final var registrosSegundo = List.of(registro);
         assertThrows(ValidationException.class,
-                () -> new RegistrarAsistenciasSesionDomain(UUID.randomUUID(), List.of(registro), null));
+                () -> new RegistrarAsistenciasSesionDomain(idAleatorio, registrosSegundo, null));
     }
 }

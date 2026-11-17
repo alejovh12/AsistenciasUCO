@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -55,7 +56,7 @@ class OpenApiEstudiantesDirectoryConformanceTest {
         assertEquals(1, operation.getSecurity().size());
         assertEquals(List.of(), operation.getSecurity().getFirst().get("bearerAuth"));
         assertNull(operation.getRequestBody(), "Un GET de directorio no debe inventar requestBody");
-        assertTrue(!Boolean.TRUE.equals(operation.getDeprecated()));
+        assertNotEquals(Boolean.TRUE, operation.getDeprecated());
     }
 
     @Test
@@ -63,7 +64,7 @@ class OpenApiEstudiantesDirectoryConformanceTest {
         final Map<String, Parameter> query = queryParameters();
         assertEquals(controllerRequestParams(), query.keySet(),
                 "Los query params del contrato deben ser exactamente los @RequestParam del controller");
-        query.values().forEach(parameter -> assertTrue(!Boolean.TRUE.equals(parameter.getRequired()),
+        query.values().forEach(parameter -> assertNotEquals(Boolean.TRUE, parameter.getRequired(),
                 () -> parameter.getName() + " es opcional en el AS-IS"));
         assertTrue(operation().getParameters().stream()
                         .anyMatch(parameter -> "#/components/parameters/CorrelationId".equals(parameter.get$ref())),

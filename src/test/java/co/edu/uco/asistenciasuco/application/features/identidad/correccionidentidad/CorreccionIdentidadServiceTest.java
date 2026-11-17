@@ -86,7 +86,8 @@ class CorreccionIdentidadServiceTest {
 
     @Test
     void T_159_SVC_03_tipo_no_soportado_o_dto_nulo_se_rechazan_sin_tocar_la_db() {
-        assertThrows(ValidationException.class, () -> service.corregir(dto("ADMINISTRADOR", null, null)));
+        final var dto = dto("ADMINISTRADOR", null, null);
+        assertThrows(ValidationException.class, () -> service.corregir(dto));
         assertThrows(CrosscuttingException.class, () -> service.corregir(null));
         verifyNoInteractions(commandPort, sincronizacion);
     }

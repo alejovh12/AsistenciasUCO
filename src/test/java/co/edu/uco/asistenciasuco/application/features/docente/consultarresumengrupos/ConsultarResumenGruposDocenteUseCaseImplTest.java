@@ -49,7 +49,8 @@ class ConsultarResumenGruposDocenteUseCaseImplTest {
     @Test
     void sin_ejecutor_o_sin_consulta_rechaza_sin_consultar_la_base() {
         assertThrows(ValidationException.class, () -> useCase.execute(null));
-        assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarResumenGruposDocenteInputPort.Consulta(null)));
+        final var consulta = new ConsultarResumenGruposDocenteInputPort.Consulta(null);
+        assertThrows(ValidationException.class, () -> useCase.execute(consulta));
         verifyNoInteractions(resumen);
     }
 

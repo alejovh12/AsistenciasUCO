@@ -15,8 +15,10 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -78,7 +80,7 @@ class ResolverSolicitudRevisionAlertasUseCaseImplTest {
     @Test
     void si_la_evaluacion_falla_la_resolucion_ya_confirmada_no_se_deshace() {
         when(destinatarios.consultarDestinatariosPorSolicitud(SOLICITUD)).thenReturn(List.of(destinatario(GRUPO)));
-        org.mockito.Mockito.doThrow(new IllegalStateException("evaluador caido")).when(evaluador).evaluarYAvisar(eq(GRUPO), any());
+        doThrow(new IllegalStateException("evaluador caido")).when(evaluador).evaluarYAvisar(eq(GRUPO), any());
 
         resolver("APROBADA");
 
@@ -97,6 +99,6 @@ class ResolverSolicitudRevisionAlertasUseCaseImplTest {
         sinDestinatarios.execute(new ResolverSolicitudRevisionAsistenciaDomain(SOLICITUD, "APROBADA", "ok", USUARIO));
 
         verify(evaluador, never()).evaluarYAvisar(any(), any());
-        verify(repository, org.mockito.Mockito.times(2)).resolverSolicitudRevisionAsistencia(any());
+        verify(repository, times(2)).resolverSolicitudRevisionAsistencia(any());
     }
 }

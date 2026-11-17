@@ -52,7 +52,8 @@ class CambiarEstadoProgramaUseCaseImplTest {
     void T_SEC_01_sin_facultad_de_decano_responde_forbidden() {
         when(scopePort.findFacultadIdByDecanoUsuario(ACTOR)).thenReturn(Optional.empty());
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(new CambiarEstadoProgramaDomain(ACTOR, PROGRAMA, false)));
+        final var cambiarEstadoProgramaDomain4 = new CambiarEstadoProgramaDomain(ACTOR, PROGRAMA, false);
+        assertThrows(ForbiddenException.class, () -> useCase.execute(cambiarEstadoProgramaDomain4));
 
         verifyNoInteractions(commandPort, queryPort);
     }
@@ -60,8 +61,10 @@ class CambiarEstadoProgramaUseCaseImplTest {
     @Test
     void valida_identificador_y_estado_destino() {
         assertThrows(ValidationException.class, () -> useCase.execute(null));
-        assertThrows(ValidationException.class, () -> useCase.execute(new CambiarEstadoProgramaDomain(ACTOR, null, true)));
-        assertThrows(ValidationException.class, () -> useCase.execute(new CambiarEstadoProgramaDomain(ACTOR, PROGRAMA, null)));
+        final var cambiarEstadoProgramaDomain3 = new CambiarEstadoProgramaDomain(ACTOR, null, true);
+        assertThrows(ValidationException.class, () -> useCase.execute(cambiarEstadoProgramaDomain3));
+        final var cambiarEstadoProgramaDomain2 = new CambiarEstadoProgramaDomain(ACTOR, PROGRAMA, null);
+        assertThrows(ValidationException.class, () -> useCase.execute(cambiarEstadoProgramaDomain2));
         verify(commandPort, never()).cambiarEstado(any());
     }
 
@@ -69,8 +72,9 @@ class CambiarEstadoProgramaUseCaseImplTest {
     void si_el_programa_no_aparece_tras_cambiar_el_estado_responde_no_encontrado() {
         when(queryPort.consultarPorId(PROGRAMA, FACULTAD)).thenReturn(Optional.empty());
 
+        final var cambiarEstadoProgramaDomain = new CambiarEstadoProgramaDomain(ACTOR, PROGRAMA, true);
         assertThrows(ResourceNotFoundException.class,
-                () -> useCase.execute(new CambiarEstadoProgramaDomain(ACTOR, PROGRAMA, true)));
+                () -> useCase.execute(cambiarEstadoProgramaDomain));
     }
 
     @Test

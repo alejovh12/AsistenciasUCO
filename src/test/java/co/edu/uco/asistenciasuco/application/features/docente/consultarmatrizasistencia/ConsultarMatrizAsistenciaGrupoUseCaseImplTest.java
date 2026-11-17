@@ -22,6 +22,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -78,15 +79,15 @@ class ConsultarMatrizAsistenciaGrupoUseCaseImplTest {
         assertEquals(0, sinBusqueda.totalElementos());
         assertEquals(List.of(), sinBusqueda.sesiones());
         assertEquals(List.of(), enBlanco.filas());
-        verify(matriz, org.mockito.Mockito.times(2)).consultarMatrizGrupoDocente(GRUPO, 1, 50, null, USUARIO);
+        verify(matriz, times(2)).consultarMatrizGrupoDocente(GRUPO, 1, 50, null, USUARIO);
     }
 
     @Test
     void un_docente_no_titular_recibe_403_sin_consultar_la_base() {
         when(scope.canDocenteAccessGrupo(USUARIO, GRUPO)).thenReturn(false);
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(
-                new ConsultarMatrizAsistenciaGrupoInputPort.Consulta(GRUPO, 1, 10, null, USUARIO)));
+        final var consulta3 = new ConsultarMatrizAsistenciaGrupoInputPort.Consulta(GRUPO, 1, 10, null, USUARIO);
+        assertThrows(ForbiddenException.class, () -> useCase.execute(consulta3));
 
         verify(matriz, never()).consultarMatrizGrupoDocente(any(), anyInt(), anyInt(), anyString(), any());
         verify(sesiones, never()).consultarResumenSesionesGrupoDocente(any(), any());
@@ -95,8 +96,10 @@ class ConsultarMatrizAsistenciaGrupoUseCaseImplTest {
     @Test
     void sin_grupo_o_sin_ejecutor_es_validacion_y_los_puertos_son_obligatorios() {
         assertThrows(ValidationException.class, () -> useCase.execute(null));
-        assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarMatrizAsistenciaGrupoInputPort.Consulta(null, 1, 10, null, USUARIO)));
-        assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarMatrizAsistenciaGrupoInputPort.Consulta(GRUPO, 1, 10, null, null)));
+        final var consulta2 = new ConsultarMatrizAsistenciaGrupoInputPort.Consulta(null, 1, 10, null, USUARIO);
+        assertThrows(ValidationException.class, () -> useCase.execute(consulta2));
+        final var consulta = new ConsultarMatrizAsistenciaGrupoInputPort.Consulta(GRUPO, 1, 10, null, null);
+        assertThrows(ValidationException.class, () -> useCase.execute(consulta));
         assertThrows(NullPointerException.class, () -> new ConsultarMatrizAsistenciaGrupoUseCaseImpl(null, matriz, sesiones));
         assertThrows(NullPointerException.class, () -> new ConsultarMatrizAsistenciaGrupoUseCaseImpl(scope, null, sesiones));
         assertThrows(NullPointerException.class, () -> new ConsultarMatrizAsistenciaGrupoUseCaseImpl(scope, matriz, null));

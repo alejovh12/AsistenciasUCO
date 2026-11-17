@@ -68,7 +68,8 @@ class RegistrarEstudianteSinCorreoUseCaseImplTest {
         when(usuarios.consultarUsuarioPorCorreo("ana.perez@uco.edu.co")).thenReturn(Optional.of(usuario));
         when(usuarios.consultarUsuarioPorIdentificacion(TIPO, DOCUMENTO)).thenReturn(Optional.of(usuario));
         when(grupos.registrarEstudianteEnGrupo(any())).thenReturn(new RegistrarEstudianteRepositoryProjection("Estudiante matriculado."));
-        when(identidad.crearCuenta(any())).thenReturn(mock(CuentaIdentidadDTO.class));
+        final var cuentaIdentidad = mock(CuentaIdentidadDTO.class);
+        when(identidad.crearCuenta(any())).thenReturn(cuentaIdentidad);
 
         assertEquals("Estudiante matriculado.", useCase.execute(pendiente()).getMensajeUsuario());
 
@@ -90,7 +91,8 @@ class RegistrarEstudianteSinCorreoUseCaseImplTest {
         // Estudiante): no se distinguen y ninguno llega al SP de matricula.
         when(grupos.buscarEstudiantePorDocumento(GRUPO, TIPO, DOCUMENTO, DOCENTE)).thenReturn(Optional.empty());
 
-        final ValidationException error = assertThrows(ValidationException.class, () -> useCase.execute(pendiente()));
+        final var pendiente3 = pendiente();
+        final ValidationException error = assertThrows(ValidationException.class, () -> useCase.execute(pendiente3));
 
         assertEquals("FIELD_REQUIRED", error.getCode());
         verify(grupos, never()).registrarEstudianteEnGrupo(any());
@@ -104,7 +106,8 @@ class RegistrarEstudianteSinCorreoUseCaseImplTest {
         when(grupos.buscarEstudiantePorDocumento(GRUPO, TIPO, DOCUMENTO, DOCENTE)).thenReturn(Optional.of(encontrado()));
         when(usuarios.consultarCorreoPorEstudiante(ESTUDIANTE)).thenReturn(Optional.empty());
 
-        assertEquals("FIELD_REQUIRED", assertThrows(ValidationException.class, () -> useCase.execute(pendiente())).getCode());
+        final var pendiente2 = pendiente();
+        assertEquals("FIELD_REQUIRED", assertThrows(ValidationException.class, () -> useCase.execute(pendiente2)).getCode());
         verify(grupos, never()).registrarEstudianteEnGrupo(any());
         verify(usuarios, never()).consultarUsuarioPorIdentificacion(any(), any());
     }
@@ -123,7 +126,8 @@ class RegistrarEstudianteSinCorreoUseCaseImplTest {
         final ForbiddenException noTitular = new ForbiddenException("SEC_002", "No tiene titularidad sobre el grupo.");
         when(grupos.buscarEstudiantePorDocumento(GRUPO, TIPO, DOCUMENTO, DOCENTE)).thenThrow(noTitular);
 
-        assertSame(noTitular, assertThrows(ForbiddenException.class, () -> useCase.execute(pendiente())));
+        final var pendiente = pendiente();
+        assertSame(noTitular, assertThrows(ForbiddenException.class, () -> useCase.execute(pendiente)));
         verify(grupos, never()).registrarEstudianteEnGrupo(any());
     }
 }

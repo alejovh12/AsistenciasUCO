@@ -61,7 +61,8 @@ class CambiarEstadoDocenteProgramaUseCaseImplTest {
     void sin_programa_del_coordinador_lanza_forbidden_y_no_llama_a_la_db() {
         when(scopePort.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.empty());
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(new CambiarEstadoDocenteProgramaDomain(ACTOR, DOCENTE, false)));
+        final var cambiarEstadoDocenteProgramaDomain2 = new CambiarEstadoDocenteProgramaDomain(ACTOR, DOCENTE, false);
+        assertThrows(ForbiddenException.class, () -> useCase.execute(cambiarEstadoDocenteProgramaDomain2));
 
         verifyNoInteractions(commandPort, queryPort);
     }
@@ -104,8 +105,9 @@ class CambiarEstadoDocenteProgramaUseCaseImplTest {
         when(scopePort.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.of(PROGRAMA));
         when(queryPort.consultar(eq(ACTOR), any())).thenReturn(new DocentesProgramaPagina(List.of(), 0));
 
+        final var cambiarEstadoDocenteProgramaDomain = new CambiarEstadoDocenteProgramaDomain(ACTOR, DOCENTE, false);
         assertThrows(InternalApplicationException.class,
-                () -> useCase.execute(new CambiarEstadoDocenteProgramaDomain(ACTOR, DOCENTE, false)));
+                () -> useCase.execute(cambiarEstadoDocenteProgramaDomain));
     }
 
     private static DocenteProgramaProjection fila(final boolean activo) {

@@ -88,7 +88,9 @@ class SesionManualSimpleUseCasesTest {
         final NotificarSesionManualInputPort notificar = mock(NotificarSesionManualInputPort.class);
         doThrow(new IllegalStateException("conflicto")).when(crear).execute(any());
 
-        assertThrows(IllegalStateException.class, () -> new CrearSesionConAvisoInteractor(crear, notificar).execute(dto()));
+        final var crearSesionConAvisoInteractor = new CrearSesionConAvisoInteractor(crear, notificar);
+        final var dto2 = dto();
+        assertThrows(IllegalStateException.class, () -> crearSesionConAvisoInteractor.execute(dto2));
         verify(notificar, never()).execute(any());
     }
 

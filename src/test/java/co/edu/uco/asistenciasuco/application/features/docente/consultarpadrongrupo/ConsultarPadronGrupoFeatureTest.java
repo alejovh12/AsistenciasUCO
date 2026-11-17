@@ -66,7 +66,8 @@ class ConsultarPadronGrupoFeatureTest {
     void quien_no_es_docente_institucional_recibe_forbidden_y_sql_no_se_consulta() {
         when(scope.findDocenteIdByUsuario(ACTOR)).thenReturn(Optional.empty());
 
-        assertThrows(ForbiddenException.class, () -> interactor.execute(new ConsultarPadronGrupoDTO(GRUPO, ACTOR, 1, 10, null)));
+        final var consultarPadronGrupoDTO2 = new ConsultarPadronGrupoDTO(GRUPO, ACTOR, 1, 10, null);
+        assertThrows(ForbiddenException.class, () -> interactor.execute(consultarPadronGrupoDTO2));
 
         verifyNoInteractions(query);
     }
@@ -76,7 +77,8 @@ class ConsultarPadronGrupoFeatureTest {
         when(scope.findDocenteIdByUsuario(ACTOR)).thenReturn(Optional.of(UUID.randomUUID()));
         when(scope.canDocenteAccessGrupo(ACTOR, GRUPO)).thenReturn(false);
 
-        assertThrows(ForbiddenException.class, () -> interactor.execute(new ConsultarPadronGrupoDTO(GRUPO, ACTOR, 1, 10, null)));
+        final var consultarPadronGrupoDTO = new ConsultarPadronGrupoDTO(GRUPO, ACTOR, 1, 10, null);
+        assertThrows(ForbiddenException.class, () -> interactor.execute(consultarPadronGrupoDTO));
 
         verifyNoInteractions(query);
     }

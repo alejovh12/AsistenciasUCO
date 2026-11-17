@@ -96,7 +96,8 @@ class ConsultarKpisCoordinadorUseCaseImplTest {
     void T_BE_01_sin_programa_de_coordinador_responde_forbidden_sin_tocar_la_db() {
         when(scopePort.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.empty());
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(new ConsultarKpisCoordinadorDomain(ACTOR, null)));
+        final var consultarKpisCoordinadorDomain = new ConsultarKpisCoordinadorDomain(ACTOR, null);
+        assertThrows(ForbiddenException.class, () -> useCase.execute(consultarKpisCoordinadorDomain));
 
         verifyNoInteractions(queryPort);
     }

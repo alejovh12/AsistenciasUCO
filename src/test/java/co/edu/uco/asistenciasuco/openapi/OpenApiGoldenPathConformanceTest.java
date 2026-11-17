@@ -46,9 +46,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.beans.FeatureDescriptor;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.lang.reflect.Method;
+import java.lang.reflect.RecordComponent;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -59,6 +61,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -140,7 +143,7 @@ class OpenApiGoldenPathConformanceTest {
         final Operation put = operation(new OperationKey("/api/v1/sesiones/{sesionId}", HttpMethod.PUT));
         assertEquals("actualizarSesion", patch.getOperationId());
         assertEquals("actualizarSesionLegacy", put.getOperationId());
-        assertTrue(!Boolean.TRUE.equals(patch.getDeprecated()), "PATCH no debe estar deprecated");
+        assertNotEquals(Boolean.TRUE, patch.getDeprecated(), "PATCH no debe estar deprecated");
         assertEquals(Boolean.TRUE, put.getDeprecated(), "PUT legacy debe estar deprecated");
         assertEquals(put.getRequestBody().getContent().get("application/json").getSchema().get$ref(),
                 patch.getRequestBody().getContent().get("application/json").getSchema().get$ref());
@@ -452,12 +455,12 @@ class OpenApiGoldenPathConformanceTest {
         updateRequest.setNombre("Sesión actualizada");
         updateRequest.setFechaHoraInicio("2026-09-24T13:00:00");
         updateRequest.setFechaHoraFin("2026-09-24T15:30:00");
-        final RegistroAsistenciaRequest record = new RegistroAsistenciaRequest();
-        record.setEstudianteId(STUDENT);
-        record.setEstado("AN");
+        final RegistroAsistenciaRequest registroAsistencia = new RegistroAsistenciaRequest();
+        registroAsistencia.setEstudianteId(STUDENT);
+        registroAsistencia.setEstado("AN");
         final RegistrarAsistenciasSesionRequest batchRequest = new RegistrarAsistenciasSesionRequest();
         batchRequest.setSesionId(SESSION);
-        batchRequest.setRegistros(List.of(record));
+        batchRequest.setRegistros(List.of(registroAsistencia));
 
         final Map<OperationKey, Integer> statuses = new LinkedHashMap<>();
         statuses.put(new OperationKey("/api/v1/docente/horarios", HttpMethod.GET), docente.consultarHorarios().getStatusCode().value());
@@ -546,12 +549,12 @@ class OpenApiGoldenPathConformanceTest {
     private static Set<String> properties(final Class<?> type) {
         if (type.isRecord()) {
             return Arrays.stream(type.getRecordComponents())
-                    .map(component -> component.getName())
+                    .map(RecordComponent::getName)
                     .collect(java.util.stream.Collectors.toUnmodifiableSet());
         }
         try {
             return Arrays.stream(Introspector.getBeanInfo(type).getPropertyDescriptors())
-                    .map(descriptor -> descriptor.getName())
+                    .map(FeatureDescriptor::getName)
                     .filter(name -> !"class".equals(name))
                     .collect(java.util.stream.Collectors.toUnmodifiableSet());
         } catch (IntrospectionException exception) {

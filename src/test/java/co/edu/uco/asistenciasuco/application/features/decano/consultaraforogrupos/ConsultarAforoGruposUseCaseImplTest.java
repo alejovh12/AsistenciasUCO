@@ -93,13 +93,15 @@ class ConsultarAforoGruposUseCaseImplTest {
 
     @Test
     void pagina_menor_a_uno_es_error_de_validacion_sin_tocar_la_db() {
-        assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarAforoGruposDomain(ACTOR, null, null, null, 0, 10)));
+        final var consultarAforoGruposDomain3 = new ConsultarAforoGruposDomain(ACTOR, null, null, null, 0, 10);
+        assertThrows(ValidationException.class, () -> useCase.execute(consultarAforoGruposDomain3));
         verifyNoInteractions(queryPort);
     }
 
     @Test
     void tamano_menor_a_uno_es_error_de_validacion_sin_tocar_la_db() {
-        assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarAforoGruposDomain(ACTOR, null, null, null, 1, 0)));
+        final var consultarAforoGruposDomain2 = new ConsultarAforoGruposDomain(ACTOR, null, null, null, 1, 0);
+        assertThrows(ValidationException.class, () -> useCase.execute(consultarAforoGruposDomain2));
         verifyNoInteractions(queryPort);
     }
 
@@ -107,7 +109,8 @@ class ConsultarAforoGruposUseCaseImplTest {
     void T_BE_01_sin_facultad_de_decano_responde_forbidden_sin_tocar_la_db() {
         when(scopePort.findFacultadIdByDecanoUsuario(ACTOR)).thenReturn(Optional.empty());
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(new ConsultarAforoGruposDomain(ACTOR, null, null, null, 1, 10)));
+        final var consultarAforoGruposDomain = new ConsultarAforoGruposDomain(ACTOR, null, null, null, 1, 10);
+        assertThrows(ForbiddenException.class, () -> useCase.execute(consultarAforoGruposDomain));
 
         verifyNoInteractions(queryPort);
     }

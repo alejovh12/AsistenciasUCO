@@ -64,8 +64,8 @@ class DirectorioEstudiantesUseCaseImplTest {
         final ConsultarEstudiantesUseCaseImpl useCase = new ConsultarEstudiantesUseCaseImpl(port);
 
         assertThrows(CrosscuttingException.class, () -> useCase.execute(null));
-        assertThrows(CrosscuttingException.class, () -> useCase.execute(
-                ConsultarEstudiantesDomain.crear(null, null, null, null, null, null, null, null, null, 0, 20, null)));
+        final var filtroEstudiantes = ConsultarEstudiantesDomain.crear(null, null, null, null, null, null, null, null, null, 0, 20, null);
+        assertThrows(CrosscuttingException.class, () -> useCase.execute(filtroEstudiantes));
         verifyNoInteractions(port);
     }
 
@@ -83,7 +83,8 @@ class DirectorioEstudiantesUseCaseImplTest {
 
         final UUID ajeno = UUID.randomUUID();
         when(port.consultarEstudiantePorId(ajeno, ACTOR)).thenReturn(Optional.empty());
-        assertThrows(ResourceNotFoundException.class, () -> useCase.execute(ConsultarEstudiantePorIdDomain.crear(ajeno, ACTOR)));
+        final var consultaAjena = ConsultarEstudiantePorIdDomain.crear(ajeno, ACTOR);
+        assertThrows(ResourceNotFoundException.class, () -> useCase.execute(consultaAjena));
     }
 
     @Test
@@ -91,8 +92,10 @@ class DirectorioEstudiantesUseCaseImplTest {
         final ConsultarEstudiantePorIdUseCaseImpl useCase = new ConsultarEstudiantePorIdUseCaseImpl(port);
 
         assertThrows(CrosscuttingException.class, () -> useCase.execute(null));
-        assertThrows(CrosscuttingException.class, () -> useCase.execute(ConsultarEstudiantePorIdDomain.crear(ESTUDIANTE, null)));
-        assertThrows(CrosscuttingException.class, () -> new ConsultarEstudiantePorIdInteractor(useCase).execute(null));
+        final var consultaSinActor = ConsultarEstudiantePorIdDomain.crear(ESTUDIANTE, null);
+        assertThrows(CrosscuttingException.class, () -> useCase.execute(consultaSinActor));
+        final var consultarEstudiantePorIdInteractor = new ConsultarEstudiantePorIdInteractor(useCase);
+        assertThrows(CrosscuttingException.class, () -> consultarEstudiantePorIdInteractor.execute(null));
         verifyNoInteractions(port);
     }
 }

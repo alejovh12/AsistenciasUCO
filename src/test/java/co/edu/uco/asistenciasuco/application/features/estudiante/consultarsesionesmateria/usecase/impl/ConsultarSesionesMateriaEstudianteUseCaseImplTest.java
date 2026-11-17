@@ -494,7 +494,8 @@ class ConsultarSesionesMateriaEstudianteUseCaseImplTest {
     void W2B_consultarPagina_de_un_no_estudiante_es_403_y_no_consulta() {
         when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.empty());
 
-        assertThrows(ForbiddenException.class, () -> useCase.consultarPagina(actor, asignatura, UUID.randomUUID(), 1, 10));
+        final var idAleatorio = UUID.randomUUID();
+        assertThrows(ForbiddenException.class, () -> useCase.consultarPagina(actor, asignatura, idAleatorio, 1, 10));
         verify(queryPort, never()).consultarSesionesMateria(any(), any(), any(), anyInt(), anyInt());
     }
 

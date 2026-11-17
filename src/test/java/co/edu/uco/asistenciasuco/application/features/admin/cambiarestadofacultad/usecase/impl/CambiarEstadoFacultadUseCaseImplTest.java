@@ -65,16 +65,18 @@ class CambiarEstadoFacultadUseCaseImplTest {
 
     @Test
     void id_nulo_lanza_validationException() {
+        final var cambiarEstadoFacultadDomain2 = new CambiarEstadoFacultadDomain(null, true, ACTOR_ID);
         final ValidationException ex = assertThrows(ValidationException.class,
-                () -> useCase.execute(new CambiarEstadoFacultadDomain(null, true, ACTOR_ID)));
+                () -> useCase.execute(cambiarEstadoFacultadDomain2));
         assertEquals("El identificador de la facultad es obligatorio.", ex.getMessage());
         verify(commandPort, never()).cambiarEstadoFacultad(any());
     }
 
     @Test
     void estado_deseado_nulo_lanza_validationException() {
+        final var cambiarEstadoFacultadDomain = new CambiarEstadoFacultadDomain(FACULTAD_ID, null, ACTOR_ID);
         final ValidationException ex = assertThrows(ValidationException.class,
-                () -> useCase.execute(new CambiarEstadoFacultadDomain(FACULTAD_ID, null, ACTOR_ID)));
+                () -> useCase.execute(cambiarEstadoFacultadDomain));
         assertEquals("El estado deseado de la facultad es obligatorio.", ex.getMessage());
         verify(commandPort, never()).cambiarEstadoFacultad(any());
     }

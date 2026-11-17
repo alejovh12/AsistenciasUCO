@@ -83,8 +83,8 @@ class ConsultarResumenAsistenciaGrupoUseCaseImplTest {
 
     @Test
     void un_docente_no_titular_recibe_403_sin_consultar() {
-        assertThrows(ForbiddenException.class, () -> useCase.execute(
-                new ConsultarResumenAsistenciaGrupoInputPort.Consulta(GRUPO, 2, 10, USUARIO)));
+        final var consulta = new ConsultarResumenAsistenciaGrupoInputPort.Consulta(GRUPO, 2, 10, USUARIO);
+        assertThrows(ForbiddenException.class, () -> useCase.execute(consulta));
         verify(resumen, never()).consultarResumenGrupoDocente(any(), anyInt(), anyInt(), any(), any());
         assertThrows(NullPointerException.class, () -> useCase.execute(null));
         assertThrows(NullPointerException.class, () -> new ConsultarResumenAsistenciaGrupoUseCaseImpl(null, resumen));

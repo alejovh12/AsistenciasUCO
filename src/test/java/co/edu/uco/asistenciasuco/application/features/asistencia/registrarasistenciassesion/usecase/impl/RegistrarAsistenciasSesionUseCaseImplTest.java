@@ -89,7 +89,9 @@ class RegistrarAsistenciasSesionUseCaseImplTest {
         doThrow(new CrosscuttingException("fallo de persistencia"))
                 .when(asistenciaRepositoryPort).registrarAsistenciasSesion(any());
 
-        assertThrows(CrosscuttingException.class, () -> useCaseEn(DURANTE).execute(dominioValido()));
+        final var useCaseEn8 = useCaseEn(DURANTE);
+        final var dominioValido9 = dominioValido();
+        assertThrows(CrosscuttingException.class, () -> useCaseEn8.execute(dominioValido9));
 
         verify(realtimePublisherPort, never()).publish(any());
     }
@@ -99,7 +101,9 @@ class RegistrarAsistenciasSesionUseCaseImplTest {
         when(sesionProcedenciaQueryPort.consultarSesion(SESION)).thenReturn(Optional.of(sesionConfirmada()));
         when(institutionalScopePort.canDocenteAccessGrupo(USUARIO_EJECUTOR, GRUPO)).thenReturn(false);
 
-        assertThrows(ForbiddenException.class, () -> useCaseEn(DURANTE).execute(dominioValido()));
+        final var useCaseEn7 = useCaseEn(DURANTE);
+        final var dominioValido8 = dominioValido();
+        assertThrows(ForbiddenException.class, () -> useCaseEn7.execute(dominioValido8));
 
         verifyNoInteractions(asistenciaRepositoryPort);
         verify(realtimePublisherPort, never()).publish(any());
@@ -110,8 +114,10 @@ class RegistrarAsistenciasSesionUseCaseImplTest {
         when(sesionProcedenciaQueryPort.consultarSesion(SESION)).thenReturn(Optional.of(sesionConfirmada()));
         when(institutionalScopePort.canDocenteAccessGrupo(USUARIO_EJECUTOR, GRUPO)).thenReturn(false);
 
+        final var useCaseEn6 = useCaseEn(Instant.parse("2026-11-03T17:00:00Z"));
+        final var dominioValido7 = dominioValido();
         assertThrows(ForbiddenException.class,
-                () -> useCaseEn(Instant.parse("2026-11-03T17:00:00Z")).execute(dominioValido()));
+                () -> useCaseEn6.execute(dominioValido7));
 
         verifyNoInteractions(asistenciaRepositoryPort);
     }
@@ -120,7 +126,9 @@ class RegistrarAsistenciasSesionUseCaseImplTest {
     void sesion_inexistente_es_rechazada_con_notFound_sin_persistir_ni_publicar() {
         when(sesionProcedenciaQueryPort.consultarSesion(SESION)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> useCaseEn(DURANTE).execute(dominioValido()));
+        final var useCaseEn5 = useCaseEn(DURANTE);
+        final var dominioValido6 = dominioValido();
+        assertThrows(ResourceNotFoundException.class, () -> useCaseEn5.execute(dominioValido6));
 
         verifyNoInteractions(asistenciaRepositoryPort);
         verify(realtimePublisherPort, never()).publish(any());
@@ -154,8 +162,10 @@ class RegistrarAsistenciasSesionUseCaseImplTest {
     void antes_del_inicio_rechaza_con_conflicto_sesion_no_iniciada_sin_persistir() {
         darTitularidadAlDocente();
 
+        final var useCaseEn4 = useCaseEn(Instant.parse("2026-11-03T12:59:59Z"));
+        final var dominioValido5 = dominioValido();
         final ConflictException exception = assertThrows(ConflictException.class,
-                () -> useCaseEn(Instant.parse("2026-11-03T12:59:59Z")).execute(dominioValido()));
+                () -> useCaseEn4.execute(dominioValido5));
 
         assertEquals(AsistenciaErrorCode.ERR_SESION_NO_INICIADA.code(), exception.getCode());
         verifyNoInteractions(asistenciaRepositoryPort);
@@ -167,8 +177,10 @@ class RegistrarAsistenciasSesionUseCaseImplTest {
     void en_el_fin_exacto_o_despues_rechaza_con_conflicto_sesion_cerrada_sin_persistir(final String instante) {
         darTitularidadAlDocente();
 
+        final var useCaseEn3 = useCaseEn(Instant.parse(instante));
+        final var dominioValido4 = dominioValido();
         final ConflictException exception = assertThrows(ConflictException.class,
-                () -> useCaseEn(Instant.parse(instante)).execute(dominioValido()));
+                () -> useCaseEn3.execute(dominioValido4));
 
         assertEquals(AsistenciaErrorCode.ERR_SESION_CERRADA.code(), exception.getCode());
         verifyNoInteractions(asistenciaRepositoryPort);
@@ -184,7 +196,8 @@ class RegistrarAsistenciasSesionUseCaseImplTest {
                 asistenciaRepositoryPort, sesionProcedenciaQueryPort, institutionalScopePort, realtimePublisherPort,
                 cerradoEnOtraZona);
 
-        final ConflictException exception = assertThrows(ConflictException.class, () -> useCase.execute(dominioValido()));
+        final var dominioValido3 = dominioValido();
+        final ConflictException exception = assertThrows(ConflictException.class, () -> useCase.execute(dominioValido3));
 
         assertEquals(AsistenciaErrorCode.ERR_SESION_CERRADA.code(), exception.getCode());
         verifyNoInteractions(asistenciaRepositoryPort);
@@ -195,8 +208,10 @@ class RegistrarAsistenciasSesionUseCaseImplTest {
     void procedencia_indeterminada_o_desconocida_rechaza_sin_suponer_zona(final String procedencia) {
         darTitularidadAlDocente(sesionConProcedencia(procedencia.isEmpty() ? null : procedencia));
 
+        final var useCaseEn2 = useCaseEn(DURANTE);
+        final var dominioValido2 = dominioValido();
         final ConflictException exception = assertThrows(ConflictException.class,
-                () -> useCaseEn(DURANTE).execute(dominioValido()));
+                () -> useCaseEn2.execute(dominioValido2));
 
         assertEquals(AsistenciaErrorCode.ERR_SESION_HORARIO_INDETERMINADO.code(), exception.getCode());
         verifyNoInteractions(asistenciaRepositoryPort);
@@ -221,8 +236,10 @@ class RegistrarAsistenciasSesionUseCaseImplTest {
                 new co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.CancelacionSesionProjection(
                         "DOCENTE", "Motivo de la cancelacion", null, INICIO_UTC.minusDays(1))));
 
+        final var useCaseEn = useCaseEn(DURANTE);
+        final var dominioValido = dominioValido();
         final ConflictException exception = assertThrows(ConflictException.class,
-                () -> useCaseEn(DURANTE).execute(dominioValido()));
+                () -> useCaseEn.execute(dominioValido));
 
         assertEquals(AsistenciaErrorCode.ERR_SESION_CANCELADA.code(), exception.getCode());
         verifyNoInteractions(asistenciaRepositoryPort);

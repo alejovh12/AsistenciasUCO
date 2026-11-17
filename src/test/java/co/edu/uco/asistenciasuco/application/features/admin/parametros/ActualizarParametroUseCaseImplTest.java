@@ -61,7 +61,8 @@ class ActualizarParametroUseCaseImplTest {
     void con_un_proveedor_de_parametros_que_no_es_sqlserver_responde_prm_010_sin_tocar_nada() {
         when(capacidad.admiteEdicion()).thenReturn(false);
 
-        final ConflictException error = assertThrows(ConflictException.class, () -> useCase.execute(comando()));
+        final var comando7 = comando();
+        final ConflictException error = assertThrows(ConflictException.class, () -> useCase.execute(comando7));
 
         assertEquals("PRM_010", error.getCode());
         assertEquals(ParametroErrorCode.PRM_010.defaultMessage(), error.getMessage());
@@ -109,18 +110,24 @@ class ActualizarParametroUseCaseImplTest {
         when(repositorio.actualizar(any(), anyString(), any(), anyString(), any()))
                 .thenThrow(new ConflictException(ParametroErrorCode.PRM_008));
 
-        assertEquals("PRM_008", assertThrows(ConflictException.class, () -> useCase.execute(comando())).getCode());
+        final var comando6 = comando();
+        assertEquals("PRM_008", assertThrows(ConflictException.class, () -> useCase.execute(comando6)).getCode());
         verifyNoInteractions(invalidacion, publisher);
     }
 
     @Test
     void la_forma_del_comando_se_valida_antes_de_consultar_la_capacidad() {
         assertThrows(NullPointerException.class, () -> useCase.execute(null));
-        assertThrows(ValidationException.class, () -> useCase.execute(new Comando(null, "20", ESPERADA, "Ajuste de prueba", ADMIN)));
-        assertThrows(ValidationException.class, () -> useCase.execute(new Comando(PARAMETRO, null, ESPERADA, "Ajuste de prueba", ADMIN)));
-        assertThrows(ValidationException.class, () -> useCase.execute(new Comando(PARAMETRO, "20", null, "Ajuste de prueba", ADMIN)));
-        assertThrows(ValidationException.class, () -> useCase.execute(new Comando(PARAMETRO, "20", ESPERADA, null, ADMIN)));
-        assertThrows(ValidationException.class, () -> useCase.execute(new Comando(PARAMETRO, "20", ESPERADA, "Ajuste de prueba", null)));
+        final var comando5 = new Comando(null, "20", ESPERADA, "Ajuste de prueba", ADMIN);
+        assertThrows(ValidationException.class, () -> useCase.execute(comando5));
+        final var comando4 = new Comando(PARAMETRO, null, ESPERADA, "Ajuste de prueba", ADMIN);
+        assertThrows(ValidationException.class, () -> useCase.execute(comando4));
+        final var comando3 = new Comando(PARAMETRO, "20", null, "Ajuste de prueba", ADMIN);
+        assertThrows(ValidationException.class, () -> useCase.execute(comando3));
+        final var comando2 = new Comando(PARAMETRO, "20", ESPERADA, null, ADMIN);
+        assertThrows(ValidationException.class, () -> useCase.execute(comando2));
+        final var comando = new Comando(PARAMETRO, "20", ESPERADA, "Ajuste de prueba", null);
+        assertThrows(ValidationException.class, () -> useCase.execute(comando));
         verifyNoInteractions(capacidad, repositorio, invalidacion, publisher);
     }
 

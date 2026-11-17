@@ -132,8 +132,10 @@ class FestivosUseCasesTest {
 
     @Test
     void el_job_exige_sus_dependencias() {
-        assertThrows(NullPointerException.class, () -> new CargarFestivosAutomaticoUseCaseImpl(null, cargaAnual, Clock.systemUTC()));
-        assertThrows(NullPointerException.class, () -> new CargarFestivosAutomaticoUseCaseImpl(parametros, null, Clock.systemUTC()));
+        final var reloj3 = Clock.systemUTC();
+        assertThrows(NullPointerException.class, () -> new CargarFestivosAutomaticoUseCaseImpl(null, cargaAnual, reloj3));
+        final var reloj2 = Clock.systemUTC();
+        assertThrows(NullPointerException.class, () -> new CargarFestivosAutomaticoUseCaseImpl(parametros, null, reloj2));
         assertThrows(NullPointerException.class, () -> new CargarFestivosAutomaticoUseCaseImpl(parametros, cargaAnual, null));
     }
 
@@ -228,10 +230,13 @@ class FestivosUseCasesTest {
 
     @Test
     void recargar_valida_el_anio_antes_de_llamar_a_los_proveedores() {
+        final var recargar3 = recargar();
+        final var comando4 = new RecargarFestivosAnioInputPort.Comando(1999, ADMIN);
         assertEquals("FES_001", assertThrows(ValidationException.class,
-                () -> recargar().execute(new RecargarFestivosAnioInputPort.Comando(1999, ADMIN))).getCode());
+                () -> recargar3.execute(comando4)).getCode());
         verifyNoInteractions(obtener, repositorio);
-        assertThrows(NullPointerException.class, () -> recargar().execute(null));
+        final var recargar2 = recargar();
+        assertThrows(NullPointerException.class, () -> recargar2.execute(null));
         assertThrows(NullPointerException.class, () -> new RecargarFestivosAnioUseCaseImpl(null, obtener, repositorio));
         assertThrows(NullPointerException.class, () -> new RecargarFestivosAnioUseCaseImpl(parametros, null, repositorio));
         assertThrows(NullPointerException.class, () -> new RecargarFestivosAnioUseCaseImpl(parametros, obtener, null));
@@ -242,7 +247,9 @@ class FestivosUseCasesTest {
         when(repositorio.cargar(anyInt(), org.mockito.ArgumentMatchers.anyList(), anyString(), anyInt(),
                 org.mockito.ArgumentMatchers.any())).thenReturn(new CargaFestivos(2026, 19, 19, 0, 0));
         doThrow(new IllegalStateException("FES_009")).when(repositorio).aplicarAnio(2026, ADMIN);
-        assertThrows(IllegalStateException.class, () -> recargar().execute(new RecargarFestivosAnioInputPort.Comando(2026, ADMIN)));
+        final var recargar = recargar();
+        final var comando3 = new RecargarFestivosAnioInputPort.Comando(2026, ADMIN);
+        assertThrows(IllegalStateException.class, () -> recargar.execute(comando3));
     }
 
     // ---------------- ConsultarFestivosAnioUseCaseImpl ----------------
@@ -277,8 +284,9 @@ class FestivosUseCasesTest {
                 consultar.execute(new ConsultarFestivosAnioInputPort.Comando(2030, false, ADMIN));
         assertTrue(resultado.festivos().isEmpty());
         assertNull(resultado.fuenteUltimaCarga());
+        final var comando2 = new ConsultarFestivosAnioInputPort.Comando(3000, false, ADMIN);
         assertEquals("FES_001", assertThrows(ValidationException.class,
-                () -> consultar.execute(new ConsultarFestivosAnioInputPort.Comando(3000, false, ADMIN))).getCode());
+                () -> consultar.execute(comando2)).getCode());
         assertThrows(NullPointerException.class, () -> consultar.execute(null));
         assertThrows(NullPointerException.class, () -> new ConsultarFestivosAnioUseCaseImpl(null, repositorio));
         assertThrows(NullPointerException.class, () -> new ConsultarFestivosAnioUseCaseImpl(parametros, null));
@@ -316,8 +324,9 @@ class FestivosUseCasesTest {
         assertEquals(5, resultado.tamanoPagina());
         assertTrue(resultado.elementos().isEmpty());
         assertTrue(new ConsultarSesionesFestivoConAsistenciaInputPort.Resultado(null, 1, 1, 0).elementos().isEmpty());
+        final var comando = new ConsultarSesionesFestivoConAsistenciaInputPort.Comando(1900, 1, 1, ADMIN);
         assertThrows(ValidationException.class,
-                () -> consultar.execute(new ConsultarSesionesFestivoConAsistenciaInputPort.Comando(1900, 1, 1, ADMIN)));
+                () -> consultar.execute(comando));
         assertThrows(NullPointerException.class, () -> consultar.execute(null));
         assertThrows(NullPointerException.class, () -> new ConsultarSesionesFestivoConAsistenciaUseCaseImpl(null, repositorio));
         assertThrows(NullPointerException.class, () -> new ConsultarSesionesFestivoConAsistenciaUseCaseImpl(parametros, null));

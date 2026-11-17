@@ -14,7 +14,6 @@ import org.mockito.InOrder;
 
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -70,7 +69,8 @@ class SubirArchivoUseCaseImplTest {
     void archivo_infectado_es_rechazado_y_nunca_se_almacena() {
         when(malwareScanPort.scan(any())).thenReturn(MalwareScanPort.ScanResult.infected("Eicar-Test-Signature"));
 
-        assertThrows(ValidationException.class, () -> useCase.execute(dominioValido("soporte.pdf")));
+        final var dominioValido10 = dominioValido("soporte.pdf");
+        assertThrows(ValidationException.class, () -> useCase.execute(dominioValido10));
 
         verify(fileStoragePort, never()).store(any());
     }
@@ -90,7 +90,8 @@ class SubirArchivoUseCaseImplTest {
     void error_del_scanner_falla_cerrado_y_nunca_almacena() {
         when(malwareScanPort.scan(any())).thenThrow(new MalwareScanPort.MalwareScanException("ClamAV no disponible"));
 
-        assertThrows(InternalApplicationException.class, () -> useCase.execute(dominioValido("soporte.pdf")));
+        final var dominioValido9 = dominioValido("soporte.pdf");
+        assertThrows(InternalApplicationException.class, () -> useCase.execute(dominioValido9));
 
         verify(fileStoragePort, never()).store(any());
     }
@@ -108,7 +109,8 @@ class SubirArchivoUseCaseImplTest {
 
     @Test
     void contenido_invalido_nunca_llega_al_escaneo_de_malware() {
-        assertThrows(ValidationException.class, () -> useCase.execute(dominioValido("script.exe")));
+        final var dominioValido8 = dominioValido("script.exe");
+        assertThrows(ValidationException.class, () -> useCase.execute(dominioValido8));
 
         verify(malwareScanPort, never()).scan(any());
         verify(fileStoragePort, never()).store(any());
@@ -165,7 +167,8 @@ class SubirArchivoUseCaseImplTest {
         doThrow(new SoporteArchivoMetadataPort.SoporteMetadataRechazadaException("rechazo", new RuntimeException()))
                 .when(metadataPort).registrarBorrador(any());
 
-        assertThrows(InternalApplicationException.class, () -> useCase.execute(dominioValido("soporte.pdf")));
+        final var dominioValido7 = dominioValido("soporte.pdf");
+        assertThrows(InternalApplicationException.class, () -> useCase.execute(dominioValido7));
 
         final ArgumentCaptor<FileStoragePort.StoreObjectCommand> stored =
                 ArgumentCaptor.forClass(FileStoragePort.StoreObjectCommand.class);
@@ -182,7 +185,8 @@ class SubirArchivoUseCaseImplTest {
         doThrow(new FileStoragePort.StorageUnavailableException("minio down", new RuntimeException()))
                 .when(fileStoragePort).delete(any());
 
-        assertThrows(InternalApplicationException.class, () -> useCase.execute(dominioValido("soporte.pdf")));
+        final var dominioValido6 = dominioValido("soporte.pdf");
+        assertThrows(InternalApplicationException.class, () -> useCase.execute(dominioValido6));
     }
 
     // BE-03: resultado desconocido => un reintento idempotente (misma metadata) y SIN delete.
@@ -208,7 +212,8 @@ class SubirArchivoUseCaseImplTest {
         doThrow(new SoporteArchivoMetadataPort.SoporteMetadataNoDisponibleException("timeout", new RuntimeException()))
                 .when(metadataPort).registrarBorrador(any());
 
-        assertThrows(InternalApplicationException.class, () -> useCase.execute(dominioValido("soporte.pdf")));
+        final var dominioValido5 = dominioValido("soporte.pdf");
+        assertThrows(InternalApplicationException.class, () -> useCase.execute(dominioValido5));
 
         verify(metadataPort, times(2)).registrarBorrador(any());
         verify(fileStoragePort, never()).delete(any());
@@ -221,16 +226,19 @@ class SubirArchivoUseCaseImplTest {
                 .doThrow(new SoporteArchivoMetadataPort.SoporteMetadataRechazadaException("rechazo", new RuntimeException()))
                 .when(metadataPort).registrarBorrador(any());
 
-        assertThrows(InternalApplicationException.class, () -> useCase.execute(dominioValido("soporte.pdf")));
+        final var dominioValido4 = dominioValido("soporte.pdf");
+        assertThrows(InternalApplicationException.class, () -> useCase.execute(dominioValido4));
 
         verify(fileStoragePort).delete(any());
     }
 
     @Test
     void archivo_rechazado_antes_de_almacenar_nunca_registra_metadata() {
-        assertThrows(ValidationException.class, () -> useCase.execute(dominioValido("script.exe")));
+        final var dominioValido3 = dominioValido("script.exe");
+        assertThrows(ValidationException.class, () -> useCase.execute(dominioValido3));
         when(malwareScanPort.scan(any())).thenReturn(MalwareScanPort.ScanResult.infected("Eicar-Test-Signature"));
-        assertThrows(ValidationException.class, () -> useCase.execute(dominioValido("soporte.pdf")));
+        final var dominioValido2 = dominioValido("soporte.pdf");
+        assertThrows(ValidationException.class, () -> useCase.execute(dominioValido2));
 
         verify(metadataPort, never()).registrarBorrador(any());
     }
@@ -241,7 +249,8 @@ class SubirArchivoUseCaseImplTest {
         final String nombreLargo = "a".repeat(247) + ".pdf";
         assertEquals(251, nombreLargo.length());
 
-        assertThrows(ValidationException.class, () -> useCase.execute(dominioValido(nombreLargo)));
+        final var dominioValido = dominioValido(nombreLargo);
+        assertThrows(ValidationException.class, () -> useCase.execute(dominioValido));
 
         verify(malwareScanPort, never()).scan(any());
         verify(fileStoragePort, never()).store(any());

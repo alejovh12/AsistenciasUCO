@@ -69,7 +69,8 @@ class ActualizarCoordinadorUseCaseImplTest {
     void execute_lanza_forbidden_sin_tocar_db_ni_identidad_cuando_no_hay_facultad_de_decano() {
         when(scopePort.findFacultadIdByDecanoUsuario(DECANO)).thenReturn(Optional.empty());
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(dominio()));
+        final var dominio2 = dominio();
+        assertThrows(ForbiddenException.class, () -> useCase.execute(dominio2));
 
         verifyNoInteractions(commandPort, sincronizacion);
     }
@@ -113,7 +114,8 @@ class ActualizarCoordinadorUseCaseImplTest {
                 co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CorreccionDocumentoDTO.ninguna()))
                 .thenThrow(new ConflictException("Correo ya registrado."));
 
-        assertThrows(ConflictException.class, () -> useCase.execute(dominio()));
+        final var dominio = dominio();
+        assertThrows(ConflictException.class, () -> useCase.execute(dominio));
 
         verifyNoInteractions(sincronizacion);
     }

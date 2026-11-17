@@ -37,7 +37,8 @@ class DocentesProgramaInteractorsTest {
 
     @Test
     void constructores_rechazan_caso_de_uso_nulo() {
-        assertThrows(NullPointerException.class, () -> new VincularDocenteProgramaInteractor(null, CorreoInstitucionalPolicyFixture.institucional()));
+        final var institucional = CorreoInstitucionalPolicyFixture.institucional();
+        assertThrows(NullPointerException.class, () -> new VincularDocenteProgramaInteractor(null, institucional));
         assertThrows(NullPointerException.class, () -> new ConsultarDocentesProgramaInteractor(null));
         assertThrows(NullPointerException.class, () -> new ConsultarCandidatosDocenteInteractor(null));
     }

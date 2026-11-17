@@ -18,6 +18,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -60,7 +61,8 @@ class GenerarReporteAsistenciaUseCaseImplTest {
         when(institutionalScopePort.findDocenteIdByUsuario(DOCENTE_AJENO)).thenReturn(Optional.of(UUID.randomUUID()));
         when(institutionalScopePort.canDocenteAccessGrupo(DOCENTE_AJENO, GRUPO)).thenReturn(false);
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(domain(DOCENTE_AJENO)));
+        final var domain9 = domain(DOCENTE_AJENO);
+        assertThrows(ForbiddenException.class, () -> useCase.execute(domain9));
 
         verify(queryPort, never()).consultarReporteAsistenciaGrupo(any());
     }
@@ -70,7 +72,8 @@ class GenerarReporteAsistenciaUseCaseImplTest {
         when(institutionalScopePort.findRolesActivosByUsuario(DOCENTE_SIN_IDENTIDAD)).thenReturn(Set.of(InstitutionalRole.DOCENTE));
         when(institutionalScopePort.findDocenteIdByUsuario(DOCENTE_SIN_IDENTIDAD)).thenReturn(Optional.empty());
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(domain(DOCENTE_SIN_IDENTIDAD)));
+        final var domain8 = domain(DOCENTE_SIN_IDENTIDAD);
+        assertThrows(ForbiddenException.class, () -> useCase.execute(domain8));
 
         verify(institutionalScopePort, never()).canDocenteAccessGrupo(DOCENTE_SIN_IDENTIDAD, GRUPO);
         verify(queryPort, never()).consultarReporteAsistenciaGrupo(any());
@@ -83,7 +86,8 @@ class GenerarReporteAsistenciaUseCaseImplTest {
         when(institutionalScopePort.findDocenteIdByUsuario(actor)).thenReturn(Optional.of(UUID.randomUUID()));
         when(institutionalScopePort.canDocenteAccessGrupo(actor, GRUPO)).thenReturn(true);
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(domain(actor)));
+        final var domain7 = domain(actor);
+        assertThrows(ForbiddenException.class, () -> useCase.execute(domain7));
 
         verify(queryPort, never()).consultarReporteAsistenciaGrupo(any());
     }
@@ -105,7 +109,8 @@ class GenerarReporteAsistenciaUseCaseImplTest {
         when(institutionalScopePort.findRolesActivosByUsuario(COORDINADOR_AJENO)).thenReturn(Set.of(InstitutionalRole.COORDINADOR));
         when(institutionalScopePort.canCoordinadorAccessGrupo(COORDINADOR_AJENO, GRUPO)).thenReturn(false);
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(domain(COORDINADOR_AJENO)));
+        final var domain6 = domain(COORDINADOR_AJENO);
+        assertThrows(ForbiddenException.class, () -> useCase.execute(domain6));
 
         verify(queryPort, never()).consultarReporteAsistenciaGrupo(any());
     }
@@ -116,7 +121,8 @@ class GenerarReporteAsistenciaUseCaseImplTest {
         when(institutionalScopePort.findRolesActivosByUsuario(actor)).thenReturn(Set.of());
         when(institutionalScopePort.canCoordinadorAccessGrupo(actor, GRUPO)).thenReturn(true);
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(domain(actor)));
+        final var domain5 = domain(actor);
+        assertThrows(ForbiddenException.class, () -> useCase.execute(domain5));
 
         verify(queryPort, never()).consultarReporteAsistenciaGrupo(any());
     }
@@ -138,7 +144,8 @@ class GenerarReporteAsistenciaUseCaseImplTest {
                 .thenReturn(Set.of(InstitutionalRole.ADMINISTRADOR));
         when(institutionalScopePort.isAdministradorActivo(ADMINISTRADOR_INACTIVO)).thenReturn(false);
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(domain(ADMINISTRADOR_INACTIVO)));
+        final var domain4 = domain(ADMINISTRADOR_INACTIVO);
+        assertThrows(ForbiddenException.class, () -> useCase.execute(domain4));
 
         verify(queryPort, never()).consultarReporteAsistenciaGrupo(any());
     }
@@ -163,7 +170,8 @@ class GenerarReporteAsistenciaUseCaseImplTest {
         when(institutionalScopePort.canCoordinadorAccessGrupo(DOCENTE_COORDINADOR, GRUPO)).thenReturn(false);
         when(institutionalScopePort.findDocenteIdByUsuario(DOCENTE_COORDINADOR)).thenReturn(Optional.empty());
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(domain(DOCENTE_COORDINADOR)));
+        final var domain3 = domain(DOCENTE_COORDINADOR);
+        assertThrows(ForbiddenException.class, () -> useCase.execute(domain3));
 
         verify(queryPort, never()).consultarReporteAsistenciaGrupo(any());
     }
@@ -172,7 +180,8 @@ class GenerarReporteAsistenciaUseCaseImplTest {
     void estudiante_sin_otra_via_permitida_es_rechazado() {
         when(institutionalScopePort.findRolesActivosByUsuario(ESTUDIANTE)).thenReturn(Set.of(InstitutionalRole.ESTUDIANTE));
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(domain(ESTUDIANTE)));
+        final var domain2 = domain(ESTUDIANTE);
+        assertThrows(ForbiddenException.class, () -> useCase.execute(domain2));
 
         verify(queryPort, never()).consultarReporteAsistenciaGrupo(any());
     }
@@ -197,10 +206,11 @@ class GenerarReporteAsistenciaUseCaseImplTest {
     void culm001_d9_grupo_inexistente_o_ajeno_es_403_de_la_bd_sin_consultar_filas() {
         when(institutionalScopePort.findRolesActivosByUsuario(ADMINISTRADOR)).thenReturn(Set.of(InstitutionalRole.ADMINISTRADOR));
         when(institutionalScopePort.isAdministradorActivo(ADMINISTRADOR)).thenReturn(true);
-        org.mockito.Mockito.doThrow(new ForbiddenException("SEC_002", "Sin autorizacion sobre el recurso."))
+        doThrow(new ForbiddenException("SEC_002", "Sin autorizacion sobre el recurso."))
                 .when(queryPort).validarAccesoGrupo(ADMINISTRADOR, GRUPO);
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(domain(ADMINISTRADOR)));
+        final var domain = domain(ADMINISTRADOR);
+        assertThrows(ForbiddenException.class, () -> useCase.execute(domain));
 
         verify(queryPort, never()).consultarReporteAsistenciaGrupo(any());
     }

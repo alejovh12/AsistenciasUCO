@@ -139,8 +139,9 @@ class CancelarSesionUseCaseImplTest {
     @Test
     void sesion_inexistente_responde_404_sin_llamar_al_sp() {
         when(sesiones.consultarSesion(SESION)).thenReturn(Optional.empty());
+        final var comando3 = new CancelarSesionInputPort.Comando(SESION, MOTIVO, DOCENTE);
         final ResourceNotFoundException error = assertThrows(ResourceNotFoundException.class,
-                () -> useCase.execute(new CancelarSesionInputPort.Comando(SESION, MOTIVO, DOCENTE)));
+                () -> useCase.execute(comando3));
         assertEquals(SesionErrorCode.ERR_SESION_NO_EXISTE.code(), error.getCode());
         verifyNoInteractions(repositorio, notificaciones, realtime);
     }
@@ -149,7 +150,8 @@ class CancelarSesionUseCaseImplTest {
     void docente_sin_titularidad_responde_403_sin_llamar_al_sp() {
         prepararSesion("UTC_V2");
         when(scope.canDocenteAccessGrupo(DOCENTE, GRUPO)).thenReturn(false);
-        assertThrows(ForbiddenException.class, () -> useCase.execute(new CancelarSesionInputPort.Comando(SESION, MOTIVO, DOCENTE)));
+        final var comando2 = new CancelarSesionInputPort.Comando(SESION, MOTIVO, DOCENTE);
+        assertThrows(ForbiddenException.class, () -> useCase.execute(comando2));
         verifyNoInteractions(repositorio, notificaciones, realtime);
     }
 
@@ -157,8 +159,9 @@ class CancelarSesionUseCaseImplTest {
     void un_rechazo_de_la_db_no_avisa_ni_publica_el_evento() {
         prepararSesion("UTC_V2");
         when(repositorio.cancelar(SESION, MOTIVO, DOCENTE)).thenThrow(new ConflictException(SesionErrorCode.SES_012));
+        final var comando = new CancelarSesionInputPort.Comando(SESION, MOTIVO, DOCENTE);
         assertEquals("SES_012", assertThrows(ConflictException.class,
-                () -> useCase.execute(new CancelarSesionInputPort.Comando(SESION, MOTIVO, DOCENTE))).getCode());
+                () -> useCase.execute(comando)).getCode());
         verify(repositorio, never()).consultarDestinatarios(any(), any());
         verifyNoInteractions(notificaciones, realtime);
     }

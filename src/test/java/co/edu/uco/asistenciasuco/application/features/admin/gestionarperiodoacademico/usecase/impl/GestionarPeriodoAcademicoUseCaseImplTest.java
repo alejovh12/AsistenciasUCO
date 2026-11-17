@@ -19,6 +19,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 /** HU096/HU097/HU098: validacion de entrada y delegacion al provider DB de periodos academicos. */
 class GestionarPeriodoAcademicoUseCaseImplTest {
@@ -47,7 +48,7 @@ class GestionarPeriodoAcademicoUseCaseImplTest {
     void culm001_d9_consultar_usa_pagina_1_y_tamano_10_por_defecto_y_exige_usuario() {
         final UUID usuario = UUID.randomUUID();
         final var pagina = new co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PaginaPeriodosAdminProjection(java.util.List.of(), 0);
-        org.mockito.Mockito.when(queryPort.consultarPeriodosAdministrador(usuario, 1, 10)).thenReturn(pagina);
+        when(queryPort.consultarPeriodosAdministrador(usuario, 1, 10)).thenReturn(pagina);
 
         org.junit.jupiter.api.Assertions.assertSame(pagina, useCase.consultar(usuario, null, null));
         org.junit.jupiter.api.Assertions.assertThrows(co.edu.uco.asistenciasuco.application.exception.validation.ValidationException.class,
@@ -81,8 +82,9 @@ class GestionarPeriodoAcademicoUseCaseImplTest {
 
     @Test
     void actualizar_sin_id_se_rechaza() {
+        final var periodoAcademicoDomain7 = new PeriodoAcademicoDomain(null, "2027-1", INICIO, FIN, UUID.randomUUID());
         assertThrows(ValidationException.class,
-                () -> useCase.actualizar(new PeriodoAcademicoDomain(null, "2027-1", INICIO, FIN, UUID.randomUUID())));
+                () -> useCase.actualizar(periodoAcademicoDomain7));
         verifyNoInteractions(commandPort);
     }
 
@@ -90,12 +92,18 @@ class GestionarPeriodoAcademicoUseCaseImplTest {
     void entradas_invalidas_se_rechazan_sin_llamar_a_la_db() {
         final UUID usuario = UUID.randomUUID();
         assertThrows(CrosscuttingException.class, () -> useCase.crear(null));
-        assertThrows(ValidationException.class, () -> useCase.crear(new PeriodoAcademicoDomain(null, " ", INICIO, FIN, usuario)));
-        assertThrows(ValidationException.class, () -> useCase.crear(new PeriodoAcademicoDomain(null, null, INICIO, FIN, usuario)));
-        assertThrows(ValidationException.class, () -> useCase.crear(new PeriodoAcademicoDomain(null, "2027-1", null, FIN, usuario)));
-        assertThrows(ValidationException.class, () -> useCase.crear(new PeriodoAcademicoDomain(null, "2027-1", INICIO, null, usuario)));
-        assertThrows(ValidationException.class, () -> useCase.crear(new PeriodoAcademicoDomain(null, "2027-1", FIN, INICIO, usuario)));
-        assertThrows(ValidationException.class, () -> useCase.crear(new PeriodoAcademicoDomain(null, "2027-1", INICIO, INICIO, usuario)));
+        final var periodoAcademicoDomain6 = new PeriodoAcademicoDomain(null, " ", INICIO, FIN, usuario);
+        assertThrows(ValidationException.class, () -> useCase.crear(periodoAcademicoDomain6));
+        final var periodoAcademicoDomain5 = new PeriodoAcademicoDomain(null, null, INICIO, FIN, usuario);
+        assertThrows(ValidationException.class, () -> useCase.crear(periodoAcademicoDomain5));
+        final var periodoAcademicoDomain4 = new PeriodoAcademicoDomain(null, "2027-1", null, FIN, usuario);
+        assertThrows(ValidationException.class, () -> useCase.crear(periodoAcademicoDomain4));
+        final var periodoAcademicoDomain3 = new PeriodoAcademicoDomain(null, "2027-1", INICIO, null, usuario);
+        assertThrows(ValidationException.class, () -> useCase.crear(periodoAcademicoDomain3));
+        final var periodoAcademicoDomain2 = new PeriodoAcademicoDomain(null, "2027-1", FIN, INICIO, usuario);
+        assertThrows(ValidationException.class, () -> useCase.crear(periodoAcademicoDomain2));
+        final var periodoAcademicoDomain = new PeriodoAcademicoDomain(null, "2027-1", INICIO, INICIO, usuario);
+        assertThrows(ValidationException.class, () -> useCase.crear(periodoAcademicoDomain));
         verifyNoInteractions(commandPort);
     }
 

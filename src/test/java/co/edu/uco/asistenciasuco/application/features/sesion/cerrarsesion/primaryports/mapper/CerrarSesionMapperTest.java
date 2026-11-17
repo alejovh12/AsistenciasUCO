@@ -34,7 +34,8 @@ class CerrarSesionMapperTest {
 
     @Test
     void toDomain_propaga_la_validacion_del_dominio_cuando_el_dto_es_invalido() {
+        final var cerrarSesionDTO = new CerrarSesionDTO(null, DOCENTE, "Cierre programado", USUARIO);
         assertThrows(ValidationException.class,
-                () -> CerrarSesionMapper.toDomain(new CerrarSesionDTO(null, DOCENTE, "Cierre programado", USUARIO)));
+                () -> CerrarSesionMapper.toDomain(cerrarSesionDTO));
     }
 }

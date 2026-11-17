@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.architecture;
 
+import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
@@ -82,7 +83,7 @@ class JpaRepositoryArchitectureRulesTest {
     void wrappers_delegadores_y_query_rows_uno_a_uno_fueron_retirados() {
         final JavaClasses imported = importedClasses();
         final List<String> wrappers = imported.stream()
-                .map(javaClass -> javaClass.getSimpleName())
+                .map(JavaClass::getSimpleName)
                 .filter(name -> name.endsWith("JpaCommandPersistence")
                         || name.endsWith("JpaQueryPersistence")
                         || name.endsWith("RepositorySqlServerAdapter")
@@ -92,7 +93,7 @@ class JpaRepositoryArchitectureRulesTest {
         assertTrue(wrappers.isEmpty(), "Persisten wrappers entre Port y @Repository: " + wrappers);
 
         final List<String> rows = imported.stream()
-                .map(javaClass -> javaClass.getSimpleName())
+                .map(JavaClass::getSimpleName)
                 .filter(REDUNDANT_QUERY_ROWS::contains)
                 .sorted()
                 .toList();

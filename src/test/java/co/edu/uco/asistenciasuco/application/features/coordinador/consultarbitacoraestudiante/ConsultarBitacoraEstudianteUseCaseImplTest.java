@@ -60,9 +60,12 @@ class ConsultarBitacoraEstudianteUseCaseImplTest {
     @Test
     void T_BE_02_valida_la_forma_antes_de_llamar_al_puerto() {
         assertThrows(ValidationException.class, () -> useCase.execute(null));
-        assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarBitacoraEstudianteDomain(ACTOR, null, null, 1, 10)));
-        assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarBitacoraEstudianteDomain(ACTOR, ESTUDIANTE, null, 0, 10)));
-        assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarBitacoraEstudianteDomain(ACTOR, ESTUDIANTE, null, 1, 0)));
+        final var consultarBitacoraEstudianteDomain4 = new ConsultarBitacoraEstudianteDomain(ACTOR, null, null, 1, 10);
+        assertThrows(ValidationException.class, () -> useCase.execute(consultarBitacoraEstudianteDomain4));
+        final var consultarBitacoraEstudianteDomain3 = new ConsultarBitacoraEstudianteDomain(ACTOR, ESTUDIANTE, null, 0, 10);
+        assertThrows(ValidationException.class, () -> useCase.execute(consultarBitacoraEstudianteDomain3));
+        final var consultarBitacoraEstudianteDomain2 = new ConsultarBitacoraEstudianteDomain(ACTOR, ESTUDIANTE, null, 1, 0);
+        assertThrows(ValidationException.class, () -> useCase.execute(consultarBitacoraEstudianteDomain2));
         verify(queryPort, never()).consultarBitacora(any(), any(), any(), anyInt(), anyInt(), any());
     }
 
@@ -70,7 +73,8 @@ class ConsultarBitacoraEstudianteUseCaseImplTest {
     void T_BE_01_sin_programa_de_coordinador_responde_forbidden() {
         when(scopePort.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.empty());
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(new ConsultarBitacoraEstudianteDomain(ACTOR, ESTUDIANTE, null, 1, 10)));
+        final var consultarBitacoraEstudianteDomain = new ConsultarBitacoraEstudianteDomain(ACTOR, ESTUDIANTE, null, 1, 10);
+        assertThrows(ForbiddenException.class, () -> useCase.execute(consultarBitacoraEstudianteDomain));
 
         verifyNoInteractions(queryPort);
     }

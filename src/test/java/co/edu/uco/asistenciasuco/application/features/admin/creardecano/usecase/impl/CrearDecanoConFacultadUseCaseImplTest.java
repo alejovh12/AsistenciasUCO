@@ -148,8 +148,9 @@ class CrearDecanoConFacultadUseCaseImplTest {
     void rechazo_de_la_base_impide_la_cuenta_de_identidad() {
         doThrow(new ConflictException("Ya existe una facultad con ese nombre.")).when(command).crearDecanoConFacultad(any());
 
+        final var dominio = dominio(null, new FacultadNuevaDomain("Facultad de Ingenieria", null, INSTITUCION_ID));
         assertThrows(ConflictException.class,
-                () -> useCase.execute(dominio(null, new FacultadNuevaDomain("Facultad de Ingenieria", null, INSTITUCION_ID))));
+                () -> useCase.execute(dominio));
 
         verifyNoInteractions(identity);
         verify(usuarios, never()).consultarUsuarioPorId(any());
