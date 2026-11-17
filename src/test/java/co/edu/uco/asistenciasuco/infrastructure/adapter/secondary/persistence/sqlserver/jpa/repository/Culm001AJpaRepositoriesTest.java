@@ -28,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.RETURNS_SELF;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -241,7 +240,7 @@ class Culm001AJpaRepositoriesTest {
     @SuppressWarnings("unchecked")
     void correo_por_estudiante_lee_el_correo_del_usuario_del_estudiante() {
         final TypedQuery<String> correo = mock(TypedQuery.class, RETURNS_SELF);
-        when(manager.createQuery(eq(UsuarioJpaRepository.HQL_CORREO_POR_ESTUDIANTE), eq(String.class))).thenReturn(correo);
+        when(manager.createQuery(UsuarioJpaRepository.HQL_CORREO_POR_ESTUDIANTE, String.class)).thenReturn(correo);
         final UUID estudiante = UUID.randomUUID();
         when(correo.getResultList()).thenReturn(List.of("ana.perez@uco.edu.co"), List.of(" "));
         final UsuarioJpaRepository repository = new UsuarioJpaRepository(manager);

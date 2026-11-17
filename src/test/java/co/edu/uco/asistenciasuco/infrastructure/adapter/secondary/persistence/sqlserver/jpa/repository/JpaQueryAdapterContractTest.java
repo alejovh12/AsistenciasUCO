@@ -23,7 +23,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.times;
 
@@ -182,7 +181,7 @@ class JpaQueryAdapterContractTest {
             when(paginaGrupos.getResultList()).thenReturn(
                     java.util.Collections.<Object>singletonList(grupoFila(ID, 2)),
                     java.util.Collections.<Object>singletonList(grupoFila(segundo, 2)));
-            when(manager.createNativeQuery(eq(GrupoJpaRepository.SQL_GRUPOS_PAGINADO))).thenReturn(paginaGrupos);
+            when(manager.createNativeQuery(GrupoJpaRepository.SQL_GRUPOS_PAGINADO)).thenReturn(paginaGrupos);
             query(GrupoJpaRepository.HQL_HORARIOS_DE_GRUPOS, UvHorarioEntity.class, List.of(
                     HydratedViewRow.of(UvHorarioEntity.class, Map.of("id", OTHER, "idGrupo", ID, "codigoDia", "MI", "nombreDia",
                             "Miercoles", "horaInicio", LocalTime.of(14, 0), "horaFin", LocalTime.of(16, 0))),
@@ -191,7 +190,7 @@ class JpaQueryAdapterContractTest {
             final jakarta.persistence.Query estudiantes = mock(jakarta.persistence.Query.class, RETURNS_SELF);
             when(estudiantes.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(
                     new Object[]{ID, OTHER.toString(), null, "Ana", "ana@uco.edu.co", "A", "Activo", 1}));
-            when(manager.createNativeQuery(eq(GrupoJpaRepository.SQL_ESTUDIANTES_GRUPO))).thenReturn(estudiantes);
+            when(manager.createNativeQuery(GrupoJpaRepository.SQL_ESTUDIANTES_GRUPO)).thenReturn(estudiantes);
             final GrupoJpaRepository repository = new GrupoJpaRepository(manager, mock(TransactionOperations.class),
                     new JpaProcedureExecutor(manager));
 
@@ -273,7 +272,7 @@ class JpaQueryAdapterContractTest {
     private <T> TypedQuery<T> query(final String hql, final Class<T> type, final List<T> rows) {
         final TypedQuery<T> query = mock(TypedQuery.class, RETURNS_SELF);
         when(query.getResultList()).thenReturn(rows);
-        when(manager.createQuery(eq(hql), eq(type))).thenReturn(query);
+        when(manager.createQuery(hql, type)).thenReturn(query);
         return query;
     }
 }

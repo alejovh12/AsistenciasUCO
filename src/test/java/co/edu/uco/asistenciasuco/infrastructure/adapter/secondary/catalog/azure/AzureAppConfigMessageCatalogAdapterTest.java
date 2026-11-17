@@ -57,22 +57,22 @@ class AzureAppConfigMessageCatalogAdapterTest {
     void consulta_utiliza_cache_y_tras_invalidar_reconsulta_a_azure() {
         final AzureAppConfigMessageCatalogAdapter defaultCacheAdapter = new AzureAppConfigMessageCatalogAdapter(configurationClient);
         final ConfigurationSetting setting = setting(USER_KEY, "El campo {0} es obligatorio");
-        when(configurationClient.getConfigurationSetting(eq(USER_KEY), eq("es"))).thenReturn(setting);
+        when(configurationClient.getConfigurationSetting(USER_KEY, "es")).thenReturn(setting);
 
         final Optional<String> primero = defaultCacheAdapter.findUserMessage("VAL-001");
         assertTrue(primero.isPresent());
         assertEquals("El campo {0} es obligatorio", primero.get());
-        verify(configurationClient, times(1)).getConfigurationSetting(eq(USER_KEY), eq("es"));
+        verify(configurationClient, times(1)).getConfigurationSetting(USER_KEY, "es");
 
         final Optional<String> segundo = defaultCacheAdapter.findUserMessage("VAL-001");
         assertTrue(segundo.isPresent());
-        verify(configurationClient, times(1)).getConfigurationSetting(eq(USER_KEY), eq("es"));
+        verify(configurationClient, times(1)).getConfigurationSetting(USER_KEY, "es");
 
         defaultCacheAdapter.invalidateMessage("VAL-001");
 
         final Optional<String> tercero = defaultCacheAdapter.findUserMessage("VAL-001");
         assertTrue(tercero.isPresent());
-        verify(configurationClient, times(2)).getConfigurationSetting(eq(USER_KEY), eq("es"));
+        verify(configurationClient, times(2)).getConfigurationSetting(USER_KEY, "es");
     }
 
     @Test

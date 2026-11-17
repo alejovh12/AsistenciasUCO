@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -104,7 +103,7 @@ class AsistenciaSesionEstudiantePuntosControlJpaRepositoryTest {
         repository.consultarMinutosSesiones(ESTUDIANTE, ASIGNATURA, ids);
 
         verify(query, times(2)).getResultList();
-        verify(query).setParameter(eq("idsSesion"), eq(ids.subList(0, AsistenciaSesionEstudianteJpaRepository.TAMANO_BLOQUE_IN)));
+        verify(query).setParameter("idsSesion", ids.subList(0, AsistenciaSesionEstudianteJpaRepository.TAMANO_BLOQUE_IN));
     }
 
     @Test

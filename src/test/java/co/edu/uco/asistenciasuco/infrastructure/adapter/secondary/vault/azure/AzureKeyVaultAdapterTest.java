@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -58,22 +57,22 @@ class AzureKeyVaultAdapterTest {
     void consulta_utiliza_cache_y_tras_invalidar_reconsulta_a_azure() {
         final AzureKeyVaultAdapter defaultCacheAdapter = new AzureKeyVaultAdapter(secretClient);
         final KeyVaultSecret secret = secretWithValue("top-secret-val");
-        when(secretClient.getSecret(eq("jwt-signing-key"))).thenReturn(secret);
+        when(secretClient.getSecret("jwt-signing-key")).thenReturn(secret);
 
         final Optional<String> primero = defaultCacheAdapter.getSecret("jwt-signing-key");
         assertTrue(primero.isPresent());
         assertEquals("top-secret-val", primero.get());
-        verify(secretClient, times(1)).getSecret(eq("jwt-signing-key"));
+        verify(secretClient, times(1)).getSecret("jwt-signing-key");
 
         final Optional<String> segundo = defaultCacheAdapter.getSecret("jwt-signing-key");
         assertTrue(segundo.isPresent());
-        verify(secretClient, times(1)).getSecret(eq("jwt-signing-key"));
+        verify(secretClient, times(1)).getSecret("jwt-signing-key");
 
         defaultCacheAdapter.invalidateSecret("jwt-signing-key");
 
         final Optional<String> tercero = defaultCacheAdapter.getSecret("jwt-signing-key");
         assertTrue(tercero.isPresent());
-        verify(secretClient, times(2)).getSecret(eq("jwt-signing-key"));
+        verify(secretClient, times(2)).getSecret("jwt-signing-key");
     }
 
     @Test

@@ -21,7 +21,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -76,7 +75,7 @@ class AsistenciaQrRateLimitFilterTest {
 
         assertEquals(0, llamadas.get());
         assertEquals("60", respuesta.getHeader("Retry-After"));
-        verify(writer).write(eq(request), eq(respuesta), eq(HttpStatus.TOO_MANY_REQUESTS), eq(AsistenciaQrErrorCode.AQR_011));
+        verify(writer).write(request, respuesta, HttpStatus.TOO_MANY_REQUESTS, AsistenciaQrErrorCode.AQR_011);
     }
 
     @Test

@@ -23,7 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -132,9 +131,9 @@ class AzureEventGridWebhookControllerTest {
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
         verify(inputPort).procesarEvento(
-                eq("Microsoft.AppConfiguration.KeyValueModified"),
-                eq("asistencias:max_inasistencias"),
-                eq(Map.of("key", "asistencias:max_inasistencias"))
+                "Microsoft.AppConfiguration.KeyValueModified",
+                "asistencias:max_inasistencias",
+                Map.of("key", "asistencias:max_inasistencias")
         );
     }
 

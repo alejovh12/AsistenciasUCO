@@ -18,7 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -91,7 +90,7 @@ class LecturaPorFacultadJpaPatternTest {
         assertTrue(repository.canDecanoAccessPrograma(DECANO, PROGRAMA));
         assertFalse(repository.canDecanoAccessPrograma(DECANO, UUID.randomUUID()));
 
-        verify(entityManager, times(2)).createQuery(eq(InstitutionalScopeJpaRepository.HQL_DECANO_DE_PROGRAMA), eq(Long.class));
+        verify(entityManager, times(2)).createQuery(InstitutionalScopeJpaRepository.HQL_DECANO_DE_PROGRAMA, Long.class);
         // El metodo se invoca dos veces con el mismo decano: el parametro usuarioId se enlaza en ambas.
         verify(typedQuery, times(2)).setParameter("usuarioId", DECANO);
         verify(typedQuery).setParameter("programaId", PROGRAMA);
