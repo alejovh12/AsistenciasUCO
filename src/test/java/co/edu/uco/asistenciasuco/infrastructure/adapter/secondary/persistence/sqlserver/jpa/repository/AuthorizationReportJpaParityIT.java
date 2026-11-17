@@ -105,8 +105,6 @@ class AuthorizationReportJpaParityIT {
 
         final List<UUID> usuariosConDesconocido = new java.util.ArrayList<>(usuarios);
         usuariosConDesconocido.add(UUID.randomUUID());
-        final List<UUID> gruposConDesconocido = new java.util.ArrayList<>(grupos);
-        gruposConDesconocido.add(UUID.randomUUID());
         final List<UUID> programasConDesconocido = new java.util.ArrayList<>(programas);
         programasConDesconocido.add(UUID.randomUUID());
         final List<UUID> facultadesConDesconocido = new java.util.ArrayList<>(facultades);

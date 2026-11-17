@@ -89,7 +89,7 @@ class EstudianteProgramaDirectorioJpaRepositoryTest {
         when(query.getResultList()).thenReturn(List.of());
         assertEquals(0, repo.consultarDirectorioPrograma(ACTOR, PROGRAMA, null, null, 1, 10).total());
 
-        final Object[] nulos = new Object[]{null, null, null, null, null, null, null, null, null, null, null, 1L};
+        final Object[] nulos = {null, null, null, null, null, null, null, null, null, null, null, 1L};
         when(query.getResultList()).thenReturn(filas(nulos));
         final EstudianteProgramaProjection fila = repo.consultarDirectorioPrograma(ACTOR, PROGRAMA, null, null, 1, 10).elementos().getFirst();
         assertNull(fila.id());

@@ -610,7 +610,7 @@ class JpaAttendanceStoredProcedureFeasibilityIT {
 
     /** Con pool=1: la unica conexion esta libre, en autocommit y sin transaccion abierta. */
     private void assertSingleConnectionClean(final String momento) {
-        final Boolean autocommit = jdbcTemplate.execute((java.sql.Connection c) -> c.getAutoCommit());
+        final Boolean autocommit = jdbcTemplate.execute(java.sql.Connection::getAutoCommit);
         final Integer tranCount = jdbcTemplate.queryForObject("SELECT @@TRANCOUNT", Integer.class);
         assertEquals(Boolean.TRUE, autocommit, "autocommit debe ser true " + momento);
         assertEquals(0, tranCount, "@@TRANCOUNT debe ser 0 " + momento);

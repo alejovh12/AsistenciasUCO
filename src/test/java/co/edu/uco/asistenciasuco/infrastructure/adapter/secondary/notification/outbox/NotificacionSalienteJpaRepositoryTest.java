@@ -271,7 +271,7 @@ class NotificacionSalienteJpaRepositoryTest {
         final UUID id = UUID.randomUUID();
         final UUID corrId = UUID.randomUUID();
         final Instant now = Instant.now();
-        final Object[] fila = new Object[]{
+        final Object[] fila = {
                 id.toString(), "TIPO_STR", "Asunto", "Mensaje", "[]", "{}", 1, now, corrId.toString(), "tr", "sp"
         };
         when(query.getResultList()).thenReturn(List.of((Object) fila));

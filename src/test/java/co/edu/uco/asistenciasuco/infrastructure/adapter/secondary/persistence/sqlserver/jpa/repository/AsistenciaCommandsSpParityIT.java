@@ -242,10 +242,6 @@ class AsistenciaCommandsSpParityIT {
         return resolverCon(candidato, solicitud, fixture.docenteUsuarioId(), accion, sesion);
     }
 
-    private Outcome resolverCon(final boolean candidato, final UUID solicitud, final UUID ejecutor, final String accion) {
-        return resolverCon(candidato, solicitud, ejecutor, accion, sesionDeSolicitud(solicitud));
-    }
-
     private Outcome resolverComoDocente(
             final boolean candidato,
             final UUID solicitud,

@@ -121,7 +121,7 @@ class ReporteAsistenciaControllerTest {
             throw new co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException("SEC_002", "Sin autorizacion.");
         };
         final org.springframework.test.web.servlet.MockMvc mvc = org.springframework.test.web.servlet.setup.MockMvcBuilders
-                .standaloneSetup(new ReporteAsistenciaController(port, () -> UUID.randomUUID()))
+                .standaloneSetup(new ReporteAsistenciaController(port, UUID::randomUUID))
                 .setControllerAdvice(new co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler(codigo -> java.util.Optional.empty()))
                 .build();
 

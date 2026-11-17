@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -29,12 +30,14 @@ class AsistenciaRepositoryMockAdapterTest {
 
     @Test
     void metodos_de_comando_aceptan_dto_valido_sin_lanzar() {
-        adapter.registrarAsistenciasSesion(new RegistrarAsistenciasSesionRepositoryDTO(UUID.randomUUID(), List.of(), UUID.randomUUID()));
-        adapter.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
-                UUID.randomUUID(), UUID.randomUUID(), "SALUD", "Justificacion", java.util.List.of(UUID.randomUUID()),
-                UUID.randomUUID()));
-        adapter.resolverSolicitudRevisionAsistencia(new ResolverSolicitudRevisionAsistenciaRepositoryDTO(
-                UUID.randomUUID(), UUID.randomUUID(), "APROBAR", "Aceptada", UUID.randomUUID()));
+        assertDoesNotThrow(() -> {
+            adapter.registrarAsistenciasSesion(new RegistrarAsistenciasSesionRepositoryDTO(UUID.randomUUID(), List.of(), UUID.randomUUID()));
+            adapter.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
+                    UUID.randomUUID(), UUID.randomUUID(), "SALUD", "Justificacion", java.util.List.of(UUID.randomUUID()),
+                    UUID.randomUUID()));
+            adapter.resolverSolicitudRevisionAsistencia(new ResolverSolicitudRevisionAsistenciaRepositoryDTO(
+                    UUID.randomUUID(), UUID.randomUUID(), "APROBAR", "Aceptada", UUID.randomUUID()));
+        });
     }
 
     @Test

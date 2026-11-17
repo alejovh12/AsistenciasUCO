@@ -47,11 +47,13 @@ class AuditInterceptorAdminMetadataTest {
             metadataRequestFields = {"motivo", "password", "clave_inicial", "claveInicial", "token", "pin", "secret", "clave", "largo"},
             metadataResponseFields = {"grupo", "clave", "valorAnterior", "valorNuevo", "inexistente"})
     public void operacion() {
+        // Metodo vacio: solo interesa la anotacion @AuditableOperation que lo decora.
     }
 
     @SuppressWarnings("unused")
     @AuditableOperation(action = "SIN_CAMPOS", resourceType = "X")
     public void sinCampos() {
+        // Metodo vacio: solo interesa la anotacion @AuditableOperation que lo decora.
     }
 
     private HandlerMethod handler(final String nombre) throws NoSuchMethodException {

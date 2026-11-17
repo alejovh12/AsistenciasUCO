@@ -164,6 +164,7 @@ class AuditInterceptorTest {
                 resourceIdPathVariable = "grupoId"
         )
         void registrarEstudiante() {
+            // Metodo vacio: solo interesa la anotacion @AuditableOperation que lo decora.
         }
 
         @AuditableOperation(
@@ -172,13 +173,16 @@ class AuditInterceptorTest {
                 resourceIdResponseField = "usuarioId"
         )
         void crearUsuario() {
+            // Metodo vacio: solo interesa la anotacion @AuditableOperation que lo decora.
         }
 
         @AuditableOperation(action = "CERRAR_SESION", resourceType = "SESION", resourceIdRequestField = "sesion")
         void cerrarSesion() {
+            // Metodo vacio: solo interesa la anotacion @AuditableOperation que lo decora.
         }
 
         void consultar() {
+            // Metodo vacio: representa un handler sin anotacion de auditoria.
         }
     }
 

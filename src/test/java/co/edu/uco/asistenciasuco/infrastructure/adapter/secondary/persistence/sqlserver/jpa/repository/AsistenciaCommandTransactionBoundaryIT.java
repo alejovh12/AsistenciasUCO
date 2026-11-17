@@ -143,7 +143,7 @@ class AsistenciaCommandTransactionBoundaryIT {
 
     /** Con pool=1: la unica conexion esta libre, en autocommit, sin transaccion abierta y sin fuga. */
     private void assertConnectionCleanAfterCall(final String momento) {
-        final Boolean autocommit = jdbcTemplate.execute((Connection c) -> c.getAutoCommit());
+        final Boolean autocommit = jdbcTemplate.execute(Connection::getAutoCommit);
         final Integer tranCount = jdbcTemplate.queryForObject("SELECT @@TRANCOUNT", Integer.class);
         assertEquals(Boolean.TRUE, autocommit, "autocommit debe ser true " + momento);
         assertEquals(0, tranCount, "@@TRANCOUNT debe ser 0 " + momento);

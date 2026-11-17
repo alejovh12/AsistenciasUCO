@@ -18,14 +18,13 @@ import java.util.UUID;
  */
 public final class CoordinadorJdbcBaseline implements CoordinadorCommandPort {
 
-    private final NamedParameterJdbcOperations jdbcOperations;
     private final CoordinadorJpaRepository commands;
 
     public CoordinadorJdbcBaseline(
             final NamedParameterJdbcOperations jdbcOperations,
             final CoordinadorJpaRepository commands
     ) {
-        this.jdbcOperations = Objects.requireNonNull(jdbcOperations, "NamedParameterJdbcOperations es obligatorio.");
+        Objects.requireNonNull(jdbcOperations, "NamedParameterJdbcOperations es obligatorio.");
         this.commands = Objects.requireNonNull(commands, "El command JPA de coordinador es obligatorio.");
     }
 
