@@ -17,6 +17,6 @@ public final class ConsultarKpisCoordinadorMapper {
     }
 
     public static KpisCoordinadorDTO toDto(final KpisCoordinadorDomain d) {
-        return new KpisCoordinadorDTO(d.idPrograma(), d.nombrePrograma(), d.idPeriodoAcademico(), d.nombrePeriodoAcademico(), d.totalEstudiantes(), d.estudiantesRegulares(), d.estudiantesRiesgo(), d.estudiantesPerdida(), d.tasaPermanencia(), d.sesionesProgramadas(), d.sesionesVencidas(), d.sesionesEjecutadas(), d.sesionesVencidasSinRegistro(), d.sesionesSinProcedenciaTemporal(), d.porcentajeCumplimiento(), d.porcentajeProgresoCalendario(), d.umbralAdvertencia(), d.umbralPerdida());
+        return new KpisCoordinadorDTO(d.idPrograma(), d.nombrePrograma(), d.idPeriodoAcademico(), d.nombrePeriodoAcademico(), d.totalEstudiantes(), d.estudiantesRegulares(), d.estudiantesRiesgo(), d.estudiantesPerdida(), d.tasaPermanencia(), d.sesionesProgramadas(), d.sesionesVencidas(), d.sesionesEjecutadas(), d.sesionesVencidasSinRegistro(), d.sesionesSinProcedenciaTemporal(), d.porcentajeCumplimiento(), d.porcentajeProgresoCalendario(), d.umbralAdvertencia(), d.umbralPerdida(), d.totalDocentes(), d.gruposActivos(), d.cupoTotal(), d.matriculadosActivos(), d.tasaAforo(), d.estudiantesRegistrados());
     }
 }

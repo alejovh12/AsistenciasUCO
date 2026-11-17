@@ -96,7 +96,8 @@ public class CoordinadorIndicadoresJpaRepository implements CoordinadorIndicador
                         throw new IllegalStateException("usp_consultar_kpis_coordinador no devolvio fila.");
                     }
                     final SpKpisCoordinadorEntity e = filas.getFirst();
-                    return new KpisCoordinadorProjection(e.idPrograma(), e.nombrePrograma(), e.idPeriodoAcademico(), e.nombrePeriodoAcademico(), cero(e.totalEstudiantes()), cero(e.estudiantesRegulares()), cero(e.estudiantesRiesgo()), cero(e.estudiantesPerdida()), e.tasaPermanencia(), cero(e.sesionesProgramadas()), cero(e.sesionesVencidas()), cero(e.sesionesEjecutadas()), cero(e.sesionesVencidasSinRegistro()), cero(e.sesionesSinProcedenciaTemporal()), e.porcentajeCumplimiento(), e.porcentajeProgresoCalendario(), e.umbralAdvertencia(), e.umbralPerdida());
+                    return new KpisCoordinadorProjection(e.idPrograma(), e.nombrePrograma(), e.idPeriodoAcademico(), e.nombrePeriodoAcademico(), cero(e.totalEstudiantes()), cero(e.estudiantesRegulares()), cero(e.estudiantesRiesgo()), cero(e.estudiantesPerdida()), e.tasaPermanencia(), cero(e.sesionesProgramadas()), cero(e.sesionesVencidas()), cero(e.sesionesEjecutadas()), cero(e.sesionesVencidasSinRegistro()), cero(e.sesionesSinProcedenciaTemporal()), e.porcentajeCumplimiento(), e.porcentajeProgresoCalendario(), e.umbralAdvertencia(), e.umbralPerdida(),
+                            cero(e.totalDocentes()), cero(e.gruposActivos()), cero(e.cupoTotal()), cero(e.matriculadosActivos()), e.tasaAforo(), cero(e.estudiantesRegistrados()));
                 });
     }
 
