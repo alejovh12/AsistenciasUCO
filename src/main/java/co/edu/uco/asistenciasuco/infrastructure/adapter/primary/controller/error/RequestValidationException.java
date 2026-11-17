@@ -18,12 +18,13 @@ public final class RequestValidationException extends RuntimeException {
      *                  usa el generico {@code VALIDATION_ERROR}
      */
     public RequestValidationException(final ValidationResult validationResult, final String errorCode) {
-        super("HTTP request validation failed.");
-        this.validationResult = Objects.requireNonNull(validationResult, "El resultado de validacion es obligatorio.");
-        this.errorCode = errorCode == null || errorCode.isBlank() ? null : errorCode;
+        Objects.requireNonNull(validationResult, "El resultado de validacion es obligatorio.");
         if (validationResult.isValid()) {
             throw new IllegalArgumentException("No se puede crear una excepcion de validacion HTTP con un resultado valido.");
         }
+        super("HTTP request validation failed.");
+        this.validationResult = validationResult;
+        this.errorCode = errorCode == null || errorCode.isBlank() ? null : errorCode;
     }
 
     public ValidationResult getValidationResult() {

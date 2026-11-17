@@ -163,8 +163,6 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
 
     private static final ObjectMapper OBJECT_MAPPER = JsonMapper.builder().build();
     private static final DateTimeFormatter HORA = DateTimeFormatter.ofPattern("HH:mm");
-    private static final List<String> ORDEN_DIAS = List.of("LU", "MA", "MI", "JU", "VI", "SA", "DO");
-    private static final int MAX_PARAMETROS_IN = 1000;
     private static final String P_GRUPO = "idGrupo";
     private static final String P_CORRELACION = "idCorrelacion";
     private static final String P_USUARIO = "idUsuarioEjecutor";

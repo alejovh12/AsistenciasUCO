@@ -251,7 +251,7 @@ public class TomaAsistenciaJpaRepository implements TomaAsistenciaRepositoryPort
     private List<Tuple> tuplas(final String sql, final Map<String, Object> parametros) {
         final var consulta = entityManager.createNativeQuery(sql, Tuple.class);
         parametros.forEach(consulta::setParameter);
-        return (List<Tuple>) consulta.getResultList();
+        return consulta.getResultList();
     }
 
     private static Map<String, Object> paginacion(final UUID tomaId, final int numeroPagina, final int tamanoPagina,

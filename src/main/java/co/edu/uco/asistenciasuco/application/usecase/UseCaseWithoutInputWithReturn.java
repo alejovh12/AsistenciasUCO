@@ -3,9 +3,9 @@ package co.edu.uco.asistenciasuco.application.usecase;
 /**
  * Contrato global para casos de uso sin entrada y con retorno.
  *
- * @param <RESULT> tipo de salida
+ * @param <R> tipo de salida
  */
-public interface UseCaseWithoutInputWithReturn<RESULT> {
+public interface UseCaseWithoutInputWithReturn<R> {
 
-    RESULT execute();
+    R execute();
 }

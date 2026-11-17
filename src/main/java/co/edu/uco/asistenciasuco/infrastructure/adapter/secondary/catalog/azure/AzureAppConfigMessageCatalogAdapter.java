@@ -150,8 +150,7 @@ public class AzureAppConfigMessageCatalogAdapter implements MessageCatalogPort {
     }
 
     public void clearCache() {
-        userMessageCache.invalidateAll();
-        technicalMessageCache.invalidateAll();
+        invalidateAll();
     }
 
     private String formatMessage(final String template, final Object... args) {
@@ -159,7 +158,7 @@ public class AzureAppConfigMessageCatalogAdapter implements MessageCatalogPort {
             return template;
         }
 
-        // Manejar plantillas con {} o con {0}, {1}
+        // Maneja plantillas con marcadores vacios o numerados
         String normalized = template;
         if (normalized.contains("{}")) {
             for (final Object arg : args) {

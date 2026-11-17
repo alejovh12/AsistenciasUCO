@@ -66,7 +66,7 @@ public class VaultRuntimeSecretsEnvironmentPostProcessor implements EnvironmentP
         if (!PROVIDER_AZURE.equalsIgnoreCase(provider)) {
             return;
         }
-        if (!environment.getProperty(PROPIEDAD_HABILITADO, Boolean.class, Boolean.TRUE)) {
+        if (!environment.getProperty(PROPIEDAD_HABILITADO, Boolean.class, Boolean.TRUE).booleanValue()) {
             log.info("Carga de secretos de ejecucion desde el baul desactivada (" + PROPIEDAD_HABILITADO + "=false).");
             return;
         }

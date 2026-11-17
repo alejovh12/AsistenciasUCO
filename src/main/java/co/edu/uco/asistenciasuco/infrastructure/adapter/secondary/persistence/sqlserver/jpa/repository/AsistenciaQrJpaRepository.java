@@ -130,7 +130,7 @@ public class AsistenciaQrJpaRepository implements AsistenciaQrRepositoryPort {
         final UUID correlacion = CorrelationIdContext.require();
         return JpaQueryExecutor.execute("consultarTomasQrPorRotar", "No fue posible consultar las tomas QR por rotar.", () -> {
             @SuppressWarnings("unchecked")
-            final List<Tuple> filas = (List<Tuple>) entityManager.createNativeQuery(SQL_POR_ROTAR, Tuple.class)
+            final List<Tuple> filas = entityManager.createNativeQuery(SQL_POR_ROTAR, Tuple.class)
                     .setParameter(P_CORRELACION, correlacion)
                     .getResultList();
             final List<TomaPorRotar> resultado = new ArrayList<>(filas.size());

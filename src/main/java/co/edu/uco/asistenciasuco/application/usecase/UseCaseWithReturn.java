@@ -3,10 +3,10 @@ package co.edu.uco.asistenciasuco.application.usecase;
 /**
  * Contrato global para casos de uso que retornan resultado.
  *
- * @param <DOMAIN> tipo de dominio de entrada
- * @param <RESULT> tipo de salida
+ * @param <D> tipo de dominio de entrada
+ * @param <R> tipo de salida
  */
-public interface UseCaseWithReturn<DOMAIN, RESULT> {
+public interface UseCaseWithReturn<D, R> {
 
-    RESULT execute(DOMAIN domain);
+    R execute(D domain);
 }

@@ -41,7 +41,7 @@ public final class AsignaturaPlanUseCaseImpl implements AsignaturaPlanUseCase {
     public PaginaAsignaturasAsociablesProjection consultarAsociables(final UUID idUsuarioEjecutor, final UUID idPlanEstudio, final String busqueda, final int pagina, final int tamano) {
         exigir(idUsuarioEjecutor, MSG_USUARIO_EJECUTOR_OBLIGATORIO);
         exigir(idPlanEstudio, MSG_PLAN_ESTUDIOS_OBLIGATORIO);
-        return port.consultarAsociables(idUsuarioEjecutor, idPlanEstudio, busqueda, Math.max(pagina, 1), Math.min(Math.max(tamano, 1), TAMANO_MAXIMO));
+        return port.consultarAsociables(idUsuarioEjecutor, idPlanEstudio, busqueda, Math.max(pagina, 1), Math.clamp(tamano, 1, TAMANO_MAXIMO));
     }
 
     @Override
@@ -96,7 +96,7 @@ public final class AsignaturaPlanUseCaseImpl implements AsignaturaPlanUseCase {
     }
 
     private static int acotarTamano(final int tamano) {
-        return Math.min(Math.max(tamano, 1), TAMANO_MAXIMO);
+        return Math.clamp(tamano, 1, TAMANO_MAXIMO);
     }
 
     private static void exigir(final Object valor, final String mensaje) {

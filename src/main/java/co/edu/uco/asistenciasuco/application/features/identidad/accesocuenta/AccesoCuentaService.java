@@ -227,7 +227,9 @@ public final class AccesoCuentaService implements AccesoCuentaInputPort {
                     problema = true;
                     detalle.append(rol).append(": ").append(perfil.detalle()).append(". ");
                 }
-                case NO_APLICA -> { }
+                case NO_APLICA -> {
+                    // Sin efecto: el perfil no aplica a este rol.
+                }
             }
         }
         final EstadoAccesoCuenta estado;

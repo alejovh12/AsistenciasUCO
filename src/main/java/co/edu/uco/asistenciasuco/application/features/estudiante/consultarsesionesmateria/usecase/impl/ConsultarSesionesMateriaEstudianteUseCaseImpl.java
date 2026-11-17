@@ -84,7 +84,7 @@ public final class ConsultarSesionesMateriaEstudianteUseCaseImpl implements Cons
         final int tamanoPagina = tamano == null ? tamanoPorDefecto() : tamano;
         final PaginaResultado<SesionMateriaEstudianteProjection> resultado =
                 queryPort.consultarSesionesMateria(actorUsuarioId, idAsignatura, idGrupo, numeroPagina, tamanoPagina);
-        if (resultado.totalElementos() > (long) resultado.elementos().size() + (long) (numeroPagina - 1) * tamanoPagina
+        if (resultado.totalElementos() > resultado.elementos().size() + (long) (numeroPagina - 1) * tamanoPagina
                 && pagina == null && tamano == null) {
             LOGGER.warn("La materia {} del estudiante tiene {} sesiones y se devuelve solo la primera pagina de {}.",
                     idAsignatura, resultado.totalElementos(), tamanoPagina);

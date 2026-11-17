@@ -3,10 +3,10 @@ package co.edu.uco.asistenciasuco.application.primaryports;
 /**
  * Contrato global para casos de uso que retornan resultado.
  *
- * @param <DTO> tipo de entrada
- * @param <RESULT> tipo de salida
+ * @param <D> tipo de entrada
+ * @param <R> tipo de salida
  */
-public interface InteractorWithReturn<DTO, RESULT> {
+public interface InteractorWithReturn<D, R> {
 
-    RESULT execute(DTO dto);
+    R execute(D dto);
 }

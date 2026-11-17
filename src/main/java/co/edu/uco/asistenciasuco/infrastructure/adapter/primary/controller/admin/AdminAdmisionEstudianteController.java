@@ -92,8 +92,4 @@ public final class AdminAdmisionEstudianteController {
     private static String trim(final String valor) {
         return valor == null || valor.isBlank() ? null : valor.trim();
     }
-
-    private static String blankToNull(final String valor) {
-        return valor == null || valor.isBlank() ? null : valor;
-    }
 }

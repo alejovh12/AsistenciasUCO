@@ -37,7 +37,7 @@ public class ResumenGruposDocenteJpaRepository implements ResumenGruposDocenteQu
                     final var consulta = entityManager.createNativeQuery(SQL_RESUMEN_GRUPOS, Tuple.class)
                             .setParameter("idUsuarioEjecutor", usuarioEjecutor)
                             .setParameter("idCorrelacion", correlacion);
-                    final List<Tuple> filas = (List<Tuple>) consulta.getResultList();
+                    final List<Tuple> filas = consulta.getResultList();
                     if (filas.isEmpty()) {
                         return new ResumenGrupos(0, 0, 0, null);
                     }

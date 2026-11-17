@@ -181,7 +181,7 @@ public class ResumenAsistenciaJpaRepository implements ResumenAsistenciaQueryPor
     private List<Tuple> tuplas(final String sql, final Map<String, Object> parametros) {
         final var consulta = entityManager.createNativeQuery(sql, Tuple.class);
         parametros.forEach(consulta::setParameter);
-        return (List<Tuple>) consulta.getResultList();
+        return consulta.getResultList();
     }
 
     static FilaResumen aFila(final Tuple f, final String nombreCompleto, final MarcaInasistenciaDTO marca) {

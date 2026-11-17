@@ -16,7 +16,8 @@ public final class HttpFieldNameSanitizer {
 
         final StringBuilder sanitized = new StringBuilder();
         int acceptedCharacters = 0;
-        for (int offset = 0; offset < rawField.length() && acceptedCharacters < MAX_FIELD_LENGTH; ) {
+        int offset = 0;
+        while (offset < rawField.length() && acceptedCharacters < MAX_FIELD_LENGTH) {
             final int codePoint = rawField.codePointAt(offset);
             offset += Character.charCount(codePoint);
             if (Character.isISOControl(codePoint)) {
@@ -26,7 +27,7 @@ public final class HttpFieldNameSanitizer {
             acceptedCharacters++;
         }
 
-        if (sanitized.length() == 0 || sanitized.toString().isBlank()) {
+        if (sanitized.isEmpty() || sanitized.toString().isBlank()) {
             return Optional.empty();
         }
         return Optional.of(sanitized.toString());
