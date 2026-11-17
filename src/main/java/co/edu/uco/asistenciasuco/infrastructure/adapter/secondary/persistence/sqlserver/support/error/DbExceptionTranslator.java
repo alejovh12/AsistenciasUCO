@@ -6,7 +6,7 @@ import co.edu.uco.asistenciasuco.application.features.admin.exception.CatalogoEr
 import co.edu.uco.asistenciasuco.application.features.admin.exception.DecanoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.FacultadErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.ParametroErrorCode;
-import co.edu.uco.asistenciasuco.application.features.admin.exception.PeriodoAcademicoErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.decano.exception.CoordinadorErrorCode;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.exception.RevisionCancelacionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
@@ -136,7 +136,7 @@ public final class DbExceptionTranslator {
             RevisionCancelacionErrorCode.RCN_013,
             RevisionCancelacionErrorCode.RCN_014,
             // FIX-CIERRE-002: cierre masivo de un periodo que aun no termino.
-            PeriodoAcademicoErrorCode.PER_007,
+            MensajeUsuarioErrorCode.PER_007,
             CommonErrorCode.CONFLICT
     );
     private static final Set<ErrorDefinition> VALIDATION_CODES = Set.of(
@@ -192,7 +192,7 @@ public final class DbExceptionTranslator {
             AsistenciaErrorCode.ERR_MAXIMO_SOPORTES_RECLAMO,
             TomaAsistenciaErrorCode.TOM_012,
             // FIX-CIERRE-002: la BD sustituye la fecha de fin del periodo en el mensaje.
-            PeriodoAcademicoErrorCode.PER_007,
+            MensajeUsuarioErrorCode.PER_007,
             // DEC-073: la BD sustituye el dominio, los limites del parametro y el maximo de creditos vigentes.
             VerificacionCorreoErrorCode.VCE_008,
             AsistenciaErrorCode.ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA,

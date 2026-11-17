@@ -14,6 +14,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -66,7 +67,7 @@ class EjecutarCierreMasivoUseCaseImplTest {
         }
 
         verify(evaluador, never()).evaluarPeriodoYAvisar(PERIODO_ID);
-        verify(cierrePeriodoCommandPort, org.mockito.Mockito.times(2)).ejecutarCierreMasivoPeriodo(
+        verify(cierrePeriodoCommandPort, times(2)).ejecutarCierreMasivoPeriodo(
                 "2026-1", ACTOR_USUARIO_ID.toString(), ACTOR_USUARIO_ID);
     }
 

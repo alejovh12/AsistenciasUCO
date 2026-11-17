@@ -114,6 +114,9 @@ public enum MensajeUsuarioErrorCode implements ErrorDefinition {
     NOF_APP_001(CommonErrorCode.RESOURCE_NOT_FOUND, "El decano especificado no existe en el sistema."),
     NOF_APP_002(CommonErrorCode.RESOURCE_NOT_FOUND, "La facultad indicada para crear decano no existe."),
     PER_001(CommonErrorCode.RESOURCE_NOT_FOUND, "El periodo academico indicado no existe."),
+    // FIX-CIERRE-002: la base lo publica con su propio codigo y con la fecha de fin del periodo en el texto.
+    PER_007("PER_007", ErrorKind.CONFLICT,
+            "El período académico aún no ha finalizado; el cierre masivo solo puede ejecutarse después de su fecha de fin ({})."),
     NOF_APP_003(CommonErrorCode.RESOURCE_NOT_FOUND, "El estudiante no existe en su ambito."),
     NOF_APP_004(CommonErrorCode.RESOURCE_NOT_FOUND, "El docente no existe o no esta vinculado a su programa."),
     NOF_APP_005(CommonErrorCode.RESOURCE_NOT_FOUND, "El plan de estudio indicado no existe en el programa del coordinador."),
