@@ -112,7 +112,7 @@ public class AlertaInasistenciaJpaRepository implements AlertaInasistenciaReposi
                 total = Math.max(total, entero(c[30]));
                 alertas.add(new AlertaFila(uuid(c[0]), texto(c[12]), texto(c[13]), texto(c[17]), texto(c[15]), decimal(c[19]), decimal(c[28]),
                         decimal(c[20]), decimal(c[29]), decimal(c[21]), decimal(c[22]), instante(c[23]), bit(c[27]), instante(c[26]),
-                        uuid(c[4]), entero(c[5]), texto(c[6]), uuid(c[7]), texto(c[8]), texto(c[10]), null));
+                        uuid(c[4]), entero(c[5]), texto(c[6]), uuid(c[7]), texto(c[8]), texto(c[10]), null, texto(c[31])));
             }
             return new PaginaAlertas(alertas, total);
         });

@@ -71,7 +71,7 @@ class AlertaInasistenciaJpaRepositoryTest {
     }
 
     private static Object[] filaAlerta(final Object total) {
-        final Object[] c = new Object[31];
+        final Object[] c = new Object[32];
         c[0] = UUID.randomUUID().toString();
         c[4] = GRUPO.toString();
         c[5] = 2;
@@ -93,6 +93,7 @@ class AlertaInasistenciaJpaRepositoryTest {
         c[28] = new BigDecimal("16.50");
         c[29] = new BigDecimal("20.00");
         c[30] = total;
+        c[31] = "RIESGO";
         return c;
     }
 
@@ -190,6 +191,8 @@ class AlertaInasistenciaJpaRepositoryTest {
         assertEquals(GRUPO, fila.grupoId());
         assertEquals(2, fila.codigoGrupo());
         assertEquals(null, fila.mensaje());
+        // CIERRE-W3I: el nivel de permanencia vigente es la ultima columna del SP y llega tal cual
+        assertEquals("RIESGO", fila.codigoPermanenciaActual());
         verify(query).setParameter("soloNoLeidas", 1);
         verify(query).setParameter("soloVigentes", 0);
         verify(query).setParameter("idGrupo", GRUPO);

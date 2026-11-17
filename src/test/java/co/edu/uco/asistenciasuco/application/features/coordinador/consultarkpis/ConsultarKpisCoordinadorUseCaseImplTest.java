@@ -34,6 +34,27 @@ class ConsultarKpisCoordinadorUseCaseImplTest {
     }
 
     @Test
+    void W3I_entrega_la_plantilla_los_grupos_el_aforo_y_el_padron_tal_como_los_calcula_la_base() {
+        final co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.KpisCoordinadorProjection b =
+                co.edu.uco.asistenciasuco.application.features.coordinador.kpis.KpisTestData.kpis();
+        when(queryPort.consultarKpis(ACTOR, PERIODO, null)).thenReturn(
+                new co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.KpisCoordinadorProjection(b.idPrograma(),
+                        b.nombrePrograma(), b.idPeriodoAcademico(), b.nombrePeriodoAcademico(), b.totalEstudiantes(), b.estudiantesRegulares(),
+                        b.estudiantesRiesgo(), b.estudiantesPerdida(), b.tasaPermanencia(), b.sesionesProgramadas(), b.sesionesVencidas(),
+                        b.sesionesEjecutadas(), b.sesionesVencidasSinRegistro(), b.sesionesSinProcedenciaTemporal(), b.porcentajeCumplimiento(),
+                        b.porcentajeProgresoCalendario(), b.umbralAdvertencia(), b.umbralPerdida(), 12, 7, 210, 168, new BigDecimal("80.00"), 5007));
+
+        final KpisCoordinadorDomain r = useCase.execute(new ConsultarKpisCoordinadorDomain(ACTOR, PERIODO));
+
+        assertEquals(12, r.totalDocentes());
+        assertEquals(7, r.gruposActivos());
+        assertEquals(210, r.cupoTotal());
+        assertEquals(168, r.matriculadosActivos());
+        assertEquals(new BigDecimal("80.00"), r.tasaAforo());
+        assertEquals(5007, r.estudiantesRegistrados());
+    }
+
+    @Test
     void T_KPI_01_devuelve_las_cifras_del_puerto_sin_recalcular() {
         when(queryPort.consultarKpis(ACTOR, PERIODO, null)).thenReturn(kpis());
 
@@ -59,7 +80,8 @@ class ConsultarKpisCoordinadorUseCaseImplTest {
     @Test
     void T_BE_04_conserva_los_nulos_en_vez_de_inventar_valores() {
         final var sinDatos = new co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.KpisCoordinadorProjection(
-                PROGRAMA, "Programa", null, null, 0, 0, 0, 0, null, 0, 0, 0, 0, 0, null, null, new BigDecimal("15.00"), new BigDecimal("20.00"));
+                PROGRAMA, "Programa", null, null, 0, 0, 0, 0, null, 0, 0, 0, 0, 0, null, null, new BigDecimal("15.00"), new BigDecimal("20.00"),
+                0, 0, 0, 0, null, 0);
         when(queryPort.consultarKpis(ACTOR, null, null)).thenReturn(sinDatos);
 
         final KpisCoordinadorDomain result = useCase.execute(new ConsultarKpisCoordinadorDomain(ACTOR, null));

@@ -27,12 +27,15 @@ public record KpisDecanoDTO(
         BigDecimal umbralPerdida,
         int tomasDictadas,
         BigDecimal horasDictadas,
-        BigDecimal horasFalta
+        BigDecimal horasFalta,
+        int totalCoordinadores,
+        int totalDocentes
 ) {
+
 
     /** Forma previa a CULM-001 B.2 (sin las columnas de horas: cero y nulas). */
     public KpisDecanoDTO(final UUID idFacultad, final String nombreFacultad, final UUID idPeriodoAcademico, final String nombrePeriodoAcademico, final int totalProgramas, final int totalEstudiantes, final int estudiantesRegulares, final int estudiantesRiesgo, final int estudiantesPerdida, final BigDecimal tasaRetencion, final int sesionesEjecutadas, final int faltasSinJustaCausa, final BigDecimal porcentajeAusentismo, final BigDecimal porcentajeAsistencia, final int gruposActivos, final int cupoTotal, final int matriculadosActivos, final BigDecimal tasaAforo, final BigDecimal umbralAdvertencia, final BigDecimal umbralPerdida) {
-        this(idFacultad, nombreFacultad, idPeriodoAcademico, nombrePeriodoAcademico, totalProgramas, totalEstudiantes, estudiantesRegulares, estudiantesRiesgo, estudiantesPerdida, tasaRetencion, sesionesEjecutadas, faltasSinJustaCausa, porcentajeAusentismo, porcentajeAsistencia, gruposActivos, cupoTotal, matriculadosActivos, tasaAforo, umbralAdvertencia, umbralPerdida, 0, null, null);
+        this(idFacultad, nombreFacultad, idPeriodoAcademico, nombrePeriodoAcademico, totalProgramas, totalEstudiantes, estudiantesRegulares, estudiantesRiesgo, estudiantesPerdida, tasaRetencion, sesionesEjecutadas, faltasSinJustaCausa, porcentajeAusentismo, porcentajeAsistencia, gruposActivos, cupoTotal, matriculadosActivos, tasaAforo, umbralAdvertencia, umbralPerdida, 0, null, null, 0, 0);
     }
 
 }

@@ -85,6 +85,8 @@ class DecanoIndicadoresJpaRepositoryTest {
         when(fila.tasaAforo()).thenReturn(new BigDecimal("12.73"));
         when(fila.umbralAdvertencia()).thenReturn(new BigDecimal("15.00"));
         when(fila.umbralPerdida()).thenReturn(new BigDecimal("20.00"));
+        when(fila.totalCoordinadores()).thenReturn(4);
+        when(fila.totalDocentes()).thenReturn(37);
         when(query.getResultList()).thenReturn(List.of(fila));
 
         final KpisDecanoProjection k = repository.consultarKpis(ACTOR, PERIODO);
@@ -103,6 +105,9 @@ class DecanoIndicadoresJpaRepositoryTest {
         assertEquals(55, k.cupoTotal());
         assertEquals(new BigDecimal("12.73"), k.tasaAforo());
         assertEquals(new BigDecimal("20.00"), k.umbralPerdida());
+        // CIERRE-W3I: totales de la facultad calculados por la base (coordinadores activos y docentes sin repetir)
+        assertEquals(4, k.totalCoordinadores());
+        assertEquals(37, k.totalDocentes());
     }
 
     @Test

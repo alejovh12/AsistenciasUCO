@@ -34,7 +34,8 @@ public record RevisionCancelacionResponse(
         String decisionResolucion,
         String motivoResolucion,
         Resolutor resolutor,
-        Instant fechaResolucionUtc
+        Instant fechaResolucionUtc,
+        String codigoPermanenciaActual
 ) {
 
     public record Persona(UUID id, String nombreCompleto) {

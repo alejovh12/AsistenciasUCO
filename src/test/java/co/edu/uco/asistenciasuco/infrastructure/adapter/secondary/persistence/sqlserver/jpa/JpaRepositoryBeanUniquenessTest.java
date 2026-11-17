@@ -45,7 +45,7 @@ class JpaRepositoryBeanUniquenessTest {
     // DEC-074: - CargaUsuariosJpaRepository (se retira la carga masiva) = 69.
     // INT-003: + MensajeCatalogoJpaRepository (sincronizacion de mensajes desde MessageUcoLab) = 70.
     // CIERRE-W1B: - DocenteJpaRepository (se retira el directorio general /api/v1/docentes) = 69.
-    private static final int EXPECTED_REPOSITORIES = 69;
+    private static final int EXPECTED_REPOSITORIES = 70;
 
     @Test
     void cada_port_tiene_exactamente_un_repository_activo_con_provider_sqlserver() {

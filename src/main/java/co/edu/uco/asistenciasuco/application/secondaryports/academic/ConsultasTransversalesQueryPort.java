@@ -84,7 +84,7 @@ public interface ConsultasTransversalesQueryPort {
                                       int faltasSinJustaCausa, int excusas, BigDecimal porcentajeAsistencia,
                                       BigDecimal porcentajeInasistencia, int estudiantesRiesgo, int estudiantesPerdida,
                                       BigDecimal horasDictadas, BigDecimal porcentajeExcusa,
-                                      BigDecimal porcentajeSinRegistro) {
+                                      BigDecimal porcentajeSinRegistro, String codigoPermanencia) {
     }
 
     record FiltroAuditoria(OffsetDateTime desde, OffsetDateTime hasta, String accion, String tipoRecurso,

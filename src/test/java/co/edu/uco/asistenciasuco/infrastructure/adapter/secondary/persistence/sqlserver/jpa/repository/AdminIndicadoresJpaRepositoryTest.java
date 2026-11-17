@@ -88,6 +88,9 @@ class AdminIndicadoresJpaRepositoryTest {
         when(f.docentesRegistrados()).thenReturn(2);
         when(f.umbralAdvertencia()).thenReturn(new BigDecimal("15.00"));
         when(f.umbralPerdida()).thenReturn(new BigDecimal("20.00"));
+        when(f.totalDecanos()).thenReturn(3);
+        when(f.decanosActivos()).thenReturn(2);
+        when(f.facultadesActivas()).thenReturn(3);
         when(query.getResultList()).thenReturn(List.of(f));
 
         final KpisInstitucionProjection k = repository.consultarKpis(ACTOR, PERIODO);
@@ -101,6 +104,10 @@ class AdminIndicadoresJpaRepositoryTest {
         assertEquals(PERIODO, k.idPeriodoAcademico());
         assertEquals("2026-2", k.nombrePeriodoAcademico());
         assertEquals(3, k.totalFacultades());
+        // CIERRE-W3I: facultades activas y decanos calculados por la base
+        assertEquals(3, k.facultadesActivas());
+        assertEquals(3, k.totalDecanos());
+        assertEquals(2, k.decanosActivos());
         assertEquals(4, k.totalProgramas());
         assertEquals(6, k.totalEstudiantes());
         assertEquals(2, k.estudiantesRegulares());

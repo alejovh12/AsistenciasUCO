@@ -22,6 +22,13 @@ public record KpisCoordinadorProjection(
         BigDecimal porcentajeCumplimiento,
         BigDecimal porcentajeProgresoCalendario,
         BigDecimal umbralAdvertencia,
-        BigDecimal umbralPerdida
+        BigDecimal umbralPerdida,
+        int totalDocentes,
+        int gruposActivos,
+        int cupoTotal,
+        int matriculadosActivos,
+        BigDecimal tasaAforo,
+        int estudiantesRegistrados
 ) {
+
 }
