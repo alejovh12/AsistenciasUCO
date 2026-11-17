@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
  * El estudiante se resuelve en el servidor desde el usuario autenticado. Una sesion sin cabecera o sin detalle de
  * asistencia es {@code NO_DISPONIBLE}: jamas se asume ausencia por falta de registro.
  * CULM-001 D.1 (HU026B): las sesiones salen de {@code usp_consultar_sesiones_materia_estudiante}, que valida el ambito
- * (matricula inscrita del usuario), pagina y trae la fecha limite de justificacion y si el plazo sigue vigente; este caso de uso
+ * (matricula inscrita del usuario), ordena (inicio, numero, id), filtra por el grupo opcional, pagina y trae la fecha limite de justificacion y si el plazo sigue vigente; este caso de uso
  * solo los transporta. Una materia tiene menos sesiones que PAGINACION/TAMANO_MAXIMO; si el total lo supera se registra un
  * aviso y se devuelve la primera pagina (deuda a revisar en CLOSURE).
  */
@@ -75,14 +75,15 @@ public final class ConsultarSesionesMateriaEstudianteUseCaseImpl implements Cons
         this.parametros = Objects.requireNonNull(parametros, "ParameterCatalogPort es obligatorio.");
     }
 
-    @Override public List<SesionMateriaEstudianteDomain> execute(final UUID actorUsuarioId, final UUID idAsignatura,
-                                                                 final Integer pagina, final Integer tamano) {
+    @Override public PaginaResultado<SesionMateriaEstudianteDomain> consultarPagina(final UUID actorUsuarioId, final UUID idAsignatura,
+                                                                                    final UUID idGrupo, final Integer pagina,
+                                                                                    final Integer tamano) {
         final UUID idEstudiante = scopePort.findEstudianteIdByUsuario(actorUsuarioId)
                 .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_004));
         final int numeroPagina = pagina == null ? 1 : pagina;
         final int tamanoPagina = tamano == null ? tamanoPorDefecto() : tamano;
         final PaginaResultado<SesionMateriaEstudianteProjection> resultado =
-                queryPort.consultarSesionesMateria(actorUsuarioId, idAsignatura, numeroPagina, tamanoPagina);
+                queryPort.consultarSesionesMateria(actorUsuarioId, idAsignatura, idGrupo, numeroPagina, tamanoPagina);
         if (resultado.totalElementos() > (long) resultado.elementos().size() + (long) (numeroPagina - 1) * tamanoPagina
                 && pagina == null && tamano == null) {
             LOGGER.warn("La materia {} del estudiante tiene {} sesiones y se devuelve solo la primera pagina de {}.",
@@ -90,7 +91,7 @@ public final class ConsultarSesionesMateriaEstudianteUseCaseImpl implements Cons
         }
         final List<SesionMateriaEstudianteProjection> sesiones = resultado.elementos();
         if (sesiones.isEmpty()) {
-            return List.of();
+            return new PaginaResultado<>(List.of(), numeroPagina, tamanoPagina, resultado.totalElementos());
         }
         // Lecturas complementarias limitadas a las sesiones de la pagina, sin consultar la materia ni el grupo completos.
         final Set<UUID> idsPagina = sesiones.stream().map(SesionMateriaEstudianteProjection::id)
@@ -110,7 +111,7 @@ public final class ConsultarSesionesMateriaEstudianteUseCaseImpl implements Cons
                 minutosPorSesion.putIfAbsent(minutos.idSesion(), minutos);
             }
         }
-        return sesiones.stream()
+        final List<SesionMateriaEstudianteDomain> elementos = sesiones.stream()
                 .map(sesion -> {
                     final var hechos = hechosPorSesion.getOrDefault(sesion.id(), List.of());
                     final SesionProcedenciaEntity procedencia = procedencias.get(sesion.id());
@@ -129,6 +130,7 @@ public final class ConsultarSesionesMateriaEstudianteUseCaseImpl implements Cons
                             sesion, procedencia, estado, estadoSolicitud, reclamable, cancelada ? null : minutos, cancelada ? List.of() : tomas);
                 })
                 .toList();
+        return new PaginaResultado<>(elementos, numeroPagina, tamanoPagina, resultado.totalElementos());
     }
 
     private static EstadoAsistenciaSesion estadoDeLaBaseDeDatos(final MinutosSesionEstudianteProjection minutos,

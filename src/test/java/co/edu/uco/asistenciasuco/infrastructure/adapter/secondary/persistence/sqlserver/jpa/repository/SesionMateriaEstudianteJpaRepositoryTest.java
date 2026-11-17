@@ -76,7 +76,24 @@ class SesionMateriaEstudianteJpaRepositoryTest {
         verify(query).setParameter("idMateria", MATERIA);
         verify(query).setParameter("numeroPagina", 2);
         verify(query).setParameter("tamanoPagina", 25);
+        verify(query).setParameter("idGrupo", (Object) null);
         verify(manager, never()).createQuery(anyString(), any(Class.class));
+    }
+
+    /** CIERRE-W2B: el grupo opcional viaja al SP, que lo valida contra las matriculas inscritas del ejecutor. */
+    @Test
+    void W2B_el_grupo_opcional_se_pasa_al_sp_y_el_total_es_el_del_filtro() {
+        final UUID grupo = UUID.randomUUID();
+        when(query.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(
+                fila(UUID.randomUUID(), LocalDateTime.of(2026, 11, 4, 12, 0), LocalDateTime.of(2026, 11, 4, 13, 0), null, Boolean.TRUE, 12)));
+
+        final var pagina = new SesionMateriaEstudianteJpaRepository(manager).consultarSesionesMateria(ACTOR, MATERIA, grupo, 3, 1);
+
+        verify(query).setParameter("idGrupo", grupo);
+        verify(query).setParameter("numeroPagina", 3);
+        assertTrue(SesionMateriaEstudianteJpaRepository.SQL_SESIONES_MATERIA.contains("@idGrupo = :idGrupo"));
+        assertEquals(12L, pagina.totalElementos());
+        assertEquals(3, pagina.numeroPagina());
     }
 
     @Test

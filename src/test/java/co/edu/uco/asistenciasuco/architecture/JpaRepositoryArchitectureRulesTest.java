@@ -38,6 +38,7 @@ class JpaRepositoryArchitectureRulesTest {
             Map.entry("HorarioEstudianteJpaRepository", List.of("academic.HorarioEstudianteQueryPort")),
             Map.entry("InstitucionJpaRepository", List.of("academic.InstitucionQueryPort")),
             Map.entry("MateriaEstudianteJpaRepository", List.of("academic.MateriaEstudianteQueryPort")),
+            Map.entry("ResumenMateriasEstudianteJpaRepository", List.of("academic.ResumenMateriasEstudianteQueryPort")),
             Map.entry("PeriodoAcademicoJpaRepository", List.of("academic.PeriodoAcademicoQueryPort")),
             Map.entry("PlanEstudioJpaRepository", List.of("academic.PlanEstudioCommandPort", "academic.PlanEstudioQueryPort")),
             Map.entry("SesionMateriaEstudianteJpaRepository", List.of("academic.SesionMateriaEstudianteQueryPort")),

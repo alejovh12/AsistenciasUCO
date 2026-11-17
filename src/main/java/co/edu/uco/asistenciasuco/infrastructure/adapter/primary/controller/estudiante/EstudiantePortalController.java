@@ -6,6 +6,8 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.respo
 import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarhorarios.primaryports.ConsultarHorariosEstudianteInputPort;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarmaterias.primaryports.ConsultarMateriasEstudianteInputPort;
+import co.edu.uco.asistenciasuco.application.features.estudiante.consultarresumenmaterias.primaryports.ConsultarResumenMateriasEstudianteInputPort;
+import co.edu.uco.asistenciasuco.application.features.estudiante.consultarresumenmaterias.primaryports.dto.ResumenMateriasEstudianteDTO;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.primaryports.ConsultarSesionesMateriaEstudianteInputPort;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarhorarios.primaryports.dto.HorarioEstudianteDTO;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarmaterias.primaryports.dto.MateriaEstudianteDTO;
@@ -14,6 +16,7 @@ import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclam
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.primaryports.dto.ReclamosEstudiantePaginaDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.estudiante.mapper.ReclamoEstudianteHttpMapper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.estudiante.response.ReclamoEstudianteResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.PaginacionRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
@@ -34,6 +37,7 @@ public final class EstudiantePortalController {
     private final ConsultarMateriasEstudianteInputPort consultarMateriasEstudianteInputPort;
     private final ConsultarHorariosEstudianteInputPort consultarHorariosEstudianteInputPort;
     private final ConsultarSesionesMateriaEstudianteInputPort consultarSesionesMateriaEstudianteInputPort;
+    private final ConsultarResumenMateriasEstudianteInputPort consultarResumenMateriasEstudianteInputPort;
     private final ConsultarReclamosEstudianteInputPort consultarReclamosEstudianteInputPort;
     private final RetirarReclamoInputPort retirarReclamoInputPort;
     private final AuthenticatedUserResolver authenticatedUserResolver;
@@ -42,6 +46,7 @@ public final class EstudiantePortalController {
             final ConsultarMateriasEstudianteInputPort consultarMateriasEstudianteInputPort,
             final ConsultarHorariosEstudianteInputPort consultarHorariosEstudianteInputPort,
             final ConsultarSesionesMateriaEstudianteInputPort consultarSesionesMateriaEstudianteInputPort,
+            final ConsultarResumenMateriasEstudianteInputPort consultarResumenMateriasEstudianteInputPort,
             final ConsultarReclamosEstudianteInputPort consultarReclamosEstudianteInputPort,
             final RetirarReclamoInputPort retirarReclamoInputPort,
             final AuthenticatedUserResolver authenticatedUserResolver
@@ -49,6 +54,7 @@ public final class EstudiantePortalController {
         this.consultarMateriasEstudianteInputPort = consultarMateriasEstudianteInputPort;
         this.consultarHorariosEstudianteInputPort = consultarHorariosEstudianteInputPort;
         this.consultarSesionesMateriaEstudianteInputPort = consultarSesionesMateriaEstudianteInputPort;
+        this.consultarResumenMateriasEstudianteInputPort = consultarResumenMateriasEstudianteInputPort;
         this.consultarReclamosEstudianteInputPort = consultarReclamosEstudianteInputPort;
         this.retirarReclamoInputPort = retirarReclamoInputPort;
         this.authenticatedUserResolver = authenticatedUserResolver;
@@ -66,19 +72,36 @@ public final class EstudiantePortalController {
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
     }
 
+    /**
+     * CIERRE-W2B: indicadores del tablero del estudiante (materias, materias en riesgo, horas de falta y creditos) calculados
+     * en la base con el mismo conjunto de materias que {@code GET /materias}.
+     */
+    @GetMapping("/materias/resumen")
+    public ResponseEntity<ApiDataResponse<ResumenMateriasEstudianteDTO>> consultarResumenMaterias() {
+        return ResponseEntity.ok(new ApiDataResponse<>(true,
+                consultarResumenMateriasEstudianteInputPort.execute(authenticatedUserResolver.requireAuthenticatedUserId())));
+    }
+
+    /**
+     * Sesiones de una materia del estudiante. CIERRE-W2B: la base las entrega en orden cronologico (inicio, numero, id) y
+     * {@code total} es el total que cumple el filtro (no el de la pagina); {@code grupoId} opcional limita a un grupo del estudiante.
+     */
     @GetMapping("/materias/{materiaId}/sesiones")
     public ResponseEntity<ApiListResponse<SesionMateriaEstudianteResponse>> consultarSesionesMateria(
             @PathVariable final UUID materiaId,
             @RequestParam(name = "pagina", required = false) final Integer pagina,
-            @RequestParam(name = "tamano", required = false) final Integer tamano
+            @RequestParam(name = "tamano", required = false) final Integer tamano,
+            @RequestParam(name = "grupoId", required = false) final UUID grupoId
     ) {
-        final var data = consultarSesionesMateriaEstudianteInputPort.execute(
+        final var resultado = consultarSesionesMateriaEstudianteInputPort.consultarPagina(
                 authenticatedUserResolver.requireAuthenticatedUserId(),
                 materiaId,
+                grupoId,
                 pagina,
                 tamano
-        ).stream().map(SesionMateriaEstudianteResponse::from).toList();
-        return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
+        );
+        final var data = resultado.sesiones().stream().map(SesionMateriaEstudianteResponse::from).toList();
+        return ResponseEntity.ok(new ApiListResponse<>(true, data, (int) Math.min(resultado.totalRegistros(), Integer.MAX_VALUE)));
     }
 
     /**

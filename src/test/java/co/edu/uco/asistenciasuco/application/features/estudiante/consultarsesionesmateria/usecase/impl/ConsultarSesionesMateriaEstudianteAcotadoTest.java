@@ -72,7 +72,7 @@ class ConsultarSesionesMateriaEstudianteAcotadoTest {
 
     private void paginaConSesiones(final List<SesionMateriaEstudianteProjection> sesiones) {
         when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.of(estudiante));
-        when(queryPort.consultarSesionesMateria(actor, asignatura, 1, 100))
+        when(queryPort.consultarSesionesMateria(actor, asignatura, null, 1, 100))
                 .thenReturn(new PaginaResultado<>(sesiones, 1, 100, sesiones.size()));
     }
 

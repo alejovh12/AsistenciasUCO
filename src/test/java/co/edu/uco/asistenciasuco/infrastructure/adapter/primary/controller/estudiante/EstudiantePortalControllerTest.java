@@ -17,7 +17,10 @@ import co.edu.uco.asistenciasuco.application.features.estudiante.consultarhorari
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarmaterias.primaryports.ConsultarMateriasEstudianteInputPort;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarmaterias.primaryports.dto.MateriaEstudianteDTO;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.primaryports.ConsultarSesionesMateriaEstudianteInputPort;
+import co.edu.uco.asistenciasuco.application.features.estudiante.consultarresumenmaterias.primaryports.ConsultarResumenMateriasEstudianteInputPort;
+import co.edu.uco.asistenciasuco.application.features.estudiante.consultarresumenmaterias.primaryports.dto.ResumenMateriasEstudianteDTO;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.primaryports.dto.SesionMateriaEstudianteDTO;
+import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.primaryports.dto.SesionesMateriaEstudiantePaginaDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.junit.jupiter.api.Test;
@@ -47,11 +50,12 @@ class EstudiantePortalControllerTest {
     private final ConsultarMateriasEstudianteInputPort materias = mock(ConsultarMateriasEstudianteInputPort.class);
     private final ConsultarHorariosEstudianteInputPort horarios = mock(ConsultarHorariosEstudianteInputPort.class);
     private final ConsultarSesionesMateriaEstudianteInputPort sesiones = mock(ConsultarSesionesMateriaEstudianteInputPort.class);
+    private final ConsultarResumenMateriasEstudianteInputPort resumen = mock(ConsultarResumenMateriasEstudianteInputPort.class);
     private final ConsultarReclamosEstudianteInputPort reclamos = mock(ConsultarReclamosEstudianteInputPort.class);
     private final RetirarReclamoInputPort retirarReclamo = mock(RetirarReclamoInputPort.class);
     private final AuthenticatedUserResolver identity = () -> ACTOR;
     private final EstudiantePortalController controller =
-            new EstudiantePortalController(materias, horarios, sesiones, reclamos, retirarReclamo, identity);
+            new EstudiantePortalController(materias, horarios, sesiones, resumen, reclamos, retirarReclamo, identity);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
             .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
 
@@ -80,10 +84,11 @@ class EstudiantePortalControllerTest {
 
     @Test
     void consultarSesionesMateria_usa_actor_y_materia() throws Exception {
-        when(sesiones.execute(ACTOR, MATERIA, null, null)).thenReturn(List.of(new SesionMateriaEstudianteDTO(
+        when(sesiones.consultarPagina(ACTOR, MATERIA, null, null, null)).thenReturn(new SesionesMateriaEstudiantePaginaDTO(
+                List.of(new SesionMateriaEstudianteDTO(
                 UUID.randomUUID(), "Sesion 1", 1, "SES-01", 1, UUID.randomUUID(), "G1", "Grupo 1",
                 java.time.LocalDateTime.of(2026, 1, 20, 8, 0), java.time.LocalDateTime.of(2026, 1, 20, 10, 0),
-                null, null, "INDETERMINADA", "AUSENTE", null, true)));
+                null, null, "INDETERMINADA", "AUSENTE", null, true)), 1));
 
         mvc.perform(get("/api/v1/estudiante/materias/{materiaId}/sesiones", MATERIA))
                 .andExpect(status().isOk())
@@ -91,13 +96,80 @@ class EstudiantePortalControllerTest {
                 .andExpect(jsonPath("$.datos[0].estadoAsistencia").value("AUSENTE"))
                 .andExpect(jsonPath("$.datos[0].estadoSolicitudRevision").doesNotExist())
                 .andExpect(jsonPath("$.datos[0].reclamable").value(true));
-        verify(sesiones).execute(ACTOR, MATERIA, null, null);
+        verify(sesiones).consultarPagina(ACTOR, MATERIA, null, null, null);
+    }
+
+    /** CIERRE-W2B: la pagina, el tamano y el grupo viajan al caso de uso y total es el total del filtro, no el de la pagina. */
+    @Test
+    void W2B_consultarSesionesMateria_pasa_pagina_tamano_y_grupo_y_devuelve_el_total_real() throws Exception {
+        final UUID grupo = UUID.randomUUID();
+        when(sesiones.consultarPagina(ACTOR, MATERIA, grupo, 2, 1)).thenReturn(new SesionesMateriaEstudiantePaginaDTO(
+                List.of(new SesionMateriaEstudianteDTO(UUID.randomUUID(), "Sesion 2", 2, "SES-02", 1, grupo, "G1", "Grupo 1",
+                        java.time.LocalDateTime.of(2026, 1, 21, 8, 0), java.time.LocalDateTime.of(2026, 1, 21, 10, 0),
+                        null, null, "INDETERMINADA", "PRESENTE", null, false)), 7));
+
+        mvc.perform(get("/api/v1/estudiante/materias/{materiaId}/sesiones", MATERIA)
+                        .param("pagina", "2").param("tamano", "1").param("grupoId", grupo.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.datos.length()").value(1))
+                .andExpect(jsonPath("$.total").value(7))
+                .andExpect(jsonPath("$.datos[0].nombre").value("Sesion 2"));
+        verify(sesiones).consultarPagina(ACTOR, MATERIA, grupo, 2, 1);
+    }
+
+    @Test
+    void W2B_consultarSesionesMateria_con_grupo_invalido_es_400() throws Exception {
+        mvc.perform(get("/api/v1/estudiante/materias/{materiaId}/sesiones", MATERIA).param("grupoId", "no-es-uuid"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void W2B_consultarSesionesMateria_sin_filas_devuelve_lista_vacia_y_total() throws Exception {
+        when(sesiones.consultarPagina(ACTOR, MATERIA, null, 9, 10)).thenReturn(new SesionesMateriaEstudiantePaginaDTO(List.of(), 3));
+
+        mvc.perform(get("/api/v1/estudiante/materias/{materiaId}/sesiones", MATERIA).param("pagina", "9").param("tamano", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.datos.length()").value(0))
+                .andExpect(jsonPath("$.total").value(3));
+    }
+
+    /** CIERRE-W2B: el resumen del tablero lo calcula la base; el controlador solo lo transporta con el actor autenticado. */
+    @Test
+    void W2B_consultarResumenMaterias_usa_actor_autenticado() throws Exception {
+        when(resumen.execute(ACTOR)).thenReturn(new ResumenMateriasEstudianteDTO(3, 2, new java.math.BigDecimal("4.50"), 9));
+
+        mvc.perform(get("/api/v1/estudiante/materias/resumen"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exitoso").value(true))
+                .andExpect(jsonPath("$.datos.totalMaterias").value(3))
+                .andExpect(jsonPath("$.datos.materiasEnRiesgo").value(2))
+                .andExpect(jsonPath("$.datos.totalHorasFalta").value(4.5))
+                .andExpect(jsonPath("$.datos.totalCreditos").value(9));
+        verify(resumen).execute(ACTOR);
+    }
+
+    @Test
+    void W2B_consultarResumenMaterias_sin_umbrales_serializa_riesgo_nulo() throws Exception {
+        when(resumen.execute(ACTOR)).thenReturn(new ResumenMateriasEstudianteDTO(1, null, java.math.BigDecimal.ZERO, 3));
+
+        mvc.perform(get("/api/v1/estudiante/materias/resumen"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.datos.materiasEnRiesgo").isEmpty())
+                .andExpect(jsonPath("$.datos.totalMaterias").value(1));
+    }
+
+    @Test
+    void W2B_consultarResumenMaterias_de_un_no_estudiante_es_403() throws Exception {
+        when(resumen.execute(ACTOR)).thenThrow(new ForbiddenException(
+                co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode.ACC_APP_004));
+
+        mvc.perform(get("/api/v1/estudiante/materias/resumen")).andExpect(status().isForbidden());
     }
 
     /** APP-04: aditivo; v1 sin zona se conserva y los instantes UTC llevan sufijo Z solo si la procedencia es CONFIRMADA. */
     @Test
     void APP04_consultarSesionesMateria_expone_instantes_utc_confirmados_sin_alterar_v1() throws Exception {
-        when(sesiones.execute(ACTOR, MATERIA, null, null)).thenReturn(List.of(
+        when(sesiones.consultarPagina(ACTOR, MATERIA, null, null, null)).thenReturn(new SesionesMateriaEstudiantePaginaDTO(List.of(
                 new SesionMateriaEstudianteDTO(UUID.randomUUID(), "Sesion 1", 1, "SES-01", 1, UUID.randomUUID(), "G1",
                         "Grupo 1", java.time.LocalDateTime.of(2026, 8, 17, 13, 0),
                         java.time.LocalDateTime.of(2026, 8, 17, 15, 0), java.time.LocalDateTime.of(2026, 8, 17, 13, 0),
@@ -105,7 +177,7 @@ class EstudiantePortalControllerTest {
                 new SesionMateriaEstudianteDTO(UUID.randomUUID(), "Sesion 2", 2, "SES-02", 2, UUID.randomUUID(), "G1",
                         "Grupo 1", java.time.LocalDateTime.of(2026, 10, 13, 8, 0),
                         java.time.LocalDateTime.of(2026, 10, 13, 10, 0), null, null, "INDETERMINADA",
-                        "NO_DISPONIBLE", null, false)));
+                        "NO_DISPONIBLE", null, false)), 2));
 
         mvc.perform(get("/api/v1/estudiante/materias/{materiaId}/sesiones", MATERIA))
                 .andExpect(status().isOk())
@@ -215,14 +287,14 @@ class EstudiantePortalControllerTest {
     /** CULM-001 D.1 (HU026B): fecha limite en UTC (sufijo Z), plazo vigente y paginacion opcional. */
     @Test
     void D1_consultarSesionesMateria_expone_la_fecha_limite_utc_y_el_plazo_vigente_y_acepta_pagina_y_tamano() throws Exception {
-        when(sesiones.execute(ACTOR, MATERIA, 2, 5)).thenReturn(List.of(
+        when(sesiones.consultarPagina(ACTOR, MATERIA, null, 2, 5)).thenReturn(new SesionesMateriaEstudiantePaginaDTO(List.of(
                 new SesionMateriaEstudianteDTO(UUID.randomUUID(), "Sesion 1", 1, "SES-01", 1, UUID.randomUUID(), "G1",
                         "Grupo 1", java.time.LocalDateTime.of(2026, 11, 4, 12, 0), java.time.LocalDateTime.of(2026, 11, 4, 13, 0),
                         null, null, "INDETERMINADA", "AUSENTE", null, true, "PROGRAMADA", null,
                         java.time.LocalDateTime.of(2026, 11, 10, 5, 0), true),
                 new SesionMateriaEstudianteDTO(UUID.randomUUID(), "Sesion 2", 2, "SES-02", 2, UUID.randomUUID(), "G1",
                         "Grupo 1", java.time.LocalDateTime.of(2026, 8, 17, 13, 0), java.time.LocalDateTime.of(2026, 8, 17, 15, 0),
-                        null, null, "INDETERMINADA", "AUSENTE", null, true, "PROGRAMADA", null, null, false)));
+                        null, null, "INDETERMINADA", "AUSENTE", null, true, "PROGRAMADA", null, null, false)), 12));
 
         mvc.perform(get("/api/v1/estudiante/materias/{materiaId}/sesiones", MATERIA).param("pagina", "2").param("tamano", "5"))
                 .andExpect(status().isOk())
@@ -231,7 +303,7 @@ class EstudiantePortalControllerTest {
                 .andExpect(jsonPath("$.datos[1].fechaLimiteJustificacionUtc").doesNotExist())
                 .andExpect(jsonPath("$.datos[1].plazoJustificacionVigente").value(false))
                 .andExpect(jsonPath("$.datos[0].nombre").value("Sesion 1"));
-        verify(sesiones).execute(ACTOR, MATERIA, 2, 5);
+        verify(sesiones).consultarPagina(ACTOR, MATERIA, null, 2, 5);
     }
 
     /** CULM-001 D.9-a (F-ADM-023, F-EST-022): pagina < 1 o tamano fuera de 1..100 es 400 PAG_001 y no llega al caso de uso. */
