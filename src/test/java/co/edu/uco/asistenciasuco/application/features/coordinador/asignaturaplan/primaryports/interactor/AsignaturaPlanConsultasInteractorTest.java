@@ -25,10 +25,10 @@ class AsignaturaPlanConsultasInteractorTest {
         final var fila = new AsignaturaPlanProjection(id, "MAT1", "Calculo", 3, id, "Ciencias", id, "Basico", id, 2024, id, "Sistemas",
                 id, 2, "S2", "OPT", "Optativa", true, true, true);
         when(useCase.consultarMalla(u, id, 2, "OPT", null, 1, 20)).thenReturn(new PaginaAsignaturasPlanProjection(List.of(fila), 9));
-        when(useCase.consultarAsignaturasCoordinador(u, id, null, null, 1, 20)).thenReturn(new PaginaAsignaturasPlanProjection(List.of(fila), 9));
+        when(useCase.consultarAsignaturasCoordinador(u, id, null, null, null, 1, 20)).thenReturn(new PaginaAsignaturasPlanProjection(List.of(fila), 9));
 
         for (final var pagina : List.of(interactor.consultarMalla(u, id, 2, "OPT", null, 1, 20),
-                interactor.consultarAsignaturasCoordinador(u, id, null, null, 1, 20))) {
+                interactor.consultarAsignaturasCoordinador(u, id, null, null, null, 1, 20))) {
             final var dto = pagina.elementos().getFirst();
             assertEquals(9, pagina.total());
             assertEquals("MAT1", dto.codigo());

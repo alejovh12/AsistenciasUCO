@@ -170,11 +170,12 @@ class AsignaturaPlanEstudioJpaRepositoryTest {
         verify(query).setParameter("numeroSemestre", 1);
         verify(query).setParameter("codigoCaracter", "OBL");
 
-        final PaginaAsignaturasPlanProjection coordinador = repo.consultarAsignaturasCoordinador(USUARIO, PROGRAMA, "x", Boolean.TRUE, 2, 5);
+        final PaginaAsignaturasPlanProjection coordinador = repo.consultarAsignaturasCoordinador(USUARIO, PROGRAMA, "x", Boolean.TRUE, "OPT", 2, 5);
         assertEquals(3, coordinador.elementos().size());
         verify(manager).createNativeQuery(AsignaturaPlanEstudioJpaRepository.SQL_ASIGNATURAS_COORDINADOR);
         verify(query).setParameter("idPrograma", PROGRAMA);
         verify(query).setParameter("estaActiva", Boolean.TRUE);
+        verify(query).setParameter("codigoCaracter", "OPT");
     }
 
     @Test
