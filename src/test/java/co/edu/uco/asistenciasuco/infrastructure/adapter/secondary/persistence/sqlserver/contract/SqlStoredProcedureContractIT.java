@@ -619,7 +619,22 @@ class SqlStoredProcedureContractIT {
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@idGrupo", "uniqueidentifier"),
                         input("@numeroPagina", "int"),
-                        input("@tamanoPagina", "int")
+                        input("@tamanoPagina", "int"),
+                        input("@busqueda", "nvarchar")
+                )),
+                // CIERRE-W3M: matriz de asistencia del grupo (estudiantes x sesiones) y resumen de sesiones del docente
+                Arguments.of("usp_consultar_matriz_asistencia_grupo_docente_paginado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idGrupo", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int"),
+                        input("@busqueda", "nvarchar")
+                )),
+                Arguments.of("usp_consultar_resumen_sesiones_grupo_docente", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idGrupo", "uniqueidentifier")
                 )),
                 Arguments.of("usp_actualizar_parametro", List.of(
                         input("@idParametro", "uniqueidentifier"),

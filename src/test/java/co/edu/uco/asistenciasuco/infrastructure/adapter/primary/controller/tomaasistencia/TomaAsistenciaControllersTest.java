@@ -384,6 +384,19 @@ class TomaAsistenciaControllersTest {
     }
 
     @Test
+    void resumen_del_docente_pasa_la_busqueda_al_caso_de_uso_y_rechaza_una_de_mas_de_100_caracteres() throws Exception {
+        when(resumen.execute(new ConsultarResumenAsistenciaGrupoInputPort.Consulta(GRUPO, 1, 50, ACTOR, "ana")))
+                .thenReturn(new PaginaResultado<>(List.of(), 1, 50, 0));
+
+        mvc.perform(get("/api/v1/docente/grupos/{g}/resumen-asistencia", GRUPO).param("pagina", "1").param("tamano", "50").param("busqueda", "ana"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElementos").value(0));
+        mvc.perform(get("/api/v1/docente/grupos/{g}/resumen-asistencia", GRUPO).param("busqueda", "x".repeat(101)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details[0].field").value("busqueda"));
+    }
+
+    @Test
     void resumen_del_docente_serializa_la_marca_con_alertas_y_revision() throws Exception {
         final UUID revision = UUID.randomUUID();
         final co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.MarcaInasistenciaDTO marca =
