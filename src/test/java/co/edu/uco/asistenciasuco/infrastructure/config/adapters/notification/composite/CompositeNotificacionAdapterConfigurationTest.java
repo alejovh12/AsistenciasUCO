@@ -88,7 +88,8 @@ class CompositeNotificacionAdapterConfigurationTest {
         final ObjectProvider<LogNotificacionAdapter> logProvider = mock(ObjectProvider.class);
         final ObjectProvider<OutboxNotificacionAdapter> outboxProvider = mock(ObjectProvider.class);
         when(logProvider.getIfAvailable()).thenReturn(new LogNotificacionAdapter());
-        when(outboxProvider.getIfAvailable()).thenReturn(mock(OutboxNotificacionAdapter.class));
+        final OutboxNotificacionAdapter outboxAdapter = mock(OutboxNotificacionAdapter.class);
+        when(outboxProvider.getIfAvailable()).thenReturn(outboxAdapter);
 
         final NotificacionPort port = configuration.compositeNotificacionPort(
                 props, logProvider, outboxProvider, new SimpleMeterRegistry()

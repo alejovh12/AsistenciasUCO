@@ -105,6 +105,7 @@ class RealtimeAudienciaPolicyTest {
     void tiposConocidos_lista_los_tipos_de_la_tabla_y_es_inmutable() {
         assertTrue(policy.tiposConocidos().containsAll(Set.of("SESION_CANCELADA", "ALERTA_INASISTENCIA", "TOMA_ABIERTA", "ASISTENCIA_QR_REGISTRADA")));
         assertFalse(policy.tiposConocidos().contains("NO_EXISTE"));
-        assertThrows(UnsupportedOperationException.class, () -> policy.tiposConocidos().add("X"));
+        final var tiposConocidos2 = policy.tiposConocidos();
+        assertThrows(UnsupportedOperationException.class, () -> tiposConocidos2.add("X"));
     }
 }

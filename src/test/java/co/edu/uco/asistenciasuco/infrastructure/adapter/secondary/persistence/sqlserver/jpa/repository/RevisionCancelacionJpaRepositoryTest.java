@@ -283,7 +283,8 @@ class RevisionCancelacionJpaRepositoryTest {
 
     @Test
     void los_argumentos_obligatorios_del_constructor_se_validan() {
-        assertThrows(NullPointerException.class, () -> new RevisionCancelacionJpaRepository(null, new JpaProcedureExecutor(manager)));
+        final var jpaProcedureExecutor = new JpaProcedureExecutor(manager);
+        assertThrows(NullPointerException.class, () -> new RevisionCancelacionJpaRepository(null, jpaProcedureExecutor));
         assertThrows(NullPointerException.class, () -> new RevisionCancelacionJpaRepository(manager, null));
     }
 

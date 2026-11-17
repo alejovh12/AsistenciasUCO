@@ -33,6 +33,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doThrow;
 
 /** HU076-HU078 / HU108: adapter JPA del programa academico (comandos por EXEC y consulta paginada). */
 class ProgramaAcademicoJpaRepositoryTest {
@@ -215,7 +216,7 @@ class ProgramaAcademicoJpaRepositoryTest {
         final var consulta = new ProgramaAcademicoQueryPort.ConsultaProgramas(ACTOR, null, null, null, 1, 100000);
         assertThrows(co.edu.uco.asistenciasuco.application.exception.validation.ValidationException.class, () -> repository.consultar(consulta));
 
-        org.mockito.Mockito.doThrow(new jakarta.persistence.PersistenceException("otro fallo")).when(query).getResultList();
+        doThrow(new jakarta.persistence.PersistenceException("otro fallo")).when(query).getResultList();
         assertThrows(co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.DatabaseOperationException.class,
                 () -> repository.consultar(consulta));
     }

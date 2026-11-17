@@ -144,7 +144,8 @@ class AlertaInasistenciaJpaRepositoryTest {
     @Test
     void evaluar_con_json_de_novedades_invalido_es_fallo_tecnico() {
         when(query.getResultList()).thenReturn(Collections.<Object>singletonList(canonicaConExtras(0, 0, 0, 0, "{no es json")));
-        assertThrows(DatabaseOperationException.class, () -> repo.evaluar(GRUPO, UUID.randomUUID()));
+        final var uuid = UUID.randomUUID();
+        assertThrows(DatabaseOperationException.class, () -> repo.evaluar(GRUPO, uuid));
     }
 
     @Test
@@ -166,7 +167,8 @@ class AlertaInasistenciaJpaRepositoryTest {
     @Test
     void consultar_grupos_pendientes_traduce_rechazos_y_encapsula_fallos_tecnicos() {
         doThrow(new PersistenceException("x", new RuntimeException("DBCODE=SEC_001|perfil"))).when(query).getResultList();
-        assertThrows(ForbiddenException.class, () -> repo.consultarGruposPendientes(null, UUID.randomUUID()));
+        final var uuid = UUID.randomUUID();
+        assertThrows(ForbiddenException.class, () -> repo.consultarGruposPendientes(null, uuid));
 
         doThrow(new PersistenceException("caida")).when(query).getResultList();
         assertThrows(DatabaseOperationException.class, () -> repo.consultarGruposPendientes(null, null));
@@ -241,7 +243,8 @@ class AlertaInasistenciaJpaRepositoryTest {
 
     @Test
     void los_argumentos_obligatorios_del_constructor_se_validan() {
-        assertThrows(NullPointerException.class, () -> new AlertaInasistenciaJpaRepository(null, new JpaProcedureExecutor(manager)));
+        final var jpaProcedureExecutor = new JpaProcedureExecutor(manager);
+        assertThrows(NullPointerException.class, () -> new AlertaInasistenciaJpaRepository(null, jpaProcedureExecutor));
         assertThrows(NullPointerException.class, () -> new AlertaInasistenciaJpaRepository(manager, null));
     }
 

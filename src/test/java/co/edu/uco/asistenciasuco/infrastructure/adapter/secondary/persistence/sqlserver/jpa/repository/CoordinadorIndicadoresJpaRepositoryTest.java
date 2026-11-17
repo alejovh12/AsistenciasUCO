@@ -23,7 +23,6 @@ import jakarta.persistence.Query;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -42,6 +41,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
 
 /** HU065-HU070: adapter JPA de KPIs del coordinador (EXEC nativo mapeado fielmente, sin recalcular). */
 class CoordinadorIndicadoresJpaRepositoryTest {
@@ -272,7 +273,7 @@ class CoordinadorIndicadoresJpaRepositoryTest {
     }
 
     private void fallaCon(final String mensaje) {
-        Mockito.doThrow(new PersistenceException("x", new RuntimeException(mensaje))).when(query).getResultList();
+        doThrow(new PersistenceException("x", new RuntimeException(mensaje))).when(query).getResultList();
         repository.consultarAlertas(ACTOR, null, null, null, 1, 10, null);
     }
 
@@ -286,7 +287,7 @@ class CoordinadorIndicadoresJpaRepositoryTest {
         repository.consultarBitacora(ACTOR, ESTUDIANTE, null, 1, 10, PROGRAMA);
         repository.consultarResumenAsistencia(ACTOR, ESTUDIANTE, null, PROGRAMA);
 
-        verify(query, org.mockito.Mockito.times(4)).setParameter("idPrograma", PROGRAMA);
+        verify(query, times(4)).setParameter("idPrograma", PROGRAMA);
     }
 
     @Test

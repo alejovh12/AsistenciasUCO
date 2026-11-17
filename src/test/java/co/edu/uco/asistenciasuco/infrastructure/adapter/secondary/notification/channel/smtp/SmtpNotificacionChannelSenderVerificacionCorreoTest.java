@@ -161,8 +161,10 @@ class SmtpNotificacionChannelSenderVerificacionCorreoTest {
             throw new IllegalStateException("SQL Server no disponible.");
         };
 
+        final var sender2 = sender(props(false), caido);
+        final var verificacion2 = verificacion(List.of(ESTUDIANTE));
         assertThrows(IllegalStateException.class,
-                () -> sender(props(false), caido).enviar(verificacion(List.of(ESTUDIANTE))));
+                () -> sender2.enviar(verificacion2));
 
         assertTrue(enviados.isEmpty());
     }

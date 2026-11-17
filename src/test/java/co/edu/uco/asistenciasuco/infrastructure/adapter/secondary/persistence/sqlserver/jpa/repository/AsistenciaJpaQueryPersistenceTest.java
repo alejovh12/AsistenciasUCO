@@ -78,14 +78,16 @@ class AsistenciaJpaRepositoryTest {
 
     @Test
     void sin_ejecutor_se_rechaza_sin_abrir_entity_manager() {
+        final var consultarAsistenciasPorGrupoRepositoryDTO = new ConsultarAsistenciasPorGrupoRepositoryDTO(GRUPO, SESION);
         assertThrows(CrosscuttingException.class,
-                () -> persistence.consultarAsistenciasPorGrupo(new ConsultarAsistenciasPorGrupoRepositoryDTO(GRUPO, SESION)));
+                () -> persistence.consultarAsistenciasPorGrupo(consultarAsistenciasPorGrupoRepositoryDTO));
         verifyNoInteractions(entityManager);
     }
 
     @Test
     void constructor_exige_entity_manager() {
-        assertThrows(NullPointerException.class, () -> new AsistenciaJpaRepository(null, new JpaProcedureExecutor(entityManager)));
+        final var jpaProcedureExecutor = new JpaProcedureExecutor(entityManager);
+        assertThrows(NullPointerException.class, () -> new AsistenciaJpaRepository(null, jpaProcedureExecutor));
     }
 
     @Test
@@ -142,8 +144,9 @@ class AsistenciaJpaRepositoryTest {
                 .getFirst().isPresente());
 
         when(query.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(new Object[6]));
+        final var consultarAsistenciasPorGrupoRepositoryDTO = new ConsultarAsistenciasPorGrupoRepositoryDTO(GRUPO, null, ACTOR);
         final DatabaseOperationException error = assertThrows(DatabaseOperationException.class,
-                () -> persistence.consultarAsistenciasPorGrupo(new ConsultarAsistenciasPorGrupoRepositoryDTO(GRUPO, null, ACTOR)));
+                () -> persistence.consultarAsistenciasPorGrupo(consultarAsistenciasPorGrupoRepositoryDTO));
         assertInstanceOf(IllegalStateException.class, error.getCause());
     }
 
@@ -153,8 +156,9 @@ class AsistenciaJpaRepositoryTest {
         when(query.getResultList()).thenThrow(new PersistenceException("wrapper",
                 new RuntimeException("DBCODE=SEC_002|El usuario no tiene titularidad sobre el grupo.")));
 
+        final var consultarAsistenciasPorGrupoRepositoryDTO = new ConsultarAsistenciasPorGrupoRepositoryDTO(GRUPO, SESION, ACTOR);
         assertThrows(ForbiddenException.class,
-                () -> persistence.consultarAsistenciasPorGrupo(new ConsultarAsistenciasPorGrupoRepositoryDTO(GRUPO, SESION, ACTOR)));
+                () -> persistence.consultarAsistenciasPorGrupo(consultarAsistenciasPorGrupoRepositoryDTO));
     }
 
     @Test
@@ -163,8 +167,9 @@ class AsistenciaJpaRepositoryTest {
         final PersistenceException cause = new PersistenceException("jpa-detail");
         when(query.getResultList()).thenThrow(cause);
 
+        final var consultarAsistenciasPorGrupoRepositoryDTO = new ConsultarAsistenciasPorGrupoRepositoryDTO(GRUPO, SESION, ACTOR);
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
-                () -> persistence.consultarAsistenciasPorGrupo(new ConsultarAsistenciasPorGrupoRepositoryDTO(GRUPO, SESION, ACTOR)));
+                () -> persistence.consultarAsistenciasPorGrupo(consultarAsistenciasPorGrupoRepositoryDTO));
 
         assertEquals("No fue posible consultar las asistencias de base de datos.", exception.getMessage());
         assertSame(cause, exception.getCause());
@@ -174,8 +179,9 @@ class AsistenciaJpaRepositoryTest {
     void illegal_state_del_entity_manager_compartido_tambien_se_traduce() {
         when(entityManager.createNativeQuery(anyString())).thenThrow(new IllegalStateException("entity manager closed"));
 
+        final var consultarAsistenciasPorGrupoRepositoryDTO = new ConsultarAsistenciasPorGrupoRepositoryDTO(GRUPO, null, ACTOR);
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
-                () -> persistence.consultarAsistenciasPorGrupo(new ConsultarAsistenciasPorGrupoRepositoryDTO(GRUPO, null, ACTOR)));
+                () -> persistence.consultarAsistenciasPorGrupo(consultarAsistenciasPorGrupoRepositoryDTO));
 
         assertNotNull(exception.getCause());
     }
@@ -202,16 +208,19 @@ class AsistenciaJpaRepositoryTest {
     @Test
     void retirar_reclamo_ajeno_o_inexistente_404_y_no_pendiente_409() {
         canonico(false, "La solicitud de revision no existe.", "DBCODE=REV_006|ajeno o inexistente.");
-        assertThrows(ResourceNotFoundException.class, () -> persistence.retirarSolicitudRevision(UUID.randomUUID(), ACTOR));
+        final var uuid2 = UUID.randomUUID();
+        assertThrows(ResourceNotFoundException.class, () -> persistence.retirarSolicitudRevision(uuid2, ACTOR));
 
         canonico(false, "Solo se puede retirar una solicitud de revision pendiente.", "DBCODE=REV_007|no pendiente.");
-        assertThrows(ConflictException.class, () -> persistence.retirarSolicitudRevision(UUID.randomUUID(), ACTOR));
+        final var uuid = UUID.randomUUID();
+        assertThrows(ConflictException.class, () -> persistence.retirarSolicitudRevision(uuid, ACTOR));
     }
 
     @Test
     void retirar_reclamo_sin_datos_no_llega_a_la_db() {
         assertThrows(CrosscuttingException.class, () -> persistence.retirarSolicitudRevision(null, ACTOR));
-        assertThrows(CrosscuttingException.class, () -> persistence.retirarSolicitudRevision(UUID.randomUUID(), null));
+        final var uuid = UUID.randomUUID();
+        assertThrows(CrosscuttingException.class, () -> persistence.retirarSolicitudRevision(uuid, null));
         verifyNoInteractions(entityManager);
     }
 }

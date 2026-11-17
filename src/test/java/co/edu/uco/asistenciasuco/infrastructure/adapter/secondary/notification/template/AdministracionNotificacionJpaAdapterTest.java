@@ -432,20 +432,26 @@ class AdministracionNotificacionJpaAdapterTest {
     @Test
     @DisplayName("crearVersionPlantilla y activar: validan argumentos y envuelven fallos de persistencia")
     void crearYActivar_validanYEnvuelvenFallos() {
-        assertThrows(NullPointerException.class, () -> adapter.crearVersionPlantilla(null, "es", "a", "c", UUID.randomUUID()));
-        assertThrows(NullPointerException.class, () -> adapter.crearVersionPlantilla("T", "es", null, "c", UUID.randomUUID()));
-        assertThrows(NullPointerException.class, () -> adapter.crearVersionPlantilla("T", "es", "a", null, UUID.randomUUID()));
-        assertThrows(NullPointerException.class, () -> adapter.activarVersionPlantilla(null, "es", 1, UUID.randomUUID()));
+        final var uuid6 = UUID.randomUUID();
+        assertThrows(NullPointerException.class, () -> adapter.crearVersionPlantilla(null, "es", "a", "c", uuid6));
+        final var uuid5 = UUID.randomUUID();
+        assertThrows(NullPointerException.class, () -> adapter.crearVersionPlantilla("T", "es", null, "c", uuid5));
+        final var uuid4 = UUID.randomUUID();
+        assertThrows(NullPointerException.class, () -> adapter.crearVersionPlantilla("T", "es", "a", null, uuid4));
+        final var uuid3 = UUID.randomUUID();
+        assertThrows(NullPointerException.class, () -> adapter.activarVersionPlantilla(null, "es", 1, uuid3));
 
         final StoredProcedureQuery guardar = mockSpQuery("dbo.usp_guardar_plantilla_notificacion");
         when(guardar.execute()).thenThrow(new jakarta.persistence.PersistenceException("caido"));
+        final var uuid2 = UUID.randomUUID();
         assertThrows(DatabaseOperationException.class,
-                () -> adapter.crearVersionPlantilla("T", "es", "a", "c", UUID.randomUUID()));
+                () -> adapter.crearVersionPlantilla("T", "es", "a", "c", uuid2));
 
         final StoredProcedureQuery activar = mockSpQuery("dbo.usp_activar_version_plantilla_notificacion");
         when(activar.execute()).thenThrow(new IllegalStateException("caido"));
+        final var uuid = UUID.randomUUID();
         assertThrows(DatabaseOperationException.class,
-                () -> adapter.activarVersionPlantilla("T", null, 1, UUID.randomUUID()));
+                () -> adapter.activarVersionPlantilla("T", null, 1, uuid));
     }
 
     @Test
@@ -511,19 +517,23 @@ class AdministracionNotificacionJpaAdapterTest {
         assertEquals(0, vacia.resumen().pendientes());
 
         when(sp.execute()).thenThrow(new IllegalArgumentException("mal"));
+        final var uuid = UUID.randomUUID();
         assertThrows(DatabaseOperationException.class,
-                () -> adapter.consultarCola(null, null, 1, 20, UUID.randomUUID()));
+                () -> adapter.consultarCola(null, null, 1, 20, uuid));
     }
 
     @Test
     @DisplayName("reintentarNotificacion: valida el id, envuelve fallos y tolera la ausencia de despachador")
     void reintentarNotificacion_validaciones() {
-        assertThrows(NullPointerException.class, () -> adapter.reintentarNotificacion(null, UUID.randomUUID()));
+        final var uuid3 = UUID.randomUUID();
+        assertThrows(NullPointerException.class, () -> adapter.reintentarNotificacion(null, uuid3));
 
         final StoredProcedureQuery sp = mockSpQuery("dbo.usp_reintentar_notificacion_saliente");
         when(sp.execute()).thenThrow(new jakarta.persistence.PersistenceException("caido"));
+        final var uuid = UUID.randomUUID();
+        final var uuid2 = UUID.randomUUID();
         assertThrows(DatabaseOperationException.class,
-                () -> adapter.reintentarNotificacion(UUID.randomUUID(), UUID.randomUUID()));
+                () -> adapter.reintentarNotificacion(uuid, uuid2));
 
         final StoredProcedureQuery ok = mockSpQuery("dbo.usp_reintentar_notificacion_saliente");
         when(ok.execute()).thenReturn(true);

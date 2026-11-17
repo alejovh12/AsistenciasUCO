@@ -45,9 +45,10 @@ class ProcedureResultValidatorTest {
 
     @Test
     void correlacion_devuelta_distinta_es_violacion_del_contrato_canonico() {
+        final var result2 = result(UUID.randomUUID(), true, "detalle");
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
                 () -> ProcedureResultValidator.validate(
-                        result(UUID.randomUUID(), true, "detalle"), CORRELATION, OPERATION));
+                        result2, CORRELATION, OPERATION));
 
         assertEquals(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT.code(), exception.getCode());
         assertEquals(CORRELATION_MESSAGE, exception.getMessage());
@@ -55,17 +56,19 @@ class ProcedureResultValidatorTest {
 
     @Test
     void correlacion_nula_devuelta_no_coincide_con_la_esperada() {
+        final var result2 = result(null, true, "detalle");
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
-                () -> ProcedureResultValidator.validate(result(null, true, "detalle"), CORRELATION, OPERATION));
+                () -> ProcedureResultValidator.validate(result2, CORRELATION, OPERATION));
 
         assertEquals(CORRELATION_MESSAGE, exception.getMessage());
     }
 
     @Test
     void correlacion_se_valida_antes_que_el_estado_funcional() {
+        final var result2 = result(UUID.randomUUID(), false, "DBCODE=SEC_001|x");
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
                 () -> ProcedureResultValidator.validate(
-                        result(UUID.randomUUID(), false, "DBCODE=SEC_001|x"), CORRELATION, OPERATION));
+                        result2, CORRELATION, OPERATION));
 
         assertEquals(CORRELATION_MESSAGE, exception.getMessage());
     }
@@ -82,10 +85,12 @@ class ProcedureResultValidatorTest {
 
         final RuntimeException viaValidator = assertThrows(RuntimeException.class,
                 () -> ProcedureResultValidator.validate(failure, CORRELATION, OPERATION));
+        final var getMensajeUsuarioResultado2 = failure.getMensajeUsuarioResultado();
+        final var correlation = CORRELATION.toString();
         final RuntimeException viaTranslator = assertThrows(RuntimeException.class,
                 () -> DbExceptionTranslator.throwIfFailed(
-                        false, failure.getMensajeUsuarioResultado(), technicalMessage,
-                        CORRELATION.toString(), OPERATION));
+                        false, getMensajeUsuarioResultado2, technicalMessage,
+                        correlation, OPERATION));
 
         assertEquals(viaTranslator.getClass(), viaValidator.getClass());
         assertEquals(codeOf(viaTranslator), codeOf(viaValidator));

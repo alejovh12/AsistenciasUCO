@@ -102,24 +102,34 @@ class AdmisionEstudianteJpaRepositoryTest {
     void los_rechazos_ADS_se_traducen_a_su_http() {
         when(query.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(
                 fila(false, "DBCODE=ADS_002|ya admitido", null, null, null, null)));
-        final ConflictException ya = assertThrows(ConflictException.class, () -> admision().admitir(orden()));
+        final var admision5 = admision();
+        final var orden5 = orden();
+        final ConflictException ya = assertThrows(ConflictException.class, () -> admision5.admitir(orden5));
         assertEquals("ADS_002", ya.getCode());
 
         when(query.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(
                 fila(false, "DBCODE=ADS_004|personas distintas", null, null, null, null)));
-        assertEquals("ADS_004", assertThrows(ConflictException.class, () -> admision().admitir(orden())).getCode());
+        final var admisionAds004 = admision();
+        final var ordenAds004 = orden();
+        assertEquals("ADS_004", assertThrows(ConflictException.class, () -> admisionAds004.admitir(ordenAds004)).getCode());
 
         when(query.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(
                 fila(false, "DBCODE=ADS_003|programa ajeno", null, null, null, null)));
-        assertThrows(ForbiddenException.class, () -> admision().admitir(orden()));
+        final var admision4 = admision();
+        final var orden4 = orden();
+        assertThrows(ForbiddenException.class, () -> admision4.admitir(orden4));
 
         when(query.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(
                 fila(false, "DBCODE=ADS_005|correo", null, null, null, null)));
-        assertThrows(ValidationException.class, () -> admision().admitir(orden()));
+        final var admision3 = admision();
+        final var orden3 = orden();
+        assertThrows(ValidationException.class, () -> admision3.admitir(orden3));
 
         when(query.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(
                 fila(false, "DBCODE=ADS_006|clave", null, null, null, null)));
-        assertThrows(ValidationException.class, () -> admision().admitir(orden()));
+        final var admision2 = admision();
+        final var orden2 = orden();
+        assertThrows(ValidationException.class, () -> admision2.admitir(orden2));
     }
 
     @Test
@@ -127,14 +137,19 @@ class AdmisionEstudianteJpaRepositoryTest {
         when(query.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(
                 fila(true, "DBCODE=ADS_001|ok", null, null, null, null)));
 
-        assertThrows(DatabaseOperationException.class, () -> admision().admitir(orden()));
+        final var admision2 = admision();
+        final var orden2 = orden();
+        assertThrows(DatabaseOperationException.class, () -> admision2.admitir(orden2));
     }
 
     @Test
     void orden_nula_o_sin_ejecutor_no_llega_a_la_db() {
-        assertThrows(CrosscuttingException.class, () -> admision().admitir(null));
-        assertThrows(CrosscuttingException.class, () -> admision().admitir(new AdmisionEstudianteCommand(
-                TIPO, 1, "Ana", null, "Perez", null, "a@uco.edu.co", null, PROGRAMA, null)));
+        final var admision3 = admision();
+        assertThrows(CrosscuttingException.class, () -> admision3.admitir(null));
+        final var admision2 = admision();
+        final var admisionEstudianteCommand = new AdmisionEstudianteCommand(
+                TIPO, 1, "Ana", null, "Perez", null, "a@uco.edu.co", null, PROGRAMA, null);
+        assertThrows(CrosscuttingException.class, () -> admision2.admitir(admisionEstudianteCommand));
         verify(manager, never()).createNativeQuery(anyString());
         assertThrows(NullPointerException.class, () -> new AdmisionEstudianteJpaRepository(null));
     }
@@ -173,25 +188,30 @@ class AdmisionEstudianteJpaRepositoryTest {
         when(query.getResultList()).thenReturn(List.of());
         assertEquals(0, programas().consultarProgramas(ADMIN, null, null, 1, 50).totalElementos());
 
-        assertThrows(CrosscuttingException.class, () -> programas().consultarProgramas(null, null, null, 1, 50));
+        final var programas2 = programas();
+        assertThrows(CrosscuttingException.class, () -> programas2.consultarProgramas(null, null, null, 1, 50));
     }
 
     @Test
     void programas_traduce_los_rechazos_del_sp_y_valida_las_columnas() {
         doThrow(new PersistenceException("x", new RuntimeException("DBCODE=SEC_001|perfil"))).when(query).getResultList();
-        assertThrows(ForbiddenException.class, () -> programas().consultarProgramas(ADMIN, null, null, 1, 50));
+        final var programas4 = programas();
+        assertThrows(ForbiddenException.class, () -> programas4.consultarProgramas(ADMIN, null, null, 1, 50));
 
         doThrow(new PersistenceException("x", new RuntimeException("DBCODE=PAG_001|pagina"))).when(query).getResultList();
-        assertThrows(ValidationException.class, () -> programas().consultarProgramas(ADMIN, null, null, 0, 50));
+        final var programas3 = programas();
+        assertThrows(ValidationException.class, () -> programas3.consultarProgramas(ADMIN, null, null, 0, 50));
 
         doThrow(new PersistenceException("db down")).when(query).getResultList();
-        assertThrows(DatabaseOperationException.class, () -> programas().consultarProgramas(ADMIN, null, null, 1, 50));
+        final var programas2 = programas();
+        assertThrows(DatabaseOperationException.class, () -> programas2.consultarProgramas(ADMIN, null, null, 1, 50));
 
         org.mockito.Mockito.reset(query);
         when(query.setParameter(anyString(), any())).thenReturn(query);
         when(query.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(new Object[4]));
+        final var programasRepo = programas();
         assertInstanceOf(IllegalStateException.class, assertThrows(DatabaseOperationException.class,
-                () -> programas().consultarProgramas(ADMIN, null, null, 1, 50)).getCause());
+                () -> programasRepo.consultarProgramas(ADMIN, null, null, 1, 50)).getCause());
         assertThrows(NullPointerException.class, () -> new ProgramaInstitucionJpaRepository(null));
     }
 }

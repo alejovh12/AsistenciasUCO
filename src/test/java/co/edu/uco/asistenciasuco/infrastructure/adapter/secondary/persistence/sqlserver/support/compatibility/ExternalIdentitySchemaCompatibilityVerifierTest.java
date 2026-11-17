@@ -27,9 +27,11 @@ class ExternalIdentitySchemaCompatibilityVerifierTest {
 
     @Test
     void sin_el_vinculo_en_la_db_el_arranque_falla_sin_degradar_a_correo() {
+        final var verifierReturning3 = verifierReturning(0);
         final IllegalStateException failure =
-                assertThrows(IllegalStateException.class, () -> verifierReturning(0).run(null));
-        assertThrows(IllegalStateException.class, () -> verifierReturning("no-numerico").run(null));
+                assertThrows(IllegalStateException.class, () -> verifierReturning3.run(null));
+        final var verifierReturning2 = verifierReturning("no-numerico");
+        assertThrows(IllegalStateException.class, () -> verifierReturning2.run(null));
         org.junit.jupiter.api.Assertions.assertTrue(failure.getMessage().contains("SEC-BASELINE-017"));
     }
 }

@@ -23,8 +23,8 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
 
 /**
  * QUALITY-PR15 J05/J07: contrato unitario de los repositorios JPA de consulta frente al
@@ -181,7 +181,7 @@ class JpaQueryAdapterContractTest {
             when(paginaGrupos.getResultList()).thenReturn(
                     java.util.Collections.<Object>singletonList(grupoFila(ID, 2)),
                     java.util.Collections.<Object>singletonList(grupoFila(segundo, 2)));
-            when(manager.createNativeQuery(eq(GrupoJpaRepository.SQL_GRUPOS_PAGINADO))).thenReturn(paginaGrupos);
+            when(manager.createNativeQuery(GrupoJpaRepository.SQL_GRUPOS_PAGINADO)).thenReturn(paginaGrupos);
             query(GrupoJpaRepository.HQL_HORARIOS_DE_GRUPOS, UvHorarioEntity.class, List.of(
                     HydratedViewRow.of(UvHorarioEntity.class, Map.of("id", OTHER, "idGrupo", ID, "codigoDia", "MI", "nombreDia",
                             "Miercoles", "horaInicio", LocalTime.of(14, 0), "horaFin", LocalTime.of(16, 0))),
@@ -190,7 +190,7 @@ class JpaQueryAdapterContractTest {
             final jakarta.persistence.Query estudiantes = mock(jakarta.persistence.Query.class, RETURNS_SELF);
             when(estudiantes.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(
                     new Object[]{ID, OTHER.toString(), null, "Ana", "ana@uco.edu.co", "A", "Activo", 1}));
-            when(manager.createNativeQuery(eq(GrupoJpaRepository.SQL_ESTUDIANTES_GRUPO))).thenReturn(estudiantes);
+            when(manager.createNativeQuery(GrupoJpaRepository.SQL_ESTUDIANTES_GRUPO)).thenReturn(estudiantes);
             final GrupoJpaRepository repository = new GrupoJpaRepository(manager, mock(TransactionOperations.class),
                     new JpaProcedureExecutor(manager));
 
@@ -201,10 +201,10 @@ class JpaQueryAdapterContractTest {
             assertEquals("508", grupos.getFirst().getCodigo());
             // F1: el listado trae el horario semanal ordenado de lunes a domingo
             assertEquals(List.of("LU", "MI"), grupos.getFirst().getFranjas().stream().map(franja -> franja.codigoDia()).toList());
-            verify(paginaGrupos, org.mockito.Mockito.times(2)).setParameter("idUsuarioEjecutor", actor);
+            verify(paginaGrupos, times(2)).setParameter("idUsuarioEjecutor", actor);
             verify(paginaGrupos).setParameter("numeroPagina", 1);
             verify(paginaGrupos).setParameter("numeroPagina", 2);
-            verify(paginaGrupos, org.mockito.Mockito.times(2)).setParameter("tamanoPagina", GrupoJpaRepository.TAMANO_PAGINA_GRUPOS);
+            verify(paginaGrupos, times(2)).setParameter("tamanoPagina", GrupoJpaRepository.TAMANO_PAGINA_GRUPOS);
 
             final var filas = repository.consultarEstudiantesGrupo(OTHER, actor);
             assertNull(filas.getFirst().documento());
@@ -258,21 +258,22 @@ class JpaQueryAdapterContractTest {
     void fallo_del_provider_en_consultas_academicas_no_devuelve_listas_vacias() {
         when(manager.createQuery(anyString(), any(Class.class))).thenThrow(new PersistenceException("db down"));
 
-        assertThrows(DatabaseOperationException.class, () -> new PeriodoAcademicoJpaRepository(manager)
-                .consultarPeriodosAcademicos());
-        assertThrows(DatabaseOperationException.class, () -> new FacultadJpaRepository(manager)
-                .consultarFacultadPorId(ID));
-        assertThrows(DatabaseOperationException.class, () -> new AsistenciaSesionEstudianteJpaRepository(manager)
-                .consultarAsistenciaSesiones(ID, OTHER));
-        assertThrows(DatabaseOperationException.class, () -> new AsignaturaJpaRepository(manager,
-                new JpaProcedureExecutor(manager)).consultarAsignaturasPorPlan(ID));
+        final var periodoAcademicoJpaRepository = new PeriodoAcademicoJpaRepository(manager);
+        assertThrows(DatabaseOperationException.class, () -> periodoAcademicoJpaRepository.consultarPeriodosAcademicos());
+        final var facultadJpaRepository = new FacultadJpaRepository(manager);
+        assertThrows(DatabaseOperationException.class, () -> facultadJpaRepository.consultarFacultadPorId(ID));
+        final var asistenciaSesionEstudianteJpaRepository = new AsistenciaSesionEstudianteJpaRepository(manager);
+        assertThrows(DatabaseOperationException.class, () -> asistenciaSesionEstudianteJpaRepository.consultarAsistenciaSesiones(ID, OTHER));
+        final var asignaturaJpaRepository = new AsignaturaJpaRepository(manager,
+                new JpaProcedureExecutor(manager));
+        assertThrows(DatabaseOperationException.class, () -> asignaturaJpaRepository.consultarAsignaturasPorPlan(ID));
     }
 
     @SuppressWarnings("unchecked")
     private <T> TypedQuery<T> query(final String hql, final Class<T> type, final List<T> rows) {
         final TypedQuery<T> query = mock(TypedQuery.class, RETURNS_SELF);
         when(query.getResultList()).thenReturn(rows);
-        when(manager.createQuery(eq(hql), eq(type))).thenReturn(query);
+        when(manager.createQuery(hql, type)).thenReturn(query);
         return query;
     }
 }

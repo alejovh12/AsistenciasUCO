@@ -66,10 +66,13 @@ class RotacionTokenAsistenciaSchedulerTest {
         scheduler.stop();
         assertFalse(scheduler.isRunning());
 
-        assertThrows(NullPointerException.class, () -> new RotacionTokenAsistenciaScheduler(null, cerrar, Duration.ofSeconds(1)));
-        assertThrows(NullPointerException.class, () -> new RotacionTokenAsistenciaScheduler(rotar, null, Duration.ofSeconds(1)));
+        final var duration3 = Duration.ofSeconds(1);
+        assertThrows(NullPointerException.class, () -> new RotacionTokenAsistenciaScheduler(null, cerrar, duration3));
+        final var duration2 = Duration.ofSeconds(1);
+        assertThrows(NullPointerException.class, () -> new RotacionTokenAsistenciaScheduler(rotar, null, duration2));
         assertThrows(NullPointerException.class, () -> new RotacionTokenAsistenciaScheduler(rotar, cerrar, null));
         assertThrows(IllegalArgumentException.class, () -> new RotacionTokenAsistenciaScheduler(rotar, cerrar, Duration.ZERO));
-        assertThrows(IllegalArgumentException.class, () -> new RotacionTokenAsistenciaScheduler(rotar, cerrar, Duration.ofSeconds(-1)));
+        final var duration = Duration.ofSeconds(-1);
+        assertThrows(IllegalArgumentException.class, () -> new RotacionTokenAsistenciaScheduler(rotar, cerrar, duration));
     }
 }

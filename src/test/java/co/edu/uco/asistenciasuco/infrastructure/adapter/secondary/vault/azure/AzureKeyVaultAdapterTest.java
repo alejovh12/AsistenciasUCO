@@ -11,7 +11,6 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.util.Optional;
 
@@ -22,12 +21,12 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
 
 class AzureKeyVaultAdapterTest {
 
@@ -37,19 +36,19 @@ class AzureKeyVaultAdapterTest {
 
     @BeforeEach
     void setUp() {
-        secretClient = Mockito.mock(SecretClient.class);
+        secretClient = mock(SecretClient.class);
         cache = Caffeine.newBuilder().build();
         adapter = new AzureKeyVaultAdapter(secretClient, cache);
     }
 
     private static KeyVaultSecret secretWithValue(final String value) {
-        final KeyVaultSecret secret = Mockito.mock(KeyVaultSecret.class);
+        final KeyVaultSecret secret = mock(KeyVaultSecret.class);
         when(secret.getValue()).thenReturn(value);
         return secret;
     }
 
     private static HttpResponse responseWithStatus(final int status) {
-        final HttpResponse response = Mockito.mock(HttpResponse.class);
+        final HttpResponse response = mock(HttpResponse.class);
         when(response.getStatusCode()).thenReturn(status);
         return response;
     }
@@ -58,22 +57,22 @@ class AzureKeyVaultAdapterTest {
     void consulta_utiliza_cache_y_tras_invalidar_reconsulta_a_azure() {
         final AzureKeyVaultAdapter defaultCacheAdapter = new AzureKeyVaultAdapter(secretClient);
         final KeyVaultSecret secret = secretWithValue("top-secret-val");
-        when(secretClient.getSecret(eq("jwt-signing-key"))).thenReturn(secret);
+        when(secretClient.getSecret("jwt-signing-key")).thenReturn(secret);
 
         final Optional<String> primero = defaultCacheAdapter.getSecret("jwt-signing-key");
         assertTrue(primero.isPresent());
         assertEquals("top-secret-val", primero.get());
-        verify(secretClient, times(1)).getSecret(eq("jwt-signing-key"));
+        verify(secretClient, times(1)).getSecret("jwt-signing-key");
 
         final Optional<String> segundo = defaultCacheAdapter.getSecret("jwt-signing-key");
         assertTrue(segundo.isPresent());
-        verify(secretClient, times(1)).getSecret(eq("jwt-signing-key"));
+        verify(secretClient, times(1)).getSecret("jwt-signing-key");
 
         defaultCacheAdapter.invalidateSecret("jwt-signing-key");
 
         final Optional<String> tercero = defaultCacheAdapter.getSecret("jwt-signing-key");
         assertTrue(tercero.isPresent());
-        verify(secretClient, times(2)).getSecret(eq("jwt-signing-key"));
+        verify(secretClient, times(2)).getSecret("jwt-signing-key");
     }
 
     @Test

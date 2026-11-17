@@ -30,23 +30,27 @@ class DbFailureClassifierCulm001D9Test {
         assertEquals(DecanoErrorCode.DEC_020, dec020);
         assertEquals("DEC_020", dec020.code());
         assertEquals(ErrorKind.CONFLICT, dec020.kind());
+        final var tecnico2 = tecnico("DEC_020");
         assertThrows(ConflictException.class,
-                () -> DbExceptionTranslator.throwIfFailed(false, USER, tecnico("DEC_020"), "c", "crearDecano"));
+                () -> DbExceptionTranslator.throwIfFailed(false, USER, tecnico2, "c", "crearDecano"));
     }
 
     @Test
     void ntf_020_y_ntf_021_son_recurso_no_encontrado() {
         assertEquals(CommonErrorCode.RESOURCE_NOT_FOUND, DbFailureClassifier.classify(USER, tecnico("NTF_020"), "reintentarNotificacionSaliente"));
         assertEquals(CommonErrorCode.RESOURCE_NOT_FOUND, DbFailureClassifier.classify(USER, tecnico("NTF_021"), "consultarPlantillaActiva"));
+        final var tecnico3 = tecnico("NTF_020");
         assertThrows(ResourceNotFoundException.class,
-                () -> DbExceptionTranslator.throwIfFailed(false, USER, tecnico("NTF_020"), "c", "reintentarNotificacionSaliente"));
+                () -> DbExceptionTranslator.throwIfFailed(false, USER, tecnico3, "c", "reintentarNotificacionSaliente"));
+        final var tecnico2 = tecnico("NTF_021");
         assertThrows(ResourceNotFoundException.class,
-                () -> DbExceptionTranslator.throwIfFailed(false, USER, tecnico("NTF_021"), "c", "consultarPlantillaActiva"));
+                () -> DbExceptionTranslator.throwIfFailed(false, USER, tecnico2, "c", "consultarPlantillaActiva"));
     }
 
     @Test
     void sec_002_es_prohibido() {
+        final var tecnico2 = tecnico("SEC_002");
         assertThrows(ForbiddenException.class,
-                () -> DbExceptionTranslator.throwIfFailed(false, USER, tecnico("SEC_002"), "c", "validarAccesoReporteGrupo"));
+                () -> DbExceptionTranslator.throwIfFailed(false, USER, tecnico2, "c", "validarAccesoReporteGrupo"));
     }
 }

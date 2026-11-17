@@ -58,7 +58,7 @@ public final class CatalogJdbcBaseline {
     private Optional<String> consultar(final String sql, final MapSqlParameterSource params) {
         try {
             return Optional.ofNullable(jdbcOperations.queryForObject(sql, params, String.class));
-        } catch (final EmptyResultDataAccessException exception) {
+        } catch (final EmptyResultDataAccessException _) {
             return Optional.empty();
         }
     }

@@ -47,9 +47,13 @@ class SesionDePruebaMismoDiaTest {
 
     @Test
     void rechaza_duraciones_que_no_caben_en_un_dia() {
+        final var localDateTime2 = LocalDateTime.of(2026, 11, 16, 13, 0);
+        final var duration2 = Duration.ofHours(24);
         assertThrows(IllegalArgumentException.class,
-                () -> SesionDePruebaMismoDia.inicioSinCruzarMedianoche(LocalDateTime.of(2026, 11, 16, 13, 0), Duration.ofHours(24)));
+                () -> SesionDePruebaMismoDia.inicioSinCruzarMedianoche(localDateTime2, duration2));
+        final var localDateTime = LocalDateTime.of(2026, 11, 16, 13, 0);
+        final var duration = Duration.ofHours(-1);
         assertThrows(IllegalArgumentException.class,
-                () -> SesionDePruebaMismoDia.inicioSinCruzarMedianoche(LocalDateTime.of(2026, 11, 16, 13, 0), Duration.ofHours(-1)));
+                () -> SesionDePruebaMismoDia.inicioSinCruzarMedianoche(localDateTime, duration));
     }
 }

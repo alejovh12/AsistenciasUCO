@@ -80,9 +80,12 @@ class RealtimeAudienciaPolicyAmbitoTest {
     @Test
     void sin_ninguna_audiencia_el_gateway_responde_403() {
         final ReactorRealtimeAdapter adapter = new ReactorRealtimeAdapter(new SimpleMeterRegistry());
-        assertThrows(ForbiddenException.class, () -> gateway(adapter).subscribe(SIN_AMBITO, GRUPO));
-        assertThrows(NullPointerException.class, () -> gateway(adapter).subscribe(null, GRUPO));
-        assertThrows(NullPointerException.class, () -> gateway(adapter).subscribe(DOCENTE, null));
+        final var gateway4 = gateway(adapter);
+        assertThrows(ForbiddenException.class, () -> gateway4.subscribe(SIN_AMBITO, GRUPO));
+        final var gateway3 = gateway(adapter);
+        assertThrows(NullPointerException.class, () -> gateway3.subscribe(null, GRUPO));
+        final var gateway2 = gateway(adapter);
+        assertThrows(NullPointerException.class, () -> gateway2.subscribe(DOCENTE, null));
     }
 
     @Test

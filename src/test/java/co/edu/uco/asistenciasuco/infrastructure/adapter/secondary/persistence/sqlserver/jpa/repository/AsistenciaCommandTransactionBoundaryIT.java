@@ -29,8 +29,8 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * LB-002.2D (CMD-PAR-010): frontera transaccional REAL del command JPA candidato bajo pool de UNA sola
@@ -105,7 +105,7 @@ class AsistenciaCommandTransactionBoundaryIT {
         assertConnectionCleanAfterCall("tras rechazo JPA");
         assertEquals(0, fixture.countDetalle(sesion));
         assertEquals(0, independentDetalleCount(sesion));
-        assertFalse(failure == null);
+        assertNotNull(failure);
     }
 
     @Test
@@ -143,7 +143,7 @@ class AsistenciaCommandTransactionBoundaryIT {
 
     /** Con pool=1: la unica conexion esta libre, en autocommit, sin transaccion abierta y sin fuga. */
     private void assertConnectionCleanAfterCall(final String momento) {
-        final Boolean autocommit = jdbcTemplate.execute((Connection c) -> c.getAutoCommit());
+        final Boolean autocommit = jdbcTemplate.execute(Connection::getAutoCommit);
         final Integer tranCount = jdbcTemplate.queryForObject("SELECT @@TRANCOUNT", Integer.class);
         assertEquals(Boolean.TRUE, autocommit, "autocommit debe ser true " + momento);
         assertEquals(0, tranCount, "@@TRANCOUNT debe ser 0 " + momento);

@@ -25,12 +25,12 @@ class TipoIdentificacionRepositoryMockAdapterTest {
         assertEquals("TI", resultado.get(2).getTipoIdentificacion());
         assertNotNull(resultado.get(0).getId());
         assertEquals(UUID.fromString("13641bab-e3cd-485c-b275-47e7b731e18c"), resultado.get(0).getId());
-        assertThrows(UnsupportedOperationException.class, () -> resultado.add(
-                new TipoIdentificacionRepositoryProjection(
+        final var tipoIdentificacionRepositoryProjection = new TipoIdentificacionRepositoryProjection(
                         UUID.fromString("93641bab-e3cd-485c-b275-47e7b731e18c"),
                         "XX",
                         "Temporal"
-                )
-        ));
+                );
+        assertThrows(UnsupportedOperationException.class, () -> resultado.add(
+                tipoIdentificacionRepositoryProjection));
     }
 }

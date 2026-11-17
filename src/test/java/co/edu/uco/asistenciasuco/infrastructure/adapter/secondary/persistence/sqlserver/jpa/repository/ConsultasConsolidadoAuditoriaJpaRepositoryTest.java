@@ -135,8 +135,9 @@ class ConsultasConsolidadoAuditoriaJpaRepositoryTest {
     void T_172_ERR_01_sec_001_es_403() {
         when(query.getResultList()).thenThrow(new PersistenceException("DBCODE=SEC_001|perfil requerido"));
 
+        final var filtroAuditoria = new FiltroAuditoria(DESDE, HASTA, null, null, null, null, null, true, null, false);
         assertThrows(ForbiddenException.class, () -> repository.consultarAuditoria(EJECUTOR,
-                new FiltroAuditoria(DESDE, HASTA, null, null, null, null, null, true, null, false), 1, 10));
+                filtroAuditoria, 1, 10));
     }
 
     private static List<Object> filas(final Object[]... filas) {

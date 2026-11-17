@@ -45,7 +45,7 @@ class OperacionAutenticadaRateLimitFilterTest {
         SecurityContextHolder.clearContext();
     }
 
-    private OperacionAutenticadaRateLimitFilter filtro(final int subidas, final int qrIp, final int qrEstudiante) {
+    private OperacionAutenticadaRateLimitFilter filtro(final int subidas) {
         return new OperacionAutenticadaRateLimitFilter(
                 new SlidingWindowRateLimiter(Duration.ofSeconds(60), 100, Clock.fixed(Instant.parse("2026-11-07T10:00:00Z"), ZoneOffset.UTC)),
                 new NetworkClientIpResolver(Optional::empty), writer, () -> subidas);
@@ -67,7 +67,7 @@ class OperacionAutenticadaRateLimitFilterTest {
 
     @Test
     void subidas_por_usuario_n_mas_uno_responde_429() throws Exception {
-        final OperacionAutenticadaRateLimitFilter f = filtro(2, 50, 50);
+        final OperacionAutenticadaRateLimitFilter f = filtro(2);
         for (int i = 0; i < 2; i++) {
             assertEquals(true, pasa(f, peticion(OperacionAutenticadaRateLimitFilter.RUTA_SUBIR_ARCHIVO, "POST", "10.0.0." + i, "est-1")));
         }
@@ -85,7 +85,7 @@ class OperacionAutenticadaRateLimitFilterTest {
     @Test
     void subidas_seguidas_de_varios_soportes_hasta_el_limite_pasan_la_siguiente_responde_429_y_otro_estudiante_no_se_afecta() throws Exception {
         final int limite = 3;
-        final OperacionAutenticadaRateLimitFilter f = filtro(limite, 50, 50);
+        final OperacionAutenticadaRateLimitFilter f = filtro(limite);
         for (int i = 0; i < limite; i++) {
             assertEquals(true, pasa(f, peticion(OperacionAutenticadaRateLimitFilter.RUTA_SUBIR_ARCHIVO, "POST", "10.0.1." + i, "est-1")),
                     "La subida " + (i + 1) + " de " + limite + " debe pasar");
@@ -105,7 +105,7 @@ class OperacionAutenticadaRateLimitFilterTest {
 
     @Test
     void subidas_por_ip_con_usuarios_distintos_responde_429() throws Exception {
-        final OperacionAutenticadaRateLimitFilter f = filtro(2, 50, 50);
+        final OperacionAutenticadaRateLimitFilter f = filtro(2);
         assertEquals(true, pasa(f, peticion(OperacionAutenticadaRateLimitFilter.RUTA_SUBIR_ARCHIVO, "POST", "10.0.0.1", "a")));
         assertEquals(true, pasa(f, peticion(OperacionAutenticadaRateLimitFilter.RUTA_SUBIR_ARCHIVO, "POST", "10.0.0.1", "b")));
         assertEquals(false, pasa(f, peticion(OperacionAutenticadaRateLimitFilter.RUTA_SUBIR_ARCHIVO, "POST", "10.0.0.1", "c")));
@@ -115,7 +115,7 @@ class OperacionAutenticadaRateLimitFilterTest {
     void B2_la_asistencia_por_qr_ya_no_se_limita_en_este_filtro() throws Exception {
         // CULM-001 B.2 ([SUPUESTO-B-12]): el limite por IP cuenta solo rechazos (AsistenciaQrRateLimitFilter) y los limites
         // por estudiante y token viven en el caso de uso; este filtro deja pasar todos los intentos de la ruta.
-        final OperacionAutenticadaRateLimitFilter f = filtro(1, 1, 1);
+        final OperacionAutenticadaRateLimitFilter f = filtro(1);
         for (int i = 0; i < 5; i++) {
             assertEquals(true, pasa(f, peticion("/api/v1/estudiante/asistencia-qr", "POST", "10.0.0.2", "a")));
         }
@@ -125,7 +125,7 @@ class OperacionAutenticadaRateLimitFilterTest {
 
     @Test
     void otras_rutas_y_otros_metodos_no_se_limitan_y_un_limite_no_positivo_vale_uno() throws Exception {
-        final OperacionAutenticadaRateLimitFilter f = filtro(0, 0, 0);
+        final OperacionAutenticadaRateLimitFilter f = filtro(0);
         for (int i = 0; i < 5; i++) {
             assertEquals(true, pasa(f, peticion("/api/v1/grupos", "POST", "10.0.0.1", "a")));
             assertEquals(true, pasa(f, peticion(OperacionAutenticadaRateLimitFilter.RUTA_SUBIR_ARCHIVO, "GET", "10.0.0.1", "a")));

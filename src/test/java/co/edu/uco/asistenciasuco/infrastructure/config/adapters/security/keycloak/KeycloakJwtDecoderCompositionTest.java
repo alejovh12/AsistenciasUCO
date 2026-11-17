@@ -98,14 +98,16 @@ class KeycloakJwtDecoderCompositionTest {
     void rechaza_token_de_otro_emisor() throws Exception {
         final String token = sign(validClaims().issuer("https://evil.example.com/realms/otro").build());
 
-        assertThrows(BadJwtException.class, () -> buildDecoder().decode(token));
+        final var buildDecoder2 = buildDecoder();
+        assertThrows(BadJwtException.class, () -> buildDecoder2.decode(token));
     }
 
     @Test
     void rechaza_token_sin_la_audiencia_de_la_api() throws Exception {
         final String token = sign(validClaims().audience("account").build());
 
-        assertThrows(BadJwtException.class, () -> buildDecoder().decode(token));
+        final var buildDecoder2 = buildDecoder();
+        assertThrows(BadJwtException.class, () -> buildDecoder2.decode(token));
     }
 
     @Test
@@ -126,7 +128,8 @@ class KeycloakJwtDecoderCompositionTest {
                 .expirationTime(Date.from(now.minusSeconds(600)))
                 .build());
 
-        assertThrows(BadJwtException.class, () -> buildDecoder().decode(token));
+        final var buildDecoder2 = buildDecoder();
+        assertThrows(BadJwtException.class, () -> buildDecoder2.decode(token));
     }
 
     @Test
@@ -138,6 +141,7 @@ class KeycloakJwtDecoderCompositionTest {
         forged.sign(new RSASSASigner((RSAPrivateKey) attacker.getPrivate()));
         final String token = forged.serialize();
 
-        assertThrows(BadJwtException.class, () -> buildDecoder().decode(token));
+        final var buildDecoder2 = buildDecoder();
+        assertThrows(BadJwtException.class, () -> buildDecoder2.decode(token));
     }
 }

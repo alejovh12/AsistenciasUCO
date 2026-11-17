@@ -1,6 +1,5 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository.*;
 
 
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.DatabaseErrorCode;
@@ -28,6 +27,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doThrow;
 
 /**
  * LB-008 JPA-03 — patron del command {@code usp_crear_coordinador} sobre {@code EntityManager + createNativeQuery}.
@@ -159,12 +159,12 @@ class CoordinadorJpaCommandPatternTest {
 
     @Test
     void COO_PAT_010_perfil_sin_permiso_del_sp_se_traduce_a_403_y_fallo_tecnico_a_database_operation_error() {
-        org.mockito.Mockito.doThrow(new PersistenceException("x", new RuntimeException("DBCODE=SEC_001|perfil")))
+        doThrow(new PersistenceException("x", new RuntimeException("DBCODE=SEC_001|perfil")))
                 .when(query).getResultList();
         assertThrows(co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException.class,
                 () -> command.consultarCoordinadoresFacultad(EJECUTOR, null, null, null, 1, 10));
 
-        org.mockito.Mockito.doThrow(new PersistenceException("deadlock")).when(query).getResultList();
+        doThrow(new PersistenceException("deadlock")).when(query).getResultList();
         assertThrows(DatabaseOperationException.class,
                 () -> command.consultarCoordinadoresFacultad(EJECUTOR, null, null, null, 1, 10));
     }
@@ -233,9 +233,10 @@ class CoordinadorJpaCommandPatternTest {
         when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{
                 CORRELATION, "ok", "", true, "no-es-un-uuid"}));
 
+        final var ninguna2 = co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CorreccionDocumentoDTO.ninguna();
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
                 () -> command.actualizarCoordinador(COORDINADOR, "ANA", null, "PEREZ", null, "ana@example.test", FACULTAD, EJECUTOR,
-                        co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CorreccionDocumentoDTO.ninguna()));
+                        ninguna2));
 
         assertEquals(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT.code(), exception.getCode());
     }

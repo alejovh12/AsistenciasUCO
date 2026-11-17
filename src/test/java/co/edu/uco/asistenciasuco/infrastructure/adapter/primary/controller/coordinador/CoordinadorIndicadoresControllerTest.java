@@ -40,6 +40,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.times;
 
 class CoordinadorIndicadoresControllerTest {
 
@@ -147,7 +148,7 @@ class CoordinadorIndicadoresControllerTest {
         mvc.perform(get("/api/v1/coordinador/estudiantes/{id}/ficha", ESTUDIANTE).param("programaId", PROGRAMA.toString())).andExpect(status().isForbidden());
 
         final var f = ArgumentCaptor.forClass(ConsultarFichaEstudianteDTO.class);
-        verify(ficha, org.mockito.Mockito.times(2)).execute(f.capture());
+        verify(ficha, times(2)).execute(f.capture());
         assertNull(f.getAllValues().get(0).idPrograma());
         assertEquals(PROGRAMA, f.getAllValues().get(1).idPrograma());
     }

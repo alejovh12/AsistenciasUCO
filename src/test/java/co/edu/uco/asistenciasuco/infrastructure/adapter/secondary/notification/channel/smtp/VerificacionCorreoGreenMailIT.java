@@ -49,7 +49,6 @@ import java.util.regex.Pattern;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -348,7 +347,7 @@ class VerificacionCorreoGreenMailIT {
 
     @Test
     @DisplayName("IT-V06: un correo ya verificado no recibe enlace (fallo permanente) aunque require-confirmed-email este activo")
-    void ITV06_un_correo_ya_verificado_no_recibe_enlace() throws Exception {
+    void ITV06_un_correo_ya_verificado_no_recibe_enlace() {
         final UUID usuario = crearUsuario("ana.ident001e@uco.edu.co", true);
 
         avisarVerificacion(usuario);
@@ -360,7 +359,7 @@ class VerificacionCorreoGreenMailIT {
 
     @Test
     @DisplayName("IT-V07: un usuario sin confirmar recibe el enlace aunque require-confirmed-email este activo")
-    void ITV07_el_aviso_de_verificacion_ignora_require_confirmed_email() throws Exception {
+    void ITV07_el_aviso_de_verificacion_ignora_require_confirmed_email() {
         final UUID usuario = crearUsuario("ana.ident001f@uco.edu.co", false);
 
         avisarVerificacion(usuario);

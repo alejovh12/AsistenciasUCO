@@ -10,7 +10,6 @@ import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -19,6 +18,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -42,12 +42,12 @@ class RotacionSecretoInvalidacionCacheTest {
 
     @BeforeEach
     void setUp() {
-        secretClient = Mockito.mock(SecretClient.class);
+        secretClient = mock(SecretClient.class);
         // TTL largo: si la segunda lectura trae la version nueva, es por la invalidacion y no por expiracion.
         baul = new AzureKeyVaultAdapter(secretClient,
                 Caffeine.newBuilder().maximumSize(50).expireAfterWrite(Duration.ofHours(1)).build());
         final CompositeCatalogInvalidationAdapter invalidacion = new CompositeCatalogInvalidationAdapter(
-                Mockito.mock(ParameterCatalogPort.class), Mockito.mock(MessageCatalogPort.class), baul);
+                mock(ParameterCatalogPort.class), mock(MessageCatalogPort.class), baul);
         procesarEvento = new ProcesarEventoAzureUseCaseImpl(invalidacion, eventosRealtime::add);
     }
 

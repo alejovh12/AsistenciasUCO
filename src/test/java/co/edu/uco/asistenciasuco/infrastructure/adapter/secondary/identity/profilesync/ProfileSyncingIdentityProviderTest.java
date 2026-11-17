@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -69,7 +70,8 @@ class ProfileSyncingIdentityProviderTest {
     void falla_del_proveedor_al_crear_no_sincroniza_ningun_perfil() {
         when(delegate.crearCuenta(any())).thenThrow(new IdentityProviderException("kc caido"));
 
-        assertThrows(IdentityProviderException.class, () -> provider.crearCuenta(dto(InstitutionalRole.DOCENTE)));
+        final var dto2 = dto(InstitutionalRole.DOCENTE);
+        assertThrows(IdentityProviderException.class, () -> provider.crearCuenta(dto2));
         verify(profiles, never()).sincronizar(anyString(), any());
     }
 
@@ -133,7 +135,7 @@ class ProfileSyncingIdentityProviderTest {
         when(profiles.sincronizar(CORREO, InstitutionalRole.DOCENTE)).thenReturn(new Resultado(Estado.RECHAZADO, "x"));
         doThrow(new IllegalStateException("metricas")).when(desfases).registrar(any(), anyString(), anyString());
 
-        provider.crearCuenta(dto(InstitutionalRole.DOCENTE));
+        assertDoesNotThrow(() -> provider.crearCuenta(dto(InstitutionalRole.DOCENTE)));
     }
 
     @Test

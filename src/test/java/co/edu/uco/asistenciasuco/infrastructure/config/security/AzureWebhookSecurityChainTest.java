@@ -28,7 +28,6 @@ import java.util.Map;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -135,9 +134,9 @@ class AzureWebhookSecurityChainTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.datos.processed").value(1));
         verify(procesarEventoAzureInputPort).procesarEvento(
-                eq("Microsoft.AppConfiguration.KeyValueModified"),
-                eq("asistencias:max_inasistencias"),
-                eq(Map.of("key", "asistencias:max_inasistencias")));
+                "Microsoft.AppConfiguration.KeyValueModified",
+                "asistencias:max_inasistencias",
+                Map.of("key", "asistencias:max_inasistencias"));
     }
 
     @Test

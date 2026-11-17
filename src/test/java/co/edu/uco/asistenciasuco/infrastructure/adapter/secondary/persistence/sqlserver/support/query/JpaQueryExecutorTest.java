@@ -27,9 +27,10 @@ class JpaQueryExecutorTest {
     void persistence_exception_se_traduce_preservando_la_causa() {
         final PersistenceException causa = new PersistenceException("fallo jpa");
 
+        final var falla2 = falla(causa);
         final DatabaseOperationException exception = assertThrows(
                 DatabaseOperationException.class,
-                () -> JpaQueryExecutor.execute(OPERATION, MESSAGE, falla(causa))
+                () -> JpaQueryExecutor.execute(OPERATION, MESSAGE, falla2)
         );
 
         assertSame(causa, exception.getCause());
@@ -40,9 +41,10 @@ class JpaQueryExecutorTest {
     void illegal_state_exception_se_traduce_a_database_operation_exception() {
         final IllegalStateException causa = new IllegalStateException("em cerrado");
 
+        final var falla2 = falla(causa);
         final DatabaseOperationException exception = assertThrows(
                 DatabaseOperationException.class,
-                () -> JpaQueryExecutor.execute(OPERATION, MESSAGE, falla(causa))
+                () -> JpaQueryExecutor.execute(OPERATION, MESSAGE, falla2)
         );
 
         assertSame(causa, exception.getCause());
@@ -52,9 +54,10 @@ class JpaQueryExecutorTest {
     void illegal_argument_exception_se_traduce_a_database_operation_exception() {
         final IllegalArgumentException causa = new IllegalArgumentException("hql invalido");
 
+        final var falla2 = falla(causa);
         final DatabaseOperationException exception = assertThrows(
                 DatabaseOperationException.class,
-                () -> JpaQueryExecutor.execute(OPERATION, MESSAGE, falla(causa))
+                () -> JpaQueryExecutor.execute(OPERATION, MESSAGE, falla2)
         );
 
         assertSame(causa, exception.getCause());
@@ -64,9 +67,10 @@ class JpaQueryExecutorTest {
     void arithmetic_exception_se_traduce_a_database_operation_exception() {
         final ArithmeticException causa = new ArithmeticException("conteo fuera de rango");
 
+        final var falla2 = falla(causa);
         final DatabaseOperationException exception = assertThrows(
                 DatabaseOperationException.class,
-                () -> JpaQueryExecutor.execute(OPERATION, MESSAGE, falla(causa))
+                () -> JpaQueryExecutor.execute(OPERATION, MESSAGE, falla2)
         );
 
         assertSame(causa, exception.getCause());
@@ -76,9 +80,10 @@ class JpaQueryExecutorTest {
     void excepcion_funcional_no_se_convierte_en_error_tecnico() {
         final UnsupportedOperationException funcional = new UnsupportedOperationException("regla de dominio");
 
+        final var falla2 = falla(funcional);
         final UnsupportedOperationException exception = assertThrows(
                 UnsupportedOperationException.class,
-                () -> JpaQueryExecutor.execute(OPERATION, MESSAGE, falla(funcional))
+                () -> JpaQueryExecutor.execute(OPERATION, MESSAGE, falla2)
         );
 
         assertSame(funcional, exception);

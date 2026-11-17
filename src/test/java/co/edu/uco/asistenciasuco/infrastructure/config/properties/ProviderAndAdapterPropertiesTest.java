@@ -36,15 +36,17 @@ class ProviderAndAdapterPropertiesTest {
 
         assertEquals(java.time.Duration.ofSeconds(3), defaults.timeout());
         assertEquals(java.time.Duration.ofMinutes(5), defaults.cacheTtl());
+        final var ofSeconds3 = java.time.Duration.ofSeconds(-1);
         assertThrows(IllegalStateException.class,
-                () -> new MessageUcoLabProviderProperties(null, java.time.Duration.ofSeconds(-1), null, null, null));
+                () -> new MessageUcoLabProviderProperties(null, ofSeconds3, null, null, null));
         assertEquals(MessageUcoLabProviderProperties.Fallback.AZURE, defaults.fallback());
         assertEquals("MSG_", defaults.codePrefix());
         assertTrue(defaults.codeAliases().isEmpty());
         assertThrows(IllegalStateException.class,
                 () -> new MessageUcoLabProviderProperties(java.time.Duration.ZERO, null, null, null, null));
+        final var ofSeconds2 = java.time.Duration.ofSeconds(-1);
         assertThrows(IllegalStateException.class,
-                () -> new MessageUcoLabProviderProperties(java.time.Duration.ofSeconds(-1), null, null, null, null));
+                () -> new MessageUcoLabProviderProperties(ofSeconds2, null, null, null, null));
     }
 
     @Test

@@ -1,12 +1,10 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository.*;
 
 
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarEstudiantesRepositoryDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.*;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.mapper.CoreViewJpaProjectionMapper;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.projection.*;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.DatabaseOperationException;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.JpaProcedureExecutor;
 import jakarta.persistence.EntityManager;
@@ -42,20 +40,27 @@ class CoreViewJpaQueryErrorSemanticsTest {
         when(entityManager.createNativeQuery(anyString())).thenThrow(new PersistenceException("db"));
         co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext.set(UUID.randomUUID());
 
+        final var sesionJpaRepository = new SesionJpaRepository(entityManager, new JpaProcedureExecutor(entityManager));
+        final var uuid3 = UUID.randomUUID();
         assertThrows(DatabaseOperationException.class,
-                () -> new SesionJpaRepository(entityManager, new JpaProcedureExecutor(entityManager))
-                        .consultarSesionesPorGrupo(UUID.randomUUID()));
-        assertThrows(DatabaseOperationException.class,
-                () -> new GrupoJpaRepository(entityManager,
+                () -> sesionJpaRepository.consultarSesionesPorGrupo(uuid3));
+        final var grupoJpaRepository = new GrupoJpaRepository(entityManager,
                         mock(org.springframework.transaction.support.TransactionOperations.class),
-                        new JpaProcedureExecutor(entityManager)).consultarGrupos(UUID.randomUUID()));
+                        new JpaProcedureExecutor(entityManager));
+        final var uuid2 = UUID.randomUUID();
         assertThrows(DatabaseOperationException.class,
-                () -> new UsuarioJpaRepository(entityManager)
-                        .consultarUsuarioPorId(UUID.randomUUID()));
+                () -> grupoJpaRepository.consultarGrupos(uuid2));
+        final var usuarioJpaRepository = new UsuarioJpaRepository(entityManager);
+        final var uuid = UUID.randomUUID();
         assertThrows(DatabaseOperationException.class,
-                () -> new EstudianteJpaRepository(entityManager).consultarEstudiantes(emptyPage()));
+                () -> usuarioJpaRepository.consultarUsuarioPorId(uuid));
+        final var estudianteJpaRepository = new EstudianteJpaRepository(entityManager);
+        final var emptyPage2 = emptyPage();
         assertThrows(DatabaseOperationException.class,
-                () -> new TipoIdentificacionJpaRepository(entityManager).consultarTiposIdentificacion());
+                () -> estudianteJpaRepository.consultarEstudiantes(emptyPage2));
+        final var tipoIdentificacionJpaRepository = new TipoIdentificacionJpaRepository(entityManager);
+        assertThrows(DatabaseOperationException.class,
+                () -> tipoIdentificacionJpaRepository.consultarTiposIdentificacion());
         co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext.clear();
     }
 

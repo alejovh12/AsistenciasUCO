@@ -137,7 +137,7 @@ class RutasSolicitudesRetiradasWebMvcTest {
             }
             try {
                 return Optional.of(ClassUtils.forName(nombreClase, classLoader));
-            } catch (ClassNotFoundException | LinkageError error) {
+            } catch (ClassNotFoundException | LinkageError _) {
                 return Optional.empty();
             }
         }

@@ -70,11 +70,16 @@ class CargaFestivosSchedulerTest {
     @Test
     void valida_sus_argumentos() {
         final CargarFestivosAutomaticoInputPort puerto = () -> 0;
-        assertThrows(NullPointerException.class, () -> new CargaFestivosScheduler(null, Duration.ZERO, Duration.ofHours(1)));
-        assertThrows(NullPointerException.class, () -> new CargaFestivosScheduler(puerto, null, Duration.ofHours(1)));
+        final var duration5 = Duration.ofHours(1);
+        assertThrows(NullPointerException.class, () -> new CargaFestivosScheduler(null, Duration.ZERO, duration5));
+        final var duration4 = Duration.ofHours(1);
+        assertThrows(NullPointerException.class, () -> new CargaFestivosScheduler(puerto, null, duration4));
         assertThrows(NullPointerException.class, () -> new CargaFestivosScheduler(puerto, Duration.ZERO, null));
         assertThrows(IllegalArgumentException.class, () -> new CargaFestivosScheduler(puerto, Duration.ZERO, Duration.ZERO));
-        assertThrows(IllegalArgumentException.class, () -> new CargaFestivosScheduler(puerto, Duration.ZERO, Duration.ofSeconds(-1)));
-        assertThrows(IllegalArgumentException.class, () -> new CargaFestivosScheduler(puerto, Duration.ofSeconds(-1), Duration.ofHours(1)));
+        final var duration3 = Duration.ofSeconds(-1);
+        assertThrows(IllegalArgumentException.class, () -> new CargaFestivosScheduler(puerto, Duration.ZERO, duration3));
+        final var duration = Duration.ofSeconds(-1);
+        final var duration2 = Duration.ofHours(1);
+        assertThrows(IllegalArgumentException.class, () -> new CargaFestivosScheduler(puerto, duration, duration2));
     }
 }

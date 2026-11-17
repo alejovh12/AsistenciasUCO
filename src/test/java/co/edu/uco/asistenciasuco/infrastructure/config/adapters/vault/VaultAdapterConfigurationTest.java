@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class VaultAdapterConfigurationTest {
 
@@ -40,7 +41,7 @@ class VaultAdapterConfigurationTest {
     @Test
     void falla_fail_fast_si_endpoint_azure_keyvault_esta_vacio() {
         missingConfigRunner.run(context -> {
-            assertTrue(context.getStartupFailure() != null);
+            assertNotNull(context.getStartupFailure());
         });
     }
 }

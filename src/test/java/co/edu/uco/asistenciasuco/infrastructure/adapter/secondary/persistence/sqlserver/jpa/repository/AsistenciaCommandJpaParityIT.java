@@ -1,6 +1,5 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository.*;
 
 
 import co.edu.uco.asistenciasuco.application.exception.ApplicationException;
@@ -447,7 +446,7 @@ class AsistenciaCommandJpaParityIT {
             estudiantesJpa.add(UUID.randomUUID());
             estados.add("AN");
         }
-        final int jsonLength = estimarLongitudJson(estudiantesJdbc, estados);
+        final int jsonLength = estimarLongitudJson(estudiantesJdbc);
         assertTrue(jsonLength > 4000, "El payload debe superar 4000 caracteres (longitud=" + jsonLength + ").");
 
         final Outcome jdbc = run(jdbcBaseline(), sesionJdbc, estudiantesJdbc, estados, fixture.docenteUsuarioId());
@@ -459,7 +458,7 @@ class AsistenciaCommandJpaParityIT {
         assertEquals(0, jpa.detalleCount());
     }
 
-    private static int estimarLongitudJson(final List<UUID> estudiantes, final List<String> estados) {
+    private static int estimarLongitudJson(final List<UUID> estudiantes) {
         return estudiantes.size() * ("{\"idEstudiante\":\"" + UUID.randomUUID() + "\",\"estado\":\"AN\"},").length();
     }
 
