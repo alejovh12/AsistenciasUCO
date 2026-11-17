@@ -48,7 +48,8 @@ class SoportesReclamoJsonTest {
     void la_lista_leida_es_inmutable() {
         final List<SoporteReclamoProjection> soportes = SoportesReclamoJson.leer("[{\"idArchivo\":\"" + UNO + "\"}]");
 
-        assertThrows(UnsupportedOperationException.class, () -> soportes.add(new SoporteReclamoProjection(DOS, "x", "y", 1L)));
+        final var soporteReclamoProjection = new SoporteReclamoProjection(DOS, "x", "y", 1L);
+        assertThrows(UnsupportedOperationException.class, () -> soportes.add(soporteReclamoProjection));
     }
 
     @Test

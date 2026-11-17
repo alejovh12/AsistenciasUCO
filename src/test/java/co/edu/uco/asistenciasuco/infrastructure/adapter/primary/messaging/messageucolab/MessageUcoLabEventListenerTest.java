@@ -203,8 +203,9 @@ class MessageUcoLabEventListenerTest {
         assertEquals(Duration.ofSeconds(60), listener.esperaAntesDelIntento(3));
         assertEquals(Duration.ofMinutes(5), listener.esperaAntesDelIntento(10));
         assertEquals(Duration.ofMinutes(5), listener.esperaAntesDelIntento(500));
+        final var jsonMapper = JsonMapper.builder().build();
         assertThrows(IllegalArgumentException.class, () -> new MessageUcoLabEventListener(client, puerto,
-                JsonMapper.builder().build(), TOPIC, "asistencias", false, Duration.ZERO));
+                jsonMapper, TOPIC, "asistencias", false, Duration.ZERO));
     }
 
     @Test

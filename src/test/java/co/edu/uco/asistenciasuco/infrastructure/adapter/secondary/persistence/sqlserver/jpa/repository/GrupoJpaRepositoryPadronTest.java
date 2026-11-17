@@ -92,8 +92,10 @@ class GrupoJpaRepositoryPadronTest {
 
     @Test
     void sin_grupo_o_ejecutor_no_llega_a_la_db() {
-        assertThrows(CrosscuttingException.class, () -> grupos().consultarPadronPagina(null, ACTOR, 1, 10, null));
-        assertThrows(CrosscuttingException.class, () -> grupos().consultarPadronPagina(GRUPO, null, 1, 10, null));
+        final var grupos3 = grupos();
+        assertThrows(CrosscuttingException.class, () -> grupos3.consultarPadronPagina(null, ACTOR, 1, 10, null));
+        final var grupos2 = grupos();
+        assertThrows(CrosscuttingException.class, () -> grupos2.consultarPadronPagina(GRUPO, null, 1, 10, null));
         verify(manager, never()).createNativeQuery(anyString());
     }
 
@@ -101,13 +103,15 @@ class GrupoJpaRepositoryPadronTest {
     void grupo_fuera_de_ambito_es_403() {
         when(query.getResultList()).thenThrow(new PersistenceException("x", new RuntimeException("DBCODE=SEC_002|ajeno")));
 
-        assertThrows(ForbiddenException.class, () -> grupos().consultarPadronPagina(GRUPO, ACTOR, 1, 10, "a"));
+        final var grupos2 = grupos();
+        assertThrows(ForbiddenException.class, () -> grupos2.consultarPadronPagina(GRUPO, ACTOR, 1, 10, "a"));
     }
 
     @Test
     void una_fila_con_otra_cantidad_de_columnas_falla() {
         when(query.getResultList()).thenReturn(Collections.<Object>singletonList(new Object[7]));
 
-        assertThrows(DatabaseOperationException.class, () -> grupos().consultarPadronPagina(GRUPO, ACTOR, 1, 10, null));
+        final var grupos2 = grupos();
+        assertThrows(DatabaseOperationException.class, () -> grupos2.consultarPadronPagina(GRUPO, ACTOR, 1, 10, null));
     }
 }

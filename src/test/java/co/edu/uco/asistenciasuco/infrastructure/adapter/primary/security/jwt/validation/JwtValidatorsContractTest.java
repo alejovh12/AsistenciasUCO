@@ -69,7 +69,8 @@ class JwtValidatorsContractTest {
                 List.copyOf(localhost.acceptedIssuers()));
         assertEquals(List.of("http://127.0.0.1:8081/realms/uco", "http://localhost:8081/realms/uco"),
                 List.copyOf(loopback.acceptedIssuers()));
-        assertThrows(UnsupportedOperationException.class, () -> localhost.acceptedIssuers().add("http://evil"));
+        final var acceptedIssuers2 = localhost.acceptedIssuers();
+        assertThrows(UnsupportedOperationException.class, () -> acceptedIssuers2.add("http://evil"));
     }
 
     @Test

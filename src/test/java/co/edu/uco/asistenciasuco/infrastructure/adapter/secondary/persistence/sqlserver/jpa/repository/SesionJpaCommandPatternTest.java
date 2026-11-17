@@ -132,8 +132,9 @@ class SesionJpaCommandPatternTest {
         final PersistenceException causa = new PersistenceException("sp inexistente");
         when(query.getResultList()).thenThrow(causa);
 
+        final var generarSesionesGrupoRepositoryDTO = new GenerarSesionesGrupoRepositoryDTO(GRUPO, EJECUTOR);
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
-                () -> command.generarSesionesGrupo(new GenerarSesionesGrupoRepositoryDTO(GRUPO, EJECUTOR)));
+                () -> command.generarSesionesGrupo(generarSesionesGrupoRepositoryDTO));
 
         assertEquals(DatabaseErrorCode.DATABASE_OPERATION_ERROR.code(), exception.getCode());
         assertTrue(exception.getCause() instanceof PersistenceException);
@@ -144,8 +145,9 @@ class SesionJpaCommandPatternTest {
         when(query.getResultList()).thenReturn(Collections.singletonList(
                 new Object[]{UUID.randomUUID(), "Operacion exitosa.", "", true}));
 
+        final var cerrarSesionRepositoryDTO = new CerrarSesionRepositoryDTO(SESION, DOCENTE, "obs", EJECUTOR);
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
-                () -> command.cerrarSesion(new CerrarSesionRepositoryDTO(SESION, DOCENTE, "obs", EJECUTOR)));
+                () -> command.cerrarSesion(cerrarSesionRepositoryDTO));
 
         assertEquals(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT.code(), exception.getCode());
     }

@@ -114,6 +114,7 @@ class ArchivoControllerTest {
     void ownership_denegado_propaga_resource_not_found_del_use_case() {
         when(descargarArchivoInputPort.execute(any())).thenThrow(new ResourceNotFoundException("El archivo solicitado no existe."));
 
-        assertThrows(ResourceNotFoundException.class, () -> controller.descargarArchivo(UUID.randomUUID().toString()));
+        final var uuid = UUID.randomUUID().toString();
+        assertThrows(ResourceNotFoundException.class, () -> controller.descargarArchivo(uuid));
     }
 }

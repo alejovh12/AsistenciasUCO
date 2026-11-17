@@ -70,7 +70,8 @@ class ProfileSyncingIdentityProviderTest {
     void falla_del_proveedor_al_crear_no_sincroniza_ningun_perfil() {
         when(delegate.crearCuenta(any())).thenThrow(new IdentityProviderException("kc caido"));
 
-        assertThrows(IdentityProviderException.class, () -> provider.crearCuenta(dto(InstitutionalRole.DOCENTE)));
+        final var dto2 = dto(InstitutionalRole.DOCENTE);
+        assertThrows(IdentityProviderException.class, () -> provider.crearCuenta(dto2));
         verify(profiles, never()).sincronizar(anyString(), any());
     }
 

@@ -86,8 +86,9 @@ class GrupoHttpMapperContractTest {
                 () -> GrupoHttpMapper.toApplicationDTO((CrearGrupoRequest) null, USUARIO_EJECUTOR));
         assertThrows(NullPointerException.class,
                 () -> GrupoHttpMapper.toApplicationDTO(GROUP, null, USUARIO_EJECUTOR));
+        final var actualizarGrupoRequest = new ActualizarGrupoRequest();
         assertThrows(NullPointerException.class,
-                () -> GrupoHttpMapper.toApplicationDTO(null, new ActualizarGrupoRequest(), USUARIO_EJECUTOR));
+                () -> GrupoHttpMapper.toApplicationDTO(null, actualizarGrupoRequest, USUARIO_EJECUTOR));
 
         final CrearGrupoRequest request = json.readValue("{}", CrearGrupoRequest.class);
         assertEquals("ERR_CAMPO_OBLIGATORIO",

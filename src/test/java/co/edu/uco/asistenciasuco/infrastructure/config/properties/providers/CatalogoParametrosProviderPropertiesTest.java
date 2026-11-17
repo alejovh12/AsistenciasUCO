@@ -68,8 +68,10 @@ class CatalogoParametrosProviderPropertiesTest {
     @Test
     void rechaza_timeout_no_positivo_y_ttl_negativo() {
         assertThrows(IllegalStateException.class, () -> con("http://h", TOKEN, SECRETO, Duration.ZERO, null, null));
-        assertThrows(IllegalStateException.class, () -> con("http://h", TOKEN, SECRETO, Duration.ofSeconds(-1), null, null));
-        assertThrows(IllegalStateException.class, () -> con("http://h", TOKEN, SECRETO, null, Duration.ofSeconds(-1), null));
+        final var duration2 = Duration.ofSeconds(-1);
+        assertThrows(IllegalStateException.class, () -> con("http://h", TOKEN, SECRETO, duration2, null, null));
+        final var duration = Duration.ofSeconds(-1);
+        assertThrows(IllegalStateException.class, () -> con("http://h", TOKEN, SECRETO, null, duration, null));
     }
 
     @Test

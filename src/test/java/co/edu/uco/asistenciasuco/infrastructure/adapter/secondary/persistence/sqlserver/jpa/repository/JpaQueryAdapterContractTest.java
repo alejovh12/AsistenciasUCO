@@ -258,14 +258,15 @@ class JpaQueryAdapterContractTest {
     void fallo_del_provider_en_consultas_academicas_no_devuelve_listas_vacias() {
         when(manager.createQuery(anyString(), any(Class.class))).thenThrow(new PersistenceException("db down"));
 
-        assertThrows(DatabaseOperationException.class, () -> new PeriodoAcademicoJpaRepository(manager)
-                .consultarPeriodosAcademicos());
-        assertThrows(DatabaseOperationException.class, () -> new FacultadJpaRepository(manager)
-                .consultarFacultadPorId(ID));
-        assertThrows(DatabaseOperationException.class, () -> new AsistenciaSesionEstudianteJpaRepository(manager)
-                .consultarAsistenciaSesiones(ID, OTHER));
-        assertThrows(DatabaseOperationException.class, () -> new AsignaturaJpaRepository(manager,
-                new JpaProcedureExecutor(manager)).consultarAsignaturasPorPlan(ID));
+        final var periodoAcademicoJpaRepository = new PeriodoAcademicoJpaRepository(manager);
+        assertThrows(DatabaseOperationException.class, () -> periodoAcademicoJpaRepository.consultarPeriodosAcademicos());
+        final var facultadJpaRepository = new FacultadJpaRepository(manager);
+        assertThrows(DatabaseOperationException.class, () -> facultadJpaRepository.consultarFacultadPorId(ID));
+        final var asistenciaSesionEstudianteJpaRepository = new AsistenciaSesionEstudianteJpaRepository(manager);
+        assertThrows(DatabaseOperationException.class, () -> asistenciaSesionEstudianteJpaRepository.consultarAsistenciaSesiones(ID, OTHER));
+        final var asignaturaJpaRepository = new AsignaturaJpaRepository(manager,
+                new JpaProcedureExecutor(manager));
+        assertThrows(DatabaseOperationException.class, () -> asignaturaJpaRepository.consultarAsignaturasPorPlan(ID));
     }
 
     @SuppressWarnings("unchecked")

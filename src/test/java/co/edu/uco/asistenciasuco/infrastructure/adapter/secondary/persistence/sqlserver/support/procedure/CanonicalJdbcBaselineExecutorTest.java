@@ -63,8 +63,9 @@ class CanonicalJdbcBaselineExecutorTest {
         when(jdbc.query(anyString(), any(MapSqlParameterSource.class), any(RowMapper.class)))
                 .thenReturn(List.of());
 
+        final var mapSqlParameterSource = new MapSqlParameterSource();
         assertThrows(DatabaseOperationException.class,
-                () -> executor.execute("operacion", "EXEC sp", new MapSqlParameterSource()));
+                () -> executor.execute("operacion", "EXEC sp", mapSqlParameterSource));
     }
 
     @Test
@@ -75,8 +76,9 @@ class CanonicalJdbcBaselineExecutorTest {
         when(jdbc.query(anyString(), any(MapSqlParameterSource.class), any(RowMapper.class)))
                 .thenReturn(List.of(mismatched));
 
+        final var mapSqlParameterSource = new MapSqlParameterSource();
         assertThrows(DatabaseOperationException.class,
-                () -> executor.execute("operacion", "EXEC sp", new MapSqlParameterSource()));
+                () -> executor.execute("operacion", "EXEC sp", mapSqlParameterSource));
     }
 
     @Test
@@ -88,8 +90,9 @@ class CanonicalJdbcBaselineExecutorTest {
         when(jdbc.query(anyString(), any(MapSqlParameterSource.class), any(RowMapper.class)))
                 .thenReturn(List.of(failed));
 
+        final var mapSqlParameterSource = new MapSqlParameterSource();
         assertThrows(DatabaseOperationException.class,
-                () -> executor.execute("operacion", "EXEC sp", new MapSqlParameterSource()));
+                () -> executor.execute("operacion", "EXEC sp", mapSqlParameterSource));
     }
 
     @Test
@@ -99,7 +102,8 @@ class CanonicalJdbcBaselineExecutorTest {
         when(jdbc.query(anyString(), any(MapSqlParameterSource.class), any(RowMapper.class)))
                 .thenThrow(new DataAccessResourceFailureException("sin conexion"));
 
+        final var mapSqlParameterSource = new MapSqlParameterSource();
         assertThrows(DatabaseOperationException.class,
-                () -> executor.execute("operacion", "EXEC sp", new MapSqlParameterSource()));
+                () -> executor.execute("operacion", "EXEC sp", mapSqlParameterSource));
     }
 }

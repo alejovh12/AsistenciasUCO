@@ -80,8 +80,9 @@ class DecanoJpaCommandPatternTest {
     void DEC_PAT_002_fallo_tecnico_se_traduce_a_database_operation_error() {
         when(query.getResultList()).thenThrow(new PersistenceException("deadlock"));
 
+        final var comando2 = comando();
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
-                () -> command.crearDecano(comando()));
+                () -> command.crearDecano(comando2));
 
         assertEquals(DatabaseErrorCode.DATABASE_OPERATION_ERROR.code(), exception.getCode());
         assertTrue(exception.getCause() instanceof PersistenceException);
@@ -91,8 +92,9 @@ class DecanoJpaCommandPatternTest {
     void DEC_PAT_003_resultado_sin_forma_canonica_se_rechaza_como_contrato() {
         when(query.getResultList()).thenReturn(Collections.emptyList());
 
+        final var comando2 = comando();
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
-                () -> command.crearDecano(comando()));
+                () -> command.crearDecano(comando2));
 
         assertEquals(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT.code(), exception.getCode());
     }

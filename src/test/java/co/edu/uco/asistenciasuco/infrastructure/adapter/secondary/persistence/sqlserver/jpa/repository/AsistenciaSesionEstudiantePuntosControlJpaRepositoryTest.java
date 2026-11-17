@@ -110,6 +110,7 @@ class AsistenciaSesionEstudiantePuntosControlJpaRepositoryTest {
     void un_fallo_de_persistencia_se_traduce_a_error_tecnico() {
         when(entityManager.createQuery(any(String.class), any(Class.class))).thenThrow(new PersistenceException("boom"));
 
-        assertThrows(DatabaseOperationException.class, () -> repository.consultarTomasSesiones(ESTUDIANTE, ASIGNATURA, List.of(SESION)));
+        final var list = List.of(SESION);
+        assertThrows(DatabaseOperationException.class, () -> repository.consultarTomasSesiones(ESTUDIANTE, ASIGNATURA, list));
     }
 }

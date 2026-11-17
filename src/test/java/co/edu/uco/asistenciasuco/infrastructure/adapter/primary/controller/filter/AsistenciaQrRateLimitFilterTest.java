@@ -105,9 +105,12 @@ class AsistenciaQrRateLimitFilterTest {
         }
         assertEquals(10, llamadas.get());
         assertEquals(1, ejecutar(201));
-        assertThrows(NullPointerException.class, () -> new AsistenciaQrRateLimitFilter(null, () -> 1, new NetworkClientIpResolver(Optional::empty), writer));
-        assertThrows(NullPointerException.class, () -> new AsistenciaQrRateLimitFilter(limiter, null, new NetworkClientIpResolver(Optional::empty), writer));
+        final var networkClientIpResolver3 = new NetworkClientIpResolver(Optional::empty);
+        assertThrows(NullPointerException.class, () -> new AsistenciaQrRateLimitFilter(null, () -> 1, networkClientIpResolver3, writer));
+        final var networkClientIpResolver2 = new NetworkClientIpResolver(Optional::empty);
+        assertThrows(NullPointerException.class, () -> new AsistenciaQrRateLimitFilter(limiter, null, networkClientIpResolver2, writer));
         assertThrows(NullPointerException.class, () -> new AsistenciaQrRateLimitFilter(limiter, () -> 1, null, writer));
-        assertThrows(NullPointerException.class, () -> new AsistenciaQrRateLimitFilter(limiter, () -> 1, new NetworkClientIpResolver(Optional::empty), null));
+        final var networkClientIpResolver = new NetworkClientIpResolver(Optional::empty);
+        assertThrows(NullPointerException.class, () -> new AsistenciaQrRateLimitFilter(limiter, () -> 1, networkClientIpResolver, null));
     }
 }

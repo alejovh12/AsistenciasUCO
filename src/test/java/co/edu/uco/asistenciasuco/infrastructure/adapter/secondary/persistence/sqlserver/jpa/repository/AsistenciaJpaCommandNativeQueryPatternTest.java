@@ -147,9 +147,10 @@ class AsistenciaJpaCommandNativeQueryPatternTest {
     void CMD_PAT_006_fila_que_no_cumple_el_contrato_canonico_se_traduce_a_contrato_db_no_a_fallo_tecnico() {
         when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{CORRELATION, "x"}));
 
+        final var resolverSolicitudRevisionAsistenciaRepositoryDTO = new ResolverSolicitudRevisionAsistenciaRepositoryDTO(
+                        SOLICITUD, DOCENTE, "APROBADA", "Respuesta", EJECUTOR);
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
-                () -> command.resolverSolicitudRevisionAsistencia(new ResolverSolicitudRevisionAsistenciaRepositoryDTO(
-                        SOLICITUD, DOCENTE, "APROBADA", "Respuesta", EJECUTOR)));
+                () -> command.resolverSolicitudRevisionAsistencia(resolverSolicitudRevisionAsistenciaRepositoryDTO));
 
         assertEquals(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT.code(), exception.getCode());
     }
@@ -158,9 +159,10 @@ class AsistenciaJpaCommandNativeQueryPatternTest {
     void CMD_PAT_007_correlacion_devuelta_distinta_es_contrato_db_y_no_se_ignora() {
         when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{UUID.randomUUID(), "m", "", true, null, 0}));
 
+        final var solicitarRevisionAsistenciaRepositoryDTO = new SolicitarRevisionAsistenciaRepositoryDTO(
+                        ESTUDIANTE, SESION, "NOTA", "J", List.of(), EJECUTOR);
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
-                () -> command.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
-                        ESTUDIANTE, SESION, "NOTA", "J", List.of(), EJECUTOR)));
+                () -> command.solicitarRevisionAsistencia(solicitarRevisionAsistenciaRepositoryDTO));
 
         assertEquals(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT.code(), exception.getCode());
     }
@@ -169,9 +171,10 @@ class AsistenciaJpaCommandNativeQueryPatternTest {
     void CMD_PAT_008_fallo_de_persistencia_se_traduce_a_error_tecnico_con_causa_y_no_se_traga() {
         when(query.getResultList()).thenThrow(new PersistenceException("sin conexion"));
 
+        final var solicitarRevisionAsistenciaRepositoryDTO = new SolicitarRevisionAsistenciaRepositoryDTO(
+                        ESTUDIANTE, SESION, "NOTA", "J", List.of(), EJECUTOR);
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
-                () -> command.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
-                        ESTUDIANTE, SESION, "NOTA", "J", List.of(), EJECUTOR)));
+                () -> command.solicitarRevisionAsistencia(solicitarRevisionAsistenciaRepositoryDTO));
 
         assertEquals(DatabaseErrorCode.DATABASE_OPERATION_ERROR.code(), exception.getCode());
         assertTrue(exception.getCause() instanceof PersistenceException);
@@ -202,9 +205,10 @@ class AsistenciaJpaCommandNativeQueryPatternTest {
     void CMD_PAT_011_la_fila_de_cuatro_columnas_ya_no_cumple_el_contrato_de_v3() {
         when(query.getResultList()).thenReturn(Collections.singletonList(exito()));
 
+        final var solicitarRevisionAsistenciaRepositoryDTO = new SolicitarRevisionAsistenciaRepositoryDTO(
+                        ESTUDIANTE, SESION, "CAL", "J", List.of(), EJECUTOR);
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
-                () -> command.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
-                        ESTUDIANTE, SESION, "CAL", "J", List.of(), EJECUTOR)));
+                () -> command.solicitarRevisionAsistencia(solicitarRevisionAsistenciaRepositoryDTO));
 
         assertEquals(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT.code(), exception.getCode());
     }
@@ -230,9 +234,10 @@ class AsistenciaJpaCommandNativeQueryPatternTest {
     void CMD_PAT_013_con_toma_la_fila_de_seis_columnas_de_v3_no_cumple_el_contrato_de_v4() {
         when(query.getResultList()).thenReturn(Collections.singletonList(exitoV3()));
 
+        final var solicitarRevisionAsistenciaRepositoryDTO = new SolicitarRevisionAsistenciaRepositoryDTO(
+                        ESTUDIANTE, SESION, UUID.randomUUID(), "CAL", "J", List.of(), EJECUTOR);
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
-                () -> command.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
-                        ESTUDIANTE, SESION, UUID.randomUUID(), "CAL", "J", List.of(), EJECUTOR)));
+                () -> command.solicitarRevisionAsistencia(solicitarRevisionAsistenciaRepositoryDTO));
 
         assertEquals(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT.code(), exception.getCode());
     }

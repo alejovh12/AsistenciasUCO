@@ -60,7 +60,8 @@ class DocenteProgramaJpaRepositoryTest {
 
     @Test
     void constructor_rechaza_dependencias_nulas() {
-        assertThrows(NullPointerException.class, () -> new DocenteProgramaJpaRepository(null, new JpaProcedureExecutor(entityManager)));
+        final var jpaProcedureExecutor = new JpaProcedureExecutor(entityManager);
+        assertThrows(NullPointerException.class, () -> new DocenteProgramaJpaRepository(null, jpaProcedureExecutor));
         assertThrows(NullPointerException.class, () -> new DocenteProgramaJpaRepository(entityManager, null));
     }
 
@@ -91,8 +92,9 @@ class DocenteProgramaJpaRepositoryTest {
     void DP_PAT_002_fallo_tecnico_se_traduce_a_database_operation_error() {
         when(query.getResultList()).thenThrow(new PersistenceException("deadlock"));
 
+        final var comando2 = comando();
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
-                () -> repository.vincular(comando()));
+                () -> repository.vincular(comando2));
 
         assertEquals(DatabaseErrorCode.DATABASE_OPERATION_ERROR.code(), exception.getCode());
         assertTrue(exception.getCause() instanceof PersistenceException);
@@ -102,8 +104,9 @@ class DocenteProgramaJpaRepositoryTest {
     void DP_PAT_003_resultado_sin_forma_canonica_se_rechaza() {
         when(query.getResultList()).thenReturn(Collections.emptyList());
 
+        final var comando2 = comando();
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
-                () -> repository.vincular(comando()));
+                () -> repository.vincular(comando2));
 
         assertEquals(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT.code(), exception.getCode());
     }
@@ -176,8 +179,9 @@ class DocenteProgramaJpaRepositoryTest {
     void DP_PAT_008_actualizar_fallo_tecnico_se_traduce_a_database_operation_error() {
         when(query.getResultList()).thenThrow(new PersistenceException("deadlock"));
 
+        final var actualizarDocenteProgramaCommand = new ActualizarDocenteProgramaCommand(UUID.randomUUID(), PROGRAMA, null, "N", null, null, null, EJECUTOR);
         assertThrows(DatabaseOperationException.class,
-                () -> repository.actualizar(new ActualizarDocenteProgramaCommand(UUID.randomUUID(), PROGRAMA, null, "N", null, null, null, EJECUTOR)));
+                () -> repository.actualizar(actualizarDocenteProgramaCommand));
     }
 
     @Test
@@ -199,8 +203,9 @@ class DocenteProgramaJpaRepositoryTest {
     void DP_PAT_010_cambiar_estado_fallo_tecnico_se_traduce_a_database_operation_error() {
         when(query.getResultList()).thenThrow(new PersistenceException("deadlock"));
 
+        final var cambiarEstadoDocenteProgramaCommand = new CambiarEstadoDocenteProgramaCommand(UUID.randomUUID(), PROGRAMA, true, EJECUTOR);
         assertThrows(DatabaseOperationException.class,
-                () -> repository.cambiarEstado(new CambiarEstadoDocenteProgramaCommand(UUID.randomUUID(), PROGRAMA, true, EJECUTOR)));
+                () -> repository.cambiarEstado(cambiarEstadoDocenteProgramaCommand));
     }
 
     private static VincularDocenteProgramaCommand comando() {

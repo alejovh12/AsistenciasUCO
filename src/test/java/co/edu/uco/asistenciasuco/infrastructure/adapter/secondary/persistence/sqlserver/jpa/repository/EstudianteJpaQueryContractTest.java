@@ -125,23 +125,28 @@ class EstudianteJpaQueryContractTest {
     void una_fila_con_otra_cantidad_de_columnas_falla_de_forma_visible() {
         when(query.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(new Object[11]));
 
+        final var dto2 = dto(0, 20);
         final DatabaseOperationException error = assertThrows(DatabaseOperationException.class,
-                () -> repository.consultarEstudiantes(dto(0, 20)));
+                () -> repository.consultarEstudiantes(dto2));
         assertInstanceOf(IllegalStateException.class, error.getCause());
     }
 
     @Test
     void entradas_invalidas_se_rechazan_sin_consultar() {
         assertThrows(CrosscuttingException.class, () -> repository.consultarEstudiantes(null));
+        final var consultarEstudiantesRepositoryDTO4 = new ConsultarEstudiantesRepositoryDTO(null, null, null, null, null, null, null, null, null, 0, 20, null);
         assertThrows(CrosscuttingException.class, () -> repository.consultarEstudiantes(
-                new ConsultarEstudiantesRepositoryDTO(null, null, null, null, null, null, null, null, null, 0, 20, null)));
+                consultarEstudiantesRepositoryDTO4));
+        final var consultarEstudiantesRepositoryDTO3 = new ConsultarEstudiantesRepositoryDTO(null, null, null, null, null, null, null, null, null, -1, 20, ACTOR);
         assertThrows(CrosscuttingException.class, () -> repository.consultarEstudiantes(
-                new ConsultarEstudiantesRepositoryDTO(null, null, null, null, null, null, null, null, null, -1, 20, ACTOR)));
+                consultarEstudiantesRepositoryDTO3));
+        final var consultarEstudiantesRepositoryDTO2 = new ConsultarEstudiantesRepositoryDTO(null, null, null, null, null, null, null, null, null, 0, 0, ACTOR);
         assertThrows(CrosscuttingException.class, () -> repository.consultarEstudiantes(
-                new ConsultarEstudiantesRepositoryDTO(null, null, null, null, null, null, null, null, null, 0, 0, ACTOR)));
+                consultarEstudiantesRepositoryDTO2));
+        final var consultarEstudiantesRepositoryDTO = new ConsultarEstudiantesRepositoryDTO(null, null, null, null, null, null, null, null, null,
+                        Integer.MAX_VALUE, 20, ACTOR);
         assertThrows(CrosscuttingException.class, () -> repository.consultarEstudiantes(
-                new ConsultarEstudiantesRepositoryDTO(null, null, null, null, null, null, null, null, null,
-                        Integer.MAX_VALUE, 20, ACTOR)));
+                consultarEstudiantesRepositoryDTO));
         assertThrows(CrosscuttingException.class, () -> repository.consultarEstudiantePorId(null, ACTOR));
         assertThrows(CrosscuttingException.class, () -> repository.consultarEstudiantePorId(ESTUDIANTE, null));
         verify(entityManager, never()).createNativeQuery(anyString());
@@ -192,7 +197,8 @@ class EstudianteJpaQueryContractTest {
     @Test
     void un_codigo_de_ambito_del_sp_se_traduce_a_403_y_un_fallo_tecnico_a_database_operation_exception() {
         when(query.getResultList()).thenThrow(new PersistenceException("DBCODE=SEC_002|fuera de ambito"));
-        assertThrows(ForbiddenException.class, () -> repository.consultarEstudiantes(dto(0, 20)));
+        final var dto2 = dto(0, 20);
+        assertThrows(ForbiddenException.class, () -> repository.consultarEstudiantes(dto2));
 
         final Query falla = mock(Query.class);
         when(entityManager.createNativeQuery(anyString())).thenReturn(falla);

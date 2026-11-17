@@ -233,9 +233,10 @@ class CoordinadorJpaCommandPatternTest {
         when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{
                 CORRELATION, "ok", "", true, "no-es-un-uuid"}));
 
+        final var ninguna2 = co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CorreccionDocumentoDTO.ninguna();
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
                 () -> command.actualizarCoordinador(COORDINADOR, "ANA", null, "PEREZ", null, "ana@example.test", FACULTAD, EJECUTOR,
-                        co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CorreccionDocumentoDTO.ninguna()));
+                        ninguna2));
 
         assertEquals(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT.code(), exception.getCode());
     }

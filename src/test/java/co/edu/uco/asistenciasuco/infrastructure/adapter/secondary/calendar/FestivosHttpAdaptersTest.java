@@ -138,16 +138,18 @@ class FestivosHttpAdaptersTest {
     @Test
     void una_interrupcion_restaura_la_bandera_del_hilo() throws Exception {
         when(http.send(any(HttpRequest.class), any())).thenThrow(new InterruptedException("stop"));
+        final var calendariosNacionalesFestivosAdapter = new CalendariosNacionalesFestivosAdapter(http, catalogo);
         assertThrows(CalendarioFestivosException.class,
-                () -> new CalendariosNacionalesFestivosAdapter(http, catalogo).obtenerFestivos(2026));
+                () -> calendariosNacionalesFestivosAdapter.obtenerFestivos(2026));
         assertTrue(Thread.interrupted());
     }
 
     @Test
     void una_url_invalida_es_un_fallo_del_proveedor() {
         when(catalogo.getParameter("FESTIVOS", "URL_CALENDARIOS_NACIONALES")).thenReturn(Optional.of("ht tp://mal {anio}"));
+        final var calendariosNacionalesFestivosAdapter = new CalendariosNacionalesFestivosAdapter(http, catalogo);
         assertThrows(CalendarioFestivosException.class,
-                () -> new CalendariosNacionalesFestivosAdapter(http, catalogo).obtenerFestivos(2026));
+                () -> calendariosNacionalesFestivosAdapter.obtenerFestivos(2026));
     }
 
     @Test
@@ -190,8 +192,9 @@ class FestivosHttpAdaptersTest {
         doReturn(Optional.of("clave-secreta")).when(vault).getSecret("otro-nombre");
         when(catalogo.getParameter("FESTIVOS", "NOMBRE_SECRETO_FERIADOS_IO")).thenReturn(Optional.of("otro-nombre"));
         when(respuesta.statusCode()).thenReturn(401);
+        final var feriadosIoFestivosAdapter = new FeriadosIoFestivosAdapter(http, catalogo, vault);
         final CalendarioFestivosException error = assertThrows(CalendarioFestivosException.class,
-                () -> new FeriadosIoFestivosAdapter(http, catalogo, vault).obtenerFestivos(2026));
+                () -> feriadosIoFestivosAdapter.obtenerFestivos(2026));
         assertFalse(error.getMessage().contains("clave-secreta"));
     }
 }

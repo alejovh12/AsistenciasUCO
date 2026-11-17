@@ -122,8 +122,9 @@ class ContactoDestinatarioJpaRepositoryTest {
         }
 
         when(entityManager.createStoredProcedureQuery(anyString())).thenThrow(new PersistenceException("DB down"));
+        final var list = List.of(UUID.randomUUID());
         assertThrows(DatabaseOperationException.class,
-                () -> repository.consultarContactos(List.of(UUID.randomUUID())));
+                () -> repository.consultarContactos(list));
 
         final ContactoDestinatario cd = new ContactoDestinatario(UUID.randomUUID(), "  a@uco.edu.co  ", false);
         assertEquals("a@uco.edu.co", cd.correo());

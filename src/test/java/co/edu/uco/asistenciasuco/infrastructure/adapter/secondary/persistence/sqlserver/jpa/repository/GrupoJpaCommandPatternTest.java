@@ -172,10 +172,11 @@ class GrupoJpaCommandPatternTest {
     void GRP_PAT_004_sp_ausente_o_fallo_tecnico_se_clasifica_como_database_operation_error() {
         when(query.getResultList()).thenThrow(new PersistenceException("Could not find stored procedure"));
 
-        final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
-                () -> command.registrarEstudianteEnGrupo(new RegistrarEstudianteRepositoryDTO(
+        final var registrarEstudianteRepositoryDTO = new RegistrarEstudianteRepositoryDTO(
                         TIPO_IDENTIFICACION, 123456, "PEREZ", "GOMEZ", "ANA", "MARIA",
-                        "ana@example.test", "Clave123!", GRUPO, EJECUTOR)));
+                        "ana@example.test", "Clave123!", GRUPO, EJECUTOR);
+        final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
+                () -> command.registrarEstudianteEnGrupo(registrarEstudianteRepositoryDTO));
 
         assertEquals(DatabaseErrorCode.DATABASE_OPERATION_ERROR.code(), exception.getCode());
         assertTrue(exception.getCause() instanceof PersistenceException);

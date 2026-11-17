@@ -32,7 +32,8 @@ class SecurityBaselinePepPropertiesTest {
         }
         for (final String url : List.of("http://pep.example.org", "http://10.0.0.5:18081",
                 "http://keycloak.localhost:18081", "ftp://127.0.0.1")) {
-            assertThrows(IllegalStateException.class, () -> enabled(url, Duration.ofSeconds(2)), url);
+            final var duration = Duration.ofSeconds(2);
+            assertThrows(IllegalStateException.class, () -> enabled(url, duration), url);
         }
     }
 
@@ -40,7 +41,8 @@ class SecurityBaselinePepPropertiesTest {
     void url_del_pep_es_un_origen_fijo_sin_credenciales_query_fragment_ni_path() {
         for (final String url : List.of("https://user:pass@pep.example.org", "https://pep.example.org?next=x",
                 "https://pep.example.org#x", "https://pep.example.org/otro-prefijo")) {
-            assertThrows(IllegalStateException.class, () -> enabled(url, Duration.ofSeconds(2)), url);
+            final var duration = Duration.ofSeconds(2);
+            assertThrows(IllegalStateException.class, () -> enabled(url, duration), url);
         }
         assertEquals(URI.create("https://pep.example.org/internal/v1/embedded-access-decisions"),
                 enabled("https://pep.example.org", Duration.ofSeconds(2)).embeddedDecisionEndpoint());
@@ -49,18 +51,22 @@ class SecurityBaselinePepPropertiesTest {
     @Test
     void timeouts_positivos_y_acotados() {
         assertThrows(IllegalStateException.class, () -> enabled("https://pep.example.org", Duration.ZERO));
-        assertThrows(IllegalStateException.class, () -> enabled("https://pep.example.org", Duration.ofSeconds(31)));
+        final var duration = Duration.ofSeconds(31);
+        assertThrows(IllegalStateException.class, () -> enabled("https://pep.example.org", duration));
         assertDoesNotThrow(() -> enabled("https://pep.example.org", Duration.ofSeconds(30)));
     }
 
     @Test
     void nombre_y_ambiente_deben_ser_identificadores_validos() {
+        final var uri3 = URI.create("https://pep.example.org");
         assertThrows(IllegalStateException.class, () -> new SecurityBaselinePepProperties(
-                URI.create("https://pep.example.org"), "nombre con espacios", "dev", CREDENTIAL, null, null));
+                uri3, "nombre con espacios", "dev", CREDENTIAL, null, null));
+        final var uri2 = URI.create("https://pep.example.org");
         assertThrows(IllegalStateException.class, () -> new SecurityBaselinePepProperties(
-                URI.create("https://pep.example.org"), "asistencias-uco", " ", CREDENTIAL, null, null));
+                uri2, "asistencias-uco", " ", CREDENTIAL, null, null));
+        final var uri = URI.create("https://pep.example.org");
         assertThrows(IllegalStateException.class, () -> new SecurityBaselinePepProperties(
-                URI.create("https://pep.example.org"), "asistencias-uco", "dev", " ", null, null));
+                uri, "asistencias-uco", "dev", " ", null, null));
     }
 
     @Test
@@ -70,8 +76,9 @@ class SecurityBaselinePepPropertiesTest {
                     URI.create("https://pep.example.org"), "asistencias-uco", environment, CREDENTIAL, null, null));
         }
         for (final String environment : new String[] {"local", "DEV", "staging"}) {
+            final var uri = URI.create("https://pep.example.org");
             assertThrows(IllegalStateException.class, () -> new SecurityBaselinePepProperties(
-                    URI.create("https://pep.example.org"), "asistencias-uco", environment, CREDENTIAL, null, null));
+                    uri, "asistencias-uco", environment, CREDENTIAL, null, null));
         }
     }
 
