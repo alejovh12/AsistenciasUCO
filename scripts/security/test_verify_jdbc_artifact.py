@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from zipfile import ZipFile
 
-from verify_jdbc_artifact import PATCHED_ARTIFACT, POM_PROPERTIES, attest
+from verify_jdbc_artifact import PATCHED_ARTIFACT, PATCHED_LIBRARY, POM_PROPERTIES, attest
 
 
 def archive(entries: list[tuple[str, str | None]], *, metadata: str | None = None):
@@ -65,6 +65,58 @@ class JdbcArtifactTests(unittest.TestCase):
             attest(self.write([(PATCHED_ARTIFACT, None)], metadata=(
                 "groupId=com.microsoft.sqlserver\nartifactId=mssql-jdbc\nversion=13.2.0\n"
             )))
+
+
+def driver_jar(metadata: str | None = None) -> bytes:
+    buf = io.BytesIO()
+    with ZipFile(buf, "w") as jar:
+        jar.writestr(POM_PROPERTIES, metadata or "groupId=com.microsoft.sqlserver\nartifactId=mssql-jdbc\nversion=13.2.1\n")
+    return buf.getvalue()
+
+
+class LayeredRuntimeTests(unittest.TestCase):
+    """Layered image: /app holds the thin app.jar and the libraries extracted to lib/."""
+
+    def setUp(self):
+        self.folder = tempfile.TemporaryDirectory()
+        self.addCleanup(self.folder.cleanup)
+        self.app = Path(self.folder.name)
+        (self.app / "lib").mkdir()
+
+    def put(self, relative: str, content: bytes) -> None:
+        target = self.app / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(content)
+
+    def test_patched_library_is_attested(self):
+        self.put(PATCHED_LIBRARY, driver_jar())
+        self.assertIn("verified", attest(self.app))
+
+    def test_old_library_is_rejected(self):
+        self.put("lib/mssql-jdbc-13.2.0.jre11.jar", driver_jar())
+        with self.assertRaisesRegex(ValueError, "Expected only"):
+            attest(self.app)
+
+    def test_missing_library_is_rejected(self):
+        self.put("lib/other.jar", b"placeholder")
+        with self.assertRaisesRegex(ValueError, "Expected only"):
+            attest(self.app)
+
+    def test_second_driver_anywhere_is_rejected(self):
+        self.put(PATCHED_LIBRARY, driver_jar())
+        self.put("cache/mssql-jdbc-12.8.1.jre11.jar", driver_jar())
+        with self.assertRaisesRegex(ValueError, "Expected only"):
+            attest(self.app)
+
+    def test_wrong_metadata_is_rejected(self):
+        self.put(PATCHED_LIBRARY, driver_jar("groupId=example.invalid\nartifactId=mssql-jdbc\nversion=13.2.1\n"))
+        with self.assertRaisesRegex(ValueError, "Unexpected JDBC driver groupId"):
+            attest(self.app)
+
+    def test_corrupt_library_is_rejected(self):
+        self.put(PATCHED_LIBRARY, b"not a jar")
+        with self.assertRaisesRegex(ValueError, "Unable to inspect"):
+            attest(self.app)
 
 
 if __name__ == "__main__":
