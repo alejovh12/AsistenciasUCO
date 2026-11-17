@@ -694,6 +694,36 @@ class SqlStoredProcedureContractIT {
                         input("@idMateria", "uniqueidentifier"),
                         input("@numeroPagina", "int"),
                         input("@tamanoPagina", "int")
+                )),
+                // CIERRE-W1B: directorios de personas con ambito por rol y paginacion en servidor.
+                Arguments.of("usp_consultar_coordinadores_facultad_paginado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int"),
+                        input("@busqueda", "nvarchar"),
+                        input("@estaActivo", "bit"),
+                        input("@sinPrograma", "bit")
+                )),
+                Arguments.of("usp_consultar_docentes_facultad_paginado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int"),
+                        input("@idPrograma", "uniqueidentifier"),
+                        input("@busqueda", "nvarchar"),
+                        input("@estaActivo", "bit"),
+                        input("@idFacultad", "uniqueidentifier"),
+                        input("@estadoVinculo", "varchar")
+                )),
+                Arguments.of("usp_buscar_estudiantes_institucion_paginado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int"),
+                        input("@busqueda", "nvarchar"),
+                        input("@idFacultad", "uniqueidentifier"),
+                        input("@estaActivo", "bit")
                 ))
         );
     }
