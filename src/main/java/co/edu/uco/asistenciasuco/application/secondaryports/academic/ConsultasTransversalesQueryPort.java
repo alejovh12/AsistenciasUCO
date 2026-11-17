@@ -40,6 +40,18 @@ public interface ConsultasTransversalesQueryPort {
     Pagina<ConsolidadoGrupoProjection> consultarConsolidadoAsistencia(UUID idUsuarioEjecutor, FiltroConsolidado filtro,
                                                                       int pagina, int tamano);
 
+    /**
+     * CIERRE-W2A: opciones de los filtros de materia y docente del consolidado: asignaturas y docentes titulares con
+     * grupos en el ambito del ejecutor (coordinador, decano o administrador) y, si se indica, del periodo.
+     */
+    OpcionesConsolidadoProjection consultarOpcionesConsolidado(UUID idUsuarioEjecutor, UUID idPeriodoAcademico);
+
+    record OpcionFiltroProjection(UUID id, String nombre) {
+    }
+
+    record OpcionesConsolidadoProjection(List<OpcionFiltroProjection> asignaturas, List<OpcionFiltroProjection> docentes) {
+    }
+
     /** HU172: rastro de auditoria (solo administrador) en un rango UTC [desde, hasta). */
     Pagina<EventoAuditoriaProjection> consultarAuditoria(UUID idUsuarioEjecutor, FiltroAuditoria filtro, int pagina,
                                                          int tamano);

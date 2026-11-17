@@ -106,6 +106,18 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
                  @idCorrelacionEvento = :idCorrelacionEvento,
                  @soloAdministracion = :soloAdministracion
             """;
+    static final String SQL_OPCIONES_ASIGNATURAS = """
+            EXEC dbo.usp_consultar_asignaturas_ambito_consolidado
+                 @idUsuarioEjecutor = :idUsuarioEjecutor,
+                 @idCorrelacion = :idCorrelacion,
+                 @idPeriodoAcademico = :idPeriodoAcademico
+            """;
+    static final String SQL_OPCIONES_DOCENTES = """
+            EXEC dbo.usp_consultar_docentes_ambito_consolidado
+                 @idUsuarioEjecutor = :idUsuarioEjecutor,
+                 @idCorrelacion = :idCorrelacion,
+                 @idPeriodoAcademico = :idPeriodoAcademico
+            """;
     static final String SQL_COMPONENTES = """
             EXEC dbo.usp_consultar_componentes_formacion
                  @idUsuarioEjecutor = :idUsuarioEjecutor,
@@ -204,6 +216,24 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
                         NativeRowValues.uuid(f[7]), texto(f[8]), NativeRowValues.uuid(f[9]), texto(f[10]),
                         cero(f[11]), cero(f[12]), cero(f[13]), cero(f[14]), cero(f[15]), decimal(f[16]),
                         decimal(f[17]), cero(f[18]), cero(f[19]), decimal(f[21]), decimal(f[22]), decimal(f[23])));
+    }
+
+    @Override
+    public OpcionesConsolidadoProjection consultarOpcionesConsolidado(final UUID idUsuarioEjecutor,
+                                                                      final UUID idPeriodoAcademico) {
+        return new OpcionesConsolidadoProjection(
+                opciones("consultarAsignaturasAmbitoConsolidado", "No fue posible consultar las asignaturas del consolidado.",
+                        SQL_OPCIONES_ASIGNATURAS, idUsuarioEjecutor, idPeriodoAcademico),
+                opciones("consultarDocentesAmbitoConsolidado", "No fue posible consultar los docentes del consolidado.",
+                        SQL_OPCIONES_DOCENTES, idUsuarioEjecutor, idPeriodoAcademico));
+    }
+
+    private List<OpcionFiltroProjection> opciones(final String operacion, final String mensajeFallo, final String sql,
+                                                  final UUID idUsuarioEjecutor, final UUID idPeriodoAcademico) {
+        return filas(operacion, mensajeFallo, sql, idUsuarioEjecutor,
+                q -> q.setParameter("idPeriodoAcademico", idPeriodoAcademico)).stream()
+                .map(f -> new OpcionFiltroProjection(NativeRowValues.uuid(f[0]), texto(f[1])))
+                .toList();
     }
 
     @Override

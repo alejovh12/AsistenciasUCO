@@ -9,6 +9,7 @@ import co.edu.uco.asistenciasuco.application.features.consultastransversales.pri
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.EventoAuditoriaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.FiltroAuditoriaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.FiltroConsolidadoDTO;
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.OpcionesConsolidadoDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.EstudianteInstitucionDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.FichaUnificadaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.PaginaDTO;
@@ -46,6 +47,8 @@ public interface ConsultasTransversalesInputPort {
     PaginaDTO<ConsolidadoGrupoDTO> consultarConsolidadoAsistencia(UUID usuario, FiltroConsolidadoDTO filtro,
                                                                   Integer pagina, Integer tamano);
 
+    /** CIERRE-W2A: asignaturas y docentes con grupos en el ambito del usuario para los filtros del consolidado. */
+    OpcionesConsolidadoDTO consultarOpcionesConsolidado(UUID usuario, UUID idPeriodoAcademico);
     PaginaDTO<EventoAuditoriaDTO> consultarAuditoria(UUID usuario, FiltroAuditoriaDTO filtro, Integer pagina,
                                                      Integer tamano);
 

@@ -10,6 +10,8 @@ import co.edu.uco.asistenciasuco.application.features.consultastransversales.pri
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.EventoAuditoriaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.FiltroAuditoriaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.FiltroConsolidadoDTO;
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.OpcionesConsolidadoDTO;
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.OpcionFiltroDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.EstudianteInstitucionDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.FichaUnificadaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.MatriculaHistorialDTO;
@@ -114,6 +116,14 @@ public final class ConsultasTransversalesInteractor implements ConsultasTransver
                         c.sesionesEjecutadas(), c.asistencias(), c.faltasSinJustaCausa(), c.excusas(),
                         c.porcentajeAsistencia(), c.porcentajeInasistencia(), c.estudiantesRiesgo(),
                         c.estudiantesPerdida(), c.horasDictadas(), c.porcentajeExcusa(), c.porcentajeSinRegistro()));
+    }
+
+    @Override
+    public OpcionesConsolidadoDTO consultarOpcionesConsolidado(final UUID usuario, final UUID idPeriodoAcademico) {
+        final var opciones = useCase.consultarOpcionesConsolidado(usuario, idPeriodoAcademico);
+        return new OpcionesConsolidadoDTO(
+                opciones.asignaturas().stream().map(o -> new OpcionFiltroDTO(o.id(), o.nombre())).toList(),
+                opciones.docentes().stream().map(o -> new OpcionFiltroDTO(o.id(), o.nombre())).toList());
     }
 
     @Override
