@@ -259,7 +259,7 @@ class JpaQueryAdapterContractTest {
         when(manager.createQuery(anyString(), any(Class.class))).thenThrow(new PersistenceException("db down"));
 
         final var periodoAcademicoJpaRepository = new PeriodoAcademicoJpaRepository(manager);
-        assertThrows(DatabaseOperationException.class, () -> periodoAcademicoJpaRepository.consultarPeriodosAcademicos());
+        assertThrows(DatabaseOperationException.class, periodoAcademicoJpaRepository::consultarPeriodosAcademicos);
         final var facultadJpaRepository = new FacultadJpaRepository(manager);
         assertThrows(DatabaseOperationException.class, () -> facultadJpaRepository.consultarFacultadPorId(ID));
         final var asistenciaSesionEstudianteJpaRepository = new AsistenciaSesionEstudianteJpaRepository(manager);

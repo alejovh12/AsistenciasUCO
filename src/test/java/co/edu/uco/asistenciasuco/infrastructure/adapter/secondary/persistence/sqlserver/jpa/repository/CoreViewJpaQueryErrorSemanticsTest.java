@@ -60,7 +60,7 @@ class CoreViewJpaQueryErrorSemanticsTest {
                 () -> estudianteJpaRepository.consultarEstudiantes(emptyPage2));
         final var tipoIdentificacionJpaRepository = new TipoIdentificacionJpaRepository(entityManager);
         assertThrows(DatabaseOperationException.class,
-                () -> tipoIdentificacionJpaRepository.consultarTiposIdentificacion());
+                tipoIdentificacionJpaRepository::consultarTiposIdentificacion);
         co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext.clear();
     }
 

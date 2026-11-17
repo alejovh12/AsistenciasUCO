@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 
 /** Cubre interactores y mappers de las tres consultas del decano con datos completos (sin mockStatic). */
 class IndicadoresDecanoPrimaryPortsTest {

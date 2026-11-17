@@ -135,7 +135,7 @@ public class MessageUcoLabEventListener implements SmartLifecycle {
 
     /** Espera antes de reintentar despues del intento {@code intento} (1, 2, 3...): se duplica hasta un tope de 5 min. */
     Duration esperaAntesDelIntento(final int intento) {
-        final int exponente = Math.clamp(intento - 1, 0, 20);
+        final int exponente = Math.max(0, Math.min(intento - 1, 20));
         final Duration espera = esperaInicial.multipliedBy(1L << exponente);
         return espera.compareTo(ESPERA_MAXIMA) > 0 ? ESPERA_MAXIMA : espera;
     }

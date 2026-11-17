@@ -129,7 +129,7 @@ class AsistenciaProgramaJpaRepositoryTest {
 
         repository.consultarGrupos(EJECUTOR, null, null, 1, 10);
 
-        org.mockito.Mockito.verify(entityManager, never()).createQuery(anyString(), eq(UvHorarioEntity.class));
+        verify(entityManager, never()).createQuery(anyString(), eq(UvHorarioEntity.class));
     }
 
     @Test
