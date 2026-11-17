@@ -40,19 +40,19 @@ class ByteArrayRecordValueSemanticsTest {
                 OWNER.toString(), "soporte.pdf", "application/pdf", 32L, 32L, false, null,
                 "a".repeat(64), Instant.parse("2026-10-08T12:00:00Z"));
         return Stream.of(
-                record("DescargarArchivoResultado",
+                registroCaso("DescargarArchivoResultado",
                         b -> new DescargarArchivoResultado(b, "application/pdf", "soporte.pdf", b.length)),
-                record("DescargarArchivoResultadoEntity",
+                registroCaso("DescargarArchivoResultadoEntity",
                         b -> new DescargarArchivoResultadoEntity(b, "application/pdf", "soporte.pdf", b.length)),
-                record("CompressionDecision",
+                registroCaso("CompressionDecision",
                         b -> new CompressionDecision(true, "DEFLATE", b)),
-                record("SubirArchivoDTO",
+                registroCaso("SubirArchivoDTO",
                         b -> new SubirArchivoDTO(OWNER, "soporte.pdf", "application/pdf", b)),
-                record("SubirArchivoDomain",
+                registroCaso("SubirArchivoDomain",
                         b -> new SubirArchivoDomain(OWNER, "soporte.pdf", "application/pdf", b)),
-                record("FileStoragePort.StoreObjectCommand",
+                registroCaso("FileStoragePort.StoreObjectCommand",
                         b -> new FileStoragePort.StoreObjectCommand("f-1", b, metadata)),
-                record("FileStoragePort.StoredObject",
+                registroCaso("FileStoragePort.StoredObject",
                         b -> new FileStoragePort.StoredObject("f-1", b, metadata))
         );
     }
@@ -86,7 +86,7 @@ class ByteArrayRecordValueSemanticsTest {
         assertFalse(text.contains("[B@"), "toString no debe depender de la identidad del arreglo: " + text);
     }
 
-    private static Arguments record(final String name, final Function<byte[], Object> factory) {
+    private static Arguments registroCaso(final String name, final Function<byte[], Object> factory) {
         return Arguments.of(Named.of(name, factory));
     }
 

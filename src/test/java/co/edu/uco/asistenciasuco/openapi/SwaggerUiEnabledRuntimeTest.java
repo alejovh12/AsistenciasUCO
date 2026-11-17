@@ -24,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -134,7 +133,7 @@ class SwaggerUiEnabledRuntimeTest {
     ) throws Exception {
         try {
             applicationContext.register(Class.forName(SWAGGER_CONFIGURATION));
-        } catch (ClassNotFoundException ignored) {
+        } catch (ClassNotFoundException _) {
             // RED: la configuración productiva todavía no existe.
         }
     }

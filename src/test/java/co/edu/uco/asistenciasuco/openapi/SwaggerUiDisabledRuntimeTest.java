@@ -80,7 +80,7 @@ class SwaggerUiDisabledRuntimeTest {
     ) throws Exception {
         try {
             applicationContext.register(Class.forName(SWAGGER_CONFIGURATION));
-        } catch (ClassNotFoundException ignored) {
+        } catch (ClassNotFoundException _) {
             // Baseline/disabled: ningún handler Swagger está registrado.
         }
     }
