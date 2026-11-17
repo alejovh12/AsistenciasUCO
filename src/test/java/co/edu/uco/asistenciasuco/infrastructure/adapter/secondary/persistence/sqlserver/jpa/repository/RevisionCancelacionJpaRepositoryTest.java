@@ -74,7 +74,7 @@ class RevisionCancelacionJpaRepositoryTest {
     }
 
     private static Object[] filaBandeja(final Object total) {
-        final Object[] c = new Object[54];
+        final Object[] c = new Object[55];
         c[0] = REVISION.toString();
         c[2] = UUID.randomUUID().toString();
         c[4] = "Estudiante Uno";
@@ -111,6 +111,7 @@ class RevisionCancelacionJpaRepositoryTest {
         c[51] = true;
         c[52] = "APROBAR, RECHAZAR , ";
         c[53] = total;
+        c[54] = "PERDIDA";
         return c;
     }
 
@@ -182,6 +183,8 @@ class RevisionCancelacionJpaRepositoryTest {
         assertEquals(new BigDecimal("22.50"), fila.porcentajeActual());
         assertEquals(new BigDecimal("9"), fila.horasFalta());
         assertEquals("Decano Uno", fila.nombreResolutor());
+        // CIERRE-W3I: el nivel de permanencia vigente es la ultima columna del SP y llega tal cual
+        assertEquals("PERDIDA", fila.codigoPermanenciaActual());
         final ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
         verify(manager).createNativeQuery(sql.capture());
         assertTrue(sql.getValue().contains("usp_consultar_revisiones_cancelacion_coordinador_paginado"));

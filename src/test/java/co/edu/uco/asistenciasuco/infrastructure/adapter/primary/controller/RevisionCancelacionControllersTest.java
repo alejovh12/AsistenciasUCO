@@ -94,6 +94,37 @@ class RevisionCancelacionControllersTest {
     }
 
     @Test
+    void w3i_las_alertas_entregan_el_nivel_de_permanencia_vigente_que_clasifica_la_base() throws Exception {
+        final AlertaFila alerta = new AlertaFila(UUID.randomUUID(), "ADVERTENCIA", "Riesgo", "VIGENTE", "ALR_010", new BigDecimal("16.00"),
+                new BigDecimal("16.00"), new BigDecimal("15.00"), new BigDecimal("20.00"), null, null, null, false, null, GRUPO, 1, "G01",
+                UUID.randomUUID(), "Bases", "A", "m", "RIESGO");
+        when(alertas.execute(new ConsultarAlertasEstudianteInputPort.Comando(USUARIO, 1, 20, false, false, null))).thenReturn(new PaginaAlertas(List.of(alerta), 1));
+
+        mvc().perform(get("/api/v1/estudiante/alertas"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.elementos[0].codigoPermanenciaActual").value("RIESGO"));
+        // conMensaje conserva el nivel: el mensaje institucional no lo altera
+        org.junit.jupiter.api.Assertions.assertEquals("RIESGO", alerta.conMensaje("otro texto").codigoPermanenciaActual());
+    }
+
+    @Test
+    void w3i_las_revisiones_entregan_el_nivel_de_permanencia_vigente_que_clasifica_la_base() {
+        final RevisionFila base = fila(true);
+        final RevisionFila conNivel = new RevisionFila(base.id(), base.estado(), base.nombreEstado(), base.requiereAccionDocente(),
+                base.requiereAccionResolutor(), base.esResolutorActual(), base.accionesPermitidas(), base.perfilResolutorActual(),
+                base.fechaEscalamientoUtc(), base.estudianteId(), base.nombreEstudiante(), base.estadoMatricula(), base.grupoId(),
+                base.codigoGrupo(), base.nombreGrupo(), base.asignaturaId(), base.nombreAsignatura(), base.docenteId(), base.nombreDocente(),
+                base.programaId(), base.nombrePrograma(), base.porcentajeCreacion(), base.porcentajeActual(), base.umbralPerdida(), base.horasFalta(),
+                base.horasDictadas(), base.fechaCreacionUtc(), base.decisionDocente(), base.motivoDocente(), base.fechaDecisionDocenteUtc(),
+                base.decisionResolucion(), base.motivoResolucion(), base.nombreResolutor(), base.perfilResolucion(), base.fechaResolucionUtc(), "PERDIDA");
+
+        org.junit.jupiter.api.Assertions.assertEquals("PERDIDA",
+                co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.support.RevisionCancelacionHttpMapper.toResponse(conNivel).codigoPermanenciaActual());
+        org.junit.jupiter.api.Assertions.assertNull(
+                co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.support.RevisionCancelacionHttpMapper.toResponse(base).codigoPermanenciaActual());
+    }
+
+    @Test
     void alertas_con_filtros_usa_pagina_y_grupo() throws Exception {
         final AlertaFila alerta = new AlertaFila(UUID.randomUUID(), "ADVERTENCIA", "Riesgo", "VIGENTE", "ALR_010", new BigDecimal("16.00"), null,
                 new BigDecimal("15.00"), new BigDecimal("20.00"), null, null, null, false, null, GRUPO, 1, "G01", UUID.randomUUID(), "Bases", "A", "m");

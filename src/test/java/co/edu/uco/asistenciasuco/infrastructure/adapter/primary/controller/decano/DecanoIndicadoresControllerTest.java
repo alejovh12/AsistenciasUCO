@@ -52,6 +52,18 @@ class DecanoIndicadoresControllerTest {
                     ? Optional.of("No tiene una facultad a su cargo para consultar estos indicadores.") : Optional.empty())).build();
 
     @Test
+    void W3I_get_indicadores_serializa_los_totales_de_coordinadores_y_docentes() throws Exception {
+        when(kpis.execute(any())).thenReturn(new KpisDecanoDTO(FACULTAD, "Ingenieria", PERIODO, "2026-2", 3, 6, 2, 1, 3, new BigDecimal("50.00"),
+                35, 6, new BigDecimal("17.14"), new BigDecimal("82.86"), 3, 55, 7, new BigDecimal("12.73"), new BigDecimal("15.00"),
+                new BigDecimal("20.00"), 0, null, null, 4, 37));
+
+        mvc.perform(get("/api/v1/decano/indicadores"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.datos.totalCoordinadores").value(4))
+                .andExpect(jsonPath("$.datos.totalDocentes").value(37));
+    }
+
+    @Test
     void T_E2E_get_indicadores_serializa_cada_cifra_y_conserva_los_nulos() throws Exception {
         when(kpis.execute(any())).thenReturn(new KpisDecanoDTO(FACULTAD, "Ingenieria", PERIODO, "2026-2", 3, 6, 2, 1, 3, new BigDecimal("50.00"),
                 35, 6, new BigDecimal("17.14"), new BigDecimal("82.86"), 3, 55, 7, null, new BigDecimal("15.00"), new BigDecimal("20.00")));

@@ -71,6 +71,19 @@ class ConsultarKpisDecanoUseCaseImplTest {
     }
 
     @Test
+    void W3I_entrega_los_totales_de_coordinadores_y_docentes_tal_como_los_calcula_la_base() {
+        final KpisDecanoProjection base = kpis();
+        when(queryPort.consultarKpis(ACTOR, PERIODO)).thenReturn(new KpisDecanoProjection(base.idFacultad(), base.nombreFacultad(),
+                base.idPeriodoAcademico(), base.nombrePeriodoAcademico(), 3, 6, 2, 1, 3, base.tasaRetencion(), 35, 6, base.porcentajeAusentismo(),
+                base.porcentajeAsistencia(), 3, 55, 7, base.tasaAforo(), base.umbralAdvertencia(), base.umbralPerdida(), 0, null, null, 4, 37));
+
+        final KpisDecanoDomain r = useCase.execute(new ConsultarKpisDecanoDomain(ACTOR, PERIODO));
+
+        assertEquals(4, r.totalCoordinadores());
+        assertEquals(37, r.totalDocentes());
+    }
+
+    @Test
     void T_BE_03_conserva_los_nulos_en_vez_de_inventar_valores() {
         when(queryPort.consultarKpis(ACTOR, null)).thenReturn(new KpisDecanoProjection(FACULTAD, "Ingenieria", null, null, 1, 0, 0, 0, 0, null,
                 0, 0, null, null, 0, 0, 0, null, new BigDecimal("15.00"), new BigDecimal("20.00")));

@@ -80,6 +80,19 @@ class AdminIndicadoresControllerTest {
     }
 
     @Test
+    void W3I_get_indicadores_serializa_facultades_activas_y_decanos() throws Exception {
+        when(kpis.execute(any())).thenReturn(new KpisInstitucionDTO(INSTITUCION, "Universidad", PERIODO, "2026-2", 3, 4, 6, 2, 1, 3, new BigDecimal("50.00"),
+                35, 6, new BigDecimal("17.14"), new BigDecimal("82.86"), 12, 11, null, 6, 7, 1, 2, new BigDecimal("15.00"), new BigDecimal("20.00"),
+                0, null, null, 3, 2, 2));
+
+        mvc.perform(get("/api/v1/admin/indicadores"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.datos.facultadesActivas").value(2))
+                .andExpect(jsonPath("$.datos.totalDecanos").value(3))
+                .andExpect(jsonPath("$.datos.decanosActivos").value(2));
+    }
+
+    @Test
     void get_indicadores_sin_periodo_delega_nulo() throws Exception {
         when(kpis.execute(any())).thenReturn(new KpisInstitucionDTO(INSTITUCION, "Universidad", null, null, 1, 1, 0, 0, 0, 0, null, 0, 0, null, null,
                 0, 0, null, 0, 0, 0, 0, new BigDecimal("15.00"), new BigDecimal("20.00")));
