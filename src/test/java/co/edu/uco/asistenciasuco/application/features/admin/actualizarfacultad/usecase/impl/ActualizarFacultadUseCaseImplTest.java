@@ -79,40 +79,45 @@ class ActualizarFacultadUseCaseImplTest {
 
     @Test
     void id_nulo_lanza_validationException() {
+        final var actualizarFacultadDomain5 = new ActualizarFacultadDomain(null, "Ciencias", null, ACTOR_ID);
         final ValidationException ex = assertThrows(ValidationException.class,
-                () -> useCase.execute(new ActualizarFacultadDomain(null, "Ciencias", null, ACTOR_ID)));
+                () -> useCase.execute(actualizarFacultadDomain5));
         assertEquals("El identificador de la facultad es obligatorio.", ex.getMessage());
         verify(commandPort, never()).actualizarFacultad(any());
     }
 
     @Test
     void sin_nombre_ni_decano_lanza_validationException() {
+        final var actualizarFacultadDomain4 = new ActualizarFacultadDomain(FACULTAD_ID, null, null, ACTOR_ID);
         final ValidationException ex = assertThrows(ValidationException.class,
-                () -> useCase.execute(new ActualizarFacultadDomain(FACULTAD_ID, null, null, ACTOR_ID)));
+                () -> useCase.execute(actualizarFacultadDomain4));
         assertEquals("Debe indicar al menos el nombre o el decano de la facultad.", ex.getMessage());
         verify(commandPort, never()).actualizarFacultad(any());
     }
 
     @Test
     void nombre_en_blanco_lanza_validationException() {
+        final var actualizarFacultadDomain3 = new ActualizarFacultadDomain(FACULTAD_ID, "   ", null, ACTOR_ID);
         final ValidationException ex = assertThrows(ValidationException.class,
-                () -> useCase.execute(new ActualizarFacultadDomain(FACULTAD_ID, "   ", null, ACTOR_ID)));
+                () -> useCase.execute(actualizarFacultadDomain3));
         assertEquals("El nombre de la facultad debe tener entre 3 y 50 caracteres.", ex.getMessage());
         verify(commandPort, never()).actualizarFacultad(any());
     }
 
     @Test
     void nombre_corto_lanza_validationException() {
+        final var actualizarFacultadDomain2 = new ActualizarFacultadDomain(FACULTAD_ID, "AB", null, ACTOR_ID);
         assertThrows(ValidationException.class,
-                () -> useCase.execute(new ActualizarFacultadDomain(FACULTAD_ID, "AB", null, ACTOR_ID)));
+                () -> useCase.execute(actualizarFacultadDomain2));
         verify(commandPort, never()).actualizarFacultad(any());
     }
 
     @Test
     void nombre_largo_lanza_validationException() {
         final String largo = "x".repeat(51);
+        final var actualizarFacultadDomain = new ActualizarFacultadDomain(FACULTAD_ID, largo, null, ACTOR_ID);
         assertThrows(ValidationException.class,
-                () -> useCase.execute(new ActualizarFacultadDomain(FACULTAD_ID, largo, null, ACTOR_ID)));
+                () -> useCase.execute(actualizarFacultadDomain));
         verify(commandPort, never()).actualizarFacultad(any());
     }
 

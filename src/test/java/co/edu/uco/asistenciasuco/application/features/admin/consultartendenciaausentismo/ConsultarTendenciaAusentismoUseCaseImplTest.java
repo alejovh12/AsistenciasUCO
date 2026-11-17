@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -67,7 +68,7 @@ class ConsultarTendenciaAusentismoUseCaseImplTest {
         useCase.execute(new ConsultarTendenciaAusentismoDomain(ACTOR, null, null));
         useCase.execute(new ConsultarTendenciaAusentismoDomain(ACTOR, null, "  "));
 
-        verify(queryPort, org.mockito.Mockito.times(2)).consultarTendencia(ACTOR, null, "SEMANA");
+        verify(queryPort, times(2)).consultarTendencia(ACTOR, null, "SEMANA");
     }
 
     @Test
@@ -81,7 +82,8 @@ class ConsultarTendenciaAusentismoUseCaseImplTest {
 
     @Test
     void una_granularidad_invalida_es_error_de_validacion_sin_tocar_la_db() {
-        assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarTendenciaAusentismoDomain(ACTOR, null, "ANIO")));
+        final var consultarTendenciaAusentismoDomain = new ConsultarTendenciaAusentismoDomain(ACTOR, null, "ANIO");
+        assertThrows(ValidationException.class, () -> useCase.execute(consultarTendenciaAusentismoDomain));
         verifyNoInteractions(queryPort);
     }
 

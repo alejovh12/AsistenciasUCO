@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.times;
 
 class RealtimeStreamGatewayImplTest {
 
@@ -47,7 +48,7 @@ class RealtimeStreamGatewayImplTest {
                 .thenCancel()
                 .verify(Duration.ofSeconds(2));
 
-        verify(institutionalScopePort, org.mockito.Mockito.times(1)).execute(new ResolverAudienciaRealtimeInputPort.Comando(USUARIO, GRUPO_PROPIO));
+        verify(institutionalScopePort, times(1)).execute(new ResolverAudienciaRealtimeInputPort.Comando(USUARIO, GRUPO_PROPIO));
     }
 
     @Test

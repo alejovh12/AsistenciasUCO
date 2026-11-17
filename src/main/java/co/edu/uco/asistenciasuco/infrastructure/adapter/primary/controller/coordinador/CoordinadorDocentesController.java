@@ -46,6 +46,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/coordinador/docentes")
 public final class CoordinadorDocentesController {
+    private static final String CLAVE_BUSQUEDA = "busqueda";
 
     private static final int TAMANO_MAXIMO = 100;
     private static final int BUSQUEDA_MAXIMA = 50;
@@ -81,7 +82,7 @@ public final class CoordinadorDocentesController {
     public ResponseEntity<ApiListResponse<DocenteProgramaDTO>> consultar(
             @RequestParam(name = "pagina", defaultValue = "1") final int pagina,
             @RequestParam(name = "tamano", defaultValue = "10") final int tamano,
-            @RequestParam(name = "busqueda", required = false) final String busqueda,
+            @RequestParam(name = CLAVE_BUSQUEDA, required = false) final String busqueda,
             @RequestParam(name = "estaActivo", required = false) final Boolean estaActivo,
             @RequestParam(name = "idTipoVinculacion", required = false) final UUID idTipoVinculacion
     ) {
@@ -93,7 +94,7 @@ public final class CoordinadorDocentesController {
             builder.add("tamano", ValidationErrorType.OUT_OF_RANGE, "El tamano de pagina debe estar entre 1 y " + TAMANO_MAXIMO + ".");
         }
         if (busqueda != null && busqueda.length() > BUSQUEDA_MAXIMA) {
-            builder.add("busqueda", ValidationErrorType.INVALID_LENGTH, "La busqueda excede la longitud permitida.");
+            builder.add(CLAVE_BUSQUEDA, ValidationErrorType.INVALID_LENGTH, "La busqueda excede la longitud permitida.");
         }
         RequestValidationGuard.validate(builder.build());
 
@@ -105,14 +106,14 @@ public final class CoordinadorDocentesController {
 
     @GetMapping("/candidatos")
     public ResponseEntity<ApiListResponse<DocenteCandidatoDTO>> consultarCandidatos(
-            @RequestParam(name = "busqueda", required = false) final String busqueda
+            @RequestParam(name = CLAVE_BUSQUEDA, required = false) final String busqueda
     ) {
         final ValidationResultBuilder builder = new ValidationResultBuilder();
         final String texto = busqueda == null ? "" : busqueda.trim();
         if (texto.length() < BUSQUEDA_CANDIDATOS_MINIMA) {
-            builder.add("busqueda", ValidationErrorType.INVALID_LENGTH, "La busqueda de candidatos requiere al menos 3 caracteres.");
+            builder.add(CLAVE_BUSQUEDA, ValidationErrorType.INVALID_LENGTH, "La busqueda de candidatos requiere al menos 3 caracteres.");
         } else if (texto.length() > BUSQUEDA_MAXIMA) {
-            builder.add("busqueda", ValidationErrorType.INVALID_LENGTH, "La busqueda excede la longitud permitida.");
+            builder.add(CLAVE_BUSQUEDA, ValidationErrorType.INVALID_LENGTH, "La busqueda excede la longitud permitida.");
         }
         RequestValidationGuard.validate(builder.build());
 

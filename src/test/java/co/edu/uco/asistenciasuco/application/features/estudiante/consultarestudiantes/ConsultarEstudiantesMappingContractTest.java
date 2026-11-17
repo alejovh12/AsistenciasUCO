@@ -105,8 +105,7 @@ class ConsultarEstudiantesMappingContractTest {
                 (co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudiantes.usecase.entity.EstudiantePaginaEntity) null));
         assertThrows(CrosscuttingException.class, () -> ConsultarEstudiantesMapper.toDTO(
                 (co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudiantes.usecase.entity.EstudianteResumenEntity) null));
-        assertThrows(ValidationException.class, () -> ConsultarEstudiantesMapper.toDomain(
-                new ConsultarEstudiantesDTO(null, null, null, null, null, null, null, null,
-                        null, -1, 20, ACTOR)));
+        final var consultarEstudiantesDTO = new ConsultarEstudiantesDTO(null, null, null, null, null, null, null, null, null, -1, 20, ACTOR);
+        assertThrows(ValidationException.class, () -> ConsultarEstudiantesMapper.toDomain(consultarEstudiantesDTO));
     }
 }

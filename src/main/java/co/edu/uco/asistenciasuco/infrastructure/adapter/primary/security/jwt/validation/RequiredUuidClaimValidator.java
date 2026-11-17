@@ -32,7 +32,7 @@ public final class RequiredUuidClaimValidator implements OAuth2TokenValidator<Jw
         }
         try {
             UUID.fromString(value.trim());
-        } catch (IllegalArgumentException exception) {
+        } catch (IllegalArgumentException _) {
             return failure();
         }
         return OAuth2TokenValidatorResult.success();

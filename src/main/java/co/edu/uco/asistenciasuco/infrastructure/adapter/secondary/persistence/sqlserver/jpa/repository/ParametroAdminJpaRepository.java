@@ -29,6 +29,8 @@ import java.util.UUID;
  */
 @Repository
 public class ParametroAdminJpaRepository implements ParametroAdminRepositoryPort {
+    private static final String PARAM_ID_USUARIO_EJECUTOR = "idUsuarioEjecutor";
+    private static final String PARAM_ID_CORRELACION = "idCorrelacion";
 
     static final String OP_ACTUALIZAR = "actualizarParametro";
     static final String SQL_ACTUALIZAR = """
@@ -61,8 +63,8 @@ public class ParametroAdminJpaRepository implements ParametroAdminRepositoryPort
                                       final String texto, final boolean soloEditables) {
         final UUID correlationId = CorrelationIdContext.require();
         final Map<String, Object> parametrosConsulta = new LinkedHashMap<>();
-        parametrosConsulta.put("idUsuarioEjecutor", usuarioEjecutor);
-        parametrosConsulta.put("idCorrelacion", correlationId);
+        parametrosConsulta.put(PARAM_ID_USUARIO_EJECUTOR, usuarioEjecutor);
+        parametrosConsulta.put(PARAM_ID_CORRELACION, correlationId);
         parametrosConsulta.put("numeroPagina", pagina);
         parametrosConsulta.put("tamanoPagina", tamano);
         parametrosConsulta.put("grupo", grupo);
@@ -93,8 +95,8 @@ public class ParametroAdminJpaRepository implements ParametroAdminRepositoryPort
         parametros.put("valor", valor);
         parametros.put("fechaModificacionEsperada", fechaModificacionEsperadaUtc);
         parametros.put("motivo", motivo);
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", usuarioEjecutor);
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, usuarioEjecutor);
         final ProcedureRow fila = procedureExecutor.executeWithExtras(OP_ACTUALIZAR, SQL_ACTUALIZAR, parametros, correlationId, 6);
         final List<Object> c = fila.extras();
         return new ParametroActualizado(NativeRowValues.uuid(c.get(0)), NativeRowValues.texto(c.get(1)), NativeRowValues.texto(c.get(2)),
@@ -105,7 +107,7 @@ public class ParametroAdminJpaRepository implements ParametroAdminRepositoryPort
     public PaginaCambios consultarCambios(final UUID usuarioEjecutor, final UUID idParametro, final int pagina, final int tamano) {
         final UUID correlationId = CorrelationIdContext.require();
         final List<?> filas = consultarFilas("consultarCambiosParametro", "No fue posible consultar el historial del parametro.",
-                SQL_CAMBIOS, Map.of("idUsuarioEjecutor", usuarioEjecutor, "idCorrelacion", correlationId, "idParametro", idParametro,
+                SQL_CAMBIOS, Map.of(PARAM_ID_USUARIO_EJECUTOR, usuarioEjecutor, PARAM_ID_CORRELACION, correlationId, "idParametro", idParametro,
                         "numeroPagina", pagina, "tamanoPagina", tamano));
         final List<CambioParametro> cambios = new ArrayList<>(filas.size());
         long total = 0;

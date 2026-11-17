@@ -33,7 +33,8 @@ class RegistroAsistenciaSesionDomainTest {
     @ParameterizedTest
     @ValueSource(strings = {"ABC", "ASISTIO", "PRESENTE", "AUSENTE", "A", "F", "T", "J"})
     void constructor_rechaza_estados_fuera_del_contrato_canonico(final String estado) {
-        assertThrows(ValidationException.class, () -> new RegistroAsistenciaSesionDomain(UUID.randomUUID(), estado));
+        final var idAleatorio2 = UUID.randomUUID();
+        assertThrows(ValidationException.class, () -> new RegistroAsistenciaSesionDomain(idAleatorio2, estado));
     }
 
     @Test
@@ -43,6 +44,7 @@ class RegistroAsistenciaSesionDomainTest {
 
     @Test
     void constructor_rechaza_estado_en_blanco() {
-        assertThrows(ValidationException.class, () -> new RegistroAsistenciaSesionDomain(UUID.randomUUID(), "   "));
+        final var idAleatorio = UUID.randomUUID();
+        assertThrows(ValidationException.class, () -> new RegistroAsistenciaSesionDomain(idAleatorio, "   "));
     }
 }

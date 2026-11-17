@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Objects;
 
 public class ProcesarEventoAzureUseCaseImpl implements ProcesarEventoAzureUseCase {
+    private static final String CLAVE_EVENT_TYPE = "eventType";
+    private static final String CLAVE_OBJECT_NAME = "ObjectName";
 
     private final CatalogInvalidationPort catalogInvalidationPort;
     private final RealtimePublisherPort realtimePublisherPort;
@@ -30,7 +32,7 @@ public class ProcesarEventoAzureUseCaseImpl implements ProcesarEventoAzureUseCas
         if (eventType.startsWith("Microsoft.AppConfiguration.")) {
             procesarEventoAppConfiguration(eventType, subject, data);
         } else if (eventType.startsWith("Microsoft.KeyVault.")) {
-            procesarEventoKeyVault(eventType, subject, data);
+            procesarEventoKeyVault(subject, data);
         }
     }
 
@@ -51,7 +53,7 @@ public class ProcesarEventoAzureUseCaseImpl implements ProcesarEventoAzureUseCas
             realtimePublisherPort.publish(RealtimeEvent.of("MESSAGE_UPDATED", Map.of(
                     "code", code,
                     "type", "USER",
-                    "eventType", eventType
+                    CLAVE_EVENT_TYPE, eventType
             )));
         } else if (rawKey.startsWith("messages:technical:")) {
             final String code = rawKey.substring("messages:technical:".length());
@@ -64,21 +66,21 @@ public class ProcesarEventoAzureUseCaseImpl implements ProcesarEventoAzureUseCas
             realtimePublisherPort.publish(RealtimeEvent.of("PARAMETER_UPDATED", Map.of(
                     "group", group,
                     "key", key,
-                    "eventType", eventType
+                    CLAVE_EVENT_TYPE, eventType
             )));
         } else {
             catalogInvalidationPort.invalidateParameter("", rawKey);
             realtimePublisherPort.publish(RealtimeEvent.of("PARAMETER_UPDATED", Map.of(
                     "key", rawKey,
-                    "eventType", eventType
+                    CLAVE_EVENT_TYPE, eventType
             )));
         }
     }
 
-    private void procesarEventoKeyVault(final String eventType, final String subject, final Map<String, Object> data) {
+    private void procesarEventoKeyVault(final String subject, final Map<String, Object> data) {
         final String secretName;
-        if (data != null && data.containsKey("ObjectName") && data.get("ObjectName") != null) {
-            secretName = data.get("ObjectName").toString().trim();
+        if (data != null && data.containsKey(CLAVE_OBJECT_NAME) && data.get(CLAVE_OBJECT_NAME) != null) {
+            secretName = data.get(CLAVE_OBJECT_NAME).toString().trim();
         } else if (subject != null && !subject.isBlank()) {
             secretName = subject.trim();
         } else {

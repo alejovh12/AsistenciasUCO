@@ -52,7 +52,7 @@ public class HorasProgramadasEstudianteJpaRepository implements HorasProgramadas
 
     @SuppressWarnings("unchecked")
     private List<Tuple> tuplas(final UUID usuarioEjecutor, final UUID correlationId) {
-        return (List<Tuple>) entityManager.createNativeQuery(SQL_HORAS_PROGRAMADAS, Tuple.class)
+        return entityManager.createNativeQuery(SQL_HORAS_PROGRAMADAS, Tuple.class)
                 .setParameter("idUsuarioEjecutor", usuarioEjecutor)
                 .setParameter("idCorrelacion", correlationId)
                 .getResultList();

@@ -91,8 +91,8 @@ class GestionarAsignaturaUseCaseImplTest {
         when(planQueryPort.consultarPlanesPorPrograma(PROGRAM)).thenReturn(List.of(plan(plan, PROGRAM)));
         when(queryPort.consultarAsignaturasPorPlan(plan)).thenReturn(List.of(subject(id, plan, UUID.randomUUID())));
 
-        assertThrows(ForbiddenException.class, () -> useCase.actualizar(
-                new AsignaturaDomain(id, plan, "COD1", "Calculo", 3, 1, "Area", "Componente", null, ACTOR)));
+        final var asignaturaDomain2 = new AsignaturaDomain(id, plan, "COD1", "Calculo", 3, 1, "Area", "Componente", null, ACTOR);
+        assertThrows(ForbiddenException.class, () -> useCase.actualizar(asignaturaDomain2));
 
         org.mockito.Mockito.verifyNoInteractions(commandPort);
     }
@@ -103,8 +103,8 @@ class GestionarAsignaturaUseCaseImplTest {
         when(scopePort.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.of(PROGRAM));
         when(planQueryPort.consultarPlanesPorPrograma(PROGRAM)).thenReturn(List.of(plan(plan, UUID.randomUUID())));
 
-        assertThrows(ForbiddenException.class, () -> useCase.crear(
-                new AsignaturaDomain(null, plan, "COD1", "Calculo", 3, 1, "Area", "Componente", null, ACTOR)));
+        final var asignaturaDomain = new AsignaturaDomain(null, plan, "COD1", "Calculo", 3, 1, "Area", "Componente", null, ACTOR);
+        assertThrows(ForbiddenException.class, () -> useCase.crear(asignaturaDomain));
 
         org.mockito.Mockito.verifyNoInteractions(commandPort);
     }
@@ -140,7 +140,8 @@ class GestionarAsignaturaUseCaseImplTest {
     void cualquier_mutacion_rechaza_actor_no_resuelto() {
         when(scopePort.findProgramaIdByCoordinadorUsuario(null)).thenReturn(Optional.empty());
 
-        assertThrows(ForbiddenException.class, () -> useCase.toggleEstado(UUID.randomUUID(), null));
+        final var idAleatorio = UUID.randomUUID();
+        assertThrows(ForbiddenException.class, () -> useCase.toggleEstado(idAleatorio, null));
 
         org.mockito.Mockito.verifyNoInteractions(commandPort);
     }

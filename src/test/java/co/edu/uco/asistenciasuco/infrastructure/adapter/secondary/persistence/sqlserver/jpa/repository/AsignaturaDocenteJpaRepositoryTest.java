@@ -15,7 +15,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -51,7 +50,7 @@ class AsignaturaDocenteJpaRepositoryTest {
         when(programa.idTipoPrograma()).thenReturn(TIPO);
         when(programa.nombreTipoPrograma()).thenReturn("pregrado");
         prepararDocentes(List.of(conPrograma, sinPrograma));
-        when(entityManager.createQuery(eq(AsignaturaDocenteJpaRepository.HQL_PROGRAMAS), eq(UvProgramaEntity.class)))
+        when(entityManager.createQuery(AsignaturaDocenteJpaRepository.HQL_PROGRAMAS, UvProgramaEntity.class))
                 .thenReturn(programas);
         when(programas.setParameter(anyString(), any())).thenReturn(programas);
         when(programas.getResultList()).thenReturn(List.of(programa));
@@ -71,7 +70,7 @@ class AsignaturaDocenteJpaRepositoryTest {
         final List<AsignaturaDocenteProjection> resultado = repository.consultarAsignaturasDocente(DOCENTE);
 
         assertNull(resultado.getFirst().idTipoPrograma());
-        verify(entityManager, never()).createQuery(eq(AsignaturaDocenteJpaRepository.HQL_PROGRAMAS), eq(UvProgramaEntity.class));
+        verify(entityManager, never()).createQuery(AsignaturaDocenteJpaRepository.HQL_PROGRAMAS, UvProgramaEntity.class);
     }
 
     @Test
@@ -84,7 +83,7 @@ class AsignaturaDocenteJpaRepositoryTest {
         when(programa.idTipoPrograma()).thenReturn(TIPO);
         when(programa.nombreTipoPrograma()).thenReturn("pregrado");
         prepararDocentes(List.of(fila));
-        when(entityManager.createQuery(eq(AsignaturaDocenteJpaRepository.HQL_PROGRAMAS), eq(UvProgramaEntity.class)))
+        when(entityManager.createQuery(AsignaturaDocenteJpaRepository.HQL_PROGRAMAS, UvProgramaEntity.class))
                 .thenReturn(programas);
         when(programas.setParameter(anyString(), any())).thenReturn(programas);
         when(programas.getResultList()).thenReturn(List.of(programa));
@@ -97,7 +96,7 @@ class AsignaturaDocenteJpaRepositoryTest {
         assertEquals(30, resultado.capacidadMaximaPermitida());
         assertEquals(TIPO, resultado.idTipoPrograma());
         assertEquals("pregrado", resultado.nombreTipoPrograma());
-        verify(grupos).setParameter(eq("idsGrupo"), eq(List.of(grupo)));
+        verify(grupos).setParameter("idsGrupo", List.of(grupo));
     }
 
     @Test
@@ -110,8 +109,8 @@ class AsignaturaDocenteJpaRepositoryTest {
 
         assertNull(resultado.estudiantesActivos());
         assertNull(resultado.capacidadMaximaPermitida());
-        verify(entityManager, never()).createQuery(eq(AsignaturaDocenteJpaRepository.HQL_ESTUDIANTES_ACTIVOS),
-                eq(Object[].class));
+        verify(entityManager, never()).createQuery(AsignaturaDocenteJpaRepository.HQL_ESTUDIANTES_ACTIVOS,
+                Object[].class);
     }
 
     @Test
@@ -119,18 +118,18 @@ class AsignaturaDocenteJpaRepositoryTest {
         prepararDocentes(List.of());
 
         assertEquals(List.of(), repository.consultarAsignaturasDocente(DOCENTE));
-        verify(entityManager, never()).createQuery(eq(AsignaturaDocenteJpaRepository.HQL_ESTUDIANTES_ACTIVOS),
-                eq(Object[].class));
-        verify(entityManager, never()).createQuery(eq(AsignaturaDocenteJpaRepository.HQL_PROGRAMAS),
-                eq(UvProgramaEntity.class));
+        verify(entityManager, never()).createQuery(AsignaturaDocenteJpaRepository.HQL_ESTUDIANTES_ACTIVOS,
+                Object[].class);
+        verify(entityManager, never()).createQuery(AsignaturaDocenteJpaRepository.HQL_PROGRAMAS,
+                UvProgramaEntity.class);
     }
 
     private void prepararDocentes(final List<UvDocenteEntity> filas) {
-        when(entityManager.createQuery(eq(AsignaturaDocenteJpaRepository.HQL_POR_DOCENTE), eq(UvDocenteEntity.class)))
+        when(entityManager.createQuery(AsignaturaDocenteJpaRepository.HQL_POR_DOCENTE, UvDocenteEntity.class))
                 .thenReturn(docentes);
         when(docentes.setParameter(anyString(), any())).thenReturn(docentes);
         when(docentes.getResultList()).thenReturn(filas);
-        when(entityManager.createQuery(eq(AsignaturaDocenteJpaRepository.HQL_ESTUDIANTES_ACTIVOS), eq(Object[].class)))
+        when(entityManager.createQuery(AsignaturaDocenteJpaRepository.HQL_ESTUDIANTES_ACTIVOS, Object[].class))
                 .thenReturn(grupos);
         when(grupos.setParameter(anyString(), any())).thenReturn(grupos);
         when(grupos.getResultList()).thenReturn(List.of());

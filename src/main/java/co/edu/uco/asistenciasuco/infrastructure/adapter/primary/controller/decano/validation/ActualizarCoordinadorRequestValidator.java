@@ -13,6 +13,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.ident
  * ambito) las decide la DB.
  */
 public final class ActualizarCoordinadorRequestValidator implements Validator<ActualizarCoordinadorRequest> {
+    private static final String CLAVE_CORREO = "correo";
 
     private static final int MAX_NOMBRE = 50;
     private static final int MAX_CORREO = 100;
@@ -29,11 +30,11 @@ public final class ActualizarCoordinadorRequestValidator implements Validator<Ac
         validarOpcional(builder, "segundoApellido", request.getSegundoApellido());
 
         if (!ValidationHelper.hasText(request.getCorreo())) {
-            builder.add("correo", ValidationErrorType.REQUIRED, "El correo electronico es obligatorio.");
+            builder.add(CLAVE_CORREO, ValidationErrorType.REQUIRED, "El correo electronico es obligatorio.");
         } else {
-            builder.addIf(!ValidationHelper.isValidEmail(request.getCorreo()), "correo",
+            builder.addIf(!ValidationHelper.isValidEmail(request.getCorreo()), CLAVE_CORREO,
                     ValidationErrorType.INVALID_FORMAT, "El correo electronico no tiene un formato valido.");
-            builder.addIf(request.getCorreo().trim().length() > MAX_CORREO, "correo",
+            builder.addIf(request.getCorreo().trim().length() > MAX_CORREO, CLAVE_CORREO,
                     ValidationErrorType.INVALID_LENGTH, "El correo electronico no puede superar " + MAX_CORREO + " caracteres.");
         }
         CorreccionDocumentoValidation.validar(builder, request, false);

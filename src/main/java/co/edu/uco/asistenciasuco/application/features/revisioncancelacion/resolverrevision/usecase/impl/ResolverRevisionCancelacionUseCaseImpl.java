@@ -1,6 +1,5 @@
 package co.edu.uco.asistenciasuco.application.features.revisioncancelacion.resolverrevision.usecase.impl;
 
-import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.resolverrevision.primaryports.ResolverRevisionCancelacionInputPort;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.resolverrevision.usecase.ResolverRevisionCancelacionUseCase;
 
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.common.AvisoRevisionCancelacionService;

@@ -11,7 +11,6 @@ import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 
 import java.util.List;
-import java.util.UUID;
 
 public final class ConsultarEstudiantePorIdMapper {
 

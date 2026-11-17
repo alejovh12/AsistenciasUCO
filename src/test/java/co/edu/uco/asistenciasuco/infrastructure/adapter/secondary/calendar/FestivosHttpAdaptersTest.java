@@ -28,6 +28,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doReturn;
 
 /**
  * CULM-001 B.1 (CONTRACT 3.4.1 y 3.4.2): proveedores HTTP de festivos con un {@link HttpClient} simulado: 200, error HTTP,
@@ -91,7 +92,7 @@ class FestivosHttpAdaptersTest {
     }
 
     @Test
-    void un_timeout_invalido_usa_el_valor_por_defecto() throws Exception {
+    void un_timeout_invalido_usa_el_valor_por_defecto() {
         for (final String valor : new String[]{"abc", "0", "-5"}) {
             when(catalogo.getParameter("FESTIVOS", "TIMEOUT_SEGUNDOS")).thenReturn(Optional.of(valor));
             assertEquals(Duration.ofSeconds(10), new FestivosHttpSupport(http, catalogo).timeout());
@@ -137,16 +138,18 @@ class FestivosHttpAdaptersTest {
     @Test
     void una_interrupcion_restaura_la_bandera_del_hilo() throws Exception {
         when(http.send(any(HttpRequest.class), any())).thenThrow(new InterruptedException("stop"));
+        final var calendariosNacionalesFestivosAdapter = new CalendariosNacionalesFestivosAdapter(http, catalogo);
         assertThrows(CalendarioFestivosException.class,
-                () -> new CalendariosNacionalesFestivosAdapter(http, catalogo).obtenerFestivos(2026));
+                () -> calendariosNacionalesFestivosAdapter.obtenerFestivos(2026));
         assertTrue(Thread.interrupted());
     }
 
     @Test
     void una_url_invalida_es_un_fallo_del_proveedor() {
         when(catalogo.getParameter("FESTIVOS", "URL_CALENDARIOS_NACIONALES")).thenReturn(Optional.of("ht tp://mal {anio}"));
+        final var calendariosNacionalesFestivosAdapter = new CalendariosNacionalesFestivosAdapter(http, catalogo);
         assertThrows(CalendarioFestivosException.class,
-                () -> new CalendariosNacionalesFestivosAdapter(http, catalogo).obtenerFestivos(2026));
+                () -> calendariosNacionalesFestivosAdapter.obtenerFestivos(2026));
     }
 
     @Test
@@ -186,11 +189,12 @@ class FestivosHttpAdaptersTest {
         assertFalse(new FeriadosIoFestivosAdapter(http, catalogo, vault).disponible());
         verify(http, never()).send(any(HttpRequest.class), any());
 
-        org.mockito.Mockito.doReturn(Optional.of("clave-secreta")).when(vault).getSecret("otro-nombre");
+        doReturn(Optional.of("clave-secreta")).when(vault).getSecret("otro-nombre");
         when(catalogo.getParameter("FESTIVOS", "NOMBRE_SECRETO_FERIADOS_IO")).thenReturn(Optional.of("otro-nombre"));
         when(respuesta.statusCode()).thenReturn(401);
+        final var feriadosIoFestivosAdapter = new FeriadosIoFestivosAdapter(http, catalogo, vault);
         final CalendarioFestivosException error = assertThrows(CalendarioFestivosException.class,
-                () -> new FeriadosIoFestivosAdapter(http, catalogo, vault).obtenerFestivos(2026));
+                () -> feriadosIoFestivosAdapter.obtenerFestivos(2026));
         assertFalse(error.getMessage().contains("clave-secreta"));
     }
 }

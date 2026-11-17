@@ -36,6 +36,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.never;
 
 /** HU064/HU060/HU061: native EXEC de los SP paginados de lectura del coordinador. */
 class AsistenciaProgramaJpaRepositoryTest {
@@ -128,7 +129,7 @@ class AsistenciaProgramaJpaRepositoryTest {
 
         repository.consultarGrupos(EJECUTOR, null, null, 1, 10);
 
-        org.mockito.Mockito.verify(entityManager, org.mockito.Mockito.never()).createQuery(anyString(), eq(UvHorarioEntity.class));
+        verify(entityManager, never()).createQuery(anyString(), eq(UvHorarioEntity.class));
     }
 
     @Test

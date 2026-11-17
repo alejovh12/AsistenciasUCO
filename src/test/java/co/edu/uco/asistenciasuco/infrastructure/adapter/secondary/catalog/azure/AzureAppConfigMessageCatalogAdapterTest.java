@@ -25,6 +25,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
 
 class AzureAppConfigMessageCatalogAdapterTest {
 
@@ -38,7 +39,7 @@ class AzureAppConfigMessageCatalogAdapterTest {
 
     @BeforeEach
     void setUp() {
-        configurationClient = Mockito.mock(ConfigurationClient.class);
+        configurationClient = mock(ConfigurationClient.class);
         userCache = Caffeine.newBuilder().build();
         technicalCache = Caffeine.newBuilder().build();
         adapter = new AzureAppConfigMessageCatalogAdapter(configurationClient, userCache, technicalCache);
@@ -49,29 +50,29 @@ class AzureAppConfigMessageCatalogAdapterTest {
     }
 
     private static ResourceNotFoundException notFound() {
-        return new ResourceNotFoundException("not found", Mockito.mock(HttpResponse.class));
+        return new ResourceNotFoundException("not found", mock(HttpResponse.class));
     }
 
     @Test
     void consulta_utiliza_cache_y_tras_invalidar_reconsulta_a_azure() {
         final AzureAppConfigMessageCatalogAdapter defaultCacheAdapter = new AzureAppConfigMessageCatalogAdapter(configurationClient);
         final ConfigurationSetting setting = setting(USER_KEY, "El campo {0} es obligatorio");
-        when(configurationClient.getConfigurationSetting(eq(USER_KEY), eq("es"))).thenReturn(setting);
+        when(configurationClient.getConfigurationSetting(USER_KEY, "es")).thenReturn(setting);
 
         final Optional<String> primero = defaultCacheAdapter.findUserMessage("VAL-001");
         assertTrue(primero.isPresent());
         assertEquals("El campo {0} es obligatorio", primero.get());
-        verify(configurationClient, times(1)).getConfigurationSetting(eq(USER_KEY), eq("es"));
+        verify(configurationClient, times(1)).getConfigurationSetting(USER_KEY, "es");
 
         final Optional<String> segundo = defaultCacheAdapter.findUserMessage("VAL-001");
         assertTrue(segundo.isPresent());
-        verify(configurationClient, times(1)).getConfigurationSetting(eq(USER_KEY), eq("es"));
+        verify(configurationClient, times(1)).getConfigurationSetting(USER_KEY, "es");
 
         defaultCacheAdapter.invalidateMessage("VAL-001");
 
         final Optional<String> tercero = defaultCacheAdapter.findUserMessage("VAL-001");
         assertTrue(tercero.isPresent());
-        verify(configurationClient, times(2)).getConfigurationSetting(eq(USER_KEY), eq("es"));
+        verify(configurationClient, times(2)).getConfigurationSetting(USER_KEY, "es");
     }
 
     @Test

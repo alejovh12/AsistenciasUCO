@@ -27,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -160,7 +161,7 @@ class CrearCoordinadorUseCaseImplTest {
         verify(identityProviderPort).crearCuenta(cuentaCaptor.capture());
         assertEquals(preexistenteId, cuentaCaptor.getValue().idUsuario());
         // La persona ya tenia cuenta en el proveedor: no recibe aviso de activacion.
-        verify(activacion, org.mockito.Mockito.never()).avisar(any(), any(), any());
+        verify(activacion, never()).avisar(any(), any(), any());
     }
 
     @Test
@@ -360,7 +361,7 @@ class CrearCoordinadorUseCaseImplTest {
 
         assertThrows(ConflictException.class, () -> useCaseConUsuarios.execute(domain));
 
-        verify(usuarios, org.mockito.Mockito.never()).consultarUsuarioPorCorreo(anyString());
+        verify(usuarios, never()).consultarUsuarioPorCorreo(anyString());
     }
 
     @org.junit.jupiter.params.ParameterizedTest
@@ -383,7 +384,7 @@ class CrearCoordinadorUseCaseImplTest {
 
         useCaseConIam.execute(dominio(documento, CORREO, actorDecano));
 
-        verify(usuarios, org.mockito.Mockito.never()).consultarUsuarioPorNumeroIdentificacion(any());
+        verify(usuarios, never()).consultarUsuarioPorNumeroIdentificacion(any());
         final ArgumentCaptor<CrearCuentaIdentidadDTO> cuenta = ArgumentCaptor.forClass(CrearCuentaIdentidadDTO.class);
         verify(identityProviderPort).crearCuenta(cuenta.capture());
         assertEquals(usuarioCreadoId, cuenta.getValue().idUsuario());

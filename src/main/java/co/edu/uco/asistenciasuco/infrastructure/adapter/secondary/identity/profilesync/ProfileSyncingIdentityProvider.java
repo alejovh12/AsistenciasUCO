@@ -123,7 +123,7 @@ public final class ProfileSyncingIdentityProvider implements IdentityProviderPor
     private Optional<String> correo(final String idExterno) {
         try {
             return delegate.correoDeCuenta(idExterno);
-        } catch (final IdentityProviderException exception) {
+        } catch (final IdentityProviderException _) {
             return Optional.empty();
         }
     }

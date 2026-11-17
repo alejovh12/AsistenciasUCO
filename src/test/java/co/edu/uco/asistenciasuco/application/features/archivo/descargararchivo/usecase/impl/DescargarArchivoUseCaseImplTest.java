@@ -95,17 +95,20 @@ class DescargarArchivoUseCaseImplTest {
         final UUID actor = UUID.randomUUID();
         when(metadata.consultarAutorizado(fileId, actor)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> useCase.execute(new DescargarArchivoDomain(fileId, actor)));
+        final var descargarArchivoDomain8 = new DescargarArchivoDomain(fileId, actor);
+        assertThrows(ResourceNotFoundException.class, () -> useCase.execute(descargarArchivoDomain8));
 
         verifyNoInteractions(storage);
     }
 
     @Test
     void identificadores_ausentes_no_consultan_ni_sql_ni_storage() {
+        final var descargarArchivoDomain7 = new DescargarArchivoDomain(null, UUID.randomUUID());
         assertThrows(ResourceNotFoundException.class,
-                () -> useCase.execute(new DescargarArchivoDomain(null, UUID.randomUUID())));
+                () -> useCase.execute(descargarArchivoDomain7));
+        final var descargarArchivoDomain6 = new DescargarArchivoDomain(UUID.randomUUID(), null);
         assertThrows(ResourceNotFoundException.class,
-                () -> useCase.execute(new DescargarArchivoDomain(UUID.randomUUID(), null)));
+                () -> useCase.execute(descargarArchivoDomain6));
         verifyNoInteractions(storage, metadata);
     }
 
@@ -116,7 +119,8 @@ class DescargarArchivoUseCaseImplTest {
         when(metadata.consultarAutorizado(fileId, actor)).thenThrow(
                 new SoporteArchivoMetadataPort.SoporteMetadataNoDisponibleException("sql down", new RuntimeException()));
 
-        assertThrows(InternalApplicationException.class, () -> useCase.execute(new DescargarArchivoDomain(fileId, actor)));
+        final var descargarArchivoDomain5 = new DescargarArchivoDomain(fileId, actor);
+        assertThrows(InternalApplicationException.class, () -> useCase.execute(descargarArchivoDomain5));
 
         verifyNoInteractions(storage);
     }
@@ -128,7 +132,8 @@ class DescargarArchivoUseCaseImplTest {
         autorizar(fileId, owner, RelacionAcceso.PROPIETARIO, PDF);
         when(storage.read(anyString())).thenThrow(new FileStoragePort.ObjectNotFoundException(fileId.toString()));
 
-        assertThrows(InternalApplicationException.class, () -> useCase.execute(new DescargarArchivoDomain(fileId, owner)));
+        final var descargarArchivoDomain4 = new DescargarArchivoDomain(fileId, owner);
+        assertThrows(InternalApplicationException.class, () -> useCase.execute(descargarArchivoDomain4));
     }
 
     @Test
@@ -170,7 +175,8 @@ class DescargarArchivoUseCaseImplTest {
         final byte[] alterado = "%PDF- contenido alterad".getBytes();
         when(storage.read(fileId.toString())).thenReturn(stored(fileId, alterado, false, null));
 
-        assertThrows(InternalApplicationException.class, () -> useCase.execute(new DescargarArchivoDomain(fileId, owner)));
+        final var descargarArchivoDomain3 = new DescargarArchivoDomain(fileId, owner);
+        assertThrows(InternalApplicationException.class, () -> useCase.execute(descargarArchivoDomain3));
     }
 
     @Test
@@ -183,7 +189,8 @@ class DescargarArchivoUseCaseImplTest {
                 RelacionAcceso.PROPIETARIO)));
         when(storage.read(fileId.toString())).thenReturn(stored(fileId, PDF, false, null));
 
-        assertThrows(InternalApplicationException.class, () -> useCase.execute(new DescargarArchivoDomain(fileId, owner)));
+        final var descargarArchivoDomain2 = new DescargarArchivoDomain(fileId, owner);
+        assertThrows(InternalApplicationException.class, () -> useCase.execute(descargarArchivoDomain2));
     }
 
     @Test
@@ -193,7 +200,8 @@ class DescargarArchivoUseCaseImplTest {
         autorizar(fileId, owner, RelacionAcceso.PROPIETARIO, PDF);
         when(storage.read(fileId.toString())).thenReturn(stored(fileId, new byte[]{1, 2, 3, 4}, true, "DEFLATE"));
 
-        assertThrows(InternalApplicationException.class, () -> useCase.execute(new DescargarArchivoDomain(fileId, owner)));
+        final var descargarArchivoDomain = new DescargarArchivoDomain(fileId, owner);
+        assertThrows(InternalApplicationException.class, () -> useCase.execute(descargarArchivoDomain));
     }
 
     @Test

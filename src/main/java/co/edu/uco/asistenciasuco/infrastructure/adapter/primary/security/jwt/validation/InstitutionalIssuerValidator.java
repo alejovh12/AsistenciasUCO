@@ -19,6 +19,8 @@ import java.util.Set;
  * de desarrollo local cuando el cliente web accede por diferente nombre de host.
  */
 public final class InstitutionalIssuerValidator implements OAuth2TokenValidator<Jwt> {
+    private static final String HOST_LOCALHOST = "localhost";
+    private static final String HOST_LOOPBACK_IPV4 = "127.0.0.1";
 
     private final String expectedIssuer;
     private final Set<String> acceptedIssuers;
@@ -31,10 +33,10 @@ public final class InstitutionalIssuerValidator implements OAuth2TokenValidator<
         final Set<String> issuers = new LinkedHashSet<>();
         issuers.add(this.expectedIssuer);
 
-        if (this.expectedIssuer.contains("localhost")) {
-            issuers.add(this.expectedIssuer.replace("localhost", "127.0.0.1"));
-        } else if (this.expectedIssuer.contains("127.0.0.1")) {
-            issuers.add(this.expectedIssuer.replace("127.0.0.1", "localhost"));
+        if (this.expectedIssuer.contains(HOST_LOCALHOST)) {
+            issuers.add(this.expectedIssuer.replace(HOST_LOCALHOST, HOST_LOOPBACK_IPV4));
+        } else if (this.expectedIssuer.contains(HOST_LOOPBACK_IPV4)) {
+            issuers.add(this.expectedIssuer.replace(HOST_LOOPBACK_IPV4, HOST_LOCALHOST));
         }
         this.acceptedIssuers = Collections.unmodifiableSet(issuers);
     }

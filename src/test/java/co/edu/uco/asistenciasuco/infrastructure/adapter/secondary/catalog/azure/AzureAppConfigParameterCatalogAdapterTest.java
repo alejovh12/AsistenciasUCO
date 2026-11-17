@@ -10,7 +10,6 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.util.Optional;
 
@@ -27,6 +26,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
 
 class AzureAppConfigParameterCatalogAdapterTest {
 
@@ -36,7 +36,7 @@ class AzureAppConfigParameterCatalogAdapterTest {
 
     @BeforeEach
     void setUp() {
-        configurationClient = Mockito.mock(ConfigurationClient.class);
+        configurationClient = mock(ConfigurationClient.class);
         cache = Caffeine.newBuilder().build();
         adapter = new AzureAppConfigParameterCatalogAdapter(configurationClient, cache);
     }
@@ -46,7 +46,7 @@ class AzureAppConfigParameterCatalogAdapterTest {
     }
 
     private static ResourceNotFoundException notFound() {
-        return new ResourceNotFoundException("not found", Mockito.mock(HttpResponse.class));
+        return new ResourceNotFoundException("not found", mock(HttpResponse.class));
     }
 
     @Test

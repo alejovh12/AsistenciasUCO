@@ -14,13 +14,13 @@ public record DescargarArchivoResultadoEntity(byte[] content, String contentType
         if (this == other) {
             return true;
         }
-        if (!(other instanceof DescargarArchivoResultadoEntity that)) {
+        if (!(other instanceof DescargarArchivoResultadoEntity(var otherContent, var otherContentType, var otherFilename, var otherSize))) {
             return false;
         }
-        return size == that.size
-                && Arrays.equals(content, that.content)
-                && Objects.equals(contentType, that.contentType)
-                && Objects.equals(filename, that.filename);
+        return size == otherSize
+                && Arrays.equals(content, otherContent)
+                && Objects.equals(contentType, otherContentType)
+                && Objects.equals(filename, otherFilename);
     }
 
     @Override

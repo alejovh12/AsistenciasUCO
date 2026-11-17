@@ -105,7 +105,7 @@ public final class RechazarSolicitudSesionUseCaseImpl implements RechazarSolicit
                     .map(MotivoCancelacion::nombre)
                     .findFirst()
                     .orElse(AvisoSesionSupport.valor(comando.codigoMotivo()));
-        } catch (final RuntimeException exception) {
+        } catch (final RuntimeException _) {
             return AvisoSesionSupport.valor(comando.codigoMotivo());
         }
     }
@@ -134,7 +134,7 @@ public final class RechazarSolicitudSesionUseCaseImpl implements RechazarSolicit
                     .map(SesionProcedenciaRepositoryProjection::fechaHoraInicio)
                     .filter(Objects::nonNull)
                     .map(inicio -> inicio.toInstant(ZoneOffset.UTC).toString());
-        } catch (final RuntimeException exception) {
+        } catch (final RuntimeException _) {
             return Optional.empty();
         }
     }

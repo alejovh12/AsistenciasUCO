@@ -193,7 +193,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void handleFrameworkBadRequest_retorna_respuesta_estandar() throws Exception {
+    void handleFrameworkBadRequest_retorna_respuesta_estandar() {
         CorrelationIdContext.set(java.util.UUID.fromString(CORRELATION_ID));
 
         final ResponseEntity<ApiErrorResponse> response = handler.handleFrameworkBadRequest(

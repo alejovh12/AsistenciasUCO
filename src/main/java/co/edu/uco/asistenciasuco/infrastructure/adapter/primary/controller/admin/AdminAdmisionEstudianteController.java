@@ -13,7 +13,6 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.respo
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiPageResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
-import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -92,9 +91,5 @@ public final class AdminAdmisionEstudianteController {
 
     private static String trim(final String valor) {
         return valor == null || valor.isBlank() ? null : valor.trim();
-    }
-
-    private static String blankToNull(final String valor) {
-        return valor == null || valor.isBlank() ? null : valor;
     }
 }

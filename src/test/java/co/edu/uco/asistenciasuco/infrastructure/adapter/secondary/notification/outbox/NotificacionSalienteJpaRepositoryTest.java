@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -272,7 +271,7 @@ class NotificacionSalienteJpaRepositoryTest {
         final UUID id = UUID.randomUUID();
         final UUID corrId = UUID.randomUUID();
         final Instant now = Instant.now();
-        final Object[] fila = new Object[]{
+        final Object[] fila = {
                 id.toString(), "TIPO_STR", "Asunto", "Mensaje", "[]", "{}", 1, now, corrId.toString(), "tr", "sp"
         };
         when(query.getResultList()).thenReturn(List.of((Object) fila));

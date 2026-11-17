@@ -22,6 +22,7 @@ import java.util.UUID;
  * destinatarios del mismo rol (el canal los reparte en bloques BCC), por lo que el saludo es colectivo.
  */
 public final class AvisoSesionSupport {
+    private static final String CLAVE_FECHA = "fecha";
 
     public static final ZoneId ZONA_INSTITUCIONAL = ZoneId.of("America/Bogota");
     /** Saludo de un aviso agrupado a los estudiantes del grupo. */
@@ -67,7 +68,7 @@ public final class AvisoSesionSupport {
         final Map<String, String> datos = new HashMap<>();
         datos.put("asignatura", valor(referencia.nombreAsignatura()));
         datos.put("grupo", valor(referencia.nombreGrupo()));
-        datos.put("fecha", fecha(referencia.fechaHoraInicio()));
+        datos.put(CLAVE_FECHA, fecha(referencia.fechaHoraInicio()));
         datos.put("horaInicio", hora(referencia.fechaHoraInicio()));
         datos.put("horaFin", hora(referencia.fechaHoraFin()));
         datos.put("docente", valor(referencia.nombreDocente()));
@@ -77,7 +78,7 @@ public final class AvisoSesionSupport {
 
     /** " del grupo G para el dd/MM/yyyy de HH:mm a HH:mm." segun la sesion de referencia. */
     public static String ventana(final Map<String, String> datos) {
-        return " del grupo " + datos.get("grupo") + " para el " + datos.get("fecha") + " de " + datos.get("horaInicio") + " a "
+        return " del grupo " + datos.get("grupo") + " para el " + datos.get(CLAVE_FECHA) + " de " + datos.get("horaInicio") + " a "
                 + datos.get("horaFin") + ".";
     }
 
@@ -95,7 +96,7 @@ public final class AvisoSesionSupport {
         }
         final Map<String, String> datos = datosBase(sesionId, grupo.getFirst());
         final String asignatura = datos.get("asignatura");
-        final String fecha = datos.get("fecha");
+        final String fecha = datos.get(CLAVE_FECHA);
         final String docente = datos.get("docente");
         final String saludo = paraEstudiantes ? SALUDO_ESTUDIANTES : SALUDO_COORDINADORES;
         datos.put(paraEstudiantes ? "estudiante" : "coordinador", saludo);

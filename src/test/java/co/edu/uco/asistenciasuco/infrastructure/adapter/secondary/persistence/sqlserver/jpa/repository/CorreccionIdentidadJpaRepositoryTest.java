@@ -91,7 +91,9 @@ class CorreccionIdentidadJpaRepositoryTest {
         when(executor.executeWithExtras(anyString(), anyString(), anyMap(), any(), eq(3)))
                 .thenReturn(new ProcedureRow(mock(ProcedureResult.class), Arrays.asList(null, null, null)));
 
+        final var nombresCorregidos = new NombresCorregidos("Luis", null, "Ruiz", null);
+        final var correccionDocumentoDTO = CorreccionDocumentoDTO.ninguna();
         assertThrows(DatabaseOperationException.class, () -> repository.corregir(TipoUsuarioCorregible.DECANO, REGISTRO,
-                new NombresCorregidos("Luis", null, "Ruiz", null), CorreccionDocumentoDTO.ninguna(), USUARIO));
+                nombresCorregidos, correccionDocumentoDTO, USUARIO));
     }
 }

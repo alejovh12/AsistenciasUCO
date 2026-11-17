@@ -90,8 +90,9 @@ class TomaAsistenciaBordesSqlServerIT {
         assertNotNull(ultima);
         assertEquals(MAXIMO_TOMAS_POR_SESION, tomasDeLaSesion(grupo.sesion()));
 
+        final var comandoAbrir = new AbrirTomaAsistenciaInputPort.Comando(grupo.sesion(), "MANUAL", docente);
         final ConflictException rechazo = assertThrows(ConflictException.class,
-                () -> abrirToma.execute(new AbrirTomaAsistenciaInputPort.Comando(grupo.sesion(), "MANUAL", docente)));
+                () -> abrirToma.execute(comandoAbrir));
 
         assertEquals("TOM_004", rechazo.getCode());
         assertEquals(MAXIMO_TOMAS_POR_SESION, tomasDeLaSesion(grupo.sesion()), "la toma 21 no debe quedar registrada");

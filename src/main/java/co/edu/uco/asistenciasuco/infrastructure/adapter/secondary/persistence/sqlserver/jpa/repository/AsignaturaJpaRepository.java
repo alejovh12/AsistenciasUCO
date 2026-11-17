@@ -20,6 +20,10 @@ import org.springframework.stereotype.Repository;
 /** Repositorio JPA directo consolidado para Asignatura. */
 @Repository
 public class AsignaturaJpaRepository implements AsignaturaQueryPort, AsignaturaCommandPort {
+    private static final String PARAM_ID_PLAN_ESTUDIO = "idPlanEstudio";
+    private static final String PARAM_ID_ASIGNATURA = "idAsignatura";
+    private static final String PARAM_ID_CORRELACION = "idCorrelacion";
+    private static final String PARAM_ID_USUARIO_EJECUTOR = "idUsuarioEjecutor";
 
     static final String SQL_CREAR_ASIGNATURA = """
             EXEC dbo.usp_crear_asignatura
@@ -144,7 +148,7 @@ public class AsignaturaJpaRepository implements AsignaturaQueryPort, AsignaturaC
                 "consultarAsignaturasPorPlan",
                 "No fue posible consultar las asignaturas del plan desde base de datos.",
                 () -> entityManager.createQuery(HQL_POR_PLAN, AsignaturaQueryRow.class)
-                        .setParameter("idPlanEstudio", idPlanEstudio)
+                        .setParameter(PARAM_ID_PLAN_ESTUDIO, idPlanEstudio)
                         .getResultList().stream()
                         .map(AcademicViewJpaProjectionMapper::toAsignatura)
                         .toList()
@@ -168,16 +172,16 @@ public class AsignaturaJpaRepository implements AsignaturaQueryPort, AsignaturaC
         final UUID correlationId = CorrelationIdContext.require();
 
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idAsignatura", idAsignatura);
+        parametros.put(PARAM_ID_ASIGNATURA, idAsignatura);
         parametros.put("codigo", codigo);
         parametros.put("nombre", nombre);
         parametros.put("creditos", creditos);
-        parametros.put("idPlanEstudio", idPlanEstudio);
+        parametros.put(PARAM_ID_PLAN_ESTUDIO, idPlanEstudio);
         parametros.put("semestreNumero", semestreNumero);
         parametros.put("nombreArea", nombreArea);
         parametros.put("nombreComponente", nombreComponente);
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", usuarioEjecutor);
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, usuarioEjecutor);
         parametros.put("codigoCaracter", codigoCaracter);
 
         return procedureExecutor.execute(OP_CREAR, SQL_CREAR_ASIGNATURA, parametros, correlationId);
@@ -198,16 +202,16 @@ public class AsignaturaJpaRepository implements AsignaturaQueryPort, AsignaturaC
         final UUID correlationId = CorrelationIdContext.require();
 
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idAsignatura", idAsignatura);
+        parametros.put(PARAM_ID_ASIGNATURA, idAsignatura);
         parametros.put("codigo", codigo);
         parametros.put("nombre", nombre);
         parametros.put("creditos", creditos);
-        parametros.put("idPlanEstudio", idPlanEstudio);
+        parametros.put(PARAM_ID_PLAN_ESTUDIO, idPlanEstudio);
         parametros.put("semestreNumero", semestreNumero);
         parametros.put("nombreArea", nombreArea);
         parametros.put("nombreComponente", nombreComponente);
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", usuarioEjecutor);
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, usuarioEjecutor);
         parametros.put("codigoCaracter", codigoCaracter);
 
         return procedureExecutor.execute(OP_ACTUALIZAR, SQL_ACTUALIZAR_ASIGNATURA, parametros, correlationId);
@@ -217,9 +221,9 @@ public class AsignaturaJpaRepository implements AsignaturaQueryPort, AsignaturaC
         final UUID correlationId = CorrelationIdContext.require();
 
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idAsignatura", idAsignatura);
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", usuarioEjecutor);
+        parametros.put(PARAM_ID_ASIGNATURA, idAsignatura);
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, usuarioEjecutor);
 
         return procedureExecutor.execute(OP_TOGGLE, SQL_TOGGLE_ESTADO_ASIGNATURA, parametros, correlationId);
     }

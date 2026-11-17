@@ -49,16 +49,16 @@ class FacultadJpaRepositoryTest {
                 FACULTY_ID, "Ingenieria", institutionId, deanId, actorId));
 
         verify(procedureExecutor).execute(
-                eq(FacultadJpaRepository.OP_CREAR_FACULTAD),
-                eq(FacultadJpaRepository.SQL_CREAR_FACULTAD),
-                eq(Map.of(
+                FacultadJpaRepository.OP_CREAR_FACULTAD,
+                FacultadJpaRepository.SQL_CREAR_FACULTAD,
+                Map.of(
                         "id", FACULTY_ID,
                         "nombre", "Ingenieria",
                         "idInstitucion", institutionId,
                         "idDecano", deanId,
                         "idCorrelacion", CORRELATION_ID,
-                        "idUsuarioEjecutor", actorId)),
-                eq(CORRELATION_ID));
+                        "idUsuarioEjecutor", actorId),
+                CORRELATION_ID);
     }
 
     @Test
@@ -72,15 +72,15 @@ class FacultadJpaRepositoryTest {
         repository.actualizarFacultad(new ActualizarFacultadCommand(FACULTY_ID, "Ingenieria", deanId, actorId));
 
         verify(procedureExecutor).execute(
-                eq(FacultadJpaRepository.OP_ACTUALIZAR_FACULTAD),
-                eq(FacultadJpaRepository.SQL_ACTUALIZAR_FACULTAD),
-                eq(Map.of(
+                FacultadJpaRepository.OP_ACTUALIZAR_FACULTAD,
+                FacultadJpaRepository.SQL_ACTUALIZAR_FACULTAD,
+                Map.of(
                         "id", FACULTY_ID,
                         "nombre", "Ingenieria",
                         "idDecano", deanId,
                         "idCorrelacion", CORRELATION_ID,
-                        "idUsuarioEjecutor", actorId)),
-                eq(CORRELATION_ID));
+                        "idUsuarioEjecutor", actorId),
+                CORRELATION_ID);
     }
 
     @Test
@@ -99,10 +99,10 @@ class FacultadJpaRepositoryTest {
         esperado.put("idCorrelacion", CORRELATION_ID);
         esperado.put("idUsuarioEjecutor", actorId);
         verify(procedureExecutor).execute(
-                eq(FacultadJpaRepository.OP_ACTUALIZAR_FACULTAD),
-                eq(FacultadJpaRepository.SQL_ACTUALIZAR_FACULTAD),
-                eq(esperado),
-                eq(CORRELATION_ID));
+                FacultadJpaRepository.OP_ACTUALIZAR_FACULTAD,
+                FacultadJpaRepository.SQL_ACTUALIZAR_FACULTAD,
+                esperado,
+                CORRELATION_ID);
     }
 
     @Test
@@ -115,14 +115,14 @@ class FacultadJpaRepositoryTest {
         repository.cambiarEstadoFacultad(new CambiarEstadoFacultadCommand(FACULTY_ID, false, actorId));
 
         verify(procedureExecutor).execute(
-                eq(FacultadJpaRepository.OP_CAMBIAR_ESTADO_FACULTAD),
-                eq(FacultadJpaRepository.SQL_CAMBIAR_ESTADO_FACULTAD),
-                eq(Map.of(
+                FacultadJpaRepository.OP_CAMBIAR_ESTADO_FACULTAD,
+                FacultadJpaRepository.SQL_CAMBIAR_ESTADO_FACULTAD,
+                Map.of(
                         "id", FACULTY_ID,
                         "estaActiva", false,
                         "idCorrelacion", CORRELATION_ID,
-                        "idUsuarioEjecutor", actorId)),
-                eq(CORRELATION_ID));
+                        "idUsuarioEjecutor", actorId),
+                CORRELATION_ID);
     }
 
     @Test

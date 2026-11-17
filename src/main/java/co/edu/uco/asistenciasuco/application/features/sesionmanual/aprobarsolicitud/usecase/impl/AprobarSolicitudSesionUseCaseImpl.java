@@ -30,6 +30,7 @@ import java.util.UUID;
  * </ul>
  */
 public final class AprobarSolicitudSesionUseCaseImpl implements AprobarSolicitudSesionUseCase {
+    private static final String CLAVE_DOCENTE = "docente";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AprobarSolicitudSesionUseCaseImpl.class);
 
@@ -97,12 +98,12 @@ public final class AprobarSolicitudSesionUseCaseImpl implements AprobarSolicitud
         }
         final DestinatarioSesionManual docente = docentes.getFirst();
         final Map<String, String> datos = AvisoSesionSupport.datosBase(sesionId, docente);
-        datos.put("docente", AvisoSesionSupport.valor(docente.nombreCompleto()));
+        datos.put(CLAVE_DOCENTE, AvisoSesionSupport.valor(docente.nombreCompleto()));
         datos.put("coordinador", AvisoSesionSupport.COORDINADOR_DEL_PROGRAMA);
         return Optional.of(new Notificacion(
                 Notificacion.TIPO_SESION_SOLICITUD_APROBADA_DOCENTE,
                 "Solicitud aprobada: " + datos.get("asignatura") + " (" + datos.get("fecha") + ")",
-                "Hola " + datos.get("docente") + ". " + AvisoSesionSupport.COORDINADOR_DEL_PROGRAMA
+                "Hola " + datos.get(CLAVE_DOCENTE) + ". " + AvisoSesionSupport.COORDINADOR_DEL_PROGRAMA
                         + " aprobó su solicitud de sesión extraordinaria de " + datos.get("asignatura") + AvisoSesionSupport.ventana(datos)
                         + " Ya puede tomar asistencia en ella y los estudiantes fueron notificados.",
                 AvisoSesionSupport.comoDestinatarios(List.of(docente)), datos));
@@ -113,7 +114,7 @@ public final class AprobarSolicitudSesionUseCaseImpl implements AprobarSolicitud
         payload.put("grupo", aprobada.idGrupo().toString());
         payload.put("sesion", aprobada.idSesion().toString());
         payload.put("fechaHoraInicio", fechaHoraInicio(aprobada));
-        payload.put("docente", destinatarios.stream().map(DestinatarioSesionManual::nombreDocente).filter(Objects::nonNull)
+        payload.put(CLAVE_DOCENTE, destinatarios.stream().map(DestinatarioSesionManual::nombreDocente).filter(Objects::nonNull)
                 .findFirst().orElse(""));
         try {
             realtime.publish(RealtimeEvent.of(NOMBRE_EVENTO, payload));
@@ -130,7 +131,7 @@ public final class AprobarSolicitudSesionUseCaseImpl implements AprobarSolicitud
         try {
             return sesiones.consultarSesion(aprobada.idSesion()).map(AvisoSesionSupport::fechaHoraInicio)
                     .orElseGet(() -> valorAlmacenado(aprobada));
-        } catch (final RuntimeException exception) {
+        } catch (final RuntimeException _) {
             return valorAlmacenado(aprobada);
         }
     }

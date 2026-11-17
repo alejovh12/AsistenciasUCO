@@ -55,7 +55,7 @@ public final class SecurityContextAuthenticatedUserResolver
         final UUID userId;
         try {
             userId = UUID.fromString(principal);
-        } catch (IllegalArgumentException exception) {
+        } catch (IllegalArgumentException _) {
             // Principal sin formato UUID: para el usuario es el mismo caso de usuario no resuelto (VAL-oleada3 MSG-05).
             throw new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_005);
         }

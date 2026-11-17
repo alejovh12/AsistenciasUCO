@@ -5,8 +5,6 @@ import co.edu.uco.asistenciasuco.application.features.coordinador.consultarficha
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarfichaestudiante.primaryports.dto.ResumenAsignaturaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarfichaestudiante.usecase.domain.ConsultarFichaEstudianteDomain;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarfichaestudiante.usecase.domain.FichaEstudianteDomain;
-import co.edu.uco.asistenciasuco.application.features.coordinador.consultarfichaestudiante.usecase.domain.ResumenAsignaturaDomain;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.FichaEstudianteProjection;
 import java.util.List;
 
 public final class ConsultarFichaEstudianteMapper {

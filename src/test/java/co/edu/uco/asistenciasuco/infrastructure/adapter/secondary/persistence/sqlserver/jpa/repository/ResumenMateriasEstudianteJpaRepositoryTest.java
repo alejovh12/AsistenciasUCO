@@ -85,22 +85,25 @@ class ResumenMateriasEstudianteJpaRepositoryTest {
 
     @Test
     void columnas_distintas_de_4_o_sin_fila_son_un_fallo_tecnico() {
+        final var repositorio = new ResumenMateriasEstudianteJpaRepository(manager);
         when(query.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(new Object[3]));
         assertInstanceOf(IllegalStateException.class, assertThrows(DatabaseOperationException.class,
-                () -> new ResumenMateriasEstudianteJpaRepository(manager).consultarResumen(ACTOR)).getCause());
+                () -> repositorio.consultarResumen(ACTOR)).getCause());
 
         when(query.getResultList()).thenReturn(List.of());
         assertInstanceOf(IllegalStateException.class, assertThrows(DatabaseOperationException.class,
-                () -> new ResumenMateriasEstudianteJpaRepository(manager).consultarResumen(ACTOR)).getCause());
+                () -> repositorio.consultarResumen(ACTOR)).getCause());
     }
 
     @Test
     void los_rechazos_del_sp_se_traducen_con_su_http() {
         doThrow(new PersistenceException("x", new RuntimeException("DBCODE=SEC_001|perfil"))).when(query).getResultList();
-        assertThrows(ForbiddenException.class, () -> new ResumenMateriasEstudianteJpaRepository(manager).consultarResumen(ACTOR));
+        final var resumenMateriasEstudianteJpaRepository2 = new ResumenMateriasEstudianteJpaRepository(manager);
+        assertThrows(ForbiddenException.class, () -> resumenMateriasEstudianteJpaRepository2.consultarResumen(ACTOR));
 
         doThrow(new PersistenceException("db down")).when(query).getResultList();
-        assertThrows(DatabaseOperationException.class, () -> new ResumenMateriasEstudianteJpaRepository(manager).consultarResumen(ACTOR));
+        final var resumenMateriasEstudianteJpaRepository = new ResumenMateriasEstudianteJpaRepository(manager);
+        assertThrows(DatabaseOperationException.class, () -> resumenMateriasEstudianteJpaRepository.consultarResumen(ACTOR));
     }
 
     @Test

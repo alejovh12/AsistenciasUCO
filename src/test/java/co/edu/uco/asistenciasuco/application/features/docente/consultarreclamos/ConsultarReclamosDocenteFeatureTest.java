@@ -26,7 +26,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -72,8 +71,9 @@ class ConsultarReclamosDocenteFeatureTest {
     void quien_no_es_docente_institucional_recibe_forbidden_y_sql_no_se_consulta() {
         when(scope.findDocenteIdByUsuario(ACTOR)).thenReturn(Optional.empty());
 
+        final var consultarReclamosDocenteDTO2 = new ConsultarReclamosDocenteDTO(ACTOR, null, 1, 10);
         assertThrows(ForbiddenException.class,
-                () -> interactor.execute(new ConsultarReclamosDocenteDTO(ACTOR, null, 1, 10)));
+                () -> interactor.execute(consultarReclamosDocenteDTO2));
 
         verifyNoInteractions(query);
     }
@@ -165,8 +165,8 @@ class ConsultarReclamosDocenteFeatureTest {
     void el_titular_sigue_siendo_requisito_con_busqueda_y_grupo() {
         when(scope.findDocenteIdByUsuario(ACTOR)).thenReturn(Optional.empty());
 
-        assertThrows(ForbiddenException.class, () -> interactor.execute(
-                new ConsultarReclamosDocenteDTO(ACTOR, null, 1, 10, "ana", UUID.randomUUID())));
+        final var consultarReclamosDocenteDTO = new ConsultarReclamosDocenteDTO(ACTOR, null, 1, 10, "ana", UUID.randomUUID());
+        assertThrows(ForbiddenException.class, () -> interactor.execute(consultarReclamosDocenteDTO));
 
         verifyNoInteractions(query);
     }

@@ -26,7 +26,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jwt.BadJwtException;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -128,7 +127,7 @@ class RutaRegistroIndividualRetiradaWebMvcTest {
             }
             try {
                 return Optional.of(ClassUtils.forName(nombreClase, classLoader));
-            } catch (ClassNotFoundException | LinkageError error) {
+            } catch (ClassNotFoundException | LinkageError _) {
                 return Optional.empty();
             }
         }

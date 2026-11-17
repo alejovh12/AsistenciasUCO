@@ -125,7 +125,8 @@ class CatalogoParametrosHttpParameterCatalogAdapterTest {
     void required_ausente_lanza_not_found() throws Exception {
         responde(200, JSON);
 
-        assertThrows(ParameterNotFoundException.class, () -> adaptor(Duration.ofMinutes(5)).getRequiredParameter("G", "NOPE"));
+        final var adaptor2 = adaptor(Duration.ofMinutes(5));
+        assertThrows(ParameterNotFoundException.class, () -> adaptor2.getRequiredParameter("G", "NOPE"));
     }
 
     @Test
@@ -139,7 +140,8 @@ class CatalogoParametrosHttpParameterCatalogAdapterTest {
     void status_no_2xx_lanza_excepcion_sin_secreto() throws Exception {
         for (final int status : new int[]{401, 500, 199, 300}) {
             responde(status, "{\"detalle\":\"" + SECRETO + "\"}");
-            final var e = assertThrows(ParameterCatalogException.class, () -> adaptor(Duration.ofMinutes(5)).getParameter("G", "K"));
+            final var adaptor2 = adaptor(Duration.ofMinutes(5));
+            final var e = assertThrows(ParameterCatalogException.class, () -> adaptor2.getParameter("G", "K"));
             assertTrue(e.getMessage().contains(String.valueOf(status)));
             assertFalse(e.getMessage().contains(SECRETO));
         }
@@ -149,7 +151,8 @@ class CatalogoParametrosHttpParameterCatalogAdapterTest {
     void io_exception_se_traduce_a_excepcion_del_catalogo() throws Exception {
         when(http.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenThrow(new IOException("caida " + "red"));
 
-        final var e = assertThrows(ParameterCatalogException.class, () -> adaptor(Duration.ofMinutes(5)).getParameter("G", "K"));
+        final var adaptor2 = adaptor(Duration.ofMinutes(5));
+        final var e = assertThrows(ParameterCatalogException.class, () -> adaptor2.getParameter("G", "K"));
         assertFalse(e.getMessage().contains(SECRETO));
     }
 
@@ -157,7 +160,8 @@ class CatalogoParametrosHttpParameterCatalogAdapterTest {
     void interrupcion_se_traduce_y_restaura_la_bandera() throws Exception {
         when(http.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenThrow(new InterruptedException());
         try {
-            assertThrows(ParameterCatalogException.class, () -> adaptor(Duration.ofMinutes(5)).getParameter("G", "K"));
+            final var adaptor2 = adaptor(Duration.ofMinutes(5));
+            assertThrows(ParameterCatalogException.class, () -> adaptor2.getParameter("G", "K"));
             assertTrue(Thread.currentThread().isInterrupted());
         } finally {
             Thread.interrupted();
@@ -168,7 +172,8 @@ class CatalogoParametrosHttpParameterCatalogAdapterTest {
     void json_invalido_lanza_excepcion_del_catalogo() throws Exception {
         responde(200, "{no es json");
 
-        assertThrows(ParameterCatalogException.class, () -> adaptor(Duration.ofMinutes(5)).getParameter("G", "K"));
+        final var adaptor2 = adaptor(Duration.ofMinutes(5));
+        assertThrows(ParameterCatalogException.class, () -> adaptor2.getParameter("G", "K"));
     }
 
     @Test
@@ -283,9 +288,8 @@ class CatalogoParametrosHttpParameterCatalogAdapterTest {
                 segundoHilo.set(Thread.currentThread());
                 return a.getParameter("G", "SINACTIVO");
             });
-            while (segundoHilo.get() == null || segundoHilo.get().getState() != Thread.State.WAITING) {
-                Thread.sleep(5);
-            }
+            org.awaitility.Awaitility.await().until(
+                    () -> segundoHilo.get() != null && segundoHilo.get().getState() == Thread.State.WAITING);
             soltar.countDown();
 
             assertEquals("presente", primera.get(5, java.util.concurrent.TimeUnit.SECONDS).orElseThrow());
@@ -498,9 +502,8 @@ class CatalogoParametrosHttpParameterCatalogAdapterTest {
                 segundoHilo.set(Thread.currentThread());
                 return a.getParameter("G", "SINACTIVO");
             });
-            while (segundoHilo.get() == null || segundoHilo.get().getState() != Thread.State.WAITING) {
-                Thread.sleep(5);
-            }
+            org.awaitility.Awaitility.await().until(
+                    () -> segundoHilo.get() != null && segundoHilo.get().getState() == Thread.State.WAITING);
             soltar.countDown();
 
             final var e1 = assertThrows(java.util.concurrent.ExecutionException.class,

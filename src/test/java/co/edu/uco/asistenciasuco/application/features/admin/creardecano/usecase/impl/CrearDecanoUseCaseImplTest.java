@@ -28,7 +28,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -120,7 +119,8 @@ class CrearDecanoUseCaseImplTest {
     void fallo_db_impide_identity() {
         doThrow(new IllegalStateException("Fallo DB")).when(command).crearDecano(any());
 
-        assertThrows(IllegalStateException.class, () -> useCase.execute(domain(123456789, CORREO)));
+        final var domain9 = domain(123456789, CORREO);
+        assertThrows(IllegalStateException.class, () -> useCase.execute(domain9));
 
         verifyNoInteractions(identity);
         verify(usuarios, never()).consultarUsuarioPorId(any());
@@ -133,8 +133,9 @@ class CrearDecanoUseCaseImplTest {
                 usuario(UUID.fromString("bbbbbbbb-cccc-dddd-eeee-ffffffffffff"), 123456789, "otro@uco.edu.co")
         ));
 
+        final var domain8 = domain(123456789, CORREO);
         final ConflictException exception = assertThrows(ConflictException.class,
-                () -> useCase.execute(domain(123456789, CORREO)));
+                () -> useCase.execute(domain8));
 
         assertEquals("ERR_IDENTIDAD_USUARIO_CONFLICTO", exception.getCode());
         verifyNoInteractions(command, activacion, identity);
@@ -144,8 +145,9 @@ class CrearDecanoUseCaseImplTest {
     void solo_correo_existente_es_conflicto_antes_de_db() {
         when(usuarios.consultarUsuarioPorCorreo(CORREO)).thenReturn(Optional.of(usuario(USUARIO_ID, 111111111, CORREO)));
 
+        final var domain7 = domain(123456789, CORREO);
         final ConflictException exception = assertThrows(ConflictException.class,
-                () -> useCase.execute(domain(123456789, CORREO)));
+                () -> useCase.execute(domain7));
 
         assertEquals("ERR_UNICIDAD_CORREO", exception.getCode());
         verifyNoInteractions(command, activacion, identity);
@@ -157,8 +159,9 @@ class CrearDecanoUseCaseImplTest {
                 usuario(USUARIO_ID, 123456789, "viejo@uco.edu.co")
         ));
 
+        final var domain6 = domain(123456789, CORREO);
         final ConflictException exception = assertThrows(ConflictException.class,
-                () -> useCase.execute(domain(123456789, CORREO)));
+                () -> useCase.execute(domain6));
 
         assertEquals("ERR_UNICIDAD_DOCUMENTO", exception.getCode());
         verifyNoInteractions(command, activacion, identity);
@@ -198,7 +201,8 @@ class CrearDecanoUseCaseImplTest {
         when(usuarios.consultarUsuarioPorCorreo(CORREO)).thenReturn(Optional.of(previo));
         when(usuarios.consultarUsuarioPorIdentificacion(TIPO_ID, 123456789)).thenReturn(Optional.of(previo));
 
-        assertThrows(InternalApplicationException.class, () -> useCase.execute(domain(123456789, CORREO)));
+        final var domain5 = domain(123456789, CORREO);
+        assertThrows(InternalApplicationException.class, () -> useCase.execute(domain5));
 
         verify(command).crearDecano(any());
         verify(usuarios).consultarUsuarioPorId(USUARIO_ID);
@@ -233,8 +237,9 @@ class CrearDecanoUseCaseImplTest {
         when(usuarios.consultarUsuarioPorIdentificacion(TIPO_ID, 123456789)).thenReturn(Optional.of(previo));
         doThrow(new ConflictException(DecanoErrorCode.DEC_020)).when(command).crearDecano(any());
 
+        final var domain4 = domain(123456789, CORREO);
         final ConflictException exception = assertThrows(ConflictException.class,
-                () -> useCase.execute(domain(123456789, CORREO)));
+                () -> useCase.execute(domain4));
 
         assertEquals("DEC_020", exception.getCode());
         verifyNoInteractions(identity, desfases);
@@ -243,7 +248,8 @@ class CrearDecanoUseCaseImplTest {
     @Test
     void usuario_nuevo_sin_proyeccion_post_command_falla_sin_identity() {
 
-        assertThrows(InternalApplicationException.class, () -> useCase.execute(domain(123456789, CORREO)));
+        final var domain3 = domain(123456789, CORREO);
+        assertThrows(InternalApplicationException.class, () -> useCase.execute(domain3));
 
         verify(command).crearDecano(any());
         verifyNoInteractions(identity);
@@ -255,7 +261,8 @@ class CrearDecanoUseCaseImplTest {
                 Optional.empty(), Optional.of(usuario(USUARIO_ID, 123456789, "otro@uco.edu.co"))
         );
 
-        assertThrows(InternalApplicationException.class, () -> useCase.execute(domain(123456789, CORREO)));
+        final var domain2 = domain(123456789, CORREO);
+        assertThrows(InternalApplicationException.class, () -> useCase.execute(domain2));
 
         verify(command).crearDecano(any());
         verifyNoInteractions(identity);
@@ -269,7 +276,8 @@ class CrearDecanoUseCaseImplTest {
                 ))
         );
 
-        assertThrows(InternalApplicationException.class, () -> useCase.execute(domain(123456789, CORREO)));
+        final var domain = domain(123456789, CORREO);
+        assertThrows(InternalApplicationException.class, () -> useCase.execute(domain));
 
         verify(command).crearDecano(any());
         verifyNoInteractions(identity);

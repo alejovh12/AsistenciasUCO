@@ -179,7 +179,7 @@ class SoporteArchivoJpaRepositoryTest {
 
     // CIERRE-W1A: busqueda e idGrupo se envian al SP (nulos si no se piden).
     @Test
-    void reclamos_docente_envia_busqueda_e_idGrupo_al_sp() throws Exception {
+    void reclamos_docente_envia_busqueda_e_idGrupo_al_sp() {
         final SolicitudRevisionDocenteJpaRepository docente = new SolicitudRevisionDocenteJpaRepository(entityManager);
         final UUID grupo = UUID.randomUUID();
         when(query.getResultList()).thenReturn(List.of());
@@ -193,7 +193,7 @@ class SoporteArchivoJpaRepositoryTest {
     }
 
     @Test
-    void reclamos_docente_sin_filtros_nuevos_envia_nulos_al_sp() throws Exception {
+    void reclamos_docente_sin_filtros_nuevos_envia_nulos_al_sp() {
         final SolicitudRevisionDocenteJpaRepository docente = new SolicitudRevisionDocenteJpaRepository(entityManager);
         when(query.getResultList()).thenReturn(List.of());
 

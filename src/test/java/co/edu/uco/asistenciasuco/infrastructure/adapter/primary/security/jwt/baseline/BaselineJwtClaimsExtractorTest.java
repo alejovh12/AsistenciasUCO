@@ -60,12 +60,15 @@ class BaselineJwtClaimsExtractorTest {
     @Test
     void subject_ausente_correo_no_verificado_o_correo_ausente_rechazan() {
         when(links.find(ISSUER, SUBJECT)).thenReturn(Optional.empty());
-        assertThrows(OAuth2AuthenticationException.class, () -> extractor.requireUserId(jwt(Map.of(
-                "email", "persona@uco.edu.co", "email_verified", true), null)));
-        assertThrows(OAuth2AuthenticationException.class, () -> extractor.requireUserId(jwt(Map.of(
-                "email", "persona@uco.edu.co", "email_verified", false))));
-        assertThrows(OAuth2AuthenticationException.class, () -> extractor.requireUserId(jwt(Map.of(
-                "email_verified", true))));
+        final var jwt4 = jwt(Map.of(
+                "email", "persona@uco.edu.co", "email_verified", true), null);
+        assertThrows(OAuth2AuthenticationException.class, () -> extractor.requireUserId(jwt4));
+        final var jwt3 = jwt(Map.of(
+                "email", "persona@uco.edu.co", "email_verified", false));
+        assertThrows(OAuth2AuthenticationException.class, () -> extractor.requireUserId(jwt3));
+        final var jwt2 = jwt(Map.of(
+                "email_verified", true));
+        assertThrows(OAuth2AuthenticationException.class, () -> extractor.requireUserId(jwt2));
     }
 
     @Test
@@ -116,14 +119,16 @@ class BaselineJwtClaimsExtractorTest {
     }
 
     private void assertInvalidClaims(final Map<String, Object> claims) {
+        final var jwt2 = jwt(claims);
         final OAuth2AuthenticationException error = assertThrows(OAuth2AuthenticationException.class,
-                () -> extractor.requireUserId(jwt(claims)));
+                () -> extractor.requireUserId(jwt2));
         assertEquals("invalid_token", error.getError().getErrorCode());
     }
 
     private void assertInvalidToken(final String email) {
+        final var jwt2 = jwt(Map.of("email", email, "email_verified", true));
         final OAuth2AuthenticationException error = assertThrows(OAuth2AuthenticationException.class,
-                () -> extractor.requireUserId(jwt(Map.of("email", email, "email_verified", true))));
+                () -> extractor.requireUserId(jwt2));
         assertEquals("invalid_token", error.getError().getErrorCode());
     }
 

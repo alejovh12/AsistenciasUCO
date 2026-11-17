@@ -129,7 +129,8 @@ class AdmitirEstudianteUseCaseImplTest {
 
     @Test
     void alta_nueva_con_correo_no_institucional_es_validacion_VCE_001_y_no_toca_la_base() {
-        assertThrows(ValidationException.class, () -> useCase.execute(domain("ana@gmail.com")));
+        final var domain7 = domain("ana@gmail.com");
+        assertThrows(ValidationException.class, () -> useCase.execute(domain7));
         verifyNoInteractions(comando, cuentas);
     }
 
@@ -159,7 +160,8 @@ class AdmitirEstudianteUseCaseImplTest {
         when(usuarios.consultarUsuarioPorCorreo(any())).thenReturn(Optional.of(canonico()));
         when(comando.admitir(any())).thenThrow(new ConflictException(AdmisionEstudianteErrorCode.ADS_004));
 
-        final ConflictException error = assertThrows(ConflictException.class, () -> useCase.execute(domain(CORREO)));
+        final var domain6 = domain(CORREO);
+        final ConflictException error = assertThrows(ConflictException.class, () -> useCase.execute(domain6));
 
         assertEquals(AdmisionEstudianteErrorCode.ADS_004.code(), error.getCode());
         verifyNoInteractions(cuentas);
@@ -210,7 +212,8 @@ class AdmitirEstudianteUseCaseImplTest {
         final ConflictException conflicto = new ConflictException(AdmisionEstudianteErrorCode.ADS_002);
         when(cuentas.repararOFallar(any())).thenThrow(conflicto);
 
-        assertSame(conflicto, assertThrows(ConflictException.class, () -> useCase.execute(domain(CORREO))));
+        final var domain5 = domain(CORREO);
+        assertSame(conflicto, assertThrows(ConflictException.class, () -> useCase.execute(domain5)));
     }
 
     @Test
@@ -219,18 +222,21 @@ class AdmitirEstudianteUseCaseImplTest {
         when(usuarios.consultarUsuarioPorIdentificacion(any(), any())).thenReturn(Optional.of(canonico()), Optional.empty());
         when(comando.admitir(any())).thenThrow(new ConflictException(AdmisionEstudianteErrorCode.ADS_002));
 
-        assertThrows(InternalApplicationException.class, () -> useCase.execute(domain(CORREO)));
+        final var domain4 = domain(CORREO);
+        assertThrows(InternalApplicationException.class, () -> useCase.execute(domain4));
 
         when(usuarios.consultarUsuarioPorIdentificacion(any(), any())).thenReturn(Optional.of(canonico()));
         when(ambito.findEstudianteIdByUsuario(USUARIO)).thenReturn(Optional.empty());
-        assertThrows(InternalApplicationException.class, () -> useCase.execute(domain(CORREO)));
+        final var domain3 = domain(CORREO);
+        assertThrows(InternalApplicationException.class, () -> useCase.execute(domain3));
     }
 
     @Test
     void un_conflicto_distinto_de_ADS_002_se_propaga_sin_reparar() {
         when(comando.admitir(any())).thenThrow(new ConflictException(UsuarioErrorCode.ERR_UNICIDAD_DOCUMENTO));
 
-        assertThrows(ConflictException.class, () -> useCase.execute(domain(CORREO)));
+        final var domain2 = domain(CORREO);
+        assertThrows(ConflictException.class, () -> useCase.execute(domain2));
         verifyNoInteractions(cuentas);
     }
 
@@ -239,7 +245,8 @@ class AdmitirEstudianteUseCaseImplTest {
         when(comando.admitir(any())).thenReturn(new AdmisionEstudianteResultadoProjection(USUARIO, ESTUDIANTE, true, true));
         when(usuarios.consultarUsuarioPorId(USUARIO)).thenReturn(Optional.empty());
 
-        assertThrows(InternalApplicationException.class, () -> useCase.execute(domain(CORREO)));
+        final var domain = domain(CORREO);
+        assertThrows(InternalApplicationException.class, () -> useCase.execute(domain));
         verifyNoInteractions(cuentas);
     }
 

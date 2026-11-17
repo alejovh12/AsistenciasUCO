@@ -122,10 +122,14 @@ class ConsultarOfertaGruposUseCaseImplTest {
     @Test
     void OG05_validaciones_de_entrada() {
         assertThrows(ValidationException.class, () -> useCase.execute(null));
-        assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarOfertaGruposDomain(ACTOR, null, 0, 10)));
-        assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarOfertaGruposDomain(ACTOR, null, 1, 0)));
-        assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarOfertaGruposDomain(ACTOR, null, 1, 101)));
-        assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarOfertaGruposDomain(ACTOR, "x".repeat(51), 1, 10)));
+        final var consultarOfertaGruposDomain4 = new ConsultarOfertaGruposDomain(ACTOR, null, 0, 10);
+        assertThrows(ValidationException.class, () -> useCase.execute(consultarOfertaGruposDomain4));
+        final var consultarOfertaGruposDomain3 = new ConsultarOfertaGruposDomain(ACTOR, null, 1, 0);
+        assertThrows(ValidationException.class, () -> useCase.execute(consultarOfertaGruposDomain3));
+        final var consultarOfertaGruposDomain2 = new ConsultarOfertaGruposDomain(ACTOR, null, 1, 101);
+        assertThrows(ValidationException.class, () -> useCase.execute(consultarOfertaGruposDomain2));
+        final var consultarOfertaGruposDomain = new ConsultarOfertaGruposDomain(ACTOR, "x".repeat(51), 1, 10);
+        assertThrows(ValidationException.class, () -> useCase.execute(consultarOfertaGruposDomain));
         verifyNoInteractions(scope, port);
     }
 
@@ -143,7 +147,8 @@ class ConsultarOfertaGruposUseCaseImplTest {
         assertEquals(LocalDate.of(2026, 7, 20), dto.grupos().getFirst().fechaInicioPeriodo());
         assertEquals("ESPECIFICA", dto.grupos().getFirst().tipoAsignatura());
         assertFalse(dto.grupos().getFirst().transversal());
-        assertThrows(ValidationException.class, () -> new ConsultarOfertaGruposInteractor(useCase).execute(null));
+        final var consultarOfertaGruposInteractor = new ConsultarOfertaGruposInteractor(useCase);
+        assertThrows(ValidationException.class, () -> consultarOfertaGruposInteractor.execute(null));
     }
 
     @Test

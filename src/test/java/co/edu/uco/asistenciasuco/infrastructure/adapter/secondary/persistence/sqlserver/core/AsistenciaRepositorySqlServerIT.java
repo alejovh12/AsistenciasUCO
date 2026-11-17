@@ -159,12 +159,13 @@ class AsistenciaRepositorySqlServerIT {
 
         // Con Docente.id (que no es un Usuario.id) la DB rechaza sin escribir; con Usuario.id el titular registra.
         CorrelationIdContext.set(UUID.randomUUID());
-        assertThrows(RuntimeException.class, () -> asistenciaRepositoryPort.registrarAsistenciasSesion(
-                new RegistrarAsistenciasSesionRepositoryDTO(
+        final var registrarAsistenciasSesionRepositoryDTO = new RegistrarAsistenciasSesionRepositoryDTO(
                         sesionId,
                         List.of(new RegistroAsistenciaSesionRepositoryDTO(estudiantes.get(0), "AN")),
                         docenteId
-                )));
+                );
+        assertThrows(RuntimeException.class, () -> asistenciaRepositoryPort.registrarAsistenciasSesion(
+                registrarAsistenciasSesionRepositoryDTO));
         assertEquals(0, consultarPorEstudiante().size(), "Docente.id como ejecutor no debe persistir nada.");
 
         CorrelationIdContext.set(UUID.randomUUID());
@@ -176,12 +177,13 @@ class AsistenciaRepositorySqlServerIT {
     void docente_ajeno_es_rechazado_por_la_db_sin_persistir_cambios() {
         CorrelationIdContext.set(UUID.randomUUID());
 
-        final ForbiddenException exception = assertThrows(ForbiddenException.class,
-                () -> asistenciaRepositoryPort.registrarAsistenciasSesion(new RegistrarAsistenciasSesionRepositoryDTO(
+        final var registrarAsistenciasSesionRepositoryDTO = new RegistrarAsistenciasSesionRepositoryDTO(
                         sesionId,
                         List.of(new RegistroAsistenciaSesionRepositoryDTO(estudiantes.get(0), "AN")),
                         docenteBUsuarioId
-                )));
+                );
+        final ForbiddenException exception = assertThrows(ForbiddenException.class,
+                () -> asistenciaRepositoryPort.registrarAsistenciasSesion(registrarAsistenciasSesionRepositoryDTO));
 
         assertEquals("FORBIDDEN", exception.getCode());
         assertEquals(0, consultarPorEstudiante().size(), "Un docente ajeno no debe dejar cambios persistidos, ni siquiera parciales.");
@@ -194,13 +196,13 @@ class AsistenciaRepositorySqlServerIT {
         final Integer razonCausaTotalAntes = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM dbo.RazonCausa", Integer.class);
 
         // Contrato congelado LB-001B.4: RC_001 -> ValidationException / VALIDATION_ERROR / HTTP 400.
-        final ValidationException exception = assertThrows(ValidationException.class, () -> asistenciaRepositoryPort.registrarAsistenciasSesion(
-                new RegistrarAsistenciasSesionRepositoryDTO(
+        final var registrarAsistenciasSesionRepositoryDTO = new RegistrarAsistenciasSesionRepositoryDTO(
                         sesionId,
                         List.of(new RegistroAsistenciaSesionRepositoryDTO(estudiantes.get(0), "ABC")),
                         docenteAUsuarioId
-                )
-        ));
+                );
+        final ValidationException exception = assertThrows(ValidationException.class, () -> asistenciaRepositoryPort.registrarAsistenciasSesion(
+                registrarAsistenciasSesionRepositoryDTO));
 
         assertEquals("VALIDATION_ERROR", exception.getCode());
         assertEquals(0, consultarPorEstudiante().size(), "Un estado invalido no debe persistir ningun cambio.");
@@ -215,8 +217,7 @@ class AsistenciaRepositorySqlServerIT {
         final Map<UUID, AsistenciaRepositoryProjection> antes = consultarPorEstudiante();
         assertEquals(0, antes.size(), "Estado previo esperado vacio para esta sesion recien creada; se compara explicitamente igual.");
 
-        final ValidationException exception = assertThrows(ValidationException.class,
-                () -> asistenciaRepositoryPort.registrarAsistenciasSesion(new RegistrarAsistenciasSesionRepositoryDTO(
+        final var registrarAsistenciasSesionRepositoryDTO = new RegistrarAsistenciasSesionRepositoryDTO(
                         sesionId,
                         List.of(
                                 new RegistroAsistenciaSesionRepositoryDTO(estudiantes.get(0), "AN"),
@@ -224,7 +225,9 @@ class AsistenciaRepositorySqlServerIT {
                                 new RegistroAsistenciaSesionRepositoryDTO(estudiantes.get(2), "EX")
                         ),
                         docenteAUsuarioId
-                )));
+                );
+        final ValidationException exception = assertThrows(ValidationException.class,
+                () -> asistenciaRepositoryPort.registrarAsistenciasSesion(registrarAsistenciasSesionRepositoryDTO));
 
         assertEquals("VALIDATION_ERROR", exception.getCode());
         final Map<UUID, AsistenciaRepositoryProjection> despues = consultarPorEstudiante();

@@ -115,8 +115,9 @@ class VaultRuntimeSecretsEnvironmentPostProcessorTest {
         environment.setProperty("app.adapters.vault.provider", "azure_keyvault");
         environment.setProperty("app.providers.azure-keyvault.endpoint", "  ");
 
+        final var procesador2 = procesador(new BaulEnMemoria(Map.of()));
         final IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> procesador(new BaulEnMemoria(Map.of())).postProcessEnvironment(environment, null));
+                () -> procesador2.postProcessEnvironment(environment, null));
 
         assertTrue(error.getMessage().contains("AZURE_KEYVAULT_ENDPOINT"));
         assertTrue(error.getMessage().contains("local_env"));
@@ -133,8 +134,9 @@ class VaultRuntimeSecretsEnvironmentPostProcessorTest {
             }
         };
 
+        final var procesador2 = procesador(baulCaido);
         final IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> procesador(baulCaido).postProcessEnvironment(environment, null));
+                () -> procesador2.postProcessEnvironment(environment, null));
 
         assertTrue(error.getMessage().contains("asistencias-db-password"));
         assertTrue(error.getMessage().contains("spring.datasource.password"));

@@ -120,7 +120,8 @@ class GestionarPlanEstudioUseCaseImplTest {
         when(scopePort.findProgramaIdByCoordinadorUsuario(coordinador)).thenReturn(Optional.of(programa));
         when(queryPort.consultarPlanesPorPrograma(programa)).thenReturn(List.of(plan(UUID.randomUUID(), programa, true)));
 
-        assertThrows(ResourceNotFoundException.class, () -> useCase.cambiarEstado(UUID.randomUUID(), coordinador));
+        final var idAleatorio = UUID.randomUUID();
+        assertThrows(ResourceNotFoundException.class, () -> useCase.cambiarEstado(idAleatorio, coordinador));
         verifyNoInteractions(commandPort);
     }
 

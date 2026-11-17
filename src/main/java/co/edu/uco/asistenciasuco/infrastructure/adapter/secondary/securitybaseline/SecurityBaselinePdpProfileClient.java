@@ -36,6 +36,9 @@ import java.util.Optional;
  * tiene el rol directo vigente, el acceso efectivo existe y se informa como asignado; no se toca esa asignación.</p>
  */
 public final class SecurityBaselinePdpProfileClient implements AccessProfilePort {
+    private static final String RUTA_PERFILES = "/api/v1/profiles/";
+    private static final String RUTA_ASSIGNMENTS = "/assignments";
+    private static final String CLAVE_USER_ID = "userId";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SecurityBaselinePdpProfileClient.class);
     private static final int PAGE_SIZE = 100;
@@ -117,7 +120,7 @@ public final class SecurityBaselinePdpProfileClient implements AccessProfilePort
             return new Resultado(exception.estado, exception.getMessage());
         } catch (final IOException exception) {
             return new Resultado(Estado.PENDIENTE_NO_DISPONIBLE, "El PDP no respondio: " + exception.getClass().getSimpleName());
-        } catch (final InterruptedException exception) {
+        } catch (final InterruptedException _) {
             Thread.currentThread().interrupt();
             return new Resultado(Estado.PENDIENTE_NO_DISPONIBLE, "Operacion interrumpida");
         } catch (final RuntimeException exception) {
@@ -144,8 +147,8 @@ public final class SecurityBaselinePdpProfileClient implements AccessProfilePort
         if (!vigentes.isEmpty()) {
             return new Resultado(Estado.ASIGNADO, "Perfil ya asignado");
         }
-        final HttpResponse<String> response = send("POST", "/api/v1/profiles/" + profileId + "/assignments",
-                Map.of("profileId", profileId, "userId", userId, "applicationId", appId));
+        final HttpResponse<String> response = send("POST", RUTA_PERFILES + profileId + RUTA_ASSIGNMENTS,
+                Map.of("profileId", profileId, CLAVE_USER_ID, userId, "applicationId", appId));
         if (response.statusCode() == 201 || response.statusCode() == 200) {
             return new Resultado(Estado.ASIGNADO, "Perfil asignado");
         }
@@ -164,7 +167,7 @@ public final class SecurityBaselinePdpProfileClient implements AccessProfilePort
     ) throws IOException, InterruptedException {
         for (final String assignmentId : vigentes) {
             final HttpResponse<String> response = send("DELETE",
-                    "/api/v1/profiles/" + profileId + "/assignments/" + assignmentId, null);
+                    RUTA_PERFILES + profileId + "/assignments/" + assignmentId, null);
             if (response.statusCode() != 200 && response.statusCode() != 204 && response.statusCode() != 404) {
                 throw fallo(response.statusCode());
             }
@@ -183,8 +186,8 @@ public final class SecurityBaselinePdpProfileClient implements AccessProfilePort
             return false;
         }
         final Instant now = clock.instant();
-        for (final JsonNode assignment : paginado("/api/v1/roles/" + roleId.get() + "/assignments")) {
-            if (userId.equals(texto(assignment, "userId")) && vigente(assignment, now)) {
+        for (final JsonNode assignment : paginado("/api/v1/roles/" + roleId.get() + RUTA_ASSIGNMENTS)) {
+            if (userId.equals(texto(assignment, CLAVE_USER_ID)) && vigente(assignment, now)) {
                 return true;
             }
         }
@@ -195,8 +198,8 @@ public final class SecurityBaselinePdpProfileClient implements AccessProfilePort
             throws IOException, InterruptedException {
         final Instant now = clock.instant();
         final List<String> ids = new ArrayList<>();
-        for (final JsonNode assignment : paginado("/api/v1/profiles/" + profileId + "/assignments")) {
-            if (userId.equals(texto(assignment, "userId")) && vigente(assignment, now)) {
+        for (final JsonNode assignment : paginado(RUTA_PERFILES + profileId + RUTA_ASSIGNMENTS)) {
+            if (userId.equals(texto(assignment, CLAVE_USER_ID)) && vigente(assignment, now)) {
                 ids.add(texto(assignment, "id"));
             }
         }
@@ -332,7 +335,7 @@ public final class SecurityBaselinePdpProfileClient implements AccessProfilePort
         }
         try {
             return Instant.parse(until).isAfter(now);
-        } catch (final java.time.format.DateTimeParseException exception) {
+        } catch (final java.time.format.DateTimeParseException _) {
             return false;
         }
     }

@@ -130,6 +130,11 @@ public final class SesionController {
         return executeConsultarSesion(request);
     }
 
+    /**
+     * Endpoint de compatibilidad con el cuerpo en POST.
+     *
+     * @deprecated los consumidores deben migrar al GET por identificador. Mismo caso de uso.
+     */
     @Deprecated(forRemoval = false)
     @PostMapping("/consultas")
     public ResponseEntity<ApiDataResponse<SesionConsultadaDTO>> consultarSesionLegacy(
@@ -156,7 +161,11 @@ public final class SesionController {
         return executeActualizarSesion(sesionId, request);
     }
 
-    /** Endpoint de compatibilidad; los consumidores deben migrar a PATCH. Mismo caso de uso. */
+    /**
+     * Endpoint de compatibilidad.
+     *
+     * @deprecated los consumidores deben migrar a PATCH. Mismo caso de uso.
+     */
     @Deprecated(forRemoval = false)
     @PutMapping("/{sesionId}")
     public ResponseEntity<ApiDataResponse<Void>> actualizarSesionLegacy(

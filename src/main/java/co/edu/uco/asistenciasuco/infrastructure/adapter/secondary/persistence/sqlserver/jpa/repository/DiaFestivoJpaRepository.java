@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /**
  * CULM-001 B.1: dias festivos via procedimientos almacenados (JPA, {@code EXEC} nativo). La DB valida anio, fuente,
@@ -225,7 +225,7 @@ public class DiaFestivoJpaRepository implements DiaFestivoRepositoryPort {
 
     @SuppressWarnings("unchecked")
     private List<Object[]> consultarFilas(final String operacion, final String mensaje, final String sql,
-                                          final Function<Query, Query> parametros) {
+                                          final UnaryOperator<Query> parametros) {
         return JpaQueryExecutor.execute(operacion, mensaje, () -> {
             try {
                 final List<?> filas = parametros.apply(entityManager.createNativeQuery(sql)).getResultList();

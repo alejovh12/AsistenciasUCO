@@ -14,6 +14,9 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin
  * nunca incluyen los valores recibidos.
  */
 public final class CrearDecanoRequestValidator implements Validator<CrearDecanoRequest> {
+    private static final String CLAVE_CORREO = "correo";
+    private static final String SUFIJO_CARACTERES = " caracteres.";
+    private static final String PREFIJO_EL_CAMPO = "El campo ";
 
     private static final int MAX_NOMBRE = 50;
     private static final int MAX_CORREO = 255;
@@ -37,11 +40,11 @@ public final class CrearDecanoRequestValidator implements Validator<CrearDecanoR
         nombre(builder, "segundoNombre", request.segundoNombre(), false);
         nombre(builder, "segundoApellido", request.segundoApellido(), false);
         if (!ValidationHelper.hasText(request.correo())) {
-            builder.add("correo", ValidationErrorType.REQUIRED, "El correo es obligatorio.");
+            builder.add(CLAVE_CORREO, ValidationErrorType.REQUIRED, "El correo es obligatorio.");
         } else {
-            builder.addIf(request.correo().trim().length() > MAX_CORREO, "correo", ValidationErrorType.INVALID_LENGTH,
-                    "El correo no puede superar " + MAX_CORREO + " caracteres.");
-            builder.addIf(!ValidationHelper.isValidEmail(request.correo().trim()), "correo", ValidationErrorType.INVALID_FORMAT,
+            builder.addIf(request.correo().trim().length() > MAX_CORREO, CLAVE_CORREO, ValidationErrorType.INVALID_LENGTH,
+                    "El correo no puede superar " + MAX_CORREO + SUFIJO_CARACTERES);
+            builder.addIf(!ValidationHelper.isValidEmail(request.correo().trim()), CLAVE_CORREO, ValidationErrorType.INVALID_FORMAT,
                     "El correo no tiene un formato valido.");
         }
         facultadNueva(builder, request);
@@ -59,22 +62,22 @@ public final class CrearDecanoRequestValidator implements Validator<CrearDecanoR
         builder.addIf(!ValidationHelper.hasText(facultad.nombre())
                         || !ValidationHelper.isLengthBetween(facultad.nombre().trim(), MIN_NOMBRE_FACULTAD, MAX_NOMBRE_FACULTAD),
                 "facultadNueva.nombre", ValidationErrorType.INVALID_LENGTH,
-                "El nombre de la facultad debe tener entre " + MIN_NOMBRE_FACULTAD + " y " + MAX_NOMBRE_FACULTAD + " caracteres.");
+                "El nombre de la facultad debe tener entre " + MIN_NOMBRE_FACULTAD + " y " + MAX_NOMBRE_FACULTAD + SUFIJO_CARACTERES);
         builder.addIf(ValidationHelper.hasText(facultad.codigo()) && facultad.codigo().trim().length() > MAX_CODIGO_FACULTAD,
                 "facultadNueva.codigo", ValidationErrorType.INVALID_LENGTH,
-                "El codigo de la facultad no puede superar " + MAX_CODIGO_FACULTAD + " caracteres.");
+                "El codigo de la facultad no puede superar " + MAX_CODIGO_FACULTAD + SUFIJO_CARACTERES);
         builder.addIf(facultad.idInstitucion() == null || !ValidationHelper.isNonEmptyUuid(facultad.idInstitucion()),
                 "facultadNueva.idInstitucion", ValidationErrorType.REQUIRED, "La institucion de la facultad es obligatoria.");
     }
 
     private static void nombre(final ValidationResultBuilder builder, final String campo, final String valor, final boolean obligatorio) {
         if (obligatorio && !ValidationHelper.hasText(valor)) {
-            builder.add(campo, ValidationErrorType.REQUIRED, "El campo " + campo + " es obligatorio.");
+            builder.add(campo, ValidationErrorType.REQUIRED, PREFIJO_EL_CAMPO + campo + " es obligatorio.");
             return;
         }
         builder.addIf(valor != null && valor.trim().length() > MAX_NOMBRE, campo, ValidationErrorType.INVALID_LENGTH,
-                "El campo " + campo + " no puede superar " + MAX_NOMBRE + " caracteres.");
+                PREFIJO_EL_CAMPO + campo + " no puede superar " + MAX_NOMBRE + SUFIJO_CARACTERES);
         builder.addIf(ValidationHelper.hasText(valor) && !ValidationHelper.isValidPersonName(valor), campo, ValidationErrorType.INVALID_FORMAT,
-                "El campo " + campo + " contiene caracteres no permitidos.");
+                PREFIJO_EL_CAMPO + campo + " contiene caracteres no permitidos.");
     }
 }

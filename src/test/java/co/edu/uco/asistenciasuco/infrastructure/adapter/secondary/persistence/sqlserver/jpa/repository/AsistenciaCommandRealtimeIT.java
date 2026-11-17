@@ -147,8 +147,9 @@ class AsistenciaCommandRealtimeIT {
 
     @Test
     void cmd_rt_003_estado_invalido_abc_no_publica_evento_alguno() {
+        final var estudiantes2 = fixture.estudiantes().get(0);
         assertThrows(ValidationException.class,
-                () -> new RegistroAsistenciaSesionDomain(fixture.estudiantes().get(0), "ABC"),
+                () -> new RegistroAsistenciaSesionDomain(estudiantes2, "ABC"),
                 "El dominio rechaza ABC antes de llegar al repositorio (contrato publico AN/SJC/EX).");
 
         verify(realtimePublisherPort, never()).publish(any());

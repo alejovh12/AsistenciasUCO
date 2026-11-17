@@ -448,11 +448,11 @@ public class AdministracionNotificacionJpaAdapter implements AdministracionNotif
         try {
             final StoredProcedureQuery sp = em.createStoredProcedureQuery(SP_PLANTILLA_ACTIVA);
             sp.registerStoredProcedureParameter("tipo", String.class, ParameterMode.IN);
-            sp.registerStoredProcedureParameter("idioma", String.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter(PARAM_IDIOMA, String.class, ParameterMode.IN);
             sp.registerStoredProcedureParameter(PARAM_ID_CORRELACION, UUID.class, ParameterMode.IN);
             sp.registerStoredProcedureParameter("validarExistencia", Boolean.class, ParameterMode.IN);
             sp.setParameter("tipo", tipo);
-            sp.setParameter("idioma", idioma);
+            sp.setParameter(PARAM_IDIOMA, idioma);
             sp.setParameter(PARAM_ID_CORRELACION, corrId);
             sp.setParameter("validarExistencia", Boolean.TRUE);
             sp.execute();

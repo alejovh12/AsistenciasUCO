@@ -47,7 +47,7 @@ class MinioClientTimeoutBoundaryTest {
                 try {
                     // Acepta y retiene la conexion sin leer ni responder nunca.
                     heldConnections.add(blackHole.accept());
-                } catch (final IOException closed) {
+                } catch (final IOException _) {
                     return;
                 }
             }

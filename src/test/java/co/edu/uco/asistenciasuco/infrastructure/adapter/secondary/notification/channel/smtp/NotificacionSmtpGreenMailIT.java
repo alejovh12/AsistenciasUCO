@@ -586,7 +586,7 @@ class NotificacionSmtpGreenMailIT {
     @Test
     @Order(9)
     @DisplayName("IT-E09: 4 avisos de retiro producen correos legibles y distinguibles por grupo (CULM-001 A: tipos SOLICITUD_INGRESO_* retirados)")
-    void ITE09_los_4_tipos_producen_correo_legible_y_distinguible() throws Exception {
+    void ITE09_los_4_tipos_producen_correo_legible_y_distinguible() {
         UUID d1 = crearUsuarioPrueba("d1.ite09@uco.edu.co", true, true);
         UUID d2 = crearUsuarioPrueba("d2.ite09@uco.edu.co", true, true);
         UUID d3 = crearUsuarioPrueba("d3.ite09@uco.edu.co", true, true);

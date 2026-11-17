@@ -72,10 +72,14 @@ class ConsultarAlertaTempranaUseCaseImplTest {
     @Test
     void T_BE_02_valida_la_forma_antes_de_llamar_al_puerto() {
         assertThrows(ValidationException.class, () -> useCase.execute(null));
-        assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarAlertaTempranaDomain(ACTOR, null, "AZUL", null, 1, 10)));
-        assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarAlertaTempranaDomain(ACTOR, null, null, null, 0, 10)));
-        assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarAlertaTempranaDomain(ACTOR, null, null, null, 1, 0)));
-        assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarAlertaTempranaDomain(ACTOR, null, null, null, -3, -1)));
+        final var consultarAlertaTempranaDomain5 = new ConsultarAlertaTempranaDomain(ACTOR, null, "AZUL", null, 1, 10);
+        assertThrows(ValidationException.class, () -> useCase.execute(consultarAlertaTempranaDomain5));
+        final var consultarAlertaTempranaDomain4 = new ConsultarAlertaTempranaDomain(ACTOR, null, null, null, 0, 10);
+        assertThrows(ValidationException.class, () -> useCase.execute(consultarAlertaTempranaDomain4));
+        final var consultarAlertaTempranaDomain3 = new ConsultarAlertaTempranaDomain(ACTOR, null, null, null, 1, 0);
+        assertThrows(ValidationException.class, () -> useCase.execute(consultarAlertaTempranaDomain3));
+        final var consultarAlertaTempranaDomain2 = new ConsultarAlertaTempranaDomain(ACTOR, null, null, null, -3, -1);
+        assertThrows(ValidationException.class, () -> useCase.execute(consultarAlertaTempranaDomain2));
         verify(queryPort, never()).consultarAlertas(any(), any(), any(), any(), anyInt(), anyInt(), any());
     }
 
@@ -83,7 +87,8 @@ class ConsultarAlertaTempranaUseCaseImplTest {
     void T_BE_01_sin_programa_de_coordinador_responde_forbidden() {
         when(scopePort.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.empty());
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(new ConsultarAlertaTempranaDomain(ACTOR, null, null, null, 1, 10)));
+        final var consultarAlertaTempranaDomain = new ConsultarAlertaTempranaDomain(ACTOR, null, null, null, 1, 10);
+        assertThrows(ForbiddenException.class, () -> useCase.execute(consultarAlertaTempranaDomain));
 
         verifyNoInteractions(queryPort);
     }

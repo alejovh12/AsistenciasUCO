@@ -1,7 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter;
 
 import co.edu.uco.asistenciasuco.crosscutting.sanitization.SensitiveDataSanitizer;
-import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import co.edu.uco.asistenciasuco.infrastructure.observability.tracing.opentelemetry.TraceContextSnapshot;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -31,22 +30,16 @@ public final class HttpRequestTraceFilter extends OncePerRequestFilter implement
             final FilterChain filterChain
     ) throws ServletException, IOException {
         final long startNanos = System.nanoTime();
-        final TraceContextSnapshot initialTraceContext = refreshTraceContextMdc(TraceContextSnapshot.current());
+        refreshTraceContextMdc(TraceContextSnapshot.current());
         Throwable failure = null;
         try {
             filterChain.doFilter(request, response);
-        } catch (ServletException | IOException | RuntimeException exception) {
-            failure = exception;
-            throw exception;
-        } catch (Error exception) {
+        } catch (ServletException | IOException | RuntimeException | Error exception) {
             failure = exception;
             throw exception;
         } finally {
-            final TraceContextSnapshot finalTraceContext = mergeTraceContext(
-                    initialTraceContext,
-                    refreshTraceContextMdc(TraceContextSnapshot.current())
-            );
-            logRequestExit(request, response, finalTraceContext, startNanos, failure);
+            refreshTraceContextMdc(TraceContextSnapshot.current());
+            logRequestExit(request, response, startNanos, failure);
             TraceContextSnapshot.clearMdc();
         }
     }
@@ -59,7 +52,6 @@ public final class HttpRequestTraceFilter extends OncePerRequestFilter implement
     private void logRequestExit(
             final HttpServletRequest request,
             final HttpServletResponse response,
-            final TraceContextSnapshot traceContext,
             final long startNanos,
             final Throwable failure
     ) {
@@ -100,15 +92,6 @@ public final class HttpRequestTraceFilter extends OncePerRequestFilter implement
         TraceContextSnapshot.clearMdc();
         traceContext.putInMdc();
         return traceContext;
-    }
-
-    private TraceContextSnapshot mergeTraceContext(
-            final TraceContextSnapshot initialTraceContext,
-            final TraceContextSnapshot finalTraceContext
-    ) {
-        final String traceId = finalTraceContext.traceId() != null ? finalTraceContext.traceId() : initialTraceContext.traceId();
-        final String spanId = finalTraceContext.spanId() != null ? finalTraceContext.spanId() : initialTraceContext.spanId();
-        return new TraceContextSnapshot(traceId, spanId);
     }
 
     private String safe(final String value, final int maxLength) {

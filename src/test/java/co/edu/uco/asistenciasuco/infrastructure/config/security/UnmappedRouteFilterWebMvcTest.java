@@ -44,6 +44,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.mock;
 
 /**
  * CULM-001 D.9-a (CONTRACT D §11.1, F-EST-024, OBS-17): {@code UnmappedRouteFilter} va despues de autenticar y antes del PEP.
@@ -137,7 +138,7 @@ class UnmappedRouteFilterWebMvcTest {
 
         @Bean
         SecurityBaselinePepClient securityBaselinePepClient() {
-            return Mockito.mock(SecurityBaselinePepClient.class);
+            return mock(SecurityBaselinePepClient.class);
         }
 
         @Bean

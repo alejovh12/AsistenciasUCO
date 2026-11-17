@@ -96,7 +96,8 @@ class BaselineJwtDecoderCompositionTest {
                 .expirationTime(Date.from(now.minusSeconds(600)))
                 .build(), keyPair);
 
-        assertThrows(BadJwtException.class, () -> decoder().decode(token));
+        final var decoder2 = decoder();
+        assertThrows(BadJwtException.class, () -> decoder2.decode(token));
     }
 
     @Test
@@ -107,7 +108,8 @@ class BaselineJwtDecoderCompositionTest {
                 .expirationTime(Date.from(now.plusSeconds(1200)))
                 .build(), keyPair);
 
-        assertThrows(BadJwtException.class, () -> decoder().decode(token));
+        final var decoder2 = decoder();
+        assertThrows(BadJwtException.class, () -> decoder2.decode(token));
     }
 
     @Test
@@ -118,7 +120,8 @@ class BaselineJwtDecoderCompositionTest {
                         .getBytes(StandardCharsets.UTF_8));
         final String token = partes[0] + "." + cargaAlterada + "." + partes[2];
 
-        assertThrows(BadJwtException.class, () -> decoder().decode(token));
+        final var decoder2 = decoder();
+        assertThrows(BadJwtException.class, () -> decoder2.decode(token));
     }
 
     @Test
@@ -126,14 +129,16 @@ class BaselineJwtDecoderCompositionTest {
         final String original = firmar(claimsValidos().build(), keyPair);
         final String token = original.substring(0, original.length() - 8);
 
-        assertThrows(BadJwtException.class, () -> decoder().decode(token));
+        final var decoder2 = decoder();
+        assertThrows(BadJwtException.class, () -> decoder2.decode(token));
     }
 
     @Test
     void rechaza_token_firmado_con_otra_clave() throws Exception {
         final String token = firmar(claimsValidos().build(), nuevoParDeClaves());
 
-        assertThrows(BadJwtException.class, () -> decoder().decode(token));
+        final var decoder2 = decoder();
+        assertThrows(BadJwtException.class, () -> decoder2.decode(token));
     }
 
     @Test
@@ -144,7 +149,8 @@ class BaselineJwtDecoderCompositionTest {
                 .encodeToString(claimsValidos().build().toString().getBytes(StandardCharsets.UTF_8));
         final String token = cabecera + "." + carga + ".";
 
-        assertThrows(BadJwtException.class, () -> decoder().decode(token));
+        final var decoder2 = decoder();
+        assertThrows(BadJwtException.class, () -> decoder2.decode(token));
     }
 
     @Test

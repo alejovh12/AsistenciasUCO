@@ -147,7 +147,7 @@ final class SesionV2RequestParser {
                 builder.add(FIELD_FIN, ValidationErrorType.OUT_OF_RANGE,
                         "La sesion debe terminar el mismo dia en que empieza; no puede pasar de la medianoche.");
             }
-        } catch (DateTimeParseException ignored) {
+        } catch (DateTimeParseException _) {
             // El formato ya lo valida HttpUtcInstantCodec; aqui no se repite el error.
         }
     }
@@ -168,7 +168,7 @@ final class SesionV2RequestParser {
         }
         try {
             return HttpUtcInstantCodec.toUtcDatabaseDateTime(texto);
-        } catch (IllegalArgumentException ignored) {
+        } catch (IllegalArgumentException _) {
             builder.add(campo, ValidationErrorType.INVALID_FORMAT, MENSAJE_INSTANTE);
             return null;
         }

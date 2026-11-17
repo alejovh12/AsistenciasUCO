@@ -18,7 +18,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -85,7 +84,7 @@ class InstitutionalScopeJpaBehaviorTest {
     void usuario_inactivo_no_se_considera_vinculable() {
         final TypedQuery<Boolean> query = mock(TypedQuery.class, RETURNS_SELF);
         when(query.getResultList()).thenReturn(List.of(Boolean.FALSE));
-        when(manager.createQuery(eq(InstitutionalScopeJpaRepository.HQL_USUARIO_ACTIVO), eq(Boolean.class)))
+        when(manager.createQuery(InstitutionalScopeJpaRepository.HQL_USUARIO_ACTIVO, Boolean.class))
                 .thenReturn(query);
 
         assertFalse(scope.isUsuarioActivo(USUARIO));
@@ -148,7 +147,7 @@ class InstitutionalScopeJpaBehaviorTest {
     private TypedQuery<UUID> uuidQuery(final String hql, final List<UUID> rows) {
         final TypedQuery<UUID> query = mock(TypedQuery.class, RETURNS_SELF);
         when(query.getResultList()).thenReturn(rows);
-        when(manager.createQuery(eq(hql), eq(UUID.class))).thenReturn(query);
+        when(manager.createQuery(hql, UUID.class)).thenReturn(query);
         return query;
     }
 
@@ -156,7 +155,7 @@ class InstitutionalScopeJpaBehaviorTest {
     private TypedQuery<Long> countQuery(final String hql, final Long count) {
         final TypedQuery<Long> query = mock(TypedQuery.class, RETURNS_SELF);
         when(query.getSingleResult()).thenReturn(count);
-        when(manager.createQuery(eq(hql), eq(Long.class))).thenReturn(query);
+        when(manager.createQuery(hql, Long.class)).thenReturn(query);
         return query;
     }
 

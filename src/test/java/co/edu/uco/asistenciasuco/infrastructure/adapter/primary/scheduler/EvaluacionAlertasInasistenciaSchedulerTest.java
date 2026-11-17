@@ -71,9 +71,11 @@ class EvaluacionAlertasInasistenciaSchedulerTest {
     @Test
     void valida_sus_argumentos() {
         final EvaluarAlertasInasistenciaAutomaticoInputPort evaluar = () -> 0;
-        assertThrows(NullPointerException.class, () -> new EvaluacionAlertasInasistenciaScheduler(null, Duration.ofSeconds(1)));
+        final var duration2 = Duration.ofSeconds(1);
+        assertThrows(NullPointerException.class, () -> new EvaluacionAlertasInasistenciaScheduler(null, duration2));
         assertThrows(NullPointerException.class, () -> new EvaluacionAlertasInasistenciaScheduler(evaluar, null));
         assertThrows(IllegalArgumentException.class, () -> new EvaluacionAlertasInasistenciaScheduler(evaluar, Duration.ZERO));
-        assertThrows(IllegalArgumentException.class, () -> new EvaluacionAlertasInasistenciaScheduler(evaluar, Duration.ofSeconds(-1)));
+        final var duration = Duration.ofSeconds(-1);
+        assertThrows(IllegalArgumentException.class, () -> new EvaluacionAlertasInasistenciaScheduler(evaluar, duration));
     }
 }

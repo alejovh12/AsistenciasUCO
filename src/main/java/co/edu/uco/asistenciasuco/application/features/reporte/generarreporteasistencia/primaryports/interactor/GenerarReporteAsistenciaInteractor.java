@@ -5,7 +5,7 @@ import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasis
 import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.primaryports.dto.GenerarReporteAsistenciaDTO;
 import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.primaryports.mapper.ReporteAsistenciaMapper;
 import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.usecase.GenerarReporteAsistenciaUseCase;
-import java.util.List; import java.util.Objects; import java.util.UUID;
+import java.util.List; import java.util.Objects;
 
 public final class GenerarReporteAsistenciaInteractor implements GenerarReporteAsistenciaInputPort {
     private final GenerarReporteAsistenciaUseCase useCase;

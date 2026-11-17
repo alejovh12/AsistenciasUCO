@@ -1,6 +1,5 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.baseline;
 
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository.*;
 
 
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DecanoCommandPort;
@@ -56,9 +55,9 @@ public final class DecanoJdbcBaseline implements DecanoQueryPort, DecanoCommandP
 
     @Override
     public void crearDecano(final CrearDecanoCommand command) {
-        // usp_crear_decano ya no declara @idTipoIdIdentificacion (resuelve el tipo internamente);
-        // command.tipoIdentificacionId() se conserva en capas superiores por compatibilidad HTTP
-        // pero no se reenvia a la SP.
+        // usp_crear_decano ya no declara @idTipoIdIdentificacion y resuelve el tipo internamente.
+        // El campo tipoIdentificacionId del comando se conserva en capas superiores por
+        // compatibilidad HTTP, pero no se reenvia a la SP.
         commands.crearDecano(command);
     }
 

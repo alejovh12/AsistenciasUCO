@@ -32,11 +32,11 @@ import java.util.TimeZone;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 /**
  * LB-004D (ONE_TABLE) contra SQL Server REAL: registro del borrador (W1), radicacion con soporte (W2 v2), lectura
@@ -198,8 +198,9 @@ class SoporteArchivoSqlIT {
 
         final ResourceNotFoundException ajeno = assertThrows(ResourceNotFoundException.class,
                 () -> radicar(estudianteA, usuarioA, deB, "ajeno"));
+        final var uuid = UUID.randomUUID();
         final ResourceNotFoundException inexistente = assertThrows(ResourceNotFoundException.class,
-                () -> radicar(estudianteA, usuarioA, UUID.randomUUID(), "inexistente"));
+                () -> radicar(estudianteA, usuarioA, uuid, "inexistente"));
         final ResourceNotFoundException reutilizado = assertThrows(ResourceNotFoundException.class,
                 () -> radicar(estudianteA, usuarioA, usado, "reuso"));
 
@@ -260,7 +261,7 @@ class SoporteArchivoSqlIT {
         final List<SolicitudRevisionDocenteProjection> segunda = reclamosPort.consultarSolicitudesDocente(docenteTitular, "P", 2, 1);
         assertEquals(1, primera.size());
         assertEquals(1, segunda.size());
-        assertFalse(primera.get(0).idSolicitud().equals(segunda.get(0).idSolicitud()));
+        assertNotEquals(segunda.get(0).idSolicitud(), primera.get(0).idSolicitud());
 
         assertTrue(reclamosPort.consultarSolicitudesDocente(docenteAjeno, null, 1, 100).stream()
                 .noneMatch(f -> f.justificacionSolicitud().startsWith(JUSTIFICACION_PREFIX)));
@@ -273,9 +274,10 @@ class SoporteArchivoSqlIT {
     void sesion_inexistente_no_vincula_el_soporte_ni_crea_solicitud() {
         final UUID fileId = registrar(usuarioA, "sesion.pdf", 5L);
 
+        final var solicitarRevisionAsistenciaRepositoryDTO = new SolicitarRevisionAsistenciaRepositoryDTO(estudianteA, UUID.randomUUID(), "CAL",
+                        JUSTIFICACION_PREFIX + "sesion-inexistente", java.util.List.of(fileId), usuarioA);
         assertThrows(RuntimeException.class, () -> asistenciaPort.solicitarRevisionAsistencia(
-                new SolicitarRevisionAsistenciaRepositoryDTO(estudianteA, UUID.randomUUID(), "CAL",
-                        JUSTIFICACION_PREFIX + "sesion-inexistente", java.util.List.of(fileId), usuarioA)));
+                solicitarRevisionAsistenciaRepositoryDTO));
 
         assertEquals("DRAFT", jdbc.queryForObject("SELECT estado FROM dbo.ArchivoSoporte WHERE id = ?", String.class, fileId.toString()));
         assertEquals(0, solicitudesConJustificacion("sesion-inexistente"));

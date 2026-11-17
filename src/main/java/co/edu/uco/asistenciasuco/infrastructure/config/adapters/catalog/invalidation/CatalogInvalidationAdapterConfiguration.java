@@ -3,7 +3,6 @@ package co.edu.uco.asistenciasuco.infrastructure.config.adapters.catalog.invalid
 import co.edu.uco.asistenciasuco.infrastructure.config.adapters.catalog.composite.ParametroConValorPorDefectoConfiguration;
 import org.springframework.beans.factory.annotation.Qualifier;
 import co.edu.uco.asistenciasuco.application.features.admin.procesareventoazure.primaryports.ProcesarEventoAzureInputPort;
-import co.edu.uco.asistenciasuco.application.features.admin.procesareventoazure.usecase.ProcesarEventoAzureUseCase;
 import co.edu.uco.asistenciasuco.application.features.admin.procesareventoazure.usecase.impl.ProcesarEventoAzureUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.CatalogInvalidationPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort;

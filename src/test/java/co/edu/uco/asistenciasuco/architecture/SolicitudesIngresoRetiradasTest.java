@@ -24,7 +24,7 @@ class SolicitudesIngresoRetiradasTest {
 
     private static final String BASE_PACKAGE = "co.edu.uco.asistenciasuco";
     private static final Pattern NOMBRE_RETIRADO =
-            Pattern.compile(".*(SolicitudIngreso|SolicitarIngreso|SolicitudesIngreso).*");
+            Pattern.compile("SolicitudIngreso|SolicitarIngreso|SolicitudesIngreso");
     private static final List<String> PAQUETES_RETIRADOS = List.of(
             ".consultarsolicitudesingreso", ".resolversolicitudingreso",
             ".retirarsolicitudingreso", ".solicitaringresogrupo");
@@ -41,7 +41,7 @@ class SolicitudesIngresoRetiradasTest {
     void no_quedan_clases_de_produccion_de_solicitudes_de_ingreso() {
         final JavaClasses clases = produccion();
         final List<String> sobrantes = clases.stream()
-                .filter(clase -> NOMBRE_RETIRADO.matcher(clase.getSimpleName()).matches()
+                .filter(clase -> NOMBRE_RETIRADO.matcher(clase.getSimpleName()).find()
                         || PAQUETES_RETIRADOS.stream().anyMatch(paquete -> (clase.getPackageName() + ".").contains(paquete + ".")))
                 .map(JavaClass::getName)
                 .sorted()

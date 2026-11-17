@@ -96,16 +96,18 @@ class RetirarEstudianteGrupoUseCaseImplTest {
         final UUID estudiante = UUID.randomUUID();
         when(scopePort.findDocenteIdByUsuario(estudiante)).thenReturn(Optional.empty());
 
+        final var retirarEstudianteGrupoDTO6 = new RetirarEstudianteGrupoDTO(estudiante, GRUPO, ESTUDIANTE, "Motivo");
         assertThrows(ForbiddenException.class,
-                () -> interactor.execute(new RetirarEstudianteGrupoDTO(estudiante, GRUPO, ESTUDIANTE, "Motivo")));
+                () -> interactor.execute(retirarEstudianteGrupoDTO6));
         verifyNoInteractions(retiroPort, notificacionPort);
     }
 
     @Test
     void UC04_motivo_obligatorio_y_maximo_500() {
         for (final String motivo : new String[]{null, "", "   ", "x".repeat(501)}) {
+            final var retirarEstudianteGrupoDTO5 = new RetirarEstudianteGrupoDTO(USUARIO, GRUPO, ESTUDIANTE, motivo);
             assertThrows(ValidationException.class,
-                    () -> interactor.execute(new RetirarEstudianteGrupoDTO(USUARIO, GRUPO, ESTUDIANTE, motivo)));
+                    () -> interactor.execute(retirarEstudianteGrupoDTO5));
         }
         assertDoesNotThrow(() -> interactor.execute(new RetirarEstudianteGrupoDTO(USUARIO, GRUPO, ESTUDIANTE, "x".repeat(500))));
         verify(retiroPort).retirarEstudiante(GRUPO, ESTUDIANTE, "x".repeat(500), USUARIO);
@@ -113,12 +115,15 @@ class RetirarEstudianteGrupoUseCaseImplTest {
 
     @Test
     void UC05_actor_grupo_y_estudiante_obligatorios() {
+        final var retirarEstudianteGrupoDTO4 = new RetirarEstudianteGrupoDTO(null, GRUPO, ESTUDIANTE, "Motivo");
         assertThrows(ValidationException.class,
-                () -> interactor.execute(new RetirarEstudianteGrupoDTO(null, GRUPO, ESTUDIANTE, "Motivo")));
+                () -> interactor.execute(retirarEstudianteGrupoDTO4));
+        final var retirarEstudianteGrupoDTO3 = new RetirarEstudianteGrupoDTO(USUARIO, null, ESTUDIANTE, "Motivo");
         assertThrows(ValidationException.class,
-                () -> interactor.execute(new RetirarEstudianteGrupoDTO(USUARIO, null, ESTUDIANTE, "Motivo")));
+                () -> interactor.execute(retirarEstudianteGrupoDTO3));
+        final var retirarEstudianteGrupoDTO2 = new RetirarEstudianteGrupoDTO(USUARIO, GRUPO, null, "Motivo");
         assertThrows(ValidationException.class,
-                () -> interactor.execute(new RetirarEstudianteGrupoDTO(USUARIO, GRUPO, null, "Motivo")));
+                () -> interactor.execute(retirarEstudianteGrupoDTO2));
         assertThrows(ValidationException.class, () -> interactor.execute(null));
         verifyNoInteractions(retiroPort, notificacionPort);
     }
@@ -128,8 +133,9 @@ class RetirarEstudianteGrupoUseCaseImplTest {
         doThrow(new IllegalStateException("RET_003")).when(retiroPort)
                 .retirarEstudiante(GRUPO, ESTUDIANTE, "Motivo", USUARIO);
 
+        final var retirarEstudianteGrupoDTO = new RetirarEstudianteGrupoDTO(USUARIO, GRUPO, ESTUDIANTE, "Motivo");
         assertThrows(IllegalStateException.class,
-                () -> interactor.execute(new RetirarEstudianteGrupoDTO(USUARIO, GRUPO, ESTUDIANTE, "Motivo")));
+                () -> interactor.execute(retirarEstudianteGrupoDTO));
         verifyNoInteractions(notificacionPort);
     }
 

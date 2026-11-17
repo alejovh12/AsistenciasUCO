@@ -139,7 +139,7 @@ public class AuditEventJpaRepository {
         }
         try {
             return UUID.fromString(value).toString();
-        } catch (IllegalArgumentException exception) {
+        } catch (IllegalArgumentException _) {
             return value;
         }
     }

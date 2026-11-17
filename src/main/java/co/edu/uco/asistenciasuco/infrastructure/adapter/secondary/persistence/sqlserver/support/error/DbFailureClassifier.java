@@ -33,6 +33,15 @@ import java.util.Locale;
  * Clasifica mensajes devueltos por SQL Server a codigos internos estables.
  */
 final class DbFailureClassifier {
+    private static final String FRAGMENTO_USUARIO = "usuario";
+    private static final String FRAGMENTO_ESTUDIANTE = "estudiante";
+    private static final String FRAGMENTO_INACTIVO = "inactivo";
+    private static final String FRAGMENTO_DOCENTE = "docente";
+    private static final String FRAGMENTO_REGISTRAD = "registrad";
+    private static final String FRAGMENTO_YA_SE_ENCUENTRA = "ya se encuentra";
+    private static final String FRAGMENTO_YA_EXISTE = "ya existe";
+    private static final String FRAGMENTO_DUPLICAD = "duplicad";
+    private static final String FRAGMENTO_SESION = "sesion";
 
     private static final String OPERATION_ACTUALIZAR_COORDINADOR = "actualizarCoordinador";
     private static final String OPERATION_CAMBIAR_ESTADO_COORDINADOR = "cambiarEstadoCoordinador";
@@ -359,19 +368,19 @@ final class DbFailureClassifier {
                 && containsAny(message, "caracteres no permitidos", "formato invalido")) {
             return UsuarioErrorCode.ERR_NOMBRE_PERSONA_INVALIDO;
         }
-        if (contains(message, "usuario") && contains(message, "registrado como docente")) {
+        if (contains(message, FRAGMENTO_USUARIO) && contains(message, "registrado como docente")) {
             return DocenteErrorCode.ERR_DOCENTE_YA_REGISTRADO;
         }
-        if (contains(message, "estudiante") && contains(message, "inactivo")) {
+        if (contains(message, FRAGMENTO_ESTUDIANTE) && contains(message, FRAGMENTO_INACTIVO)) {
             return EstudianteErrorCode.ERR_ESTUDIANTE_INACTIVO;
         }
-        if (contains(message, "docente") && contains(message, "inactivo")) {
+        if (contains(message, FRAGMENTO_DOCENTE) && contains(message, FRAGMENTO_INACTIVO)) {
             return DocenteErrorCode.ERR_DOCENTE_INACTIVO;
         }
-        if (contains(message, "usuario") && contains(message, "inactivo")) {
+        if (contains(message, FRAGMENTO_USUARIO) && contains(message, FRAGMENTO_INACTIVO)) {
             return UsuarioErrorCode.ERR_USUARIO_INACTIVO;
         }
-        if (contains(message, "matricula") && containsAny(message, "duplicad", "ya existe", "ya se encuentra", "registrad", "inscrit")) {
+        if (contains(message, "matricula") && containsAny(message, FRAGMENTO_DUPLICAD, FRAGMENTO_YA_EXISTE, FRAGMENTO_YA_SE_ENCUENTRA, FRAGMENTO_REGISTRAD, "inscrit")) {
             return GrupoErrorCode.ERR_MATRICULA_DUPLICADA;
         }
         if (containsAny(message, "tamaoo moximo", "tamano maximo")) {
@@ -382,10 +391,10 @@ final class DbFailureClassifier {
             return GrupoErrorCode.ERR_CUPO_SUPERADO;
         }
         if (isScheduleConflict(message)) {
-            if (contains(message, "estudiante") || contains(normalizedOperation, OPERATION_REGISTRAR_ESTUDIANTE.toLowerCase(Locale.ROOT))) {
+            if (contains(message, FRAGMENTO_ESTUDIANTE) || contains(normalizedOperation, OPERATION_REGISTRAR_ESTUDIANTE.toLowerCase(Locale.ROOT))) {
                 return GrupoErrorCode.ERR_CRUCE_HORARIO_ESTUDIANTE;
             }
-            if (contains(message, "docente") || contains(normalizedOperation, OPERATION_ASIGNAR_DOCENTE.toLowerCase(Locale.ROOT))) {
+            if (contains(message, FRAGMENTO_DOCENTE) || contains(normalizedOperation, OPERATION_ASIGNAR_DOCENTE.toLowerCase(Locale.ROOT))) {
                 return GrupoErrorCode.ERR_CRUCE_HORARIO_DOCENTE;
             }
         }
@@ -393,11 +402,11 @@ final class DbFailureClassifier {
                 || contains(message, "no corresponden de forma univoca al mismo usuario")) {
             return UsuarioErrorCode.ERR_IDENTIDAD_USUARIO_CONFLICTO;
         }
-        if (containsAny(message, "correo", "email", "e-mail") && containsAny(message, "duplicad", "ya existe", "ya se encuentra", "registrad", "unico")) {
+        if (containsAny(message, "correo", "email", "e-mail") && containsAny(message, FRAGMENTO_DUPLICAD, FRAGMENTO_YA_EXISTE, FRAGMENTO_YA_SE_ENCUENTRA, FRAGMENTO_REGISTRAD, "unico")) {
             return UsuarioErrorCode.ERR_UNICIDAD_CORREO;
         }
         if (containsAny(message, "documento", "identificacion", "numero de identificacion")
-                && containsAny(message, "duplicad", "ya existe", "ya se encuentra", "registrad", "unico")) {
+                && containsAny(message, FRAGMENTO_DUPLICAD, FRAGMENTO_YA_EXISTE, FRAGMENTO_YA_SE_ENCUENTRA, FRAGMENTO_REGISTRAD, "unico")) {
             return UsuarioErrorCode.ERR_UNICIDAD_DOCUMENTO;
         }
         if (contains(message, "grupo") && containsAny(
@@ -425,19 +434,19 @@ final class DbFailureClassifier {
         if (doesNotExist(message, "grupo")) {
             return GrupoErrorCode.ERR_GRUPO_NO_EXISTE;
         }
-        if (doesNotExist(message, "estudiante")) {
+        if (doesNotExist(message, FRAGMENTO_ESTUDIANTE)) {
             return EstudianteErrorCode.ERR_ESTUDIANTE_NO_EXISTE;
         }
-        if (doesNotExist(message, "usuario")) {
+        if (doesNotExist(message, FRAGMENTO_USUARIO)) {
             return UsuarioErrorCode.ERR_USUARIO_NO_EXISTE;
         }
-        if (doesNotExist(message, "docente")) {
+        if (doesNotExist(message, FRAGMENTO_DOCENTE)) {
             return DocenteErrorCode.ERR_DOCENTE_NO_EXISTE;
         }
-        if (doesNotExist(message, "sesion")) {
+        if (doesNotExist(message, FRAGMENTO_SESION)) {
             return SesionErrorCode.ERR_SESION_NO_EXISTE;
         }
-        if (contains(message, "estudiante") && contains(message, "sesion")
+        if (contains(message, FRAGMENTO_ESTUDIANTE) && contains(message, FRAGMENTO_SESION)
                 && containsAny(message, "no pertenece", "no esta asociado", "no se encuentra asociado")) {
             return AsistenciaErrorCode.ERR_ESTUDIANTE_NO_PERTENECE_SESION;
         }
@@ -452,7 +461,7 @@ final class DbFailureClassifier {
 
     private static boolean isScheduleConflict(final String message) {
         return containsAny(message, "cruce", "conflicto", "solap")
-                && containsAny(message, "horario", "hora", "sesion");
+                && containsAny(message, "horario", "hora", FRAGMENTO_SESION);
     }
 
     private static boolean containsAny(final String value, final String... expectedValues) {

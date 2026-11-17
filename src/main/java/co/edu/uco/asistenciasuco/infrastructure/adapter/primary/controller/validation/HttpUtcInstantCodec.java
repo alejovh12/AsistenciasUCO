@@ -28,7 +28,7 @@ public final class HttpUtcInstantCodec {
                     .withOffsetSameInstant(ZoneOffset.UTC).toLocalDateTime();
             validateDatabasePrecision(utc);
             return utc;
-        } catch (java.time.DateTimeException ignored) {
+        } catch (java.time.DateTimeException _) {
             throw invalidFormat();
         }
     }

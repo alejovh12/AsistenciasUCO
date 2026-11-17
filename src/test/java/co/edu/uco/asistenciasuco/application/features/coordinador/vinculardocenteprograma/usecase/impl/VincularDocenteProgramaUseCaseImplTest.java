@@ -3,7 +3,6 @@ package co.edu.uco.asistenciasuco.application.features.coordinador.vinculardocen
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
-import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.domain.DocenteProgramaDomain;
 import co.edu.uco.asistenciasuco.application.features.coordinador.vinculardocenteprograma.usecase.domain.VincularDocenteProgramaDomain;
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
@@ -36,7 +35,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -99,7 +97,8 @@ class VincularDocenteProgramaUseCaseImplTest {
         final UUID otro = UUID.randomUUID();
         when(scopePort.findProgramaIdByCoordinadorUsuario(otro)).thenReturn(Optional.empty());
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(dominioNuevo(otro)));
+        final var dominioNuevo = dominioNuevo(otro);
+        assertThrows(ForbiddenException.class, () -> useCase.execute(dominioNuevo));
 
         verifyNoInteractions(commandPort, identityProviderPort, activacion);
     }
@@ -190,8 +189,9 @@ class VincularDocenteProgramaUseCaseImplTest {
         when(queryPort.consultar(eq(ACTOR), any())).thenReturn(pagina(fila()));
         when(identityProviderPort.crearCuenta(any())).thenThrow(new IdentityProviderPort.IdentityProviderException("kc caido"));
 
+        final var dominioDocente2 = dominioDocente(ID_DOCENTE);
         final InternalApplicationException error = assertThrows(InternalApplicationException.class,
-                () -> useCase.execute(dominioDocente(ID_DOCENTE)));
+                () -> useCase.execute(dominioDocente2));
 
         verify(commandPort, times(1)).vincular(any());
         assertTrue(error.getCause() instanceof IdentityProviderPort.IdentityProviderException);
@@ -240,7 +240,8 @@ class VincularDocenteProgramaUseCaseImplTest {
     void fila_no_encontrada_despues_del_comando_es_error_interno() {
         when(queryPort.consultar(eq(ACTOR), any())).thenReturn(new DocentesProgramaPagina(List.of(), 0));
 
-        assertThrows(InternalApplicationException.class, () -> useCase.execute(dominioDocente(ID_DOCENTE)));
+        final var dominioDocente = dominioDocente(ID_DOCENTE);
+        assertThrows(InternalApplicationException.class, () -> useCase.execute(dominioDocente));
 
         verifyNoInteractions(identityProviderPort);
     }

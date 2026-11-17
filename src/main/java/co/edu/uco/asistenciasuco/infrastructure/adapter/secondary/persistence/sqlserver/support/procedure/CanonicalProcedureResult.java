@@ -42,6 +42,6 @@ public final class CanonicalProcedureResult implements ProcedureResult {
 
     @Override
     public boolean getEstadoResultado() {
-        return estadoResultado;
+        return isEstadoResultado();
     }
 }

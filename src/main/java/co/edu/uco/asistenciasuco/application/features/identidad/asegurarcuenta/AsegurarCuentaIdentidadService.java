@@ -59,7 +59,7 @@ public final class AsegurarCuentaIdentidadService {
         final Optional<CuentaIdentidadDTO> existente;
         try {
             existente = identityProvider.buscarCuentaPorIdUsuario(solicitud.idUsuario());
-        } catch (final IdentityProviderPort.IdentityProviderException exception) {
+        } catch (final IdentityProviderPort.IdentityProviderException _) {
             throw new ConflictException(AdmisionEstudianteErrorCode.ADS_002);
         }
         if (existente.isPresent()) {

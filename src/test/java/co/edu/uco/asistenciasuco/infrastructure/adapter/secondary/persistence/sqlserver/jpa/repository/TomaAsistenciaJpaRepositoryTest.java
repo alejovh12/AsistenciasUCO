@@ -1,7 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
-import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.PaginaResultado;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.AsistenciaTomaFila;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.FaltanteTomaFila;
@@ -46,6 +45,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.times;
 
 /** CULM-001 B.2: adaptador JPA de las tomas (SP canonicos con conteo exacto y consultas leidas por nombre de columna). */
 class TomaAsistenciaJpaRepositoryTest {
@@ -139,7 +139,7 @@ class TomaAsistenciaJpaRepositoryTest {
         repository.cerrar(TOMA, true, USUARIO);
         repository.cerrar(TOMA, false, USUARIO);
         final ArgumentCaptor<Map<String, Object>> parametros = ArgumentCaptor.forClass(Map.class);
-        verify(executor, org.mockito.Mockito.times(3)).executeWithExtras(anyString(), anyString(), parametros.capture(), any(), eq(7));
+        verify(executor, times(3)).executeWithExtras(anyString(), anyString(), parametros.capture(), any(), eq(7));
         assertEquals(Arrays.asList(null, "1", "0"), parametros.getAllValues().stream().map(p -> p.get("marcarAusentes")).toList());
     }
 

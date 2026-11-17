@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -132,7 +131,7 @@ class RealtimeEventsControllerTest {
                 "payload", Map.of("grupo", GRUPO.toString())
         ));
 
-        verify(gateway).emit(eq("SESION_CANCELADA"), eq(Map.of("grupo", GRUPO.toString())));
+        verify(gateway).emit("SESION_CANCELADA", Map.of("grupo", GRUPO.toString()));
         assertEquals(200, result.getStatusCode().value());
         assertTrue(((String) result.getBody().datos().get("mensajeUsuario")).contains("2 suscriptores"));
     }
@@ -141,7 +140,7 @@ class RealtimeEventsControllerTest {
     void emitCustomEvent_acepta_el_tipo_parameter_updated_para_el_administrador() {
         controller.emitCustomEvent(Map.of("tipo", "PARAMETER_UPDATED", "audiencia", "ADMINISTRADOR", "payload", Map.of()));
 
-        verify(gateway).emit(eq("PARAMETER_UPDATED"), eq(Map.of()));
+        verify(gateway).emit("PARAMETER_UPDATED", Map.of());
     }
 
     @Test

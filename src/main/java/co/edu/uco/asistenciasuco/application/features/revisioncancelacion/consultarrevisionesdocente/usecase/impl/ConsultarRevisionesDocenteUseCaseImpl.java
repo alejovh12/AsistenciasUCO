@@ -1,6 +1,5 @@
 package co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionesdocente.usecase.impl;
 
-import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionesdocente.primaryports.ConsultarRevisionesDocenteInputPort;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.consultarrevisionesdocente.usecase.ConsultarRevisionesDocenteUseCase;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.common.PaginaRevisiones;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.RevisionCancelacionRepositoryPort;

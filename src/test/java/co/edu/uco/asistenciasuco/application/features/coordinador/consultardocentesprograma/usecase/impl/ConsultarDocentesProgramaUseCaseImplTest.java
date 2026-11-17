@@ -46,8 +46,9 @@ class ConsultarDocentesProgramaUseCaseImplTest {
     void sin_programa_del_coordinador_lanza_forbidden() {
         when(scopePort.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.empty());
 
+        final var consultarDocentesProgramaDomain = new ConsultarDocentesProgramaDomain(1, 10, null, null, null);
         assertThrows(ForbiddenException.class,
-                () -> useCase.execute(ACTOR, new ConsultarDocentesProgramaDomain(1, 10, null, null, null)));
+                () -> useCase.execute(ACTOR, consultarDocentesProgramaDomain));
 
         verifyNoInteractions(queryPort);
     }

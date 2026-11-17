@@ -41,8 +41,9 @@ class ObjectHelperTest {
 
     @Test
     void requireNotEmptyUuid_con_uuid_vacio_lanza_excepcion() {
+        final var uuidVacio = new UUID(0L, 0L);
         assertThrows(IllegalArgumentException.class,
-                () -> ObjectHelper.requireNotEmptyUuid(new UUID(0L, 0L), "nulo", "vacio"));
+                () -> ObjectHelper.requireNotEmptyUuid(uuidVacio, "nulo", "vacio"));
     }
 
     @Test

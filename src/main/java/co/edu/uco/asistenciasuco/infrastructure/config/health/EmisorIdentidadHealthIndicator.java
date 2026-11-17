@@ -19,9 +19,10 @@ import java.util.Objects;
  * tokens vigentes. Solo expone el emisor (dato publico) y el estado HTTP.
  */
 public final class EmisorIdentidadHealthIndicator implements HealthIndicator {
+    private static final String CLAVE_ISSUER = "issuer";
 
     static final Duration TIEMPO_MAXIMO = Duration.ofSeconds(3);
-    private static final String DESCUBRIMIENTO = "/.well-known/openid-configuration";
+    private static final String RUTA_DESCUBRIMIENTO = "/.well-known/openid-configuration";
 
     private final String issuer;
     private final URI descubrimiento;
@@ -33,7 +34,7 @@ public final class EmisorIdentidadHealthIndicator implements HealthIndicator {
 
     EmisorIdentidadHealthIndicator(final String issuerUri, final HttpClient httpClient) {
         this.issuer = quitarBarraFinal(Objects.requireNonNull(issuerUri, "El emisor es obligatorio.").trim());
-        this.descubrimiento = URI.create(issuer + DESCUBRIMIENTO);
+        this.descubrimiento = URI.create(issuer + RUTA_DESCUBRIMIENTO);
         this.httpClient = Objects.requireNonNull(httpClient, "HttpClient es obligatorio.");
     }
 
@@ -44,12 +45,12 @@ public final class EmisorIdentidadHealthIndicator implements HealthIndicator {
                     HttpRequest.newBuilder(descubrimiento).timeout(TIEMPO_MAXIMO).GET().build(),
                     HttpResponse.BodyHandlers.discarding());
             final Health.Builder estado = respuesta.statusCode() == 200 ? Health.up() : Health.down();
-            return estado.withDetail("issuer", issuer).withDetail("status", respuesta.statusCode()).build();
+            return estado.withDetail(CLAVE_ISSUER, issuer).withDetail("status", respuesta.statusCode()).build();
         } catch (final InterruptedException interrupcion) {
             Thread.currentThread().interrupt();
-            return Health.down().withDetail("issuer", issuer).withDetail("error", interrupcion.getClass().getSimpleName()).build();
+            return Health.down().withDetail(CLAVE_ISSUER, issuer).withDetail("error", interrupcion.getClass().getSimpleName()).build();
         } catch (final Exception fallo) {
-            return Health.down().withDetail("issuer", issuer).withDetail("error", fallo.getClass().getSimpleName()).build();
+            return Health.down().withDetail(CLAVE_ISSUER, issuer).withDetail("error", fallo.getClass().getSimpleName()).build();
         }
     }
 

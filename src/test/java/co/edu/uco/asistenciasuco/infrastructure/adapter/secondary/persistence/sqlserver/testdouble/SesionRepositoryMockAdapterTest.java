@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -36,15 +37,17 @@ class SesionRepositoryMockAdapterTest {
      */
     @Test
     void metodos_de_comando_aceptan_dto_valido_sin_lanzar() {
-        adapter.crearSesion(new CrearSesionRepositoryDTO(
-                UUID.randomUUID(), "Nombre", LocalDateTime.now(), LocalDateTime.now().plusHours(2),
-                UUID.randomUUID()));
-        adapter.actualizarSesion(new ActualizarSesionRepositoryDTO(
-                UUID.randomUUID(), "Sesion", LocalDateTime.now(), LocalDateTime.now().plusHours(2),
-                UUID.randomUUID()));
-        adapter.cerrarSesion(new CerrarSesionRepositoryDTO(
-                UUID.randomUUID(), UUID.randomUUID(), "Cerrada a tiempo", UUID.randomUUID()));
-        adapter.generarSesionesGrupo(new GenerarSesionesGrupoRepositoryDTO(UUID.randomUUID(), UUID.randomUUID()));
+        assertDoesNotThrow(() -> {
+            adapter.crearSesion(new CrearSesionRepositoryDTO(
+                    UUID.randomUUID(), "Nombre", LocalDateTime.now(), LocalDateTime.now().plusHours(2),
+                    UUID.randomUUID()));
+            adapter.actualizarSesion(new ActualizarSesionRepositoryDTO(
+                    UUID.randomUUID(), "Sesion", LocalDateTime.now(), LocalDateTime.now().plusHours(2),
+                    UUID.randomUUID()));
+            adapter.cerrarSesion(new CerrarSesionRepositoryDTO(
+                    UUID.randomUUID(), UUID.randomUUID(), "Cerrada a tiempo", UUID.randomUUID()));
+            adapter.generarSesionesGrupo(new GenerarSesionesGrupoRepositoryDTO(UUID.randomUUID(), UUID.randomUUID()));
+        });
     }
 
     @Test

@@ -20,6 +20,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.HandlerMapping;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -83,7 +84,7 @@ public final class AuditInterceptor implements HandlerInterceptor {
         final TraceContextSnapshot traceContext = readTraceContext();
         auditEventPublisher.publish(new AuditEvent(
                 UUID.randomUUID(),
-                OffsetDateTime.now(),
+                OffsetDateTime.now(ZoneId.systemDefault()),
                 actor.actorId(),
                 actor.actorType(),
                 auditableOperation.action(),
@@ -216,7 +217,7 @@ public final class AuditInterceptor implements HandlerInterceptor {
             try {
                 final java.lang.reflect.Method metodo = target.getClass().getMethod(nombre);
                 return metodo.invoke(target);
-            } catch (final ReflectiveOperationException | IllegalArgumentException ignorada) {
+            } catch (final ReflectiveOperationException | IllegalArgumentException _) {
                 // prueba el siguiente nombre
             }
         }

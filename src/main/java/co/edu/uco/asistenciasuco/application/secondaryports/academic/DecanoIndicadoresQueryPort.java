@@ -1,6 +1,5 @@
 package co.edu.uco.asistenciasuco.application.secondaryports.academic;
 
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.AforoGrupoProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ComparativaProgramaProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.KpisDecanoProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PaginaAforoGruposProjection;

@@ -6,7 +6,6 @@ import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudi
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudianteporid.primaryports.mapper.ConsultarEstudiantePorIdMapper;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudianteporid.usecase.ConsultarEstudiantePorIdUseCase;
 
-import java.util.UUID;
 import java.util.Objects;
 
 public final class ConsultarEstudiantePorIdInteractor implements ConsultarEstudiantePorIdInputPort {

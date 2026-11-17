@@ -39,7 +39,6 @@ public final class AsistenciaJdbcBaselineOracle implements AsistenciaRepositoryP
     private static final String PARAM_ID_SESION = "idSesion";
     private static final String PARAM_ASISTENCIA_JSON = "asistenciaJSON";
     private static final String PARAM_ID_ESTUDIANTE = "idEstudiante";
-    private static final String PARAM_CODIGO_VERIFICACION = "codigoVerificacion";
     private static final String PARAM_CATEGORIA = "categoria";
     private static final String PARAM_JUSTIFICACION = "justificacion";
     private static final String PARAM_SOPORTE_NOMBRE = "soporteNombre";

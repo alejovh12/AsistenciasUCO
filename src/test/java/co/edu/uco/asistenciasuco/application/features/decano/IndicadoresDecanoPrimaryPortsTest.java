@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import co.edu.uco.asistenciasuco.application.features.decano.consultaraforogrupos.primaryports.dto.AforoGruposPaginaDTO;
@@ -29,7 +30,6 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 
 /** Cubre interactores y mappers de las tres consultas del decano con datos completos (sin mockStatic). */
 class IndicadoresDecanoPrimaryPortsTest {
@@ -48,7 +48,7 @@ class IndicadoresDecanoPrimaryPortsTest {
         final KpisDecanoDTO dto = new ConsultarKpisDecanoInteractor(useCase).execute(new ConsultarKpisDecanoDTO(ACTOR, PERIODO));
 
         final ArgumentCaptor<ConsultarKpisDecanoDomain> captor = ArgumentCaptor.forClass(ConsultarKpisDecanoDomain.class);
-        Mockito.verify(useCase).execute(captor.capture());
+        verify(useCase).execute(captor.capture());
         assertEquals(ACTOR, captor.getValue().actorUsuarioId());
         assertEquals(PERIODO, captor.getValue().idPeriodoAcademico());
         assertEquals(FACULTAD, dto.idFacultad());
@@ -114,7 +114,7 @@ class IndicadoresDecanoPrimaryPortsTest {
 
         final ArgumentCaptor<co.edu.uco.asistenciasuco.application.features.decano.consultaraforogrupos.usecase.domain.ConsultarAforoGruposDomain> captor =
                 ArgumentCaptor.forClass(co.edu.uco.asistenciasuco.application.features.decano.consultaraforogrupos.usecase.domain.ConsultarAforoGruposDomain.class);
-        Mockito.verify(useCase).execute(captor.capture());
+        verify(useCase).execute(captor.capture());
         assertEquals(PROGRAMA, captor.getValue().idPrograma());
         assertEquals(false, captor.getValue().soloHabilitados());
         assertEquals(2, captor.getValue().pagina());

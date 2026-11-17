@@ -114,8 +114,9 @@ class ConsultarAsistenciaProgramaUseCaseImplTest {
     void T_060_02_sesiones_exige_grupo_y_rango_coherente() {
         assertThrows(ValidationException.class,
                 () -> useCase.consultarSesionesGrupo(COORDINADOR, null, null, null, 1, 10));
-        assertThrows(ValidationException.class, () -> useCase.consultarSesionesGrupo(COORDINADOR, GRUPO,
-                LocalDate.of(2026, 3, 2), LocalDate.of(2026, 3, 1), 1, 10));
+        final var fechaInicio = LocalDate.of(2026, 3, 2);
+        final var fechaFin = LocalDate.of(2026, 3, 1);
+        assertThrows(ValidationException.class, () -> useCase.consultarSesionesGrupo(COORDINADOR, GRUPO, fechaInicio, fechaFin, 1, 10));
         verifyNoInteractions(queryPort);
     }
 

@@ -21,12 +21,12 @@ public record CompressionDecision(boolean compressed, String algorithm, byte[] s
         if (this == other) {
             return true;
         }
-        if (!(other instanceof CompressionDecision that)) {
+        if (!(other instanceof CompressionDecision(var otherCompressed, var otherAlgorithm, var otherStoredContent))) {
             return false;
         }
-        return compressed == that.compressed
-                && Objects.equals(algorithm, that.algorithm)
-                && Arrays.equals(storedContent, that.storedContent);
+        return compressed == otherCompressed
+                && Objects.equals(algorithm, otherAlgorithm)
+                && Arrays.equals(storedContent, otherStoredContent);
     }
 
     @Override

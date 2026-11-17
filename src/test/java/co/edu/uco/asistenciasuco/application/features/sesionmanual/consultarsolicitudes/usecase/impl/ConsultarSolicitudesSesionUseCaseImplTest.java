@@ -72,7 +72,8 @@ class ConsultarSolicitudesSesionUseCaseImplTest {
         when(repositorio.consultarSolicitudes(COORDINADOR, true, null, null, 1, 20))
                 .thenThrow(new ForbiddenException("SEC_001", "Sin acceso al recurso solicitado."));
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(new Comando(COORDINADOR, true, null, null, null, null)));
+        final var comando = new Comando(COORDINADOR, true, null, null, null, null);
+        assertThrows(ForbiddenException.class, () -> useCase.execute(comando));
     }
 
     @Test

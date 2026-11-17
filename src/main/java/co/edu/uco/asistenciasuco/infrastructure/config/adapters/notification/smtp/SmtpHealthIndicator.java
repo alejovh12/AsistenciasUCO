@@ -30,7 +30,7 @@ public final class SmtpHealthIndicator implements HealthIndicator {
         try {
             transport.verificarConexion();
             return Health.up().withDetail("host", host).withDetail("port", port).build();
-        } catch (final UnsupportedOperationException sinVerificacion) {
+        } catch (final UnsupportedOperationException _) {
             return Health.unknown().withDetail("host", host).withDetail("port", port).build();
         } catch (final Exception fallo) {
             return Health.down()

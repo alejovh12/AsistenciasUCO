@@ -1,6 +1,5 @@
 package co.edu.uco.asistenciasuco.application.features.alertainasistencia.consultaralertasestudiante.usecase.impl;
 
-import co.edu.uco.asistenciasuco.application.features.alertainasistencia.consultaralertasestudiante.primaryports.ConsultarAlertasEstudianteInputPort;
 import co.edu.uco.asistenciasuco.application.features.alertainasistencia.consultaralertasestudiante.usecase.ConsultarAlertasEstudianteUseCase;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort;
@@ -41,7 +40,7 @@ public final class ConsultarAlertasEstudianteUseCaseImpl implements ConsultarAle
         final String limite = umbralLimite == null ? "" : umbralLimite.toPlainString();
         try {
             return mensajes.getUserMessage(f.codigoMensajeUsuario(), porcentaje, f.nombreAsignatura(), limite);
-        } catch (final RuntimeException exception) {
+        } catch (final RuntimeException _) {
             return perdida
                     ? "Alcanzaste " + porcentaje + "% de inasistencia en " + f.nombreAsignatura() + " (límite " + limite + "%). Tu docente revisará tu caso."
                     : "Llevas " + porcentaje + "% de inasistencia en " + f.nombreAsignatura() + ". Si llegas al " + limite + "% podrías perder la asignatura.";

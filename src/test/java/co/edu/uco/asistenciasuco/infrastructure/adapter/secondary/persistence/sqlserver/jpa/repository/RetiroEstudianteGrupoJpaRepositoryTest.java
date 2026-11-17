@@ -54,8 +54,9 @@ class RetiroEstudianteGrupoJpaRepositoryTest {
     @Test
     void constructor_rechaza_dependencias_nulas() {
         assertThrows(NullPointerException.class, () -> new RetiroEstudianteGrupoJpaRepository(null, entityManager));
+        final var jpaProcedureExecutor = new JpaProcedureExecutor(entityManager);
         assertThrows(NullPointerException.class,
-                () -> new RetiroEstudianteGrupoJpaRepository(new JpaProcedureExecutor(entityManager), null));
+                () -> new RetiroEstudianteGrupoJpaRepository(jpaProcedureExecutor, null));
     }
 
     @Test

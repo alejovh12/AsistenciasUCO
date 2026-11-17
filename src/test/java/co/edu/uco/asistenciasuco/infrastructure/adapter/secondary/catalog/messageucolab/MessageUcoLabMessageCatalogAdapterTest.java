@@ -23,6 +23,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.times;
 
 class MessageUcoLabMessageCatalogAdapterTest {
 
@@ -227,7 +228,7 @@ class MessageUcoLabMessageCatalogAdapterTest {
         assertEquals(Optional.of("Texto remoto"), cached.findUserMessage("VAL_001"));
         assertEquals(Optional.of("Texto remoto"), cached.findUserMessage("VAL_001"));
 
-        verify(reader, Mockito.times(1)).getDetails("MSG_VAL001");
+        verify(reader, times(1)).getDetails("MSG_VAL001");
     }
 
     @Test
@@ -239,7 +240,7 @@ class MessageUcoLabMessageCatalogAdapterTest {
         cached.findUserMessage("VAL_001");
         cached.findUserMessage("VAL_001");
 
-        verify(reader, Mockito.times(2)).getDetails("MSG_VAL001");
+        verify(reader, times(2)).getDetails("MSG_VAL001");
     }
 
     @Test
@@ -254,7 +255,7 @@ class MessageUcoLabMessageCatalogAdapterTest {
         cached.findUserMessage("VAL_001");
         cached.invalidateMessage(null);
 
-        verify(reader, Mockito.times(3)).getDetails("MSG_VAL001");
+        verify(reader, times(3)).getDetails("MSG_VAL001");
     }
 
     @Test
@@ -264,7 +265,7 @@ class MessageUcoLabMessageCatalogAdapterTest {
         adapter.findUserMessage("VAL_001");
         adapter.findUserMessage("VAL_001");
 
-        verify(reader, Mockito.times(2)).getDetails("MSG_VAL001");
+        verify(reader, times(2)).getDetails("MSG_VAL001");
     }
 
     @Test

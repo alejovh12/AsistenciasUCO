@@ -46,7 +46,7 @@ class MinioFileStorageAdapterIT {
         for (final String fileId : createdFileIds) {
             try {
                 adapter.delete(fileId);
-            } catch (final RuntimeException ignored) {
+            } catch (final RuntimeException _) {
                 // best-effort: el objeto pudo no haberse llegado a crear en un test fallido
             }
         }
@@ -115,8 +115,8 @@ class MinioFileStorageAdapterIT {
         assertArrayEquals(content, read.content());
     }
 
-    // STORAGE-006 / STATELESS-001: dos adapters/clientes independientes contra el mismo MinIO;
-    // A escribe, B lee el mismo objeto.
+    // STORAGE-006 / STATELESS-001: dos adapters/clientes independientes contra el mismo MinIO.
+    // El adapter A escribe y el adapter B lee el mismo objeto.
     @Test
     void dos_adapters_independientes_contra_el_mismo_minio_leen_el_mismo_objeto() {
         final FileStoragePort adapterA = newAdapter();

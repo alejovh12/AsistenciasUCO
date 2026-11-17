@@ -26,7 +26,6 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -204,7 +203,7 @@ class AsistenciaQrConcurrenciaIT {
         final List<Resultado> errores = resultados.stream().filter(r -> r.status() != estadoEsperado).toList();
         for (final TomaQrCargaFixture.GrupoCarga grupo : fixture.grupos()) {
             final List<Long> tiempos = new ArrayList<>(resultados.stream().filter(r -> r.grupo().equals(grupo.grupo())).map(Resultado::milis).toList());
-            Collections.sort(tiempos);
+            tiempos.sort(null);
             LOGGER.info("{} grupo {}: p50={} ms p95={} ms max={} ms", ronda, grupo.grupo(), percentil(tiempos, 50), percentil(tiempos, 95),
                     tiempos.getLast());
             assertEquals(POR_GRUPO, fixture.detallesPresentes(grupo.sesion()), ronda + ": detalles AN del grupo " + grupo.grupo());

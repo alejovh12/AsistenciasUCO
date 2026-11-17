@@ -28,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.RETURNS_SELF;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -95,26 +94,39 @@ class Culm001AJpaRepositoriesTest {
         assertTrue(grupos().buscarEstudiantePorDocumento(UUID.randomUUID(), UUID.randomUUID(), 123456, ACTOR).isEmpty());
 
         when(query.getResultList()).thenThrow(new PersistenceException("x", new RuntimeException("DBCODE=SEC_002|no titular")));
+        final var grupos2 = grupos();
+        final var uuid = UUID.randomUUID();
+        final var uuid2 = UUID.randomUUID();
         assertThrows(ForbiddenException.class,
-                () -> grupos().buscarEstudiantePorDocumento(UUID.randomUUID(), UUID.randomUUID(), 123456, ACTOR));
+                () -> grupos2.buscarEstudiantePorDocumento(uuid, uuid2, 123456, ACTOR));
 
         final Query corta = mock(Query.class, RETURNS_SELF);
         when(corta.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(new Object[8]));
         when(manager.createNativeQuery(GrupoJpaRepository.SQL_BUSCAR_ESTUDIANTE_POR_DOCUMENTO)).thenReturn(corta);
+        final var gruposRepo = grupos();
+        final var idGrupo = UUID.randomUUID();
+        final var idEstudiante = UUID.randomUUID();
         assertInstanceOf(IllegalStateException.class, assertThrows(DatabaseOperationException.class,
-                () -> grupos().buscarEstudiantePorDocumento(UUID.randomUUID(), UUID.randomUUID(), 123456, ACTOR)).getCause());
+                () -> gruposRepo.buscarEstudiantePorDocumento(idGrupo, idEstudiante, 123456, ACTOR)).getCause());
     }
 
     @Test
     void busqueda_y_consultas_de_grupo_sin_datos_obligatorios_no_llegan_a_la_db() {
         final GrupoJpaRepository repository = grupos();
-        assertThrows(CrosscuttingException.class, () -> repository.buscarEstudiantePorDocumento(null, UUID.randomUUID(), 1, ACTOR));
-        assertThrows(CrosscuttingException.class, () -> repository.buscarEstudiantePorDocumento(UUID.randomUUID(), null, 1, ACTOR));
-        assertThrows(CrosscuttingException.class, () -> repository.buscarEstudiantePorDocumento(UUID.randomUUID(), UUID.randomUUID(), null, ACTOR));
-        assertThrows(CrosscuttingException.class, () -> repository.buscarEstudiantePorDocumento(UUID.randomUUID(), UUID.randomUUID(), 1, null));
+        final var uuid7 = UUID.randomUUID();
+        assertThrows(CrosscuttingException.class, () -> repository.buscarEstudiantePorDocumento(null, uuid7, 1, ACTOR));
+        final var uuid6 = UUID.randomUUID();
+        assertThrows(CrosscuttingException.class, () -> repository.buscarEstudiantePorDocumento(uuid6, null, 1, ACTOR));
+        final var uuid4 = UUID.randomUUID();
+        final var uuid5 = UUID.randomUUID();
+        assertThrows(CrosscuttingException.class, () -> repository.buscarEstudiantePorDocumento(uuid4, uuid5, null, ACTOR));
+        final var uuid2 = UUID.randomUUID();
+        final var uuid3 = UUID.randomUUID();
+        assertThrows(CrosscuttingException.class, () -> repository.buscarEstudiantePorDocumento(uuid2, uuid3, 1, null));
         assertThrows(CrosscuttingException.class, () -> repository.consultarGrupos(null));
         assertThrows(CrosscuttingException.class, () -> repository.consultarEstudiantesGrupo(null, ACTOR));
-        assertThrows(CrosscuttingException.class, () -> repository.consultarEstudiantesGrupo(UUID.randomUUID(), null));
+        final var uuid = UUID.randomUUID();
+        assertThrows(CrosscuttingException.class, () -> repository.consultarEstudiantesGrupo(uuid, null));
         verify(manager, never()).createNativeQuery(anyString());
     }
 
@@ -124,14 +136,19 @@ class Culm001AJpaRepositoriesTest {
         assertTrue(grupos().consultarGrupos(ACTOR).isEmpty());
 
         when(query.getResultList()).thenThrow(new PersistenceException("x", new RuntimeException("DBCODE=SEC_002|ajeno")));
-        assertThrows(ForbiddenException.class, () -> grupos().consultarEstudiantesGrupo(UUID.randomUUID(), ACTOR));
+        final var grupos2 = grupos();
+        final var uuid = UUID.randomUUID();
+        assertThrows(ForbiddenException.class, () -> grupos2.consultarEstudiantesGrupo(uuid, ACTOR));
     }
 
     @Test
     void filas_de_grupo_y_de_estudiante_con_otra_cantidad_de_columnas_fallan() {
         when(query.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(new Object[12]));
-        assertThrows(DatabaseOperationException.class, () -> grupos().consultarGrupos(ACTOR));
-        assertThrows(DatabaseOperationException.class, () -> grupos().consultarEstudiantesGrupo(UUID.randomUUID(), ACTOR));
+        final var grupos3 = grupos();
+        assertThrows(DatabaseOperationException.class, () -> grupos3.consultarGrupos(ACTOR));
+        final var grupos2 = grupos();
+        final var uuid = UUID.randomUUID();
+        assertThrows(DatabaseOperationException.class, () -> grupos2.consultarEstudiantesGrupo(uuid, ACTOR));
     }
 
     // --- estado del decano ---
@@ -164,9 +181,11 @@ class Culm001AJpaRepositoriesTest {
         verify(query).setParameter("estaActivo", "0");
 
         when(query.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(new Object[]{CORRELACION, "ok", "DEC_003", true, null, 0, 1}));
-        assertThrows(DatabaseOperationException.class, () -> repository.cambiarEstadoDecano(UUID.randomUUID(), null, ACTOR));
+        final var uuid3 = UUID.randomUUID();
+        assertThrows(DatabaseOperationException.class, () -> repository.cambiarEstadoDecano(uuid3, null, ACTOR));
         when(query.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(new Object[]{CORRELACION, "ok", "DEC_003", true, "no-uuid", 0, 1}));
-        assertThrows(DatabaseOperationException.class, () -> repository.cambiarEstadoDecano(UUID.randomUUID(), null, ACTOR));
+        final var uuid2 = UUID.randomUUID();
+        assertThrows(DatabaseOperationException.class, () -> repository.cambiarEstadoDecano(uuid2, null, ACTOR));
     }
 
     @Test
@@ -174,11 +193,13 @@ class Culm001AJpaRepositoriesTest {
         final DecanoJpaRepository repository = new DecanoJpaRepository(manager, new JpaProcedureExecutor(manager));
         when(query.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(new Object[]{CORRELACION, "No se puede desactivar.",
                 "DBCODE=DEC_002|programas activos", false, null, null, null}));
-        assertThrows(ConflictException.class, () -> repository.cambiarEstadoDecano(UUID.randomUUID(), null, ACTOR));
+        final var uuid2 = UUID.randomUUID();
+        assertThrows(ConflictException.class, () -> repository.cambiarEstadoDecano(uuid2, null, ACTOR));
 
         when(query.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(new Object[]{CORRELACION, "No existe.",
                 "DBCODE=DEC_001|fuera de ambito", false, null, null, null}));
-        assertThrows(ResourceNotFoundException.class, () -> repository.cambiarEstadoDecano(UUID.randomUUID(), null, ACTOR));
+        final var uuid = UUID.randomUUID();
+        assertThrows(ResourceNotFoundException.class, () -> repository.cambiarEstadoDecano(uuid, null, ACTOR));
     }
 
     // --- materias y horario del estudiante ---
@@ -224,13 +245,17 @@ class Culm001AJpaRepositoriesTest {
 
     @Test
     void materias_y_horario_sin_ejecutor_no_llegan_a_la_db_y_columnas_distintas_fallan() {
-        assertThrows(CrosscuttingException.class, () -> new MateriaEstudianteJpaRepository(manager).consultarMateriasEstudiante(null));
-        assertThrows(CrosscuttingException.class, () -> new HorarioEstudianteJpaRepository(manager).consultarHorarioEstudiante(null));
+        final var materiaEstudianteJpaRepository2 = new MateriaEstudianteJpaRepository(manager);
+        assertThrows(CrosscuttingException.class, () -> materiaEstudianteJpaRepository2.consultarMateriasEstudiante(null));
+        final var horarioEstudianteJpaRepository2 = new HorarioEstudianteJpaRepository(manager);
+        assertThrows(CrosscuttingException.class, () -> horarioEstudianteJpaRepository2.consultarHorarioEstudiante(null));
         verify(manager, never()).createNativeQuery(anyString());
 
         when(query.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(new Object[3]));
-        assertThrows(DatabaseOperationException.class, () -> new MateriaEstudianteJpaRepository(manager).consultarMateriasEstudiante(ACTOR));
-        assertThrows(DatabaseOperationException.class, () -> new HorarioEstudianteJpaRepository(manager).consultarHorarioEstudiante(ACTOR));
+        final var materiaEstudianteJpaRepository = new MateriaEstudianteJpaRepository(manager);
+        assertThrows(DatabaseOperationException.class, () -> materiaEstudianteJpaRepository.consultarMateriasEstudiante(ACTOR));
+        final var horarioEstudianteJpaRepository = new HorarioEstudianteJpaRepository(manager);
+        assertThrows(DatabaseOperationException.class, () -> horarioEstudianteJpaRepository.consultarHorarioEstudiante(ACTOR));
         assertThrows(NullPointerException.class, () -> new MateriaEstudianteJpaRepository(null));
         assertThrows(NullPointerException.class, () -> new HorarioEstudianteJpaRepository(null));
     }
@@ -241,7 +266,7 @@ class Culm001AJpaRepositoriesTest {
     @SuppressWarnings("unchecked")
     void correo_por_estudiante_lee_el_correo_del_usuario_del_estudiante() {
         final TypedQuery<String> correo = mock(TypedQuery.class, RETURNS_SELF);
-        when(manager.createQuery(eq(UsuarioJpaRepository.HQL_CORREO_POR_ESTUDIANTE), eq(String.class))).thenReturn(correo);
+        when(manager.createQuery(UsuarioJpaRepository.HQL_CORREO_POR_ESTUDIANTE, String.class)).thenReturn(correo);
         final UUID estudiante = UUID.randomUUID();
         when(correo.getResultList()).thenReturn(List.of("ana.perez@uco.edu.co"), List.of(" "));
         final UsuarioJpaRepository repository = new UsuarioJpaRepository(manager);

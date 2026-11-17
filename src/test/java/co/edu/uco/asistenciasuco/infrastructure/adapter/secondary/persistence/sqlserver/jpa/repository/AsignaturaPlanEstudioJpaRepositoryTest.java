@@ -254,7 +254,8 @@ class AsignaturaPlanEstudioJpaRepositoryTest {
 
     @Test
     void los_argumentos_obligatorios_del_constructor_se_validan() {
-        assertThrows(NullPointerException.class, () -> new AsignaturaPlanEstudioJpaRepository(null, new JpaProcedureExecutor(manager)));
+        final var jpaProcedureExecutor = new JpaProcedureExecutor(manager);
+        assertThrows(NullPointerException.class, () -> new AsignaturaPlanEstudioJpaRepository(null, jpaProcedureExecutor));
         assertThrows(NullPointerException.class, () -> new AsignaturaPlanEstudioJpaRepository(manager, null));
     }
 

@@ -40,7 +40,7 @@ public final class NativeRowValues {
             return 0;
         }
         if (valor instanceof Boolean bit) {
-            return bit ? 1 : 0;
+            return bit.booleanValue() ? 1 : 0;
         }
         if (valor instanceof Number numero) {
             return numero.intValue();

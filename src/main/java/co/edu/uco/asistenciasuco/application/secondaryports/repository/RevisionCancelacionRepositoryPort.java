@@ -4,8 +4,6 @@ import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.common
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.common.ResultadoResolucion;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.common.PaginaRevisiones;
 import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.common.DestinatarioRevision;
-import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 

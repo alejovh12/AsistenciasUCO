@@ -1,9 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadCommandPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadCommandPort.ActualizarFacultadCommand;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadCommandPort.CambiarEstadoFacultadCommand;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadCommandPort.CrearFacultadCommand;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.FacultadProjection;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.mapper.AcademicViewJpaProjectionMapper;
@@ -25,6 +22,8 @@ import java.util.UUID;
 /** Consulta JPA-only de {@code uv_facultad} y comando sobre {@code usp_crear_facultad} (LB-008 JPA-05 / HU116). */
 @Repository
 public class FacultadJpaRepository implements FacultadQueryPort, FacultadCommandPort {
+    private static final String PARAM_ID_CORRELACION = "idCorrelacion";
+    private static final String PARAM_ID_USUARIO_EJECUTOR = "idUsuarioEjecutor";
 
     static final String SQL_CREAR_FACULTAD = """
             EXEC dbo.usp_crear_facultad
@@ -87,8 +86,8 @@ public class FacultadJpaRepository implements FacultadQueryPort, FacultadCommand
         parametros.put("nombre", command.nombre());
         parametros.put("idInstitucion", command.idInstitucion());
         parametros.put("idDecano", command.idDecano());
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", command.actorUsuarioId());
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, command.actorUsuarioId());
 
         procedureExecutor.execute(OP_CREAR_FACULTAD, SQL_CREAR_FACULTAD, parametros, correlationId);
     }
@@ -101,8 +100,8 @@ public class FacultadJpaRepository implements FacultadQueryPort, FacultadCommand
         parametros.put("id", command.id());
         parametros.put("nombre", command.nombre());
         parametros.put("idDecano", command.idDecano());
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", command.actorUsuarioId());
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, command.actorUsuarioId());
 
         procedureExecutor.execute(OP_ACTUALIZAR_FACULTAD, SQL_ACTUALIZAR_FACULTAD, parametros, correlationId);
     }
@@ -114,8 +113,8 @@ public class FacultadJpaRepository implements FacultadQueryPort, FacultadCommand
         final Map<String, Object> parametros = new LinkedHashMap<>();
         parametros.put("id", command.id());
         parametros.put("estaActiva", command.activa());
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", command.actorUsuarioId());
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, command.actorUsuarioId());
 
         procedureExecutor.execute(OP_CAMBIAR_ESTADO_FACULTAD, SQL_CAMBIAR_ESTADO_FACULTAD, parametros, correlationId);
     }

@@ -32,7 +32,6 @@ import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
@@ -192,7 +191,7 @@ class SesionGrupoCommandsSpParityIT {
         final Outcome outcome = ejecutar("GRP_01", () -> grupoRepositoryPort.crearGrupo(new CrearGrupoRepositoryDTO(
                 UUID.randomUUID(), asignatura.get(), periodo.get(), ThreadLocalRandom.current().nextInt(900_000, 990_000),
                 nombreUnico("GRP"), docente, null)),
-                () -> contarGruposPrefijados());
+                this::contarGruposPrefijados);
 
         assertBaseline(outcome, "ValidationException", "VALIDATION_ERROR", 0);
     }
@@ -212,7 +211,7 @@ class SesionGrupoCommandsSpParityIT {
         final Outcome outcome = ejecutar("GRP_02", () -> grupoRepositoryPort.crearGrupo(new CrearGrupoRepositoryDTO(
                 UUID.randomUUID(), asignatura.get(), periodo.get(), ThreadLocalRandom.current().nextInt(900_000, 990_000),
                 nombreUnico("GRP"), docente, coordinador.get())),
-                () -> contarGruposPrefijados());
+                this::contarGruposPrefijados);
 
         assertBaseline(outcome, "", "", 1);
     }
@@ -228,7 +227,7 @@ class SesionGrupoCommandsSpParityIT {
 
         final Outcome outcome = ejecutar("GRP_03", () -> grupoRepositoryPort.actualizarGrupo(new ActualizarGrupoRepositoryDTO(
                 UUID.randomUUID(), 1, nombreUnico("U"), docente, 30, coordinador.get())),
-                () -> contarGruposPrefijados());
+                this::contarGruposPrefijados);
 
         // VAL_002 (grupo inexistente) tiene mapeo formal DBCODE: validacion funcional, no error tecnico.
         assertBaseline(outcome, "ValidationException", "VALIDATION_ERROR", 0);

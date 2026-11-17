@@ -16,13 +16,13 @@ public record SubirArchivoDomain(
         if (this == other) {
             return true;
         }
-        if (!(other instanceof SubirArchivoDomain that)) {
+        if (!(other instanceof SubirArchivoDomain(var otherOwnerSubject, var otherOriginalFilename, var otherDeclaredContentType, var otherContent))) {
             return false;
         }
-        return Arrays.equals(content, that.content)
-                && Objects.equals(ownerSubject, that.ownerSubject)
-                && Objects.equals(originalFilename, that.originalFilename)
-                && Objects.equals(declaredContentType, that.declaredContentType);
+        return Arrays.equals(content, otherContent)
+                && Objects.equals(ownerSubject, otherOwnerSubject)
+                && Objects.equals(originalFilename, otherOriginalFilename)
+                && Objects.equals(declaredContentType, otherDeclaredContentType);
     }
 
     @Override

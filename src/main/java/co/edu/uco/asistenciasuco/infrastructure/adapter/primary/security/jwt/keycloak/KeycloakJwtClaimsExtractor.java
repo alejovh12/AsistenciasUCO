@@ -56,7 +56,7 @@ public final class KeycloakJwtClaimsExtractor implements JwtClaimsExtractor {
         }
         try {
             return UUID.fromString(value.trim());
-        } catch (IllegalArgumentException exception) {
+        } catch (IllegalArgumentException _) {
             throw invalidToken("El claim '" + userIdClaim + "' no tiene formato UUID valido.");
         }
     }
@@ -79,8 +79,8 @@ public final class KeycloakJwtClaimsExtractor implements JwtClaimsExtractor {
         }
 
         return roles.stream()
-                .filter(role -> role instanceof String)
-                .map(role -> (String) role)
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
                 .map(KeycloakJwtClaimsExtractor::toInstitutionalRole)
                 .flatMap(Optional::stream)
                 .collect(Collectors.toUnmodifiableSet());

@@ -23,6 +23,7 @@ import org.springframework.stereotype.Repository;
 /** Repositorio JPA directo consolidado para PlanEstudio. */
 @Repository
 public class PlanEstudioJpaRepository implements PlanEstudioQueryPort, PlanEstudioCommandPort {
+    private static final String PARAM_ID_PLAN_ESTUDIO = "idPlanEstudio";
 
     static final String SQL_REGISTRAR_O_ACTUALIZAR_PLAN = """
             EXEC dbo.usp_registrar_o_actualizar_plan_estudio
@@ -118,7 +119,7 @@ public class PlanEstudioJpaRepository implements PlanEstudioQueryPort, PlanEstud
     @Override
     public void cambiarEstadoPlanEstudio(final UUID idPlanEstudio, final boolean estaActivo, final UUID idUsuarioEjecutor) {
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idPlanEstudio", idPlanEstudio);
+        parametros.put(PARAM_ID_PLAN_ESTUDIO, idPlanEstudio);
         parametros.put("estaActivo", estaActivo);
         ejecutarComandoPlan(OP_CAMBIAR_ESTADO_PLAN, SQL_CAMBIAR_ESTADO_PLAN, parametros, idUsuarioEjecutor);
     }
@@ -126,14 +127,14 @@ public class PlanEstudioJpaRepository implements PlanEstudioQueryPort, PlanEstud
     @Override
     public void agregarSemestrePlanEstudio(final UUID idPlanEstudio, final UUID idUsuarioEjecutor) {
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idPlanEstudio", idPlanEstudio);
+        parametros.put(PARAM_ID_PLAN_ESTUDIO, idPlanEstudio);
         ejecutarComandoPlan(OP_AGREGAR_SEMESTRE_PLAN, SQL_AGREGAR_SEMESTRE_PLAN, parametros, idUsuarioEjecutor);
     }
 
     @Override
     public void quitarSemestrePlanEstudio(final UUID idPlanEstudio, final Integer numeroSemestre, final UUID idUsuarioEjecutor) {
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idPlanEstudio", idPlanEstudio);
+        parametros.put(PARAM_ID_PLAN_ESTUDIO, idPlanEstudio);
         parametros.put("numeroSemestre", numeroSemestre);
         ejecutarComandoPlan(OP_QUITAR_SEMESTRE_PLAN, SQL_QUITAR_SEMESTRE_PLAN, parametros, idUsuarioEjecutor);
     }
@@ -232,7 +233,7 @@ public class PlanEstudioJpaRepository implements PlanEstudioQueryPort, PlanEstud
         final UUID correlationId = CorrelationIdContext.require();
 
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idPlanEstudio", idPlanEstudio);
+        parametros.put(PARAM_ID_PLAN_ESTUDIO, idPlanEstudio);
         parametros.put("idPrograma", idPrograma);
         parametros.put("inp", inp);
         parametros.put("idCorrelacion", correlationId);

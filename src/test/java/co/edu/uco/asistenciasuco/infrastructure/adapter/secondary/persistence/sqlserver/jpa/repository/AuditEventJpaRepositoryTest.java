@@ -114,7 +114,8 @@ class AuditEventJpaRepositoryTest {
                 "CREATE", "Sesion", EVENT_ID.toString(), "no-es-uuid", null, null, "POST", "/api/v1/sesiones",
                 201, "127.0.0.1", null, AuditOutcome.SUCCESS, Map.of());
 
-        assertThrows(IllegalArgumentException.class, () -> new AuditEventJpaRepository(entityManager).insert(invalido));
+        final var auditEventJpaRepository = new AuditEventJpaRepository(entityManager);
+        assertThrows(IllegalArgumentException.class, () -> auditEventJpaRepository.insert(invalido));
         verify(entityManager, never()).persist(any());
     }
 

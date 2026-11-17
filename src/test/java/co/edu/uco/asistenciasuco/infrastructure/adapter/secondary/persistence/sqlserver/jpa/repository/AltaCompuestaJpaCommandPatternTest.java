@@ -104,7 +104,8 @@ class AltaCompuestaJpaCommandPatternTest {
     void decano_con_facultad_sin_id_en_la_fila_es_contrato_roto() {
         devuelve(CORRELATION, "ok", "", true, null, FACULTAD, "F");
 
-        final var exception = assertThrows(DatabaseOperationException.class, () -> decanos.crearDecanoConFacultad(comandoDecano()));
+        final var comandoDecano2 = comandoDecano();
+        final var exception = assertThrows(DatabaseOperationException.class, () -> decanos.crearDecanoConFacultad(comandoDecano2));
 
         assertEquals(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT.code(), exception.getCode());
     }
@@ -113,7 +114,8 @@ class AltaCompuestaJpaCommandPatternTest {
     void decano_con_facultad_con_id_mal_formado_es_contrato_roto() {
         devuelve(CORRELATION, "ok", "", true, DECANO, "no-es-uuid", "F");
 
-        final var exception = assertThrows(DatabaseOperationException.class, () -> decanos.crearDecanoConFacultad(comandoDecano()));
+        final var comandoDecano2 = comandoDecano();
+        final var exception = assertThrows(DatabaseOperationException.class, () -> decanos.crearDecanoConFacultad(comandoDecano2));
 
         assertEquals(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT.code(), exception.getCode());
         assertTrue(exception.getCause() instanceof IllegalArgumentException);
@@ -123,7 +125,8 @@ class AltaCompuestaJpaCommandPatternTest {
     void decano_con_facultad_traduce_el_fallo_tecnico() {
         when(query.getResultList()).thenThrow(new PersistenceException("deadlock"));
 
-        final var exception = assertThrows(DatabaseOperationException.class, () -> decanos.crearDecanoConFacultad(comandoDecano()));
+        final var comandoDecano2 = comandoDecano();
+        final var exception = assertThrows(DatabaseOperationException.class, () -> decanos.crearDecanoConFacultad(comandoDecano2));
 
         assertEquals(DatabaseErrorCode.DATABASE_OPERATION_ERROR.code(), exception.getCode());
     }
@@ -132,7 +135,8 @@ class AltaCompuestaJpaCommandPatternTest {
     void decano_con_facultad_duplicada_es_conflicto() {
         devuelve(CORRELATION, "Ya existe una facultad con ese nombre.", "DBCODE=GEN_003|duplicada", false, null, null, null);
 
-        assertThrows(ConflictException.class, () -> decanos.crearDecanoConFacultad(comandoDecano()));
+        final var comandoDecano2 = comandoDecano();
+        assertThrows(ConflictException.class, () -> decanos.crearDecanoConFacultad(comandoDecano2));
     }
 
     @Test
@@ -178,8 +182,9 @@ class AltaCompuestaJpaCommandPatternTest {
     void coordinador_con_programa_sin_id_en_la_fila_es_contrato_roto() {
         devuelve(CORRELATION, "ok", "", true, COORDINADOR, null, "P");
 
+        final var comandoCoordinador2 = comandoCoordinador();
         final var exception = assertThrows(DatabaseOperationException.class,
-                () -> coordinadores.crearCoordinadorConPrograma(comandoCoordinador()));
+                () -> coordinadores.crearCoordinadorConPrograma(comandoCoordinador2));
 
         assertEquals(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT.code(), exception.getCode());
     }
@@ -188,8 +193,9 @@ class AltaCompuestaJpaCommandPatternTest {
     void coordinador_con_programa_con_id_mal_formado_es_contrato_roto() {
         devuelve(CORRELATION, "ok", "", true, "no-es-uuid", PROGRAMA, "P");
 
+        final var comandoCoordinador2 = comandoCoordinador();
         final var exception = assertThrows(DatabaseOperationException.class,
-                () -> coordinadores.crearCoordinadorConPrograma(comandoCoordinador()));
+                () -> coordinadores.crearCoordinadorConPrograma(comandoCoordinador2));
 
         assertEquals(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT.code(), exception.getCode());
         assertTrue(exception.getCause() instanceof IllegalArgumentException);
@@ -199,8 +205,9 @@ class AltaCompuestaJpaCommandPatternTest {
     void coordinador_con_programa_traduce_el_fallo_tecnico() {
         when(query.getResultList()).thenThrow(new PersistenceException("deadlock"));
 
+        final var comandoCoordinador2 = comandoCoordinador();
         final var exception = assertThrows(DatabaseOperationException.class,
-                () -> coordinadores.crearCoordinadorConPrograma(comandoCoordinador()));
+                () -> coordinadores.crearCoordinadorConPrograma(comandoCoordinador2));
 
         assertEquals(DatabaseErrorCode.DATABASE_OPERATION_ERROR.code(), exception.getCode());
     }
@@ -209,7 +216,8 @@ class AltaCompuestaJpaCommandPatternTest {
     void coordinador_con_programa_repetido_es_conflicto() {
         devuelve(CORRELATION, "Ya existe un programa con ese nombre.", "DBCODE=PROG_003|duplicado", false, null, null, null);
 
-        assertThrows(ConflictException.class, () -> coordinadores.crearCoordinadorConPrograma(comandoCoordinador()));
+        final var comandoCoordinador2 = comandoCoordinador();
+        assertThrows(ConflictException.class, () -> coordinadores.crearCoordinadorConPrograma(comandoCoordinador2));
     }
 
     private static CrearDecanoConFacultadCommand comandoDecano() {

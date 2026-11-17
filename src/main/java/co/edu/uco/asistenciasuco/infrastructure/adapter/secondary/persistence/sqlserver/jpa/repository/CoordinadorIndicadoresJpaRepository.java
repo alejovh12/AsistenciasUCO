@@ -30,6 +30,8 @@ import org.springframework.stereotype.Repository;
 /** KPIs, alerta temprana, bitacora y ficha del coordinador: ejecuta los SP de consulta y mapea fielmente sus columnas. */
 @Repository
 public class CoordinadorIndicadoresJpaRepository implements CoordinadorIndicadoresQueryPort {
+    private static final String PARAM_ID_PROGRAMA = "idPrograma";
+    private static final String PARAM_ID_ESTUDIANTE = "idEstudiante";
 
     static final String SQL_KPIS = """
             EXEC dbo.usp_consultar_kpis_coordinador
@@ -112,7 +114,7 @@ public class CoordinadorIndicadoresJpaRepository implements CoordinadorIndicador
                     extra.put("tamanoPagina", tamano);
                     extra.put("semaforo", semaforo);
                     extra.put("filtroTexto", nombre);
-                    extra.put("idPrograma", idPrograma);
+                    extra.put(PARAM_ID_PROGRAMA, idPrograma);
                     final List<SpAlertaTempranaEntity> filas = ejecutar(SQL_ALERTAS, SpAlertaTempranaEntity.class, correlationId, actorUsuarioId, extra, idPeriodoAcademico);
                     final int total = filas.isEmpty() ? 0 : cero(filas.getFirst().totalRegistros());
                     return new PaginaAlertasProjection(filas.stream().map(e -> new AlertaTempranaProjection(e.idEstudiante(), e.nombreCompleto(), e.numeroIdentificacion(), e.correo(), cero(e.totalMatriculasActivas()), e.porcentajeInasistencia(), cero(e.faltasSinJustaCausa()), e.codigoPermanencia(), e.semaforo())).toList(), total);
@@ -126,8 +128,8 @@ public class CoordinadorIndicadoresJpaRepository implements CoordinadorIndicador
         return JpaQueryExecutor.execute("consultarBitacoraEstudiante", "No fue posible consultar la bitacora del estudiante desde base de datos.",
                 () -> {
                     final Map<String, Object> extra = new LinkedHashMap<>();
-                    extra.put("idEstudiante", idEstudiante);
-                    extra.put("idPrograma", idPrograma);
+                    extra.put(PARAM_ID_ESTUDIANTE, idEstudiante);
+                    extra.put(PARAM_ID_PROGRAMA, idPrograma);
                     extra.put("numeroPagina", pagina);
                     extra.put("tamanoPagina", tamano);
                     final List<SpBitacoraSesionEntity> filas = ejecutar(SQL_BITACORA, SpBitacoraSesionEntity.class, correlationId, actorUsuarioId, extra, idPeriodoAcademico);
@@ -142,7 +144,7 @@ public class CoordinadorIndicadoresJpaRepository implements CoordinadorIndicador
         return JpaQueryExecutor.execute("consultarFichaEstudiante", "No fue posible consultar la ficha del estudiante desde base de datos.",
                 () -> {
                     final List<SpFichaEstudianteEntity> filas = ejecutar(SQL_FICHA, SpFichaEstudianteEntity.class, correlationId, actorUsuarioId,
-                            extra(idPrograma, "idEstudiante", idEstudiante), null, false);
+                            extra(idPrograma, PARAM_ID_ESTUDIANTE, idEstudiante), null, false);
                     if (filas.isEmpty()) {
                         throw new IllegalStateException("usp_consultar_ficha_estudiante_programa no devolvio fila.");
                     }
@@ -155,7 +157,7 @@ public class CoordinadorIndicadoresJpaRepository implements CoordinadorIndicador
     public List<ResumenAsignaturaProjection> consultarResumenAsistencia(final UUID actorUsuarioId, final UUID idEstudiante, final UUID idPeriodoAcademico, final UUID idPrograma) {
         final UUID correlationId = CorrelationIdContext.require();
         return JpaQueryExecutor.execute("consultarResumenAsistenciaEstudiante", "No fue posible consultar el resumen de asistencia desde base de datos.",
-                () -> ejecutar(SQL_RESUMEN, SpResumenAsignaturaEntity.class, correlationId, actorUsuarioId, extra(idPrograma, "idEstudiante", idEstudiante), idPeriodoAcademico).stream()
+                () -> ejecutar(SQL_RESUMEN, SpResumenAsignaturaEntity.class, correlationId, actorUsuarioId, extra(idPrograma, PARAM_ID_ESTUDIANTE, idEstudiante), idPeriodoAcademico).stream()
                         .map(e -> new ResumenAsignaturaProjection(e.idGrupo(), cero(e.codigoGrupo()), e.idAsignatura(), e.nombreAsignatura(), e.codigoEstadoEstudiante(), e.nombreEstadoEstudiante(), cero(e.sesionesEjecutadas()), cero(e.asistencias()), cero(e.faltasSinJustaCausa()), cero(e.excusas()), e.porcentajeInasistencia(), e.codigoPermanencia())).toList());
     }
 
@@ -188,7 +190,7 @@ public class CoordinadorIndicadoresJpaRepository implements CoordinadorIndicador
         for (int i = 0; i + 1 < pares.length; i += 2) {
             mapa.put((String) pares[i], pares[i + 1]);
         }
-        mapa.put("idPrograma", idPrograma);
+        mapa.put(PARAM_ID_PROGRAMA, idPrograma);
         return mapa;
     }
 

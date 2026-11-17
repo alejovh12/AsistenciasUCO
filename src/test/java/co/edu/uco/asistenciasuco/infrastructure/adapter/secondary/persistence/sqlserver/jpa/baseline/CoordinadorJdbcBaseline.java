@@ -1,16 +1,12 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.baseline;
 
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository.*;
 
 
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.CoordinadorCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResultadoGestionCoordinadorProjection;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository.CoordinadorJpaRepository;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.mapping.JdbcBaselineValueMapper;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -22,14 +18,13 @@ import java.util.UUID;
  */
 public final class CoordinadorJdbcBaseline implements CoordinadorCommandPort {
 
-    private final NamedParameterJdbcOperations jdbcOperations;
     private final CoordinadorJpaRepository commands;
 
     public CoordinadorJdbcBaseline(
             final NamedParameterJdbcOperations jdbcOperations,
             final CoordinadorJpaRepository commands
     ) {
-        this.jdbcOperations = Objects.requireNonNull(jdbcOperations, "NamedParameterJdbcOperations es obligatorio.");
+        Objects.requireNonNull(jdbcOperations, "NamedParameterJdbcOperations es obligatorio.");
         this.commands = Objects.requireNonNull(commands, "El command JPA de coordinador es obligatorio.");
     }
 

@@ -126,7 +126,9 @@ class CleanArchitectureRulesTest {
 
     private static boolean containsInternalProcedureReference(final Path path) {
         try {
-            return Files.readString(path).matches("(?s).*usp_.*_interno.*");
+            final String contenido = Files.readString(path);
+            final int inicio = contenido.indexOf("usp_");
+            return inicio >= 0 && contenido.indexOf("_interno", inicio + "usp_".length()) >= 0;
         } catch (IOException exception) {
             throw new IllegalStateException("No fue posible inspeccionar " + path, exception);
         }

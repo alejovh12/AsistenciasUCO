@@ -11,7 +11,8 @@ import co.edu.uco.asistenciasuco.application.secondaryports.security.Institution
 import java.util.List; import java.util.Objects; import java.util.Optional; import java.util.UUID;
 
 public final class ConsultarPlanesEstudioUseCaseImpl implements ConsultarPlanesEstudioUseCase {
-    private final InstitutionalScopePort scopePort; private final PlanEstudioQueryPort queryPort;
+    private final InstitutionalScopePort scopePort;
+    private final PlanEstudioQueryPort queryPort;
     public ConsultarPlanesEstudioUseCaseImpl(final InstitutionalScopePort scopePort, final PlanEstudioQueryPort queryPort) {
         this.scopePort = Objects.requireNonNull(scopePort); this.queryPort = Objects.requireNonNull(queryPort);
     }

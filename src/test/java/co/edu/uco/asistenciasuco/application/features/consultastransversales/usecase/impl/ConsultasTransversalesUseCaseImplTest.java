@@ -75,8 +75,8 @@ class ConsultasTransversalesUseCaseImplTest {
     void T_PAG_UC_01_paginacion_y_busqueda_invalidas_son_400_sin_consultar() {
         assertThrows(ValidationException.class, () -> useCase.consultarProgramasCreditos(USUARIO, null, null, 0, 10));
         assertThrows(ValidationException.class, () -> useCase.consultarDocentes(USUARIO, null, 1, 101));
-        assertThrows(ValidationException.class, () -> useCase.buscarAsignaturas(USUARIO,
-                new FiltroConsulta("x".repeat(101), null, null), 1, 10));
+        final var filtroConsulta = new FiltroConsulta("x".repeat(101), null, null);
+        assertThrows(ValidationException.class, () -> useCase.buscarAsignaturas(USUARIO, filtroConsulta, 1, 10));
         verifyNoInteractions(port);
     }
 

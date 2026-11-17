@@ -66,9 +66,7 @@ class GrupoRepositorySqlServerIT {
 
         CorrelationIdContext.set(UUID.randomUUID());
 
-        final ApplicationException exception = assertThrows(
-                ApplicationException.class,
-                () -> grupoRepositoryPort.registrarEstudianteEnGrupo(new RegistrarEstudianteRepositoryDTO(
+        final var registrarEstudianteRepositoryDTO = new RegistrarEstudianteRepositoryDTO(
                         tipoIdentificacion.get(),
                         identity.numeroIdentificacion(),
                         "PEREZ",
@@ -79,7 +77,10 @@ class GrupoRepositorySqlServerIT {
                         "Clave123!",
                         UUID.randomUUID(),
                         ejecutorAutorizado.get()
-                ))
+                );
+        final ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> grupoRepositoryPort.registrarEstudianteEnGrupo(registrarEstudianteRepositoryDTO)
         );
 
         assertEquals("ERR_GRUPO_NO_EXISTE", exception.getCode());

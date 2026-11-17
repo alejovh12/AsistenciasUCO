@@ -10,13 +10,13 @@ public record DescargarArchivoResultado(byte[] content, String contentType, Stri
         if (this == other) {
             return true;
         }
-        if (!(other instanceof DescargarArchivoResultado that)) {
+        if (!(other instanceof DescargarArchivoResultado(var otherContent, var otherContentType, var otherFilename, var otherSize))) {
             return false;
         }
-        return size == that.size
-                && Arrays.equals(content, that.content)
-                && Objects.equals(contentType, that.contentType)
-                && Objects.equals(filename, that.filename);
+        return size == otherSize
+                && Arrays.equals(content, otherContent)
+                && Objects.equals(contentType, otherContentType)
+                && Objects.equals(filename, otherFilename);
     }
 
     @Override

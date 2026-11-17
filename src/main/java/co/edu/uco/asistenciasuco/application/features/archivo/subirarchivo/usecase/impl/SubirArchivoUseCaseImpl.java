@@ -171,7 +171,7 @@ public final class SubirArchivoUseCaseImpl implements SubirArchivoUseCase {
     private void compensarObjeto(final UUID fileId) {
         try {
             fileStoragePort.delete(fileId.toString());
-        } catch (final RuntimeException exception) {
+        } catch (final RuntimeException _) {
             // Best-effort: si falla queda un huerfano tecnico sin fila, atendido por la reconciliacion.
             LOGGER.warn("Compensacion de objeto de soporte no completada. fileId={}", fileId);
         }

@@ -185,8 +185,10 @@ class RevisionCancelacionUseCasesTest {
         new ResolverRevisionCancelacionUseCaseImpl(repositorio, avisos).execute(new ResolverRevisionCancelacionInputPort.Comando(REVISION, "RECHAZAR", "m", RESOLUTOR));
         assertThrows(NullPointerException.class, () -> new ResolverRevisionCancelacionUseCaseImpl(null, avisos));
         assertThrows(NullPointerException.class, () -> new ResolverRevisionCancelacionUseCaseImpl(repositorio, null));
-        assertThrows(NullPointerException.class, () -> new ResolverRevisionCancelacionUseCaseImpl(repositorio, avisos).execute(null));
-        assertThrows(NullPointerException.class, () -> new DecidirRevisionCancelacionUseCaseImpl(repositorio, avisos).execute(null));
+        final var resolverRevisionCancelacionUseCaseImpl = new ResolverRevisionCancelacionUseCaseImpl(repositorio, avisos);
+        assertThrows(NullPointerException.class, () -> resolverRevisionCancelacionUseCaseImpl.execute(null));
+        final var decidirRevisionCancelacionUseCaseImpl = new DecidirRevisionCancelacionUseCaseImpl(repositorio, avisos);
+        assertThrows(NullPointerException.class, () -> decidirRevisionCancelacionUseCaseImpl.execute(null));
     }
 
     @Test

@@ -44,6 +44,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
@@ -107,7 +108,7 @@ class AltaUsuarioSinAmbitoRetiradaTest {
     void ROL05_02_sin_bearer_sigue_respondiendo_401() throws Exception {
         final int status = mockMvc.perform(post(RUTA).contentType(MediaType.APPLICATION_JSON).content(CUERPO))
                 .andReturn().getResponse().getStatus();
-        assertTrue(status == 401, () -> "Sin Bearer se esperaba 401 y fue " + status);
+        assertEquals(401, status, () -> "Sin Bearer se esperaba 401 y fue " + status);
     }
 
     @Test

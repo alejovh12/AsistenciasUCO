@@ -70,6 +70,7 @@ class ProgramaAcademicoRequestValidatorTest {
 
         assertDoesNotThrow(() -> ProgramaAcademicoRequestValidator.validar(conEstado));
         assertThrows(ValidationException.class, () -> ProgramaAcademicoRequestValidator.validar((CambiarEstadoProgramaRequest) null));
-        assertThrows(ValidationException.class, () -> ProgramaAcademicoRequestValidator.validar(new CambiarEstadoProgramaRequest()));
+        final var cambiarEstadoProgramaRequest = new CambiarEstadoProgramaRequest();
+        assertThrows(ValidationException.class, () -> ProgramaAcademicoRequestValidator.validar(cambiarEstadoProgramaRequest));
     }
 }

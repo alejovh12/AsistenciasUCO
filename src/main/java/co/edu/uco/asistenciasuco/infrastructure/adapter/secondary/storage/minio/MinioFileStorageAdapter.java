@@ -27,6 +27,7 @@ import java.util.Objects;
  * ({@code soportes/<fileId>}); Application nunca ve esta representacion.</p>
  */
 public final class MinioFileStorageAdapter implements FileStoragePort {
+    private static final String MSG_FILE_ID_OBLIGATORIO = "fileId es obligatorio.";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MinioFileStorageAdapter.class);
     private static final String OBJECT_KEY_PREFIX = "soportes/";
@@ -77,7 +78,7 @@ public final class MinioFileStorageAdapter implements FileStoragePort {
 
     @Override
     public StoredObject read(final String fileId) {
-        Objects.requireNonNull(fileId, "fileId es obligatorio.");
+        Objects.requireNonNull(fileId, MSG_FILE_ID_OBLIGATORIO);
         final String objectKey = objectKeyOf(fileId);
         try {
             final StatObjectResponse stat = minioClient.statObject(StatObjectArgs.builder()
@@ -109,7 +110,7 @@ public final class MinioFileStorageAdapter implements FileStoragePort {
 
     @Override
     public boolean exists(final String fileId) {
-        Objects.requireNonNull(fileId, "fileId es obligatorio.");
+        Objects.requireNonNull(fileId, MSG_FILE_ID_OBLIGATORIO);
         try {
             minioClient.statObject(StatObjectArgs.builder()
                     .bucket(bucket)
@@ -128,7 +129,7 @@ public final class MinioFileStorageAdapter implements FileStoragePort {
 
     @Override
     public void delete(final String fileId) {
-        Objects.requireNonNull(fileId, "fileId es obligatorio.");
+        Objects.requireNonNull(fileId, MSG_FILE_ID_OBLIGATORIO);
         try {
             minioClient.removeObject(RemoveObjectArgs.builder()
                     .bucket(bucket)

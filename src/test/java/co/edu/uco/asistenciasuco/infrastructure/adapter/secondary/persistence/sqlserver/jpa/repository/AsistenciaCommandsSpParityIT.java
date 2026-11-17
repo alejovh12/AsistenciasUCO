@@ -1,6 +1,5 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository.*;
 
 
 import co.edu.uco.asistenciasuco.application.exception.ApplicationException;
@@ -33,7 +32,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -242,10 +240,6 @@ class AsistenciaCommandsSpParityIT {
 
     private Outcome resolver(final boolean candidato, final UUID sesion, final UUID solicitud, final String accion) {
         return resolverCon(candidato, solicitud, fixture.docenteUsuarioId(), accion, sesion);
-    }
-
-    private Outcome resolverCon(final boolean candidato, final UUID solicitud, final UUID ejecutor, final String accion) {
-        return resolverCon(candidato, solicitud, ejecutor, accion, sesionDeSolicitud(solicitud));
     }
 
     private Outcome resolverComoDocente(

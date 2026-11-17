@@ -6,7 +6,6 @@ import co.edu.uco.asistenciasuco.infrastructure.audit.model.AuditActorType;
 import co.edu.uco.asistenciasuco.infrastructure.audit.model.AuditEvent;
 import co.edu.uco.asistenciasuco.infrastructure.audit.contract.AuditEventPublisher;
 import co.edu.uco.asistenciasuco.infrastructure.audit.model.AuditOutcome;
-import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditRequestAttributes;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import co.edu.uco.asistenciasuco.infrastructure.observability.tracing.opentelemetry.TraceContextSnapshot;
 import org.junit.jupiter.api.AfterEach;
@@ -165,6 +164,7 @@ class AuditInterceptorTest {
                 resourceIdPathVariable = "grupoId"
         )
         void registrarEstudiante() {
+            // Metodo vacio: solo interesa la anotacion @AuditableOperation que lo decora.
         }
 
         @AuditableOperation(
@@ -173,13 +173,16 @@ class AuditInterceptorTest {
                 resourceIdResponseField = "usuarioId"
         )
         void crearUsuario() {
+            // Metodo vacio: solo interesa la anotacion @AuditableOperation que lo decora.
         }
 
         @AuditableOperation(action = "CERRAR_SESION", resourceType = "SESION", resourceIdRequestField = "sesion")
         void cerrarSesion() {
+            // Metodo vacio: solo interesa la anotacion @AuditableOperation que lo decora.
         }
 
         void consultar() {
+            // Metodo vacio: representa un handler sin anotacion de auditoria.
         }
     }
 

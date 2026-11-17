@@ -44,7 +44,7 @@ public final class HttpTemporalParser {
         }
         try {
             return LocalDate.parse(value.trim(), LOCAL_DATE_FORMATTER);
-        } catch (DateTimeParseException exception) {
+        } catch (DateTimeParseException _) {
             throw invalidTemporal(fieldName, "yyyy-MM-dd");
         }
     }
@@ -55,7 +55,7 @@ public final class HttpTemporalParser {
         }
         try {
             return LocalTime.parse(value.trim(), LOCAL_TIME_FORMATTER);
-        } catch (DateTimeParseException exception) {
+        } catch (DateTimeParseException _) {
             throw invalidTemporal(fieldName, "HH:mm o HH:mm:ss");
         }
     }
@@ -66,7 +66,7 @@ public final class HttpTemporalParser {
         }
         try {
             return LocalDateTime.parse(value.trim(), LOCAL_DATE_TIME_FORMATTER);
-        } catch (DateTimeParseException exception) {
+        } catch (DateTimeParseException _) {
             throw invalidTemporal(fieldName, "yyyy-MM-dd'T'HH:mm o yyyy-MM-dd'T'HH:mm:ss");
         }
     }

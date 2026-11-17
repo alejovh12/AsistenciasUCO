@@ -77,8 +77,9 @@ class CierreW2aJpaRepositoriesTest {
     void un_fallo_de_la_base_al_filtrar_periodos_no_devuelve_lista_vacia() {
         when(entityManager.createQuery(anyString(), any(Class.class))).thenThrow(new PersistenceException("db down"));
 
+        final var periodoAcademicoJpaRepository = new PeriodoAcademicoJpaRepository(entityManager);
         assertThrows(DatabaseOperationException.class,
-                () -> new PeriodoAcademicoJpaRepository(entityManager).consultarPeriodosAcademicosPorEstado("ACTIVO"));
+                () -> periodoAcademicoJpaRepository.consultarPeriodosAcademicosPorEstado("ACTIVO"));
     }
 
     @Test
@@ -127,7 +128,8 @@ class CierreW2aJpaRepositoriesTest {
         when(rechazada.setParameter(anyString(), any())).thenReturn(rechazada);
         when(rechazada.getResultList()).thenThrow(new PersistenceException("DBCODE=SEC_001|El perfil no tiene permiso"));
 
+        final var consultasTransversalesJpaRepository = new ConsultasTransversalesJpaRepository(entityManager);
         assertThrows(ForbiddenException.class,
-                () -> new ConsultasTransversalesJpaRepository(entityManager).consultarOpcionesConsolidado(EJECUTOR, PERIODO));
+                () -> consultasTransversalesJpaRepository.consultarOpcionesConsolidado(EJECUTOR, PERIODO));
     }
 }

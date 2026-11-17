@@ -18,14 +18,17 @@ public final class RegistrarAsistenciasSesionMapper {
             throw new CrosscuttingException("El DTO para registrar asistencias de sesion es obligatorio.");
         }
 
-        final List<RegistroAsistenciaSesionDomain> registros = dto.getRegistros() == null
-                ? List.of()
-                : dto.getRegistros().stream()
-                        .map(registro -> new RegistroAsistenciaSesionDomain(
-                                registro == null ? null : registro.getEstudiante(),
-                                registro == null ? null : registro.getEstado()
-                        ))
-                        .toList();
+        final List<RegistroAsistenciaSesionDomain> registros;
+        if (dto.getRegistros() == null) {
+            registros = List.of();
+        } else {
+            registros = dto.getRegistros().stream()
+                    .map(registro -> new RegistroAsistenciaSesionDomain(
+                            registro == null ? null : registro.getEstudiante(),
+                            registro == null ? null : registro.getEstado()
+                    ))
+                    .toList();
+        }
         return new RegistrarAsistenciasSesionDomain(dto.getSesion(), registros, dto.getUsuarioEjecutor());
     }
 }

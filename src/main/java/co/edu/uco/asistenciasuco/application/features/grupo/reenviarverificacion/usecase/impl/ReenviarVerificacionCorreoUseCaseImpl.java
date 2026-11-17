@@ -23,8 +23,7 @@ import java.util.UUID;
  * verificar y espera minima). Solo entonces se registra el aviso, sin correo ni token: el enlace nuevo se emite al
  * entregar y revoca el anterior. A diferencia del aviso del registro, aqui el reenvio es la accion pedida, asi que un
  * fallo de la cola se propaga.
- */
-/**
+ * <p>
  * IDENT-001: reenvio del enlace al estudiante del grupo. IDENT-002: si su cuenta aun no tiene contrasena (registrado por el
  * docente o el administrador) se envia el aviso de activacion; si ya la tiene (matricula por QR), el de verificacion.
  */
@@ -88,7 +87,7 @@ public final class ReenviarVerificacionCorreoUseCaseImpl implements ReenviarVeri
                     .map(CuentaIdentidadDTO::idExterno)
                     .map(idExterno -> !identityProviderPort.tieneContrasena(idExterno))
                     .orElse(false);
-        } catch (final IdentityProviderPort.IdentityProviderException exception) {
+        } catch (final IdentityProviderPort.IdentityProviderException _) {
             return false;
         }
     }

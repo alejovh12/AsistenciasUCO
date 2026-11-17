@@ -66,15 +66,17 @@ class ConsultarReclamosEstudianteUseCaseImplTest {
         final UUID docente = UUID.randomUUID();
         when(scopePort.findEstudianteIdByUsuario(docente)).thenReturn(Optional.empty());
 
+        final var consultarReclamosEstudianteDTO3 = new ConsultarReclamosEstudianteDTO(docente, null, null, null);
         assertThrows(ForbiddenException.class,
-                () -> interactor.execute(new ConsultarReclamosEstudianteDTO(docente, null, null, null)));
+                () -> interactor.execute(consultarReclamosEstudianteDTO3));
         verifyNoInteractions(queryPort);
     }
 
     @Test
     void UC02_usuario_autenticado_obligatorio() {
+        final var consultarReclamosEstudianteDTO2 = new ConsultarReclamosEstudianteDTO(null, null, null, null);
         assertThrows(ValidationException.class,
-                () -> interactor.execute(new ConsultarReclamosEstudianteDTO(null, null, null, null)));
+                () -> interactor.execute(consultarReclamosEstudianteDTO2));
         verifyNoInteractions(queryPort);
     }
 
@@ -101,8 +103,9 @@ class ConsultarReclamosEstudianteUseCaseImplTest {
 
     @Test
     void UC05_estado_desconocido_es_400() {
+        final var consultarReclamosEstudianteDTO = new ConsultarReclamosEstudianteDTO(USUARIO, "BORRADA", 1, 10);
         assertThrows(ValidationException.class,
-                () -> interactor.execute(new ConsultarReclamosEstudianteDTO(USUARIO, "BORRADA", 1, 10)));
+                () -> interactor.execute(consultarReclamosEstudianteDTO));
         verifyNoInteractions(queryPort);
     }
 

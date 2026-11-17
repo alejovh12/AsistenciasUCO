@@ -47,11 +47,13 @@ class AuditInterceptorAdminMetadataTest {
             metadataRequestFields = {"motivo", "password", "clave_inicial", "claveInicial", "token", "pin", "secret", "clave", "largo"},
             metadataResponseFields = {"grupo", "clave", "valorAnterior", "valorNuevo", "inexistente"})
     public void operacion() {
+        // Metodo vacio: solo interesa la anotacion @AuditableOperation que lo decora.
     }
 
     @SuppressWarnings("unused")
     @AuditableOperation(action = "SIN_CAMPOS", resourceType = "X")
     public void sinCampos() {
+        // Metodo vacio: solo interesa la anotacion @AuditableOperation que lo decora.
     }
 
     private HandlerMethod handler(final String nombre) throws NoSuchMethodException {
@@ -112,7 +114,7 @@ class AuditInterceptorAdminMetadataTest {
     }
 
     @Test
-    void un_publicador_que_falla_no_rompe_la_peticion() throws Exception {
+    void un_publicador_que_falla_no_rompe_la_peticion() {
         interceptor = new AuditInterceptor(evento -> {
             throw new IllegalStateException("publicador caido");
         }, new ClientIpResolver(), new RequestActorResolver());

@@ -25,6 +25,15 @@ import org.springframework.stereotype.Repository;
 /** Repositorio JPA directo consolidado para Coordinador. */
 @Repository
 public class CoordinadorJpaRepository implements CoordinadorQueryPort, CoordinadorCommandPort {
+    private static final String PARAM_ID_COORDINADOR = "idCoordinador";
+    private static final String PARAM_PRIMER_NOMBRE = "primerNombre";
+    private static final String PARAM_SEGUNDO_NOMBRE = "segundoNombre";
+    private static final String PARAM_PRIMER_APELLIDO = "primerApellido";
+    private static final String PARAM_SEGUNDO_APELLIDO = "segundoApellido";
+    private static final String PARAM_CORREO = "correo";
+    private static final String PARAM_ID_FACULTAD = "idFacultad";
+    private static final String PARAM_ID_CORRELACION = "idCorrelacion";
+    private static final String PARAM_ID_USUARIO_EJECUTOR = "idUsuarioEjecutor";
 
     static final String SQL_CREAR_COORDINADOR = """
             EXEC dbo.usp_crear_coordinador
@@ -136,27 +145,27 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
         final UUID correlationId = CorrelationIdContext.require();
 
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idCoordinador", command.idCoordinador());
+        parametros.put(PARAM_ID_COORDINADOR, command.idCoordinador());
         parametros.put("numeroIdentificacion", command.numeroIdentificacion());
-        parametros.put("primerNombre", command.primerNombre());
-        parametros.put("segundoNombre", command.segundoNombre());
-        parametros.put("primerApellido", command.primerApellido());
-        parametros.put("segundoApellido", command.segundoApellido());
-        parametros.put("correo", command.correo());
+        parametros.put(PARAM_PRIMER_NOMBRE, command.primerNombre());
+        parametros.put(PARAM_SEGUNDO_NOMBRE, command.segundoNombre());
+        parametros.put(PARAM_PRIMER_APELLIDO, command.primerApellido());
+        parametros.put(PARAM_SEGUNDO_APELLIDO, command.segundoApellido());
+        parametros.put(PARAM_CORREO, command.correo());
         parametros.put("password", command.password());
         parametros.put("nombrePrograma", command.nombrePrograma());
         parametros.put("idTipoPrograma", command.idTipoPrograma());
         parametros.put("idModalidad", command.idModalidad());
         parametros.put("idJornada", command.idJornada());
-        parametros.put("idFacultad", command.idFacultad());
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", command.usuarioEjecutor());
+        parametros.put(PARAM_ID_FACULTAD, command.idFacultad());
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, command.usuarioEjecutor());
         parametros.put("idTipoIdIdentificacion", command.tipoIdentificacionId());
 
         final ProcedureRow fila = procedureExecutor.executeWithExtras(
                 OP_CREAR_COORDINADOR_CON_PROGRAMA, SQL_CREAR_COORDINADOR_CON_PROGRAMA, parametros, correlationId, 3);
         return new ResultadoCoordinadorConPrograma(
-                idObligatorio(fila.extras().get(0), "idCoordinador"),
+                idObligatorio(fila.extras().get(0), PARAM_ID_COORDINADOR),
                 idObligatorio(fila.extras().get(1), "idPrograma"),
                 NativeRowValues.texto(fila.extras().get(2)));
     }
@@ -183,15 +192,15 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
         final UUID correlationId = CorrelationIdContext.require();
 
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idCoordinador", idCoordinador);
-        parametros.put("primerNombre", primerNombre);
-        parametros.put("segundoNombre", segundoNombre);
-        parametros.put("primerApellido", primerApellido);
-        parametros.put("segundoApellido", segundoApellido);
-        parametros.put("correo", correo);
-        parametros.put("idFacultad", idFacultad);
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", usuarioEjecutor);
+        parametros.put(PARAM_ID_COORDINADOR, idCoordinador);
+        parametros.put(PARAM_PRIMER_NOMBRE, primerNombre);
+        parametros.put(PARAM_SEGUNDO_NOMBRE, segundoNombre);
+        parametros.put(PARAM_PRIMER_APELLIDO, primerApellido);
+        parametros.put(PARAM_SEGUNDO_APELLIDO, segundoApellido);
+        parametros.put(PARAM_CORREO, correo);
+        parametros.put(PARAM_ID_FACULTAD, idFacultad);
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, usuarioEjecutor);
         CorreccionDocumentoParametros.agregar(parametros, documento);
 
         final ProcedureRow fila = procedureExecutor.executeWithExtras(
@@ -205,11 +214,11 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
         final UUID correlationId = CorrelationIdContext.require();
 
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idCoordinador", idCoordinador);
+        parametros.put(PARAM_ID_COORDINADOR, idCoordinador);
         parametros.put("estaActivo", estaActivo);
-        parametros.put("idFacultad", idFacultad);
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", usuarioEjecutor);
+        parametros.put(PARAM_ID_FACULTAD, idFacultad);
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, usuarioEjecutor);
 
         final ProcedureRow fila = procedureExecutor.executeWithExtras(
                 OP_CAMBIAR_ESTADO_COORDINADOR, SQL_CAMBIAR_ESTADO_COORDINADOR, parametros, correlationId, 2);
@@ -231,8 +240,8 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
                     final List<?> filas;
                     try {
                         filas = entityManager.createNativeQuery(SQL_CONSULTAR_COORDINADORES_FACULTAD)
-                                .setParameter("idUsuarioEjecutor", idUsuarioEjecutor)
-                                .setParameter("idCorrelacion", correlationId)
+                                .setParameter(PARAM_ID_USUARIO_EJECUTOR, idUsuarioEjecutor)
+                                .setParameter(PARAM_ID_CORRELACION, correlationId)
                                 .setParameter("numeroPagina", pagina)
                                 .setParameter("tamanoPagina", tamano)
                                 .setParameter("busqueda", busqueda)
@@ -307,18 +316,18 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
         final UUID correlationId = CorrelationIdContext.require();
 
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idCoordinador", idCoordinador);
+        parametros.put(PARAM_ID_COORDINADOR, idCoordinador);
         parametros.put("numeroIdentificacion", numeroIdentificacion);
-        parametros.put("primerNombre", primerNombre);
-        parametros.put("segundoNombre", segundoNombre);
-        parametros.put("primerApellido", primerApellido);
-        parametros.put("segundoApellido", segundoApellido);
-        parametros.put("correo", correo);
+        parametros.put(PARAM_PRIMER_NOMBRE, primerNombre);
+        parametros.put(PARAM_SEGUNDO_NOMBRE, segundoNombre);
+        parametros.put(PARAM_PRIMER_APELLIDO, primerApellido);
+        parametros.put(PARAM_SEGUNDO_APELLIDO, segundoApellido);
+        parametros.put(PARAM_CORREO, correo);
         parametros.put("idPrograma", idPrograma);
-        parametros.put("idFacultad", idFacultad);
+        parametros.put(PARAM_ID_FACULTAD, idFacultad);
         parametros.put("password", password);
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", usuarioEjecutor);
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, usuarioEjecutor);
         parametros.put("idTipoIdIdentificacion", idTipoIdIdentificacion);
 
         return procedureExecutor.execute(OP_CREAR_COORDINADOR, SQL_CREAR_COORDINADOR, parametros, correlationId);

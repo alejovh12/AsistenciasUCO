@@ -31,16 +31,18 @@ class CrearDecanoMapperTest {
 
     @Test
     void toDomain_sin_tipo_de_identificacion_lanza_validacion_especifica() {
+        final var dto2 = dto(null, EJECUTOR);
         final ValidationException ex = assertThrows(ValidationException.class,
-                () -> CrearDecanoMapper.toDomain(dto(null, EJECUTOR)));
+                () -> CrearDecanoMapper.toDomain(dto2));
 
         assertEquals(TipoIdentificacionErrorCode.ERR_TIPO_IDENTIFICACION_REQUERIDA.code(), ex.getCode());
     }
 
     @Test
     void toDomain_sin_usuario_ejecutor_lanza_validacion_especifica() {
+        final var dto = dto(TIPO, null);
         final ValidationException ex = assertThrows(ValidationException.class,
-                () -> CrearDecanoMapper.toDomain(dto(TIPO, null)));
+                () -> CrearDecanoMapper.toDomain(dto));
 
         assertEquals(UsuarioErrorCode.ERR_USUARIO_REQUERIDO.code(), ex.getCode());
     }

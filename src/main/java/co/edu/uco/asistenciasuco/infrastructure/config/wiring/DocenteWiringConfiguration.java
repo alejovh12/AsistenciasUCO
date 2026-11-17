@@ -32,13 +32,10 @@ import co.edu.uco.asistenciasuco.application.features.docente.retirarestudianteg
 import co.edu.uco.asistenciasuco.application.features.docente.retirarestudiantegrupo.usecase.RetirarEstudianteGrupoUseCase;
 import co.edu.uco.asistenciasuco.application.features.docente.retirarestudiantegrupo.usecase.impl.RetirarEstudianteGrupoUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarmatrizasistencia.primaryports.ConsultarMatrizAsistenciaGrupoInputPort;
-import co.edu.uco.asistenciasuco.application.features.docente.consultarmatrizasistencia.usecase.ConsultarMatrizAsistenciaGrupoUseCase;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarmatrizasistencia.usecase.impl.ConsultarMatrizAsistenciaGrupoUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarresumengrupos.primaryports.ConsultarResumenGruposDocenteInputPort;
-import co.edu.uco.asistenciasuco.application.features.docente.consultarresumengrupos.usecase.ConsultarResumenGruposDocenteUseCase;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarresumengrupos.usecase.impl.ConsultarResumenGruposDocenteUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarresumensesiones.primaryports.ConsultarResumenSesionesGrupoInputPort;
-import co.edu.uco.asistenciasuco.application.features.docente.consultarresumensesiones.usecase.ConsultarResumenSesionesGrupoUseCase;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarresumensesiones.usecase.impl.ConsultarResumenSesionesGrupoUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.MatrizAsistenciaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.ResumenGruposDocenteQueryPort;
@@ -135,8 +132,7 @@ public class DocenteWiringConfiguration {
             final MatrizAsistenciaQueryPort matrizPort,
             final ResumenSesionesGrupoQueryPort sesionesPort
     ) {
-        final ConsultarMatrizAsistenciaGrupoUseCase useCase = new ConsultarMatrizAsistenciaGrupoUseCaseImpl(scopePort, matrizPort, sesionesPort);
-        return useCase;
+        return new ConsultarMatrizAsistenciaGrupoUseCaseImpl(scopePort, matrizPort, sesionesPort);
     }
 
     /** CIERRE-W3M (puntos 2 y 3): resumen de sesiones del grupo con estado temporal y conteos resueltos en la base. */
@@ -145,14 +141,12 @@ public class DocenteWiringConfiguration {
             final InstitutionalScopePort scopePort,
             final ResumenSesionesGrupoQueryPort sesionesPort
     ) {
-        final ConsultarResumenSesionesGrupoUseCase useCase = new ConsultarResumenSesionesGrupoUseCaseImpl(scopePort, sesionesPort);
-        return useCase;
+        return new ConsultarResumenSesionesGrupoUseCaseImpl(scopePort, sesionesPort);
     }
 
     /** CIERRE-W3I: totales de los grupos habilitados del docente (grupos, estudiantes activos, cupo y ocupacion) resueltos en la base. */
     @Bean
     ConsultarResumenGruposDocenteInputPort consultarResumenGruposDocenteInputPort(final ResumenGruposDocenteQueryPort resumenPort) {
-        final ConsultarResumenGruposDocenteUseCase useCase = new ConsultarResumenGruposDocenteUseCaseImpl(resumenPort);
-        return useCase;
+        return new ConsultarResumenGruposDocenteUseCaseImpl(resumenPort);
     }
 }

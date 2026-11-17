@@ -157,7 +157,7 @@ public class MessageUcoLabMessageCatalogAdapter implements MessageCatalogPort {
         }
         try {
             return MessageFormat.format(template, args);
-        } catch (final IllegalArgumentException e) {
+        } catch (final IllegalArgumentException _) {
             return template;
         }
     }

@@ -134,11 +134,11 @@ class AdminNotificacionControllerTest {
                 .andExpect(jsonPath("$.datos.asunto").value("Nuevo asunto {grupo}"));
 
         verify(administracionPort).crearVersionPlantilla(
-                eq("RETIRO_ESTUDIANTE_GRUPO"),
-                eq("es"),
-                eq("Nuevo asunto {grupo}"),
-                eq("Nuevo cuerpo {estudiante}"),
-                eq(ADMIN_ID)
+                "RETIRO_ESTUDIANTE_GRUPO",
+                "es",
+                "Nuevo asunto {grupo}",
+                "Nuevo cuerpo {estudiante}",
+                ADMIN_ID
         );
     }
 

@@ -24,11 +24,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
@@ -211,12 +209,7 @@ class AuditHttpIT {
 
     private RestTemplate buildRestTemplate() {
         final RestTemplate template = new RestTemplate();
-        template.setErrorHandler(new ResponseErrorHandler() {
-            @Override
-            public boolean hasError(final ClientHttpResponse response) {
-                return false;
-            }
-        });
+        template.setErrorHandler(response -> false);
         return template;
     }
 }

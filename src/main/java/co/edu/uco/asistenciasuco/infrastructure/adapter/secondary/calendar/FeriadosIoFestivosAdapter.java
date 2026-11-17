@@ -52,7 +52,12 @@ public final class FeriadosIoFestivosAdapter implements CalendarioFestivosPort {
         final String apiKey = apiKey().orElseThrow(() -> new CalendarioFestivosException(CODIGO_FUENTE + " no tiene API key."));
         final JsonNode raiz = http.get(CODIGO_FUENTE, http.parametro(CLAVE_URL, URL_POR_DEFECTO), anio,
                 Map.of("Authorization", "Bearer " + apiKey));
-        final JsonNode arreglo = raiz.isArray() ? raiz : raiz.has("holidays") ? raiz.get("holidays") : raiz.get("data");
+        final JsonNode arreglo;
+        if (raiz.isArray()) {
+            arreglo = raiz;
+        } else {
+            arreglo = raiz.get(raiz.has("holidays") ? "holidays" : "data");
+        }
         return FestivosHttpSupport.leerFestivos(CODIGO_FUENTE, arreglo, anio);
     }
 
@@ -65,7 +70,7 @@ public final class FeriadosIoFestivosAdapter implements CalendarioFestivosPort {
                             secretos.getSecret(http.parametro(CLAVE_NOMBRE_SECRETO, NOMBRE_SECRETO_POR_DEFECTO)),
                             Optional.<String>empty())
                     .filter(key -> !key.isBlank());
-        } catch (final RuntimeException exception) {
+        } catch (final RuntimeException _) {
             return Optional.empty();
         }
     }

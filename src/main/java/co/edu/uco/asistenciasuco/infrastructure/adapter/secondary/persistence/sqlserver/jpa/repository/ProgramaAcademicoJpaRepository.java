@@ -24,6 +24,11 @@ import org.springframework.stereotype.Repository;
 /** Programa academico por JPA: comandos por {@code usp_*_programa_academico} y consulta paginada con ambito en la DB. */
 @Repository
 public class ProgramaAcademicoJpaRepository implements ProgramaAcademicoCommandPort, ProgramaAcademicoQueryPort {
+    private static final String PARAM_ID_PROGRAMA = "idPrograma";
+    private static final String PARAM_NOMBRE = "nombre";
+    private static final String PARAM_ID_TIPO_PROGRAMA = "idTipoPrograma";
+    private static final String PARAM_ID_CORRELACION = "idCorrelacion";
+    private static final String PARAM_ID_USUARIO_EJECUTOR = "idUsuarioEjecutor";
 
     static final String SQL_CREAR = """
             EXEC dbo.usp_crear_programa_academico
@@ -91,15 +96,15 @@ public class ProgramaAcademicoJpaRepository implements ProgramaAcademicoCommandP
     public void crear(final CrearProgramaCommand command) {
         final UUID correlationId = CorrelationIdContext.require();
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idPrograma", command.id());
-        parametros.put("nombre", command.nombre());
-        parametros.put("idTipoPrograma", command.idTipoPrograma());
+        parametros.put(PARAM_ID_PROGRAMA, command.id());
+        parametros.put(PARAM_NOMBRE, command.nombre());
+        parametros.put(PARAM_ID_TIPO_PROGRAMA, command.idTipoPrograma());
         parametros.put("idCoordinador", command.idCoordinador());
         parametros.put("idModalidad", command.idModalidad());
         parametros.put("idJornada", command.idJornada());
         parametros.put("idFacultad", command.idFacultad());
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", command.actorUsuarioId());
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, command.actorUsuarioId());
         procedureExecutor.execute(OP_CREAR, SQL_CREAR, parametros, correlationId);
     }
 
@@ -107,14 +112,14 @@ public class ProgramaAcademicoJpaRepository implements ProgramaAcademicoCommandP
     public void actualizar(final ActualizarProgramaCommand command) {
         final UUID correlationId = CorrelationIdContext.require();
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idPrograma", command.id());
-        parametros.put("nombre", command.nombre());
-        parametros.put("idTipoPrograma", command.idTipoPrograma());
+        parametros.put(PARAM_ID_PROGRAMA, command.id());
+        parametros.put(PARAM_NOMBRE, command.nombre());
+        parametros.put(PARAM_ID_TIPO_PROGRAMA, command.idTipoPrograma());
         parametros.put("idCoordinador", command.idCoordinador());
         parametros.put("idModalidad", command.idModalidad());
         parametros.put("idJornada", command.idJornada());
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", command.actorUsuarioId());
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, command.actorUsuarioId());
         procedureExecutor.execute(OP_ACTUALIZAR, SQL_ACTUALIZAR, parametros, correlationId);
     }
 
@@ -122,10 +127,10 @@ public class ProgramaAcademicoJpaRepository implements ProgramaAcademicoCommandP
     public void cambiarEstado(final CambiarEstadoProgramaCommand command) {
         final UUID correlationId = CorrelationIdContext.require();
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idPrograma", command.id());
+        parametros.put(PARAM_ID_PROGRAMA, command.id());
         parametros.put("estaActivo", command.estaActivo());
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", command.actorUsuarioId());
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, command.actorUsuarioId());
         procedureExecutor.execute(OP_CAMBIAR_ESTADO, SQL_CAMBIAR_ESTADO, parametros, correlationId);
     }
 
@@ -139,13 +144,13 @@ public class ProgramaAcademicoJpaRepository implements ProgramaAcademicoCommandP
                     final List<?> filas;
                     try {
                         filas = entityManager.createNativeQuery(SQL_CONSULTAR, SpProgramaAcademicoPaginadoEntity.class)
-                            .setParameter("idUsuarioEjecutor", consulta.actorUsuarioId())
-                            .setParameter("idCorrelacion", correlationId)
+                            .setParameter(PARAM_ID_USUARIO_EJECUTOR, consulta.actorUsuarioId())
+                            .setParameter(PARAM_ID_CORRELACION, correlationId)
                             .setParameter("numeroPagina", consulta.pagina())
                             .setParameter("tamanoPagina", consulta.tamano())
-                            .setParameter("nombre", consulta.nombre())
+                            .setParameter(PARAM_NOMBRE, consulta.nombre())
                             .setParameter("estaActivo", consulta.estaActivo())
-                            .setParameter("idTipoPrograma", consulta.idTipoPrograma())
+                            .setParameter(PARAM_ID_TIPO_PROGRAMA, consulta.idTipoPrograma())
                             .getResultList();
                     } catch (final PersistenceException exception) {
                         if (esPaginacionInvalida(exception)) {
@@ -168,7 +173,7 @@ public class ProgramaAcademicoJpaRepository implements ProgramaAcademicoCommandP
                 OP_POR_ID,
                 "No fue posible consultar el programa academico desde base de datos.",
                 () -> entityManager.createQuery(HQL_POR_ID, UvProgramaEntity.class)
-                        .setParameter("idPrograma", idPrograma)
+                        .setParameter(PARAM_ID_PROGRAMA, idPrograma)
                         .setParameter("idFacultad", idFacultad)
                         .setMaxResults(1)
                         .getResultList().stream()

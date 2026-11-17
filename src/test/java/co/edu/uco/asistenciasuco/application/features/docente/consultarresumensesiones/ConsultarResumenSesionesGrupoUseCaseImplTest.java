@@ -79,7 +79,8 @@ class ConsultarResumenSesionesGrupoUseCaseImplTest {
     void un_docente_no_titular_recibe_403_sin_consultar_la_base() {
         when(scope.canDocenteAccessGrupo(USUARIO, GRUPO)).thenReturn(false);
 
-        assertThrows(ForbiddenException.class, () -> useCase.execute(new ConsultarResumenSesionesGrupoInputPort.Consulta(GRUPO, USUARIO)));
+        final var consulta3 = new ConsultarResumenSesionesGrupoInputPort.Consulta(GRUPO, USUARIO);
+        assertThrows(ForbiddenException.class, () -> useCase.execute(consulta3));
 
         verify(resumen, never()).consultarResumenSesionesGrupoDocente(any(), any());
     }
@@ -87,8 +88,10 @@ class ConsultarResumenSesionesGrupoUseCaseImplTest {
     @Test
     void sin_grupo_o_sin_ejecutor_es_validacion_y_los_puertos_son_obligatorios() {
         assertThrows(ValidationException.class, () -> useCase.execute(null));
-        assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarResumenSesionesGrupoInputPort.Consulta(null, USUARIO)));
-        assertThrows(ValidationException.class, () -> useCase.execute(new ConsultarResumenSesionesGrupoInputPort.Consulta(GRUPO, null)));
+        final var consulta2 = new ConsultarResumenSesionesGrupoInputPort.Consulta(null, USUARIO);
+        assertThrows(ValidationException.class, () -> useCase.execute(consulta2));
+        final var consulta = new ConsultarResumenSesionesGrupoInputPort.Consulta(GRUPO, null);
+        assertThrows(ValidationException.class, () -> useCase.execute(consulta));
         assertThrows(NullPointerException.class, () -> new ConsultarResumenSesionesGrupoUseCaseImpl(null, resumen));
         assertThrows(NullPointerException.class, () -> new ConsultarResumenSesionesGrupoUseCaseImpl(scope, null));
     }

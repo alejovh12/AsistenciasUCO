@@ -77,7 +77,7 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
         if (!usuarioExistente) {
             dominioCorreoPolicy.exigir(domain.getCorreo());
         }
-        final String passwordParaPersistir = resolverPasswordParaPersistir(domain, usuarioExistente);
+        final String passwordParaPersistir = resolverPasswordParaPersistir(usuarioExistente);
 
         final RegistrarEstudianteRepositoryProjection resultado = grupoRepositoryPort.registrarEstudianteEnGrupo(
                 RegistrarEstudianteRepositoryMapper.toRepositoryDTO(domain, passwordParaPersistir)
@@ -193,10 +193,7 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
         return existePorCorreo;
     }
 
-    private String resolverPasswordParaPersistir(
-            final RegistrarEstudianteDomain domain,
-            final boolean usuarioExistente
-    ) {
+    private String resolverPasswordParaPersistir(final boolean usuarioExistente) {
         if (usuarioExistente) {
             return null;
         }

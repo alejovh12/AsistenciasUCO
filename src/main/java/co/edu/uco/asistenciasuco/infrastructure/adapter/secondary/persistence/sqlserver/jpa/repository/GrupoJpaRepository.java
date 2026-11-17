@@ -18,7 +18,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.repository.projectio
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.mapper.CoreViewJpaProjectionMapper;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvHorarioEntity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.JpaProcedureExecutor;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.ProcedureResult;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
@@ -28,8 +27,6 @@ import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.Correl
 import jakarta.persistence.EntityManager;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -166,8 +163,6 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
 
     private static final ObjectMapper OBJECT_MAPPER = JsonMapper.builder().build();
     private static final DateTimeFormatter HORA = DateTimeFormatter.ofPattern("HH:mm");
-    private static final List<String> ORDEN_DIAS = List.of("LU", "MA", "MI", "JU", "VI", "SA", "DO");
-    private static final int MAX_PARAMETROS_IN = 1000;
     private static final String P_GRUPO = "idGrupo";
     private static final String P_CORRELACION = "idCorrelacion";
     private static final String P_USUARIO = "idUsuarioEjecutor";

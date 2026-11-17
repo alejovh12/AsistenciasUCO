@@ -25,6 +25,8 @@ import tools.jackson.databind.ObjectMapper;
 
 @Repository
 public class AsistenciaJpaRepository implements AsistenciaRepositoryPort {
+    private static final String PARAM_ID_CORRELACION = "idCorrelacion";
+    private static final String PARAM_ID_USUARIO_EJECUTOR = "idUsuarioEjecutor";
 
     private static final ObjectMapper OBJECT_MAPPER = JsonMapper.builder().build();
 
@@ -130,10 +132,10 @@ public class AsistenciaJpaRepository implements AsistenciaRepositoryPort {
         final UUID correlationId = CorrelationIdContext.require();
 
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idSesion", dto.sesion());
+        parametros.put(PARAM_SESION, dto.sesion());
         parametros.put("asistenciaJSON", asistenciaJson);
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", dto.usuarioEjecutor());
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, dto.usuarioEjecutor());
 
         procedureExecutor.execute(OP_REGISTRAR_ASISTENCIAS_SESION, SQL_REGISTRAR_ASISTENCIAS_SESION, parametros, correlationId);
     }
@@ -148,14 +150,14 @@ public class AsistenciaJpaRepository implements AsistenciaRepositoryPort {
 
         final Map<String, Object> parametros = new LinkedHashMap<>();
         parametros.put("idEstudiante", dto.estudiante());
-        parametros.put("idSesion", dto.sesion());
+        parametros.put(PARAM_SESION, dto.sesion());
         parametros.put("categoria", dto.categoria());
         parametros.put("justificacion", dto.justificacion());
         // CULM-001 D.2: los soportes viajan como arreglo JSON de GUID; sin soportes el parametro es NULL (un String nulo tiene
         // JdbcType resoluble en Hibernate; un UUID nulo sin tipo no).
         parametros.put("idsArchivoSoporte", serializarSoportes(dto.soportes()));
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", dto.usuarioEjecutor());
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, dto.usuarioEjecutor());
 
         // v3 (reclamo de la sesion) devuelve las 4 columnas canonicas mas idSolicitudRevision y totalSoportes; PC: v4 (reclamo de una
         // toma) agrega idToma.
@@ -184,8 +186,8 @@ public class AsistenciaJpaRepository implements AsistenciaRepositoryPort {
         parametros.put("respuestaDocente", dto.respuestaDocente());
         // Un String nulo tiene JdbcType resoluble; nulo deja que la DB aplique EX (reclamo rechazado o sin resultado).
         parametros.put("codigoResultadoAprobacion", dto.codigoResultadoAprobacion());
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", dto.usuarioEjecutor());
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, dto.usuarioEjecutor());
 
         procedureExecutor.execute(OP_RESOLVER_SOLICITUD_REVISION, SQL_RESOLVER_SOLICITUD_REVISION, parametros, correlationId);
     }
@@ -198,8 +200,8 @@ public class AsistenciaJpaRepository implements AsistenciaRepositoryPort {
         final UUID correlationId = CorrelationIdContext.require();
         final Map<String, Object> parametros = new LinkedHashMap<>();
         parametros.put("idSolicitudRevision", idSolicitudRevision);
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", usuarioEjecutor);
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, usuarioEjecutor);
         return procedureExecutor.execute(OP_RETIRAR_SOLICITUD_REVISION, SQL_RETIRAR_SOLICITUD_REVISION, parametros, correlationId)
                 .getMensajeUsuarioResultado();
     }
@@ -225,8 +227,8 @@ public class AsistenciaJpaRepository implements AsistenciaRepositoryPort {
                         .setParameter(PARAM_GRUPO, dto.getGrupo())
                         // Un UUID nulo sin tipo no tiene JdbcType en Hibernate: la sesion viaja como texto o NULL.
                         .setParameter(PARAM_SESION, dto.getSesion() == null ? null : dto.getSesion().toString())
-                        .setParameter("idUsuarioEjecutor", dto.getUsuarioEjecutor())
-                        .setParameter("idCorrelacion", correlationId)
+                        .setParameter(PARAM_ID_USUARIO_EJECUTOR, dto.getUsuarioEjecutor())
+                        .setParameter(PARAM_ID_CORRELACION, correlationId)
                         .getResultList())
                         .stream()
                         .map(Object[].class::cast)

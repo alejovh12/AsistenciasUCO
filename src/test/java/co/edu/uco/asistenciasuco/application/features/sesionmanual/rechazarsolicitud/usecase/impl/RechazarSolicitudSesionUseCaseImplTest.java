@@ -31,6 +31,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -123,7 +124,7 @@ class RechazarSolicitudSesionUseCaseImplTest {
         useCase.execute(new Comando(SESION, null, null, COORDINADOR));
 
         final ArgumentCaptor<Notificacion> aviso = ArgumentCaptor.forClass(Notificacion.class);
-        verify(notificaciones, org.mockito.Mockito.times(2)).notificar(aviso.capture());
+        verify(notificaciones, times(2)).notificar(aviso.capture());
         assertEquals("DUPLICADA", aviso.getAllValues().get(0).datos().get("motivo"));
         assertEquals("", aviso.getAllValues().get(1).datos().get("motivo"));
     }

@@ -28,6 +28,8 @@ import java.util.function.Function;
  */
 @Repository
 public class AsistenciaSesionEstudianteJpaRepository implements AsistenciaSesionEstudianteQueryPort {
+    private static final String PARAM_ID_ESTUDIANTE = "idEstudiante";
+    private static final String PARAM_ID_ASIGNATURA = "idAsignatura";
 
     static final String HQL_POR_ESTUDIANTE_Y_ASIGNATURA = """
             select new co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.projection.AsistenciaSesionEstudianteQueryRow(
@@ -89,8 +91,8 @@ public class AsistenciaSesionEstudianteJpaRepository implements AsistenciaSesion
                 "consultarAsistenciaSesionesEstudiante",
                 "No fue posible consultar la asistencia de las sesiones desde base de datos.",
                 () -> entityManager.createQuery(HQL_POR_ESTUDIANTE_Y_ASIGNATURA, AsistenciaSesionEstudianteQueryRow.class)
-                        .setParameter("idEstudiante", idEstudiante)
-                        .setParameter("idAsignatura", idAsignatura)
+                        .setParameter(PARAM_ID_ESTUDIANTE, idEstudiante)
+                        .setParameter(PARAM_ID_ASIGNATURA, idAsignatura)
                         .getResultList().stream()
                         .map(row -> new AsistenciaSesionEstudianteProjection(row.idSesion(), row.codigoDetalle(),
                                 row.asistio(), row.codigoRazonCausa(), row.idSolicitud(), row.estadoSolicitud(),
@@ -115,8 +117,8 @@ public class AsistenciaSesionEstudianteJpaRepository implements AsistenciaSesion
                     for (int desde = 0; desde < ids.size(); desde += TAMANO_BLOQUE_IN) {
                         final List<UUID> bloque = ids.subList(desde, Math.min(ids.size(), desde + TAMANO_BLOQUE_IN));
                         entityManager.createQuery(HQL_POR_ESTUDIANTE_ASIGNATURA_Y_SESIONES, AsistenciaSesionEstudianteQueryRow.class)
-                                .setParameter("idEstudiante", idEstudiante)
-                                .setParameter("idAsignatura", idAsignatura)
+                                .setParameter(PARAM_ID_ESTUDIANTE, idEstudiante)
+                                .setParameter(PARAM_ID_ASIGNATURA, idAsignatura)
                                 .setParameter("idsSesion", bloque)
                                 .getResultList()
                                 .forEach(row -> resultado.add(new AsistenciaSesionEstudianteProjection(row.idSesion(),
@@ -163,8 +165,8 @@ public class AsistenciaSesionEstudianteJpaRepository implements AsistenciaSesion
             for (int desde = 0; desde < ids.size(); desde += TAMANO_BLOQUE_IN) {
                 final List<UUID> bloque = ids.subList(desde, Math.min(ids.size(), desde + TAMANO_BLOQUE_IN));
                 entityManager.createQuery(hql, tipoFila)
-                        .setParameter("idEstudiante", idEstudiante)
-                        .setParameter("idAsignatura", idAsignatura)
+                        .setParameter(PARAM_ID_ESTUDIANTE, idEstudiante)
+                        .setParameter(PARAM_ID_ASIGNATURA, idAsignatura)
                         .setParameter("idsSesion", bloque)
                         .getResultList()
                         .forEach(row -> resultado.add(mapeo.apply(row)));

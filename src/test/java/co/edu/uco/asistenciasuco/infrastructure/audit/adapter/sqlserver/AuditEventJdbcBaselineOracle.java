@@ -100,9 +100,9 @@ public class AuditEventJdbcBaselineOracle {
     private final JsonParser jsonParser;
 
     public AuditEventJdbcBaselineOracle(final ObjectProvider<JdbcTemplate> jdbcTemplateProvider) {
-        final JdbcTemplate jdbcTemplate = jdbcTemplateProvider.getIfAvailable();
-        this.jdbcTemplate = jdbcTemplate == null ? null : new NamedParameterJdbcTemplate(jdbcTemplate);
-        this.queryJdbcTemplate = jdbcTemplate;
+        final JdbcTemplate disponible = jdbcTemplateProvider.getIfAvailable();
+        this.jdbcTemplate = disponible == null ? null : new NamedParameterJdbcTemplate(disponible);
+        this.queryJdbcTemplate = disponible;
         this.jsonParser = JsonParserFactory.getJsonParser();
     }
 
@@ -217,7 +217,7 @@ public class AuditEventJdbcBaselineOracle {
         }
         try {
             return UUID.fromString(value).toString();
-        } catch (IllegalArgumentException exception) {
+        } catch (IllegalArgumentException _) {
             return value;
         }
     }

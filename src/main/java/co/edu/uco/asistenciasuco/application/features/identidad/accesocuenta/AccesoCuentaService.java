@@ -227,7 +227,9 @@ public final class AccesoCuentaService implements AccesoCuentaInputPort {
                     problema = true;
                     detalle.append(rol).append(": ").append(perfil.detalle()).append(". ");
                 }
-                case NO_APLICA -> { }
+                case NO_APLICA -> {
+                    // Sin efecto: el perfil no aplica a este rol.
+                }
             }
         }
         final EstadoAccesoCuenta estado;
@@ -252,7 +254,7 @@ public final class AccesoCuentaService implements AccesoCuentaInputPort {
     private void registrarDesfase(final UUID usuario, final String detalle) {
         try {
             desfases.registrar(usuario, OPERACION_RECONCILIAR, detalle);
-        } catch (final RuntimeException exception) {
+        } catch (final RuntimeException _) {
             // Registrar el desfase nunca oculta el resultado de la reconciliacion.
         }
     }

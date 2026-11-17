@@ -54,7 +54,9 @@ class SolicitarRevisionAsistenciaDomainTest {
         origen.add(UUID.randomUUID());
 
         assertEquals(List.of(SOPORTE, SOPORTE_2), domain.getSoportes());
-        assertThrows(UnsupportedOperationException.class, () -> domain.getSoportes().add(UUID.randomUUID()));
+        final var soportes = domain.getSoportes();
+        final var idAleatorio = UUID.randomUUID();
+        assertThrows(UnsupportedOperationException.class, () -> soportes.add(idAleatorio));
     }
 
     @Test
@@ -70,6 +72,7 @@ class SolicitarRevisionAsistenciaDomainTest {
         assertThrows(ValidationException.class, () -> new SolicitarRevisionAsistenciaDomain(SESION, "CAT", "motivo valido", null, null));
         assertThrows(ValidationException.class, () -> new SolicitarRevisionAsistenciaDomain(SESION, null, "motivo valido", null, USUARIO));
         assertThrows(ValidationException.class, () -> new SolicitarRevisionAsistenciaDomain(SESION, "CAT", null, null, USUARIO));
-        assertThrows(ValidationException.class, () -> new SolicitarRevisionAsistenciaDomain(SESION, "CAT", "a".repeat(301), null, USUARIO));
+        final var textoLargo = "a".repeat(301);
+        assertThrows(ValidationException.class, () -> new SolicitarRevisionAsistenciaDomain(SESION, "CAT", textoLargo, null, USUARIO));
     }
 }

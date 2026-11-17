@@ -57,8 +57,10 @@ class ActualizarSesionDomainTest {
         assertEquals("A", create(SESSION, "A", START, START.plusHours(1), USUARIO_EJECUTOR).getNombre());
         assertEquals("X".repeat(50),
                 create(SESSION, "X".repeat(50), START, START.plusHours(1), USUARIO_EJECUTOR).getNombre());
+        final var textoLargo = "X".repeat(51);
+        final var finEsperado = START.plusHours(1);
         final ValidationException ex = assertThrows(ValidationException.class,
-                () -> create(SESSION, "X".repeat(51), START, START.plusHours(1), USUARIO_EJECUTOR));
+                () -> create(SESSION, textoLargo, START, finEsperado, USUARIO_EJECUTOR));
         assertEquals("ERR_NOMBRE_SESION_LONGITUD_INVALIDA", ex.getCode());
         assertEquals("El nombre de la sesion debe tener entre 1 y 50 caracteres.", ex.getMessage());
     }

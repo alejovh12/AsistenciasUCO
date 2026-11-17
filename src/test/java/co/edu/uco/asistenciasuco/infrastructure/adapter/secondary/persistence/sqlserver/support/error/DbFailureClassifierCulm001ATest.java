@@ -33,8 +33,9 @@ class DbFailureClassifierCulm001ATest {
     void ntf_002_y_rev_006_son_recurso_no_encontrado() {
         assertEquals(CommonErrorCode.RESOURCE_NOT_FOUND, DbFailureClassifier.classify(USER, tecnico("NTF_002"), "reintentarNotificacionSaliente"));
         assertEquals(CommonErrorCode.RESOURCE_NOT_FOUND, DbFailureClassifier.classify(USER, tecnico("REV_006"), "retirarSolicitudRevisionAsistencia"));
+        final var tecnico2 = tecnico("NTF_002");
         assertThrows(ResourceNotFoundException.class,
-                () -> DbExceptionTranslator.throwIfFailed(false, USER, tecnico("NTF_002"), "c", "reintentarNotificacionSaliente"));
+                () -> DbExceptionTranslator.throwIfFailed(false, USER, tecnico2, "c", "reintentarNotificacionSaliente"));
     }
 
     @Test
@@ -46,8 +47,9 @@ class DbFailureClassifierCulm001ATest {
         assertEquals(DecanoErrorCode.DEC_002, dec002);
         assertEquals("DEC_002", dec002.code());
         assertEquals(ErrorKind.CONFLICT, dec002.kind());
+        final var tecnico2 = tecnico("DEC_002");
         assertThrows(ConflictException.class,
-                () -> DbExceptionTranslator.throwIfFailed(false, USER, tecnico("DEC_002"), "c", "cambiarEstadoDecano"));
+                () -> DbExceptionTranslator.throwIfFailed(false, USER, tecnico2, "c", "cambiarEstadoDecano"));
     }
 
     @Test
@@ -59,8 +61,9 @@ class DbFailureClassifierCulm001ATest {
         assertEquals("SES_017", ses017.code());
         assertEquals(DbFailureClassifier.classify(USER, tecnico("SES_004"), "crearSesion").kind(), ses017.kind());
         assertEquals(ErrorKind.VALIDATION, ses017.kind());
+        final var tecnico2 = tecnico("SES_017");
         assertThrows(ValidationException.class,
-                () -> DbExceptionTranslator.throwIfFailed(false, USER, tecnico("SES_017"), "c", "actualizarSesion"));
+                () -> DbExceptionTranslator.throwIfFailed(false, USER, tecnico2, "c", "actualizarSesion"));
     }
 
     @Test

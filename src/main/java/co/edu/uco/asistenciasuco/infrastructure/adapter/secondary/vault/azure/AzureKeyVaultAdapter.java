@@ -58,7 +58,7 @@ public class AzureKeyVaultAdapter implements SecretVaultPort {
             }
             cache.put(cleanName, secret.getValue());
             return Optional.of(secret.getValue());
-        } catch (final ResourceNotFoundException e) {
+        } catch (final ResourceNotFoundException _) {
             return Optional.empty();
         } catch (final HttpResponseException e) {
             // Nivel 2: Si hay error de autenticación/autorización (401/403) evictar inmediatamente

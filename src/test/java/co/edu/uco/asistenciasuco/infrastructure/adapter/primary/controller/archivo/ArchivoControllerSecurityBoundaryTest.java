@@ -29,16 +29,18 @@ class ArchivoControllerSecurityBoundaryTest {
     @Test
     void descarga_sin_identidad_no_consulta_el_archivo() {
         when(identity.requireAuthenticatedUserId()).thenThrow(new IllegalStateException("no identity"));
+        final var uuid = UUID.randomUUID().toString();
         assertThrows(IllegalStateException.class,
-                () -> controller.descargarArchivo(UUID.randomUUID().toString()));
+                () -> controller.descargarArchivo(uuid));
         verifyNoInteractions(download, upload);
     }
 
     @Test
     void subida_sin_identidad_no_invoca_el_caso_de_uso() {
         when(identity.requireAuthenticatedUserId()).thenThrow(new IllegalStateException("no identity"));
+        final var mockMultipartFile = new MockMultipartFile("archivo", "safe.pdf", "application/pdf", "%PDF-1.4".getBytes());
         assertThrows(IllegalStateException.class, () -> controller.subirArchivo(
-                new MockMultipartFile("archivo", "safe.pdf", "application/pdf", "%PDF-1.4".getBytes())));
+                mockMultipartFile));
         verifyNoInteractions(upload, download);
     }
 

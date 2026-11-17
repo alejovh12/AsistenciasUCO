@@ -38,6 +38,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.times;
 
 class SesionControllerContractTest {
 
@@ -193,7 +194,7 @@ class SesionControllerContractTest {
                         .content("{\"sesion\":\"" + SESSION + "\"}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.datos.sesion").value(SESSION.toString()));
         final var captor = ArgumentCaptor.forClass(ConsultarSesionDTO.class);
-        verify(query, org.mockito.Mockito.times(2)).execute(captor.capture());
+        verify(query, times(2)).execute(captor.capture());
         captor.getAllValues().forEach(dto -> {
             assertEquals(SESSION, dto.getSesion());
             // El ownership se decide en Application: ambas rutas (path y legacy) deben trasladar al solicitante autenticado.
@@ -313,7 +314,7 @@ class SesionControllerContractTest {
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
         assertEquals(putBody, patchBody);
         final var captor = ArgumentCaptor.forClass(ActualizarSesionDTO.class);
-        verify(update, org.mockito.Mockito.times(2)).execute(captor.capture());
+        verify(update, times(2)).execute(captor.capture());
         final var commands = captor.getAllValues();
         assertEquals(commands.get(0).getSesion(), commands.get(1).getSesion());
         assertEquals(commands.get(0).getNombre(), commands.get(1).getNombre());

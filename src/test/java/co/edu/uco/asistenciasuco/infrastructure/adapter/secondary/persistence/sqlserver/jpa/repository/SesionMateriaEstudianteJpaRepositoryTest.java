@@ -153,23 +153,27 @@ class SesionMateriaEstudianteJpaRepositoryTest {
     void columnas_distintas_de_13_son_un_fallo_tecnico() {
         when(query.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(new Object[12]));
 
+        final var repositorio = new SesionMateriaEstudianteJpaRepository(manager);
         assertInstanceOf(IllegalStateException.class, assertThrows(DatabaseOperationException.class,
-                () -> new SesionMateriaEstudianteJpaRepository(manager).consultarSesionesMateria(ACTOR, MATERIA, 1, 100)).getCause());
+                () -> repositorio.consultarSesionesMateria(ACTOR, MATERIA, 1, 100)).getCause());
     }
 
     @Test
     void los_rechazos_del_sp_se_traducen_con_su_http() {
         doThrow(new PersistenceException("x", new RuntimeException("DBCODE=PAG_001|paginacion"))).when(query).getResultList();
+        final var sesionMateriaEstudianteJpaRepository3 = new SesionMateriaEstudianteJpaRepository(manager);
         assertThrows(ValidationException.class,
-                () -> new SesionMateriaEstudianteJpaRepository(manager).consultarSesionesMateria(ACTOR, MATERIA, 0, 100));
+                () -> sesionMateriaEstudianteJpaRepository3.consultarSesionesMateria(ACTOR, MATERIA, 0, 100));
 
         doThrow(new PersistenceException("x", new RuntimeException("DBCODE=SEC_001|perfil"))).when(query).getResultList();
+        final var sesionMateriaEstudianteJpaRepository2 = new SesionMateriaEstudianteJpaRepository(manager);
         assertThrows(ForbiddenException.class,
-                () -> new SesionMateriaEstudianteJpaRepository(manager).consultarSesionesMateria(ACTOR, MATERIA, 1, 100));
+                () -> sesionMateriaEstudianteJpaRepository2.consultarSesionesMateria(ACTOR, MATERIA, 1, 100));
 
         doThrow(new PersistenceException("db down")).when(query).getResultList();
+        final var sesionMateriaEstudianteJpaRepository = new SesionMateriaEstudianteJpaRepository(manager);
         assertThrows(DatabaseOperationException.class,
-                () -> new SesionMateriaEstudianteJpaRepository(manager).consultarSesionesMateria(ACTOR, MATERIA, 1, 100));
+                () -> sesionMateriaEstudianteJpaRepository.consultarSesionesMateria(ACTOR, MATERIA, 1, 100));
     }
 
     @Test

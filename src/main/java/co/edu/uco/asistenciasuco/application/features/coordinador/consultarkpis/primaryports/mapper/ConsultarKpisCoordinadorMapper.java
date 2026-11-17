@@ -4,8 +4,6 @@ import co.edu.uco.asistenciasuco.application.features.coordinador.consultarkpis.
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarkpis.primaryports.dto.KpisCoordinadorDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarkpis.usecase.domain.ConsultarKpisCoordinadorDomain;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarkpis.usecase.domain.KpisCoordinadorDomain;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.KpisCoordinadorProjection;
-import java.util.List;
 
 public final class ConsultarKpisCoordinadorMapper {
 
