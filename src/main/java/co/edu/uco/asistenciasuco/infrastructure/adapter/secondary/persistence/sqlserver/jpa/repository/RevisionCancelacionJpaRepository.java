@@ -130,7 +130,7 @@ public class RevisionCancelacionJpaRepository implements RevisionCancelacionRepo
                         texto(c[33]), instante(c[34]), uuid(c[2]), texto(c[4]), texto(c[14]), uuid(c[5]), entero(c[6]), texto(c[7]), uuid(c[8]),
                         texto(c[9]), uuid(c[11]), texto(c[13]), uuid(c[45]), texto(c[46]), decimal(c[24]), decimal(c[47]), decimal(c[50]),
                         decimal(c[48]), decimal(c[49]), instante(c[27]), texto(c[28]), texto(c[29]), instante(c[32]), texto(c[35]), texto(c[36]),
-                        texto(c[38]), texto(c[39]), instante(c[43])));
+                        texto(c[38]), texto(c[39]), instante(c[43]), texto(c[54])));
             }
             return new PaginaRevisiones(revisiones, total);
         });

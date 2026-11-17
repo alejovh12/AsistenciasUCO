@@ -92,6 +92,12 @@ class CoordinadorIndicadoresJpaRepositoryTest {
         when(fila.porcentajeProgresoCalendario()).thenReturn(new BigDecimal("66.67"));
         when(fila.umbralAdvertencia()).thenReturn(new BigDecimal("15.00"));
         when(fila.umbralPerdida()).thenReturn(new BigDecimal("20.00"));
+        when(fila.totalDocentes()).thenReturn(12);
+        when(fila.gruposActivos()).thenReturn(7);
+        when(fila.cupoTotal()).thenReturn(210);
+        when(fila.matriculadosActivos()).thenReturn(168);
+        when(fila.tasaAforo()).thenReturn(new BigDecimal("80.00"));
+        when(fila.estudiantesRegistrados()).thenReturn(5007);
         when(query.getResultList()).thenReturn(List.of(fila));
 
         final KpisCoordinadorProjection kpis = repository.consultarKpis(ACTOR, PERIODO, null);
@@ -105,6 +111,13 @@ class CoordinadorIndicadoresJpaRepositoryTest {
         assertEquals(9, kpis.sesionesEjecutadas());
         assertEquals(new BigDecimal("90.00"), kpis.porcentajeCumplimiento());
         assertEquals(new BigDecimal("20.00"), kpis.umbralPerdida());
+        // CIERRE-W3I: totales del programa calculados por la base (plantilla, grupos, aforo del periodo y padron)
+        assertEquals(12, kpis.totalDocentes());
+        assertEquals(7, kpis.gruposActivos());
+        assertEquals(210, kpis.cupoTotal());
+        assertEquals(168, kpis.matriculadosActivos());
+        assertEquals(new BigDecimal("80.00"), kpis.tasaAforo());
+        assertEquals(5007, kpis.estudiantesRegistrados());
     }
 
     @Test

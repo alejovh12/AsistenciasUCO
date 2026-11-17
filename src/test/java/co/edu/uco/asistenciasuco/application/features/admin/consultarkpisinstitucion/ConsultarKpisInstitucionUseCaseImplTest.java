@@ -33,6 +33,21 @@ class ConsultarKpisInstitucionUseCaseImplTest {
     }
 
     @Test
+    void W3I_entrega_las_facultades_activas_y_los_decanos_tal_como_los_calcula_la_base() {
+        final KpisInstitucionProjection b = kpis();
+        when(queryPort.consultarKpis(ACTOR, PERIODO)).thenReturn(new KpisInstitucionProjection(b.idInstitucion(), b.nombreInstitucion(),
+                b.idPeriodoAcademico(), b.nombrePeriodoAcademico(), 3, 4, 6, 2, 1, 3, b.tasaRetencion(), 35, 6, b.porcentajeAusentismo(),
+                b.porcentajeAsistencia(), 12, 11, b.porcentajeCumplimiento(), 6, 7, 1, 2, b.umbralAdvertencia(), b.umbralPerdida(), 0, null, null,
+                3, 2, 2));
+
+        final KpisInstitucionDomain r = useCase.execute(new ConsultarKpisInstitucionDomain(ACTOR, PERIODO));
+
+        assertEquals(3, r.totalDecanos());
+        assertEquals(2, r.decanosActivos());
+        assertEquals(2, r.facultadesActivas());
+    }
+
+    @Test
     void T_BE_01_devuelve_las_cifras_del_puerto_sin_recalcular() {
         when(queryPort.consultarKpis(ACTOR, PERIODO)).thenReturn(kpis());
 

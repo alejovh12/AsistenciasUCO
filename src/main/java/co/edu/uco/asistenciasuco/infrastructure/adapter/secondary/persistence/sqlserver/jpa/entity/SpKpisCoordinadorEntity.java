@@ -28,6 +28,14 @@ public class SpKpisCoordinadorEntity {
     @Column(name = "umbralAdvertencia") private BigDecimal umbralAdvertencia;
     @Column(name = "umbralPerdida") private BigDecimal umbralPerdida;
 
+    // CIERRE-W3I: columnas nuevas al final del SP (se leen por nombre).
+    @Column(name = "totalDocentes") private Integer totalDocentes;
+    @Column(name = "gruposActivos") private Integer gruposActivos;
+    @Column(name = "cupoTotal") private Integer cupoTotal;
+    @Column(name = "matriculadosActivos") private Integer matriculadosActivos;
+    @Column(name = "tasaAforo") private BigDecimal tasaAforo;
+    @Column(name = "estudiantesRegistrados") private Integer estudiantesRegistrados;
+
     protected SpKpisCoordinadorEntity() {
     }
 
@@ -101,5 +109,29 @@ public class SpKpisCoordinadorEntity {
 
     public BigDecimal umbralPerdida() {
         return umbralPerdida;
+    }
+
+    public Integer totalDocentes() {
+        return totalDocentes;
+    }
+
+    public Integer gruposActivos() {
+        return gruposActivos;
+    }
+
+    public Integer cupoTotal() {
+        return cupoTotal;
+    }
+
+    public Integer matriculadosActivos() {
+        return matriculadosActivos;
+    }
+
+    public BigDecimal tasaAforo() {
+        return tasaAforo;
+    }
+
+    public Integer estudiantesRegistrados() {
+        return estudiantesRegistrados;
     }
 }

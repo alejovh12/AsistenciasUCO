@@ -41,7 +41,7 @@ class KpisHorasDecanoInstitucionTest {
         when(scope.findFacultadIdByDecanoUsuario(ACTOR)).thenReturn(Optional.of(UUID.randomUUID()));
         final DecanoIndicadoresQueryPort port = mock(DecanoIndicadoresQueryPort.class);
         when(port.consultarKpis(ACTOR, null)).thenReturn(new KpisDecanoProjection(UUID.randomUUID(), "F", null, null, 1, 2, 1, 1, 0,
-                DIEZ, 3, 1, DIEZ, DIEZ, 1, 40, 2, DIEZ, DIEZ, DIEZ, 7, new BigDecimal("14.00"), new BigDecimal("2.00")));
+                DIEZ, 3, 1, DIEZ, DIEZ, 1, 40, 2, DIEZ, DIEZ, DIEZ, 7, new BigDecimal("14.00"), new BigDecimal("2.00"), 0, 0));
 
         final KpisDecanoDomain domain = new ConsultarKpisDecanoUseCaseImpl(scope, port).execute(new ConsultarKpisDecanoDomain(ACTOR, null));
         final KpisDecanoDTO dto = ConsultarKpisDecanoMapper.toDto(domain);
@@ -58,7 +58,7 @@ class KpisHorasDecanoInstitucionTest {
     void institucion_propaga_las_horas_de_la_db_hasta_el_dto() {
         final AdminIndicadoresQueryPort port = mock(AdminIndicadoresQueryPort.class);
         when(port.consultarKpis(ACTOR, null)).thenReturn(new KpisInstitucionProjection(UUID.randomUUID(), "I", null, null, 1, 2, 3, 1, 1, 1,
-                DIEZ, 4, 1, DIEZ, DIEZ, 4, 4, DIEZ, 3, 3, 1, 1, DIEZ, DIEZ, 9, new BigDecimal("18.00"), new BigDecimal("3.00")));
+                DIEZ, 4, 1, DIEZ, DIEZ, 4, 4, DIEZ, 3, 3, 1, 1, DIEZ, DIEZ, 9, new BigDecimal("18.00"), new BigDecimal("3.00"), 0, 0, 0));
 
         final KpisInstitucionDomain domain = new ConsultarKpisInstitucionUseCaseImpl(port).execute(new ConsultarKpisInstitucionDomain(ACTOR, null));
         final KpisInstitucionDTO dto = ConsultarKpisInstitucionMapper.toDto(domain);

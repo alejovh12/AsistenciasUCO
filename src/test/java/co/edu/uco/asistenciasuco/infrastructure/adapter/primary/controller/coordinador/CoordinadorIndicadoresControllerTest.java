@@ -63,7 +63,7 @@ class CoordinadorIndicadoresControllerTest {
     @Test
     void T_KPI_01_get_indicadores_serializa_cada_cifra_y_conserva_los_nulos() throws Exception {
         when(kpis.execute(any())).thenReturn(new KpisCoordinadorDTO(PROGRAMA, "Sistemas", PERIODO, "2026-2", 5, 2, 1, 2, new BigDecimal("60.00"),
-                15, 10, 9, 1, 1, null, new BigDecimal("66.67"), new BigDecimal("15.00"), new BigDecimal("20.00")));
+                15, 10, 9, 1, 1, null, new BigDecimal("66.67"), new BigDecimal("15.00"), new BigDecimal("20.00"), 0, 0, 0, 0, null, 0));
 
         mvc.perform(get("/api/v1/coordinador/indicadores").param("idPeriodoAcademico", PERIODO.toString()))
                 .andExpect(status().isOk())
@@ -83,9 +83,25 @@ class CoordinadorIndicadoresControllerTest {
     }
 
     @Test
+    void W3I_get_indicadores_serializa_plantilla_grupos_aforo_y_padron() throws Exception {
+        when(kpis.execute(any())).thenReturn(new KpisCoordinadorDTO(PROGRAMA, "Sistemas", PERIODO, "2026-2", 5, 2, 1, 2, new BigDecimal("60.00"),
+                15, 10, 9, 1, 1, null, new BigDecimal("66.67"), new BigDecimal("15.00"), new BigDecimal("20.00"),
+                12, 7, 210, 168, null, 5007));
+
+        mvc.perform(get("/api/v1/coordinador/indicadores"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.datos.totalDocentes").value(12))
+                .andExpect(jsonPath("$.datos.gruposActivos").value(7))
+                .andExpect(jsonPath("$.datos.cupoTotal").value(210))
+                .andExpect(jsonPath("$.datos.matriculadosActivos").value(168))
+                .andExpect(jsonPath("$.datos.tasaAforo").doesNotExist())
+                .andExpect(jsonPath("$.datos.estudiantesRegistrados").value(5007));
+    }
+
+    @Test
     void get_indicadores_sin_periodo_delega_nulo() throws Exception {
         when(kpis.execute(any())).thenReturn(new KpisCoordinadorDTO(PROGRAMA, "Sistemas", null, null, 0, 0, 0, 0, null, 0, 0, 0, 0, 0, null, null,
-                new BigDecimal("15.00"), new BigDecimal("20.00")));
+                new BigDecimal("15.00"), new BigDecimal("20.00"), 0, 0, 0, 0, null, 0));
 
         mvc.perform(get("/api/v1/coordinador/indicadores")).andExpect(status().isOk());
 
@@ -104,7 +120,7 @@ class CoordinadorIndicadoresControllerTest {
     @Test
     void B2NM_S4_programaId_viaja_a_indicadores_alertas_y_bitacora_de_un_coordinador_de_varios_programas() throws Exception {
         when(kpis.execute(any())).thenReturn(new KpisCoordinadorDTO(PROGRAMA, "Sistemas", null, null, 0, 0, 0, 0, null, 0, 0, 0, 0, 0, null, null,
-                new BigDecimal("15.00"), new BigDecimal("20.00")));
+                new BigDecimal("15.00"), new BigDecimal("20.00"), 0, 0, 0, 0, null, 0));
         when(alertas.execute(any())).thenReturn(new AlertasPaginaDTO(List.of(), 0));
         when(bitacora.execute(any())).thenReturn(new BitacoraPaginaDTO(List.of(), 0));
 

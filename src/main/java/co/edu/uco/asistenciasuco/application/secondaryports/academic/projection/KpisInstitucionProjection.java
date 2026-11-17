@@ -31,12 +31,16 @@ public record KpisInstitucionProjection(
         BigDecimal umbralPerdida,
         int tomasDictadas,
         BigDecimal horasDictadas,
-        BigDecimal horasFalta
+        BigDecimal horasFalta,
+        int totalDecanos,
+        int decanosActivos,
+        int facultadesActivas
 ) {
+
 
     /** Forma previa a CULM-001 B.2 (sin las columnas de horas: cero y nulas). */
     public KpisInstitucionProjection(final UUID idInstitucion, final String nombreInstitucion, final UUID idPeriodoAcademico, final String nombrePeriodoAcademico, final int totalFacultades, final int totalProgramas, final int totalEstudiantes, final int estudiantesRegulares, final int estudiantesRiesgo, final int estudiantesPerdida, final BigDecimal tasaRetencion, final int sesionesEjecutadas, final int faltasSinJustaCausa, final BigDecimal porcentajeAusentismo, final BigDecimal porcentajeAsistencia, final int sesionesVencidas, final int sesionesConRegistro, final BigDecimal porcentajeCumplimiento, final int estudiantesConMatriculaActiva, final int estudiantesRegistrados, final int docentesConGrupoActivo, final int docentesRegistrados, final BigDecimal umbralAdvertencia, final BigDecimal umbralPerdida) {
-        this(idInstitucion, nombreInstitucion, idPeriodoAcademico, nombrePeriodoAcademico, totalFacultades, totalProgramas, totalEstudiantes, estudiantesRegulares, estudiantesRiesgo, estudiantesPerdida, tasaRetencion, sesionesEjecutadas, faltasSinJustaCausa, porcentajeAusentismo, porcentajeAsistencia, sesionesVencidas, sesionesConRegistro, porcentajeCumplimiento, estudiantesConMatriculaActiva, estudiantesRegistrados, docentesConGrupoActivo, docentesRegistrados, umbralAdvertencia, umbralPerdida, 0, null, null);
+        this(idInstitucion, nombreInstitucion, idPeriodoAcademico, nombrePeriodoAcademico, totalFacultades, totalProgramas, totalEstudiantes, estudiantesRegulares, estudiantesRiesgo, estudiantesPerdida, tasaRetencion, sesionesEjecutadas, faltasSinJustaCausa, porcentajeAusentismo, porcentajeAsistencia, sesionesVencidas, sesionesConRegistro, porcentajeCumplimiento, estudiantesConMatriculaActiva, estudiantesRegistrados, docentesConGrupoActivo, docentesRegistrados, umbralAdvertencia, umbralPerdida, 0, null, null, 0, 0, 0);
     }
 
 }

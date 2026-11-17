@@ -636,6 +636,10 @@ class SqlStoredProcedureContractIT {
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@idGrupo", "uniqueidentifier")
                 )),
+                Arguments.of("usp_consultar_resumen_grupos_docente", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier")
+                )),
                 Arguments.of("usp_actualizar_parametro", List.of(
                         input("@idParametro", "uniqueidentifier"),
                         input("@valor", "nvarchar"),

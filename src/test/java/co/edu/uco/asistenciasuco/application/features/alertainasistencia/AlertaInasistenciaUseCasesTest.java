@@ -193,7 +193,7 @@ class AlertaInasistenciaUseCasesTest {
     private static co.edu.uco.asistenciasuco.application.features.alertainasistencia.common.AlertaFila fila(final String tipo, final String codigo) {
         return new co.edu.uco.asistenciasuco.application.features.alertainasistencia.common.AlertaFila(UUID.randomUUID(), tipo, tipo, "VIGENTE", codigo,
                 new BigDecimal("16.00"), new BigDecimal("16.00"), new BigDecimal("15.00"), new BigDecimal("20.00"), null, null, null, false, null, GRUPO, 1,
-                "G01", UUID.randomUUID(), "Bases", "A", null);
+                "G01", UUID.randomUUID(), "Bases", "A", null, null);
     }
 
     @Test

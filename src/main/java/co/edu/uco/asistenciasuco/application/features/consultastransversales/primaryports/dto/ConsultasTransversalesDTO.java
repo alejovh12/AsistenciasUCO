@@ -93,7 +93,7 @@ public final class ConsultasTransversalesDTO {
                                       int asistencias, int faltasSinJustaCausa, int excusas,
                                       BigDecimal porcentajeAsistencia, BigDecimal porcentajeInasistencia,
                                       int estudiantesRiesgo, int estudiantesPerdida, BigDecimal horasDictadas,
-                                      BigDecimal porcentajeExcusa, BigDecimal porcentajeSinRegistro) {
+                                      BigDecimal porcentajeExcusa, BigDecimal porcentajeSinRegistro, String codigoPermanencia) {
     }
 
     public record EventoAuditoriaDTO(UUID id, OffsetDateTime ocurridoEn, String idActor, String tipoActor,

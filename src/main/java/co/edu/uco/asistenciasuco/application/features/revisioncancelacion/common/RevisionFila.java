@@ -13,5 +13,5 @@ public record RevisionFila(UUID id, String estado, String nombreEstado, boolean 
                     BigDecimal porcentajeCreacion, BigDecimal porcentajeActual, BigDecimal umbralPerdida, BigDecimal horasFalta,
                     BigDecimal horasDictadas, Instant fechaCreacionUtc, String decisionDocente, String motivoDocente,
                     Instant fechaDecisionDocenteUtc, String decisionResolucion, String motivoResolucion, String nombreResolutor,
-                    String perfilResolucion, Instant fechaResolucionUtc) {
+                    String perfilResolucion, Instant fechaResolucionUtc, String codigoPermanenciaActual) {
 }

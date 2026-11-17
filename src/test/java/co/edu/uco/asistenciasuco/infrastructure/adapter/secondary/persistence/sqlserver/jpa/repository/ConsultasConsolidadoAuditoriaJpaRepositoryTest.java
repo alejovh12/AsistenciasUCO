@@ -61,7 +61,7 @@ class ConsultasConsolidadoAuditoriaJpaRepositoryTest {
     void T_061_PAT_01_consolidado_enlaza_filtros_y_mapea_metricas() {
         when(query.getResultList()).thenReturn(filas(new Object[]{ID.toString(), 1, "G1", ID, "2026-2", ID,
                 "Sistemas", ID, "Calculo", ID, "Ana Docente", 20, 8, 150, 10, 0, new BigDecimal("93.75"), 6.25,
-                2, 1, 12, new BigDecimal("15.00"), new BigDecimal("0.00"), new BigDecimal("6.25")}));
+                2, 1, 12, new BigDecimal("15.00"), new BigDecimal("0.00"), new BigDecimal("6.25"), "REGULAR"}));
 
         final var pagina = repository.consultarConsolidadoAsistencia(EJECUTOR, new FiltroConsolidado(ID, null, ID, null),
                 1, 10);
@@ -81,6 +81,8 @@ class ConsultasConsolidadoAuditoriaJpaRepositoryTest {
         assertEquals(new BigDecimal("15.00"), fila.horasDictadas());
         assertEquals(new BigDecimal("0.00"), fila.porcentajeExcusa());
         assertEquals(new BigDecimal("6.25"), fila.porcentajeSinRegistro());
+        // CIERRE-W3I: el nivel de permanencia del grupo es la ultima columna del SP y llega tal cual
+        assertEquals("REGULAR", fila.codigoPermanencia());
     }
 
     @Test

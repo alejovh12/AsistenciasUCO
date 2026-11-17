@@ -34,10 +34,14 @@ import co.edu.uco.asistenciasuco.application.features.docente.retirarestudianteg
 import co.edu.uco.asistenciasuco.application.features.docente.consultarmatrizasistencia.primaryports.ConsultarMatrizAsistenciaGrupoInputPort;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarmatrizasistencia.usecase.ConsultarMatrizAsistenciaGrupoUseCase;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarmatrizasistencia.usecase.impl.ConsultarMatrizAsistenciaGrupoUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarresumengrupos.primaryports.ConsultarResumenGruposDocenteInputPort;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarresumengrupos.usecase.ConsultarResumenGruposDocenteUseCase;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarresumengrupos.usecase.impl.ConsultarResumenGruposDocenteUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarresumensesiones.primaryports.ConsultarResumenSesionesGrupoInputPort;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarresumensesiones.usecase.ConsultarResumenSesionesGrupoUseCase;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarresumensesiones.usecase.impl.ConsultarResumenSesionesGrupoUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.MatrizAsistenciaQueryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.ResumenGruposDocenteQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.ResumenSesionesGrupoQueryPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -142,6 +146,13 @@ public class DocenteWiringConfiguration {
             final ResumenSesionesGrupoQueryPort sesionesPort
     ) {
         final ConsultarResumenSesionesGrupoUseCase useCase = new ConsultarResumenSesionesGrupoUseCaseImpl(scopePort, sesionesPort);
+        return useCase;
+    }
+
+    /** CIERRE-W3I: totales de los grupos habilitados del docente (grupos, estudiantes activos, cupo y ocupacion) resueltos en la base. */
+    @Bean
+    ConsultarResumenGruposDocenteInputPort consultarResumenGruposDocenteInputPort(final ResumenGruposDocenteQueryPort resumenPort) {
+        final ConsultarResumenGruposDocenteUseCase useCase = new ConsultarResumenGruposDocenteUseCaseImpl(resumenPort);
         return useCase;
     }
 }

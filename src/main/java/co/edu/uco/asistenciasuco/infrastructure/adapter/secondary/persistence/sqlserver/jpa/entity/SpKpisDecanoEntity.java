@@ -34,6 +34,10 @@ public class SpKpisDecanoEntity {
     @Column(name = "horasDictadas") private BigDecimal horasDictadas;
     @Column(name = "horasFalta") private BigDecimal horasFalta;
 
+    // CIERRE-W3I: columnas nuevas al final del SP (se leen por nombre).
+    @Column(name = "totalCoordinadores") private Integer totalCoordinadores;
+    @Column(name = "totalDocentes") private Integer totalDocentes;
+
     protected SpKpisDecanoEntity() {
     }
 
@@ -127,5 +131,13 @@ public class SpKpisDecanoEntity {
 
     public BigDecimal horasFalta() {
         return horasFalta;
+    }
+
+    public Integer totalCoordinadores() {
+        return totalCoordinadores;
+    }
+
+    public Integer totalDocentes() {
+        return totalDocentes;
     }
 }
