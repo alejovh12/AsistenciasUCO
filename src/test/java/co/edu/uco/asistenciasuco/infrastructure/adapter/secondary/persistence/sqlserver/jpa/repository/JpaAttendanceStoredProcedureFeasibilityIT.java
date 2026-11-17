@@ -623,7 +623,7 @@ class JpaAttendanceStoredProcedureFeasibilityIT {
     private int independentDetalleCountOrMinusOne(final UUID sesion) {
         try {
             return independentDetalleCountChecked(sesion);
-        } catch (SQLException e) {
+        } catch (SQLException _) {
             return -1;
         }
     }

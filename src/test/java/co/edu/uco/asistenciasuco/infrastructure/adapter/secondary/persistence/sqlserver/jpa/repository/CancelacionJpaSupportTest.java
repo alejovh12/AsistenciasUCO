@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /** CULM-001 C.1: lectura de las novedades JSON del motor y del job, construccion de EXEC sin nulos y conversiones de filas nativas. */
 class CancelacionJpaSupportTest {
@@ -51,7 +52,7 @@ class CancelacionJpaSupportTest {
         assertNull(CancelacionRowSupport.instante(null));
         assertEquals(Instant.parse("2026-11-08T10:00:00Z"), CancelacionRowSupport.instante(LocalDateTime.of(2026, 11, 8, 10, 0)));
         assertEquals(Instant.parse("2026-11-08T10:00:00Z"), CancelacionRowSupport.instante("2026-11-08 10:00:00"));
-        assertTrue(CancelacionRowSupport.instante(Timestamp.valueOf(LocalDateTime.of(2026, 11, 8, 10, 0))) != null);
+        assertNotNull(CancelacionRowSupport.instante(Timestamp.valueOf(LocalDateTime.of(2026, 11, 8, 10, 0))));
     }
 
     @Test

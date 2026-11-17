@@ -124,7 +124,7 @@ class SmtpHealthIndicatorTest {
                     responder(salida, "250 ok");
                 }
             }
-        } catch (final Exception ignorada) {
+        } catch (final Exception _) {
             // el cliente puede cerrar antes de QUIT; la prueba solo mira el estado de salud
         }
     }

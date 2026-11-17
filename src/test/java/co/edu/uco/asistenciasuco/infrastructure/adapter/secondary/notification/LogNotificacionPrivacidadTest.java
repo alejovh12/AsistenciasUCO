@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class LogNotificacionPrivacidadTest {
     @Test
-    void descripcion_y_log_omiten_valores_personales_y_campos_desconocidos() throws Exception {
+    void descripcion_y_log_omiten_valores_personales_y_campos_desconocidos() {
         final UUID usuario = UUID.randomUUID();
         final Map<String, String> datos = Map.ofEntries(
                 Map.entry("nombre", "FAKE_NOMBRE"), Map.entry("apellido", "FAKE_APELLIDO"),

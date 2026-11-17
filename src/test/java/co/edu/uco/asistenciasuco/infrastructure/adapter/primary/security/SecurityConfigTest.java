@@ -54,6 +54,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -207,7 +208,7 @@ class SecurityConfigTest {
     void cors_no_habilita_credenciales_de_navegador() {
         final CorsConfiguration configuration = corsConfigurationSource.getCorsConfiguration(corsRequest("http://localhost:4200"));
 
-        assertFalse(Boolean.TRUE.equals(configuration.getAllowCredentials()));
+        assertNotEquals(Boolean.TRUE, configuration.getAllowCredentials());
         assertFalse(configuration.getAllowedOrigins().contains("*"));
     }
 

@@ -112,7 +112,7 @@ class AuditInterceptorAdminMetadataTest {
     }
 
     @Test
-    void un_publicador_que_falla_no_rompe_la_peticion() throws Exception {
+    void un_publicador_que_falla_no_rompe_la_peticion() {
         interceptor = new AuditInterceptor(evento -> {
             throw new IllegalStateException("publicador caido");
         }, new ClientIpResolver(), new RequestActorResolver());

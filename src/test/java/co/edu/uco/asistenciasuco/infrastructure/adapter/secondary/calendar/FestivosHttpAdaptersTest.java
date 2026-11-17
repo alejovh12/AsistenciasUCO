@@ -92,7 +92,7 @@ class FestivosHttpAdaptersTest {
     }
 
     @Test
-    void un_timeout_invalido_usa_el_valor_por_defecto() throws Exception {
+    void un_timeout_invalido_usa_el_valor_por_defecto() {
         for (final String valor : new String[]{"abc", "0", "-5"}) {
             when(catalogo.getParameter("FESTIVOS", "TIMEOUT_SEGUNDOS")).thenReturn(Optional.of(valor));
             assertEquals(Duration.ofSeconds(10), new FestivosHttpSupport(http, catalogo).timeout());

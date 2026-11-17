@@ -37,6 +37,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -97,7 +98,7 @@ class MatriculaQrPublicaSinTokenWebMvcTest {
                     request.setDispatcherType(DispatcherType.ERROR);
                     return request;
                 }))
-                .andExpect(result -> assertTrue(result.getResponse().getStatus() != 401,
+                .andExpect(result -> assertNotEquals(401, result.getResponse().getStatus(),
                         "El despacho ERROR no debe exigir autenticacion."));
         // Sin despacho de error, una ruta de negocio sin token sigue respondiendo 401.
         mockMvc.perform(get("/error")).andExpect(status().isUnauthorized());

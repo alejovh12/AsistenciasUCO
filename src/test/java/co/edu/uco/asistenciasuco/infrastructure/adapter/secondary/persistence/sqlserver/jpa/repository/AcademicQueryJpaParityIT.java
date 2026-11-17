@@ -46,7 +46,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
@@ -215,7 +215,7 @@ class AcademicQueryJpaParityIT {
         assertEquals(before, after);
         assertEquals(before.size(), pagina.totalElementos());
         assertFalse(before.isEmpty(), "Debe existir al menos una sesion viva.");
-        assertTrue(before.getFirst().fechaHoraInicio() != null, "fechaHoraInicio debe conservar valor UTC.");
+        assertNotNull(before.getFirst().fechaHoraInicio(), "fechaHoraInicio debe conservar valor UTC.");
     }
 
     private UUID uuidDe(final String sql) {

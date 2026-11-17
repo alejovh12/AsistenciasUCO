@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class SecurityBaselinePepPropertiesTest {
 
@@ -124,7 +125,7 @@ class SecurityBaselinePepPropertiesTest {
                         "app.providers.security-baseline-pep.application-name=asistencias-uco-lab",
                         "app.providers.security-baseline-pep.environment=dev",
                         "app.providers.security-baseline-pep.application-credential=" + CREDENTIAL)
-                .run(context -> assertTrue(context.getStartupFailure() != null));
+                .run(context -> assertNotNull(context.getStartupFailure()));
     }
 
     private static ApplicationContextRunner contextRunner() {

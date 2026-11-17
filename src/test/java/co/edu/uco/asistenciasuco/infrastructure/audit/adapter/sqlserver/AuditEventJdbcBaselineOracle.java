@@ -217,7 +217,7 @@ public class AuditEventJdbcBaselineOracle {
         }
         try {
             return UUID.fromString(value).toString();
-        } catch (IllegalArgumentException exception) {
+        } catch (IllegalArgumentException _) {
             return value;
         }
     }

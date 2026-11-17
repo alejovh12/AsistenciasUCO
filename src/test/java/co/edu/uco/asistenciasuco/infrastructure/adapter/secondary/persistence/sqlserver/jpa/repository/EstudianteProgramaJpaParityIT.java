@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
@@ -68,7 +67,7 @@ class EstudianteProgramaJpaParityIT {
                     .filter(fila -> fila.id().equals(estudiantePrograma))
                     .count();
             assertEquals(1L, filasDelEstudiantePrograma, "Una EstudiantePrograma debe producir exactamente una proyeccion.");
-            assertTrue(obtenido.stream().map(EstudianteProgramaProjection::id).distinct().count() == obtenido.size(),
+            assertEquals(obtenido.size(), obtenido.stream().map(EstudianteProgramaProjection::id).distinct().count(),
                     "Los id de la consulta por programa deben ser unicos.");
         } finally {
             jdbc.update("DELETE FROM dbo.EstudiantePrograma WHERE id = ?", estudiantePrograma);

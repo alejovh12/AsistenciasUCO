@@ -46,7 +46,7 @@ class MinioFileStorageAdapterIT {
         for (final String fileId : createdFileIds) {
             try {
                 adapter.delete(fileId);
-            } catch (final RuntimeException ignored) {
+            } catch (final RuntimeException _) {
                 // best-effort: el objeto pudo no haberse llegado a crear en un test fallido
             }
         }

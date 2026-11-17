@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 /**
  * Prueba {@link KeycloakIdentityProviderAdapter} de punta a punta contra un
@@ -339,7 +340,7 @@ class KeycloakIdentityProviderAdapterTest {
 
             final CuentaIdentidadDTO resultado = adapter.crearCuenta(nuevoUsuarioDto());
 
-            assertFalse(resultado.idExterno().equals(ID_USUARIO.toString()));
+            assertNotEquals(ID_USUARIO.toString(), resultado.idExterno());
         }
 
         @Test

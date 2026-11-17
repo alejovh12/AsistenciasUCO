@@ -32,11 +32,11 @@ import java.util.TimeZone;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 /**
  * LB-004D (ONE_TABLE) contra SQL Server REAL: registro del borrador (W1), radicacion con soporte (W2 v2), lectura
@@ -260,7 +260,7 @@ class SoporteArchivoSqlIT {
         final List<SolicitudRevisionDocenteProjection> segunda = reclamosPort.consultarSolicitudesDocente(docenteTitular, "P", 2, 1);
         assertEquals(1, primera.size());
         assertEquals(1, segunda.size());
-        assertFalse(primera.get(0).idSolicitud().equals(segunda.get(0).idSolicitud()));
+        assertNotEquals(segunda.get(0).idSolicitud(), primera.get(0).idSolicitud());
 
         assertTrue(reclamosPort.consultarSolicitudesDocente(docenteAjeno, null, 1, 100).stream()
                 .noneMatch(f -> f.justificacionSolicitud().startsWith(JUSTIFICACION_PREFIX)));

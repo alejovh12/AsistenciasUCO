@@ -394,7 +394,7 @@ class SecurityBaselinePepWiringTest {
             return exchange -> {
                 try {
                     Thread.sleep(2_000);
-                } catch (final InterruptedException exception) {
+                } catch (final InterruptedException _) {
                     Thread.currentThread().interrupt();
                 }
                 exchange.getResponseHeaders().add("X-Decision-Id", DECISION_ID);

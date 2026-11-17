@@ -195,7 +195,7 @@ class SecurityBaselinePepClientTest {
         server = server(exchange -> {
             try {
                 Thread.sleep(1_500);
-            } catch (final InterruptedException exception) {
+            } catch (final InterruptedException _) {
                 Thread.currentThread().interrupt();
             }
             exchange.sendResponseHeaders(204, -1);
@@ -248,7 +248,7 @@ class SecurityBaselinePepClientTest {
                         abiertos.add(socket);
                         comportamiento.aplicar(socket);
                     }
-                } catch (final IOException ignored) {
+                } catch (final IOException _) {
                     // El ServerSocket se cerró al terminar la prueba.
                 }
             });

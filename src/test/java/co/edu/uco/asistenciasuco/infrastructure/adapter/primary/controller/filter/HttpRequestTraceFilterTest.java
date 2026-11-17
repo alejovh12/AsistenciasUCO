@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 class HttpRequestTraceFilterTest {
 
@@ -51,7 +52,7 @@ class HttpRequestTraceFilterTest {
     @Test
     void filtro_corre_despues_de_correlationIdFilter() {
         assertEquals(Ordered.HIGHEST_PRECEDENCE + 1, filter.getOrder());
-        assertFalse(filter.getOrder() == Ordered.HIGHEST_PRECEDENCE);
+        assertNotEquals(Ordered.HIGHEST_PRECEDENCE, filter.getOrder());
     }
 
     @Test

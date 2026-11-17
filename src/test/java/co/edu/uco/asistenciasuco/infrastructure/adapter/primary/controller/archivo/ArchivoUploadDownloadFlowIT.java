@@ -116,7 +116,7 @@ class ArchivoUploadDownloadFlowIT {
         for (final UUID fileId : createdFileIds) {
             try {
                 fileStoragePort.delete(fileId.toString());
-            } catch (final RuntimeException ignored) {
+            } catch (final RuntimeException _) {
                 // best-effort
             }
         }
