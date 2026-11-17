@@ -12,4 +12,12 @@ public final class ConsultarPeriodosAcademicosUseCaseImpl implements ConsultarPe
     @Override public List<PeriodoAcademicoDomain> execute() {
         return queryPort.consultarPeriodosAcademicos().stream().map(ConsultarPeriodosAcademicosRepositoryMapper::toDomain).toList();
     }
+
+    @Override public List<PeriodoAcademicoDomain> execute(final String estado) {
+        if (estado == null || estado.isBlank()) {
+            return execute();
+        }
+        return queryPort.consultarPeriodosAcademicosPorEstado(estado.trim().toUpperCase(java.util.Locale.ROOT)).stream()
+                .map(ConsultarPeriodosAcademicosRepositoryMapper::toDomain).toList();
+    }
 }

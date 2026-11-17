@@ -7,6 +7,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTr
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.EstadoSistemaProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.EventoAuditoriaProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.FiltroAuditoria;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.OpcionesConsolidadoProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.FiltroConsolidado;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.DocenteFacultadProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.EstudianteInstitucionProjection;
@@ -40,6 +41,9 @@ public interface ConsultasTransversalesUseCase {
     /** HU061: el ambito (programa, facultad o institucion) lo resuelve el provider segun el perfil. */
     Pagina<ConsolidadoGrupoProjection> consultarConsolidadoAsistencia(UUID usuario, FiltroConsolidado filtro,
                                                                       Integer pagina, Integer tamano);
+
+    /** CIERRE-W2A: asignaturas y docentes con grupos en el ambito del usuario para el filtro del consolidado. */
+    OpcionesConsolidadoProjection consultarOpcionesConsolidado(UUID usuario, UUID idPeriodoAcademico);
 
     /** HU172: sin rango se consultan los ultimos 7 dias; el rango maximo es de 90 dias. */
     Pagina<EventoAuditoriaProjection> consultarAuditoria(UUID usuario, FiltroAuditoria filtro, Integer pagina,

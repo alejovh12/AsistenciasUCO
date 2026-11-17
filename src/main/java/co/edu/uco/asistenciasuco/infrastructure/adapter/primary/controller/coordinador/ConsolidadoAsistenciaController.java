@@ -5,6 +5,8 @@ import co.edu.uco.asistenciasuco.application.features.consultastransversales.pri
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.ConsolidadoGrupoDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.FiltroConsolidadoDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.PaginaDTO;
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.OpcionesConsolidadoDTO;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +49,15 @@ public final class ConsolidadoAsistenciaController {
         final PaginaDTO<ConsolidadoGrupoDTO> resultado = inputPort.consultarConsolidadoAsistencia(usuario(),
                 new FiltroConsolidadoDTO(idPeriodoAcademico, idPrograma, idAsignatura, idDocente), pagina, tamano);
         return ResponseEntity.ok(new ApiListResponse<>(true, resultado.elementos(), resultado.total()));
+    }
+
+    /** CIERRE-W2A: opciones de los filtros de materia y docente, completas y dentro del ambito del usuario. */
+    @GetMapping({"/api/v1/coordinador/consolidado-asistencia/opciones", "/api/v1/decano/consolidado-asistencia/opciones"})
+    public ResponseEntity<ApiDataResponse<OpcionesConsolidadoDTO>> consultarOpciones(
+            @RequestParam(name = "idPeriodoAcademico", required = false) final UUID idPeriodoAcademico
+    ) {
+        return ResponseEntity.ok(new ApiDataResponse<>(true,
+                inputPort.consultarOpcionesConsolidado(usuario(), idPeriodoAcademico)));
     }
 
     @GetMapping("/api/v1/coordinador/componentes-formacion")

@@ -22,10 +22,20 @@ public final class PeriodoAcademicoJdbcBaseline implements PeriodoAcademicoQuery
     @Override
     public List<PeriodoAcademicoProjection> consultarPeriodosAcademicos() {
         return jdbcOperations.query("""
-                SELECT id, idInstitucion, nombreInstitucion, nombre, codigo, fechaInicio, fechaFin, anio
+                SELECT id, idInstitucion, nombreInstitucion, nombre, codigo, fechaInicio, fechaFin, anio, estado
                 FROM dbo.uv_periodo_academico
                 ORDER BY nombre, id
                 """, (rs, rowNum) -> mapPeriodo(rs));
+    }
+
+    @Override
+    public List<PeriodoAcademicoProjection> consultarPeriodosAcademicosPorEstado(final String estado) {
+        return jdbcOperations.query("""
+                SELECT id, idInstitucion, nombreInstitucion, nombre, codigo, fechaInicio, fechaFin, anio, estado
+                FROM dbo.uv_periodo_academico
+                WHERE estado = :estado
+                ORDER BY nombre, id
+                """, new MapSqlParameterSource("estado", estado), (rs, rowNum) -> mapPeriodo(rs));
     }
 
     @Override
@@ -37,7 +47,7 @@ public final class PeriodoAcademicoJdbcBaseline implements PeriodoAcademicoQuery
     @Override
     public Optional<PeriodoAcademicoProjection> consultarPeriodoAcademicoPorId(final UUID idPeriodoAcademico) {
         final List<PeriodoAcademicoProjection> result = jdbcOperations.query("""
-                SELECT id, idInstitucion, nombreInstitucion, nombre, codigo, fechaInicio, fechaFin, anio
+                SELECT id, idInstitucion, nombreInstitucion, nombre, codigo, fechaInicio, fechaFin, anio, estado
                 FROM dbo.uv_periodo_academico
                 WHERE id = :idPeriodoAcademico
                 """, new MapSqlParameterSource("idPeriodoAcademico", idPeriodoAcademico), (rs, rowNum) -> mapPeriodo(rs));
@@ -53,7 +63,8 @@ public final class PeriodoAcademicoJdbcBaseline implements PeriodoAcademicoQuery
                 JdbcBaselineValueMapper.toString(rs.getObject("codigo")),
                 JdbcBaselineValueMapper.toLocalDate(rs.getObject("fechaInicio")),
                 JdbcBaselineValueMapper.toLocalDate(rs.getObject("fechaFin")),
-                JdbcBaselineValueMapper.toInteger(rs.getObject("anio"))
+                JdbcBaselineValueMapper.toInteger(rs.getObject("anio")),
+                JdbcBaselineValueMapper.toString(rs.getObject("estado"))
         );
     }
 }

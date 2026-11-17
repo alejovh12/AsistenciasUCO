@@ -475,20 +475,10 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
         if (grupos.isEmpty()) {
             return grupos;
         }
-        final Map<UUID, List<FranjaHorarioRepositoryProjection>> porGrupo = new HashMap<>();
-        final List<UUID> ids = grupos.stream().map(GrupoRepositoryProjection::getId).toList();
-        for (int desde = 0; desde < ids.size(); desde += MAX_PARAMETROS_IN) {
-            entityManager.createQuery(HQL_HORARIOS_DE_GRUPOS, UvHorarioEntity.class)
-                    .setParameter("idsGrupo", ids.subList(desde, Math.min(desde + MAX_PARAMETROS_IN, ids.size())))
-                    .getResultList().stream()
-                    .map(CoreViewJpaProjectionMapper::toFranjaHorario)
-                    .forEach(franja -> porGrupo.computeIfAbsent(franja.idGrupo(), id -> new ArrayList<>()).add(franja));
-        }
-        final Comparator<FranjaHorarioRepositoryProjection> orden = Comparator
-                .comparingInt((FranjaHorarioRepositoryProjection franja) -> ORDEN_DIAS.indexOf(franja.codigoDia()))
-                .thenComparing(FranjaHorarioRepositoryProjection::horaInicio);
+        final Map<UUID, List<FranjaHorarioRepositoryProjection>> porGrupo = GrupoHorariosJpaSupport.franjasPorGrupo(
+                entityManager, grupos.stream().map(GrupoRepositoryProjection::getId).toList());
         return grupos.stream()
-                .map(grupo -> grupo.conFranjas(porGrupo.getOrDefault(grupo.getId(), List.of()).stream().sorted(orden).toList()))
+                .map(grupo -> grupo.conFranjas(porGrupo.getOrDefault(grupo.getId(), List.of())))
                 .toList();
     }
 

@@ -739,6 +739,27 @@ class SqlStoredProcedureContractIT {
                         input("@busqueda", "nvarchar"),
                         input("@idFacultad", "uniqueidentifier"),
                         input("@estaActivo", "bit")
+                )),
+                // CIERRE-W2A: filtro por caracter en servidor (parametro opcional al final) y opciones del consolidado con ambito.
+                Arguments.of("usp_consultar_asignaturas_coordinador_paginado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int"),
+                        input("@idPrograma", "uniqueidentifier"),
+                        input("@busqueda", "nvarchar"),
+                        input("@estaActiva", "bit"),
+                        input("@codigoCaracter", "nvarchar")
+                )),
+                Arguments.of("usp_consultar_asignaturas_ambito_consolidado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idPeriodoAcademico", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_docentes_ambito_consolidado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idPeriodoAcademico", "uniqueidentifier")
                 ))
         );
     }

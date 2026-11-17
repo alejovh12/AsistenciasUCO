@@ -10,4 +10,5 @@ public final class ConsultarPeriodosAcademicosInteractor implements ConsultarPer
     private final ConsultarPeriodosAcademicosUseCase useCase;
     public ConsultarPeriodosAcademicosInteractor(final ConsultarPeriodosAcademicosUseCase useCase) { this.useCase = Objects.requireNonNull(useCase); }
     @Override public List<PeriodoAcademicoDTO> execute() { return useCase.execute().stream().map(ConsultarPeriodosAcademicosMapper::toDTO).toList(); }
+    @Override public List<PeriodoAcademicoDTO> execute(final String estado) { return useCase.execute(estado).stream().map(ConsultarPeriodosAcademicosMapper::toDTO).toList(); }
 }

@@ -121,8 +121,9 @@ public final class CoordinadorPortalController {
     }
 
     @GetMapping("/periodos-academicos")
-    public ResponseEntity<ApiListResponse<PeriodoAcademicoDTO>> consultarPeriodosAcademicos() {
-        final var data = consultarPeriodosAcademicosInputPort.execute();
+    public ResponseEntity<ApiListResponse<PeriodoAcademicoDTO>> consultarPeriodosAcademicos(
+            @org.springframework.web.bind.annotation.RequestParam(name = "estado", required = false) final String estado) {
+        final var data = consultarPeriodosAcademicosInputPort.execute(estado);
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
     }
     // HU096/HU097/HU098: el periodo es unico por institucion; crearlo, modificarlo y eliminarlo es del ADMINISTRADOR
