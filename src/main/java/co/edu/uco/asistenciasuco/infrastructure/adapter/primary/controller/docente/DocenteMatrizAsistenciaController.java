@@ -1,9 +1,9 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente;
 
 import co.edu.uco.asistenciasuco.application.features.docente.consultarmatrizasistencia.primaryports.ConsultarMatrizAsistenciaGrupoInputPort;
-import co.edu.uco.asistenciasuco.application.features.docente.consultarmatrizasistencia.primaryports.dto.MatrizAsistenciaGrupoDTO;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarmatrizasistencia.result.MatrizAsistenciaGrupoDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarresumensesiones.primaryports.ConsultarResumenSesionesGrupoInputPort;
-import co.edu.uco.asistenciasuco.application.features.docente.consultarresumensesiones.primaryports.dto.ResumenSesionesGrupoDTO;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarresumensesiones.result.ResumenSesionesGrupoDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.BusquedaRequestValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.PaginacionRequestValidator;

@@ -3,9 +3,9 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.doce
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarmatrizasistencia.primaryports.ConsultarMatrizAsistenciaGrupoInputPort;
-import co.edu.uco.asistenciasuco.application.features.docente.consultarmatrizasistencia.primaryports.dto.MatrizAsistenciaGrupoDTO;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarmatrizasistencia.result.MatrizAsistenciaGrupoDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarresumensesiones.primaryports.ConsultarResumenSesionesGrupoInputPort;
-import co.edu.uco.asistenciasuco.application.features.docente.consultarresumensesiones.primaryports.dto.ResumenSesionesGrupoDTO;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarresumensesiones.result.ResumenSesionesGrupoDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.junit.jupiter.api.Test;

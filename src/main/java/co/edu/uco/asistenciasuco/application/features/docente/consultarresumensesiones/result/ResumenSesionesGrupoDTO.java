@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.application.features.docente.consultarresumensesiones.primaryports.dto;
+package co.edu.uco.asistenciasuco.application.features.docente.consultarresumensesiones.result;
 
 import java.math.BigDecimal;
 import java.time.Instant;

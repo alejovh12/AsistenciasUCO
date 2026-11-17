@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.application.features.docente.consultarmatrizasistencia.primaryports.dto;
+package co.edu.uco.asistenciasuco.application.features.docente.consultarmatrizasistencia.result;
 
 import java.time.Instant;
 import java.util.List;

@@ -4,7 +4,7 @@ import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenExcepti
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.PaginaResultado;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarmatrizasistencia.primaryports.ConsultarMatrizAsistenciaGrupoInputPort;
-import co.edu.uco.asistenciasuco.application.features.docente.consultarmatrizasistencia.primaryports.dto.MatrizAsistenciaGrupoDTO;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarmatrizasistencia.result.MatrizAsistenciaGrupoDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarmatrizasistencia.usecase.impl.ConsultarMatrizAsistenciaGrupoUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.MatrizAsistenciaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.ResumenSesionesGrupoQueryPort;
