@@ -44,7 +44,7 @@ class ConsultarResumenAsistenciaGrupoUseCaseImplTest {
     void el_titular_obtiene_la_pagina_con_los_indicadores_de_la_db_y_valores_por_defecto() {
         final UUID estudiante = UUID.randomUUID();
         when(scope.canDocenteAccessGrupo(USUARIO, GRUPO)).thenReturn(true);
-        when(resumen.consultarResumenGrupoDocente(GRUPO, 1, 50, USUARIO)).thenReturn(new PaginaResultado<>(List.of(
+        when(resumen.consultarResumenGrupoDocente(GRUPO, 1, 50, null, USUARIO)).thenReturn(new PaginaResultado<>(List.of(
                 new ResumenAsistenciaQueryPort.FilaResumen(GRUPO, estudiante, "Ana Perez", "A", indicadores())), 1, 50, 31));
 
         final PaginaResultado<ResumenAsistenciaEstudianteDTO> pagina = useCase.execute(
@@ -55,11 +55,24 @@ class ConsultarResumenAsistenciaGrupoUseCaseImplTest {
     }
 
     @Test
+    void la_busqueda_se_recorta_y_una_en_blanco_es_sin_filtro() {
+        when(scope.canDocenteAccessGrupo(USUARIO, GRUPO)).thenReturn(true);
+        when(resumen.consultarResumenGrupoDocente(GRUPO, 1, 50, "ana", USUARIO)).thenReturn(new PaginaResultado<>(List.of(), 1, 50, 0));
+        when(resumen.consultarResumenGrupoDocente(GRUPO, 1, 50, null, USUARIO)).thenReturn(new PaginaResultado<>(List.of(), 1, 50, 0));
+
+        useCase.execute(new ConsultarResumenAsistenciaGrupoInputPort.Consulta(GRUPO, null, null, USUARIO, "  ana "));
+        useCase.execute(new ConsultarResumenAsistenciaGrupoInputPort.Consulta(GRUPO, null, null, USUARIO, "   "));
+
+        verify(resumen).consultarResumenGrupoDocente(GRUPO, 1, 50, "ana", USUARIO);
+        verify(resumen).consultarResumenGrupoDocente(GRUPO, 1, 50, null, USUARIO);
+    }
+
+    @Test
     void la_marca_de_inasistencia_de_la_fila_llega_al_resumen() {
         final UUID estudiante = UUID.randomUUID();
         final MarcaInasistenciaDTO marca = new MarcaInasistenciaDTO(true, java.time.Instant.parse("2026-11-01T10:00:00Z"), false, null, null);
         when(scope.canDocenteAccessGrupo(USUARIO, GRUPO)).thenReturn(true);
-        when(resumen.consultarResumenGrupoDocente(GRUPO, 1, 50, USUARIO)).thenReturn(new PaginaResultado<>(List.of(
+        when(resumen.consultarResumenGrupoDocente(GRUPO, 1, 50, null, USUARIO)).thenReturn(new PaginaResultado<>(List.of(
                 new ResumenAsistenciaQueryPort.FilaResumen(GRUPO, estudiante, "Ana Perez", "A", indicadores(), marca)), 1, 50, 1));
 
         final ResumenAsistenciaEstudianteDTO fila = useCase.execute(
@@ -72,7 +85,7 @@ class ConsultarResumenAsistenciaGrupoUseCaseImplTest {
     void un_docente_no_titular_recibe_403_sin_consultar() {
         assertThrows(ForbiddenException.class, () -> useCase.execute(
                 new ConsultarResumenAsistenciaGrupoInputPort.Consulta(GRUPO, 2, 10, USUARIO)));
-        verify(resumen, never()).consultarResumenGrupoDocente(any(), anyInt(), anyInt(), any());
+        verify(resumen, never()).consultarResumenGrupoDocente(any(), anyInt(), anyInt(), any(), any());
         assertThrows(NullPointerException.class, () -> useCase.execute(null));
         assertThrows(NullPointerException.class, () -> new ConsultarResumenAsistenciaGrupoUseCaseImpl(null, resumen));
         assertThrows(NullPointerException.class, () -> new ConsultarResumenAsistenciaGrupoUseCaseImpl(scope, null));
