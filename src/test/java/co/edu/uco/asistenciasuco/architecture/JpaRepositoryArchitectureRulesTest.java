@@ -24,7 +24,6 @@ class JpaRepositoryArchitectureRulesTest {
             Map.entry("GrupoJpaRepository", List.of("repository.GrupoRepositoryPort")),
             Map.entry("SesionJpaRepository", List.of("repository.SesionRepositoryPort")),
             Map.entry("UsuarioJpaRepository", List.of("repository.UsuarioRepositoryPort")),
-            Map.entry("DocenteJpaRepository", List.of("repository.DocenteRepositoryPort")),
             Map.entry("EstudianteJpaRepository", List.of("repository.EstudianteRepositoryPort")),
             Map.entry("TipoIdentificacionJpaRepository", List.of("repository.TipoIdentificacionRepositoryPort")),
             Map.entry("AreaJpaRepository", List.of("academic.AreaQueryPort")),

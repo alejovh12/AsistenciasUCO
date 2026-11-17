@@ -11,6 +11,7 @@ public final class ConsultarDecanosRepositoryMapper {
     public static DecanoDomain toDomain(final DecanoProjection projection) {
         return new DecanoDomain(projection.id(), projection.idUsuario(), projection.numeroIdentificacion(),
                 projection.nombreCompleto(), projection.idFacultad(), projection.nombreFacultad(),
-                projection.estaActivoDecano());
+                projection.estaActivoDecano(), projection.primerNombre(), projection.segundoNombre(),
+                projection.primerApellido(), projection.segundoApellido());
     }
 }

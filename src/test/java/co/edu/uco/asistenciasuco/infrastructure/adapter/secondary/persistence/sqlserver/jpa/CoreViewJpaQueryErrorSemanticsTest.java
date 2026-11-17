@@ -4,7 +4,6 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 
 
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarEstudiantesRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarDocentePorIdRepositoryDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.*;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.mapper.CoreViewJpaProjectionMapper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.projection.*;
@@ -37,7 +36,6 @@ class CoreViewJpaQueryErrorSemanticsTest {
         when(entityManager.createQuery(anyString(), eq(Object[].class))).thenThrow(new PersistenceException("db"));
         when(entityManager.createQuery(anyString(), eq(UvGrupoEntity.class))).thenThrow(new PersistenceException("db"));
         when(entityManager.createQuery(anyString(), eq(UvUsuarioEntity.class))).thenThrow(new PersistenceException("db"));
-        when(entityManager.createQuery(anyString(), eq(UvDocenteIdentidadEntity.class))).thenThrow(new PersistenceException("db"));
         when(entityManager.createQuery(anyString(), eq(Long.class))).thenThrow(new PersistenceException("db"));
         when(entityManager.createQuery(anyString(), eq(UvTipoIdentificacionEntity.class))).thenThrow(new PersistenceException("db"));
         // CULM-001 A.2-1/A.2-2: grupos y directorio de estudiantes se consultan por SP (consulta nativa con ejecutor).
@@ -54,8 +52,6 @@ class CoreViewJpaQueryErrorSemanticsTest {
         assertThrows(DatabaseOperationException.class,
                 () -> new UsuarioJpaRepository(entityManager)
                         .consultarUsuarioPorId(UUID.randomUUID()));
-        assertThrows(DatabaseOperationException.class,
-                () -> new DocenteJpaRepository(entityManager).consultarDocentes());
         assertThrows(DatabaseOperationException.class,
                 () -> new EstudianteJpaRepository(entityManager).consultarEstudiantes(emptyPage()));
         assertThrows(DatabaseOperationException.class,

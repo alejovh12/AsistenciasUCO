@@ -61,6 +61,29 @@ class ConsultasTransversalesInteractorTest {
     }
 
     @Test
+    void W1B_NOM_INT_01_docentes_y_estudiantes_traen_nombres_separados_y_agrupados() {
+        final UUID tipo = UUID.randomUUID();
+        when(useCase.consultarDocentes(USUARIO, new FiltroConsulta(null, null, null), 1, 10)).thenReturn(new Pagina<>(
+                List.of(new DocenteFacultadProjection(ID, "101", "Ana Maria Perez Gomez", "ana@uco.edu.co", true, "Sistemas", 1, 4,
+                        true, "Ana", "Maria", "Perez", "Gomez", tipo, "CC")), 1));
+        when(useCase.buscarEstudiantes(USUARIO, new FiltroConsulta(null, null, null), 1, 10)).thenReturn(new Pagina<>(
+                List.of(new EstudianteInstitucionProjection(ID, "102", "Luis Ruiz", null, true, "Ingenieria", "Sistemas", 2,
+                        "Luis", null, "Ruiz", " ")), 1));
+
+        final var docente = interactor.consultarDocentes(USUARIO, null, null, null, 1, 10).elementos().getFirst();
+        assertEquals("Ana", docente.primerNombre());
+        assertEquals("Ana Maria", docente.nombres());
+        assertEquals("Perez Gomez", docente.apellidos());
+        assertEquals(tipo, docente.idTipoIdentificacion());
+        assertEquals("CC", docente.codigoTipoIdentificacion());
+
+        final var estudiante = interactor.buscarEstudiantes(USUARIO, null, null, null, 1, 10).elementos().getFirst();
+        assertEquals("Luis", estudiante.nombres());
+        assertEquals("Ruiz", estudiante.apellidos());
+        assertEquals("Luis", estudiante.primerNombre());
+    }
+
+    @Test
     void T_143_INT_01_mapea_asignaturas_con_la_facultad_como_filtro() {
         when(useCase.buscarAsignaturas(USUARIO, new FiltroConsulta("CAL", ID, true), null, null)).thenReturn(
                 new Pagina<>(List.of(new AsignaturaProjection(ID, "CAL1", "Calculo", 3, "Ciencias", "Basico",

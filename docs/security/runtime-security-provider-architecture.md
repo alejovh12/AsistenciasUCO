@@ -536,7 +536,6 @@ Estado vigente de las familias revisadas:
 | `/api/v1/decano/**` | `DECANO` o `ADMINISTRADOR` |
 | `/api/v1/coordinador/**` | `COORDINADOR` o `ADMINISTRADOR` |
 | `/api/v1/docente/**` | `DOCENTE` |
-| `/api/v1/docentes/**` | `COORDINADOR` o `ADMINISTRADOR` |
 | `/api/v1/estudiante/**` | `ESTUDIANTE` |
 | `/api/v1/estudiantes/**` | `DOCENTE`, `COORDINADOR` o `ADMINISTRADOR` |
 | `GET /api/v1/grupos/**` | `DOCENTE`, `COORDINADOR` o `ADMINISTRADOR` |

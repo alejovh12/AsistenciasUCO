@@ -9,6 +9,18 @@ public record DecanoProjection(
         String nombreCompleto,
         UUID idFacultad,
         String nombreFacultad,
-        boolean estaActivoDecano
+        boolean estaActivoDecano,
+        String primerNombre,
+        String segundoNombre,
+        String primerApellido,
+        String segundoApellido
 ) {
+
+    /** CIERRE-W1B: sin los nombres separados (consultas que no los necesitan). */
+    public DecanoProjection(final UUID id, final UUID idUsuario, final String numeroIdentificacion,
+                            final String nombreCompleto, final UUID idFacultad, final String nombreFacultad,
+                            final boolean estaActivoDecano) {
+        this(id, idUsuario, numeroIdentificacion, nombreCompleto, idFacultad, nombreFacultad, estaActivoDecano,
+                null, null, null, null);
+    }
 }

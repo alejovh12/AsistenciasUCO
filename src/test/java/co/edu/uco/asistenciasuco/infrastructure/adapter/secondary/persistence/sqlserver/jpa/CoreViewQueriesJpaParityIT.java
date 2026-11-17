@@ -5,8 +5,6 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarEstudiantesRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarSesionRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarDocentePorIdRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarAsignacionesAcademicasDocenteRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.*;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.mapping.JdbcBaselineValueMapper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.JpaProcedureExecutor;
@@ -49,7 +47,6 @@ class CoreViewQueriesJpaParityIT {
     private SesionJpaRepository sesiones;
     private GrupoJpaRepository grupos;
     private UsuarioJpaRepository usuarios;
-    private DocenteJpaRepository docentes;
     private EstudianteJpaRepository estudiantes;
     private TipoIdentificacionJpaRepository tiposIdentificacion;
 
@@ -60,7 +57,6 @@ class CoreViewQueriesJpaParityIT {
                 org.mockito.Mockito.mock(org.springframework.transaction.support.TransactionOperations.class),
                 new JpaProcedureExecutor(entityManager));
         usuarios = new UsuarioJpaRepository(entityManager);
-        docentes = new DocenteJpaRepository(entityManager);
         estudiantes = new EstudianteJpaRepository(entityManager);
         tiposIdentificacion = new TipoIdentificacionJpaRepository(entityManager);
         // CULM-001 A.2: las consultas por SP exigen la correlacion de la peticion.
@@ -137,38 +133,6 @@ class CoreViewQueriesJpaParityIT {
         assertEquals(expected, userJpa(usuarios.consultarUsuarioPorIdentificacion(type, number).orElseThrow()));
         assertEquals(expected, userJpa(usuarios.consultarUsuarioPorCorreo("  " + email.toUpperCase() + "  ").orElseThrow()));
         assertTrue(usuarios.consultarUsuarioPorId(UUID.randomUUID()).isEmpty());
-    }
-
-    @Test
-    void docentes_conservan_identidad_asignaciones_orden_y_not_found() {
-        final List<List<Object>> before = jdbc.query("""
-                SELECT id, idUsuario, numeroIdentificacion, nombreCompleto, estaActivoUsuario
-                FROM dbo.uv_docente_identidad
-                ORDER BY nombreCompleto, id
-                """, (rs, row) -> teacherIdentityJdbc(rs));
-        assertEquals(before, docentes.consultarDocentes().stream()
-                .map(CoreViewQueriesJpaParityIT::teacherIdentityJpa).toList());
-        assumeFalse(before.isEmpty(), "No hay docentes para comparar.");
-        final UUID teacherId = (UUID) before.getFirst().getFirst();
-        assertEquals(before.getFirst(), teacherIdentityJpa(docentes.consultarDocentePorId(
-                new ConsultarDocentePorIdRepositoryDTO(teacherId)).orElseThrow()));
-
-        final List<List<Object>> beforeAssignments = jdbc.query("""
-                SELECT id, idUsuario, numeroIdentificacion, nombreCompleto, estaActivoUsuario,
-                       idInstitucion, nombreInstitucion, idFacultad, nombreFacultad, idPrograma,
-                       nombrePrograma, idPlanEstudio, inpPlanEstudio, idAsignatura, nombreAsignatura,
-                       idGrupo, nombreGrupo, idPerfil, codigoPerfil, nombrePerfil,
-                       estaActivoDocente, estaActivoTextoDocente
-                FROM dbo.uv_docente
-                WHERE id = ?
-                ORDER BY nombreInstitucion, nombreFacultad, nombrePrograma,
-                         nombreAsignatura, nombreGrupo, idGrupo
-                """, (rs, row) -> teacherAssignmentJdbc(rs), teacherId);
-        assertEquals(beforeAssignments, docentes.consultarAsignacionesAcademicas(
-                        new ConsultarAsignacionesAcademicasDocenteRepositoryDTO(teacherId)).stream()
-                .map(CoreViewQueriesJpaParityIT::teacherAssignmentJpa).toList());
-        assertTrue(docentes.consultarDocentePorId(
-                new ConsultarDocentePorIdRepositoryDTO(UUID.randomUUID())).isEmpty());
     }
 
     @Test
@@ -380,36 +344,6 @@ class CoreViewQueriesJpaParityIT {
     private static List<Object> userJpa(final UsuarioIdentidadRepositoryProjection value) {
         return row(value.id(), value.tipoIdentificacionId(), value.numeroIdentificacion(), value.primerNombre(),
                 value.primerApellido(), value.correo());
-    }
-
-    private static List<Object> teacherIdentityJdbc(final ResultSet rs) throws SQLException {
-        return row(uuid(rs, "id"), uuid(rs, "idUsuario"), integer(rs, "numeroIdentificacion"),
-                string(rs, "nombreCompleto"), bool(rs, "estaActivoUsuario"));
-    }
-
-    private static List<Object> teacherIdentityJpa(final DocenteIdentidadRepositoryProjection value) {
-        return row(value.getId(), value.getIdUsuario(), value.getNumeroIdentificacion(), value.getNombreCompleto(),
-                value.isEstaActivoUsuario());
-    }
-
-    private static List<Object> teacherAssignmentJdbc(final ResultSet rs) throws SQLException {
-        return row(uuid(rs, "id"), uuid(rs, "idUsuario"), integer(rs, "numeroIdentificacion"),
-                string(rs, "nombreCompleto"), bool(rs, "estaActivoUsuario"), uuid(rs, "idInstitucion"),
-                string(rs, "nombreInstitucion"), uuid(rs, "idFacultad"), string(rs, "nombreFacultad"),
-                uuid(rs, "idPrograma"), string(rs, "nombrePrograma"), uuid(rs, "idPlanEstudio"),
-                string(rs, "inpPlanEstudio"), uuid(rs, "idAsignatura"), string(rs, "nombreAsignatura"),
-                uuid(rs, "idGrupo"), string(rs, "nombreGrupo"), uuid(rs, "idPerfil"),
-                string(rs, "codigoPerfil"), string(rs, "nombrePerfil"), integer(rs, "estaActivoDocente"),
-                string(rs, "estaActivoTextoDocente"));
-    }
-
-    private static List<Object> teacherAssignmentJpa(final DocenteAsignacionAcademicaRepositoryProjection value) {
-        return row(value.getId(), value.getIdUsuario(), value.getNumeroIdentificacion(), value.getNombreCompleto(),
-                value.isEstaActivoUsuario(), value.getIdInstitucion(), value.getNombreInstitucion(),
-                value.getIdFacultad(), value.getNombreFacultad(), value.getIdPrograma(), value.getNombrePrograma(),
-                value.getIdPlanEstudio(), value.getInpPlanEstudio(), value.getIdAsignatura(), value.getNombreAsignatura(),
-                value.getIdGrupo(), value.getNombreGrupo(), value.getIdPerfil(), value.getCodigoPerfil(),
-                value.getNombrePerfil(), value.getEstaActivoDocente(), value.getEstaActivoTextoDocente());
     }
 
     private static List<Object> studentJdbc(final ResultSet rs) throws SQLException {

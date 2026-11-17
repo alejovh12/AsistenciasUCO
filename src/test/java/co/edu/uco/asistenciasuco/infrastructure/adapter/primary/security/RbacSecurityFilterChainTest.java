@@ -57,10 +57,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * <p>Política vigente verificada aquí (inspeccionada en {@code SecurityConfig} antes de
  * escribir las expectativas, no inventada):</p>
  * <ul>
- *   <li>{@code /api/v1/docentes/**} (directorio general, {@code DocenteController}): solo
- *       {@code COORDINADOR}/{@code ADMINISTRADOR} — ver duda documentada en
- *       docs/security/runtime-security-provider-architecture.md (no hay contrato funcional
- *       explícito; DOCENTE NO tiene acceso bajo la política actual).</li>
+ *   <li>{@code /api/v1/docentes/**} (directorio general sin ámbito): retirado en CIERRE-W1B; ningún rol autenticado
+ *       llega a un controlador (404) y sin token sigue siendo 401. Los directorios con ámbito son
+ *       {@code /admin/docentes}, {@code /decano/docentes} y {@code /coordinador/docentes}.</li>
  *   <li>{@code POST /api/v1/grupos} (command de coordinación; DEC-065 (4): el docente ya no crea grupos): solo {@code COORDINADOR}.</li>
  *   <li>{@code POST /api/v1/asistencias/lote} (registro docente por lote): {@code DOCENTE}.</li>
  *   <li>{@code /api/v1/estudiante/**} (portal del propio estudiante): {@code ESTUDIANTE}.</li>
@@ -104,25 +103,27 @@ class RbacSecurityFilterChainTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    // --- /api/v1/docentes/** : directorio general (COORDINADOR/ADMINISTRADOR) ---
+    // --- /api/v1/docentes/** : directorio general retirado (CIERRE-W1B) ---
 
     @Test
-    void docentes_directorio_estudiante_recibe_403() throws Exception {
-        mockMvc.perform(get("/api/v1/docentes").header(HttpHeaders.AUTHORIZATION, bearer("ESTUDIANTE")))
-                .andExpect(status().isForbidden());
+    void docentes_directorio_retirado_responde_404_a_todo_rol_autenticado() throws Exception {
+        for (final String rol : new String[] {"ESTUDIANTE", "DOCENTE", "COORDINADOR", "DECANO", "ADMINISTRADOR"}) {
+            mockMvc.perform(get("/api/v1/docentes").header(HttpHeaders.AUTHORIZATION, bearer(rol)))
+                    .andExpect(status().isNotFound());
+            mockMvc.perform(get("/api/v1/docentes/13641bab-e3cd-485c-b275-47e7b731e18c").header(HttpHeaders.AUTHORIZATION, bearer(rol)))
+                    .andExpect(status().isNotFound());
+            mockMvc.perform(get("/api/v1/docentes/13641bab-e3cd-485c-b275-47e7b731e18c/asignaciones").header(HttpHeaders.AUTHORIZATION, bearer(rol)))
+                    .andExpect(status().isNotFound());
+            mockMvc.perform(post("/api/v1/docentes/consultas/id").header(HttpHeaders.AUTHORIZATION, bearer(rol))
+                            .contentType("application/json").content("{}"))
+                    .andExpect(status().isNotFound());
+        }
     }
 
     @Test
-    void docentes_directorio_docente_recibe_403_bajo_politica_actual() throws Exception {
-        // Política vigente: DOCENTE no administra el directorio general de docentes.
-        mockMvc.perform(get("/api/v1/docentes").header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
-    void docentes_directorio_coordinador_es_permitido() throws Exception {
-        mockMvc.perform(get("/api/v1/docentes").header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
-                .andExpect(status().isOk());
+    void docentes_directorio_retirado_sin_token_sigue_siendo_401() throws Exception {
+        mockMvc.perform(get("/api/v1/docentes/13641bab-e3cd-485c-b275-47e7b731e18c"))
+                .andExpect(status().isUnauthorized());
     }
 
     // --- /api/v1/coordinador/docentes/** : directorio y vinculacion del programa (HU062/HU091) ---
@@ -840,11 +841,6 @@ class RbacSecurityFilterChainTest {
         @GetMapping("/openapi/openapi-golden-path.yaml")
         String canonicalOpenApi() {
             return "openapi: 3.1.2";
-        }
-
-        @GetMapping("/api/v1/docentes")
-        String docentes() {
-            return "ok";
         }
 
         @GetMapping({"/api/v1/coordinador/indicadores", "/api/v1/coordinador/alertas-tempranas",

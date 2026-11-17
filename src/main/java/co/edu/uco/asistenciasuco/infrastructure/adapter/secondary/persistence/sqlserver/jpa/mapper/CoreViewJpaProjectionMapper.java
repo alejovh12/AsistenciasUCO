@@ -52,21 +52,6 @@ public final class CoreViewJpaProjectionMapper {
                 row.numeroIdentificacion(), row.primerNombre(), row.primerApellido(), row.correo());
     }
 
-    public static DocenteIdentidadRepositoryProjection toDocenteIdentidad(final UvDocenteIdentidadEntity row) {
-        return new DocenteIdentidadRepositoryProjection(row.id(), row.idUsuario(), row.numeroIdentificacion(),
-                row.nombreCompleto(), Boolean.TRUE.equals(row.estaActivoUsuario()));
-    }
-
-    public static DocenteAsignacionAcademicaRepositoryProjection toDocenteAsignacion(
-            final UvDocenteEntity row) {
-        return new DocenteAsignacionAcademicaRepositoryProjection(row.id(), row.idUsuario(),
-                row.numeroIdentificacion(), row.nombreCompleto(), Boolean.TRUE.equals(row.estaActivoUsuario()),
-                row.idInstitucion(), row.nombreInstitucion(), row.idFacultad(), row.nombreFacultad(),
-                row.idPrograma(), row.nombrePrograma(), row.idPlanEstudio(), textOrNull(row.inpPlanEstudio()),
-                row.idAsignatura(), row.nombreAsignatura(), row.idGrupo(), row.nombreGrupo(), row.idPerfil(),
-                row.codigoPerfil(), row.nombrePerfil(), row.estaActivoDocente(), row.estaActivoTextoDocente());
-    }
-
     public static EstudianteResumenRepositoryProjection toEstudianteResumen(final EstudianteResumenQueryRow row) {
         return new EstudianteResumenRepositoryProjection(row.id(), row.idUsuario(), row.tipoIdentificacionId(),
                 row.numeroIdentificacion(), row.primerApellido(), row.segundoApellido(), row.primerNombre(),

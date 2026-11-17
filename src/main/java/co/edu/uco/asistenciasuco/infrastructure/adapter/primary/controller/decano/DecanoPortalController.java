@@ -41,15 +41,23 @@ public final class DecanoPortalController {
         this.authenticatedUserResolver = authenticatedUserResolver;
     }
 
+    /**
+     * CIERRE-W1B: filtros opcionales {@code busqueda}, {@code estaActivo} y {@code sinPrograma}; la paginacion, los
+     * filtros y el ambito (facultad del decano) se resuelven en el SP.
+     */
     @GetMapping("/coordinadores")
     public ResponseEntity<ApiPageResponse<CoordinadorDTO>> consultarCoordinadores(
             @RequestParam(name = "pagina", required = false) final Integer pagina,
-            @RequestParam(name = "tamano", required = false) final Integer tamano
+            @RequestParam(name = "tamano", required = false) final Integer tamano,
+            @RequestParam(name = "busqueda", required = false) final String busqueda,
+            @RequestParam(name = "estaActivo", required = false) final Boolean estaActivo,
+            @RequestParam(name = "sinPrograma", required = false) final Boolean sinPrograma
     ) {
         // Una sola regla de paginacion (CULM-001 D.9-a): 400 PAG_001 con details[] (PaginacionRequestValidator).
         final PaginacionRequestValidator.Pagina solicitada = PaginacionRequestValidator.resolver(pagina, tamano);
         final var resultado = consultarCoordinadoresInputPort.execute(
-                authenticatedUserResolver.requireAuthenticatedUserId(), solicitada.numero(), solicitada.tamano());
+                authenticatedUserResolver.requireAuthenticatedUserId(), busqueda, estaActivo, sinPrograma,
+                solicitada.numero(), solicitada.tamano());
         return ResponseEntity.ok(ApiPageResponse.of(
                 resultado.elementos(),
                 resultado.numeroPagina(),

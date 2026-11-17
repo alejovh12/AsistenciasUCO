@@ -1,6 +1,5 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.diagnostics;
 
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.DocenteRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.TipoIdentificacionRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
@@ -44,9 +43,6 @@ class SqlServerConnectionIT {
     private UsuarioRepositoryPort usuarioRepositoryPort;
 
     @Autowired
-    private DocenteRepositoryPort docenteRepositoryPort;
-
-    @Autowired
     private GrupoRepositoryPort grupoRepositoryPort;
 
     @Test
@@ -65,7 +61,6 @@ class SqlServerConnectionIT {
         assertNotNull(databaseDiagnostics.firstTipoIdentificacionRows());
         assertFalse(tipoIdentificacionRepositoryPort instanceof TipoIdentificacionRepositoryMockAdapter);
         assertFalse(usuarioRepositoryPort instanceof UsuarioRepositoryMockAdapter);
-        assertNotNull(docenteRepositoryPort);
         assertFalse(grupoRepositoryPort instanceof GrupoRepositoryMockAdapter);
         assertEquals("servlet", environment.getProperty("spring.main.web-application-type"));
         assertEquals("true", environment.getProperty("spring.threads.virtual.enabled"));

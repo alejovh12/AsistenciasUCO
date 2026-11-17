@@ -21,7 +21,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 public class DecanoWiringConfiguration {
 
-    @Bean ConsultarCoordinadoresUseCase consultarCoordinadoresUseCase(final InstitutionalScopePort scopePort, final CoordinadorQueryPort queryPort) { return new ConsultarCoordinadoresUseCaseImpl(scopePort, queryPort); }
+    @Bean ConsultarCoordinadoresUseCase consultarCoordinadoresUseCase(final CoordinadorQueryPort queryPort) { return new ConsultarCoordinadoresUseCaseImpl(queryPort); }
     @Bean ConsultarCoordinadoresInputPort consultarCoordinadoresInputPort(final ConsultarCoordinadoresUseCase useCase) { return new ConsultarCoordinadoresInteractor(useCase); }
     @Bean CrearCoordinadorUseCase crearCoordinadorUseCase(
             final CoordinadorCommandPort commandPort,

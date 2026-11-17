@@ -17,6 +17,7 @@ import co.edu.uco.asistenciasuco.application.features.consultastransversales.pri
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.ProgramaCreditosDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.ResumenAsistenciaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.usecase.ConsultasTransversalesUseCase;
+import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.DocenteFacultadProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.FiltroAuditoria;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.FiltroConsulta;
@@ -68,7 +69,11 @@ public final class ConsultasTransversalesInteractor implements ConsultasTransver
 
     private static DocenteFacultadDTO docente(final DocenteFacultadProjection d) {
         return new DocenteFacultadDTO(d.idDocente(), d.numeroIdentificacion(), d.nombreCompleto(), d.correo(),
-                d.activo(), d.programas(), d.totalProgramas(), d.totalGrupos(), d.tieneVinculoActivo());
+                d.activo(), d.programas(), d.totalProgramas(), d.totalGrupos(), d.tieneVinculoActivo(),
+                d.primerNombre(), d.segundoNombre(), d.primerApellido(), d.segundoApellido(),
+                TextHelper.unirNombres(d.primerNombre(), d.segundoNombre()),
+                TextHelper.unirNombres(d.primerApellido(), d.segundoApellido()), d.idTipoIdentificacion(),
+                d.codigoTipoIdentificacion());
     }
 
     @Override
@@ -88,7 +93,10 @@ public final class ConsultasTransversalesInteractor implements ConsultasTransver
         return pagina(useCase.buscarEstudiantes(usuario, new FiltroConsulta(busqueda, idFacultad, estaActivo), pagina,
                         tamano),
                 e -> new EstudianteInstitucionDTO(e.idEstudiante(), e.numeroIdentificacion(), e.nombreCompleto(),
-                        e.correo(), e.activo(), e.facultades(), e.programas(), e.totalGrupos()));
+                        e.correo(), e.activo(), e.facultades(), e.programas(), e.totalGrupos(), e.primerNombre(),
+                        e.segundoNombre(), e.primerApellido(), e.segundoApellido(),
+                        TextHelper.unirNombres(e.primerNombre(), e.segundoNombre()),
+                        TextHelper.unirNombres(e.primerApellido(), e.segundoApellido())));
     }
 
     /** Los datos personales se repiten en cada fila del provider: se toman de la primera. */
