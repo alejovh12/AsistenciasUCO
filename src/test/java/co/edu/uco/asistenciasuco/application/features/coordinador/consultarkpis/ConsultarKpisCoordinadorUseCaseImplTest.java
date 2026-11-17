@@ -80,7 +80,8 @@ class ConsultarKpisCoordinadorUseCaseImplTest {
     @Test
     void T_BE_04_conserva_los_nulos_en_vez_de_inventar_valores() {
         final var sinDatos = new co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.KpisCoordinadorProjection(
-                PROGRAMA, "Programa", null, null, 0, 0, 0, 0, null, 0, 0, 0, 0, 0, null, null, new BigDecimal("15.00"), new BigDecimal("20.00"));
+                PROGRAMA, "Programa", null, null, 0, 0, 0, 0, null, 0, 0, 0, 0, 0, null, null, new BigDecimal("15.00"), new BigDecimal("20.00"),
+                0, 0, 0, 0, null, 0);
         when(queryPort.consultarKpis(ACTOR, null, null)).thenReturn(sinDatos);
 
         final KpisCoordinadorDomain result = useCase.execute(new ConsultarKpisCoordinadorDomain(ACTOR, null));

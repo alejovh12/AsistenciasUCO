@@ -85,10 +85,6 @@ public interface ConsultasTransversalesQueryPort {
                                       BigDecimal porcentajeInasistencia, int estudiantesRiesgo, int estudiantesPerdida,
                                       BigDecimal horasDictadas, BigDecimal porcentajeExcusa,
                                       BigDecimal porcentajeSinRegistro, String codigoPermanencia) {
-    /** Forma previa a CIERRE-W3I (sin el nivel de permanencia). */
-    public ConsolidadoGrupoProjection(final UUID idGrupo, final Integer codigoGrupo, final String nombreGrupo, final UUID idPeriodoAcademico, final String nombrePeriodoAcademico, final UUID idPrograma, final String nombrePrograma, final UUID idAsignatura, final String nombreAsignatura, final UUID idDocente, final String nombreDocente, final int estudiantesActivos, final int sesionesEjecutadas, final int asistencias, final int faltasSinJustaCausa, final int excusas, final BigDecimal porcentajeAsistencia, final BigDecimal porcentajeInasistencia, final int estudiantesRiesgo, final int estudiantesPerdida, final BigDecimal horasDictadas, final BigDecimal porcentajeExcusa, final BigDecimal porcentajeSinRegistro) {
-        this(idGrupo, codigoGrupo, nombreGrupo, idPeriodoAcademico, nombrePeriodoAcademico, idPrograma, nombrePrograma, idAsignatura, nombreAsignatura, idDocente, nombreDocente, estudiantesActivos, sesionesEjecutadas, asistencias, faltasSinJustaCausa, excusas, porcentajeAsistencia, porcentajeInasistencia, estudiantesRiesgo, estudiantesPerdida, horasDictadas, porcentajeExcusa, porcentajeSinRegistro, null);
-    }
     }
 
     record FiltroAuditoria(OffsetDateTime desde, OffsetDateTime hasta, String accion, String tipoRecurso,

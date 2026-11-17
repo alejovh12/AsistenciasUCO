@@ -26,7 +26,7 @@ public final class KpisTestData {
 
     public static KpisCoordinadorProjection kpis() {
         return new KpisCoordinadorProjection(PROGRAMA, "Ingenieria de Sistemas", PERIODO, "2026-2", 5, 2, 1, 2, new BigDecimal("60.00"),
-                15, 10, 9, 1, 1, new BigDecimal("90.00"), new BigDecimal("66.67"), new BigDecimal("15.00"), new BigDecimal("20.00"));
+                15, 10, 9, 1, 1, new BigDecimal("90.00"), new BigDecimal("66.67"), new BigDecimal("15.00"), new BigDecimal("20.00"), 0, 0, 0, 0, null, 0);
     }
 
     public static AlertaTempranaProjection alerta() {
