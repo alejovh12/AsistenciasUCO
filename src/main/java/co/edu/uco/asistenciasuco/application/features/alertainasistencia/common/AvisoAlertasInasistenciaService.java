@@ -23,6 +23,11 @@ import java.util.UUID;
  * en el payload.
  */
 public final class AvisoAlertasInasistenciaService implements EvaluadorAlertasInasistencia {
+    private static final String CLAVE_GRUPO = "grupo";
+    private static final String CLAVE_UMBRAL = "umbral";
+    private static final String CLAVE_ESTUDIANTE = "estudiante";
+    private static final String CLAVE_PORCENTAJE = "porcentaje";
+    private static final String CLAVE_LIMITE = "limite";
 
     public static final String EVENTO_ALERTA_INASISTENCIA = "ALERTA_INASISTENCIA";
     public static final String EVENTO_REVISION_CREADA = "REVISION_CANCELACION_CREADA";
@@ -79,12 +84,12 @@ public final class AvisoAlertasInasistenciaService implements EvaluadorAlertasIn
         }
         if (n.estudiante() != null && n.estudiante().idUsuario() != null) {
             final Map<String, Object> payload = new HashMap<>();
-            payload.put("grupo", n.idGrupo().toString());
+            payload.put(CLAVE_GRUPO, n.idGrupo().toString());
             payload.put("alerta", n.idAlerta().toString());
             payload.put("estudianteGrupo", n.idEstudianteGrupo().toString());
             payload.put("tipo", n.codigoTipo());
             payload.put("porcentajeInasistencia", n.porcentaje());
-            payload.put("umbral", n.umbral());
+            payload.put(CLAVE_UMBRAL, n.umbral());
             ejecutarSeguro("evento de alerta " + n.idAlerta(),
                     () -> realtime.publish(RealtimeEvent.paraDestinatarios(EVENTO_ALERTA_INASISTENCIA, payload, Set.of(n.estudiante().idUsuario()))));
         }
@@ -92,7 +97,7 @@ public final class AvisoAlertasInasistenciaService implements EvaluadorAlertasIn
             ejecutarSeguro("aviso de revision " + n.idRevisionCreada(), () -> notificaciones.notificar(avisoDocente(n)));
             if (n.docente().idUsuario() != null) {
                 final Map<String, Object> payload = new HashMap<>();
-                payload.put("grupo", n.idGrupo().toString());
+                payload.put(CLAVE_GRUPO, n.idGrupo().toString());
                 payload.put("revision", n.idRevisionCreada().toString());
                 payload.put("estudianteGrupo", n.idEstudianteGrupo().toString());
                 payload.put("estado", "PENDIENTE_DOCENTE");
@@ -105,16 +110,16 @@ public final class AvisoAlertasInasistenciaService implements EvaluadorAlertasIn
     private static Notificacion avisoEstudiante(final NovedadAlerta n) {
         final String grupo = texto(n.nombreGrupo()) + " de " + texto(n.nombreAsignatura());
         final Map<String, String> datos = new HashMap<>();
-        datos.put("estudiante", texto(n.estudiante().nombreCompleto()));
-        datos.put("grupo", grupo);
-        datos.put("porcentaje", n.porcentaje() == null ? "" : n.porcentaje().toPlainString());
-        datos.put("umbral", n.umbral() == null ? "" : n.umbral().toPlainString());
+        datos.put(CLAVE_ESTUDIANTE, texto(n.estudiante().nombreCompleto()));
+        datos.put(CLAVE_GRUPO, grupo);
+        datos.put(CLAVE_PORCENTAJE, n.porcentaje() == null ? "" : n.porcentaje().toPlainString());
+        datos.put(CLAVE_UMBRAL, n.umbral() == null ? "" : n.umbral().toPlainString());
         final var limite = n.umbralPerdida() != null ? n.umbralPerdida() : n.umbral();
-        datos.put("limite", limite == null ? "" : limite.toPlainString());
+        datos.put(CLAVE_LIMITE, limite == null ? "" : limite.toPlainString());
         datos.put("idAlerta", n.idAlerta().toString());
         final String asunto = "Alerta de inasistencia en " + grupo;
-        final String mensaje = "Estimado(a) " + texto(n.estudiante().nombreCompleto()) + ", acumulas " + datos.get("porcentaje")
-                + "% de inasistencia en " + grupo + " (umbral " + datos.get("umbral") + "%, límite " + datos.get("limite") + "%).";
+        final String mensaje = "Estimado(a) " + texto(n.estudiante().nombreCompleto()) + ", acumulas " + datos.get(CLAVE_PORCENTAJE)
+                + "% de inasistencia en " + grupo + " (umbral " + datos.get(CLAVE_UMBRAL) + "%, límite " + datos.get(CLAVE_LIMITE) + "%).";
         return new Notificacion(n.tipoPlantillaEstudiante(), asunto, mensaje,
                 List.of(new Notificacion.Destinatario(ROL_ESTUDIANTE, n.estudiante().idUsuario(), n.estudiante().nombreCompleto(), n.estudiante().correo())),
                 datos);
@@ -124,14 +129,14 @@ public final class AvisoAlertasInasistenciaService implements EvaluadorAlertasIn
         final String grupo = texto(n.nombreGrupo()) + " de " + texto(n.nombreAsignatura());
         final Map<String, String> datos = new HashMap<>();
         datos.put("docente", texto(n.docente().nombreCompleto()));
-        datos.put("estudiante", texto(n.estudiante() == null ? null : n.estudiante().nombreCompleto()));
-        datos.put("grupo", grupo);
-        datos.put("porcentaje", n.porcentaje() == null ? "" : n.porcentaje().toPlainString());
-        datos.put("limite", n.umbral() == null ? "" : n.umbral().toPlainString());
+        datos.put(CLAVE_ESTUDIANTE, texto(n.estudiante() == null ? null : n.estudiante().nombreCompleto()));
+        datos.put(CLAVE_GRUPO, grupo);
+        datos.put(CLAVE_PORCENTAJE, n.porcentaje() == null ? "" : n.porcentaje().toPlainString());
+        datos.put(CLAVE_LIMITE, n.umbral() == null ? "" : n.umbral().toPlainString());
         datos.put("idRevision", n.idRevisionCreada().toString());
-        final String asunto = "Revisión de cancelación pendiente: " + datos.get("estudiante") + " en " + grupo;
-        final String mensaje = "Hola " + texto(n.docente().nombreCompleto()) + ". El estudiante " + datos.get("estudiante") + " alcanzó el "
-                + datos.get("porcentaje") + "% de inasistencia en " + grupo + ". Decide el caso desde la planilla del grupo.";
+        final String asunto = "Revisión de cancelación pendiente: " + datos.get(CLAVE_ESTUDIANTE) + " en " + grupo;
+        final String mensaje = "Hola " + texto(n.docente().nombreCompleto()) + ". El estudiante " + datos.get(CLAVE_ESTUDIANTE) + " alcanzó el "
+                + datos.get(CLAVE_PORCENTAJE) + "% de inasistencia en " + grupo + ". Decide el caso desde la planilla del grupo.";
         return new Notificacion(Notificacion.TIPO_REVISION_CANCELACION_PENDIENTE, asunto, mensaje,
                 List.of(new Notificacion.Destinatario(ROL_DOCENTE, n.docente().idUsuario(), n.docente().nombreCompleto(), n.docente().correo())),
                 datos);

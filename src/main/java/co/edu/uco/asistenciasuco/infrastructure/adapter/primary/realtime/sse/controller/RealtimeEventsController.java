@@ -43,6 +43,8 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/realtime")
 public class RealtimeEventsController {
+    private static final String CLAVE_AUDIENCIA = "audiencia";
+    private static final String CLAVE_PAYLOAD = "payload";
 
     static final Duration HEARTBEAT_INTERVAL = Duration.ofSeconds(25);
     static final String COMENTARIO_CONECTADO = " conectado"; // Spring antepone ":" sin espacio: el wire queda ": conectado"
@@ -118,8 +120,8 @@ public class RealtimeEventsController {
         final List<ValidationIssue> issues = new ArrayList<>();
         final Map<String, Object> body = cuerpo == null ? Map.of() : cuerpo;
         final String tipo = validarTipo(body.get("tipo"), issues);
-        validarAudiencia(tipo, body.get("audiencia"), issues);
-        final Map<String, Object> payload = validarPayload(body.get("payload"), issues);
+        validarAudiencia(tipo, body.get(CLAVE_AUDIENCIA), issues);
+        final Map<String, Object> payload = validarPayload(body.get(CLAVE_PAYLOAD), issues);
         RequestValidationGuard.validate(ValidationResult.of(issues));
 
         realtimeStreamGateway.emit(tipo, payload);
@@ -150,11 +152,11 @@ public class RealtimeEventsController {
 
     private static void validarAudiencia(final String tipo, final Object valor, final List<ValidationIssue> issues) {
         if (valor == null) {
-            issues.add(new ValidationIssue("audiencia", ValidationErrorType.REQUIRED, "La audiencia es obligatoria."));
+            issues.add(new ValidationIssue(CLAVE_AUDIENCIA, ValidationErrorType.REQUIRED, "La audiencia es obligatoria."));
             return;
         }
         if (!(valor instanceof String texto)) {
-            issues.add(new ValidationIssue("audiencia", ValidationErrorType.INVALID_TYPE, "La audiencia debe ser texto."));
+            issues.add(new ValidationIssue(CLAVE_AUDIENCIA, ValidationErrorType.INVALID_TYPE, "La audiencia debe ser texto."));
             return;
         }
         final RealtimeAudienciaPolicy.Audiencia audiencia = Arrays.stream(RealtimeAudienciaPolicy.Audiencia.values())
@@ -162,26 +164,26 @@ public class RealtimeEventsController {
                 .findFirst()
                 .orElse(null);
         if (audiencia == null) {
-            issues.add(new ValidationIssue("audiencia", ValidationErrorType.INVALID_VALUE, "La audiencia no existe."));
+            issues.add(new ValidationIssue(CLAVE_AUDIENCIA, ValidationErrorType.INVALID_VALUE, "La audiencia no existe."));
         } else if (tipo != null && !POLITICA.entregaA(tipo, audiencia)) {
-            issues.add(new ValidationIssue("audiencia", ValidationErrorType.INVALID_VALUE,
+            issues.add(new ValidationIssue(CLAVE_AUDIENCIA, ValidationErrorType.INVALID_VALUE,
                     "La politica de audiencia del tipo de evento no autoriza esa audiencia."));
         }
     }
 
     private static Map<String, Object> validarPayload(final Object valor, final List<ValidationIssue> issues) {
         if (valor == null) {
-            issues.add(new ValidationIssue("payload", ValidationErrorType.REQUIRED, "El payload es obligatorio."));
+            issues.add(new ValidationIssue(CLAVE_PAYLOAD, ValidationErrorType.REQUIRED, "El payload es obligatorio."));
             return Map.of();
         }
         if (!(valor instanceof Map<?, ?> mapa)) {
-            issues.add(new ValidationIssue("payload", ValidationErrorType.INVALID_TYPE, "El payload debe ser un objeto JSON."));
+            issues.add(new ValidationIssue(CLAVE_PAYLOAD, ValidationErrorType.INVALID_TYPE, "El payload debe ser un objeto JSON."));
             return Map.of();
         }
         final Map<String, Object> payload = new LinkedHashMap<>();
         for (final Map.Entry<?, ?> entry : mapa.entrySet()) {
             if (!(entry.getKey() instanceof String clave)) {
-                issues.add(new ValidationIssue("payload", ValidationErrorType.INVALID_TYPE, "Las claves del payload deben ser texto."));
+                issues.add(new ValidationIssue(CLAVE_PAYLOAD, ValidationErrorType.INVALID_TYPE, "Las claves del payload deben ser texto."));
                 return Map.of();
             }
             payload.put(clave, entry.getValue());

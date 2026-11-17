@@ -22,6 +22,9 @@ import org.springframework.stereotype.Repository;
 /** Repositorio JPA directo consolidado para Decano. */
 @Repository
 public class DecanoJpaRepository implements DecanoQueryPort, DecanoCommandPort {
+    private static final String PARAM_ID_DECANO = "idDecano";
+    private static final String PARAM_ID_CORRELACION = "idCorrelacion";
+    private static final String PARAM_ID_USUARIO_EJECUTOR = "idUsuarioEjecutor";
 
     static final String SQL_CREAR_DECANO = """
             EXEC dbo.usp_crear_decano
@@ -100,7 +103,7 @@ public class DecanoJpaRepository implements DecanoQueryPort, DecanoCommandPort {
         final UUID correlationId = CorrelationIdContext.require();
 
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idDecano", command.idDecano());
+        parametros.put(PARAM_ID_DECANO, command.idDecano());
         parametros.put("numeroIdentificacion", command.numeroIdentificacion());
         parametros.put("primerNombre", command.primerNombre());
         parametros.put("segundoNombre", command.segundoNombre());
@@ -111,14 +114,14 @@ public class DecanoJpaRepository implements DecanoQueryPort, DecanoCommandPort {
         parametros.put("nombreFacultad", command.nombreFacultad());
         parametros.put("codigoFacultad", command.codigoFacultad());
         parametros.put("idInstitucion", command.idInstitucion());
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", command.usuarioEjecutor());
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, command.usuarioEjecutor());
         parametros.put("idTipoIdIdentificacion", command.tipoIdentificacionId());
 
         final ProcedureRow fila = procedureExecutor.executeWithExtras(
                 OP_CREAR_DECANO_CON_FACULTAD, SQL_CREAR_DECANO_CON_FACULTAD, parametros, correlationId, 3);
         return new ResultadoDecanoConFacultad(
-                idObligatorio(fila.extras().get(0), "idDecano"),
+                idObligatorio(fila.extras().get(0), PARAM_ID_DECANO),
                 idObligatorio(fila.extras().get(1), "idFacultad"),
                 NativeRowValues.texto(fila.extras().get(2)));
     }
@@ -141,11 +144,11 @@ public class DecanoJpaRepository implements DecanoQueryPort, DecanoCommandPort {
     public ResultadoCambioEstadoDecano cambiarEstadoDecano(final UUID idDecano, final Boolean estaActivo, final UUID usuarioEjecutor) {
         final UUID correlationId = CorrelationIdContext.require();
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idDecano", idDecano);
+        parametros.put(PARAM_ID_DECANO, idDecano);
         // Un Boolean nulo sin tipo no tiene JdbcType en Hibernate: viaja como texto o NULL (NULL = invertir el estado).
         parametros.put("estaActivo", estaActivo == null ? null : (Boolean.TRUE.equals(estaActivo) ? "1" : "0"));
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", usuarioEjecutor);
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, usuarioEjecutor);
         final ProcedureRow fila = procedureExecutor.executeWithExtras(
                 OP_CAMBIAR_ESTADO_DECANO, SQL_CAMBIAR_ESTADO_DECANO, parametros, correlationId, 3);
         return new ResultadoCambioEstadoDecano(idUsuario(fila.extras().get(0)), flag(fila.extras().get(1)), flag(fila.extras().get(2)));
@@ -203,7 +206,7 @@ public class DecanoJpaRepository implements DecanoQueryPort, DecanoCommandPort {
         final UUID correlationId = CorrelationIdContext.require();
 
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idDecano", command.idDecano());
+        parametros.put(PARAM_ID_DECANO, command.idDecano());
         parametros.put("numeroIdentificacion", command.numeroIdentificacion());
         parametros.put("primerNombre", command.primerNombre());
         parametros.put("segundoNombre", command.segundoNombre());
@@ -213,8 +216,8 @@ public class DecanoJpaRepository implements DecanoQueryPort, DecanoCommandPort {
         parametros.put("idFacultad", command.idFacultad());
         parametros.put("nombreFacultad", command.nombreFacultad());
         parametros.put("password", command.password());
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", command.usuarioEjecutor());
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, command.usuarioEjecutor());
         // CULM-001 D.9-a (F-ADM-011): el tipo de documento elegido por el administrador (NULL = el que decide la BD).
         parametros.put("idTipoIdIdentificacion", command.tipoIdentificacionId());
 

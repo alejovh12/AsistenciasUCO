@@ -36,6 +36,8 @@ import java.util.List;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
+    private static final String RUTA_SESIONES = "/api/v1/sesiones/**";
+    private static final String RUTA_GRUPOS = "/api/v1/grupos/**";
 
     private static final String ROLE_ADMINISTRADOR = "ADMINISTRADOR";
     private static final String ROLE_DECANO = "DECANO";
@@ -168,9 +170,9 @@ public class SecurityConfig {
                 // y la espera minima en la base de datos.
                 .requestMatchers(HttpMethod.POST, "/api/v1/identidad/cuentas/activacion/reenvios")
                     .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_DECANO, ROLE_COORDINADOR)
-                .requestMatchers(HttpMethod.POST, "/api/v1/sesiones/**").hasRole(ROLE_DOCENTE)
-                .requestMatchers(HttpMethod.PUT, "/api/v1/sesiones/**").hasRole(ROLE_DOCENTE)
-                .requestMatchers(HttpMethod.PATCH, "/api/v1/sesiones/**").hasRole(ROLE_DOCENTE)
+                .requestMatchers(HttpMethod.POST, RUTA_SESIONES).hasRole(ROLE_DOCENTE)
+                .requestMatchers(HttpMethod.PUT, RUTA_SESIONES).hasRole(ROLE_DOCENTE)
+                .requestMatchers(HttpMethod.PATCH, RUTA_SESIONES).hasRole(ROLE_DOCENTE)
                 // CULM-001 B.2: tomas de asistencia de la sesion (POST cubierto por /api/v1/sesiones/**) y operaciones sobre
                 // una toma (cierre, lote, consultas, QR). Titularidad en Application y en la DB.
                 .requestMatchers(HttpMethod.GET, "/api/v1/sesiones/*/tomas").hasRole(ROLE_DOCENTE)
@@ -215,7 +217,7 @@ public class SecurityConfig {
                 // CULM-001 B2NM (S3 minimo): programas de un grupo para el selector de matricula; el ambito lo valida el SP.
                 .requestMatchers(HttpMethod.GET, "/api/v1/grupos/*/programas")
                     .hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR, ROLE_DECANO)
-                .requestMatchers(HttpMethod.GET, "/api/v1/grupos/**")
+                .requestMatchers(HttpMethod.GET, RUTA_GRUPOS)
                     .hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
                 // F-COO-004 (CULM-001 A): matricula solo del DOCENTE titular (la DB valida titularidad, SEC_002).
                 // COORDINADOR y ADMINISTRADOR no matriculan (usp_registrar_estudiante_en_grupo exige perfil DOCENTE).
@@ -232,9 +234,9 @@ public class SecurityConfig {
                 // DEC-065 (4): solo el COORDINADOR crea grupos (usp_crear_grupo exige ese perfil); el docente y el administrador
                 // reciben 403. Retira la excepcion F3 del docente.
                 .requestMatchers(HttpMethod.POST, "/api/v1/grupos").hasRole(ROLE_COORDINADOR)
-                .requestMatchers(HttpMethod.POST, "/api/v1/grupos/**").hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
-                .requestMatchers(HttpMethod.PUT, "/api/v1/grupos/**").hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
-                .requestMatchers(HttpMethod.DELETE, "/api/v1/grupos/**").hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
+                .requestMatchers(HttpMethod.POST, RUTA_GRUPOS).hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
+                .requestMatchers(HttpMethod.PUT, RUTA_GRUPOS).hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
+                .requestMatchers(HttpMethod.DELETE, RUTA_GRUPOS).hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
                 // Utilidad de desarrollo para forzar eventos SSE manualmente: no tiene todavía
                 // un rol funcional propio; se restringe a ADMINISTRADOR hasta que Realtime
                 // tenga su propio Port (ver documentación).

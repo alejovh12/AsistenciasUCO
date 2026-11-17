@@ -28,6 +28,10 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class SesionJpaRepository implements SesionRepositoryPort {
+    private static final String PARAM_ID_GRUPO = "idGrupo";
+    private static final String PARAM_ID_CORRELACION = "idCorrelacion";
+    private static final String PARAM_ID_USUARIO_EJECUTOR = "idUsuarioEjecutor";
+    private static final String PARAM_ID_SESION = "idSesion";
 
     static final String SQL_CREAR_SESION = """
             EXEC dbo.usp_crear_sesion
@@ -88,7 +92,7 @@ public class SesionJpaRepository implements SesionRepositoryPort {
             """;
 
     // CULM-001 B.1 (§2.7.6, §3.2.3): v2 = SP congelado + cancelacion por festivo. Sin transaccion de Spring: con
-    // @@TRANCOUNT = 0 el v2 traduce cualquier fallo interno (incluido el 3915) a la tupla SYS_001.
+    // TRANCOUNT = 0 el v2 traduce cualquier fallo interno (incluido el 3915) a la tupla SYS_001.
     static final String SQL_GENERAR_SESIONES_GRUPO = """
             EXEC dbo.usp_generar_sesiones_grupo_v2
                  @idGrupo = :idGrupo,
@@ -131,12 +135,12 @@ public class SesionJpaRepository implements SesionRepositoryPort {
         final boolean utcConfirmado = dto.getContratoTemporal() == ContratoHorarioSesion.UTC_CONFIRMADO_V2;
 
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idGrupo", dto.getGrupo());
+        parametros.put(PARAM_ID_GRUPO, dto.getGrupo());
         parametros.put("nombre", dto.getNombre());
         parametros.put("fechaHoraInicio", temporal(dto.getFechaHoraInicio(), utcConfirmado));
         parametros.put("fechaHoraFin", temporal(dto.getFechaHoraFin(), utcConfirmado));
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", dto.getUsuarioEjecutor());
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, dto.getUsuarioEjecutor());
 
         return procedureExecutor.execute(
                 utcConfirmado ? OP_CREAR_SESION_V2 : OP_CREAR_SESION,
@@ -154,12 +158,12 @@ public class SesionJpaRepository implements SesionRepositoryPort {
         final boolean utcConfirmado = dto.contratoTemporal() == ContratoHorarioSesion.UTC_CONFIRMADO_V2;
 
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idSesion", dto.sesion());
+        parametros.put(PARAM_ID_SESION, dto.sesion());
         parametros.put("nombre", dto.nombre());
         parametros.put("fechaHoraInicio", temporal(dto.fechaHoraInicio(), utcConfirmado));
         parametros.put("fechaHoraFin", temporal(dto.fechaHoraFin(), utcConfirmado));
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", dto.usuarioEjecutor());
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, dto.usuarioEjecutor());
 
         procedureExecutor.execute(
                 utcConfirmado ? OP_ACTUALIZAR_SESION_V2 : OP_ACTUALIZAR_SESION,
@@ -175,10 +179,10 @@ public class SesionJpaRepository implements SesionRepositoryPort {
         final UUID correlationId = CorrelationIdContext.require();
 
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idSesion", dto.getSesion());
+        parametros.put(PARAM_ID_SESION, dto.getSesion());
         parametros.put("idDocente", dto.getDocente());
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", dto.getUsuarioEjecutor());
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, dto.getUsuarioEjecutor());
 
         procedureExecutor.execute(OP_CERRAR_SESION, SQL_CERRAR_SESION, parametros, correlationId);
     }
@@ -189,9 +193,9 @@ public class SesionJpaRepository implements SesionRepositoryPort {
         final UUID correlationId = CorrelationIdContext.require();
 
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idGrupo", dto.grupo());
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", dto.usuarioEjecutor());
+        parametros.put(PARAM_ID_GRUPO, dto.grupo());
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, dto.usuarioEjecutor());
 
         final List<Object> extras = procedureExecutor.executeWithExtras(
                 OP_GENERAR_SESIONES_GRUPO, SQL_GENERAR_SESIONES_GRUPO, parametros, correlationId, 2).extras();
@@ -213,7 +217,7 @@ public class SesionJpaRepository implements SesionRepositoryPort {
                 "consultarSesionesPorGrupo",
                 "No fue posible consultar las sesiones del grupo desde base de datos.",
                 () -> entityManager.createQuery(HQL_POR_GRUPO, Object[].class)
-                        .setParameter("idGrupo", grupoId)
+                        .setParameter(PARAM_ID_GRUPO, grupoId)
                         .getResultList().stream().map(SesionJpaRepository::toSesion).toList()
         );
     }
@@ -223,7 +227,7 @@ public class SesionJpaRepository implements SesionRepositoryPort {
                 "consultarSesion",
                 "No fue posible consultar la sesion desde base de datos.",
                 () -> entityManager.createQuery(HQL_POR_ID, Object[].class)
-                        .setParameter("idSesion", sesionId)
+                        .setParameter(PARAM_ID_SESION, sesionId)
                         .setMaxResults(1)
                         .getResultList().stream()
                         .findFirst()

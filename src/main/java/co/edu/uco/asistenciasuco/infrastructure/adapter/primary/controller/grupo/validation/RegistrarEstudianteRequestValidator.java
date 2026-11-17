@@ -12,6 +12,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.valid
 import java.util.UUID;
 
 public final class RegistrarEstudianteRequestValidator implements Validator<RegistrarEstudianteRequest> {
+    private static final String CLAVE_NUMERO_IDENTIFICACION = "numeroIdentificacion";
 
     private static final int MAX_NAME_LENGTH = 50;
     private static final int MAX_EMAIL_LENGTH = 100;
@@ -76,16 +77,16 @@ public final class RegistrarEstudianteRequestValidator implements Validator<Regi
 
     private static void validateNumeroIdentificacion(final Integer value, final ValidationResultBuilder builder) {
         if (value == null) {
-            builder.add("numeroIdentificacion", ValidationErrorType.REQUIRED, "El numero de identificacion es obligatorio.");
+            builder.add(CLAVE_NUMERO_IDENTIFICACION, ValidationErrorType.REQUIRED, "El numero de identificacion es obligatorio.");
         } else if (!ValidationHelper.isPositive(value)) {
             builder.add(
-                    "numeroIdentificacion",
+                    CLAVE_NUMERO_IDENTIFICACION,
                     ValidationErrorType.OUT_OF_RANGE,
                     HttpValidationMessages.INVALID_IDENTIFICATION_NUMBER
             );
         } else if (!ValidationHelper.hasDigitCount(value, MIN_IDENTIFICATION_DIGITS, MAX_IDENTIFICATION_DIGITS)) {
             builder.add(
-                    "numeroIdentificacion",
+                    CLAVE_NUMERO_IDENTIFICACION,
                     ValidationErrorType.OUT_OF_RANGE,
                     "El numero de identificacion debe contener entre 6 y 10 digitos."
             );

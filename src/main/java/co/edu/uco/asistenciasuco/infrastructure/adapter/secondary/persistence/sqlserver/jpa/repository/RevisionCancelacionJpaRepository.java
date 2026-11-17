@@ -32,6 +32,8 @@ import static co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persist
  */
 @Repository
 public class RevisionCancelacionJpaRepository implements RevisionCancelacionRepositoryPort {
+    private static final String PARAM_ID_USUARIO_EJECUTOR = "idUsuarioEjecutor";
+    private static final String PARAM_ID_CORRELACION = "idCorrelacion";
 
     static final String OP_DECIDIR = "decidirRevisionCancelacion";
     static final String OP_RESOLVER = "resolverRevisionCancelacion";
@@ -101,8 +103,8 @@ public class RevisionCancelacionJpaRepository implements RevisionCancelacionRepo
         return JpaQueryExecutor.execute("consultarDestinatariosRevisionCancelacion",
                 "No fue posible consultar los destinatarios de la revision de cancelacion.", () -> {
                     final Map<String, Object> parametros = new LinkedHashMap<>();
-                    parametros.put("idUsuarioEjecutor", usuarioId);
-                    parametros.put("idCorrelacion", correlationId);
+                    parametros.put(PARAM_ID_USUARIO_EJECUTOR, usuarioId);
+                    parametros.put(PARAM_ID_CORRELACION, correlationId);
                     parametros.put("idRevision", revisionId);
                     final List<?> filas = ejecutar("usp_consultar_destinatarios_revision_cancelacion", parametros);
                     final List<DestinatarioRevision> destinatarios = new ArrayList<>(filas.size());
@@ -118,7 +120,7 @@ public class RevisionCancelacionJpaRepository implements RevisionCancelacionRepo
 
     private PaginaRevisiones consultar(final String operacion, final String procedimiento, final Map<String, Object> parametros) {
         final UUID correlationId = CorrelationIdContext.require();
-        parametros.put("idCorrelacion", correlationId);
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
         return JpaQueryExecutor.execute(operacion, "No fue posible consultar las revisiones de cancelacion.", () -> {
             final List<?> filas = ejecutar(procedimiento, parametros);
             final List<RevisionFila> revisiones = new ArrayList<>(filas.size());
@@ -154,15 +156,15 @@ public class RevisionCancelacionJpaRepository implements RevisionCancelacionRepo
         parametros.put("idRevision", revisionId);
         parametros.put("codigoDecision", decision);
         parametros.put("motivo", motivo);
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", usuarioId);
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, usuarioId);
         return parametros;
     }
 
     private static Map<String, Object> bandeja(final UUID usuarioId, final int pagina, final int tamano, final boolean soloPendientes,
                                                final String estado, final UUID programaId) {
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idUsuarioEjecutor", usuarioId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, usuarioId);
         parametros.put("numeroPagina", pagina);
         parametros.put("tamanoPagina", tamano);
         parametros.put("soloPendientes", soloPendientes ? 1 : 0);

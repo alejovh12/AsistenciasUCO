@@ -27,6 +27,8 @@ import java.util.UUID;
  */
 @Repository
 public class InstitutionalScopeJpaRepository implements InstitutionalScopePort {
+    private static final String PARAM_USUARIO_ID = "usuarioId";
+    private static final String PARAM_GRUPO_ID = "grupoId";
 
     static final String HQL_USUARIO_POR_ID = """
             select u.id from UvUsuarioEntity u where u.id = :usuarioId
@@ -158,7 +160,7 @@ public class InstitutionalScopeJpaRepository implements InstitutionalScopePort {
 
     @Override
     public Optional<UUID> findUsuarioIdById(final UUID usuarioId) {
-        return singleUuid(HQL_USUARIO_POR_ID, "usuarioId", usuarioId, "findUsuarioIdById");
+        return singleUuid(HQL_USUARIO_POR_ID, PARAM_USUARIO_ID, usuarioId, "findUsuarioIdById");
     }
 
     @Override
@@ -173,7 +175,7 @@ public class InstitutionalScopeJpaRepository implements InstitutionalScopePort {
                 "No fue posible validar el estado del usuario institucional.",
                 () -> {
                     final List<Boolean> rows = entityManager.createQuery(HQL_USUARIO_ACTIVO, Boolean.class)
-                            .setParameter("usuarioId", usuarioId)
+                            .setParameter(PARAM_USUARIO_ID, usuarioId)
                             .setMaxResults(1)
                             .getResultList();
                     return !rows.isEmpty() && Boolean.TRUE.equals(rows.getFirst());
@@ -183,49 +185,49 @@ public class InstitutionalScopeJpaRepository implements InstitutionalScopePort {
 
     @Override
     public Optional<UUID> findDocenteIdByUsuario(final UUID usuarioId) {
-        return singleUuid(HQL_DOCENTE_POR_USUARIO, "usuarioId", usuarioId, "findDocenteIdByUsuario");
+        return singleUuid(HQL_DOCENTE_POR_USUARIO, PARAM_USUARIO_ID, usuarioId, "findDocenteIdByUsuario");
     }
 
     @Override
     public Optional<UUID> findEstudianteIdByUsuario(final UUID usuarioId) {
-        return singleUuid(HQL_ESTUDIANTE_POR_USUARIO, "usuarioId", usuarioId, "findEstudianteIdByUsuario");
+        return singleUuid(HQL_ESTUDIANTE_POR_USUARIO, PARAM_USUARIO_ID, usuarioId, "findEstudianteIdByUsuario");
     }
 
     @Override
     public Optional<UUID> findProgramaIdByCoordinadorUsuario(final UUID usuarioId) {
-        return singleUuid(HQL_PROGRAMA_POR_COORDINADOR, "usuarioId", usuarioId, "findProgramaIdByCoordinadorUsuario");
+        return singleUuid(HQL_PROGRAMA_POR_COORDINADOR, PARAM_USUARIO_ID, usuarioId, "findProgramaIdByCoordinadorUsuario");
     }
 
     @Override
     public Optional<UUID> findCoordinadorIdByUsuario(final UUID usuarioId) {
-        return singleUuid(HQL_COORDINADOR_POR_USUARIO, "usuarioId", usuarioId, "findCoordinadorIdByUsuario");
+        return singleUuid(HQL_COORDINADOR_POR_USUARIO, PARAM_USUARIO_ID, usuarioId, "findCoordinadorIdByUsuario");
     }
 
     @Override
     public Optional<UUID> findFacultadIdByDecanoUsuario(final UUID usuarioId) {
-        return singleUuid(HQL_FACULTAD_POR_DECANO, "usuarioId", usuarioId, "findFacultadIdByDecanoUsuario");
+        return singleUuid(HQL_FACULTAD_POR_DECANO, PARAM_USUARIO_ID, usuarioId, "findFacultadIdByDecanoUsuario");
     }
 
     @Override
     public Optional<UUID> findDecanoIdByUsuario(final UUID usuarioId) {
-        return singleUuid(HQL_DECANO_POR_USUARIO, "usuarioId", usuarioId, "findDecanoIdByUsuario");
+        return singleUuid(HQL_DECANO_POR_USUARIO, PARAM_USUARIO_ID, usuarioId, "findDecanoIdByUsuario");
     }
 
     @Override
     public boolean canDocenteAccessGrupo(final UUID usuarioId, final UUID grupoId) {
         return nativeCount(SQL_DOCENTE_ACCEDE_GRUPO, "canDocenteAccessGrupo",
-                new Parameter("grupoId", grupoId), new Parameter("usuarioId", usuarioId)) > 0;
+                new Parameter(PARAM_GRUPO_ID, grupoId), new Parameter(PARAM_USUARIO_ID, usuarioId)) > 0;
     }
 
     @Override
     public boolean canEstudianteAccessGrupo(final UUID usuarioId, final UUID grupoId) {
         return nativeCount(SQL_ESTUDIANTE_ACCEDE_GRUPO, "canEstudianteAccessGrupo",
-                new Parameter("grupoId", grupoId), new Parameter("usuarioId", usuarioId)) > 0;
+                new Parameter(PARAM_GRUPO_ID, grupoId), new Parameter(PARAM_USUARIO_ID, usuarioId)) > 0;
     }
 
     @Override
     public boolean isAdministradorActivo(final UUID usuarioId) {
-        return nativeCount(SQL_ADMINISTRADOR_ACTIVO, "isAdministradorActivo", new Parameter("usuarioId", usuarioId)) > 0;
+        return nativeCount(SQL_ADMINISTRADOR_ACTIVO, "isAdministradorActivo", new Parameter(PARAM_USUARIO_ID, usuarioId)) > 0;
     }
 
     @Override
@@ -236,7 +238,7 @@ public class InstitutionalScopeJpaRepository implements InstitutionalScopePort {
                 () -> {
                     final Set<InstitutionalRole> roles = EnumSet.noneOf(InstitutionalRole.class);
                     for (final Object fila : entityManager.createNativeQuery(SQL_ROLES_ACTIVOS)
-                            .setParameter("usuarioId", usuarioId).getResultList()) {
+                            .setParameter(PARAM_USUARIO_ID, usuarioId).getResultList()) {
                         roles.add(InstitutionalRole.valueOf(String.valueOf(fila)));
                     }
                     return roles;
@@ -253,31 +255,31 @@ public class InstitutionalScopeJpaRepository implements InstitutionalScopePort {
     @Override
     public boolean canCoordinadorAccessGrupo(final UUID usuarioId, final UUID grupoId) {
         return nativeCount(SQL_COORDINADOR_ACCEDE_GRUPO, "canCoordinadorAccessGrupo",
-                new Parameter("grupoId", grupoId), new Parameter("usuarioId", usuarioId)) > 0;
+                new Parameter(PARAM_GRUPO_ID, grupoId), new Parameter(PARAM_USUARIO_ID, usuarioId)) > 0;
     }
 
     @Override
     public boolean canDecanoAccessGrupo(final UUID usuarioId, final UUID grupoId) {
         return nativeCount(SQL_DECANO_ACCEDE_GRUPO, "canDecanoAccessGrupo",
-                new Parameter("grupoId", grupoId), new Parameter("usuarioId", usuarioId)) > 0;
+                new Parameter(PARAM_GRUPO_ID, grupoId), new Parameter(PARAM_USUARIO_ID, usuarioId)) > 0;
     }
 
     @Override
     public boolean canCoordinadorAccessPrograma(final UUID usuarioId, final UUID programaId) {
         return count(HQL_COORDINADOR_DE_PROGRAMA, "canCoordinadorAccessPrograma",
-                new Parameter("usuarioId", usuarioId), new Parameter("programaId", programaId)) > 0;
+                new Parameter(PARAM_USUARIO_ID, usuarioId), new Parameter("programaId", programaId)) > 0;
     }
 
     @Override
     public boolean canDecanoAccessFacultad(final UUID usuarioId, final UUID facultadId) {
         return count(HQL_DECANO_DE_FACULTAD, "canDecanoAccessFacultad",
-                new Parameter("usuarioId", usuarioId), new Parameter("facultadId", facultadId)) > 0;
+                new Parameter(PARAM_USUARIO_ID, usuarioId), new Parameter("facultadId", facultadId)) > 0;
     }
 
     @Override
     public boolean canDecanoAccessPrograma(final UUID usuarioId, final UUID programaId) {
         return count(HQL_DECANO_DE_PROGRAMA, "canDecanoAccessPrograma",
-                new Parameter("usuarioId", usuarioId), new Parameter("programaId", programaId)) > 0;
+                new Parameter(PARAM_USUARIO_ID, usuarioId), new Parameter("programaId", programaId)) > 0;
     }
 
     private Optional<UUID> singleUuid(final String hql, final String parameterName, final Object value,

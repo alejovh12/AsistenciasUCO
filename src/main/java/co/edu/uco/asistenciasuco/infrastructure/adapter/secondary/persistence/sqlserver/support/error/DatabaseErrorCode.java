@@ -4,11 +4,11 @@ import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorDefinition;
 import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorKind;
 
 public enum DatabaseErrorCode implements ErrorDefinition {
-    DATABASE_OPERATION_ERROR("DATABASE_OPERATION_ERROR", "Ocurrio un error interno. Utilice el codigo de seguimiento para soporte.", ErrorKind.TECHNICAL),
+    DATABASE_OPERATION_ERROR("DATABASE_OPERATION_ERROR", Mensajes.ERROR_INTERNO_SOPORTE, ErrorKind.TECHNICAL),
     FEATURE_UNAVAILABLE("FEATURE_UNAVAILABLE", "La operacion solicitada no esta soportada.", ErrorKind.BUSINESS),
-    ERR_DB_CANONICAL_CONTRACT("ERR_DB_CANONICAL_CONTRACT", "Ocurrio un error interno. Utilice el codigo de seguimiento para soporte.", ErrorKind.TECHNICAL),
-    ERR_DB_CATALOG_INCONSISTENT("ERR_DB_CATALOG_INCONSISTENT", "Ocurrio un error interno. Utilice el codigo de seguimiento para soporte.", ErrorKind.TECHNICAL),
-    ERR_DB_UNCLASSIFIED("ERR_DB_UNCLASSIFIED", "Ocurrio un error interno. Utilice el codigo de seguimiento para soporte.", ErrorKind.TECHNICAL);
+    ERR_DB_CANONICAL_CONTRACT("ERR_DB_CANONICAL_CONTRACT", Mensajes.ERROR_INTERNO_SOPORTE, ErrorKind.TECHNICAL),
+    ERR_DB_CATALOG_INCONSISTENT("ERR_DB_CATALOG_INCONSISTENT", Mensajes.ERROR_INTERNO_SOPORTE, ErrorKind.TECHNICAL),
+    ERR_DB_UNCLASSIFIED("ERR_DB_UNCLASSIFIED", Mensajes.ERROR_INTERNO_SOPORTE, ErrorKind.TECHNICAL);
 
     private final String code;
     private final String defaultMessage;
@@ -33,5 +33,9 @@ public enum DatabaseErrorCode implements ErrorDefinition {
     @Override
     public ErrorKind kind() {
         return kind;
+    }
+
+    private static final class Mensajes {
+        static final String ERROR_INTERNO_SOPORTE = "Ocurrio un error interno. Utilice el codigo de seguimiento para soporte.";
     }
 }

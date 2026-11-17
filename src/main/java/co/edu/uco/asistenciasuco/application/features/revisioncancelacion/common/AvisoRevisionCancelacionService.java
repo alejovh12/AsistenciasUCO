@@ -24,6 +24,12 @@ import java.util.UUID;
  * el proponente nunca es resolutor). Mejor esfuerzo: un fallo se registra y no cambia la respuesta ni el estado ya confirmado.
  */
 public final class AvisoRevisionCancelacionService {
+    private static final String CLAVE_GRUPO = "grupo";
+    private static final String CLAVE_REVISION = "revision";
+    private static final String CLAVE_ESTUDIANTE_GRUPO = "estudianteGrupo";
+    private static final String CLAVE_ESTUDIANTE = "estudiante";
+    private static final String SALUDO_HOLA = "Hola ";
+    private static final String CLAVE_RESOLUTOR = "resolutor";
 
     public static final String EVENTO_DECIDIDA = "REVISION_CANCELACION_DECIDIDA";
     public static final String EVENTO_RESUELTA = "REVISION_CANCELACION_RESUELTA";
@@ -58,9 +64,9 @@ public final class AvisoRevisionCancelacionService {
             destinatarios.stream().filter(d -> ROL_DOCENTE.equals(d.rol()) || (propone && ROL_RESOLUTOR.equals(d.rol())))
                     .forEach(d -> audiencia.add(d.idUsuario()));
             final Map<String, Object> payload = new HashMap<>();
-            payload.put("grupo", r.idGrupo().toString());
-            payload.put("revision", r.idRevision().toString());
-            payload.put("estudianteGrupo", r.idEstudianteGrupo().toString());
+            payload.put(CLAVE_GRUPO, r.idGrupo().toString());
+            payload.put(CLAVE_REVISION, r.idRevision().toString());
+            payload.put(CLAVE_ESTUDIANTE_GRUPO, r.idEstudianteGrupo().toString());
             payload.put("decision", r.decision());
             payload.put("estado", r.estadoNuevo());
             if (r.perfilResolutor() != null) {
@@ -92,9 +98,9 @@ public final class AvisoRevisionCancelacionService {
                 }
             }
             final Map<String, Object> payload = new HashMap<>();
-            payload.put("grupo", r.idGrupo().toString());
-            payload.put("revision", r.idRevision().toString());
-            payload.put("estudianteGrupo", r.idEstudianteGrupo().toString());
+            payload.put(CLAVE_GRUPO, r.idGrupo().toString());
+            payload.put(CLAVE_REVISION, r.idRevision().toString());
+            payload.put(CLAVE_ESTUDIANTE_GRUPO, r.idEstudianteGrupo().toString());
             payload.put("decision", r.decision());
             payload.put("estado", r.estadoNuevo());
             payload.put("cambioMatricula", r.cambioMatricula());
@@ -123,9 +129,9 @@ public final class AvisoRevisionCancelacionService {
                 audiencia.add(resolutor.idUsuario());
             }
             final Map<String, Object> payload = new HashMap<>();
-            payload.put("grupo", n.idGrupo().toString());
-            payload.put("revision", n.idRevision().toString());
-            payload.put("estudianteGrupo", n.idEstudianteGrupo().toString());
+            payload.put(CLAVE_GRUPO, n.idGrupo().toString());
+            payload.put(CLAVE_REVISION, n.idRevision().toString());
+            payload.put(CLAVE_ESTUDIANTE_GRUPO, n.idEstudianteGrupo().toString());
             if (n.perfilResolutor() != null) {
                 payload.put("perfilResolutor", n.perfilResolutor());
             }
@@ -135,9 +141,9 @@ public final class AvisoRevisionCancelacionService {
                     final Map<String, String> datos = datosPropuesta(resolutor.nombreCompleto(), n.nombreEstudiante(), n.nombreGrupo(), n.nombreAsignatura(),
                             n.nombreDocente(), n.porcentaje() == null ? "" : n.porcentaje().toPlainString(),
                             n.umbral() == null ? "" : n.umbral().toPlainString(), n.motivo());
-                    enviar(new Notificacion(Notificacion.TIPO_PROPUESTA_CANCELACION, "Propuesta de cancelación por inasistencia: " + datos.get("estudiante")
-                            + " en " + datos.get("grupo"), "Hola " + datos.get("resolutor") + ". Tienes una propuesta de cancelación por inasistencia pendiente de "
-                            + "resolver para " + datos.get("estudiante") + " en " + datos.get("grupo") + ".",
+                    enviar(new Notificacion(Notificacion.TIPO_PROPUESTA_CANCELACION, "Propuesta de cancelación por inasistencia: " + datos.get(CLAVE_ESTUDIANTE)
+                            + " en " + datos.get(CLAVE_GRUPO), SALUDO_HOLA + datos.get(CLAVE_RESOLUTOR) + ". Tienes una propuesta de cancelación por inasistencia pendiente de "
+                            + "resolver para " + datos.get(CLAVE_ESTUDIANTE) + " en " + datos.get(CLAVE_GRUPO) + ".",
                             List.of(new Notificacion.Destinatario(resolutor.codigoPerfil(), resolutor.idUsuario(), resolutor.nombreCompleto(), resolutor.correo())), datos));
                 }
             }
@@ -168,7 +174,7 @@ public final class AvisoRevisionCancelacionService {
                 d.porcentajeActual() == null ? "" : d.porcentajeActual().toPlainString(),
                 d.umbralPerdida() == null ? "" : d.umbralPerdida().toPlainString(), d.motivoDocente());
         return new Notificacion(tipo, "Propuesta de cancelación por inasistencia: " + texto(d.nombreEstudiante()) + " en " + grupo,
-                "Hola " + texto(d.nombreCompleto()) + ". El docente " + texto(d.nombreDocente()) + " propone cancelar por inasistencia a "
+                SALUDO_HOLA + texto(d.nombreCompleto()) + ". El docente " + texto(d.nombreDocente()) + " propone cancelar por inasistencia a "
                         + texto(d.nombreEstudiante()) + " en " + grupo + ". Motivo: " + texto(d.motivoDocente()) + ".",
                 List.of(new Notificacion.Destinatario(d.codigoPerfil(), d.idUsuario(), d.nombreCompleto(), d.correo())), datos);
     }
@@ -176,9 +182,9 @@ public final class AvisoRevisionCancelacionService {
     private static Map<String, String> datosPropuesta(final String resolutor, final String estudiante, final String grupo, final String asignatura,
                                                       final String docente, final String porcentaje, final String limite, final String motivo) {
         final Map<String, String> datos = new HashMap<>();
-        datos.put("resolutor", texto(resolutor));
-        datos.put("estudiante", texto(estudiante));
-        datos.put("grupo", texto(grupo) + " de " + texto(asignatura));
+        datos.put(CLAVE_RESOLUTOR, texto(resolutor));
+        datos.put(CLAVE_ESTUDIANTE, texto(estudiante));
+        datos.put(CLAVE_GRUPO, texto(grupo) + " de " + texto(asignatura));
         datos.put("docente", texto(docente));
         datos.put("porcentaje", porcentaje);
         datos.put("limite", limite);
@@ -191,15 +197,15 @@ public final class AvisoRevisionCancelacionService {
         final Map<String, String> datos = new HashMap<>();
         datos.put("destinatario", texto(d.nombreCompleto()));
         datos.put("docente", texto(d.nombreCompleto()));
-        datos.put("estudiante", texto(d.nombreEstudiante()));
-        datos.put("grupo", grupo);
+        datos.put(CLAVE_ESTUDIANTE, texto(d.nombreEstudiante()));
+        datos.put(CLAVE_GRUPO, grupo);
         datos.put("porcentaje", d.porcentajeActual() == null ? "" : d.porcentajeActual().toPlainString());
         datos.put("motivo", texto(d.motivoResolucion()));
-        datos.put("resolutor", texto(d.nombreResolutor()));
+        datos.put(CLAVE_RESOLUTOR, texto(d.nombreResolutor()));
         final boolean aprobada = Notificacion.TIPO_CANCELACION_APROBADA.equals(tipo);
         final String asunto = aprobada ? "Cancelación por inasistencia en " + grupo
                 : "Propuesta de cancelación rechazada: " + texto(d.nombreEstudiante()) + " en " + grupo;
-        final String mensaje = "Hola " + texto(d.nombreCompleto()) + ". " + (aprobada
+        final String mensaje = SALUDO_HOLA + texto(d.nombreCompleto()) + ". " + (aprobada
                 ? "Se aprobó la cancelación por inasistencia de " + texto(d.nombreEstudiante()) + " en " + grupo + "."
                 : "Se rechazó la propuesta de cancelación de " + texto(d.nombreEstudiante()) + " en " + grupo + "; el estudiante sigue activo.")
                 + " Motivo: " + texto(d.motivoResolucion()) + ".";

@@ -14,7 +14,7 @@ import java.util.Objects;
 public final class ConsultarTendenciaAusentismoUseCaseImpl implements ConsultarTendenciaAusentismoUseCase {
 
     static final String GRANULARIDAD_POR_DEFECTO = "SEMANA";
-    static final Set<String> GRANULARIDADES = Set.of("SEMANA", "MES");
+    static final Set<String> GRANULARIDADES = Set.of(GRANULARIDAD_POR_DEFECTO, "MES");
 
     private final AdminIndicadoresQueryPort queryPort;
 

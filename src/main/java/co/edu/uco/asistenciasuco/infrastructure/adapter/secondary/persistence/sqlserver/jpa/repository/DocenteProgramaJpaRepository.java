@@ -28,6 +28,11 @@ import java.util.UUID;
 /** Adaptador JPA de la adscripcion docente-programa: comando via SP transaccional y consultas via SP paginados. */
 @Repository
 public class DocenteProgramaJpaRepository implements DocenteProgramaCommandPort, DocenteProgramaQueryPort {
+    private static final String PARAM_ID_DOCENTE = "idDocente";
+    private static final String PARAM_ID_TIPO_VINCULACION = "idTipoVinculacion";
+    private static final String PARAM_ID_PROGRAMA = "idPrograma";
+    private static final String PARAM_ID_CORRELACION = "idCorrelacion";
+    private static final String PARAM_ID_USUARIO_EJECUTOR = "idUsuarioEjecutor";
 
     static final String SQL_VINCULAR = """
             EXEC dbo.usp_vincular_docente_programa
@@ -112,7 +117,7 @@ public class DocenteProgramaJpaRepository implements DocenteProgramaCommandPort,
     public void vincular(final VincularDocenteProgramaCommand command) {
         final UUID correlationId = CorrelationIdContext.require();
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idDocente", command.idDocente());
+        parametros.put(PARAM_ID_DOCENTE, command.idDocente());
         parametros.put("idUsuario", command.idUsuario());
         parametros.put("idTipoIdentificacion", command.idTipoIdentificacion());
         parametros.put("numeroIdentificacion", command.numeroIdentificacion());
@@ -122,10 +127,10 @@ public class DocenteProgramaJpaRepository implements DocenteProgramaCommandPort,
         parametros.put("segundoApellido", command.segundoApellido());
         parametros.put("correo", command.correo());
         parametros.put("password", command.passwordHash());
-        parametros.put("idTipoVinculacion", command.idTipoVinculacion());
-        parametros.put("idPrograma", command.idPrograma());
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", command.usuarioEjecutor());
+        parametros.put(PARAM_ID_TIPO_VINCULACION, command.idTipoVinculacion());
+        parametros.put(PARAM_ID_PROGRAMA, command.idPrograma());
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, command.usuarioEjecutor());
         procedureExecutor.execute(OP_VINCULAR, SQL_VINCULAR, parametros, correlationId);
     }
 
@@ -133,15 +138,15 @@ public class DocenteProgramaJpaRepository implements DocenteProgramaCommandPort,
     public void actualizar(final ActualizarDocenteProgramaCommand command) {
         final UUID correlationId = CorrelationIdContext.require();
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idDocente", command.idDocente());
-        parametros.put("idPrograma", command.idPrograma());
-        parametros.put("idTipoVinculacion", command.idTipoVinculacion());
+        parametros.put(PARAM_ID_DOCENTE, command.idDocente());
+        parametros.put(PARAM_ID_PROGRAMA, command.idPrograma());
+        parametros.put(PARAM_ID_TIPO_VINCULACION, command.idTipoVinculacion());
         parametros.put("primerNombre", command.primerNombre());
         parametros.put("segundoNombre", command.segundoNombre());
         parametros.put("primerApellido", command.primerApellido());
         parametros.put("segundoApellido", command.segundoApellido());
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", command.usuarioEjecutor());
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, command.usuarioEjecutor());
         CorreccionDocumentoParametros.agregar(parametros, command.documento());
         procedureExecutor.execute(OP_ACTUALIZAR, SQL_ACTUALIZAR, parametros, correlationId);
     }
@@ -150,11 +155,11 @@ public class DocenteProgramaJpaRepository implements DocenteProgramaCommandPort,
     public void cambiarEstado(final CambiarEstadoDocenteProgramaCommand command) {
         final UUID correlationId = CorrelationIdContext.require();
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idDocente", command.idDocente());
-        parametros.put("idPrograma", command.idPrograma());
+        parametros.put(PARAM_ID_DOCENTE, command.idDocente());
+        parametros.put(PARAM_ID_PROGRAMA, command.idPrograma());
         parametros.put("estaActivo", command.estaActivo());
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", command.usuarioEjecutor());
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, command.usuarioEjecutor());
         procedureExecutor.execute(OP_CAMBIAR_ESTADO, SQL_CAMBIAR_ESTADO, parametros, correlationId);
     }
 
@@ -167,15 +172,15 @@ public class DocenteProgramaJpaRepository implements DocenteProgramaCommandPort,
                 () -> {
                     final List<SpDocenteProgramaPaginadoEntity> filas = entityManager
                             .createNativeQuery(SQL_CONSULTAR, SpDocenteProgramaPaginadoEntity.class)
-                            .setParameter("idUsuarioEjecutor", usuarioEjecutor)
-                            .setParameter("idCorrelacion", correlationId)
-                            .setParameter("idPrograma", filtro.idPrograma())
+                            .setParameter(PARAM_ID_USUARIO_EJECUTOR, usuarioEjecutor)
+                            .setParameter(PARAM_ID_CORRELACION, correlationId)
+                            .setParameter(PARAM_ID_PROGRAMA, filtro.idPrograma())
                             .setParameter("numeroPagina", filtro.pagina())
                             .setParameter("tamanoPagina", filtro.tamano())
                             .setParameter("busqueda", filtro.busqueda())
                             .setParameter("estaActivo", filtro.estaActivo())
-                            .setParameter("idTipoVinculacion", filtro.idTipoVinculacion())
-                            .setParameter("idDocente", filtro.idDocente())
+                            .setParameter(PARAM_ID_TIPO_VINCULACION, filtro.idTipoVinculacion())
+                            .setParameter(PARAM_ID_DOCENTE, filtro.idDocente())
                             .setParameter("idUsuario", filtro.idUsuario())
                             .getResultList();
                     final long total = filas.isEmpty() ? 0 : filas.get(0).totalRegistros();
@@ -194,9 +199,9 @@ public class DocenteProgramaJpaRepository implements DocenteProgramaCommandPort,
                 () -> {
                     final List<SpDocenteCandidatoEntity> filas = entityManager
                             .createNativeQuery(SQL_CANDIDATOS, SpDocenteCandidatoEntity.class)
-                            .setParameter("idUsuarioEjecutor", usuarioEjecutor)
-                            .setParameter("idCorrelacion", correlationId)
-                            .setParameter("idPrograma", idPrograma)
+                            .setParameter(PARAM_ID_USUARIO_EJECUTOR, usuarioEjecutor)
+                            .setParameter(PARAM_ID_CORRELACION, correlationId)
+                            .setParameter(PARAM_ID_PROGRAMA, idPrograma)
                             .setParameter("busqueda", busqueda)
                             .getResultList();
                     return filas.stream().map(f -> new DocenteCandidatoProjection(f.idDocente(), f.idUsuario(),

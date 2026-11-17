@@ -37,6 +37,9 @@ import static co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persist
  */
 @Repository
 public class AlertaInasistenciaJpaRepository implements AlertaInasistenciaRepositoryPort {
+    private static final String PARAM_ID_GRUPO = "idGrupo";
+    private static final String PARAM_ID_CORRELACION = "idCorrelacion";
+    private static final String PARAM_ID_ESTUDIANTE_GRUPO = "idEstudianteGrupo";
 
     static final String OP_EVALUAR = "evaluarAlertasInasistenciaGrupo";
     static final String OP_RESOLUTORES = "actualizarResolutoresRevisiones";
@@ -54,9 +57,9 @@ public class AlertaInasistenciaJpaRepository implements AlertaInasistenciaReposi
     public ResultadoEvaluacion evaluar(final UUID grupoId, final UUID estudianteGrupoId) {
         final UUID correlationId = CorrelationIdContext.require();
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idGrupo", grupoId);
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idEstudianteGrupo", estudianteGrupoId);
+        parametros.put(PARAM_ID_GRUPO, grupoId);
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_ESTUDIANTE_GRUPO, estudianteGrupoId);
         final ProcedureRow fila = procedureExecutor.executeWithExtras(OP_EVALUAR,
                 CancelacionRowSupport.exec("usp_evaluar_alertas_inasistencia_grupo", parametros), CancelacionRowSupport.enlazables(parametros), correlationId, 5);
         final List<Object> c = fila.extras();
@@ -69,7 +72,7 @@ public class AlertaInasistenciaJpaRepository implements AlertaInasistenciaReposi
         return JpaQueryExecutor.execute("consultarGruposPendientesEvaluacionAlertas",
                 "No fue posible consultar los grupos pendientes de evaluacion de alertas.", () -> {
                     final Map<String, Object> parametros = new LinkedHashMap<>();
-                    parametros.put("idCorrelacion", correlationId);
+                    parametros.put(PARAM_ID_CORRELACION, correlationId);
                     parametros.put("tamanoLote", lote);
                     parametros.put("idPeriodoAcademico", periodoId);
                     final List<?> filas;
@@ -93,12 +96,12 @@ public class AlertaInasistenciaJpaRepository implements AlertaInasistenciaReposi
         return JpaQueryExecutor.execute("consultarAlertasEstudiante", "No fue posible consultar las alertas del estudiante.", () -> {
             final Map<String, Object> parametros = new LinkedHashMap<>();
             parametros.put("idUsuarioEjecutor", usuarioId);
-            parametros.put("idCorrelacion", correlationId);
+            parametros.put(PARAM_ID_CORRELACION, correlationId);
             parametros.put("numeroPagina", pagina);
             parametros.put("tamanoPagina", tamano);
             parametros.put("soloNoLeidas", soloNoLeidas ? 1 : 0);
             parametros.put("soloVigentes", soloVigentes ? 1 : 0);
-            parametros.put("idGrupo", grupoId);
+            parametros.put(PARAM_ID_GRUPO, grupoId);
             final List<?> filas;
             try {
                 filas = CancelacionRowSupport.ejecutar(entityManager, "usp_consultar_alertas_estudiante", parametros);
@@ -122,7 +125,7 @@ public class AlertaInasistenciaJpaRepository implements AlertaInasistenciaReposi
     public ResultadoResolutores actualizarResolutores(final Integer lote) {
         final UUID correlationId = CorrelationIdContext.require();
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idCorrelacion", correlationId);
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
         parametros.put("tamanoLote", lote);
         final ProcedureRow fila = procedureExecutor.executeWithExtras(OP_RESOLUTORES,
                 CancelacionRowSupport.exec("usp_actualizar_resolutores_revisiones_cancelacion", parametros), CancelacionRowSupport.enlazables(parametros), correlationId, 4);
@@ -137,8 +140,8 @@ public class AlertaInasistenciaJpaRepository implements AlertaInasistenciaReposi
         for (final JsonNode n : leerArreglo(json)) {
             resultado.add(new NovedadAlerta(uuidJson(n.path("idAlerta")), n.path("codigoTipo").asString(""), n.path("nivel").asInt(0),
                     n.path("esPrincipal").asBoolean(false), decimalJson(n.path("porcentajeInasistencia")), decimalJson(n.path("umbral")),
-                    decimalJson(n.path("umbralPerdida")), decimalJson(n.path("horasFalta")), decimalJson(n.path("horasDictadas")), uuidJson(n.path("idEstudianteGrupo")),
-                    uuidJson(n.path("idGrupo")), n.path("codigoGrupo").asInt(0), n.path("nombreGrupo").asString(""),
+                    decimalJson(n.path("umbralPerdida")), decimalJson(n.path("horasFalta")), decimalJson(n.path("horasDictadas")), uuidJson(n.path(PARAM_ID_ESTUDIANTE_GRUPO)),
+                    uuidJson(n.path(PARAM_ID_GRUPO)), n.path("codigoGrupo").asInt(0), n.path("nombreGrupo").asString(""),
                     n.path("nombreAsignatura").asString(""), n.path("tipoPlantillaEstudiante").asString(""),
                     persona(n.path("estudiante")), persona(n.path("docente")), uuidJson(n.path("idRevisionCreada"))));
         }
@@ -153,8 +156,8 @@ public class AlertaInasistenciaJpaRepository implements AlertaInasistenciaReposi
                 resolutores.add(new Resolutor(uuidJson(r.path("idUsuario")), r.path("nombreCompleto").asString(""), r.path("correo").asString(null),
                         r.path("codigoPerfil").asString(""), r.path("esEscalamiento").asBoolean(false)));
             }
-            resultado.add(new NovedadResolutores(uuidJson(n.path("idRevision")), uuidJson(n.path("idGrupo")), n.path("nombreGrupo").asString(""),
-                    n.path("nombreAsignatura").asString(""), uuidJson(n.path("idEstudianteGrupo")), n.path("perfilResolutor").asString(null),
+            resultado.add(new NovedadResolutores(uuidJson(n.path("idRevision")), uuidJson(n.path(PARAM_ID_GRUPO)), n.path("nombreGrupo").asString(""),
+                    n.path("nombreAsignatura").asString(""), uuidJson(n.path(PARAM_ID_ESTUDIANTE_GRUPO)), n.path("perfilResolutor").asString(null),
                     n.path("evento").asString(""), decimalJson(n.path("porcentajeInasistencia")), decimalJson(n.path("umbral")),
                     n.path("motivo").asString(""), n.path("nombreCompletoEstudiante").asString(""), n.path("nombreCompletoDocente").asString(""),
                     uuidJson(n.path("idUsuarioDocente")), uuidJson(n.path("idUsuarioEstudiante")), List.copyOf(resolutores)));

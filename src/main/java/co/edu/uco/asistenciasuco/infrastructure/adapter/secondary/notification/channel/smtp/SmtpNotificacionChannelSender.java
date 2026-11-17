@@ -341,7 +341,7 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
 
     private void registrarDuracion(final String outcome, final long nanos) {
         Timer.builder("notification.email.send.duration")
-                .tag("outcome", outcome)
+                .tag(TAG_OUTCOME, outcome)
                 .register(meterRegistry)
                 .record(nanos, TimeUnit.NANOSECONDS);
     }

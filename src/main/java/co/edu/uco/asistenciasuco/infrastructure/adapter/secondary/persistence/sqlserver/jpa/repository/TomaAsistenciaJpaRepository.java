@@ -37,6 +37,7 @@ import java.util.UUID;
  */
 @Repository
 public class TomaAsistenciaJpaRepository implements TomaAsistenciaRepositoryPort {
+    private static final String PARAM_NOMBRE_COMPLETO_ESTUDIANTE = "nombreCompletoEstudiante";
 
     private static final ObjectMapper JSON = JsonMapper.builder().build();
     private static final String P_CORRELACION = "idCorrelacion";
@@ -201,7 +202,7 @@ public class TomaAsistenciaJpaRepository implements TomaAsistenciaRepositoryPort
             final List<ResumenTomasSesionFila> resumen = new ArrayList<>(filas.size());
             for (final Tuple f : filas) {
                 resumen.add(new ResumenTomasSesionFila(NativeRowValues.uuid(f.get(C_ESTUDIANTE)),
-                        NativeRowValues.texto(f.get("nombreCompletoEstudiante")), NativeRowValues.entero(f.get("minutosSesion")),
+                        NativeRowValues.texto(f.get(PARAM_NOMBRE_COMPLETO_ESTUDIANTE)), NativeRowValues.entero(f.get("minutosSesion")),
                         NativeRowValues.entero(f.get("minutosAsistidos")), NativeRowValues.entero(f.get("minutosFalta")),
                         NativeRowValues.entero(f.get("minutosExcusa")), NativeRowValues.entero(f.get("minutosSinRegistro")),
                         NativeRowValues.texto(f.get("codigoEstadoSesionEstudiante")), NativeRowValues.entero(f.get("tomasAusentes"))));
@@ -219,7 +220,7 @@ public class TomaAsistenciaJpaRepository implements TomaAsistenciaRepositoryPort
             final List<AsistenciaTomaFila> elementos = new ArrayList<>(filas.size());
             for (final Tuple f : filas) {
                 elementos.add(new AsistenciaTomaFila(NativeRowValues.uuid(f.get(C_ESTUDIANTE)),
-                        NativeRowValues.texto(f.get("nombreCompletoEstudiante")), NativeRowValues.texto(f.get("codigoRazonCausa")),
+                        NativeRowValues.texto(f.get(PARAM_NOMBRE_COMPLETO_ESTUDIANTE)), NativeRowValues.texto(f.get("codigoRazonCausa")),
                         NativeRowValues.bit(f.get("registradoPorEstudiante")), NativeRowValues.instanteUtc(f.get("fechaRegistroUtc"))));
             }
             return new PaginaResultado<>(elementos, numeroPagina, tamanoPagina, total(filas));
@@ -235,7 +236,7 @@ public class TomaAsistenciaJpaRepository implements TomaAsistenciaRepositoryPort
             final List<FaltanteTomaFila> elementos = new ArrayList<>(filas.size());
             for (final Tuple f : filas) {
                 elementos.add(new FaltanteTomaFila(NativeRowValues.uuid(f.get(C_ESTUDIANTE)),
-                        NativeRowValues.texto(f.get("nombreCompletoEstudiante")), NativeRowValues.bit(f.get("tieneRegistro")),
+                        NativeRowValues.texto(f.get(PARAM_NOMBRE_COMPLETO_ESTUDIANTE)), NativeRowValues.bit(f.get("tieneRegistro")),
                         NativeRowValues.texto(f.get("codigoRazonCausa")), NativeRowValues.bit(f.get("fueMarcadoAlCerrar"))));
             }
             return new PaginaResultado<>(elementos, numeroPagina, tamanoPagina, total(filas));

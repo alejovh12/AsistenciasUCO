@@ -25,6 +25,11 @@ import java.util.UUID;
  */
 @Repository
 public class SesionManualJpaRepository implements SesionManualRepositoryPort {
+    private static final String PARAM_ID_SESION = "idSesion";
+    private static final String PARAM_OBSERVACION = "observacion";
+    private static final String PARAM_ID_CORRELACION = "idCorrelacion";
+    private static final String PARAM_ID_USUARIO_EJECUTOR = "idUsuarioEjecutor";
+    private static final String PARAM_SESION = "sesion";
 
     static final String OP_CANCELAR_COORDINADOR = "cancelarSesionCoordinador";
     static final String SQL_CANCELAR_COORDINADOR = """
@@ -71,11 +76,11 @@ public class SesionManualJpaRepository implements SesionManualRepositoryPort {
                                                   final UUID coordinadorUsuarioId) {
         final UUID correlationId = CorrelationIdContext.require();
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idSesion", sesionId);
+        parametros.put(PARAM_ID_SESION, sesionId);
         parametros.put("codigoMotivo", codigoMotivo);
-        parametros.put("observacion", observacion);
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", coordinadorUsuarioId);
+        parametros.put(PARAM_OBSERVACION, observacion);
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, coordinadorUsuarioId);
         final ProcedureRow fila = procedureExecutor.executeWithExtras(
                 OP_CANCELAR_COORDINADOR, SQL_CANCELAR_COORDINADOR, parametros, correlationId, 4);
         final List<Object> c = fila.extras();
@@ -87,10 +92,10 @@ public class SesionManualJpaRepository implements SesionManualRepositoryPort {
     public SolicitudAprobada aprobarSolicitud(final UUID sesionId, final String observacion, final UUID coordinadorUsuarioId) {
         final UUID correlationId = CorrelationIdContext.require();
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idSesion", sesionId);
-        parametros.put("observacion", observacion);
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", coordinadorUsuarioId);
+        parametros.put(PARAM_ID_SESION, sesionId);
+        parametros.put(PARAM_OBSERVACION, observacion);
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, coordinadorUsuarioId);
         final ProcedureRow fila = procedureExecutor.executeWithExtras(
                 OP_APROBAR_SOLICITUD, SQL_APROBAR_SOLICITUD, parametros, correlationId, 4);
         final List<Object> c = fila.extras();
@@ -104,11 +109,11 @@ public class SesionManualJpaRepository implements SesionManualRepositoryPort {
                                                 final UUID coordinadorUsuarioId) {
         final UUID correlationId = CorrelationIdContext.require();
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idSesion", sesionId);
+        parametros.put(PARAM_ID_SESION, sesionId);
         parametros.put("codigoMotivo", codigoMotivo);
-        parametros.put("observacion", observacion);
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", coordinadorUsuarioId);
+        parametros.put(PARAM_OBSERVACION, observacion);
+        parametros.put(PARAM_ID_CORRELACION, correlationId);
+        parametros.put(PARAM_ID_USUARIO_EJECUTOR, coordinadorUsuarioId);
         final ProcedureRow fila = procedureExecutor.executeWithExtras(
                 OP_RECHAZAR_SOLICITUD, SQL_RECHAZAR_SOLICITUD, parametros, correlationId, 4);
         final List<Object> c = fila.extras();
@@ -132,12 +137,12 @@ public class SesionManualJpaRepository implements SesionManualRepositoryPort {
                     parametros.put("idGrupo", grupoId);
                     parametros.put("numeroPagina", pagina);
                     parametros.put("tamanoPagina", tamano);
-                    parametros.put("idCorrelacion", correlationId);
+                    parametros.put(PARAM_ID_CORRELACION, correlationId);
                     final List<?> filas;
                     try {
                         filas = CancelacionRowSupport.ejecutar(entityManager, PROCEDIMIENTO_SOLICITUDES, parametros);
                     } catch (final PersistenceException exception) {
-                        throw DbCodeTranslator.traducir(exception, "sesion");
+                        throw DbCodeTranslator.traducir(exception, PARAM_SESION);
                     }
                     final List<SolicitudSesion> solicitudes = new ArrayList<>(filas.size());
                     long total = 0;
@@ -174,12 +179,12 @@ public class SesionManualJpaRepository implements SesionManualRepositoryPort {
             final List<?> filas;
             try {
                 filas = entityManager.createNativeQuery(sql)
-                        .setParameter("idSesion", sesionId)
-                        .setParameter("idCorrelacion", correlationId)
-                        .setParameter("idUsuarioEjecutor", usuarioEjecutor)
+                        .setParameter(PARAM_ID_SESION, sesionId)
+                        .setParameter(PARAM_ID_CORRELACION, correlationId)
+                        .setParameter(PARAM_ID_USUARIO_EJECUTOR, usuarioEjecutor)
                         .getResultList();
             } catch (final PersistenceException exception) {
-                throw DbCodeTranslator.traducir(exception, "sesion");
+                throw DbCodeTranslator.traducir(exception, PARAM_SESION);
             }
             final List<DestinatarioSesionManual> destinatarios = new ArrayList<>(filas.size());
             for (final Object fila : filas) {
@@ -202,11 +207,11 @@ public class SesionManualJpaRepository implements SesionManualRepositoryPort {
                     final List<?> filas;
                     try {
                         filas = entityManager.createNativeQuery(SQL_MOTIVOS)
-                                .setParameter("idUsuarioEjecutor", coordinadorUsuarioId)
-                                .setParameter("idCorrelacion", correlationId)
+                                .setParameter(PARAM_ID_USUARIO_EJECUTOR, coordinadorUsuarioId)
+                                .setParameter(PARAM_ID_CORRELACION, correlationId)
                                 .getResultList();
                     } catch (final PersistenceException exception) {
-                        throw DbCodeTranslator.traducir(exception, "sesion");
+                        throw DbCodeTranslator.traducir(exception, PARAM_SESION);
                     }
                     final List<MotivoCancelacion> motivos = new ArrayList<>(filas.size());
                     for (final Object fila : filas) {

@@ -11,6 +11,8 @@ import java.util.regex.Pattern;
 
 /** HU091: exactamente un modo; el modo nuevo exige datos completos y contrasena conforme a la politica (sin valor por defecto). */
 public final class VincularDocenteProgramaRequestValidator implements Validator<VincularDocenteProgramaRequest> {
+    private static final String CLAVE_NUMERO_IDENTIFICACION = "numeroIdentificacion";
+    private static final String CLAVE_CORREO = "correo";
 
     private static final int MAX_NOMBRE = 50;
     private static final int MAX_CORREO = 100;
@@ -51,14 +53,14 @@ public final class VincularDocenteProgramaRequestValidator implements Validator<
         validarUuid(builder, "idTipoIdentificacion", request.getIdTipoIdentificacion(), true, "El tipo de identificacion es obligatorio.");
         final String documento = request.getNumeroIdentificacion() == null ? null : request.getNumeroIdentificacion().trim();
         if (!hayTexto(documento)) {
-            builder.add("numeroIdentificacion", ValidationErrorType.REQUIRED, "El numero de identificacion es obligatorio.");
+            builder.add(CLAVE_NUMERO_IDENTIFICACION, ValidationErrorType.REQUIRED, "El numero de identificacion es obligatorio.");
         } else if (!DIGITOS.matcher(documento).matches()) {
-            builder.add("numeroIdentificacion", ValidationErrorType.INVALID_FORMAT, "El numero de identificacion debe ser numerico.");
+            builder.add(CLAVE_NUMERO_IDENTIFICACION, ValidationErrorType.INVALID_FORMAT, "El numero de identificacion debe ser numerico.");
         } else {
             try {
                 Integer.parseInt(documento);
             } catch (final NumberFormatException _) {
-                builder.add("numeroIdentificacion", ValidationErrorType.OUT_OF_RANGE, "El numero de identificacion excede el rango permitido.");
+                builder.add(CLAVE_NUMERO_IDENTIFICACION, ValidationErrorType.OUT_OF_RANGE, "El numero de identificacion excede el rango permitido.");
             }
         }
         requeridoConLongitud(builder, "primerNombre", request.getPrimerNombre(), MAX_NOMBRE, true);
@@ -68,11 +70,11 @@ public final class VincularDocenteProgramaRequestValidator implements Validator<
 
         final String correo = request.getCorreo() == null ? null : request.getCorreo().trim();
         if (!hayTexto(correo)) {
-            builder.add("correo", ValidationErrorType.REQUIRED, "El correo es obligatorio.");
+            builder.add(CLAVE_CORREO, ValidationErrorType.REQUIRED, "El correo es obligatorio.");
         } else if (correo.length() > MAX_CORREO) {
-            builder.add("correo", ValidationErrorType.INVALID_LENGTH, "El correo excede la longitud permitida.");
+            builder.add(CLAVE_CORREO, ValidationErrorType.INVALID_LENGTH, "El correo excede la longitud permitida.");
         } else if (!CORREO.matcher(correo).matches() || !dominioValido(correo)) {
-            builder.add("correo", ValidationErrorType.INVALID_FORMAT, "El correo no tiene un formato valido.");
+            builder.add(CLAVE_CORREO, ValidationErrorType.INVALID_FORMAT, "El correo no tiene un formato valido.");
         }
 
     }

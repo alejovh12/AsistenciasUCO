@@ -21,6 +21,8 @@ import java.util.UUID;
  */
 @Repository
 public class NotificacionSalienteJpaRepository implements NotificacionOutboxRepository {
+    private static final String PARAM_ID_CORRELACION = "idCorrelacion";
+    private static final String PARAM_INSTANCIA = "instancia";
 
     private static final String INSTANCIA_OBLIGATORIA = "La instancia es obligatoria.";
 
@@ -46,7 +48,7 @@ public class NotificacionSalienteJpaRepository implements NotificacionOutboxRepo
         params.put("mensaje", registro.mensaje());
         params.put("destinatariosJson", registro.destinatariosJson());
         params.put("datosJson", registro.datosJson());
-        params.put("idCorrelacion", corrId);
+        params.put(PARAM_ID_CORRELACION, corrId);
         params.put("traceId", registro.traceId());
         params.put("spanId", registro.spanId());
 
@@ -71,8 +73,8 @@ public class NotificacionSalienteJpaRepository implements NotificacionOutboxRepo
         final Query query = entityManager.createNativeQuery(sql)
                 .setParameter("lote", lote)
                 .setParameter("leaseSegundos", (int) lease.toSeconds())
-                .setParameter("instancia", instancia)
-                .setParameter("idCorrelacion", corrId);
+                .setParameter(PARAM_INSTANCIA, instancia)
+                .setParameter(PARAM_ID_CORRELACION, corrId);
 
         final List<Object> filas = query.getResultList();
         final List<NotificacionReservada> resultado = new ArrayList<>();
@@ -117,8 +119,8 @@ public class NotificacionSalienteJpaRepository implements NotificacionOutboxRepo
 
         final Map<String, Object> params = new HashMap<>();
         params.put("id", id);
-        params.put("instancia", instancia);
-        params.put("idCorrelacion", corrId);
+        params.put(PARAM_INSTANCIA, instancia);
+        params.put(PARAM_ID_CORRELACION, corrId);
 
         final String sql = "EXEC dbo.usp_marcar_notificacion_entregada "
                 + "@id = :id, @instancia = :instancia, @idCorrelacion = :idCorrelacion";
@@ -143,14 +145,14 @@ public class NotificacionSalienteJpaRepository implements NotificacionOutboxRepo
 
         final Map<String, Object> params = new HashMap<>();
         params.put("id", id);
-        params.put("instancia", instancia);
+        params.put(PARAM_INSTANCIA, instancia);
         params.put("codigoError", codigoError != null ? codigoError : "ERR_DESCONOCIDO");
         params.put("detalleError", detalle);
         params.put("reintentable", reintentable);
         params.put("maxIntentos", maxIntentos);
         params.put("backoffBaseSegundos", base != null ? (int) base.toSeconds() : 30);
         params.put("backoffMaxSegundos", max != null ? (int) max.toSeconds() : 900);
-        params.put("idCorrelacion", corrId);
+        params.put(PARAM_ID_CORRELACION, corrId);
 
         final String sql = "EXEC dbo.usp_registrar_fallo_notificacion "
                 + "@id = :id, @instancia = :instancia, @codigoError = :codigoError, "
@@ -168,7 +170,7 @@ public class NotificacionSalienteJpaRepository implements NotificacionOutboxRepo
         final Map<String, Object> params = new HashMap<>();
         params.put("retencionDias", retencionDias);
         params.put("lote", lote);
-        params.put("idCorrelacion", corrId);
+        params.put(PARAM_ID_CORRELACION, corrId);
 
         final String sql = "EXEC dbo.usp_depurar_notificaciones_salientes "
                 + "@retencionDias = :retencionDias, @lote = :lote, @idCorrelacion = :idCorrelacion";

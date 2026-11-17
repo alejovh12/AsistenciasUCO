@@ -51,6 +51,14 @@ import java.util.UUID;
  * {@code app.adapters.identity.provider}. No requiere cambios en Application ni Domain.</p>
  */
 public final class KeycloakIdentityProviderAdapter implements IdentityProviderPort {
+    private static final String OPERACION_IDENTITY_CREATE_ACCOUNT = "IDENTITY_CREATE_ACCOUNT";
+    private static final String CLAVE_OPERATION = "operation";
+    private static final String CLAVE_STAGE = "stage";
+    private static final String CLAVE_REALM = "realm";
+    private static final String CLAVE_EXTERNAL_USER_ID = "externalUserId";
+    private static final String RUTA_USERS = "/users/";
+    private static final String RUTA_ROLE_MAPPINGS_CLIENTS = "/role-mappings/clients/";
+    private static final String HEADER_CONTENT_TYPE = "Content-Type";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KeycloakIdentityProviderAdapter.class);
     private static final Duration TIMEOUT = Duration.ofSeconds(10);
@@ -101,9 +109,9 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
         final String institutionalRoleName = requireValidInstitutionalRoleName(dto.rolInstitucional());
 
         LOGGER.atInfo()
-                .addKeyValue("operation", "IDENTITY_CREATE_ACCOUNT")
-                .addKeyValue("stage", "START")
-                .addKeyValue("realm", realm)
+                .addKeyValue(CLAVE_OPERATION, OPERACION_IDENTITY_CREATE_ACCOUNT)
+                .addKeyValue(CLAVE_STAGE, "START")
+                .addKeyValue(CLAVE_REALM, realm)
                 .log("Iniciando provisioning de identidad institucional en Keycloak.");
 
         final String adminToken = obtenerAdminToken();
@@ -125,10 +133,10 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
         }
 
         LOGGER.atInfo()
-                .addKeyValue("operation", "IDENTITY_CREATE_ACCOUNT")
-                .addKeyValue("stage", "COMPLETED")
-                .addKeyValue("realm", realm)
-                .addKeyValue("externalUserId", resolution.externalId())
+                .addKeyValue(CLAVE_OPERATION, OPERACION_IDENTITY_CREATE_ACCOUNT)
+                .addKeyValue(CLAVE_STAGE, "COMPLETED")
+                .addKeyValue(CLAVE_REALM, realm)
+                .addKeyValue(CLAVE_EXTERNAL_USER_ID, resolution.externalId())
                 .addKeyValue("newlyCreated", resolution.newlyCreated())
                 .addKeyValue("institutionalRole", institutionalRoleName)
                 .log("Identidad institucional resuelta en Keycloak.");
@@ -147,9 +155,9 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
             return;
         }
         LOGGER.atInfo()
-                .addKeyValue("operation", "IDENTITY_DELETE_ACCOUNT")
-                .addKeyValue("realm", realm)
-                .addKeyValue("externalUserId", idExterno)
+                .addKeyValue(CLAVE_OPERATION, "IDENTITY_DELETE_ACCOUNT")
+                .addKeyValue(CLAVE_REALM, realm)
+                .addKeyValue(CLAVE_EXTERNAL_USER_ID, idExterno)
                 .log("Eliminando cuenta de compensacion en Keycloak.");
         try {
             final String adminToken = obtenerAdminToken();
@@ -158,7 +166,7 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
             LOGGER.atError()
                     .addKeyValue("eventType", "IDENTITY_COMPENSATION_FAILED")
                     .addKeyValue("correlationId", CorrelationIdContext.getAsString())
-                    .addKeyValue("externalUserId", idExterno)
+                    .addKeyValue(CLAVE_EXTERNAL_USER_ID, idExterno)
                     .addKeyValue("provider", PROVIDER_NAME)
                     .setCause(exception)
                     .log("No fue posible eliminar la cuenta de compensacion en Keycloak.");
@@ -216,8 +224,8 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
         actualizarUsuario(adminToken, externalId, new EnabledRequest(false), "deshabilitar");
         cerrarSesionesBestEffort(adminToken, externalId);
         LOGGER.atInfo()
-                .addKeyValue("operation", "IDENTITY_DISABLE_ACCOUNT")
-                .addKeyValue("externalUserId", externalId)
+                .addKeyValue(CLAVE_OPERATION, "IDENTITY_DISABLE_ACCOUNT")
+                .addKeyValue(CLAVE_EXTERNAL_USER_ID, externalId)
                 .log("Cuenta deshabilitada en Keycloak.");
     }
 
@@ -227,8 +235,8 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
         final String adminToken = obtenerAdminToken();
         actualizarUsuario(adminToken, externalId, new EnabledRequest(true), "habilitar");
         LOGGER.atInfo()
-                .addKeyValue("operation", "IDENTITY_ENABLE_ACCOUNT")
-                .addKeyValue("externalUserId", externalId)
+                .addKeyValue(CLAVE_OPERATION, "IDENTITY_ENABLE_ACCOUNT")
+                .addKeyValue(CLAVE_EXTERNAL_USER_ID, externalId)
                 .log("Cuenta habilitada en Keycloak.");
     }
 
@@ -239,8 +247,8 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
         final String adminToken = obtenerAdminToken();
         actualizarUsuario(adminToken, externalId, new EmailVerifiedRequest(true, true), "confirmar el correo de");
         LOGGER.atInfo()
-                .addKeyValue("operation", "IDENTITY_CONFIRM_EMAIL")
-                .addKeyValue("externalUserId", externalId)
+                .addKeyValue(CLAVE_OPERATION, "IDENTITY_CONFIRM_EMAIL")
+                .addKeyValue(CLAVE_EXTERNAL_USER_ID, externalId)
                 .log("Correo confirmado y cuenta habilitada en Keycloak.");
     }
 
@@ -260,14 +268,14 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
             verificarUsername(adminToken, externalId, username);
         }
         LOGGER.atInfo()
-                .addKeyValue("operation", "IDENTITY_UPDATE_ACCOUNT")
-                .addKeyValue("externalUserId", externalId)
+                .addKeyValue(CLAVE_OPERATION, "IDENTITY_UPDATE_ACCOUNT")
+                .addKeyValue(CLAVE_EXTERNAL_USER_ID, externalId)
                 .log("Datos de la cuenta actualizados en Keycloak.");
     }
 
     private void verificarUsername(final String adminToken, final String externalId, final String esperado) {
         final HttpResponse<String> response = send(authorizedRequestBuilder(
-                adminUrl("/users/" + externalId), adminToken).GET().build());
+                adminUrl(RUTA_USERS + externalId), adminToken).GET().build());
         final UserSearchResult cuenta = response.statusCode() == 200 ? readJson(response.body(), UserSearchResult.class) : null;
         if (cuenta == null || cuenta.username() == null || !cuenta.username().equalsIgnoreCase(esperado)) {
             throw new IdentityProviderException("Keycloak no aplico el nuevo nombre de usuario (documento corregido).");
@@ -278,7 +286,7 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
     public Optional<String> correoDeCuenta(final String idExterno) {
         final String externalId = requireValidExternalUserId(idExterno, "externalUserId es obligatorio para consultar el correo.");
         final HttpResponse<String> response = send(authorizedRequestBuilder(
-                adminUrl("/users/" + externalId), obtenerAdminToken()).GET().build());
+                adminUrl(RUTA_USERS + externalId), obtenerAdminToken()).GET().build());
         if (response.statusCode() == 404) {
             return Optional.empty();
         }
@@ -297,7 +305,7 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
         final String adminToken = obtenerAdminToken();
         final String clientUuid = resolverApiClientUuid(adminToken);
         final HttpResponse<String> response = send(authorizedRequestBuilder(
-                adminUrl("/users/" + externalId + "/role-mappings/clients/" + clientUuid), adminToken).GET().build());
+                adminUrl(RUTA_USERS + externalId + RUTA_ROLE_MAPPINGS_CLIENTS + clientUuid), adminToken).GET().build());
         if (response.statusCode() != 200) {
             throw new IdentityProviderException(
                     "No fue posible consultar client roles existentes en Keycloak. HTTP " + response.statusCode());
@@ -328,15 +336,15 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
         final KeycloakRoleRepresentation roleRepresentation = resolverClientRole(adminToken, clientUuid, institutionalRoleName);
         if (!clientRoleAlreadyAssigned(adminToken, externalId, clientUuid, institutionalRoleName)) {
             LOGGER.atInfo()
-                    .addKeyValue("operation", "IDENTITY_REMOVE_CLIENT_ROLE")
-                    .addKeyValue("stage", "NOT_ASSIGNED")
-                    .addKeyValue("externalUserId", externalId)
+                    .addKeyValue(CLAVE_OPERATION, "IDENTITY_REMOVE_CLIENT_ROLE")
+                    .addKeyValue(CLAVE_STAGE, "NOT_ASSIGNED")
+                    .addKeyValue(CLAVE_EXTERNAL_USER_ID, externalId)
                     .log("El client role institucional ya no estaba asignado en Keycloak.");
             return;
         }
         final HttpRequest request = authorizedRequestBuilder(
-                adminUrl("/users/" + externalId + "/role-mappings/clients/" + clientUuid), adminToken)
-                .header("Content-Type", CONTENT_TYPE_JSON)
+                adminUrl(RUTA_USERS + externalId + RUTA_ROLE_MAPPINGS_CLIENTS + clientUuid), adminToken)
+                .header(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
                 .method("DELETE", HttpRequest.BodyPublishers.ofString(writeJson(List.of(roleRepresentation))))
                 .build();
         final HttpResponse<String> response = send(request);
@@ -344,14 +352,14 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
             throw new IdentityProviderException("No se pudo retirar el client role en Keycloak. HTTP " + response.statusCode());
         }
         LOGGER.atInfo()
-                .addKeyValue("operation", "IDENTITY_REMOVE_CLIENT_ROLE")
-                .addKeyValue("externalUserId", externalId)
+                .addKeyValue(CLAVE_OPERATION, "IDENTITY_REMOVE_CLIENT_ROLE")
+                .addKeyValue(CLAVE_EXTERNAL_USER_ID, externalId)
                 .log("Client role institucional retirado en Keycloak.");
     }
 
     private void actualizarUsuario(final String adminToken, final String externalId, final Object payload, final String accion) {
-        final HttpRequest request = authorizedRequestBuilder(adminUrl("/users/" + externalId), adminToken)
-                .header("Content-Type", CONTENT_TYPE_JSON)
+        final HttpRequest request = authorizedRequestBuilder(adminUrl(RUTA_USERS + externalId), adminToken)
+                .header(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
                 .PUT(HttpRequest.BodyPublishers.ofString(writeJson(payload)))
                 .build();
         final HttpResponse<String> response = send(request);
@@ -370,21 +378,21 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
     /** La cuenta ya quedo deshabilitada: un fallo al cerrar sesiones no se propaga ni revierte. */
     private void cerrarSesionesBestEffort(final String adminToken, final String externalId) {
         try {
-            final HttpRequest request = authorizedRequestBuilder(adminUrl("/users/" + externalId + "/logout"), adminToken)
+            final HttpRequest request = authorizedRequestBuilder(adminUrl(RUTA_USERS + externalId + "/logout"), adminToken)
                     .POST(HttpRequest.BodyPublishers.noBody())
                     .build();
             final HttpResponse<String> response = send(request);
             if (!isSuccess(response.statusCode())) {
                 LOGGER.atWarn()
-                        .addKeyValue("operation", "IDENTITY_LOGOUT_SESSIONS")
-                        .addKeyValue("externalUserId", externalId)
+                        .addKeyValue(CLAVE_OPERATION, "IDENTITY_LOGOUT_SESSIONS")
+                        .addKeyValue(CLAVE_EXTERNAL_USER_ID, externalId)
                         .addKeyValue("httpStatus", response.statusCode())
                         .log("No se pudieron cerrar las sesiones de la cuenta deshabilitada.");
             }
         } catch (final IdentityProviderException exception) {
             LOGGER.atWarn()
-                    .addKeyValue("operation", "IDENTITY_LOGOUT_SESSIONS")
-                    .addKeyValue("externalUserId", externalId)
+                    .addKeyValue(CLAVE_OPERATION, "IDENTITY_LOGOUT_SESSIONS")
+                    .addKeyValue(CLAVE_EXTERNAL_USER_ID, externalId)
                     .setCause(exception)
                     .log("No se pudieron cerrar las sesiones de la cuenta deshabilitada.");
         }
@@ -402,7 +410,7 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
 
         final HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(tokenUrl))
-                .header("Content-Type", CONTENT_TYPE_FORM)
+                .header(HEADER_CONTENT_TYPE, CONTENT_TYPE_FORM)
                 .POST(HttpRequest.BodyPublishers.ofString(formBody))
                 .timeout(TIMEOUT)
                 .build();
@@ -441,17 +449,17 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
                     : buscarUsuarioPorIdUsuarioVerificado(adminToken, dto).orElseThrow(() ->
                             new IdentityProviderException("No fue posible resolver la identidad creada en Keycloak."));
             LOGGER.atInfo()
-                    .addKeyValue("operation", "IDENTITY_CREATE_ACCOUNT")
-                    .addKeyValue("stage", "CREATED")
-                    .addKeyValue("externalUserId", externalId)
+                    .addKeyValue(CLAVE_OPERATION, OPERACION_IDENTITY_CREATE_ACCOUNT)
+                    .addKeyValue(CLAVE_STAGE, "CREATED")
+                    .addKeyValue(CLAVE_EXTERNAL_USER_ID, externalId)
                     .log("Usuario nuevo creado en Keycloak.");
             return new UserResolution(externalId, true);
         }
 
         if (response.statusCode() == 409) {
             LOGGER.atWarn()
-                    .addKeyValue("operation", "IDENTITY_CREATE_ACCOUNT")
-                    .addKeyValue("stage", "CONFLICT_VERIFYING_EXISTING")
+                    .addKeyValue(CLAVE_OPERATION, OPERACION_IDENTITY_CREATE_ACCOUNT)
+                    .addKeyValue(CLAVE_STAGE, "CONFLICT_VERIFYING_EXISTING")
                     .log("Keycloak reporto conflicto de usuario existente; verificando identidad exacta.");
             return new UserResolution(buscarUsuarioPorIdUsuarioVerificado(adminToken, dto).orElseThrow(() ->
                     new IdentityProviderException("El conflicto de identidad no pudo resolverse por vinculo institucional.")), false);
@@ -472,7 +480,7 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
                 Map.of(userIdAttribute, List.of(dto.idUsuario().toString()))
         );
         final HttpRequest request = authorizedRequestBuilder(adminUrl("/users"), adminToken)
-                .header("Content-Type", CONTENT_TYPE_JSON)
+                .header(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
                 .POST(HttpRequest.BodyPublishers.ofString(writeJson(payload)))
                 .build();
         return send(request);
@@ -486,7 +494,7 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
         }
         try {
             final URI actual = URI.create(location);
-            final URI expected = URI.create(adminUrl("/users/"));
+            final URI expected = URI.create(adminUrl(RUTA_USERS));
             if (!Objects.equals(actual.getScheme(), expected.getScheme())
                     || !Objects.equals(actual.getAuthority(), expected.getAuthority())
                     || actual.getQuery() != null
@@ -569,7 +577,7 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
     public boolean tieneContrasena(final String idExterno) {
         final String externalId = requireValidExternalUserId(idExterno, "externalUserId es obligatorio para consultar credenciales.");
         final HttpResponse<String> response = send(authorizedRequestBuilder(
-                adminUrl("/users/" + externalId + "/credentials"), obtenerAdminToken()).GET().build());
+                adminUrl(RUTA_USERS + externalId + "/credentials"), obtenerAdminToken()).GET().build());
         if (response.statusCode() != 200) {
             throw new IdentityProviderException("No fue posible consultar las credenciales en Keycloak. HTTP " + response.statusCode());
         }
@@ -587,8 +595,8 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
         }
         establecerPassword(obtenerAdminToken(), externalId, contrasena, false);
         LOGGER.atInfo()
-                .addKeyValue("operation", "IDENTITY_SET_PASSWORD")
-                .addKeyValue("externalUserId", externalId)
+                .addKeyValue(CLAVE_OPERATION, "IDENTITY_SET_PASSWORD")
+                .addKeyValue(CLAVE_EXTERNAL_USER_ID, externalId)
                 .log("Contrasena definitiva establecida en Keycloak.");
     }
 
@@ -600,8 +608,8 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
         );
         final CredentialRepresentation credential = new CredentialRepresentation("password", password, temporal);
         final HttpRequest request = authorizedRequestBuilder(
-                adminUrl("/users/" + validatedExternalId + "/reset-password"), adminToken)
-                .header("Content-Type", CONTENT_TYPE_JSON)
+                adminUrl(RUTA_USERS + validatedExternalId + "/reset-password"), adminToken)
+                .header(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
                 .PUT(HttpRequest.BodyPublishers.ofString(writeJson(credential)))
                 .build();
         final HttpResponse<String> response = send(request);
@@ -623,19 +631,19 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
         final KeycloakRoleRepresentation roleRepresentation = resolverClientRole(adminToken, clientUuid, roleName);
         if (clientRoleAlreadyAssigned(adminToken, validatedExternalId, clientUuid, roleName)) {
             LOGGER.atInfo()
-                    .addKeyValue("operation", "IDENTITY_ASSIGN_CLIENT_ROLE")
-                    .addKeyValue("stage", "ALREADY_ASSIGNED")
+                    .addKeyValue(CLAVE_OPERATION, "IDENTITY_ASSIGN_CLIENT_ROLE")
+                    .addKeyValue(CLAVE_STAGE, "ALREADY_ASSIGNED")
                     .addKeyValue("apiClientId", apiClientId)
-                    .addKeyValue("externalUserId", validatedExternalId)
+                    .addKeyValue(CLAVE_EXTERNAL_USER_ID, validatedExternalId)
                     .log("Client role institucional ya estaba asignado en Keycloak.");
             return;
         }
 
         asignarClientRoleRepresentation(adminToken, validatedExternalId, clientUuid, roleRepresentation);
         LOGGER.atInfo()
-                .addKeyValue("operation", "IDENTITY_ASSIGN_CLIENT_ROLE")
+                .addKeyValue(CLAVE_OPERATION, "IDENTITY_ASSIGN_CLIENT_ROLE")
                 .addKeyValue("apiClientId", apiClientId)
-                .addKeyValue("externalUserId", validatedExternalId)
+                .addKeyValue(CLAVE_EXTERNAL_USER_ID, validatedExternalId)
                 .log("Client role institucional asignado en Keycloak.");
     }
 
@@ -697,7 +705,7 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
             final String clientUuid,
             final String roleName
     ) {
-        final String url = adminUrl("/users/" + externalId + "/role-mappings/clients/" + clientUuid);
+        final String url = adminUrl(RUTA_USERS + externalId + RUTA_ROLE_MAPPINGS_CLIENTS + clientUuid);
         final HttpRequest request = authorizedRequestBuilder(url, adminToken).GET().build();
         final HttpResponse<String> response = send(request);
         if (response.statusCode() != 200) {
@@ -719,9 +727,9 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
             final String clientUuid,
             final KeycloakRoleRepresentation roleRepresentation
     ) {
-        final String url = adminUrl("/users/" + externalId + "/role-mappings/clients/" + clientUuid);
+        final String url = adminUrl(RUTA_USERS + externalId + RUTA_ROLE_MAPPINGS_CLIENTS + clientUuid);
         final HttpRequest request = authorizedRequestBuilder(url, adminToken)
-                .header("Content-Type", CONTENT_TYPE_JSON)
+                .header(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
                 .POST(HttpRequest.BodyPublishers.ofString(writeJson(List.of(roleRepresentation))))
                 .build();
         final HttpResponse<String> response = send(request);
@@ -755,7 +763,7 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
             LOGGER.atError()
                     .addKeyValue("eventType", "IDENTITY_COMPENSATION_FAILED")
                     .addKeyValue("correlationId", CorrelationIdContext.getAsString())
-                    .addKeyValue("externalUserId", externalId)
+                    .addKeyValue(CLAVE_EXTERNAL_USER_ID, externalId)
                     .addKeyValue("provider", PROVIDER_NAME)
                     .setCause(exception)
                     .log("No fue posible eliminar la cuenta de compensacion en Keycloak.");
@@ -767,7 +775,7 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
                 externalId,
                 "externalUserId es obligatorio para eliminar usuario en Keycloak."
         );
-        final HttpRequest request = authorizedRequestBuilder(adminUrl("/users/" + validatedExternalId), adminToken)
+        final HttpRequest request = authorizedRequestBuilder(adminUrl(RUTA_USERS + validatedExternalId), adminToken)
                 .DELETE()
                 .build();
         final HttpResponse<String> response = send(request);
