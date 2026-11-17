@@ -22,7 +22,8 @@ public record AlertaInasistenciaResponse(
         Instant fechaLecturaUtc,
         Referencia grupo,
         Referencia asignatura,
-        String estadoMatricula
+        String estadoMatricula,
+        String codigoPermanenciaActual
 ) {
 
     /** Grupo (id, codigo, nombre) o asignatura (id, nombre). */

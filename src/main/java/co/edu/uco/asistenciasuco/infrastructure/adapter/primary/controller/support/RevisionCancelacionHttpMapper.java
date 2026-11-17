@@ -25,7 +25,7 @@ public final class RevisionCancelacionHttpMapper {
                 f.porcentajeCreacion(), f.porcentajeActual(), f.umbralPerdida(), f.horasFalta(), f.horasDictadas(), f.fechaCreacionUtc(),
                 f.decisionDocente(), f.motivoDocente(), f.fechaDecisionDocenteUtc(), f.decisionResolucion(), f.motivoResolucion(),
                 f.nombreResolutor() == null ? null : new RevisionCancelacionResponse.Resolutor(f.nombreResolutor(), f.perfilResolucion()),
-                f.fechaResolucionUtc());
+                f.fechaResolucionUtc(), f.codigoPermanenciaActual());
     }
 
     public static DecisionRevisionCancelacionResponse toResponse(final ResultadoDecision r) {
@@ -42,6 +42,6 @@ public final class RevisionCancelacionHttpMapper {
         return new AlertaInasistenciaResponse(f.id(), f.codigoTipo(), f.nombreTipo(), f.codigoEstado(), f.mensaje(), f.porcentajeCruce(),
                 f.porcentajeActual(), f.umbral(), f.umbralPerdida(), f.horasFalta(), f.horasDictadas(), f.fechaCruceUtc(), f.leida(), f.fechaLecturaUtc(),
                 new AlertaInasistenciaResponse.Referencia(f.grupoId(), f.codigoGrupo(), f.nombreGrupo()),
-                new AlertaInasistenciaResponse.Referencia(f.asignaturaId(), null, f.nombreAsignatura()), f.estadoMatricula());
+                new AlertaInasistenciaResponse.Referencia(f.asignaturaId(), null, f.nombreAsignatura()), f.estadoMatricula(), f.codigoPermanenciaActual());
     }
 }
