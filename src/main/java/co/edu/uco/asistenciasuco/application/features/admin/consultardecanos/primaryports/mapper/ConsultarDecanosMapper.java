@@ -14,6 +14,7 @@ public final class ConsultarDecanosMapper {
                 domain.idFacultad(), domain.nombreFacultad(), domain.estaActivoDecano(), domain.primerNombre(),
                 domain.segundoNombre(), domain.primerApellido(), domain.segundoApellido(),
                 TextHelper.unirNombres(domain.primerNombre(), domain.segundoNombre()),
-                TextHelper.unirNombres(domain.primerApellido(), domain.segundoApellido()));
+                TextHelper.unirNombres(domain.primerApellido(), domain.segundoApellido()), domain.correo(),
+                domain.tipoIdentificacion());
     }
 }

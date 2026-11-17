@@ -194,11 +194,12 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
                                                                      final int tamano) {
         return pagina("buscarEstudiantesInstitucion", "No fue posible buscar los estudiantes de la institucion.",
                 SQL_ESTUDIANTES, idUsuarioEjecutor, q -> filtrar(paginar(q, pagina, tamano), filtro), 9,
-                // Columnas 10..13 (CIERRE-W1B, punto 4): primerNombre, segundoNombre, primerApellido, segundoApellido.
+                // Columnas 10..13 (CIERRE-W1B, punto 4): primerNombre, segundoNombre, primerApellido, segundoApellido; 14: tipoIdentificacion.
                 f -> new EstudianteInstitucionProjection(NativeRowValues.uuid(f[0]), texto(f[2]), texto(f[3]),
                         texto(f[4]), verdadero(f[5]), texto(f[6]), texto(f[7]), cero(f[8]),
                         f.length > 10 ? texto(f[10]) : null, f.length > 11 ? texto(f[11]) : null,
-                        f.length > 12 ? texto(f[12]) : null, f.length > 13 ? texto(f[13]) : null));
+                        f.length > 12 ? texto(f[12]) : null, f.length > 13 ? texto(f[13]) : null,
+                        f.length > 14 ? texto(f[14]) : null));
     }
 
     @Override

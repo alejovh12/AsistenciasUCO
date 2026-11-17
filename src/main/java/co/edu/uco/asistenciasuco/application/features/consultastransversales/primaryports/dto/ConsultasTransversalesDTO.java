@@ -58,13 +58,13 @@ public final class ConsultasTransversalesDTO {
                                            String correo, boolean activo, String facultades, String programas,
                                            int totalGrupos, String primerNombre, String segundoNombre,
                                            String primerApellido, String segundoApellido, String nombres,
-                                           String apellidos) {
+                                           String apellidos, String tipoIdentificacion) {
 
         public EstudianteInstitucionDTO(final UUID idEstudiante, final String numeroIdentificacion,
                                         final String nombreCompleto, final String correo, final boolean activo,
                                         final String facultades, final String programas, final int totalGrupos) {
             this(idEstudiante, numeroIdentificacion, nombreCompleto, correo, activo, facultades, programas, totalGrupos,
-                    null, null, null, null, null, null);
+                    null, null, null, null, null, null, null);
         }
     }
 

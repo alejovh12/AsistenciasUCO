@@ -98,7 +98,7 @@ public final class ConsultasTransversalesInteractor implements ConsultasTransver
                         e.correo(), e.activo(), e.facultades(), e.programas(), e.totalGrupos(), e.primerNombre(),
                         e.segundoNombre(), e.primerApellido(), e.segundoApellido(),
                         TextHelper.unirNombres(e.primerNombre(), e.segundoNombre()),
-                        TextHelper.unirNombres(e.primerApellido(), e.segundoApellido())));
+                        TextHelper.unirNombres(e.primerApellido(), e.segundoApellido()), e.tipoIdentificacion()));
     }
 
     /** Los datos personales se repiten en cada fila del provider: se toman de la primera. */

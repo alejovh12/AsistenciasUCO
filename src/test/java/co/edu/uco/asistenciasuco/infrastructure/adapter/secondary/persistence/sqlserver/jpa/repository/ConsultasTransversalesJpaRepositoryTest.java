@@ -115,7 +115,7 @@ class ConsultasTransversalesJpaRepositoryTest {
     @Test
     void W1B_NOM_PAT_02_estudiantes_mapea_nombres_separados() {
         when(query.getResultList()).thenReturn(filas(fila(ID, ID, 101, "Ana Perez", null, true, "Ingenieria",
-                "Sistemas", 2, 1, "Ana", null, "Perez", "Gomez")));
+                "Sistemas", 2, 1, "Ana", null, "Perez", "Gomez", "CC")));
 
         final var estudiante = repository.buscarEstudiantes(EJECUTOR, new FiltroConsulta(null, null, null), 1, 10)
                 .elementos().getFirst();
@@ -124,6 +124,7 @@ class ConsultasTransversalesJpaRepositoryTest {
         assertNull(estudiante.segundoNombre());
         assertEquals("Perez", estudiante.primerApellido());
         assertEquals("Gomez", estudiante.segundoApellido());
+        assertEquals("CC", estudiante.tipoIdentificacion());
     }
 
     @Test
@@ -162,6 +163,7 @@ class ConsultasTransversalesJpaRepositoryTest {
 
         assertEquals("Ingenieria", estudiante.facultades());
         assertFalse(estudiante.activo());
+        assertNull(estudiante.tipoIdentificacion());
     }
 
     @Test

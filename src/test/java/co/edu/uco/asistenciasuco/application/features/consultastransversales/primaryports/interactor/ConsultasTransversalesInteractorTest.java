@@ -68,7 +68,7 @@ class ConsultasTransversalesInteractorTest {
                         true, "Ana", "Maria", "Perez", "Gomez", tipo, "CC")), 1));
         when(useCase.buscarEstudiantes(USUARIO, new FiltroConsulta(null, null, null), 1, 10)).thenReturn(new Pagina<>(
                 List.of(new EstudianteInstitucionProjection(ID, "102", "Luis Ruiz", null, true, "Ingenieria", "Sistemas", 2,
-                        "Luis", null, "Ruiz", " ")), 1));
+                        "Luis", null, "Ruiz", " ", "TI")), 1));
 
         final var docente = interactor.consultarDocentes(USUARIO, null, null, null, 1, 10).elementos().getFirst();
         assertEquals("Ana", docente.primerNombre());
@@ -81,6 +81,7 @@ class ConsultasTransversalesInteractorTest {
         assertEquals("Luis", estudiante.nombres());
         assertEquals("Ruiz", estudiante.apellidos());
         assertEquals("Luis", estudiante.primerNombre());
+        assertEquals("TI", estudiante.tipoIdentificacion());
     }
 
     @Test
@@ -108,6 +109,7 @@ class ConsultasTransversalesInteractorTest {
 
         assertEquals("Ingenieria", estudiante.facultades());
         assertEquals(2, estudiante.totalGrupos());
+        assertNull(estudiante.tipoIdentificacion());
     }
 
     @Test
