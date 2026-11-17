@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.application.features.docente.consultarmatrizasistencia.result;
+package co.edu.uco.asistenciasuco.application.features.docente.common.dto;
 
 import java.time.Instant;
 import java.util.List;

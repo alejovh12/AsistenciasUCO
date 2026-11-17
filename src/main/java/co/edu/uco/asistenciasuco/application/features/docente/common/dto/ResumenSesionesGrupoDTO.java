@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.application.features.docente.consultarresumensesiones.result;
+package co.edu.uco.asistenciasuco.application.features.docente.common.dto;
 
 import java.math.BigDecimal;
 import java.time.Instant;

@@ -1,6 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.docente.consultarresumensesiones.primaryports;
 
-import co.edu.uco.asistenciasuco.application.features.docente.consultarresumensesiones.result.ResumenSesionesGrupoDTO;
+import co.edu.uco.asistenciasuco.application.features.docente.common.dto.ResumenSesionesGrupoDTO;
 import co.edu.uco.asistenciasuco.application.primaryports.InteractorWithReturn;
 
 import java.util.UUID;

@@ -1,6 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.docente.consultarmatrizasistencia.primaryports;
 
-import co.edu.uco.asistenciasuco.application.features.docente.consultarmatrizasistencia.result.MatrizAsistenciaGrupoDTO;
+import co.edu.uco.asistenciasuco.application.features.docente.common.dto.MatrizAsistenciaGrupoDTO;
 import co.edu.uco.asistenciasuco.application.primaryports.InteractorWithReturn;
 
 import java.util.UUID;
