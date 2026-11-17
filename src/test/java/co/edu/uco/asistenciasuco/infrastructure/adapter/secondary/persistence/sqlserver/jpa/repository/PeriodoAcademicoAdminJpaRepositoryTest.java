@@ -24,6 +24,7 @@ import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doThrow;
 
 /** CULM-001 D.9-a (F-ADM-030): consulta paginada de periodos del administrador por usp_consultar_periodos_academicos_paginado. */
 class PeriodoAcademicoAdminJpaRepositoryTest {
@@ -98,7 +99,7 @@ class PeriodoAcademicoAdminJpaRepositoryTest {
         when(query.getResultList()).thenThrow(new PersistenceException("DBCODE=SEC_001|rbac"));
         assertThrows(ForbiddenException.class, () -> repository.consultarPeriodosAdministrador(ADMIN, 1, 10));
 
-        org.mockito.Mockito.doThrow(new PersistenceException("DBCODE=PAG_001|pagina")).when(query).getResultList();
+        doThrow(new PersistenceException("DBCODE=PAG_001|pagina")).when(query).getResultList();
         assertThrows(ValidationException.class, () -> repository.consultarPeriodosAdministrador(ADMIN, 0, 10));
     }
 }

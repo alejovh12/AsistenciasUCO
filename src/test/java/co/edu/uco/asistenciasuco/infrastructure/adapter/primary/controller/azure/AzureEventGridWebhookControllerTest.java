@@ -9,7 +9,6 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.respo
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 
@@ -28,6 +27,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.mock;
 
 class AzureEventGridWebhookControllerTest {
 
@@ -41,7 +41,7 @@ class AzureEventGridWebhookControllerTest {
 
     @BeforeEach
     void setUp() {
-        inputPort = Mockito.mock(ProcesarEventoAzureInputPort.class);
+        inputPort = mock(ProcesarEventoAzureInputPort.class);
         controller = new AzureEventGridWebhookController(inputPort);
 
         controllerLogger = (Logger) LoggerFactory.getLogger(AzureEventGridWebhookController.class);

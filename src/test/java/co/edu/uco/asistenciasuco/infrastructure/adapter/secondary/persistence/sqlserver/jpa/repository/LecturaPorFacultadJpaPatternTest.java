@@ -22,6 +22,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.times;
 
 /**
  * Lectura con ambito de facultad para el decano (hallazgo del recorrido de vistas). Se verifica que cada consulta
@@ -90,9 +91,9 @@ class LecturaPorFacultadJpaPatternTest {
         assertTrue(repository.canDecanoAccessPrograma(DECANO, PROGRAMA));
         assertFalse(repository.canDecanoAccessPrograma(DECANO, UUID.randomUUID()));
 
-        verify(entityManager, org.mockito.Mockito.times(2)).createQuery(eq(InstitutionalScopeJpaRepository.HQL_DECANO_DE_PROGRAMA), eq(Long.class));
+        verify(entityManager, times(2)).createQuery(eq(InstitutionalScopeJpaRepository.HQL_DECANO_DE_PROGRAMA), eq(Long.class));
         // El metodo se invoca dos veces con el mismo decano: el parametro usuarioId se enlaza en ambas.
-        verify(typedQuery, org.mockito.Mockito.times(2)).setParameter("usuarioId", DECANO);
+        verify(typedQuery, times(2)).setParameter("usuarioId", DECANO);
         verify(typedQuery).setParameter("programaId", PROGRAMA);
         assertEquals(true, InstitutionalScopeJpaRepository.HQL_DECANO_DE_PROGRAMA.contains("estaActivoDecano = 1"));
     }

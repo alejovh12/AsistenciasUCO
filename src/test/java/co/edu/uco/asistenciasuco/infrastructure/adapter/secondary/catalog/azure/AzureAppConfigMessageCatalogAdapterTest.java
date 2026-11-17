@@ -25,6 +25,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
 
 class AzureAppConfigMessageCatalogAdapterTest {
 
@@ -38,7 +39,7 @@ class AzureAppConfigMessageCatalogAdapterTest {
 
     @BeforeEach
     void setUp() {
-        configurationClient = Mockito.mock(ConfigurationClient.class);
+        configurationClient = mock(ConfigurationClient.class);
         userCache = Caffeine.newBuilder().build();
         technicalCache = Caffeine.newBuilder().build();
         adapter = new AzureAppConfigMessageCatalogAdapter(configurationClient, userCache, technicalCache);
@@ -49,7 +50,7 @@ class AzureAppConfigMessageCatalogAdapterTest {
     }
 
     private static ResourceNotFoundException notFound() {
-        return new ResourceNotFoundException("not found", Mockito.mock(HttpResponse.class));
+        return new ResourceNotFoundException("not found", mock(HttpResponse.class));
     }
 
     @Test

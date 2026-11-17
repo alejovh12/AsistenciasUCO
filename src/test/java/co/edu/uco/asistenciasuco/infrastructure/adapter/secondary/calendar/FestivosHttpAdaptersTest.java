@@ -28,6 +28,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doReturn;
 
 /**
  * CULM-001 B.1 (CONTRACT 3.4.1 y 3.4.2): proveedores HTTP de festivos con un {@link HttpClient} simulado: 200, error HTTP,
@@ -186,7 +187,7 @@ class FestivosHttpAdaptersTest {
         assertFalse(new FeriadosIoFestivosAdapter(http, catalogo, vault).disponible());
         verify(http, never()).send(any(HttpRequest.class), any());
 
-        org.mockito.Mockito.doReturn(Optional.of("clave-secreta")).when(vault).getSecret("otro-nombre");
+        doReturn(Optional.of("clave-secreta")).when(vault).getSecret("otro-nombre");
         when(catalogo.getParameter("FESTIVOS", "NOMBRE_SECRETO_FERIADOS_IO")).thenReturn(Optional.of("otro-nombre"));
         when(respuesta.statusCode()).thenReturn(401);
         final CalendarioFestivosException error = assertThrows(CalendarioFestivosException.class,

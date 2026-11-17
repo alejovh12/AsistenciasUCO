@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
 
 /**
  * QUALITY-PR15 J05/J07: contrato unitario de los repositorios JPA de consulta frente al
@@ -201,10 +202,10 @@ class JpaQueryAdapterContractTest {
             assertEquals("508", grupos.getFirst().getCodigo());
             // F1: el listado trae el horario semanal ordenado de lunes a domingo
             assertEquals(List.of("LU", "MI"), grupos.getFirst().getFranjas().stream().map(franja -> franja.codigoDia()).toList());
-            verify(paginaGrupos, org.mockito.Mockito.times(2)).setParameter("idUsuarioEjecutor", actor);
+            verify(paginaGrupos, times(2)).setParameter("idUsuarioEjecutor", actor);
             verify(paginaGrupos).setParameter("numeroPagina", 1);
             verify(paginaGrupos).setParameter("numeroPagina", 2);
-            verify(paginaGrupos, org.mockito.Mockito.times(2)).setParameter("tamanoPagina", GrupoJpaRepository.TAMANO_PAGINA_GRUPOS);
+            verify(paginaGrupos, times(2)).setParameter("tamanoPagina", GrupoJpaRepository.TAMANO_PAGINA_GRUPOS);
 
             final var filas = repository.consultarEstudiantesGrupo(OTHER, actor);
             assertNull(filas.getFirst().documento());

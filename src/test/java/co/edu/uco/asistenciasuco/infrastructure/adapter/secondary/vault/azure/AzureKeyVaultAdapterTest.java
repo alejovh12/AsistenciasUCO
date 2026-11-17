@@ -11,7 +11,6 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.util.Optional;
 
@@ -28,6 +27,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
 
 class AzureKeyVaultAdapterTest {
 
@@ -37,19 +37,19 @@ class AzureKeyVaultAdapterTest {
 
     @BeforeEach
     void setUp() {
-        secretClient = Mockito.mock(SecretClient.class);
+        secretClient = mock(SecretClient.class);
         cache = Caffeine.newBuilder().build();
         adapter = new AzureKeyVaultAdapter(secretClient, cache);
     }
 
     private static KeyVaultSecret secretWithValue(final String value) {
-        final KeyVaultSecret secret = Mockito.mock(KeyVaultSecret.class);
+        final KeyVaultSecret secret = mock(KeyVaultSecret.class);
         when(secret.getValue()).thenReturn(value);
         return secret;
     }
 
     private static HttpResponse responseWithStatus(final int status) {
-        final HttpResponse response = Mockito.mock(HttpResponse.class);
+        final HttpResponse response = mock(HttpResponse.class);
         when(response.getStatusCode()).thenReturn(status);
         return response;
     }

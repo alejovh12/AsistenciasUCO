@@ -9,11 +9,11 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.messag
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.vault.azure.AzureKeyVaultAdapter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.mock;
 
 class CompositeCatalogInvalidationAdapterTest {
 
@@ -21,15 +21,15 @@ class CompositeCatalogInvalidationAdapterTest {
     private AzureAppConfigMessageCatalogAdapter azureMessages;
     private AzureKeyVaultAdapter azureVault;
 
-    private final ParameterCatalogPort otherParameters = Mockito.mock(ParameterCatalogPort.class);
-    private final MessageCatalogPort otherMessages = Mockito.mock(MessageCatalogPort.class);
-    private final SecretVaultPort otherVault = Mockito.mock(SecretVaultPort.class);
+    private final ParameterCatalogPort otherParameters = mock(ParameterCatalogPort.class);
+    private final MessageCatalogPort otherMessages = mock(MessageCatalogPort.class);
+    private final SecretVaultPort otherVault = mock(SecretVaultPort.class);
 
     @BeforeEach
     void setUp() {
-        azureParameters = Mockito.mock(AzureAppConfigParameterCatalogAdapter.class);
-        azureMessages = Mockito.mock(AzureAppConfigMessageCatalogAdapter.class);
-        azureVault = Mockito.mock(AzureKeyVaultAdapter.class);
+        azureParameters = mock(AzureAppConfigParameterCatalogAdapter.class);
+        azureMessages = mock(AzureAppConfigMessageCatalogAdapter.class);
+        azureVault = mock(AzureKeyVaultAdapter.class);
     }
 
     private CompositeCatalogInvalidationAdapter withAzureAdapters() {
@@ -112,7 +112,7 @@ class CompositeCatalogInvalidationAdapterTest {
 
     @Test
     void invalidacion_de_mensajes_delega_en_el_adaptador_messageucolab() {
-        final MessageUcoLabMessageCatalogAdapter messageUcoLab = Mockito.mock(MessageUcoLabMessageCatalogAdapter.class);
+        final MessageUcoLabMessageCatalogAdapter messageUcoLab = mock(MessageUcoLabMessageCatalogAdapter.class);
         final CompositeCatalogInvalidationAdapter composite =
                 new CompositeCatalogInvalidationAdapter(otherParameters, messageUcoLab, otherVault);
 

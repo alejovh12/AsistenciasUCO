@@ -49,6 +49,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.times;
 
 class CoordinadorPortalControllerTest {
 
@@ -139,7 +140,7 @@ class CoordinadorPortalControllerTest {
                         .content("{\"inp\":2027}"))
                 .andExpect(status().isOk());
         final var planCaptor = ArgumentCaptor.forClass(GuardarPlanEstudioDTO.class);
-        verify(managePlans, org.mockito.Mockito.times(2)).guardar(planCaptor.capture());
+        verify(managePlans, times(2)).guardar(planCaptor.capture());
         assertNull(planCaptor.getAllValues().get(0).idPlanEstudio());
         assertEquals(2026, planCaptor.getAllValues().get(0).inp());
         assertEquals(ACTOR, planCaptor.getAllValues().get(0).usuario());

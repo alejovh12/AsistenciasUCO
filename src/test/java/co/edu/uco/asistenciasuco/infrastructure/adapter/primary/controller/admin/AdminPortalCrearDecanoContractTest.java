@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 class AdminPortalCrearDecanoContractTest {
 
@@ -45,7 +46,7 @@ class AdminPortalCrearDecanoContractTest {
 
     @org.junit.jupiter.api.BeforeEach
     void resultadoDelCasoDeUso() {
-        org.mockito.Mockito.when(useCase.execute(org.mockito.ArgumentMatchers.any())).thenReturn(
+        when(useCase.execute(org.mockito.ArgumentMatchers.any())).thenReturn(
                 new co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.domain.CrearDecanoResultado(
                         UUID.randomUUID(), null, null));
     }

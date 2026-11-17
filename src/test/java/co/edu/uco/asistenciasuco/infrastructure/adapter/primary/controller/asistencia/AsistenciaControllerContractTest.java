@@ -35,6 +35,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.times;
 
 class AsistenciaControllerContractTest {
 
@@ -96,7 +97,7 @@ class AsistenciaControllerContractTest {
                         .content("{\"sesionId\":\"" + SESSION + "\",\"categoria\":\"MED\",\"justificacion\":\"Cita\"}"))
                 .andExpect(status().isAccepted());
         final var captor = ArgumentCaptor.forClass(SolicitarRevisionAsistenciaDTO.class);
-        verify(review, org.mockito.Mockito.times(2)).execute(captor.capture());
+        verify(review, times(2)).execute(captor.capture());
         assertEquals(toma, captor.getAllValues().get(0).getToma());
         assertEquals(null, captor.getAllValues().get(1).getToma());
     }

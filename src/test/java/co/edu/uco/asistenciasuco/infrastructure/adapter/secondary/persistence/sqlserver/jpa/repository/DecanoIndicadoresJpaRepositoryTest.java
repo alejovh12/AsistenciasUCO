@@ -11,6 +11,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doThrow;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
@@ -32,7 +33,6 @@ import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 /** HU102-HU144: adapter JPA de KPIs del decano (EXEC nativo mapeado fielmente, sin recalcular). */
 class DecanoIndicadoresJpaRepositoryTest {
@@ -232,7 +232,7 @@ class DecanoIndicadoresJpaRepositoryTest {
     }
 
     private void fallaCon(final String mensaje) {
-        Mockito.doThrow(new PersistenceException("x", new RuntimeException(mensaje))).when(query).getResultList();
+        doThrow(new PersistenceException("x", new RuntimeException(mensaje))).when(query).getResultList();
         repository.consultarAforo(ACTOR, null, null, true, 1, 10);
     }
 

@@ -32,6 +32,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.times;
 
 /**
  * LB-008 JPA-01 COMMANDS — RED estructural (CMD-PAT-001..004). Fija el patron DEFINITIVO de los cuatro
@@ -243,7 +244,7 @@ class AsistenciaJpaCommandNativeQueryPatternTest {
         command.resolverSolicitudRevisionAsistencia(new ResolverSolicitudRevisionAsistenciaRepositoryDTO(
                 SOLICITUD, DOCENTE, "RECHAZADA", "Respuesta", EJECUTOR));
 
-        verify(entityManager, org.mockito.Mockito.times(2)).createNativeQuery(contains("@codigoResultadoAprobacion = :codigoResultadoAprobacion"));
+        verify(entityManager, times(2)).createNativeQuery(contains("@codigoResultadoAprobacion = :codigoResultadoAprobacion"));
         verify(query).setParameter("codigoResultadoAprobacion", "AN");
         verify(query).setParameter("codigoResultadoAprobacion", (Object) null);
     }
