@@ -57,6 +57,9 @@ Campos agregados (aditivos; el nombre completo se conserva):
 - Correo y tipo de documento (2026-11-17, aditivo, columnas al final): `GET /admin/decanos` (`DecanoDTO`) suma `correo` y `tipoIdentificacion`
   (código corto: CC, TI...; salen de `uv_usuario` vía `uv_decano_identidad` y `uv_decano`); `GET /admin/estudiantes` (`EstudianteInstitucionDTO`)
   suma `tipoIdentificacion` (columna 15 de `usp_buscar_estudiantes_institucion_paginado`). Ausente = `null`; el front no inventa un tipo.
+- Ficha unificada del estudiante (`GET /admin/estudiantes/{id}/historial` y `GET /decano/estudiantes/{id}/historial`, `ResumenAsistenciaDTO`):
+  suma `tomasDictadas` (int), `horasDictadas` y `horasFalta` (decimales, columnas 28 a 30 del SP). `asistencias`, `faltasSinJustaCausa` y `excusas`
+  cuentan tomas; `sesionesEjecutadas` cuenta sesiones (NB-2). El resumen sigue siendo `null` si la matrícula no tiene grupo.
 - `GET /decano/coordinadores`: `nombres` y `apellidos` (los cuatro campos separados ya existían).
 Un dato ausente es `null` (un segundo nombre ausente no se rellena).
 

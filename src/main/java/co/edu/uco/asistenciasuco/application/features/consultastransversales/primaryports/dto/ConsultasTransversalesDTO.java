@@ -77,7 +77,8 @@ public final class ConsultasTransversalesDTO {
     }
 
     public record ResumenAsistenciaDTO(int sesionesEjecutadas, int asistencias, int faltasSinJustaCausa,
-                                       int excusas, BigDecimal porcentajeInasistencia, String codigoPermanencia) {
+                                       int excusas, BigDecimal porcentajeInasistencia, String codigoPermanencia,
+                                       int tomasDictadas, BigDecimal horasDictadas, BigDecimal horasFalta) {
     }
 
     public record FichaUnificadaDTO(UUID idEstudiante, String tipoIdentificacion, String numeroIdentificacion,

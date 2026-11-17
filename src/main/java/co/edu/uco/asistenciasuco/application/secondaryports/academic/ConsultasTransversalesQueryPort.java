@@ -169,6 +169,7 @@ public interface ConsultasTransversalesQueryPort {
     }
 
     record ResumenAsistenciaProjection(int sesionesEjecutadas, int asistencias, int faltasSinJustaCausa, int excusas,
-                                       BigDecimal porcentajeInasistencia, String codigoPermanencia) {
+                                       BigDecimal porcentajeInasistencia, String codigoPermanencia,
+                                       int tomasDictadas, BigDecimal horasDictadas, BigDecimal horasFalta) {
     }
 }

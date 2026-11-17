@@ -116,7 +116,8 @@ class ConsultasTransversalesInteractorTest {
     void T_157_INT_02_ficha_toma_los_datos_de_la_primera_fila_y_una_matricula_por_fila() {
         final UUID grupo = UUID.randomUUID();
         when(useCase.consultarHistorial(USUARIO, ID)).thenReturn(List.of(
-                fila(grupo, new ResumenAsistenciaProjection(10, 8, 2, 0, new BigDecimal("20.00"), "RIESGO")),
+                fila(grupo, new ResumenAsistenciaProjection(10, 8, 2, 0, new BigDecimal("20.00"), "RIESGO", 14,
+                        new BigDecimal("28.00"), new BigDecimal("4.00"))),
                 fila(null, null)));
 
         final var ficha = interactor.consultarHistorial(USUARIO, ID);
@@ -125,6 +126,9 @@ class ConsultasTransversalesInteractorTest {
         assertEquals(2, ficha.matriculas().size());
         assertEquals(grupo, ficha.matriculas().getFirst().idGrupo());
         assertEquals(new BigDecimal("20.00"), ficha.matriculas().getFirst().resumen().porcentajeInasistencia());
+        assertEquals(14, ficha.matriculas().getFirst().resumen().tomasDictadas());
+        assertEquals(new BigDecimal("28.00"), ficha.matriculas().getFirst().resumen().horasDictadas());
+        assertEquals(new BigDecimal("4.00"), ficha.matriculas().getFirst().resumen().horasFalta());
         assertNull(ficha.matriculas().get(1).resumen());
     }
 
