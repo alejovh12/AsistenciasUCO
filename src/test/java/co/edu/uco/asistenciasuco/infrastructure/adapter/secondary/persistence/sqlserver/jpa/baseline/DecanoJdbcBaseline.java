@@ -35,7 +35,8 @@ public final class DecanoJdbcBaseline implements DecanoQueryPort, DecanoCommandP
     @Override
     public List<DecanoProjection> consultarDecanos() {
         return jdbcOperations.query("""
-                SELECT id, idUsuario, numeroIdentificacion, nombreCompleto, idFacultad, nombreFacultad, estaActivoDecano
+                SELECT id, idUsuario, numeroIdentificacion, nombreCompleto, idFacultad, nombreFacultad, estaActivoDecano,
+                       primerNombre, segundoNombre, primerApellido, segundoApellido
                 FROM dbo.uv_decano
                 ORDER BY nombreCompleto, id
                 """, (rs, rowNum) -> new DecanoProjection(
@@ -45,7 +46,11 @@ public final class DecanoJdbcBaseline implements DecanoQueryPort, DecanoCommandP
                 JdbcBaselineValueMapper.toString(rs.getObject("nombreCompleto")),
                 JdbcBaselineValueMapper.toUuid(rs.getObject("idFacultad")),
                 JdbcBaselineValueMapper.toString(rs.getObject("nombreFacultad")),
-                JdbcBaselineValueMapper.toBoolean(rs.getObject("estaActivoDecano"))
+                JdbcBaselineValueMapper.toBoolean(rs.getObject("estaActivoDecano")),
+                JdbcBaselineValueMapper.toString(rs.getObject("primerNombre")),
+                JdbcBaselineValueMapper.toString(rs.getObject("segundoNombre")),
+                JdbcBaselineValueMapper.toString(rs.getObject("primerApellido")),
+                JdbcBaselineValueMapper.toString(rs.getObject("segundoApellido"))
         ));
     }
 

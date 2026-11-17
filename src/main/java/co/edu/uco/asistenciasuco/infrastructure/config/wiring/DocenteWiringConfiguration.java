@@ -1,21 +1,9 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
-import co.edu.uco.asistenciasuco.application.features.docente.consultarasignacionesacademicas.primaryports.ConsultarAsignacionesAcademicasDocenteInputPort;
-import co.edu.uco.asistenciasuco.application.features.docente.consultarasignacionesacademicas.primaryports.interactor.ConsultarAsignacionesAcademicasDocenteInteractor;
-import co.edu.uco.asistenciasuco.application.features.docente.consultarasignacionesacademicas.usecase.ConsultarAsignacionesAcademicasDocenteUseCase;
-import co.edu.uco.asistenciasuco.application.features.docente.consultarasignacionesacademicas.usecase.impl.ConsultarAsignacionesAcademicasDocenteUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignaturas.primaryports.ConsultarAsignaturasDocenteInputPort;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignaturas.primaryports.interactor.ConsultarAsignaturasDocenteInteractor;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignaturas.usecase.ConsultarAsignaturasDocenteUseCase;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignaturas.usecase.impl.ConsultarAsignaturasDocenteUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.features.docente.consultardocentes.primaryports.ConsultarDocentesInputPort;
-import co.edu.uco.asistenciasuco.application.features.docente.consultardocentes.primaryports.interactor.ConsultarDocentesInteractor;
-import co.edu.uco.asistenciasuco.application.features.docente.consultardocentes.usecase.ConsultarDocentesUseCase;
-import co.edu.uco.asistenciasuco.application.features.docente.consultardocentes.usecase.impl.ConsultarDocentesUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.features.docente.consultardocenteporid.primaryports.ConsultarDocentePorIdInputPort;
-import co.edu.uco.asistenciasuco.application.features.docente.consultardocenteporid.primaryports.interactor.ConsultarDocentePorIdInteractor;
-import co.edu.uco.asistenciasuco.application.features.docente.consultardocenteporid.usecase.ConsultarDocentePorIdUseCase;
-import co.edu.uco.asistenciasuco.application.features.docente.consultardocenteporid.usecase.impl.ConsultarDocentePorIdUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardetallereclamo.primaryports.ConsultarDetalleReclamoDocenteInputPort;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardetallereclamo.primaryports.interactor.ConsultarDetalleReclamoDocenteInteractor;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardetallereclamo.usecase.ConsultarDetalleReclamoDocenteUseCase;
@@ -36,7 +24,6 @@ import co.edu.uco.asistenciasuco.application.features.docente.consultarhorarios.
 import co.edu.uco.asistenciasuco.application.features.docente.consultarhorarios.usecase.impl.ConsultarHorariosDocenteUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsignaturaDocenteQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.HorarioDocenteQueryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.DocenteRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.RetiroEstudianteGrupoPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
@@ -57,46 +44,6 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration(proxyBeanMethods = false)
 public class DocenteWiringConfiguration {
-
-    @Bean
-    public ConsultarDocentesUseCase consultarDocentesUseCase(final DocenteRepositoryPort docenteRepositoryPort) {
-        return new ConsultarDocentesUseCaseImpl(docenteRepositoryPort);
-    }
-
-    @Bean
-    public ConsultarDocentesInputPort consultarDocentesInputPort(
-            final ConsultarDocentesUseCase consultarDocentesUseCase
-    ) {
-        return new ConsultarDocentesInteractor(consultarDocentesUseCase);
-    }
-
-    @Bean
-    public ConsultarDocentePorIdUseCase consultarDocentePorIdUseCase(
-            final DocenteRepositoryPort docenteRepositoryPort
-    ) {
-        return new ConsultarDocentePorIdUseCaseImpl(docenteRepositoryPort);
-    }
-
-    @Bean
-    public ConsultarDocentePorIdInputPort consultarDocentePorIdInputPort(
-            final ConsultarDocentePorIdUseCase consultarDocentePorIdUseCase
-    ) {
-        return new ConsultarDocentePorIdInteractor(consultarDocentePorIdUseCase);
-    }
-
-    @Bean
-    public ConsultarAsignacionesAcademicasDocenteUseCase consultarAsignacionesAcademicasDocenteUseCase(
-            final DocenteRepositoryPort docenteRepositoryPort
-    ) {
-        return new ConsultarAsignacionesAcademicasDocenteUseCaseImpl(docenteRepositoryPort);
-    }
-
-    @Bean
-    public ConsultarAsignacionesAcademicasDocenteInputPort consultarAsignacionesAcademicasDocenteInputPort(
-            final ConsultarAsignacionesAcademicasDocenteUseCase consultarAsignacionesAcademicasDocenteUseCase
-    ) {
-        return new ConsultarAsignacionesAcademicasDocenteInteractor(consultarAsignacionesAcademicasDocenteUseCase);
-    }
 
     @Bean
     ConsultarReclamosDocenteUseCase consultarReclamosDocenteUseCase(

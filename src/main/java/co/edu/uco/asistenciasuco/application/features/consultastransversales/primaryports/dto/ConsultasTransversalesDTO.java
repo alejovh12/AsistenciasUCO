@@ -23,10 +23,23 @@ public final class ConsultasTransversalesDTO {
                                       int totalSemestres, int totalAsignaturas, int totalCreditos) {
     }
 
-    /** HU128/HU136: {@code tieneVinculoActivo} es falso para un docente retirado de todos sus programas. */
+    /**
+     * HU128/HU136: {@code tieneVinculoActivo} es falso para un docente retirado de todos sus programas.
+     * CIERRE-W1B: nombres y apellidos separados (y agrupados) y tipo de documento; el frontend no parte el nombre completo.
+     */
     public record DocenteFacultadDTO(UUID idDocente, String numeroIdentificacion, String nombreCompleto,
                                      String correo, boolean activo, String programas, int totalProgramas,
-                                     int totalGrupos, boolean tieneVinculoActivo) {
+                                     int totalGrupos, boolean tieneVinculoActivo, String primerNombre,
+                                     String segundoNombre, String primerApellido, String segundoApellido,
+                                     String nombres, String apellidos, UUID idTipoIdentificacion,
+                                     String codigoTipoIdentificacion) {
+
+        public DocenteFacultadDTO(final UUID idDocente, final String numeroIdentificacion, final String nombreCompleto,
+                                  final String correo, final boolean activo, final String programas,
+                                  final int totalProgramas, final int totalGrupos, final boolean tieneVinculoActivo) {
+            this(idDocente, numeroIdentificacion, nombreCompleto, correo, activo, programas, totalProgramas, totalGrupos,
+                    tieneVinculoActivo, null, null, null, null, null, null, null, null);
+        }
 
         public DocenteFacultadDTO(final UUID idDocente, final String numeroIdentificacion, final String nombreCompleto,
                                   final String correo, final boolean activo, final String programas,
@@ -40,9 +53,19 @@ public final class ConsultasTransversalesDTO {
                                            boolean activa) {
     }
 
+    /** CIERRE-W1B: nombres y apellidos separados (y agrupados) tal como los guarda la BD. */
     public record EstudianteInstitucionDTO(UUID idEstudiante, String numeroIdentificacion, String nombreCompleto,
                                            String correo, boolean activo, String facultades, String programas,
-                                           int totalGrupos) {
+                                           int totalGrupos, String primerNombre, String segundoNombre,
+                                           String primerApellido, String segundoApellido, String nombres,
+                                           String apellidos) {
+
+        public EstudianteInstitucionDTO(final UUID idEstudiante, final String numeroIdentificacion,
+                                        final String nombreCompleto, final String correo, final boolean activo,
+                                        final String facultades, final String programas, final int totalGrupos) {
+            this(idEstudiante, numeroIdentificacion, nombreCompleto, correo, activo, facultades, programas, totalGrupos,
+                    null, null, null, null, null, null);
+        }
     }
 
     /** Una matricula del historial; los campos del grupo y del resumen son nulos si el programa no tiene grupos. */

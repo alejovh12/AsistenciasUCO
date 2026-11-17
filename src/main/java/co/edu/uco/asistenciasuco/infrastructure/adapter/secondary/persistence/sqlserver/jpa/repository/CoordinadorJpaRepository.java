@@ -2,12 +2,9 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.CoordinadorCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.CoordinadorQueryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.CoordinadorProjection;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResumenCoordinacionProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.CoordinadorFacultadProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResultadoGestionCoordinadorProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CorreccionDocumentoDTO;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.mapper.AcademicViewJpaProjectionMapper;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvCoordinadorEntity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.DatabaseErrorCode;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.DatabaseOperationException;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.JpaProcedureExecutor;
@@ -17,6 +14,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.NativeRowValues;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -91,37 +89,21 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
                  @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
 
-    static final String HQL_POR_FACULTAD = """
-            select c
-            from UvCoordinadorEntity c
-            where c.idFacultad = :idFacultad and c.idPrograma is not null
-            order by c.nombrePrograma, c.nombreCompleto, c.id
-            """;
-
-    static final String HQL_SIN_PROGRAMA = """
-            select c.id, c.idUsuario, c.numeroIdentificacion, c.nombreCompleto,
-                   c.idPrograma, c.nombrePrograma, c.estaActivoCoordinador,
-                   c.primerNombre, c.segundoNombre, c.primerApellido, c.segundoApellido, c.correo,
-                   c.estaActivoRolCoordinador
-            from UvCoordinadorEntity c
-            where c.idPrograma is null and c.idFacultad = :idFacultad
-            order by c.nombreCompleto, c.id
-            """;
-
     /**
-     * Certificacion F3: por programa de la facultad, docentes con vinculacion activa y grupos habilitados. Solo lee
-     * vistas {@code uv_*} (concedidas al rol runtime); no cambia objetos de BD.
+     * CIERRE-W1B: coordinadores de la facultad del decano ejecutor con filtros y paginacion en el SP (el ambito y el
+     * perfil DECANO los valida el SP). Columnas: id, idUsuario, numeroIdentificacion, nombreCompleto, idPrograma,
+     * nombrePrograma, estaActivoCoordinador, primerNombre, segundoNombre, primerApellido, segundoApellido, correo,
+     * estaActivoRolCoordinador, nombreFacultad, totalDocentes, totalGrupos, totalRegistros.
      */
-    static final String SQL_RESUMEN_PROGRAMAS_FACULTAD = """
-            SELECT pr.id,
-                   pr.nombreFacultad,
-                   (SELECT COUNT(DISTINCT dp.idDocente) FROM dbo.uv_docente_programa dp
-                     WHERE dp.idPrograma = pr.id AND dp.estaActivoDocentePrograma = 1) AS totalDocentes,
-                   (SELECT COUNT(*) FROM dbo.uv_grupo_programa gp
-                     WHERE gp.idPrograma = pr.id AND gp.grupoEstaHablitado = 1) AS totalGrupos
-            FROM dbo.uv_programa pr
-            WHERE pr.idFacultad = :idFacultad
-            ORDER BY pr.nombrePrograma, pr.id
+    static final String SQL_CONSULTAR_COORDINADORES_FACULTAD = """
+            EXEC dbo.usp_consultar_coordinadores_facultad_paginado
+                 @idUsuarioEjecutor = :idUsuarioEjecutor,
+                 @idCorrelacion = :idCorrelacion,
+                 @numeroPagina = :numeroPagina,
+                 @tamanoPagina = :tamanoPagina,
+                 @busqueda = :busqueda,
+                 @estaActivo = :estaActivo,
+                 @sinPrograma = :sinPrograma
             """;
 
     static final String OP_CREAR_COORDINADOR = "crearCoordinador";
@@ -238,75 +220,47 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
     // QUERIES
 
     @Override
-    public List<CoordinadorProjection> consultarCoordinadoresPorFacultad(final UUID idFacultad) {
+    public Pagina<CoordinadorFacultadProjection> consultarCoordinadoresFacultad(
+            final UUID idUsuarioEjecutor, final String busqueda, final Boolean estaActivo, final Boolean sinPrograma,
+            final int pagina, final int tamano) {
+        final UUID correlationId = CorrelationIdContext.require();
         return JpaQueryExecutor.execute(
-                "consultarCoordinadoresPorFacultad",
-                "No fue posible consultar los coordinadores desde base de datos.",
-                () -> entityManager.createQuery(HQL_POR_FACULTAD, UvCoordinadorEntity.class)
-                        .setParameter("idFacultad", idFacultad)
-                        .getResultList().stream()
-                        .map(AcademicViewJpaProjectionMapper::toCoordinador)
-                        .toList()
-        );
-    }
-
-    @Override
-    public List<CoordinadorProjection> consultarCoordinadoresSinPrograma(final UUID idFacultad) {
-        return JpaQueryExecutor.execute(
-                "consultarCoordinadoresSinPrograma",
-                "No fue posible consultar los coordinadores disponibles sin programa desde base de datos.",
-                () -> entityManager.createQuery(HQL_SIN_PROGRAMA, Object[].class)
-                        .setParameter("idFacultad", idFacultad)
-                        .getResultList().stream()
-                        .map(row -> new CoordinadorProjection(
-                                (UUID) row[0],
-                                (UUID) row[1],
-                                row[2] == null ? null : String.valueOf(row[2]),
-                                (String) row[3],
-                                (UUID) row[4],
-                                (String) row[5],
-                                flag(row[6]),
-                                (String) row[7],
-                                (String) row[8],
-                                (String) row[9],
-                                (String) row[10],
-                                (String) row[11],
-                                flag(row[12])
-                        ))
-                        .toList()
-        );
-    }
-
-    @Override
-    public List<ResumenCoordinacionProjection> consultarResumenProgramasFacultad(final UUID idFacultad) {
-        return JpaQueryExecutor.execute(
-                "consultarResumenProgramasFacultad",
-                "No fue posible consultar el resumen de los programas de la facultad desde base de datos.",
+                "consultarCoordinadoresFacultad",
+                "No fue posible consultar los coordinadores de la facultad.",
                 () -> {
-                    final List<ResumenCoordinacionProjection> resumenes = new java.util.ArrayList<>();
-                    for (final Object fila : entityManager.createNativeQuery(SQL_RESUMEN_PROGRAMAS_FACULTAD)
-                            .setParameter("idFacultad", idFacultad).getResultList()) {
-                        final Object[] columnas = (Object[]) fila;
-                        resumenes.add(new ResumenCoordinacionProjection(uuid(columnas[0]), (String) columnas[1],
-                                entero(columnas[2]), entero(columnas[3])));
+                    final List<?> filas;
+                    try {
+                        filas = entityManager.createNativeQuery(SQL_CONSULTAR_COORDINADORES_FACULTAD)
+                                .setParameter("idUsuarioEjecutor", idUsuarioEjecutor)
+                                .setParameter("idCorrelacion", correlationId)
+                                .setParameter("numeroPagina", pagina)
+                                .setParameter("tamanoPagina", tamano)
+                                .setParameter("busqueda", busqueda)
+                                .setParameter("estaActivo", estaActivo)
+                                .setParameter("sinPrograma", sinPrograma)
+                                .getResultList();
+                    } catch (final PersistenceException exception) {
+                        throw DbCodeTranslator.traducir(exception);
                     }
-                    return resumenes;
+                    final List<CoordinadorFacultadProjection> elementos = new java.util.ArrayList<>();
+                    int total = 0;
+                    for (final Object fila : filas) {
+                        final Object[] c = (Object[]) fila;
+                        elementos.add(new CoordinadorFacultadProjection(
+                                NativeRowValues.uuid(c[0]), NativeRowValues.uuid(c[1]), NativeRowValues.texto(c[2]),
+                                NativeRowValues.texto(c[3]), NativeRowValues.uuid(c[4]), NativeRowValues.texto(c[5]),
+                                NativeRowValues.bit(c[6]), NativeRowValues.texto(c[7]), NativeRowValues.texto(c[8]),
+                                NativeRowValues.texto(c[9]), NativeRowValues.texto(c[10]), NativeRowValues.texto(c[11]),
+                                NativeRowValues.bit(c[12]), NativeRowValues.texto(c[13]), NativeRowValues.entero(c[14]),
+                                NativeRowValues.entero(c[15])));
+                        total = NativeRowValues.entero(c[16]);
+                    }
+                    return new Pagina<>(elementos, total);
                 }
         );
     }
 
     // PRIVATE HELPERS
-
-    private static UUID uuid(final Object valor) {
-        if (valor == null || valor instanceof UUID) {
-            return (UUID) valor;
-        }
-        return UUID.fromString(String.valueOf(valor).trim());
-    }
-
-    private static int entero(final Object valor) {
-        return valor == null ? 0 : ((Number) valor).intValue();
-    }
 
     /** El SP devuelve el usuario del coordinador cuando la operacion tuvo exito; su ausencia es una violacion del contrato. */
     private static UUID idUsuarioDeFila(final ProcedureRow fila, final String operation) {

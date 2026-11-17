@@ -1,7 +1,5 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarAsignacionesAcademicasDocenteRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarDocentePorIdRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarSesionRepositoryDTO;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.*;
@@ -40,39 +38,6 @@ class JpaQueryAdapterContractTest {
     private static final UUID OTHER = UUID.fromString("00000000-0000-0000-0000-0000000000b2");
 
     private final EntityManager manager = mock(EntityManager.class);
-
-    @Test
-    void docentes_listado_detalle_y_asignaciones() {
-        final UvDocenteIdentidadEntity identidad = HydratedViewRow.of(UvDocenteIdentidadEntity.class,
-                Map.of("id", ID, "idUsuario", OTHER, "numeroIdentificacion", 1037, "nombreCompleto", "Luz Mar",
-                        "estaActivoUsuario", Boolean.TRUE));
-        query(DocenteJpaRepository.HQL_TODOS, UvDocenteIdentidadEntity.class, List.of(identidad));
-        final TypedQuery<UvDocenteIdentidadEntity> porId =
-                query(DocenteJpaRepository.HQL_POR_ID, UvDocenteIdentidadEntity.class, List.of(identidad));
-        final TypedQuery<UvDocenteEntity> asignaciones = query(DocenteJpaRepository.HQL_ASIGNACIONES,
-                UvDocenteEntity.class, List.of(HydratedViewRow.of(UvDocenteEntity.class,
-                        Map.of("id", ID, "nombreAsignatura", "Calculo", "inpPlanEstudio", 77))));
-        final DocenteJpaRepository repository = new DocenteJpaRepository(manager);
-
-        assertEquals("Luz Mar", repository.consultarDocentes().getFirst().getNombreCompleto());
-        assertEquals(ID, repository.consultarDocentePorId(new ConsultarDocentePorIdRepositoryDTO(ID))
-                .orElseThrow().getId());
-        verify(porId).setParameter("idDocente", ID);
-        verify(porId).setMaxResults(1);
-        assertEquals("77", repository.consultarAsignacionesAcademicas(
-                new ConsultarAsignacionesAcademicasDocenteRepositoryDTO(ID)).getFirst().getInpPlanEstudio());
-        verify(asignaciones).setParameter("idDocente", ID);
-    }
-
-    @Test
-    void docente_inexistente_y_entradas_nulas() {
-        query(DocenteJpaRepository.HQL_POR_ID, UvDocenteIdentidadEntity.class, List.of());
-        final DocenteJpaRepository repository = new DocenteJpaRepository(manager);
-
-        assertEquals(Optional.empty(), repository.consultarDocentePorId(new ConsultarDocentePorIdRepositoryDTO(ID)));
-        assertThrows(CrosscuttingException.class, () -> repository.consultarDocentePorId(null));
-        assertThrows(CrosscuttingException.class, () -> repository.consultarAsignacionesAcademicas(null));
-    }
 
     @Test
     void sesiones_por_id_y_por_grupo() {
@@ -151,9 +116,10 @@ class JpaQueryAdapterContractTest {
         final UUID decano2 = UUID.randomUUID();
         final UUID decano3 = UUID.randomUUID();
         query(DecanoJpaRepository.HQL_LISTAR, Object[].class, List.of(
-                new Object[]{ID, OTHER, 1037600111, "Ana Perez", ID, "Ingenieria", 1},
-                new Object[]{decano2, OTHER, null, "Luis Gomez", null, null, 0},
-                new Object[]{decano3, OTHER, 987654321, "Carlos Ruiz", null, null, null}
+                new Object[]{ID, OTHER, 1037600111, "Ana Maria Perez Gomez", ID, "Ingenieria", 1,
+                        "Ana", "Maria", "Perez", "Gomez"},
+                new Object[]{decano2, OTHER, null, "Luis Gomez", null, null, 0, "Luis", null, "Gomez", null},
+                new Object[]{decano3, OTHER, 987654321, "Carlos Ruiz", null, null, null, "Carlos", null, "Ruiz", null}
         ));
         final DecanoJpaRepository decanos = new DecanoJpaRepository(manager, new JpaProcedureExecutor(manager));
 
@@ -161,6 +127,11 @@ class JpaQueryAdapterContractTest {
 
         assertEquals(3, resultado.size());
         assertEquals("1037600111", resultado.get(0).numeroIdentificacion());
+        assertEquals("Ana", resultado.get(0).primerNombre());
+        assertEquals("Maria", resultado.get(0).segundoNombre());
+        assertEquals("Perez", resultado.get(0).primerApellido());
+        assertEquals("Gomez", resultado.get(0).segundoApellido());
+        assertNull(resultado.get(1).segundoNombre());
         assertEquals(ID, resultado.get(0).idFacultad());
         assertEquals("Ingenieria", resultado.get(0).nombreFacultad());
         assertTrue(resultado.get(0).estaActivoDecano());

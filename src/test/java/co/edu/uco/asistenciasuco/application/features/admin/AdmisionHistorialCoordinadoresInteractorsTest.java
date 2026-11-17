@@ -23,7 +23,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -113,54 +112,43 @@ class AdmisionHistorialCoordinadoresInteractorsTest {
 
     // ---- coordinadores paginados ----
 
-    private static List<CoordinadorDomain> coordinadores(final int cantidad) {
-        final List<CoordinadorDomain> lista = new ArrayList<>();
-        for (int i = 0; i < cantidad; i++) {
-            final CoordinadorDomain c = mock(CoordinadorDomain.class);
-            when(c.id()).thenReturn(UUID.randomUUID());
-            when(c.nombreCompleto()).thenReturn("Coordinador " + i);
-            lista.add(c);
-        }
-        return lista;
-    }
-
     @Test
-    void coordinadores_sin_paginar_devuelve_todos_mapeados() {
+    void coordinadores_delega_la_pagina_y_los_filtros_al_caso_de_uso_y_mapea_nombres_agrupados() {
         final ConsultarCoordinadoresUseCase useCase = mock(ConsultarCoordinadoresUseCase.class);
         final UUID decano = UUID.randomUUID();
-        final List<CoordinadorDomain> tres = coordinadores(3);
-        when(useCase.execute(decano)).thenReturn(tres);
-
-        final List<CoordinadorDTO> todos = new ConsultarCoordinadoresInteractor(useCase).execute(decano);
-
-        assertEquals(3, todos.size());
-        assertEquals("Coordinador 1", todos.get(1).nombreCompleto());
-    }
-
-    @Test
-    void coordinadores_pagina_en_servidor_con_valores_por_defecto_y_limites() {
-        final ConsultarCoordinadoresUseCase useCase = mock(ConsultarCoordinadoresUseCase.class);
-        final UUID decano = UUID.randomUUID();
-        final List<CoordinadorDomain> veinticinco = coordinadores(25);
-        when(useCase.execute(decano)).thenReturn(veinticinco);
+        final CoordinadorDomain ana = new CoordinadorDomain(UUID.randomUUID(), UUID.randomUUID(), "1", "Ana Maria Perez Gomez",
+                UUID.randomUUID(), "Ingenieria", true, "Ana", "Maria", "Perez", "Gomez", "ana@uco.edu.co", true, "Facultad", 3, 2);
+        final CoordinadorDomain jorge = new CoordinadorDomain(UUID.randomUUID(), UUID.randomUUID(), "2", "Jorge Henao",
+                null, null, true, "Jorge", null, "Henao", " ", null, true, "Facultad", 0, 0);
+        when(useCase.execute(decano, "ana", true, false, 2, 5)).thenReturn(new PaginaResultado<>(List.of(ana, jorge), 2, 5, 12));
         final ConsultarCoordinadoresInteractor interactor = new ConsultarCoordinadoresInteractor(useCase);
 
-        final PaginaResultado<CoordinadorDTO> porDefecto = interactor.execute(decano, null, null);
+        final PaginaResultado<CoordinadorDTO> pagina = interactor.execute(decano, "  ana ", true, false, 2, 5);
+
+        assertEquals(2, pagina.numeroPagina());
+        assertEquals(5, pagina.tamanoPagina());
+        assertEquals(12, pagina.totalElementos());
+        assertEquals("Ana Maria", pagina.elementos().getFirst().nombres());
+        assertEquals("Perez Gomez", pagina.elementos().getFirst().apellidos());
+        assertEquals("Jorge", pagina.elementos().getLast().nombres());
+        assertEquals("Henao", pagina.elementos().getLast().apellidos());
+    }
+
+    @Test
+    void coordinadores_aplica_valores_por_defecto_y_rechaza_limites_invalidos() {
+        final ConsultarCoordinadoresUseCase useCase = mock(ConsultarCoordinadoresUseCase.class);
+        final UUID decano = UUID.randomUUID();
+        when(useCase.execute(decano, null, null, null, 1, 10)).thenReturn(new PaginaResultado<>(List.of(), 1, 10, 0));
+        final ConsultarCoordinadoresInteractor interactor = new ConsultarCoordinadoresInteractor(useCase);
+
+        final PaginaResultado<CoordinadorDTO> porDefecto = interactor.execute(decano, "   ", null, null, null, null);
         assertEquals(1, porDefecto.numeroPagina());
         assertEquals(10, porDefecto.tamanoPagina());
-        assertEquals(25, porDefecto.totalElementos());
-        assertEquals(10, porDefecto.elementos().size());
+        assertTrue(porDefecto.elementos().isEmpty());
 
-        final PaginaResultado<CoordinadorDTO> ultima = interactor.execute(decano, 3, 10);
-        assertEquals(5, ultima.elementos().size());
-        assertEquals("Coordinador 20", ultima.elementos().getFirst().nombreCompleto());
-
-        final PaginaResultado<CoordinadorDTO> fueraDeRango = interactor.execute(decano, 9, 10);
-        assertTrue(fueraDeRango.elementos().isEmpty());
-        assertEquals(25, fueraDeRango.totalElementos());
-
-        assertThrows(ValidationException.class, () -> interactor.execute(decano, 0, 10));
-        assertThrows(ValidationException.class, () -> interactor.execute(decano, 1, 101));
+        assertThrows(ValidationException.class, () -> interactor.execute(decano, null, null, null, 0, 10));
+        assertThrows(ValidationException.class, () -> interactor.execute(decano, null, null, null, 1, 101));
+        assertThrows(ValidationException.class, () -> interactor.execute(decano, "x".repeat(101), null, null, 1, 10));
         assertThrows(NullPointerException.class, () -> new ConsultarCoordinadoresInteractor(null));
     }
 }

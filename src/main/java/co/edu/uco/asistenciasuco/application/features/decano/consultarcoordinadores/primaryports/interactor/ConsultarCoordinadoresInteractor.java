@@ -7,12 +7,11 @@ import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinado
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.primaryports.mapper.ConsultarCoordinadoresMapper;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.usecase.ConsultarCoordinadoresUseCase;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Interactor para la consulta de coordinadores de la facultad (F-DEC-004: paginacion en servidor).
+ * Interactor para la consulta de coordinadores de la facultad (paginacion y filtros en servidor).
  */
 public final class ConsultarCoordinadoresInteractor implements ConsultarCoordinadoresInputPort {
 
@@ -23,23 +22,14 @@ public final class ConsultarCoordinadoresInteractor implements ConsultarCoordina
     }
 
     @Override
-    public List<CoordinadorDTO> execute(final UUID actorUsuarioId) {
-        return useCase.execute(actorUsuarioId).stream().map(ConsultarCoordinadoresMapper::toDTO).toList();
-    }
-
-    @Override
-    public PaginaResultado<CoordinadorDTO> execute(final UUID actorUsuarioId, final Integer pagina, final Integer tamano) {
+    public PaginaResultado<CoordinadorDTO> execute(final UUID actorUsuarioId, final String busqueda,
+                                                   final Boolean estaActivo, final Boolean sinPrograma,
+                                                   final Integer pagina, final Integer tamano) {
         final int pag = ConsultaPaginadaRules.pagina(pagina);
         final int tam = ConsultaPaginadaRules.tamano(tamano);
-        final List<CoordinadorDTO> todos = execute(actorUsuarioId);
-        final int total = todos.size();
-        final int offset = (pag - 1) * tam;
-        final List<CoordinadorDTO> paginados;
-        if (offset >= total) {
-            paginados = List.of();
-        } else {
-            paginados = todos.subList(offset, Math.min(offset + tam, total));
-        }
-        return new PaginaResultado<>(paginados, pag, tam, total);
+        final String filtro = ConsultaPaginadaRules.busqueda(busqueda);
+        final var resultado = useCase.execute(actorUsuarioId, filtro, estaActivo, sinPrograma, pag, tam);
+        return new PaginaResultado<>(resultado.elementos().stream().map(ConsultarCoordinadoresMapper::toDTO).toList(),
+                resultado.numeroPagina(), resultado.tamanoPagina(), resultado.totalElementos());
     }
 }

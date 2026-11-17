@@ -148,11 +148,8 @@ public class SecurityConfig {
                     .hasAnyRole(ROLE_DECANO, ROLE_COORDINADOR)
                 .requestMatchers("/api/v1/coordinador/**").hasRole(ROLE_COORDINADOR)
                 .requestMatchers("/api/v1/docente/**").hasRole(ROLE_DOCENTE)
-                // Directorio general de docentes (crear/consultar/asignar a grupo): hoy sin
-                // contrato funcional explícito de quién debe administrarlo; se restringe a los
-                // roles que ya administran docentes en otros endpoints (ver duda documentada
-                // en docs/security/runtime-security-provider-architecture.md).
-                .requestMatchers("/api/v1/docentes/**").hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
+                // CIERRE-W1B: el directorio general /api/v1/docentes/** se retiro (sin usuario ejecutor ni ambito).
+                // Los directorios con ambito son /admin/docentes, /decano/docentes y /coordinador/docentes.
                 .requestMatchers("/api/v1/estudiante/**").hasRole(ROLE_ESTUDIANTE)
                 // IDENT-001: dominio institucional vigente para validar el formulario de registro manual del estudiante.
                 // DEC-073: tambien lo leen ADMINISTRADOR (alta de decanos) y DECANO (alta de coordinadores); solo expone el dominio.

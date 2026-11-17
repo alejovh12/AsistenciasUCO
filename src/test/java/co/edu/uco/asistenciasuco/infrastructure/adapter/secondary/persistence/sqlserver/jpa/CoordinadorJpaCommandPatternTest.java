@@ -103,89 +103,70 @@ class CoordinadorJpaCommandPatternTest {
         assertEquals(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT.code(), exception.getCode());
     }
 
+    // CIERRE-W1B (punto 3): el listado del decano se pagina y filtra en el SP con el usuario ejecutor.
     @Test
-    void COO_PAT_004_consultar_coordinadores_sin_programa_mapea_correctamente() {
-        final jakarta.persistence.TypedQuery typedQuery = mock(jakarta.persistence.TypedQuery.class);
-        when(entityManager.createQuery(anyString(), org.mockito.ArgumentMatchers.eq(Object[].class))).thenReturn(typedQuery);
-        final Object[] fila = new Object[]{
-                COORDINADOR,
-                UUID.randomUUID(),
-                "1017555444",
-                "Jorge Henao",
-                null,
-                null,
-                1,
-                "Jorge",
-                "Luis",
-                "Henao",
-                "Perez",
-                "jorge.henao@uco.edu.co",
-                1
-        };
-        when(typedQuery.setParameter(anyString(), any())).thenReturn(typedQuery);
-        when(typedQuery.getResultList()).thenReturn(Collections.singletonList(fila));
-
-        final java.util.List<co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.CoordinadorProjection> resultado =
-                command.consultarCoordinadoresSinPrograma(FACULTAD);
-
-        // HU121 D2: el coordinador sin programa se filtra por la facultad del decano (antes devolvia los de todas).
-        verify(typedQuery).setParameter("idFacultad", FACULTAD);
-        assertEquals(1, resultado.size());
-        assertEquals(COORDINADOR, resultado.getFirst().id());
-        assertEquals("1017555444", resultado.getFirst().numeroIdentificacion());
-        assertEquals("Jorge Henao", resultado.getFirst().nombreCompleto());
-        assertTrue(resultado.getFirst().estaActivoCoordinador());
-        assertEquals("Jorge", resultado.getFirst().primerNombre());
-        assertEquals("jorge.henao@uco.edu.co", resultado.getFirst().correo());
-        assertTrue(resultado.getFirst().estaActivoRolCoordinador());
-    }
-
-    @Test
-    void COO_PAT_005_consultar_coordinadores_por_facultad_mapea_correctamente() {
-        final jakarta.persistence.TypedQuery typedQuery = mock(jakarta.persistence.TypedQuery.class);
-        when(entityManager.createQuery(anyString(), org.mockito.ArgumentMatchers.eq(co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvCoordinadorEntity.class)))
-                .thenReturn(typedQuery);
-        when(typedQuery.setParameter(anyString(), any())).thenReturn(typedQuery);
-        when(typedQuery.getResultList()).thenReturn(Collections.emptyList());
-
-        final java.util.List<co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.CoordinadorProjection> resultado =
-                command.consultarCoordinadoresPorFacultad(FACULTAD);
-
-        assertTrue(resultado.isEmpty());
-    }
-
-    // Certificacion F3: resumen por programa (facultad, docentes activos y grupos habilitados) solo desde vistas uv_*.
-    @Test
-    void COO_PAT_011_resumen_de_programas_lee_vistas_y_mapea_conteos() {
-        final UUID programa = UUID.fromString("80808080-8080-8080-8080-808080808080");
+    void COO_PAT_004_consultar_coordinadores_facultad_ejecuta_el_sp_con_filtros_y_mapea_filas_y_total() {
+        final UUID idUsuario = UUID.fromString("70707070-7070-7070-7070-707070707070");
         when(query.getResultList()).thenReturn(java.util.List.of(
-                new Object[]{programa, "Facultad de Ingenieria", 1, 2L},
-                new Object[]{programa.toString(), null, null, null}));
+                new Object[]{COORDINADOR, idUsuario, 1017555444L, "Ana Maria Perez Gomez", PROGRAMA, "Ingenieria", 1,
+                        "Ana", "Maria", "Perez", "Gomez", "ana@uco.edu.co", true, "Facultad de Ingenieria", 3, 2L, 7},
+                new Object[]{COORDINADOR.toString(), idUsuario.toString(), null, "Jorge Henao", null, null, 0,
+                        "Jorge", null, "Henao", null, null, 0, null, null, null, 7}));
 
-        final java.util.List<co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResumenCoordinacionProjection> resumen =
-                command.consultarResumenProgramasFacultad(FACULTAD);
+        final var pagina = command.consultarCoordinadoresFacultad(EJECUTOR, "ana", true, null, 2, 5);
 
-        org.mockito.Mockito.verify(entityManager).createNativeQuery(CoordinadorJpaRepository.SQL_RESUMEN_PROGRAMAS_FACULTAD);
-        org.mockito.Mockito.verify(query).setParameter("idFacultad", FACULTAD);
-        assertEquals(2, resumen.size());
-        assertEquals(programa, resumen.get(0).idPrograma());
-        assertEquals("Facultad de Ingenieria", resumen.get(0).nombreFacultad());
-        assertEquals(1, resumen.get(0).totalDocentes());
-        assertEquals(2, resumen.get(0).totalGrupos());
-        assertEquals(programa, resumen.get(1).idPrograma());
-        assertEquals(0, resumen.get(1).totalDocentes());
-        assertTrue(CoordinadorJpaRepository.SQL_RESUMEN_PROGRAMAS_FACULTAD.contains("dbo.uv_docente_programa"));
-        assertTrue(CoordinadorJpaRepository.SQL_RESUMEN_PROGRAMAS_FACULTAD.contains("dbo.uv_grupo_programa"));
+        verify(entityManager).createNativeQuery(CoordinadorJpaRepository.SQL_CONSULTAR_COORDINADORES_FACULTAD);
+        verify(query).setParameter("idUsuarioEjecutor", EJECUTOR);
+        verify(query).setParameter("idCorrelacion", CORRELATION);
+        verify(query).setParameter("numeroPagina", 2);
+        verify(query).setParameter("tamanoPagina", 5);
+        verify(query).setParameter("busqueda", "ana");
+        verify(query).setParameter("estaActivo", true);
+        verify(query).setParameter("sinPrograma", null);
+        assertEquals(7, pagina.total());
+        assertEquals(2, pagina.elementos().size());
+        final var primero = pagina.elementos().getFirst();
+        assertEquals(COORDINADOR, primero.id());
+        assertEquals("1017555444", primero.numeroIdentificacion());
+        assertEquals("Ana", primero.primerNombre());
+        assertEquals("Maria", primero.segundoNombre());
+        assertEquals("Gomez", primero.segundoApellido());
+        assertEquals(PROGRAMA, primero.idPrograma());
+        assertTrue(primero.estaActivoCoordinador());
+        assertTrue(primero.estaActivoRolCoordinador());
+        assertEquals("Facultad de Ingenieria", primero.nombreFacultad());
+        assertEquals(3, primero.totalDocentes());
+        assertEquals(2, primero.totalGrupos());
+        final var segundo = pagina.elementos().getLast();
+        assertEquals(null, segundo.idPrograma());
+        assertFalse(segundo.estaActivoCoordinador());
+        assertEquals(0, segundo.totalDocentes());
+        assertEquals(0, segundo.totalGrupos());
+        assertTrue(CoordinadorJpaRepository.SQL_CONSULTAR_COORDINADORES_FACULTAD
+                .contains("EXEC dbo.usp_consultar_coordinadores_facultad_paginado"));
     }
 
-    // Regresion hallada en el E2E de HU121/HU122: con Coordinador.facultad, uv_coordinador devuelve filas con
-    // idPrograma nulo (parte de la identidad compuesta de la entidad) y Hibernate las entrega como null. Los
-    // coordinadores sin programa se leen con la otra consulta (por columnas), asi que esta los excluye.
     @Test
-    void COO_PAT_010_listado_por_facultad_solo_lee_coordinadores_con_programa() {
-        assertTrue(CoordinadorJpaRepository.HQL_POR_FACULTAD.contains("c.idPrograma is not null"));
-        assertTrue(CoordinadorJpaRepository.HQL_SIN_PROGRAMA.contains("c.idPrograma is null"));
-        assertTrue(CoordinadorJpaRepository.HQL_SIN_PROGRAMA.contains("c.idFacultad = :idFacultad"));
+    void COO_PAT_005_consultar_coordinadores_facultad_sin_filas_devuelve_total_cero() {
+        when(query.getResultList()).thenReturn(Collections.emptyList());
+
+        final var pagina = command.consultarCoordinadoresFacultad(EJECUTOR, null, null, true, 1, 10);
+
+        assertTrue(pagina.elementos().isEmpty());
+        assertEquals(0, pagina.total());
+        verify(query).setParameter("sinPrograma", true);
+    }
+
+    @Test
+    void COO_PAT_010_perfil_sin_permiso_del_sp_se_traduce_a_403_y_fallo_tecnico_a_database_operation_error() {
+        org.mockito.Mockito.doThrow(new PersistenceException("x", new RuntimeException("DBCODE=SEC_001|perfil")))
+                .when(query).getResultList();
+        assertThrows(co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException.class,
+                () -> command.consultarCoordinadoresFacultad(EJECUTOR, null, null, null, 1, 10));
+
+        org.mockito.Mockito.doThrow(new PersistenceException("deadlock")).when(query).getResultList();
+        assertThrows(DatabaseOperationException.class,
+                () -> command.consultarCoordinadoresFacultad(EJECUTOR, null, null, null, 1, 10));
     }
 
     // HU121/HU122 (CONTRACT HU121-HU122 §3.1): comandos de edicion y estado.

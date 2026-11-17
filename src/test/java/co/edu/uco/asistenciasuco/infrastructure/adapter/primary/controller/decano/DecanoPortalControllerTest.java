@@ -44,7 +44,7 @@ class DecanoPortalControllerTest {
 
     @Test
     void consultarCoordinadores_paginado_devuelve_api_page_response() throws Exception {
-        when(consultarCoordinadores.execute(ACTOR, 1, 10)).thenReturn(new PaginaResultado<>(
+        when(consultarCoordinadores.execute(ACTOR, null, null, null, 1, 10)).thenReturn(new PaginaResultado<>(
                 List.of(new CoordinadorDTO(UUID.randomUUID(), UUID.randomUUID(), "123456", "Ana Perez", PROGRAMA, "Ingenieria", true)),
                 1, 10, 1));
 
@@ -56,7 +56,38 @@ class DecanoPortalControllerTest {
                 .andExpect(jsonPath("$.tamanoPagina").value(10))
                 .andExpect(jsonPath("$.totalElementos").value(1));
 
-        verify(consultarCoordinadores).execute(ACTOR, 1, 10);
+        verify(consultarCoordinadores).execute(ACTOR, null, null, null, 1, 10);
+    }
+
+    @Test
+    void consultarCoordinadores_traslada_busqueda_estado_y_sin_programa_al_puerto() throws Exception {
+        when(consultarCoordinadores.execute(ACTOR, "ana", true, false, 2, 5)).thenReturn(new PaginaResultado<>(
+                List.of(new CoordinadorDTO(UUID.randomUUID(), UUID.randomUUID(), "123456", "Ana Perez", PROGRAMA, "Ingenieria",
+                        true, "Ana", null, "Perez", null, "ana@uco.edu.co", true, "Facultad", 3, 2, "Ana", "Perez")),
+                2, 5, 11));
+
+        mvc.perform(get("/api/v1/decano/coordinadores").param("pagina", "2").param("tamano", "5")
+                        .param("busqueda", "ana").param("estaActivo", "true").param("sinPrograma", "false"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.elementos[0].nombres").value("Ana"))
+                .andExpect(jsonPath("$.elementos[0].apellidos").value("Perez"))
+                .andExpect(jsonPath("$.elementos[0].totalDocentes").value(3))
+                .andExpect(jsonPath("$.numeroPagina").value(2))
+                .andExpect(jsonPath("$.tamanoPagina").value(5))
+                .andExpect(jsonPath("$.totalElementos").value(11))
+                .andExpect(jsonPath("$.totalPaginas").value(3));
+
+        verify(consultarCoordinadores).execute(ACTOR, "ana", true, false, 2, 5);
+    }
+
+    @Test
+    void consultarCoordinadores_tamano_fuera_de_rango_responde_400() throws Exception {
+        mvc.perform(get("/api/v1/decano/coordinadores").param("tamano", "101"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("PAG_001"))
+                .andExpect(jsonPath("$.details[0].field").value("tamano"));
+        mvc.perform(get("/api/v1/decano/coordinadores").param("estaActivo", "quizas"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
