@@ -20,7 +20,8 @@ import java.util.UUID;
 /**
  * Sesiones de una asignatura para el estudiante (CULM-001 D.1, HU026B; antes LB-008 JPA-05 sobre {@code uv_sesion}) sobre
  * {@code usp_consultar_sesiones_materia_estudiante}: el SP resuelve el estudiante desde el usuario ejecutor, solo cuenta la
- * matricula inscrita ({@code MATRICULA/ESTADO_INSCRITA}), pagina con {@code COUNT(1) OVER()} y calcula la fecha limite de
+ * matricula inscrita ({@code MATRICULA/ESTADO_INSCRITA}), ordena por inicio, numero e id (CIERRE-W2B), filtra por el grupo
+ * opcional ({@code @idGrupo}), pagina con {@code COUNT(1) OVER()} y calcula la fecha limite de
  * justificacion ({@code fechaLimiteJustificacionUtc}, {@code plazoJustificacionVigente}). Las fechas DATETIME2 se leen
  * siempre como UTC literal (MAINT-003K): jamas con la zona de la JVM.
  */
@@ -33,7 +34,8 @@ public class SesionMateriaEstudianteJpaRepository implements SesionMateriaEstudi
                  @idCorrelacion = :idCorrelacion,
                  @idMateria = :idMateria,
                  @numeroPagina = :numeroPagina,
-                 @tamanoPagina = :tamanoPagina
+                 @tamanoPagina = :tamanoPagina,
+                 @idGrupo = :idGrupo
             """;
     static final int COLUMNAS_SESIONES_MATERIA = 13;
     private static final int COLUMNA_TOTAL = 12;
@@ -47,6 +49,7 @@ public class SesionMateriaEstudianteJpaRepository implements SesionMateriaEstudi
     @Override
     public PaginaResultado<SesionMateriaEstudianteProjection> consultarSesionesMateria(final UUID usuarioEjecutor,
                                                                                        final UUID idAsignatura,
+                                                                                       final UUID idGrupo,
                                                                                        final int numeroPagina,
                                                                                        final int tamanoPagina) {
         if (usuarioEjecutor == null || idAsignatura == null) {
@@ -63,6 +66,7 @@ public class SesionMateriaEstudianteJpaRepository implements SesionMateriaEstudi
                             .setParameter("idMateria", idAsignatura)
                             .setParameter("numeroPagina", numeroPagina)
                             .setParameter("tamanoPagina", tamanoPagina)
+                            .setParameter("idGrupo", idGrupo)
                             .getResultList();
                     final List<SesionMateriaEstudianteProjection> sesiones = filas.stream()
                             .map(Object[].class::cast)

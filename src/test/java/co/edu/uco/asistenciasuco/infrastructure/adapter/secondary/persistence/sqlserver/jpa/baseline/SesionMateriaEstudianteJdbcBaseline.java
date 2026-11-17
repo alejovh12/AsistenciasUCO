@@ -31,7 +31,7 @@ public final class SesionMateriaEstudianteJdbcBaseline {
                 INNER JOIN dbo.uv_grupo g ON g.id = s.idGrupo
                 WHERE eg.idEstudiante = :idEstudiante
                   AND g.idAsignatura = :idAsignatura
-                ORDER BY s.numero, s.fechaHoraInicio
+                ORDER BY s.fechaHoraInicio, s.numero, s.id
                 """, new MapSqlParameterSource()
                 .addValue("idEstudiante", idEstudiante)
                 .addValue("idAsignatura", idAsignatura), (rs, rowNum) -> new SesionMateriaEstudianteProjection(

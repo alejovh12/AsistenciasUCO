@@ -693,7 +693,14 @@ class SqlStoredProcedureContractIT {
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@idMateria", "uniqueidentifier"),
                         input("@numeroPagina", "int"),
-                        input("@tamanoPagina", "int")
+                        input("@tamanoPagina", "int"),
+                        // CIERRE-W2B: grupo opcional (NULL = todos los grupos inscritos de la asignatura).
+                        input("@idGrupo", "uniqueidentifier")
+                )),
+                // CIERRE-W2B: indicadores del tablero del estudiante calculados en la base con las mismas materias del listado.
+                Arguments.of("usp_consultar_resumen_materias_estudiante", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier")
                 )),
                 // CIERRE-W1B: directorios de personas con ambito por rol y paginacion en servidor.
                 Arguments.of("usp_consultar_coordinadores_facultad_paginado", List.of(
