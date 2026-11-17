@@ -65,7 +65,8 @@ public class DecanoJpaRepository implements DecanoQueryPort, DecanoCommandPort {
     static final String HQL_LISTAR = """
             select d.id, d.idUsuario, d.numeroIdentificacion, d.nombreCompleto,
                    d.idFacultad, d.nombreFacultad, d.estaActivoDecano,
-                   d.primerNombre, d.segundoNombre, d.primerApellido, d.segundoApellido
+                   d.primerNombre, d.segundoNombre, d.primerApellido, d.segundoApellido,
+                   d.correo, d.tipoIdentificacion
             from UvDecanoEntity d
             order by d.nombreCompleto, d.id
             """;
@@ -198,7 +199,9 @@ public class DecanoJpaRepository implements DecanoQueryPort, DecanoCommandPort {
                                 (String) row[7],
                                 (String) row[8],
                                 (String) row[9],
-                                (String) row[10]
+                                (String) row[10],
+                                (String) row[11],
+                                (String) row[12]
                         ))
                         .toList()
         );

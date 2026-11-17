@@ -33,6 +33,25 @@ class ConsultarDecanosMapperTest {
     }
 
     @Test
+    void el_correo_y_el_tipo_de_documento_llegan_al_dto() {
+        final DecanoDTO dto = ConsultarDecanosMapper.toDTO(ConsultarDecanosRepositoryMapper.toDomain(
+                new DecanoProjection(UUID.randomUUID(), UUID.randomUUID(), "1037", "Ana Perez", null, null, true,
+                        "Ana", null, "Perez", null, "ana.perez@uco.edu.co", "CC")));
+
+        assertEquals("ana.perez@uco.edu.co", dto.correo());
+        assertEquals("CC", dto.tipoIdentificacion());
+    }
+
+    @Test
+    void sin_correo_ni_tipo_de_documento_no_se_inventan_valores() {
+        final DecanoDTO dto = ConsultarDecanosMapper.toDTO(ConsultarDecanosRepositoryMapper.toDomain(
+                new DecanoProjection(UUID.randomUUID(), UUID.randomUUID(), "1", "Luis Gomez", null, null, false)));
+
+        assertNull(dto.correo());
+        assertNull(dto.tipoIdentificacion());
+    }
+
+    @Test
     void sin_nombres_separados_los_agrupados_son_nulos_y_no_se_deducen_del_nombre_completo() {
         final DecanoDTO dto = ConsultarDecanosMapper.toDTO(ConsultarDecanosRepositoryMapper.toDomain(
                 new DecanoProjection(UUID.randomUUID(), UUID.randomUUID(), "1", "Luis Gomez", null, null, false)));

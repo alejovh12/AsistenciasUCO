@@ -102,12 +102,16 @@ class DecanoConsultasTransversalesControllerTest {
         when(inputPort.consultarHistorial(ACTOR, ID)).thenReturn(new FichaUnificadaDTO(ID, "CC", "101", "Ana Ruiz",
                 "ana@uco.edu.co", true, List.of(new MatriculaHistorialDTO(ID, "Ingenieria", ID, "Sistemas", 2024, ID,
                 "2026-1", "Primer semestre", ID, 1, ID, "Calculo", "MAT", "Matriculado",
-                new ResumenAsistenciaDTO(10, 8, 2, 0, new BigDecimal("20.00"), "RIESGO")))));
+                new ResumenAsistenciaDTO(10, 8, 2, 0, new BigDecimal("20.00"), "RIESGO", 14,
+                        new BigDecimal("28.00"), new BigDecimal("4.00"))))));
 
         mvc.perform(get("/api/v1/decano/estudiantes/{id}/historial", ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.datos.nombreCompleto").value("Ana Ruiz"))
-                .andExpect(jsonPath("$.datos.matriculas[0].resumen.codigoPermanencia").value("RIESGO"));
+                .andExpect(jsonPath("$.datos.matriculas[0].resumen.codigoPermanencia").value("RIESGO"))
+                .andExpect(jsonPath("$.datos.matriculas[0].resumen.tomasDictadas").value(14))
+                .andExpect(jsonPath("$.datos.matriculas[0].resumen.horasDictadas").value(28.0))
+                .andExpect(jsonPath("$.datos.matriculas[0].resumen.horasFalta").value(4.0));
     }
 
     @Test

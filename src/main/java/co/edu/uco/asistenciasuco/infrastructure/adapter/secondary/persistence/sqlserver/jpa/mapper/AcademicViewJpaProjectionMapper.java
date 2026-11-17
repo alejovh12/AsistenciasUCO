@@ -100,7 +100,8 @@ public final class AcademicViewJpaProjectionMapper {
     public static DecanoProjection toDecano(final UvDecanoEntity row) {
         return new DecanoProjection(row.id(), row.idUsuario(), text(row.numeroIdentificacion()),
                 row.nombreCompleto(), row.idFacultad(), row.nombreFacultad(), flag(row.estaActivoDecano()),
-                row.primerNombre(), row.segundoNombre(), row.primerApellido(), row.segundoApellido());
+                row.primerNombre(), row.segundoNombre(), row.primerApellido(), row.segundoApellido(),
+                row.correo(), row.tipoIdentificacion());
     }
 
     public static CoordinadorProjection toCoordinador(final UvCoordinadorEntity row) {
