@@ -6,7 +6,7 @@ queda desactualizada. Una prueba cuenta para una HU cuando su archivo cita el c√
 `@RepeatedTest`) del archivo. Es la columna "Pruebas (backend)" de la HU-CATALOG
 (`AsistenciasUCO-Infra/docs/user-stories/HU-CATALOG.md`); la del frontend est√° en su repositorio.
 
-Resumen: 71 HU con pruebas en 124 de 739 archivos de prueba.
+Resumen: 71 HU con pruebas en 124 de 743 archivos de prueba.
 
 | HU | Capas | Archivos | Casos | Pruebas |
 |---|---|---|---|---|

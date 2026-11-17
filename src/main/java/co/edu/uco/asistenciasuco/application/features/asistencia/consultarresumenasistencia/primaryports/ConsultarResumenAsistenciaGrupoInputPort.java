@@ -13,6 +13,12 @@ import java.util.UUID;
 public interface ConsultarResumenAsistenciaGrupoInputPort
         extends InteractorWithReturn<ConsultarResumenAsistenciaGrupoInputPort.Consulta, PaginaResultado<ResumenAsistenciaEstudianteDTO>> {
 
-    record Consulta(UUID grupoId, Integer pagina, Integer tamano, UUID usuarioEjecutor) {
+    /** {@code busqueda} (CIERRE-W3M) es opcional: subcadena del nombre o del documento del estudiante. */
+    record Consulta(UUID grupoId, Integer pagina, Integer tamano, UUID usuarioEjecutor, String busqueda) {
+
+        /** Consulta sin busqueda. */
+        public Consulta(final UUID grupoId, final Integer pagina, final Integer tamano, final UUID usuarioEjecutor) {
+            this(grupoId, pagina, tamano, usuarioEjecutor, null);
+        }
     }
 }

@@ -3,7 +3,9 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.PaginaResultado;
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.IndicadoresAsistenciaDTO;
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.MarcaInasistenciaDTO;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.MatrizAsistenciaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.ResumenAsistenciaQueryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.ResumenSesionesGrupoQueryPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.NativeRowValues;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
@@ -12,6 +14,8 @@ import jakarta.persistence.Tuple;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -23,12 +27,21 @@ import java.util.UUID;
  * desplazan el mapeo. Horas y porcentajes salen con 2 decimales (HALF_UP).
  */
 @Repository
-public class ResumenAsistenciaJpaRepository implements ResumenAsistenciaQueryPort {
+public class ResumenAsistenciaJpaRepository implements ResumenAsistenciaQueryPort, MatrizAsistenciaQueryPort, ResumenSesionesGrupoQueryPort {
 
     static final String SQL_GRUPO_DOCENTE = """
             EXEC dbo.usp_consultar_resumen_asistencia_grupo_docente_paginado
                  @idUsuarioEjecutor = :idUsuarioEjecutor, @idCorrelacion = :idCorrelacion, @idGrupo = :idGrupo,
-                 @numeroPagina = :numeroPagina, @tamanoPagina = :tamanoPagina
+                 @numeroPagina = :numeroPagina, @tamanoPagina = :tamanoPagina, @busqueda = :busqueda
+            """;
+    static final String SQL_MATRIZ = """
+            EXEC dbo.usp_consultar_matriz_asistencia_grupo_docente_paginado
+                 @idUsuarioEjecutor = :idUsuarioEjecutor, @idCorrelacion = :idCorrelacion, @idGrupo = :idGrupo,
+                 @numeroPagina = :numeroPagina, @tamanoPagina = :tamanoPagina, @busqueda = :busqueda
+            """;
+    static final String SQL_RESUMEN_SESIONES = """
+            EXEC dbo.usp_consultar_resumen_sesiones_grupo_docente
+                 @idUsuarioEjecutor = :idUsuarioEjecutor, @idCorrelacion = :idCorrelacion, @idGrupo = :idGrupo
             """;
     static final String SQL_ESTUDIANTE = """
             EXEC dbo.usp_consultar_resumen_asistencia_estudiante
@@ -43,16 +56,107 @@ public class ResumenAsistenciaJpaRepository implements ResumenAsistenciaQueryPor
 
     @Override
     public PaginaResultado<FilaResumen> consultarResumenGrupoDocente(final UUID grupoId, final int numeroPagina, final int tamanoPagina,
-                                                                    final UUID usuarioEjecutor) {
+                                                                    final String busqueda, final UUID usuarioEjecutor) {
         final UUID correlacion = CorrelationIdContext.require();
         return JpaQueryExecutor.execute("consultarResumenAsistenciaGrupoDocente",
                 "No fue posible consultar el resumen de asistencia del grupo.", () -> {
-                    final List<Tuple> filas = tuplas(SQL_GRUPO_DOCENTE, Map.of("idUsuarioEjecutor", usuarioEjecutor,
-                            "idCorrelacion", correlacion, "idGrupo", grupoId, "numeroPagina", numeroPagina, "tamanoPagina", tamanoPagina));
+                    final List<Tuple> filas = tuplas(SQL_GRUPO_DOCENTE, parametrosPagina(usuarioEjecutor, correlacion, grupoId,
+                            numeroPagina, tamanoPagina, busqueda));
                     final long total = filas.isEmpty() ? 0 : NativeRowValues.entero(filas.getFirst().get("totalRegistros"));
                     return new PaginaResultado<>(filas.stream().map(f -> aFila(f, NativeRowValues.texto(f.get("nombreCompletoEstudiante")), aMarca(f)))
                             .toList(), numeroPagina, tamanoPagina, total);
                 }, excepcion -> DbCodeTranslator.traducir(excepcion, "grupo"));
+    }
+
+    private static Map<String, Object> parametrosPagina(final UUID usuarioEjecutor, final UUID correlacion, final UUID grupoId,
+                                                        final int numeroPagina, final int tamanoPagina, final String busqueda) {
+        final Map<String, Object> parametros = new HashMap<>(Map.of("idUsuarioEjecutor", usuarioEjecutor, "idCorrelacion", correlacion,
+                "idGrupo", grupoId, "numeroPagina", numeroPagina, "tamanoPagina", tamanoPagina));
+        parametros.put("busqueda", busqueda);
+        return parametros;
+    }
+
+    /**
+     * CIERRE-W3M (punto 1): una fila por (matricula, sesion); se agrupan por matricula conservando el orden del SP (nombre, id) y,
+     * dentro de cada una, el de las sesiones (numero). {@code totalRegistros} cuenta estudiantes y {@code idSesion} es NULL en un
+     * grupo sin sesiones (la matricula queda sin celdas).
+     */
+    @Override
+    public PaginaResultado<FilaMatriz> consultarMatrizGrupoDocente(final UUID grupoId, final int numeroPagina, final int tamanoPagina,
+                                                                  final String busqueda, final UUID usuarioEjecutor) {
+        final UUID correlacion = CorrelationIdContext.require();
+        return JpaQueryExecutor.execute("consultarMatrizAsistenciaGrupoDocente",
+                "No fue posible consultar la matriz de asistencia del grupo.", () -> {
+                    final List<Tuple> filas = tuplas(SQL_MATRIZ, parametrosPagina(usuarioEjecutor, correlacion, grupoId,
+                            numeroPagina, tamanoPagina, busqueda));
+                    final Map<UUID, FilaMatrizAcumulada> porMatricula = new LinkedHashMap<>();
+                    for (final Tuple f : filas) {
+                        final FilaMatrizAcumulada acumulada = porMatricula.computeIfAbsent(
+                                NativeRowValues.uuid(f.get("idEstudianteGrupo")), id -> new FilaMatrizAcumulada(f));
+                        final UUID idSesion = NativeRowValues.uuid(f.get("idSesion"));
+                        if (idSesion != null) {
+                            acumulada.celdas.add(new CeldaMatriz(idSesion, NativeRowValues.texto(f.get("codigoEstado")),
+                                    NativeRowValues.entero(f.get("minutosAsistidos")), NativeRowValues.entero(f.get("minutosSesion"))));
+                        }
+                    }
+                    final long total = filas.isEmpty() ? 0 : NativeRowValues.entero(filas.getFirst().get("totalRegistros"));
+                    return new PaginaResultado<>(porMatricula.values().stream().map(FilaMatrizAcumulada::aFila).toList(),
+                            numeroPagina, tamanoPagina, total);
+                }, excepcion -> DbCodeTranslator.traducir(excepcion, "grupo"));
+    }
+
+    /**
+     * CIERRE-W3M (puntos 2 y 3): una fila por sesion con las columnas del grupo repetidas; un grupo sin sesiones devuelve una sola
+     * fila con {@code idSesion} NULL (solo aporta las columnas del grupo).
+     */
+    @Override
+    public ResumenGrupo consultarResumenSesionesGrupoDocente(final UUID grupoId, final UUID usuarioEjecutor) {
+        final UUID correlacion = CorrelationIdContext.require();
+        return JpaQueryExecutor.execute("consultarResumenSesionesGrupoDocente",
+                "No fue posible consultar el resumen de sesiones del grupo.", () -> {
+                    final List<Tuple> filas = tuplas(SQL_RESUMEN_SESIONES, Map.of("idUsuarioEjecutor", usuarioEjecutor,
+                            "idCorrelacion", correlacion, "idGrupo", grupoId));
+                    if (filas.isEmpty()) {
+                        return new ResumenGrupo(0, 0, 0, 0, null, null, 0, 0, null, null, null, List.of());
+                    }
+                    final Tuple g = filas.getFirst();
+                    final List<SesionResumen> sesiones = filas.stream().filter(f -> f.get("idSesion") != null).map(f -> new SesionResumen(
+                            NativeRowValues.uuid(f.get("idSesion")), NativeRowValues.entero(f.get("numero")), NativeRowValues.texto(f.get("nombre")),
+                            NativeRowValues.instanteUtc(f.get("fechaHoraInicio")), NativeRowValues.instanteUtc(f.get("fechaHoraFin")),
+                            f.get("procedenciaTemporal") != null, NativeRowValues.texto(f.get("estadoSesion")),
+                            NativeRowValues.texto(f.get("estadoSolicitud")), NativeRowValues.bit(f.get("pendienteAprobacion")),
+                            NativeRowValues.entero(f.get("totalEstudiantes")), NativeRowValues.entero(f.get("presentes")),
+                            NativeRowValues.entero(f.get("parciales")), NativeRowValues.entero(f.get("justificadas")),
+                            NativeRowValues.entero(f.get("ausentes")), NativeRowValues.entero(f.get("sinRegistro")))).toList();
+                    return new ResumenGrupo(NativeRowValues.entero(g.get("sesionesProgramadas")), NativeRowValues.entero(g.get("sesionesEjecutadas")),
+                            NativeRowValues.entero(g.get("sesionesCanceladas")), NativeRowValues.entero(g.get("sesionesEnCurso")),
+                            NativeRowValues.uuid(g.get("idSesionEnCurso")), NativeRowValues.uuid(g.get("idSesionProxima")),
+                            NativeRowValues.entero(g.get("estudiantesActivos")), NativeRowValues.entero(g.get("estudiantesEnRiesgo")),
+                            NativeRowValues.decimal2(g.get("promedioAsistencia")), NativeRowValues.decimal2(g.get("umbralAdvertencia")),
+                            NativeRowValues.decimal2(g.get("umbralPerdida")), sesiones);
+                }, excepcion -> DbCodeTranslator.traducir(excepcion, "grupo"));
+    }
+
+    /** Matricula de la matriz en construccion: datos de la primera fila y celdas acumuladas por sesion. */
+    private static final class FilaMatrizAcumulada {
+        private final UUID idEstudianteGrupo;
+        private final UUID idEstudiante;
+        private final String nombreCompleto;
+        private final String documento;
+        private final String codigoEstadoEstudiante;
+        private final List<CeldaMatriz> celdas = new ArrayList<>();
+
+        private FilaMatrizAcumulada(final Tuple f) {
+            this.idEstudianteGrupo = NativeRowValues.uuid(f.get("idEstudianteGrupo"));
+            this.idEstudiante = NativeRowValues.uuid(f.get("idEstudiante"));
+            this.nombreCompleto = NativeRowValues.texto(f.get("nombreCompletoEstudiante"));
+            this.documento = NativeRowValues.texto(f.get("documento"));
+            this.codigoEstadoEstudiante = NativeRowValues.texto(f.get("codigoEstadoEstudiante"));
+        }
+
+        private FilaMatriz aFila() {
+            return new FilaMatriz(idEstudianteGrupo, idEstudiante, nombreCompleto, documento, codigoEstadoEstudiante, celdas);
+        }
     }
 
     @Override
