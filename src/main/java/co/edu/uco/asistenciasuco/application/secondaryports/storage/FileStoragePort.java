@@ -43,10 +43,10 @@ public interface FileStoragePort {
             if (this == other) {
                 return true;
             }
-            return other instanceof StoreObjectCommand that
-                    && Objects.equals(fileId, that.fileId)
-                    && Arrays.equals(content, that.content)
-                    && Objects.equals(metadata, that.metadata);
+            return other instanceof StoreObjectCommand(var otherFileId, var otherContent, var otherMetadata)
+                    && Objects.equals(fileId, otherFileId)
+                    && Arrays.equals(content, otherContent)
+                    && Objects.equals(metadata, otherMetadata);
         }
 
         @Override
@@ -69,10 +69,10 @@ public interface FileStoragePort {
             if (this == other) {
                 return true;
             }
-            return other instanceof StoredObject that
-                    && Objects.equals(fileId, that.fileId)
-                    && Arrays.equals(content, that.content)
-                    && Objects.equals(metadata, that.metadata);
+            return other instanceof StoredObject(var otherFileId, var otherContent, var otherMetadata)
+                    && Objects.equals(fileId, otherFileId)
+                    && Arrays.equals(content, otherContent)
+                    && Objects.equals(metadata, otherMetadata);
         }
 
         @Override

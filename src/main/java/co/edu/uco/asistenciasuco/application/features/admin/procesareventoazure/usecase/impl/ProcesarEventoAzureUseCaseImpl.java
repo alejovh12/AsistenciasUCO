@@ -32,7 +32,7 @@ public class ProcesarEventoAzureUseCaseImpl implements ProcesarEventoAzureUseCas
         if (eventType.startsWith("Microsoft.AppConfiguration.")) {
             procesarEventoAppConfiguration(eventType, subject, data);
         } else if (eventType.startsWith("Microsoft.KeyVault.")) {
-            procesarEventoKeyVault(eventType, subject, data);
+            procesarEventoKeyVault(subject, data);
         }
     }
 
@@ -77,7 +77,7 @@ public class ProcesarEventoAzureUseCaseImpl implements ProcesarEventoAzureUseCas
         }
     }
 
-    private void procesarEventoKeyVault(final String eventType, final String subject, final Map<String, Object> data) {
+    private void procesarEventoKeyVault(final String subject, final Map<String, Object> data) {
         final String secretName;
         if (data != null && data.containsKey(CLAVE_OBJECT_NAME) && data.get(CLAVE_OBJECT_NAME) != null) {
             secretName = data.get(CLAVE_OBJECT_NAME).toString().trim();

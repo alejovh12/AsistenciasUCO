@@ -72,10 +72,14 @@ public final class TomaAsistenciaController {
             @PathVariable final UUID tomaId,
             @Valid @RequestBody(required = false) final TomaAsistenciaRequests.LoteToma request
     ) {
-        final List<RegistrarAsistenciasTomaInputPort.Registro> registros = request == null || request.registros() == null ? null
-                : request.registros().stream()
-                .map(r -> r == null ? null : new RegistrarAsistenciasTomaInputPort.Registro(r.estudianteId(), r.estado()))
-                .toList();
+        final List<RegistrarAsistenciasTomaInputPort.Registro> registros;
+        if (request == null || request.registros() == null) {
+            registros = null;
+        } else {
+            registros = request.registros().stream()
+                    .map(r -> r == null ? null : new RegistrarAsistenciasTomaInputPort.Registro(r.estudianteId(), r.estado()))
+                    .toList();
+        }
         return ResponseEntity.ok(new ApiDataResponse<>(true, LoteTomaResponse.from(registrarAsistencias.execute(
                 new RegistrarAsistenciasTomaInputPort.Comando(tomaId, registros, authenticatedUserResolver.requireAuthenticatedUserId())))));
     }

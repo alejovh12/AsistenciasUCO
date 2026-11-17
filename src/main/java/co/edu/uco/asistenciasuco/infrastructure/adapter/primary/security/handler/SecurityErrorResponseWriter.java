@@ -15,6 +15,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Component
@@ -34,7 +35,7 @@ public final class SecurityErrorResponseWriter {
         response.setCharacterEncoding("UTF-8");
         // Serializacion estandar de Jackson: escapa comillas, controles y caracteres especiales del path reflejado.
         JSON_MAPPER.writeValue(response.getOutputStream(), new ApiErrorResponse(
-                OffsetDateTime.now(),
+                OffsetDateTime.now(ZoneId.systemDefault()),
                 status.value(),
                 status.getReasonPhrase(),
                 errorDefinition.code(),

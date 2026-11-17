@@ -298,7 +298,10 @@ public class AsignaturaPlanEstudioJpaRepository implements AsignaturaPlanPort {
     }
 
     private static UUID uuid(final Object valor) {
-        return valor == null ? null : (valor instanceof UUID u ? u : UUID.fromString(valor.toString()));
+        if (valor == null) {
+            return null;
+        }
+        return valor instanceof UUID u ? u : UUID.fromString(valor.toString());
     }
 
     private static Integer entero(final Object valor) {

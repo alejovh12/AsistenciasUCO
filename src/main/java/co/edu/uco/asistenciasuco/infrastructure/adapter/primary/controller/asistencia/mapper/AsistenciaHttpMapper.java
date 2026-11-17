@@ -56,14 +56,17 @@ public final class AsistenciaHttpMapper {
             final UUID usuarioEjecutor
     ) {
         Objects.requireNonNull(request, "El request HTTP para registrar asistencias de sesion es obligatorio.");
-        final List<RegistroAsistenciaSesionDTO> registros = request.getRegistros() == null
-                ? List.of()
-                : request.getRegistros().stream()
-                        .map(registro -> new RegistroAsistenciaSesionDTO(
-                                registro == null ? null : registro.getEstudianteId(),
-                                registro == null ? null : registro.getEstado()
-                        ))
-                        .toList();
+        final List<RegistroAsistenciaSesionDTO> registros;
+        if (request.getRegistros() == null) {
+            registros = List.of();
+        } else {
+            registros = request.getRegistros().stream()
+                    .map(registro -> new RegistroAsistenciaSesionDTO(
+                            registro == null ? null : registro.getEstudianteId(),
+                            registro == null ? null : registro.getEstado()
+                    ))
+                    .toList();
+        }
         return new RegistrarAsistenciasSesionDTO(request.getSesionId(), registros, usuarioEjecutor);
     }
 }

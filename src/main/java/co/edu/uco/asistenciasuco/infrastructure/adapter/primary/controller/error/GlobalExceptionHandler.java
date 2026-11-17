@@ -36,6 +36,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -60,7 +61,7 @@ public final class GlobalExceptionHandler {
     ) {
         final ApiErrorDescriptor descriptor = ApiErrorCatalog.invalidRequest();
         final Optional<ResolvedInputError> resolvedError = JacksonInputErrorResolver.resolve(exception);
-        logFrameworkBadRequest(descriptor, exception, request, resolvedError.map(ResolvedInputError::field).stream().toList());
+        logFrameworkBadRequest(descriptor, request, resolvedError.map(ResolvedInputError::field).stream().toList());
         return resolvedError
                 .map(error -> buildResponse(descriptor, request, List.of(toFieldError(error))))
                 .orElseGet(() -> buildResponse(descriptor, request));
@@ -72,7 +73,7 @@ public final class GlobalExceptionHandler {
             final HttpServletRequest request
     ) {
         final ApiErrorDescriptor descriptor = ApiErrorCatalog.invalidRequest();
-        logFrameworkBadRequest(descriptor, exception, request, List.of(exception.getName()));
+        logFrameworkBadRequest(descriptor, request, List.of(exception.getName()));
         return buildResponse(descriptor, request, resolveTypeMismatchFieldError(exception.getName(), exception.getRequiredType()));
     }
 
@@ -83,7 +84,7 @@ public final class GlobalExceptionHandler {
     ) {
         final ApiErrorDescriptor descriptor = ApiErrorCatalog.requestValidationError();
         final String field = exception.getParameterName();
-        logFrameworkBadRequest(descriptor, exception, request, List.of(field));
+        logFrameworkBadRequest(descriptor, request, List.of(field));
         return buildResponse(descriptor, request, List.of(new ApiFieldError(
                 field,
                 ApiFieldErrorCode.FIELD_REQUIRED.name(),
@@ -98,7 +99,7 @@ public final class GlobalExceptionHandler {
     ) {
         final ApiErrorDescriptor descriptor = ApiErrorCatalog.requestValidationError();
         final String field = exception.getRequestPartName();
-        logFrameworkBadRequest(descriptor, exception, request, List.of(field));
+        logFrameworkBadRequest(descriptor, request, List.of(field));
         return buildResponse(descriptor, request, List.of(new ApiFieldError(
                 field,
                 ApiFieldErrorCode.FIELD_REQUIRED.name(),
@@ -112,7 +113,7 @@ public final class GlobalExceptionHandler {
             final HttpServletRequest request
     ) {
         final ApiErrorDescriptor descriptor = ApiErrorCatalog.unsupportedMediaType();
-        logFrameworkBadRequest(descriptor, exception, request);
+        logFrameworkBadRequest(descriptor, request);
         return buildResponse(descriptor, request);
     }
 
@@ -122,7 +123,7 @@ public final class GlobalExceptionHandler {
             final HttpServletRequest request
     ) {
         final ApiErrorDescriptor descriptor = ApiErrorCatalog.notAcceptable();
-        logFrameworkBadRequest(descriptor, exception, request);
+        logFrameworkBadRequest(descriptor, request);
         return buildResponse(descriptor, request);
     }
 
@@ -132,7 +133,7 @@ public final class GlobalExceptionHandler {
             final HttpServletRequest request
     ) {
         final ApiErrorDescriptor descriptor = ApiErrorCatalog.malformedMultipart();
-        logFrameworkBadRequest(descriptor, exception, request);
+        logFrameworkBadRequest(descriptor, request);
         return buildResponse(descriptor, request);
     }
 
@@ -148,7 +149,7 @@ public final class GlobalExceptionHandler {
     ) {
         final ApiErrorDescriptor descriptor = ApiErrorCatalog.requestValidationError();
         final List<ApiFieldError> details = BeanValidationFieldErrorMapper.from(exception.getBindingResult());
-        logFrameworkBadRequest(descriptor, exception, request,
+        logFrameworkBadRequest(descriptor, request,
                 details.stream().map(ApiFieldError::field).distinct().sorted().toList());
         return buildResponse(descriptor, request, details);
     }
@@ -163,7 +164,7 @@ public final class GlobalExceptionHandler {
             final HttpServletRequest request
     ) {
         final ApiErrorDescriptor descriptor = ApiErrorCatalog.invalidRequest();
-        logFrameworkBadRequest(descriptor, exception, request);
+        logFrameworkBadRequest(descriptor, request);
         return buildResponse(descriptor, request);
     }
 
@@ -189,7 +190,7 @@ public final class GlobalExceptionHandler {
             final HttpServletRequest request
     ) {
         final ApiErrorDescriptor descriptor = ApiErrorCatalog.methodNotAllowed();
-        logFrameworkBadRequest(descriptor, exception, request);
+        logFrameworkBadRequest(descriptor, request);
         final ResponseEntity<ApiErrorResponse> response = buildResponse(descriptor, request);
         if (exception.getSupportedHttpMethods() == null || exception.getSupportedHttpMethods().isEmpty()) {
             return response;
@@ -206,7 +207,7 @@ public final class GlobalExceptionHandler {
             final HttpServletRequest request
     ) {
         final ApiErrorDescriptor descriptor = ApiErrorCatalog.uploadSizeExceeded();
-        logFrameworkBadRequest(descriptor, exception, request);
+        logFrameworkBadRequest(descriptor, request);
         return buildResponse(descriptor, request);
     }
 
@@ -216,7 +217,7 @@ public final class GlobalExceptionHandler {
             final HttpServletRequest request
     ) {
         final ApiErrorDescriptor descriptor = ApiErrorCatalog.resourceNotFound();
-        logFrameworkNotFound(descriptor, exception, request);
+        logFrameworkNotFound(descriptor, request);
         return buildResponse(descriptor, request);
     }
 
@@ -229,7 +230,7 @@ public final class GlobalExceptionHandler {
         if (descriptor.status().is5xxServerError()) {
             logInternal(descriptor, exception, request);
         } else {
-            logControlled(descriptor, exception, request);
+            logControlled(descriptor, request);
         }
         final ResponseEntity<ApiErrorResponse> respuesta = buildResponse(descriptor, request);
         if (descriptor.status() == HttpStatus.TOO_MANY_REQUESTS) {
@@ -278,7 +279,7 @@ public final class GlobalExceptionHandler {
         AuditRequestAttributes.storeErrorCode(request, descriptor.code());
         final String resolvedMessage = resolveErrorMessage(descriptor);
         return ResponseEntity.status(descriptor.status()).contentType(MediaType.APPLICATION_JSON).body(new ApiErrorResponse(
-                OffsetDateTime.now(),
+                OffsetDateTime.now(ZoneId.systemDefault()),
                 descriptor.status().value(),
                 descriptor.status().getReasonPhrase(),
                 descriptor.code(),
@@ -309,7 +310,6 @@ public final class GlobalExceptionHandler {
 
     private void logControlled(
             final ApiErrorDescriptor descriptor,
-            final Exception exception,
             final HttpServletRequest request
     ) {
         LOGGER.warn(
@@ -345,15 +345,13 @@ public final class GlobalExceptionHandler {
 
     private void logFrameworkBadRequest(
             final ApiErrorDescriptor descriptor,
-            final Exception exception,
             final HttpServletRequest request
     ) {
-        logFrameworkBadRequest(descriptor, exception, request, List.of());
+        logFrameworkBadRequest(descriptor, request, List.of());
     }
 
     private void logFrameworkBadRequest(
             final ApiErrorDescriptor descriptor,
-            final Exception exception,
             final HttpServletRequest request,
             final List<String> validationFields
     ) {
@@ -412,7 +410,6 @@ public final class GlobalExceptionHandler {
 
     private void logFrameworkNotFound(
             final ApiErrorDescriptor descriptor,
-            final Exception exception,
             final HttpServletRequest request
     ) {
         LOGGER.warn(

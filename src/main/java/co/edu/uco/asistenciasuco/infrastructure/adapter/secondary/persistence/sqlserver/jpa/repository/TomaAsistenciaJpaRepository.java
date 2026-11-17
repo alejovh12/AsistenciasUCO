@@ -112,7 +112,11 @@ public class TomaAsistenciaJpaRepository implements TomaAsistenciaRepositoryPort
         final Map<String, Object> parametros = new LinkedHashMap<>();
         parametros.put(P_TOMA, tomaId);
         // Un BIT nulo sin tipo no tiene JdbcType resoluble: viaja como texto o NULL y SQL Server lo convierte.
-        parametros.put("marcarAusentes", marcarAusentes == null ? null : (marcarAusentes ? "1" : "0"));
+        String marcarAusentesTexto = null;
+        if (marcarAusentes != null) {
+            marcarAusentesTexto = marcarAusentes ? "1" : "0";
+        }
+        parametros.put("marcarAusentes", marcarAusentesTexto);
         parametros.put(P_CORRELACION, correlacion);
         parametros.put(P_USUARIO, usuarioEjecutor);
         // idToma, idSesion, idGrupo, fechaCierreUtc, totalAusentesMarcados, totalFaltantes, yaEstabaCerrada

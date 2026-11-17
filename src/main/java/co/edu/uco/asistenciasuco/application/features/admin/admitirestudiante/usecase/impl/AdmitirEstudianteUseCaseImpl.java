@@ -70,7 +70,7 @@ public final class AdmitirEstudianteUseCaseImpl implements AdmitirEstudianteUseC
         }
         final String correo = domain.correo() == null ? null : domain.correo().strip().toLowerCase(Locale.ROOT);
         final boolean personaExistente = existePersona(domain, correo);
-        final String passwordHash = personaExistente ? null : exigirReglasDeAltaNueva(domain, correo);
+        final String passwordHash = personaExistente ? null : exigirReglasDeAltaNueva(correo);
 
         final AdmisionEstudianteResultadoProjection admitido;
         try {
@@ -110,7 +110,7 @@ public final class AdmitirEstudianteUseCaseImpl implements AdmitirEstudianteUseC
      * Persona nueva: correo institucional (VCE_001). IDENT-002: sin contrasena en el registro; devuelve el valor de la
      * columna legada (hash de un secreto inutilizable).
      */
-    private String exigirReglasDeAltaNueva(final AdmitirEstudianteDomain domain, final String correo) {
+    private String exigirReglasDeAltaNueva(final String correo) {
         dominioCorreoPolicy.exigir(correo);
         return activacion.credencialLegadaInutilizable();
     }

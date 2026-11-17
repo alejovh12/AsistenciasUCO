@@ -146,7 +146,11 @@ public class DecanoJpaRepository implements DecanoQueryPort, DecanoCommandPort {
         final Map<String, Object> parametros = new LinkedHashMap<>();
         parametros.put(PARAM_ID_DECANO, idDecano);
         // Un Boolean nulo sin tipo no tiene JdbcType en Hibernate: viaja como texto o NULL (NULL = invertir el estado).
-        parametros.put("estaActivo", estaActivo == null ? null : (Boolean.TRUE.equals(estaActivo) ? "1" : "0"));
+        String estaActivoTexto = null;
+        if (estaActivo != null) {
+            estaActivoTexto = Boolean.TRUE.equals(estaActivo) ? "1" : "0";
+        }
+        parametros.put("estaActivo", estaActivoTexto);
         parametros.put(PARAM_ID_CORRELACION, correlationId);
         parametros.put(PARAM_ID_USUARIO_EJECUTOR, usuarioEjecutor);
         final ProcedureRow fila = procedureExecutor.executeWithExtras(
