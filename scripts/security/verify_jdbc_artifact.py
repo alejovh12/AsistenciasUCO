@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""SEC-002: attest that the runnable Spring Boot archive embeds the patched JDBC jar.
+"""SEC-002: attest that the runtime ships only the patched JDBC jar.
+
+Accepts the Spring Boot fat jar (BOOT-INF/lib inside the archive) or the application
+directory of the layered runtime image (/app, with the libraries extracted to lib/).
 
 Trivy can normalize 13.2.1.jre11 to 13.2.1 in pom.properties.
 This check does not suppress scanner findings or prove SQL/TLS connectivity.
@@ -13,22 +16,35 @@ from pathlib import Path
 from zipfile import BadZipFile, ZipFile
 
 PATCHED_ARTIFACT = "BOOT-INF/lib/mssql-jdbc-13.2.1.jre11.jar"
+PATCHED_LIBRARY = "lib/mssql-jdbc-13.2.1.jre11.jar"
 POM_PROPERTIES = "META-INF/maven/com.microsoft.sqlserver/mssql-jdbc/pom.properties"
 
 
+def _read_driver_metadata(runtime: Path) -> str:
+    """Return pom.properties of the only JDBC driver, or raise ValueError on unexpected drivers."""
+    if runtime.is_dir():
+        # Layered image: every mssql-jdbc jar anywhere under the application directory counts.
+        matches = sorted(path.relative_to(runtime).as_posix() for path in runtime.rglob("mssql-jdbc-*.jar"))
+        if matches != [PATCHED_LIBRARY]:
+            raise ValueError(f"Expected only {PATCHED_LIBRARY}; found {matches}")
+        with ZipFile(runtime / PATCHED_LIBRARY) as inner:
+            return inner.read(POM_PROPERTIES).decode("utf-8")
+    with ZipFile(runtime) as outer:
+        matches = [
+            name
+            for name in outer.namelist()
+            if name.startswith("BOOT-INF/lib/mssql-jdbc-") and name.endswith(".jar")
+        ]
+        if matches != [PATCHED_ARTIFACT]:
+            raise ValueError(f"Expected only {PATCHED_ARTIFACT}; found {matches}")
+        with ZipFile(io.BytesIO(outer.read(PATCHED_ARTIFACT))) as inner:
+            return inner.read(POM_PROPERTIES).decode("utf-8")
+
+
 def attest(boot_jar: Path) -> str:
-    """Inspect a Spring Boot fat jar and raise ValueError on unexpected drivers."""
+    """Inspect a Spring Boot fat jar or a layered application directory."""
     try:
-        with ZipFile(boot_jar) as outer:
-            matches = [
-                name
-                for name in outer.namelist()
-                if name.startswith("BOOT-INF/lib/mssql-jdbc-") and name.endswith(".jar")
-            ]
-            if matches != [PATCHED_ARTIFACT]:
-                raise ValueError(f"Expected only {PATCHED_ARTIFACT}; found {matches}")
-            with ZipFile(io.BytesIO(outer.read(PATCHED_ARTIFACT))) as inner:
-                properties = inner.read(POM_PROPERTIES).decode("utf-8")
+        properties = _read_driver_metadata(boot_jar)
     except (BadZipFile, KeyError, OSError, UnicodeError) as error:
         raise ValueError("Unable to inspect JDBC artifact and Maven metadata") from error
 
@@ -51,7 +67,7 @@ def attest(boot_jar: Path) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("archive", type=Path, help="Freshly built Spring Boot runtime archive")
+    parser.add_argument("archive", type=Path, help="Spring Boot runtime archive, or the /app directory of the layered image")
     args = parser.parse_args()
     try:
         print(attest(args.archive))

@@ -167,8 +167,9 @@ jobs:
           image="asistencias-uco-security-scan:${{ github.sha }}"
           cid="$(docker create "$image")"
           trap 'docker rm -f "$cid" >/dev/null 2>&1 || true' EXIT
-          docker cp "$cid":/app/app.jar "${RUNNER_TEMP}/asistencias-runtime.jar"
-          python3 scripts/security/verify_jdbc_artifact.py "${RUNNER_TEMP}/asistencias-runtime.jar"
+          # La imagen va por capas: las librerias estan en /app/lib y app.jar es el JAR delgado. Se inspecciona todo /app.
+          docker cp "$cid":/app "${RUNNER_TEMP}/asistencias-runtime-app"
+          python3 scripts/security/verify_jdbc_artifact.py "${RUNNER_TEMP}/asistencias-runtime-app"
       # TRI-02 (VAL oleada 2): inventario SARIF de la imagen + compuerta bloqueante.
       - name: Scan built Docker image (SARIF inventory for Code Scanning)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
