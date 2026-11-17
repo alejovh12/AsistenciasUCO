@@ -288,9 +288,8 @@ class CatalogoParametrosHttpParameterCatalogAdapterTest {
                 segundoHilo.set(Thread.currentThread());
                 return a.getParameter("G", "SINACTIVO");
             });
-            while (segundoHilo.get() == null || segundoHilo.get().getState() != Thread.State.WAITING) {
-                Thread.sleep(5);
-            }
+            org.awaitility.Awaitility.await().until(
+                    () -> segundoHilo.get() != null && segundoHilo.get().getState() == Thread.State.WAITING);
             soltar.countDown();
 
             assertEquals("presente", primera.get(5, java.util.concurrent.TimeUnit.SECONDS).orElseThrow());
@@ -503,9 +502,8 @@ class CatalogoParametrosHttpParameterCatalogAdapterTest {
                 segundoHilo.set(Thread.currentThread());
                 return a.getParameter("G", "SINACTIVO");
             });
-            while (segundoHilo.get() == null || segundoHilo.get().getState() != Thread.State.WAITING) {
-                Thread.sleep(5);
-            }
+            org.awaitility.Awaitility.await().until(
+                    () -> segundoHilo.get() != null && segundoHilo.get().getState() == Thread.State.WAITING);
             soltar.countDown();
 
             final var e1 = assertThrows(java.util.concurrent.ExecutionException.class,
