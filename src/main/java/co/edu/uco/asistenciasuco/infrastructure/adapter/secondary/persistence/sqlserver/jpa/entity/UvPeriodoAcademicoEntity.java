@@ -42,6 +42,9 @@ public class UvPeriodoAcademicoEntity {
     @Column(name = "anio")
     private Integer anio;
 
+    @Column(name = "estado")
+    private String estado;
+
     protected UvPeriodoAcademicoEntity() {
         // requerido por JPA
     }
@@ -76,6 +79,11 @@ public class UvPeriodoAcademicoEntity {
 
     public Integer anio() {
         return anio;
+    }
+
+    /** PLANEACION, ACTIVO o CERRADO: lo resuelve la vista con la fecha local institucional. */
+    public String estado() {
+        return estado;
     }
 }
 

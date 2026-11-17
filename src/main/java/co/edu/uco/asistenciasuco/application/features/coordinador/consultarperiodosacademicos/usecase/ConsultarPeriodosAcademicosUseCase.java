@@ -4,4 +4,7 @@ import co.edu.uco.asistenciasuco.application.features.coordinador.consultarperio
 
 import java.util.List;
 
-public interface ConsultarPeriodosAcademicosUseCase { List<PeriodoAcademicoDomain> execute(); }
+public interface ConsultarPeriodosAcademicosUseCase { List<PeriodoAcademicoDomain> execute();
+
+    /** CIERRE-W2A: con {@code estado} (PLANEACION, ACTIVO, CERRADO, sin distinguir mayusculas) solo los periodos en ese estado. */
+    List<PeriodoAcademicoDomain> execute(String estado); }

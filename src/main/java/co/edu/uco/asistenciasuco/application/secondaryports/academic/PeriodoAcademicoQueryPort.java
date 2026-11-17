@@ -11,6 +11,9 @@ public interface PeriodoAcademicoQueryPort {
 
     List<PeriodoAcademicoProjection> consultarPeriodosAcademicos();
 
+    /** CIERRE-W2A: periodos cuyo {@code estado} (PLANEACION, ACTIVO, CERRADO) coincide; el filtro lo aplica la BD. */
+    List<PeriodoAcademicoProjection> consultarPeriodosAcademicosPorEstado(String estado);
+
     Optional<PeriodoAcademicoProjection> consultarPeriodoAcademicoPorId(UUID idPeriodoAcademico);
 
     /**

@@ -17,7 +17,8 @@ public final class ConsultarPeriodosAcademicosRepositoryMapper {
                 projection.codigo(),
                 projection.fechaInicio(),
                 projection.fechaFin(),
-                projection.anio()
+                projection.anio(),
+                projection.estado()
         );
     }
 }

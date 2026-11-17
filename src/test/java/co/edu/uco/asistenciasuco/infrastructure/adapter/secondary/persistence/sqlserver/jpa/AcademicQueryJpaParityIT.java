@@ -93,6 +93,11 @@ class AcademicQueryJpaParityIT {
         final List<PeriodoAcademicoProjection> before = new PeriodoAcademicoJdbcBaseline(named).consultarPeriodosAcademicos();
         final PeriodoAcademicoJpaRepository after = new PeriodoAcademicoJpaRepository(entityManager);
         assertEquals(before, after.consultarPeriodosAcademicos());
+        for (final String estado : List.of("PLANEACION", "ACTIVO", "CERRADO")) {
+            // CIERRE-W2A: el estado lo resuelve la vista; el filtro por estado coincide con la referencia JDBC
+            assertEquals(new PeriodoAcademicoJdbcBaseline(named).consultarPeriodosAcademicosPorEstado(estado),
+                    after.consultarPeriodosAcademicosPorEstado(estado));
+        }
 
         assumeTrue(!before.isEmpty(), "No hay periodos vivos para comparar consulta por id.");
         final UUID id = before.getFirst().id();

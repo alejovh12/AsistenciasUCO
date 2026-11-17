@@ -14,6 +14,20 @@ public record PeriodoAcademicoDomain(
         String codigo,
         LocalDate fechaInicio,
         LocalDate fechaFin,
-        Integer anio
+        Integer anio,
+        String estado
 ) {
+
+    public PeriodoAcademicoDomain(
+            final UUID id,
+            final UUID idInstitucion,
+            final String nombreInstitucion,
+            final String nombre,
+            final String codigo,
+            final LocalDate fechaInicio,
+            final LocalDate fechaFin,
+            final Integer anio
+    ) {
+        this(id, idInstitucion, nombreInstitucion, nombre, codigo, fechaInicio, fechaFin, anio, null);
+    }
 }
