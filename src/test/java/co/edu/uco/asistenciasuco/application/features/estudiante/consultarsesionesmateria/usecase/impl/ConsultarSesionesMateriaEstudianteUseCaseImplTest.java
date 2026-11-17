@@ -72,7 +72,7 @@ class ConsultarSesionesMateriaEstudianteUseCaseImplTest {
     private void dado(final List<SesionMateriaEstudianteProjection> sesiones,
                       final List<AsistenciaSesionEstudianteProjection> hechos) {
         when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.of(estudiante));
-        when(queryPort.consultarSesionesMateria(actor, asignatura, 1, 100))
+        when(queryPort.consultarSesionesMateria(actor, asignatura, null, 1, 100))
                 .thenReturn(new PaginaResultado<>(sesiones, 1, 100, sesiones.size()));
         when(asistenciaPort.consultarAsistenciaSesiones(eq(estudiante), eq(asignatura), any())).thenReturn(hechos);
     }
@@ -82,7 +82,7 @@ class ConsultarSesionesMateriaEstudianteUseCaseImplTest {
         when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.empty());
 
         assertThrows(ForbiddenException.class, () -> useCase.execute(actor, asignatura));
-        verify(queryPort, never()).consultarSesionesMateria(any(), any(), anyInt(), anyInt());
+        verify(queryPort, never()).consultarSesionesMateria(any(), any(), any(), anyInt(), anyInt());
         verify(asistenciaPort, never()).consultarAsistenciaSesiones(any(), any(), any());
     }
 
@@ -359,41 +359,41 @@ class ConsultarSesionesMateriaEstudianteUseCaseImplTest {
 
         useCase.execute(actor, asignatura);
 
-        verify(queryPort).consultarSesionesMateria(actor, asignatura, 1, 100);
+        verify(queryPort).consultarSesionesMateria(actor, asignatura, null, 1, 100);
     }
 
     @Test
     void el_tamano_por_defecto_sale_del_parametro_paginacion_tamano_maximo() {
         when(parametros.getParameter("PAGINACION", "TAMANO_MAXIMO")).thenReturn(Optional.of(" 50 "));
         when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.of(estudiante));
-        when(queryPort.consultarSesionesMateria(actor, asignatura, 1, 50)).thenReturn(new PaginaResultado<>(List.of(), 1, 50, 0));
+        when(queryPort.consultarSesionesMateria(actor, asignatura, null, 1, 50)).thenReturn(new PaginaResultado<>(List.of(), 1, 50, 0));
 
         assertTrue(useCase.execute(actor, asignatura, null, null).isEmpty());
 
-        verify(queryPort).consultarSesionesMateria(actor, asignatura, 1, 50);
+        verify(queryPort).consultarSesionesMateria(actor, asignatura, null, 1, 50);
     }
 
     @Test
     void un_parametro_de_tamano_ausente_o_mal_formado_usa_100_como_la_semilla() {
         when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.of(estudiante));
-        when(queryPort.consultarSesionesMateria(actor, asignatura, 1, 100)).thenReturn(new PaginaResultado<>(List.of(), 1, 100, 0));
+        when(queryPort.consultarSesionesMateria(actor, asignatura, null, 1, 100)).thenReturn(new PaginaResultado<>(List.of(), 1, 100, 0));
         when(parametros.getParameter("PAGINACION", "TAMANO_MAXIMO")).thenReturn(Optional.of("abc"), Optional.of(""), Optional.empty());
 
         useCase.execute(actor, asignatura);
         useCase.execute(actor, asignatura);
         useCase.execute(actor, asignatura);
 
-        verify(queryPort, times(3)).consultarSesionesMateria(actor, asignatura, 1, 100);
+        verify(queryPort, times(3)).consultarSesionesMateria(actor, asignatura, null, 1, 100);
     }
 
     @Test
     void la_pagina_y_el_tamano_explicitos_llegan_al_puerto() {
         when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.of(estudiante));
-        when(queryPort.consultarSesionesMateria(actor, asignatura, 2, 10)).thenReturn(new PaginaResultado<>(List.of(), 2, 10, 0));
+        when(queryPort.consultarSesionesMateria(actor, asignatura, null, 2, 10)).thenReturn(new PaginaResultado<>(List.of(), 2, 10, 0));
 
         useCase.execute(actor, asignatura, 2, 10);
 
-        verify(queryPort).consultarSesionesMateria(actor, asignatura, 2, 10);
+        verify(queryPort).consultarSesionesMateria(actor, asignatura, null, 2, 10);
     }
 
     @Test
@@ -422,7 +422,7 @@ class ConsultarSesionesMateriaEstudianteUseCaseImplTest {
     void si_el_total_supera_la_pagina_se_devuelve_la_primera_pagina_sin_fallar() {
         final var primera = sesion(sesion1, 1, UUID.randomUUID());
         when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.of(estudiante));
-        when(queryPort.consultarSesionesMateria(actor, asignatura, 1, 100))
+        when(queryPort.consultarSesionesMateria(actor, asignatura, null, 1, 100))
                 .thenReturn(new PaginaResultado<>(List.of(primera), 1, 100, 250));
         when(asistenciaPort.consultarAsistenciaSesiones(eq(estudiante), eq(asignatura), any())).thenReturn(List.of());
 
@@ -435,27 +435,67 @@ class ConsultarSesionesMateriaEstudianteUseCaseImplTest {
     @Test
     void un_tamano_no_positivo_o_un_fallo_del_catalogo_usan_100() {
         when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.of(estudiante));
-        when(queryPort.consultarSesionesMateria(actor, asignatura, 1, 100)).thenReturn(new PaginaResultado<>(List.of(), 1, 100, 0));
+        when(queryPort.consultarSesionesMateria(actor, asignatura, null, 1, 100)).thenReturn(new PaginaResultado<>(List.of(), 1, 100, 0));
         when(parametros.getParameter("PAGINACION", "TAMANO_MAXIMO")).thenReturn(Optional.of("0"))
                 .thenThrow(new ParameterCatalogPort.ParameterCatalogException("catalogo caido"));
 
         useCase.execute(actor, asignatura);
         useCase.execute(actor, asignatura);
 
-        verify(queryPort, times(2)).consultarSesionesMateria(actor, asignatura, 1, 100);
+        verify(queryPort, times(2)).consultarSesionesMateria(actor, asignatura, null, 1, 100);
     }
 
     @Test
     void con_pagina_explicita_un_total_mayor_es_normal_y_no_cambia_el_resultado() {
         final var segunda = sesion(sesion2, 2, UUID.randomUUID());
         when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.of(estudiante));
-        when(queryPort.consultarSesionesMateria(actor, asignatura, 2, 1)).thenReturn(new PaginaResultado<>(List.of(segunda), 2, 1, 5));
+        when(queryPort.consultarSesionesMateria(actor, asignatura, null, 2, 1)).thenReturn(new PaginaResultado<>(List.of(segunda), 2, 1, 5));
         when(asistenciaPort.consultarAsistenciaSesiones(eq(estudiante), eq(asignatura), any())).thenReturn(List.of());
 
         final List<SesionMateriaEstudianteDomain> result = useCase.execute(actor, asignatura, 2, 1);
 
         assertEquals(1, result.size());
         assertEquals(sesion2, result.getFirst().id());
+    }
+
+    // ---- CIERRE-W2B: pagina ordenada por la base con el total real y grupo opcional ----
+
+    @Test
+    void W2B_consultarPagina_transporta_el_total_real_el_orden_de_la_base_y_el_grupo() {
+        final UUID grupo = UUID.randomUUID();
+        final var primera = sesion(sesion2, 2, grupo);
+        final var segunda = sesion(sesion1, 1, grupo);
+        when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.of(estudiante));
+        when(queryPort.consultarSesionesMateria(actor, asignatura, grupo, 2, 2)).thenReturn(new PaginaResultado<>(List.of(primera, segunda), 2, 2, 9));
+        when(asistenciaPort.consultarAsistenciaSesiones(eq(estudiante), eq(asignatura), any())).thenReturn(List.of());
+
+        final PaginaResultado<SesionMateriaEstudianteDomain> pagina = useCase.consultarPagina(actor, asignatura, grupo, 2, 2);
+
+        assertEquals(9L, pagina.totalElementos());
+        assertEquals(2, pagina.numeroPagina());
+        assertEquals(2, pagina.tamanoPagina());
+        assertEquals(List.of(sesion2, sesion1), pagina.elementos().stream().map(SesionMateriaEstudianteDomain::id).toList());
+        verify(queryPort).consultarSesionesMateria(actor, asignatura, grupo, 2, 2);
+    }
+
+    @Test
+    void W2B_una_pagina_vacia_conserva_el_total_del_filtro() {
+        when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.of(estudiante));
+        when(queryPort.consultarSesionesMateria(actor, asignatura, null, 7, 10)).thenReturn(new PaginaResultado<>(List.of(), 7, 10, 4));
+
+        final PaginaResultado<SesionMateriaEstudianteDomain> pagina = useCase.consultarPagina(actor, asignatura, null, 7, 10);
+
+        assertTrue(pagina.elementos().isEmpty());
+        assertEquals(4L, pagina.totalElementos());
+        assertEquals(7, pagina.numeroPagina());
+    }
+
+    @Test
+    void W2B_consultarPagina_de_un_no_estudiante_es_403_y_no_consulta() {
+        when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.empty());
+
+        assertThrows(ForbiddenException.class, () -> useCase.consultarPagina(actor, asignatura, UUID.randomUUID(), 1, 10));
+        verify(queryPort, never()).consultarSesionesMateria(any(), any(), any(), anyInt(), anyInt());
     }
 
     // ---- PC (puntos de control): el estado y los minutos salen de la base de datos; las tomas se listan con su reclamabilidad ----

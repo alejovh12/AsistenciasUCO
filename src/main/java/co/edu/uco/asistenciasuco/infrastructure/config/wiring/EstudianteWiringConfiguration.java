@@ -23,6 +23,11 @@ import co.edu.uco.asistenciasuco.application.features.estudiante.consultarmateri
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarmaterias.usecase.ConsultarMateriasEstudianteUseCase;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarmaterias.usecase.impl.ConsultarMateriasEstudianteUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.ResumenAsistenciaQueryPort;
+import co.edu.uco.asistenciasuco.application.features.estudiante.consultarresumenmaterias.primaryports.ConsultarResumenMateriasEstudianteInputPort;
+import co.edu.uco.asistenciasuco.application.features.estudiante.consultarresumenmaterias.primaryports.interactor.ConsultarResumenMateriasEstudianteInteractor;
+import co.edu.uco.asistenciasuco.application.features.estudiante.consultarresumenmaterias.usecase.ConsultarResumenMateriasEstudianteUseCase;
+import co.edu.uco.asistenciasuco.application.features.estudiante.consultarresumenmaterias.usecase.impl.ConsultarResumenMateriasEstudianteUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.ResumenMateriasEstudianteQueryPort;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.primaryports.ConsultarSesionesMateriaEstudianteInputPort;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.primaryports.interactor.ConsultarSesionesMateriaEstudianteInteractor;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.usecase.ConsultarSesionesMateriaEstudianteUseCase;
@@ -103,6 +108,18 @@ public class EstudianteWiringConfiguration {
     @Bean
     ConsultarMateriasEstudianteInputPort consultarMateriasEstudianteInputPort(final ConsultarMateriasEstudianteUseCase useCase) {
         return new ConsultarMateriasEstudianteInteractor(useCase);
+    }
+
+    /** CIERRE-W2B: indicadores del tablero del estudiante calculados en la base con las mismas materias del listado. */
+    @Bean
+    ConsultarResumenMateriasEstudianteUseCase consultarResumenMateriasEstudianteUseCase(final InstitutionalScopePort scopePort,
+                                                                                         final ResumenMateriasEstudianteQueryPort queryPort) {
+        return new ConsultarResumenMateriasEstudianteUseCaseImpl(scopePort, queryPort);
+    }
+
+    @Bean
+    ConsultarResumenMateriasEstudianteInputPort consultarResumenMateriasEstudianteInputPort(final ConsultarResumenMateriasEstudianteUseCase useCase) {
+        return new ConsultarResumenMateriasEstudianteInteractor(useCase);
     }
 
     @Bean
