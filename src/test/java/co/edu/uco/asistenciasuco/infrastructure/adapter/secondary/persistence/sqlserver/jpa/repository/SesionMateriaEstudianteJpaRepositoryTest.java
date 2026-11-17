@@ -153,8 +153,9 @@ class SesionMateriaEstudianteJpaRepositoryTest {
     void columnas_distintas_de_13_son_un_fallo_tecnico() {
         when(query.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(new Object[12]));
 
+        final var repositorio = new SesionMateriaEstudianteJpaRepository(manager);
         assertInstanceOf(IllegalStateException.class, assertThrows(DatabaseOperationException.class,
-                () -> new SesionMateriaEstudianteJpaRepository(manager).consultarSesionesMateria(ACTOR, MATERIA, 1, 100)).getCause());
+                () -> repositorio.consultarSesionesMateria(ACTOR, MATERIA, 1, 100)).getCause());
     }
 
     @Test

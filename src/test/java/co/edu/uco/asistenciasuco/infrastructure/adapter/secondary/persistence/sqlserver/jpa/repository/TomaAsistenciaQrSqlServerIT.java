@@ -99,8 +99,9 @@ class TomaAsistenciaQrSqlServerIT {
         assertEquals(1, manual.numero());
         assertEquals("MANUAL", manual.modo());
         assertTrue(manual.estaAbierta());
+        final var comandoAbrirQr = new AbrirTomaAsistenciaInputPort.Comando(grupo.sesion(), "QR", docente);
         assertEquals("TOM_003", assertThrows(ConflictException.class,
-                () -> abrirToma.execute(new AbrirTomaAsistenciaInputPort.Comando(grupo.sesion(), "QR", docente))).getCode());
+                () -> abrirToma.execute(comandoAbrirQr)).getCode());
         registrarLote.execute(new RegistrarAsistenciasTomaInputPort.Comando(manual.idToma(), List.of(
                 new RegistrarAsistenciasTomaInputPort.Registro(e1.estudiante(), "AN"),
                 new RegistrarAsistenciasTomaInputPort.Registro(e2.estudiante(), "AN"),
@@ -127,16 +128,18 @@ class TomaAsistenciaQrSqlServerIT {
         assertNotNull(porPin.mensaje());
         assertTrue(registrarPorToken.execute(
                 new RegistrarAsistenciaPorTokenInputPort.Comando(token, null, "127.0.0.1", e1.usuario())).yaRegistrado());
-        assertEquals("AQR_001", assertThrows(ResourceNotFoundException.class, () -> registrarPorToken.execute(
-                new RegistrarAsistenciaPorTokenInputPort.Comando(null, "000000".equals(rotado.pin()) ? "111111" : "000000", "127.0.0.1",
-                        e2.usuario()))).getCode());
+        final var comandoPinInvalido = new RegistrarAsistenciaPorTokenInputPort.Comando(null,
+                "000000".equals(rotado.pin()) ? "111111" : "000000", "127.0.0.1", e2.usuario());
+        assertEquals("AQR_001", assertThrows(ResourceNotFoundException.class,
+                () -> registrarPorToken.execute(comandoPinInvalido)).getCode());
 
         final PaginaResultado<FaltanteTomaFila> antes = faltantes.execute(new ConsultarFaltantesTomaInputPort.Consulta(tomaQr.idToma(), 1, 50, docente));
         assertEquals(2, antes.totalElementos());
 
         cerrarQr.execute(new CerrarQrTomaInputPort.Comando(tomaQr.idToma(), docente));
-        assertEquals("AQR_001", assertThrows(ApplicationException.class, () -> registrarPorToken.execute(
-                new RegistrarAsistenciaPorTokenInputPort.Comando(token, null, "127.0.0.1", e2.usuario()))).getCode());
+        final var comandoQrCerrado = new RegistrarAsistenciaPorTokenInputPort.Comando(token, null, "127.0.0.1", e2.usuario());
+        assertEquals("AQR_001", assertThrows(ApplicationException.class,
+                () -> registrarPorToken.execute(comandoQrCerrado)).getCode());
 
         final CerrarTomaAsistenciaInputPort.Resultado cierreQr = cerrarToma.execute(
                 new CerrarTomaAsistenciaInputPort.Comando(tomaQr.idToma(), null, docente));

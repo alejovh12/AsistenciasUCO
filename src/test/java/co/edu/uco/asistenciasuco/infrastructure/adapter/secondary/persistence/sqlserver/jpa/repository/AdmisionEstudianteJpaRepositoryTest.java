@@ -109,7 +109,9 @@ class AdmisionEstudianteJpaRepositoryTest {
 
         when(query.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(
                 fila(false, "DBCODE=ADS_004|personas distintas", null, null, null, null)));
-        assertEquals("ADS_004", assertThrows(ConflictException.class, () -> admision().admitir(orden())).getCode());
+        final var admisionAds004 = admision();
+        final var ordenAds004 = orden();
+        assertEquals("ADS_004", assertThrows(ConflictException.class, () -> admisionAds004.admitir(ordenAds004)).getCode());
 
         when(query.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(
                 fila(false, "DBCODE=ADS_003|programa ajeno", null, null, null, null)));
@@ -207,8 +209,9 @@ class AdmisionEstudianteJpaRepositoryTest {
         org.mockito.Mockito.reset(query);
         when(query.setParameter(anyString(), any())).thenReturn(query);
         when(query.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(new Object[4]));
+        final var programasRepo = programas();
         assertInstanceOf(IllegalStateException.class, assertThrows(DatabaseOperationException.class,
-                () -> programas().consultarProgramas(ADMIN, null, null, 1, 50)).getCause());
+                () -> programasRepo.consultarProgramas(ADMIN, null, null, 1, 50)).getCause());
         assertThrows(NullPointerException.class, () -> new ProgramaInstitucionJpaRepository(null));
     }
 }

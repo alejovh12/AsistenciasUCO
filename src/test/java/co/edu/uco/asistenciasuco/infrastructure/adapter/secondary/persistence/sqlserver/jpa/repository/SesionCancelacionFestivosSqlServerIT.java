@@ -109,8 +109,9 @@ class SesionCancelacionFestivosSqlServerIT {
         assertEquals(cancelada.totalEstudiantesActivos(),
                 cancelacionPort.consultarDestinatarios(sesion, fixture.docenteUsuarioId()).size());
 
+        final var docenteUsuarioId2 = fixture.docenteUsuarioId();
         final ConflictException repetida = assertThrows(ConflictException.class,
-                () -> cancelacionPort.cancelar(sesion, MOTIVO, fixture.docenteUsuarioId()));
+                () -> cancelacionPort.cancelar(sesion, MOTIVO, docenteUsuarioId2));
         assertEquals("SES_011", repetida.getCode());
     }
 
@@ -120,10 +121,11 @@ class SesionCancelacionFestivosSqlServerIT {
         cancelar(sesion, MOTIVO);
         assumeTrue(!fixture.estudiantes().isEmpty(), "El grupo del fixture no tiene estudiantes activos.");
 
-        final ConflictException error = assertThrows(ConflictException.class,
-                () -> asistenciaRepositoryPort.registrarAsistenciasSesion(new RegistrarAsistenciasSesionRepositoryDTO(
+        final var registrarAsistenciasSesionRepositoryDTO = new RegistrarAsistenciasSesionRepositoryDTO(
                         sesion, List.of(new RegistroAsistenciaSesionRepositoryDTO(fixture.estudiantes().getFirst(), "AN")),
-                        fixture.docenteUsuarioId())));
+                        fixture.docenteUsuarioId());
+        final ConflictException error = assertThrows(ConflictException.class,
+                () -> asistenciaRepositoryPort.registrarAsistenciasSesion(registrarAsistenciasSesionRepositoryDTO));
 
         assertEquals("ERR_SESION_CANCELADA", error.getCode());
         assertEquals(0, fixture.countAsistencia(sesion));
@@ -132,14 +134,16 @@ class SesionCancelacionFestivosSqlServerIT {
     @Test
     void un_motivo_corto_es_ses_013_y_otro_docente_no_puede_cancelar() {
         final UUID sesion = nuevaSesion();
+        final var docenteUsuarioId2 = fixture.docenteUsuarioId();
         final ApplicationException corto = assertThrows(ApplicationException.class,
-                () -> cancelacionPort.cancelar(sesion, "corto", fixture.docenteUsuarioId()));
+                () -> cancelacionPort.cancelar(sesion, "corto", docenteUsuarioId2));
         assumeTrue(!"SEC_001".equals(corto.getCode()), "El docente del fixture no tiene el perfil DOCENTE en RBAC.");
         assertTrue(corto instanceof ValidationException);
         assertEquals("SES_013", corto.getCode());
 
+        final var otroDocenteUsuarioId2 = fixture.otroDocenteUsuarioId();
         final ApplicationException ajeno = assertThrows(ApplicationException.class,
-                () -> cancelacionPort.cancelar(sesion, MOTIVO, fixture.otroDocenteUsuarioId()));
+                () -> cancelacionPort.cancelar(sesion, MOTIVO, otroDocenteUsuarioId2));
         assertTrue(ajeno.getCode().startsWith("SEC_") || "FORBIDDEN".equals(ajeno.getCode()), ajeno.getCode());
         assertEquals(null, procedenciaPort.consultarSesion(sesion).orElseThrow().cancelacion());
     }
@@ -175,8 +179,9 @@ class SesionCancelacionFestivosSqlServerIT {
 
     @Test
     void una_carga_con_fuente_desconocida_es_fes_004() {
+        final var calculoLocalFestivosColombiaAdapter = new CalculoLocalFestivosColombiaAdapter().obtenerFestivos(ANIO_PRUEBA);
         final ApplicationException error = assertThrows(ApplicationException.class, () -> festivoPort.cargarAutomatico(
-                ANIO_PRUEBA, new CalculoLocalFestivosColombiaAdapter().obtenerFestivos(ANIO_PRUEBA), "OTRA_FUENTE", 0));
+                ANIO_PRUEBA, calculoLocalFestivosColombiaAdapter, "OTRA_FUENTE", 0));
         assertEquals("FES_004", error.getCode());
     }
 

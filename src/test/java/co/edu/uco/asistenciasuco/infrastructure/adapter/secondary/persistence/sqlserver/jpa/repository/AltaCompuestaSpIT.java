@@ -100,8 +100,9 @@ class AltaCompuestaSpIT {
     void decano_con_facultad_repetida_es_conflicto_y_no_deja_persona() {
         final String correo = correoUnico();
 
+        final var decano2 = decano(correo, nombreFacultadExistente, institucion, admin);
         assertThrows(ConflictException.class,
-                () -> decanos.crearDecanoConFacultad(decano(correo, nombreFacultadExistente, institucion, admin)));
+                () -> decanos.crearDecanoConFacultad(decano2));
 
         assertEquals(0, contar("SELECT COUNT(*) FROM dbo.Usuario WHERE correo = ?", correo));
     }
@@ -120,7 +121,8 @@ class AltaCompuestaSpIT {
     void decano_con_facultad_de_nombre_corto_es_validacion_y_no_deja_persona() {
         final String correo = correoUnico();
 
-        assertThrows(ValidationException.class, () -> decanos.crearDecanoConFacultad(decano(correo, "AB", institucion, admin)));
+        final var decano2 = decano(correo, "AB", institucion, admin);
+        assertThrows(ValidationException.class, () -> decanos.crearDecanoConFacultad(decano2));
 
         assertEquals(0, contar("SELECT COUNT(*) FROM dbo.Usuario WHERE correo = ?", correo));
     }
@@ -158,8 +160,9 @@ class AltaCompuestaSpIT {
     void coordinador_con_programa_repetido_es_conflicto_y_no_deja_persona() {
         final String correo = correoUnico();
 
+        final var coordinador2 = coordinador(correo, nombreProgramaExistente, facultad, decanoEjecutor);
         assertThrows(ConflictException.class,
-                () -> coordinadores.crearCoordinadorConPrograma(coordinador(correo, nombreProgramaExistente, facultad, decanoEjecutor)));
+                () -> coordinadores.crearCoordinadorConPrograma(coordinador2));
 
         assertEquals(0, contar("SELECT COUNT(*) FROM dbo.Usuario WHERE correo = ?", correo));
     }

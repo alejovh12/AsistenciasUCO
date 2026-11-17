@@ -123,8 +123,9 @@ class SesionSolicitudSqlServerIT {
         assertFalse(aprobadaFila.pendienteAprobacion());
         assertNull(aprobadaFila.cancelacion());
 
+        final var sesion2 = pendiente.sesion();
         final ConflictException repetida = assertThrows(ConflictException.class,
-                () -> manualPort.aprobarSolicitud(pendiente.sesion(), null, coordinador));
+                () -> manualPort.aprobarSolicitud(sesion2, null, coordinador));
         assertEquals("SES_024", repetida.getCode());
     }
 
@@ -152,8 +153,10 @@ class SesionSolicitudSqlServerIT {
         assertFalse(manualPort.consultarSolicitudes(coordinador, true, null, fixture.grupoId(), 1, 50).elementos().stream()
                 .anyMatch(s -> s.idSesion().equals(pendiente.sesion())));
 
+        final var sesion2 = pendiente.sesion();
+        final var getFirst2 = motivos.getFirst().codigo();
         final ConflictException repetida = assertThrows(ConflictException.class,
-                () -> manualPort.rechazarSolicitud(pendiente.sesion(), motivos.getFirst().codigo(), null, coordinador));
+                () -> manualPort.rechazarSolicitud(sesion2, getFirst2, null, coordinador));
         assertTrue(List.of("SES_024", "SES_011").contains(repetida.getCode()), "Rechazar dos veces es un conflicto: " + repetida.getCode());
     }
 
@@ -164,9 +167,12 @@ class SesionSolicitudSqlServerIT {
         final SesionProcedenciaRepositoryProjection pendiente = localizar(nombre);
         sesiones.add(pendiente.sesion());
 
-        assertThrows(RuntimeException.class, () -> manualPort.aprobarSolicitud(pendiente.sesion(), null, fixture.docenteUsuarioId()));
+        final var sesion2 = pendiente.sesion();
+        final var docenteUsuarioId3 = fixture.docenteUsuarioId();
+        assertThrows(RuntimeException.class, () -> manualPort.aprobarSolicitud(sesion2, null, docenteUsuarioId3));
+        final var docenteUsuarioId2 = fixture.docenteUsuarioId();
         assertThrows(RuntimeException.class,
-                () -> manualPort.consultarSolicitudes(fixture.docenteUsuarioId(), true, null, null, 1, 20));
+                () -> manualPort.consultarSolicitudes(docenteUsuarioId2, true, null, null, 1, 20));
     }
 
     private String crearComoDocente(final String nombre) {

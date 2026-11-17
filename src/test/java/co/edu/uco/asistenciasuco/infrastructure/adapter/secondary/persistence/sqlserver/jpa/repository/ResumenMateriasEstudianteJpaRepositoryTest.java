@@ -85,13 +85,14 @@ class ResumenMateriasEstudianteJpaRepositoryTest {
 
     @Test
     void columnas_distintas_de_4_o_sin_fila_son_un_fallo_tecnico() {
+        final var repositorio = new ResumenMateriasEstudianteJpaRepository(manager);
         when(query.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(new Object[3]));
         assertInstanceOf(IllegalStateException.class, assertThrows(DatabaseOperationException.class,
-                () -> new ResumenMateriasEstudianteJpaRepository(manager).consultarResumen(ACTOR)).getCause());
+                () -> repositorio.consultarResumen(ACTOR)).getCause());
 
         when(query.getResultList()).thenReturn(List.of());
         assertInstanceOf(IllegalStateException.class, assertThrows(DatabaseOperationException.class,
-                () -> new ResumenMateriasEstudianteJpaRepository(manager).consultarResumen(ACTOR)).getCause());
+                () -> repositorio.consultarResumen(ACTOR)).getCause());
     }
 
     @Test

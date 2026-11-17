@@ -103,8 +103,11 @@ class Culm001AJpaRepositoriesTest {
         final Query corta = mock(Query.class, RETURNS_SELF);
         when(corta.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(new Object[8]));
         when(manager.createNativeQuery(GrupoJpaRepository.SQL_BUSCAR_ESTUDIANTE_POR_DOCUMENTO)).thenReturn(corta);
+        final var gruposRepo = grupos();
+        final var idGrupo = UUID.randomUUID();
+        final var idEstudiante = UUID.randomUUID();
         assertInstanceOf(IllegalStateException.class, assertThrows(DatabaseOperationException.class,
-                () -> grupos().buscarEstudiantePorDocumento(UUID.randomUUID(), UUID.randomUUID(), 123456, ACTOR)).getCause());
+                () -> gruposRepo.buscarEstudiantePorDocumento(idGrupo, idEstudiante, 123456, ACTOR)).getCause());
     }
 
     @Test

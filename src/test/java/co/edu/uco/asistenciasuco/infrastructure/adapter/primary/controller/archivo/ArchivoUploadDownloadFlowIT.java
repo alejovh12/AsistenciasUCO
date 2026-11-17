@@ -137,8 +137,9 @@ class ArchivoUploadDownloadFlowIT {
     // Caso negativo: fileId inexistente en MinIO real -> 404, no revela existencia.
     @Test
     void descarga_de_fileId_inexistente_retorna_resource_not_found() {
+        final var uuid = UUID.randomUUID().toString();
         assertThrows(ResourceNotFoundException.class,
-                () -> archivoController.descargarArchivo(UUID.randomUUID().toString()));
+                () -> archivoController.descargarArchivo(uuid));
     }
 
     // MALWARE-001 en el flujo completo (cierra R-LB004-025): el PDF valido con EICAR embebido pasa
@@ -207,8 +208,9 @@ class ArchivoUploadDownloadFlowIT {
     void soporte_de_5_mib_mas_un_byte_se_rechaza_antes_de_contactar_proveedores() {
         final byte[] oversized = SoporteFixtures.incompressiblePdfOfExactSize(SoporteFixtures.MAX_FILE_SIZE_BYTES + 1, 32L);
 
+        final var mockMultipartFile = new MockMultipartFile("archivo", "grande.pdf", "application/pdf", oversized);
         assertThrows(ValidationException.class, () -> archivoController.subirArchivo(
-                new MockMultipartFile("archivo", "grande.pdf", "application/pdf", oversized)));
+                mockMultipartFile));
     }
 
     // FOREIGN_FILE_HTTP 404: otro usuario autenticado no descarga ni distingue el archivo ajeno
@@ -220,10 +222,12 @@ class ArchivoUploadDownloadFlowIT {
         final UUID owner = currentUser.get();
 
         currentUser.set(UUID.randomUUID());
+        final var toString2 = fileId.toString();
         final ResourceNotFoundException foreign = assertThrows(ResourceNotFoundException.class,
-                () -> archivoController.descargarArchivo(fileId.toString()));
+                () -> archivoController.descargarArchivo(toString2));
+        final var uuid = UUID.randomUUID().toString();
         final ResourceNotFoundException missing = assertThrows(ResourceNotFoundException.class,
-                () -> archivoController.descargarArchivo(UUID.randomUUID().toString()));
+                () -> archivoController.descargarArchivo(uuid));
         assertEquals(missing.getMessage(), foreign.getMessage());
 
         currentUser.set(owner);
