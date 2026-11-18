@@ -55,6 +55,12 @@ public class UvDecanoEntity {
     @Column(name = "segundoApellido")
     private String segundoApellido;
 
+    @Column(name = "TipoIdentificacion")
+    private String tipoIdentificacion;
+
+    @Column(name = "correo")
+    private String correo;
+
     protected UvDecanoEntity() {
         // requerido por JPA
     }
@@ -102,5 +108,12 @@ public class UvDecanoEntity {
     public String segundoApellido() {
         return segundoApellido;
     }
-}
 
+    public String tipoIdentificacion() {
+        return tipoIdentificacion;
+    }
+
+    public String correo() {
+        return correo;
+    }
+}

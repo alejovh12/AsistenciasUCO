@@ -10,6 +10,7 @@ public final class ConsultarFacultadesMapper {
 
     public static FacultadDTO toDTO(final FacultadDomain domain) {
         return new FacultadDTO(domain.id(), domain.nombreFacultad(), domain.idInstitucion(), domain.nombreInstitucion(),
-                domain.idDecano(), domain.nombreCompletoDecano(), domain.estaActivaFacultad(), domain.estaActivaTextoFacultad());
+                domain.idDecano(), domain.nombreCompletoDecano(), domain.estaActivaFacultad(), domain.estaActivaTextoFacultad(),
+                domain.totalProgramas(), domain.totalEstudiantes());
     }
 }

@@ -23,8 +23,8 @@ public final class FacultadJdbcBaseline implements FacultadQueryPort {
     public List<FacultadProjection> consultarFacultades() {
         return jdbcOperations.query("""
                 SELECT id, nombreFacultad, idInstitucion, nombreInstitucion, idDecano, nombreCompletoDecano,
-                       estaActivaFacultad, estaActivaTextoFacultad
-                FROM dbo.uv_facultad
+                       estaActivaFacultad, estaActivaTextoFacultad, totalProgramas, totalEstudiantes
+                FROM dbo.uv_facultad_resumen
                 ORDER BY nombreInstitucion, nombreFacultad, id
                 """, (rs, rowNum) -> mapFacultad(rs.getObject("id"),
                 rs.getObject("nombreFacultad"),
@@ -33,7 +33,9 @@ public final class FacultadJdbcBaseline implements FacultadQueryPort {
                 rs.getObject("idDecano"),
                 rs.getObject("nombreCompletoDecano"),
                 rs.getObject("estaActivaFacultad"),
-                rs.getObject("estaActivaTextoFacultad")
+                rs.getObject("estaActivaTextoFacultad"),
+                rs.getObject("totalProgramas"),
+                rs.getObject("totalEstudiantes")
         ));
     }
 
@@ -41,8 +43,8 @@ public final class FacultadJdbcBaseline implements FacultadQueryPort {
     public Optional<FacultadProjection> consultarFacultadPorId(final UUID idFacultad) {
         final List<FacultadProjection> result = jdbcOperations.query("""
                 SELECT id, nombreFacultad, idInstitucion, nombreInstitucion, idDecano, nombreCompletoDecano,
-                       estaActivaFacultad, estaActivaTextoFacultad
-                FROM dbo.uv_facultad
+                       estaActivaFacultad, estaActivaTextoFacultad, totalProgramas, totalEstudiantes
+                FROM dbo.uv_facultad_resumen
                 WHERE id = :idFacultad
                 """, new MapSqlParameterSource("idFacultad", idFacultad), (rs, rowNum) -> mapFacultad(
                 rs.getObject("id"),
@@ -52,7 +54,9 @@ public final class FacultadJdbcBaseline implements FacultadQueryPort {
                 rs.getObject("idDecano"),
                 rs.getObject("nombreCompletoDecano"),
                 rs.getObject("estaActivaFacultad"),
-                rs.getObject("estaActivaTextoFacultad")
+                rs.getObject("estaActivaTextoFacultad"),
+                rs.getObject("totalProgramas"),
+                rs.getObject("totalEstudiantes")
         ));
         return result.stream().findFirst();
     }
@@ -65,7 +69,9 @@ public final class FacultadJdbcBaseline implements FacultadQueryPort {
             final Object idDecano,
             final Object nombreCompletoDecano,
             final Object estaActivaFacultad,
-            final Object estaActivaTextoFacultad
+            final Object estaActivaTextoFacultad,
+            final Object totalProgramas,
+            final Object totalEstudiantes
     ) {
         return new FacultadProjection(
                 JdbcBaselineValueMapper.toUuid(id),
@@ -75,7 +81,9 @@ public final class FacultadJdbcBaseline implements FacultadQueryPort {
                 JdbcBaselineValueMapper.toUuid(idDecano),
                 JdbcBaselineValueMapper.toString(nombreCompletoDecano),
                 JdbcBaselineValueMapper.toBoolean(estaActivaFacultad),
-                JdbcBaselineValueMapper.toString(estaActivaTextoFacultad)
+                JdbcBaselineValueMapper.toString(estaActivaTextoFacultad),
+                totalProgramas == null ? 0 : ((Number) totalProgramas).intValue(),
+                totalEstudiantes == null ? 0 : ((Number) totalEstudiantes).intValue()
         );
     }
 }

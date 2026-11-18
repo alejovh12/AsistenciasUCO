@@ -98,7 +98,7 @@ public final class ConsultasTransversalesInteractor implements ConsultasTransver
                         e.correo(), e.activo(), e.facultades(), e.programas(), e.totalGrupos(), e.primerNombre(),
                         e.segundoNombre(), e.primerApellido(), e.segundoApellido(),
                         TextHelper.unirNombres(e.primerNombre(), e.segundoNombre()),
-                        TextHelper.unirNombres(e.primerApellido(), e.segundoApellido())));
+                        TextHelper.unirNombres(e.primerApellido(), e.segundoApellido()), e.tipoIdentificacion()));
     }
 
     /** Los datos personales se repiten en cada fila del provider: se toman de la primera. */
@@ -183,7 +183,8 @@ public final class ConsultasTransversalesInteractor implements ConsultasTransver
                 h.codigoGrupo(), h.idAsignatura(), h.nombreAsignatura(), h.codigoEstadoEstudiante(),
                 h.nombreEstadoEstudiante(),
                 r == null ? null : new ResumenAsistenciaDTO(r.sesionesEjecutadas(), r.asistencias(),
-                        r.faltasSinJustaCausa(), r.excusas(), r.porcentajeInasistencia(), r.codigoPermanencia()));
+                        r.faltasSinJustaCausa(), r.excusas(), r.porcentajeInasistencia(), r.codigoPermanencia(),
+                        r.tomasDictadas(), r.horasDictadas(), r.horasFalta()));
     }
 
     private static <P, D> PaginaDTO<D> pagina(final Pagina<P> resultado, final Function<P, D> mapper) {

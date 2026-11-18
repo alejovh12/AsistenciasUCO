@@ -194,11 +194,12 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
                                                                      final int tamano) {
         return pagina("buscarEstudiantesInstitucion", "No fue posible buscar los estudiantes de la institucion.",
                 SQL_ESTUDIANTES, idUsuarioEjecutor, q -> filtrar(paginar(q, pagina, tamano), filtro), 9,
-                // Columnas 10..13 (CIERRE-W1B, punto 4): primerNombre, segundoNombre, primerApellido, segundoApellido.
+                // Columnas 10..13 (CIERRE-W1B, punto 4): primerNombre, segundoNombre, primerApellido, segundoApellido; 14: tipoIdentificacion.
                 f -> new EstudianteInstitucionProjection(NativeRowValues.uuid(f[0]), texto(f[2]), texto(f[3]),
                         texto(f[4]), verdadero(f[5]), texto(f[6]), texto(f[7]), cero(f[8]),
                         f.length > 10 ? texto(f[10]) : null, f.length > 11 ? texto(f[11]) : null,
-                        f.length > 12 ? texto(f[12]) : null, f.length > 13 ? texto(f[13]) : null));
+                        f.length > 12 ? texto(f[12]) : null, f.length > 13 ? texto(f[13]) : null,
+                        f.length > 14 ? texto(f[14]) : null));
     }
 
     @Override
@@ -299,7 +300,9 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
     private static HistorialEstudianteProjection historial(final Object[] f) {
         final UUID idGrupo = NativeRowValues.uuid(f[15]);
         final ResumenAsistenciaProjection resumen = idGrupo == null ? null : new ResumenAsistenciaProjection(
-                cero(f[21]), cero(f[22]), cero(f[23]), cero(f[24]), decimal(f[25]), texto(f[26]));
+                cero(f[21]), cero(f[22]), cero(f[23]), cero(f[24]), decimal(f[25]), texto(f[26]),
+                // CULM-001 B.2 (NB-2): columnas 27..29 = tomasDictadas, horasDictadas, horasFalta.
+                cero(f[27]), decimal(f[28]), decimal(f[29]));
         return new HistorialEstudianteProjection(NativeRowValues.uuid(f[0]), texto(f[2]), texto(f[3]), texto(f[4]),
                 texto(f[5]), verdadero(f[6]), NativeRowValues.uuid(f[7]), texto(f[8]), NativeRowValues.uuid(f[9]),
                 texto(f[10]), entero(f[11]), NativeRowValues.uuid(f[12]), texto(f[13]), texto(f[14]), idGrupo,

@@ -95,6 +95,11 @@ class ViewEntityProjectionMappingTest {
         decano.put("segundoApellido", "Paz");
         assertEquals(new DecanoProjection(A, B, "1037", "Luz Mar", C, "Ingenieria", true, "Luz", "Ana", "Mar", "Paz"),
                 AcademicViewJpaProjectionMapper.toDecano(HydratedViewRow.of(UvDecanoEntity.class, decano)));
+        decano.put("correo", "luz.mar@uco.edu.co");
+        decano.put("tipoIdentificacion", "CC");
+        assertEquals(new DecanoProjection(A, B, "1037", "Luz Mar", C, "Ingenieria", true, "Luz", "Ana", "Mar", "Paz",
+                        "luz.mar@uco.edu.co", "CC"),
+                AcademicViewJpaProjectionMapper.toDecano(HydratedViewRow.of(UvDecanoEntity.class, decano)));
         decano.put("estaActivoDecano", 0);
         assertFalse(AcademicViewJpaProjectionMapper.toDecano(
                 HydratedViewRow.of(UvDecanoEntity.class, decano)).estaActivoDecano());
@@ -123,6 +128,21 @@ class ViewEntityProjectionMappingTest {
                         cols("id", A, "idPrograma", B, "nombrePrograma", "Sistemas", "inp", 77,
                                 "estaActivoPlanEstudio", 0, "estaActivoTextoPlanEstudio", "Inactivo",
                                 "justificacionEstado", "Reforma"))));
+    }
+
+    @Test
+    void facultad_proyecta_totales_de_programas_y_estudiantes_y_trata_nulos_como_cero() {
+        assertEquals(new FacultadProjection(A, "Ingenieria", B, "UCO", null, null, true, "Activa", 3, 20),
+                AcademicViewJpaProjectionMapper.toFacultad(HydratedViewRow.of(UvFacultadEntity.class,
+                        cols("id", A, "nombreFacultad", "Ingenieria", "idInstitucion", B, "nombreInstitucion", "UCO",
+                                "estaActivaFacultad", Boolean.TRUE, "estaActivaTextoFacultad", "Activa",
+                                "totalProgramas", 3, "totalEstudiantes", 20))));
+
+        final var sinTotales = AcademicViewJpaProjectionMapper.toFacultad(HydratedViewRow.of(UvFacultadEntity.class,
+                cols("id", A, "nombreFacultad", "Salud", "idInstitucion", B, "nombreInstitucion", "UCO",
+                        "estaActivaFacultad", Boolean.TRUE, "estaActivaTextoFacultad", "Activa")));
+        assertEquals(0, sinTotales.totalProgramas());
+        assertEquals(0, sinTotales.totalEstudiantes());
     }
 
     @Test

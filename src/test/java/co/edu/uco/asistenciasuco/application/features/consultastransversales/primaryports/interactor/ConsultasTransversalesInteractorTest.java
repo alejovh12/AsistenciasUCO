@@ -68,7 +68,7 @@ class ConsultasTransversalesInteractorTest {
                         true, "Ana", "Maria", "Perez", "Gomez", tipo, "CC")), 1));
         when(useCase.buscarEstudiantes(USUARIO, new FiltroConsulta(null, null, null), 1, 10)).thenReturn(new Pagina<>(
                 List.of(new EstudianteInstitucionProjection(ID, "102", "Luis Ruiz", null, true, "Ingenieria", "Sistemas", 2,
-                        "Luis", null, "Ruiz", " ")), 1));
+                        "Luis", null, "Ruiz", " ", "TI")), 1));
 
         final var docente = interactor.consultarDocentes(USUARIO, null, null, null, 1, 10).elementos().getFirst();
         assertEquals("Ana", docente.primerNombre());
@@ -81,6 +81,7 @@ class ConsultasTransversalesInteractorTest {
         assertEquals("Luis", estudiante.nombres());
         assertEquals("Ruiz", estudiante.apellidos());
         assertEquals("Luis", estudiante.primerNombre());
+        assertEquals("TI", estudiante.tipoIdentificacion());
     }
 
     @Test
@@ -108,13 +109,15 @@ class ConsultasTransversalesInteractorTest {
 
         assertEquals("Ingenieria", estudiante.facultades());
         assertEquals(2, estudiante.totalGrupos());
+        assertNull(estudiante.tipoIdentificacion());
     }
 
     @Test
     void T_157_INT_02_ficha_toma_los_datos_de_la_primera_fila_y_una_matricula_por_fila() {
         final UUID grupo = UUID.randomUUID();
         when(useCase.consultarHistorial(USUARIO, ID)).thenReturn(List.of(
-                fila(grupo, new ResumenAsistenciaProjection(10, 8, 2, 0, new BigDecimal("20.00"), "RIESGO")),
+                fila(grupo, new ResumenAsistenciaProjection(10, 8, 2, 0, new BigDecimal("20.00"), "RIESGO", 14,
+                        new BigDecimal("28.00"), new BigDecimal("4.00"))),
                 fila(null, null)));
 
         final var ficha = interactor.consultarHistorial(USUARIO, ID);
@@ -123,6 +126,9 @@ class ConsultasTransversalesInteractorTest {
         assertEquals(2, ficha.matriculas().size());
         assertEquals(grupo, ficha.matriculas().getFirst().idGrupo());
         assertEquals(new BigDecimal("20.00"), ficha.matriculas().getFirst().resumen().porcentajeInasistencia());
+        assertEquals(14, ficha.matriculas().getFirst().resumen().tomasDictadas());
+        assertEquals(new BigDecimal("28.00"), ficha.matriculas().getFirst().resumen().horasDictadas());
+        assertEquals(new BigDecimal("4.00"), ficha.matriculas().getFirst().resumen().horasFalta());
         assertNull(ficha.matriculas().get(1).resumen());
     }
 

@@ -100,7 +100,8 @@ public final class AcademicViewJpaProjectionMapper {
     public static DecanoProjection toDecano(final UvDecanoEntity row) {
         return new DecanoProjection(row.id(), row.idUsuario(), text(row.numeroIdentificacion()),
                 row.nombreCompleto(), row.idFacultad(), row.nombreFacultad(), flag(row.estaActivoDecano()),
-                row.primerNombre(), row.segundoNombre(), row.primerApellido(), row.segundoApellido());
+                row.primerNombre(), row.segundoNombre(), row.primerApellido(), row.segundoApellido(),
+                row.correo(), row.tipoIdentificacion());
     }
 
     public static CoordinadorProjection toCoordinador(final UvCoordinadorEntity row) {
@@ -113,7 +114,7 @@ public final class AcademicViewJpaProjectionMapper {
     public static FacultadProjection toFacultad(final UvFacultadEntity row) {
         return new FacultadProjection(row.id(), row.nombreFacultad(), row.idInstitucion(), row.nombreInstitucion(),
                 row.idDecano(), row.nombreCompletoDecano(), flag(row.estaActivaFacultad()),
-                row.estaActivaTextoFacultad());
+                row.estaActivaTextoFacultad(), cero(row.totalProgramas()), cero(row.totalEstudiantes()));
     }
 
     public static PlanEstudioProjection toPlanEstudio(final UvPlanEstudioEntity row) {
@@ -151,6 +152,11 @@ public final class AcademicViewJpaProjectionMapper {
                 row.correo(),
                 row.asistio(),
                 row.nombreRazonCausa());
+    }
+
+    /** Totales de vista: NULL es cero. */
+    private static int cero(final Integer value) {
+        return value == null ? 0 : value;
     }
 
     /** Conversion certificada en JPA-04: NULL es {@code false}. */

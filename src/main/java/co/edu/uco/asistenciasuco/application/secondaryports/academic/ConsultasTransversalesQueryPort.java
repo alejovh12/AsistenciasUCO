@@ -148,13 +148,14 @@ public interface ConsultasTransversalesQueryPort {
     record EstudianteInstitucionProjection(UUID idEstudiante, String numeroIdentificacion, String nombreCompleto,
                                            String correo, boolean activo, String facultades, String programas,
                                            int totalGrupos, String primerNombre, String segundoNombre,
-                                           String primerApellido, String segundoApellido) {
+                                           String primerApellido, String segundoApellido,
+                                           String tipoIdentificacion) {
 
         public EstudianteInstitucionProjection(final UUID idEstudiante, final String numeroIdentificacion,
                                                final String nombreCompleto, final String correo, final boolean activo,
                                                final String facultades, final String programas, final int totalGrupos) {
             this(idEstudiante, numeroIdentificacion, nombreCompleto, correo, activo, facultades, programas, totalGrupos,
-                    null, null, null, null);
+                    null, null, null, null, null);
         }
     }
 
@@ -168,6 +169,7 @@ public interface ConsultasTransversalesQueryPort {
     }
 
     record ResumenAsistenciaProjection(int sesionesEjecutadas, int asistencias, int faltasSinJustaCausa, int excusas,
-                                       BigDecimal porcentajeInasistencia, String codigoPermanencia) {
+                                       BigDecimal porcentajeInasistencia, String codigoPermanencia,
+                                       int tomasDictadas, BigDecimal horasDictadas, BigDecimal horasFalta) {
     }
 }

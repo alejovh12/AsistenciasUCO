@@ -115,7 +115,7 @@ class ConsultasTransversalesJpaRepositoryTest {
     @Test
     void W1B_NOM_PAT_02_estudiantes_mapea_nombres_separados() {
         when(query.getResultList()).thenReturn(filas(fila(ID, ID, 101, "Ana Perez", null, true, "Ingenieria",
-                "Sistemas", 2, 1, "Ana", null, "Perez", "Gomez")));
+                "Sistemas", 2, 1, "Ana", null, "Perez", "Gomez", "CC")));
 
         final var estudiante = repository.buscarEstudiantes(EJECUTOR, new FiltroConsulta(null, null, null), 1, 10)
                 .elementos().getFirst();
@@ -124,6 +124,7 @@ class ConsultasTransversalesJpaRepositoryTest {
         assertNull(estudiante.segundoNombre());
         assertEquals("Perez", estudiante.primerApellido());
         assertEquals("Gomez", estudiante.segundoApellido());
+        assertEquals("CC", estudiante.tipoIdentificacion());
     }
 
     @Test
@@ -162,6 +163,7 @@ class ConsultasTransversalesJpaRepositoryTest {
 
         assertEquals("Ingenieria", estudiante.facultades());
         assertFalse(estudiante.activo());
+        assertNull(estudiante.tipoIdentificacion());
     }
 
     @Test
@@ -179,6 +181,9 @@ class ConsultasTransversalesJpaRepositoryTest {
         assertEquals(grupo, filas.getFirst().idGrupo());
         assertEquals(new BigDecimal("20.00"), filas.getFirst().resumen().porcentajeInasistencia());
         assertEquals("RIESGO", filas.getFirst().resumen().codigoPermanencia());
+        assertEquals(14, filas.getFirst().resumen().tomasDictadas());
+        assertEquals(new BigDecimal("28.00"), filas.getFirst().resumen().horasDictadas());
+        assertEquals(new BigDecimal("4.00"), filas.getFirst().resumen().horasFalta());
         assertNull(filas.get(1).resumen());
     }
 
@@ -225,7 +230,9 @@ class ConsultasTransversalesJpaRepositoryTest {
                                       final String permanencia) {
         return Arrays.asList(ID, ID, "CC", 101, "Ana Ruiz", "ana@uco.edu.co", true, ID, "Ingenieria", ID, "Sistemas",
                 2024, ID, "2026-1", "Primer semestre", grupo, grupo == null ? null : 1, ID, "Calculo", "MAT",
-                "Matriculado", sesiones, asistencias, faltas, excusas, porcentaje, permanencia).toArray();
+                "Matriculado", sesiones, asistencias, faltas, excusas, porcentaje, permanencia,
+                grupo == null ? null : 14, grupo == null ? null : new BigDecimal("28.00"),
+                grupo == null ? null : new BigDecimal("4.00")).toArray();
     }
 
     @Test
