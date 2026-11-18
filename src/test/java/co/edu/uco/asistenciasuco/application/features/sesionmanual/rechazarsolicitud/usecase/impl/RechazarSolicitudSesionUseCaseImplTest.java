@@ -87,10 +87,14 @@ class RechazarSolicitudSesionUseCaseImplTest {
                 aviso.getValue().datos());
 
         final ArgumentCaptor<RealtimeEvent> evento = ArgumentCaptor.forClass(RealtimeEvent.class);
-        verify(realtime).publish(evento.capture());
-        assertEquals("SESION_CANCELADA", evento.getValue().type());
+        verify(realtime, times(2)).publish(evento.capture());
+        assertEquals("SESION_CANCELADA", evento.getAllValues().get(0).type());
         assertEquals(Map.of("grupo", GRUPO.toString(), "sesion", SESION.toString(), "tipo", "COORDINADOR",
-                "fechaHoraInicioUtc", "2026-11-10T13:00:00Z"), evento.getValue().payload());
+                "fechaHoraInicioUtc", "2026-11-10T13:00:00Z"), evento.getAllValues().get(0).payload());
+        // ATA D6: el menu de solicitudes se entera del rechazo (mismo payload que SESION_SOLICITUD_CREADA)
+        assertEquals("SESION_SOLICITUD_RECHAZADA", evento.getAllValues().get(1).type());
+        assertEquals(Map.of("grupo", GRUPO.toString(), "sesion", SESION.toString(), "fechaHoraInicio", "2026-11-10T13:00:00Z",
+                "docente", "Maria Docente"), evento.getAllValues().get(1).payload());
     }
 
     @Test
@@ -109,8 +113,11 @@ class RechazarSolicitudSesionUseCaseImplTest {
         assertEquals("Hola Maria Docente. El coordinador del programa rechazó su solicitud de sesión extraordinaria de Calculo del grupo "
                 + "G01 de Calculo para el 10/11/2026 de 08:00 a 10:00. Motivo: OTRO.", aviso.getValue().mensaje());
         final ArgumentCaptor<RealtimeEvent> evento = ArgumentCaptor.forClass(RealtimeEvent.class);
-        verify(realtime).publish(evento.capture());
-        assertFalse(evento.getValue().payload().containsKey("fechaHoraInicioUtc"));
+        verify(realtime, times(2)).publish(evento.capture());
+        assertFalse(evento.getAllValues().get(0).payload().containsKey("fechaHoraInicioUtc"));
+        // horario sin procedencia confirmada: el aviso de solicitud lleva la hora local sin zona (como SESION_SOLICITUD_CREADA)
+        assertEquals("SESION_SOLICITUD_RECHAZADA", evento.getAllValues().get(1).type());
+        assertEquals(INICIO.toString(), evento.getAllValues().get(1).payload().get("fechaHoraInicio"));
     }
 
     @Test
@@ -139,8 +146,11 @@ class RechazarSolicitudSesionUseCaseImplTest {
         assertEquals(new Resultado(SESION, GRUPO, MENSAJE, 0, false, true), useCase.execute(COMANDO));
         verify(notificaciones, never()).notificar(any());
         final ArgumentCaptor<RealtimeEvent> evento = ArgumentCaptor.forClass(RealtimeEvent.class);
-        verify(realtime).publish(evento.capture());
-        assertFalse(evento.getValue().payload().containsKey("fechaHoraInicioUtc"));
+        verify(realtime, times(2)).publish(evento.capture());
+        assertFalse(evento.getAllValues().get(0).payload().containsKey("fechaHoraInicioUtc"));
+        // sin hora de inicio el evento de solicitud sale sin hora y con el docente vacio (sin destinatarios)
+        assertFalse(evento.getAllValues().get(1).payload().containsKey("fechaHoraInicio"));
+        assertEquals("", evento.getAllValues().get(1).payload().get("docente"));
     }
 
     @Test
@@ -153,6 +163,19 @@ class RechazarSolicitudSesionUseCaseImplTest {
         doThrow(new IllegalStateException("sse")).when(realtime).publish(any());
 
         assertEquals(new Resultado(SESION, GRUPO, MENSAJE, 12, false, false), useCase.execute(COMANDO));
+    }
+
+    @Test
+    void si_falla_la_consulta_de_destinatarios_no_avisa_y_el_evento_de_solicitud_sale_sin_docente() {
+        prepararRechazo();
+        when(repositorio.consultarDestinatariosSolicitud(any(), any())).thenThrow(new IllegalStateException("db"));
+        when(sesiones.consultarSesion(SESION)).thenReturn(Optional.of(sesion("UTC_V2")));
+
+        assertEquals(new Resultado(SESION, GRUPO, MENSAJE, 12, false, true), useCase.execute(COMANDO));
+        verify(notificaciones, never()).notificar(any());
+        final ArgumentCaptor<RealtimeEvent> evento = ArgumentCaptor.forClass(RealtimeEvent.class);
+        verify(realtime, times(2)).publish(evento.capture());
+        assertEquals("", evento.getAllValues().get(1).payload().get("docente"));
     }
 
     @Test

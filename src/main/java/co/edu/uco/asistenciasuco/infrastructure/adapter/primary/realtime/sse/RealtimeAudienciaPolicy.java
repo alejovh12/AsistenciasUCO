@@ -57,6 +57,8 @@ public final class RealtimeAudienciaPolicy {
         tabla.put("SESION_MANUAL_CREADA", ESTUDIANTES_AMBITO_Y_TITULAR);
         // DEC-065 (2): solicitud de sesion extraordinaria pendiente. Sin estudiantes: ambito de lectura (coordinador) y titular.
         tabla.put("SESION_SOLICITUD_CREADA", AMBITO_Y_TITULAR);
+        // ATA D6: solicitud rechazada. Misma audiencia (coordinador y titular recargan su menu de solicitudes); nunca los estudiantes.
+        tabla.put("SESION_SOLICITUD_RECHAZADA", AMBITO_Y_TITULAR);
         // Alertas y revisiones: el titular y los destinatarios que calcula la DB.
         for (final String tipo : new String[]{"ALERTA_INASISTENCIA", "REVISION_CANCELACION_CREADA", "REVISION_CANCELACION_DECIDIDA",
                 "REVISION_CANCELACION_RESUELTA", "REVISION_CANCELACION_REASIGNADA"}) {

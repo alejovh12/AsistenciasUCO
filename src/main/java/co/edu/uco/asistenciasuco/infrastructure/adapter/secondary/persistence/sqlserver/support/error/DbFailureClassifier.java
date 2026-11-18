@@ -6,6 +6,7 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.exception.Asist
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.festivos.exception.FestivoErrorCode;
+import co.edu.uco.asistenciasuco.application.features.sesioncalendario.exception.CalendarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.asistenciaqr.exception.AsistenciaQrErrorCode;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.exception.TomaAsistenciaErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.AdmisionEstudianteErrorCode;
@@ -296,6 +297,8 @@ final class DbFailureClassifier {
             case "PRM_012" -> ParametroErrorCode.PRM_012;
             case "AUD_001" -> ParametroErrorCode.AUD_001;
             case "AUD_002" -> ParametroErrorCode.AUD_002;
+            // ATA D7: rango invalido del calendario de sesiones (400).
+            case "CAL_001" -> CalendarioErrorCode.CAL_001;
             case "FES_001" -> FestivoErrorCode.FES_001;
             case "FES_002" -> FestivoErrorCode.FES_002;
             case "FES_003" -> FestivoErrorCode.FES_003;

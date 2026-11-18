@@ -484,6 +484,26 @@ class SqlStoredProcedureContractIT {
                         input("@tamanoPagina", "int"),
                         input("@idCorrelacion", "uniqueidentifier")
                 )),
+                Arguments.of("usp_consultar_solicitudes_sesion_docente_paginado", List.of(
+                        input("@idUsuario", "uniqueidentifier"),
+                        input("@soloPendientes", "bit"),
+                        input("@idGrupo", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int"),
+                        input("@idCorrelacion", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_sesiones_calendario_estudiante", List.of(
+                        input("@idUsuario", "uniqueidentifier"),
+                        input("@desde", "date"),
+                        input("@hasta", "date"),
+                        input("@idCorrelacion", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_sesiones_calendario_docente", List.of(
+                        input("@idUsuario", "uniqueidentifier"),
+                        input("@desde", "date"),
+                        input("@hasta", "date"),
+                        input("@idCorrelacion", "uniqueidentifier")
+                )),
                 Arguments.of("usp_consultar_destinatarios_solicitud_sesion", List.of(
                         input("@idSesion", "uniqueidentifier"),
                         input("@idCorrelacion", "uniqueidentifier"),
