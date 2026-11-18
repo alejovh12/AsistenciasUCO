@@ -58,7 +58,7 @@ class MessageUcoLabCatalogoTest {
     }
 
     @Test
-    void el_catalogo_trae_los_487_codigos_de_usuario_de_los_seeds() throws Exception {
+    void el_catalogo_trae_los_489_codigos_de_usuario_de_los_seeds() throws Exception {
         // CULM-001 A.1: - SIG_001..SIG_015 y ERR_SOLICITUD_MATRICULA_NO_IMPLEMENTADA (seeds 23 y 04 retirados).
         // CULM-001 A.2: + SES_017, REV_006, REV_007, REV_008, DEC_002 y DEC_003 (seed 33_culm001_a_mensajes).
         // VAL-oleada3 MSG-03: regenerado desde todos los seeds (291 que ya estaban en la BD) + 107 de MSG-05 (seed 62).
@@ -68,7 +68,8 @@ class MessageUcoLabCatalogoTest {
         // IDENT-002: + VCE_009, ACT_001 y ACT_002 (seed 65 / migracion 46; el fixture se regenero en VAL-oleada9).
         // VAL-oleada9 REA-02: + ERR_ALMACENAMIENTO_NO_DISPONIBLE (seed 63 / migracion 47).
         // FIX-CIERRE-002: + PER_007 (seed 17 / migracion 48 de BD; el fixture se regenero con build-message-catalog.py).
-        assertEquals(487, catalogo().size());
+        // VAL-pendientes-john PRU-15: + PER_008 y PER_009 (seed 17 / migracion 49 de BD; filas con el formato de build-message-catalog.py).
+        assertEquals(489, catalogo().size());
     }
 
     @Test
