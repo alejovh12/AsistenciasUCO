@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.scheduler;
 
 import co.edu.uco.asistenciasuco.application.features.asistenciaqr.rotartokensasistenciaautomatico.primaryports.RotarTokensAsistenciaAutomaticoInputPort;
+import co.edu.uco.asistenciasuco.application.features.tomaasistencia.avisarfaltassesion.primaryports.AvisarFaltasSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.cerrartomasvencidas.primaryports.CerrarTomasVencidasInputPort;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import org.slf4j.Logger;
@@ -17,7 +18,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * CULM-001 B.2 (contrato 3.5): job del SERVIDOR (patron de {@link RotacionTokenMatriculaScheduler}) que (1) rota los
- * tokens de asistencia vencidos y empuja el QR nuevo al titular por SSE y (2) cierra las tomas cuya ventana vencio. No es
+ * tokens de asistencia vencidos y empuja el QR nuevo al titular por SSE, (2) cierra las tomas cuya ventana vencio y (3) ATA D1: avisa por
+ * correo las faltas de las sesiones que ya terminaron (despues del cierre, para que las tomas recien cerradas ya cuenten). No es
  * polling del cliente. Cada pasada abre su propia correlacion, nunca propaga excepciones y es segura entre instancias (la
  * base de datos decide si rota o cierra). Hilo daemon {@code rotacion-token-asistencia-qr}; nunca {@code @Scheduled}.
  */
@@ -27,6 +29,7 @@ public final class RotacionTokenAsistenciaScheduler implements SmartLifecycle {
 
     private final RotarTokensAsistenciaAutomaticoInputPort rotarTokens;
     private final CerrarTomasVencidasInputPort cerrarVencidas;
+    private final AvisarFaltasSesionInputPort avisarFaltas;
     private final Duration tick;
     private final AtomicBoolean running = new AtomicBoolean(false);
     private ScheduledExecutorService executor;
@@ -34,17 +37,19 @@ public final class RotacionTokenAsistenciaScheduler implements SmartLifecycle {
     public RotacionTokenAsistenciaScheduler(
             final RotarTokensAsistenciaAutomaticoInputPort rotarTokens,
             final CerrarTomasVencidasInputPort cerrarVencidas,
+            final AvisarFaltasSesionInputPort avisarFaltas,
             final Duration tick
     ) {
         this.rotarTokens = Objects.requireNonNull(rotarTokens, "RotarTokensAsistenciaAutomaticoInputPort es obligatorio.");
         this.cerrarVencidas = Objects.requireNonNull(cerrarVencidas, "CerrarTomasVencidasInputPort es obligatorio.");
+        this.avisarFaltas = Objects.requireNonNull(avisarFaltas, "AvisarFaltasSesionInputPort es obligatorio.");
         this.tick = Objects.requireNonNull(tick, "El tick del scheduler es obligatorio.");
         if (tick.isZero() || tick.isNegative()) {
             throw new IllegalArgumentException("El tick del scheduler debe ser positivo.");
         }
     }
 
-    /** Una pasada completa (rotacion y cierre); visible para pruebas. */
+    /** Una pasada completa (rotacion, cierre y aviso de faltas); visible para pruebas. */
     public void ejecutarPasada() {
         final boolean correlacionPropia = CorrelationIdContext.get() == null;
         if (correlacionPropia) {
@@ -53,6 +58,7 @@ public final class RotacionTokenAsistenciaScheduler implements SmartLifecycle {
         try {
             ejecutar("rotacion de tokens de asistencia", rotarTokens::execute);
             ejecutar("cierre de tomas vencidas", cerrarVencidas::execute);
+            ejecutar("aviso de faltas por sesion", avisarFaltas::execute);
         } finally {
             if (correlacionPropia) {
                 CorrelationIdContext.clear();

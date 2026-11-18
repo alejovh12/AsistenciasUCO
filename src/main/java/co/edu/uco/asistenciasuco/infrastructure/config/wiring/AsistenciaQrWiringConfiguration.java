@@ -15,13 +15,17 @@ import co.edu.uco.asistenciasuco.application.features.asistenciaqr.rotarqrtoma.p
 import co.edu.uco.asistenciasuco.application.features.asistenciaqr.rotarqrtoma.usecase.impl.RotarQrTomaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.asistenciaqr.rotartokensasistenciaautomatico.primaryports.RotarTokensAsistenciaAutomaticoInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistenciaqr.rotartokensasistenciaautomatico.usecase.impl.RotarTokensAsistenciaAutomaticoUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.tomaasistencia.avisarfaltassesion.primaryports.AvisarFaltasSesionInputPort;
+import co.edu.uco.asistenciasuco.application.features.tomaasistencia.avisarfaltassesion.usecase.impl.AvisarFaltasSesionUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.cerrartomasvencidas.primaryports.CerrarTomasVencidasInputPort;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.TomaAsistenciaAcceso;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.TomaAsistenciaEventos;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.network.RedInstitucionalPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.qr.CodigoQrGeneratorPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaQrRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.AvisoFaltaSesionRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.TomaAsistenciaRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.LimitadorIntentosPort;
@@ -112,13 +116,22 @@ public class AsistenciaQrWiringConfiguration {
         return new RegistrarAsistenciaPorTokenUseCaseImpl(acceso, limitador, repositorio, tomas, scope, eventos, EsperaReintento.delHilo());
     }
 
+    /** ATA D1: aviso de falta por sesion; el enlace al reclamo usa la URL de la plataforma del canal de correo (vacia: sin enlace). */
+    @Bean
+    public AvisarFaltasSesionInputPort avisarFaltasSesionInputPort(
+            final AvisoFaltaSesionRepositoryPort repositorio, final NotificacionPort notificaciones,
+            @Value("${app.providers.smtp-notification.platform-url:}") final String urlPlataforma) {
+        return new AvisarFaltasSesionUseCaseImpl(repositorio, notificaciones, urlPlataforma);
+    }
+
     @Bean
     public RotacionTokenAsistenciaScheduler rotacionTokenAsistenciaScheduler(
             final RotarTokensAsistenciaAutomaticoInputPort rotarTokens,
             final CerrarTomasVencidasInputPort cerrarVencidas,
+            final AvisarFaltasSesionInputPort avisarFaltas,
             @Value("${app.asistencia-qr.rotacion.tick:PT5S}") final Duration tick
     ) {
-        return new RotacionTokenAsistenciaScheduler(rotarTokens, cerrarVencidas, tick);
+        return new RotacionTokenAsistenciaScheduler(rotarTokens, cerrarVencidas, avisarFaltas, tick);
     }
 
     /**

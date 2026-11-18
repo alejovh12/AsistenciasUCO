@@ -58,6 +58,9 @@ public record Notificacion(
     /** DEC-065 (2): el coordinador rechazo la solicitud (aviso al docente titular, con motivo y observacion). */
     public static final String TIPO_SESION_SOLICITUD_RECHAZADA_DOCENTE = "SESION_SOLICITUD_RECHAZADA_DOCENTE";
 
+    /** ATA D1 (HU175): aviso al estudiante de las tomas en falta de una sesion que ya termino (un correo por estudiante y sesion). */
+    public static final String TIPO_FALTA_ASISTENCIA_SESION_ESTUDIANTE = "FALTA_ASISTENCIA_SESION_ESTUDIANTE";
+
     public Notificacion {
         Objects.requireNonNull(tipo, "El tipo de notificacion es obligatorio.");
         destinatarios = destinatarios == null ? List.of() : List.copyOf(destinatarios);

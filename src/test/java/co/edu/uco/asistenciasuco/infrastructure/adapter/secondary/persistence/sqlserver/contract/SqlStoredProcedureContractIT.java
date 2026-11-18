@@ -554,6 +554,20 @@ class SqlStoredProcedureContractIT {
                 Arguments.of("usp_cerrar_tomas_vencidas", List.of(
                         input("@idCorrelacion", "uniqueidentifier")
                 )),
+                // ATA D1 (HU175): aviso de falta por sesion (comandos de sistema del job)
+                Arguments.of("usp_consultar_sesiones_pendientes_aviso_falta", List.of(
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@tamanoLote", "int")
+                )),
+                Arguments.of("usp_consultar_faltas_sesion_aviso", List.of(
+                        input("@idSesion", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier")
+                )),
+                Arguments.of("usp_registrar_aviso_falta_sesion", List.of(
+                        input("@idSesion", "uniqueidentifier"),
+                        input("@totalEstudiantesAvisados", "int"),
+                        input("@idCorrelacion", "uniqueidentifier")
+                )),
                 Arguments.of("usp_registrar_asistencias_toma", List.of(
                         input("@idToma", "uniqueidentifier"),
                         input("@asistenciaJSON", "nvarchar"),
