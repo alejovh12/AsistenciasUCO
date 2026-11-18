@@ -11,6 +11,7 @@ public final class ConsultarFacultadesRepositoryMapper {
     public static FacultadDomain toDomain(final FacultadProjection projection) {
         return new FacultadDomain(projection.id(), projection.nombreFacultad(), projection.idInstitucion(),
                 projection.nombreInstitucion(), projection.idDecano(), projection.nombreCompletoDecano(),
-                projection.estaActivaFacultad(), projection.estaActivaTextoFacultad());
+                projection.estaActivaFacultad(), projection.estaActivaTextoFacultad(),
+                projection.totalProgramas(), projection.totalEstudiantes());
     }
 }

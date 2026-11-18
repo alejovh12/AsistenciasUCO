@@ -9,12 +9,12 @@ import org.hibernate.annotations.Immutable;
 import java.util.UUID;
 
 /**
- * Modelo de persistencia de SOLO LECTURA sobre la vista {@code dbo.uv_facultad} (LB-008 JPA-05).
+ * Modelo de persistencia de SOLO LECTURA sobre la vista {@code dbo.uv_facultad_resumen} (uv_facultad mas totales de programas y estudiantes; LB-008 JPA-05).
  * {@code idDecano} y {@code nombreCompletoDecano} son NULLABLE en la vista.
  */
 @Entity
 @Immutable
-@Table(name = "uv_facultad", schema = "dbo")
+@Table(name = "uv_facultad_resumen", schema = "dbo")
 public class UvFacultadEntity {
 
     @Id
@@ -41,6 +41,13 @@ public class UvFacultadEntity {
 
     @Column(name = "estaActivaTextoFacultad")
     private String estaActivaTextoFacultad;
+
+    /** Totales de la vista (programas y estudiantes inscritos en el periodo mas reciente con grupos habilitados). */
+    @Column(name = "totalProgramas")
+    private Integer totalProgramas;
+
+    @Column(name = "totalEstudiantes")
+    private Integer totalEstudiantes;
 
     protected UvFacultadEntity() {
         // requerido por JPA
@@ -76,6 +83,14 @@ public class UvFacultadEntity {
 
     public String estaActivaTextoFacultad() {
         return estaActivaTextoFacultad;
+    }
+
+    public Integer totalProgramas() {
+        return totalProgramas;
+    }
+
+    public Integer totalEstudiantes() {
+        return totalEstudiantes;
     }
 }
 
