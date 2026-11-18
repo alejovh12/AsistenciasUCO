@@ -137,6 +137,9 @@ public final class DbExceptionTranslator {
             RevisionCancelacionErrorCode.RCN_014,
             // FIX-CIERRE-002: cierre masivo de un periodo que aun no termino.
             MensajeUsuarioErrorCode.PER_007,
+            // VAL-pendientes-john PRU-15: operacion sobre un periodo cerrado y segundo cierre.
+            MensajeUsuarioErrorCode.PER_008,
+            MensajeUsuarioErrorCode.PER_009,
             CommonErrorCode.CONFLICT
     );
     private static final Set<ErrorDefinition> VALIDATION_CODES = Set.of(
@@ -193,6 +196,9 @@ public final class DbExceptionTranslator {
             TomaAsistenciaErrorCode.TOM_012,
             // FIX-CIERRE-002: la BD sustituye la fecha de fin del periodo en el mensaje.
             MensajeUsuarioErrorCode.PER_007,
+            // VAL-pendientes-john PRU-15: la BD sustituye el nombre del periodo (PER_008) y la fecha del primer cierre (PER_009).
+            MensajeUsuarioErrorCode.PER_008,
+            MensajeUsuarioErrorCode.PER_009,
             // DEC-073: la BD sustituye el dominio, los limites del parametro y el maximo de creditos vigentes.
             VerificacionCorreoErrorCode.VCE_008,
             AsistenciaErrorCode.ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA,
