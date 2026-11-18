@@ -37,6 +37,7 @@ public final class RealtimeAudienciaPolicy {
     private static final Set<Audiencia> ESTUDIANTES_AMBITO_Y_TITULAR =
             EnumSet.of(Audiencia.ESTUDIANTE_GRUPO, Audiencia.AMBITO_GRUPO, Audiencia.DOCENTE_TITULAR);
     private static final Set<Audiencia> SOLO_ADMINISTRADOR = EnumSet.of(Audiencia.ADMINISTRADOR);
+    private static final Set<Audiencia> SOLO_DESTINATARIO = EnumSet.of(Audiencia.DESTINATARIO);
     private static final Set<Audiencia> TITULAR_Y_DESTINATARIO = EnumSet.of(Audiencia.DOCENTE_TITULAR, Audiencia.DESTINATARIO);
 
     private final Map<String, Set<Audiencia>> audienciasPorTipo;
@@ -64,6 +65,8 @@ public final class RealtimeAudienciaPolicy {
                 "REVISION_CANCELACION_RESUELTA", "REVISION_CANCELACION_REASIGNADA"}) {
             tabla.put(tipo, TITULAR_Y_DESTINATARIO);
         }
+        // ATA D10: aviso de falta por sesion. Solo los estudiantes avisados (destinatarios que fija el caso de uso); ni el titular ni el ambito.
+        tabla.put("FALTA_SESION_AVISADA", SOLO_DESTINATARIO);
         // Operacion del docente (algunos llevan token o identidad): solo el titular.
         for (final String tipo : new String[]{"ASISTENCIA_REGISTRADA", "MATRICULA_QR_ROTADO", "ESTUDIANTE_MATRICULADO", "TOMA_ABIERTA", "TOMA_CERRADA",
                 "ASISTENCIA_QR_ROTADO", "ASISTENCIA_QR_REGISTRADA"}) {

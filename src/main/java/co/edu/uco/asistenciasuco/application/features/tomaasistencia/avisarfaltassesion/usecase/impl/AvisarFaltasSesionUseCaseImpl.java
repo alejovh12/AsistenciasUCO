@@ -4,6 +4,8 @@ import co.edu.uco.asistenciasuco.application.features.sesionmanual.common.AvisoS
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.avisarfaltassesion.usecase.AvisarFaltasSesionUseCase;
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notificacion;
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimeEvent;
+import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AvisoFaltaSesionRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AvisoFaltaSesionRepositoryPort.FaltaSesionAviso;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AvisoFaltaSesionRepositoryPort.SesionPendienteAviso;
@@ -14,10 +16,13 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -25,7 +30,8 @@ import java.util.stream.Collectors;
  * ATA D1 (HU175, ADDENDUM_ATA_ASISTENCIA_TOMAS_AVISOS C): aviso de falta por sesion. Por cada sesion que la base de datos reporta como
  * pendiente (terminada, con todas sus tomas cerradas, dentro del atraso maximo y sin aviso previo) arma UNA {@link Notificacion} por
  * estudiante con al menos una toma en SJC, con destinatario unico y rol ESTUDIANTE, y luego registra la marca de sesion avisada con el
- * total avisado.
+ * total avisado. Tras registrar la marca publica el evento {@code FALTA_SESION_AVISADA} (ATA D10) con destinatarios los estudiantes a
+ * los que se envio el correo, para que la plataforma recargue sus faltas por reclamar.
  * <ul>
  *   <li>{@code detalleFaltas}: "falta general" si quedo SJC en todas las tomas; si no, las tomas en falta con su hora (punto de
  *       control) en hora institucional (America/Bogota, como {@link AvisoSesionSupport}).</li>
@@ -39,6 +45,8 @@ import java.util.stream.Collectors;
  */
 public final class AvisarFaltasSesionUseCaseImpl implements AvisarFaltasSesionUseCase {
 
+    /** ATA D10: payload {@code {grupo, sesion}} sin nombres, tomas ni correos; audiencia DESTINATARIO (los avisados). */
+    public static final String EVENTO_FALTA_SESION_AVISADA = "FALTA_SESION_AVISADA";
     static final String ROL_ESTUDIANTE = "ESTUDIANTE";
     static final String FALTA_GENERAL = "falta general (no registró asistencia en ninguna toma)";
     static final String PLATAFORMA_SIN_ENLACE = "la plataforma de asistencia";
@@ -47,12 +55,14 @@ public final class AvisarFaltasSesionUseCaseImpl implements AvisarFaltasSesionUs
 
     private final AvisoFaltaSesionRepositoryPort repositorio;
     private final NotificacionPort notificaciones;
+    private final RealtimePublisherPort realtime;
     private final String urlPlataforma;
 
     public AvisarFaltasSesionUseCaseImpl(final AvisoFaltaSesionRepositoryPort repositorio, final NotificacionPort notificaciones,
-                                         final String urlPlataforma) {
+                                         final RealtimePublisherPort realtime, final String urlPlataforma) {
         this.repositorio = Objects.requireNonNull(repositorio, "AvisoFaltaSesionRepositoryPort es obligatorio.");
         this.notificaciones = Objects.requireNonNull(notificaciones, "NotificacionPort es obligatorio.");
+        this.realtime = Objects.requireNonNull(realtime, "RealtimePublisherPort es obligatorio.");
         this.urlPlataforma = urlPlataforma == null ? "" : urlPlataforma.strip();
     }
 
@@ -60,14 +70,15 @@ public final class AvisarFaltasSesionUseCaseImpl implements AvisarFaltasSesionUs
     public int execute() {
         int avisadas = 0;
         for (final SesionPendienteAviso pendiente : repositorio.consultarSesionesPendientes()) {
-            if (avisarSesion(pendiente.idSesion())) {
+            if (avisarSesion(pendiente)) {
                 avisadas++;
             }
         }
         return avisadas;
     }
 
-    private boolean avisarSesion(final UUID sesionId) {
+    private boolean avisarSesion(final SesionPendienteAviso pendiente) {
+        final UUID sesionId = pendiente.idSesion();
         final List<FaltaSesionAviso> faltas;
         try {
             faltas = repositorio.consultarFaltas(sesionId);
@@ -77,15 +88,16 @@ public final class AvisarFaltasSesionUseCaseImpl implements AvisarFaltasSesionUs
         }
         final Map<UUID, List<FaltaSesionAviso>> porEstudiante = faltas.stream()
                 .collect(Collectors.groupingBy(FaltaSesionAviso::idUsuarioEstudiante, LinkedHashMap::new, Collectors.toList()));
-        int avisados = 0;
+        final Set<UUID> destinatarios = new LinkedHashSet<>();
         int fallidos = 0;
         for (final List<FaltaSesionAviso> deEstudiante : porEstudiante.values()) {
             if (avisarEstudiante(sesionId, deEstudiante)) {
-                avisados++;
+                destinatarios.add(deEstudiante.getFirst().idUsuarioEstudiante());
             } else {
                 fallidos++;
             }
         }
+        final int avisados = destinatarios.size();
         if (avisados == 0 && fallidos > 0) {
             LOGGER.warn("Ningun aviso de falta de la sesion {} pudo encolarse ({} estudiantes): se reintenta en la siguiente pasada.", sesionId, fallidos);
             return false;
@@ -99,7 +111,23 @@ public final class AvisarFaltasSesionUseCaseImpl implements AvisarFaltasSesionUs
         if (fallidos > 0) {
             LOGGER.warn("Aviso de falta de la sesion {}: {} avisados y {} con fallo.", sesionId, avisados, fallidos);
         }
+        publicarEvento(pendiente, destinatarios);
         return true;
+    }
+
+    /** ATA D10: mejor esfuerzo; un fallo del evento no revierte la marca ni los correos. Sin avisados no hay evento. */
+    private void publicarEvento(final SesionPendienteAviso pendiente, final Set<UUID> destinatarios) {
+        if (destinatarios.isEmpty()) {
+            return;
+        }
+        try {
+            final Map<String, Object> payload = new HashMap<>();
+            payload.put("grupo", pendiente.idGrupo().toString());
+            payload.put("sesion", pendiente.idSesion().toString());
+            realtime.publish(RealtimeEvent.paraDestinatarios(EVENTO_FALTA_SESION_AVISADA, payload, Set.copyOf(destinatarios)));
+        } catch (final RuntimeException exception) {
+            LOGGER.warn("No fue posible publicar el evento de falta avisada de la sesion {}: {}", pendiente.idSesion(), exception.getClass().getSimpleName());
+        }
     }
 
     private boolean avisarEstudiante(final UUID sesionId, final List<FaltaSesionAviso> faltas) {

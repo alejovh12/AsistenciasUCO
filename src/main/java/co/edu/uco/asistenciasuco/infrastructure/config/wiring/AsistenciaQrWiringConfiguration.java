@@ -24,6 +24,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCat
 import co.edu.uco.asistenciasuco.application.secondaryports.network.RedInstitucionalPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.qr.CodigoQrGeneratorPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaQrRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AvisoFaltaSesionRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.TomaAsistenciaRepositoryPort;
@@ -116,12 +117,12 @@ public class AsistenciaQrWiringConfiguration {
         return new RegistrarAsistenciaPorTokenUseCaseImpl(acceso, limitador, repositorio, tomas, scope, eventos, EsperaReintento.delHilo());
     }
 
-    /** ATA D1: aviso de falta por sesion; el enlace al reclamo usa la URL de la plataforma del canal de correo (vacia: sin enlace). */
+    /** ATA D1/D10: aviso de falta por sesion (correo y evento FALTA_SESION_AVISADA); el enlace al reclamo usa la URL de la plataforma del canal de correo (vacia: sin enlace). */
     @Bean
     public AvisarFaltasSesionInputPort avisarFaltasSesionInputPort(
-            final AvisoFaltaSesionRepositoryPort repositorio, final NotificacionPort notificaciones,
+            final AvisoFaltaSesionRepositoryPort repositorio, final NotificacionPort notificaciones, final RealtimePublisherPort realtime,
             @Value("${app.providers.smtp-notification.platform-url:}") final String urlPlataforma) {
-        return new AvisarFaltasSesionUseCaseImpl(repositorio, notificaciones, urlPlataforma);
+        return new AvisarFaltasSesionUseCaseImpl(repositorio, notificaciones, realtime, urlPlataforma);
     }
 
     @Bean

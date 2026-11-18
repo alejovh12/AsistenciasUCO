@@ -2,6 +2,8 @@ package co.edu.uco.asistenciasuco.application.features.tomaasistencia.avisarfalt
 
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notificacion;
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimeEvent;
+import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AvisoFaltaSesionRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AvisoFaltaSesionRepositoryPort.FaltaSesionAviso;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AvisoFaltaSesionRepositoryPort.SesionPendienteAviso;
@@ -10,14 +12,18 @@ import org.mockito.ArgumentCaptor;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -41,9 +47,10 @@ class AvisarFaltasSesionUseCaseImplTest {
 
     private final AvisoFaltaSesionRepositoryPort repositorio = mock(AvisoFaltaSesionRepositoryPort.class);
     private final NotificacionPort notificaciones = mock(NotificacionPort.class);
+    private final RealtimePublisherPort realtime = mock(RealtimePublisherPort.class);
 
     private AvisarFaltasSesionUseCaseImpl caso(final String url) {
-        return new AvisarFaltasSesionUseCaseImpl(repositorio, notificaciones, url);
+        return new AvisarFaltasSesionUseCaseImpl(repositorio, notificaciones, realtime, url);
     }
 
     private static SesionPendienteAviso pendiente(final UUID sesion) {
@@ -212,9 +219,111 @@ class AvisarFaltasSesionUseCaseImplTest {
         assertEquals("", captor.getValue().datos().get("fechaLimiteReclamo"));
     }
 
+    // ------------------------------------------------------------------ ATA D10: evento FALTA_SESION_AVISADA
+
+    @Test
+    void publica_el_evento_con_los_estudiantes_avisados_como_destinatarios_tras_registrar_la_marca() {
+        when(repositorio.consultarSesionesPendientes()).thenReturn(List.of(pendiente(SESION)));
+        when(repositorio.consultarFaltas(SESION)).thenReturn(List.of(
+                falta(SESION, USUARIO_1, "Ana Gomez", 1, "2026-11-17T13:00:00Z", 2, 2),
+                falta(SESION, USUARIO_1, "Ana Gomez", 2, "2026-11-17T14:00:00Z", 2, 2),
+                falta(SESION, USUARIO_2, "Beto Ruiz", 2, "2026-11-17T14:00:00Z", 1, 2)));
+
+        assertEquals(1, caso("").execute());
+
+        final ArgumentCaptor<RealtimeEvent> captor = ArgumentCaptor.forClass(RealtimeEvent.class);
+        final var orden = inOrder(repositorio, realtime);
+        orden.verify(repositorio).registrarAviso(SESION, 2);
+        orden.verify(realtime).publish(captor.capture());
+        final RealtimeEvent evento = captor.getValue();
+        assertEquals("FALTA_SESION_AVISADA", evento.type());
+        assertEquals(AvisarFaltasSesionUseCaseImpl.EVENTO_FALTA_SESION_AVISADA, evento.type());
+        assertEquals(Map.of("grupo", GRUPO.toString(), "sesion", SESION.toString()), evento.payload());
+        assertEquals(Set.of(USUARIO_1, USUARIO_2), evento.destinatariosUsuario());
+    }
+
+    @Test
+    void el_payload_no_lleva_nombres_tomas_ni_correos() {
+        when(repositorio.consultarSesionesPendientes()).thenReturn(List.of(pendiente(SESION)));
+        when(repositorio.consultarFaltas(SESION)).thenReturn(List.of(falta(SESION, USUARIO_1, "Ana Gomez", 1, "2026-11-17T13:00:00Z", 1, 1)));
+
+        caso("").execute();
+
+        final ArgumentCaptor<RealtimeEvent> captor = ArgumentCaptor.forClass(RealtimeEvent.class);
+        verify(realtime).publish(captor.capture());
+        assertEquals(Set.of("grupo", "sesion"), captor.getValue().payload().keySet());
+        assertFalse(captor.getValue().payload().toString().contains("Ana"));
+        assertFalse(captor.getValue().payload().toString().contains("@"));
+    }
+
+    @Test
+    void los_destinatarios_son_solo_los_estudiantes_cuyo_correo_se_encolo() {
+        when(repositorio.consultarSesionesPendientes()).thenReturn(List.of(pendiente(SESION)));
+        when(repositorio.consultarFaltas(SESION)).thenReturn(List.of(
+                falta(SESION, USUARIO_1, "Ana Gomez", 1, "2026-11-17T13:00:00Z", 1, 1),
+                falta(SESION, USUARIO_2, "Beto Ruiz", 1, "2026-11-17T13:00:00Z", 1, 1)));
+        doThrow(new IllegalStateException("outbox")).doNothing().when(notificaciones).notificar(any());
+
+        caso("").execute();
+
+        final ArgumentCaptor<RealtimeEvent> captor = ArgumentCaptor.forClass(RealtimeEvent.class);
+        verify(realtime).publish(captor.capture());
+        assertEquals(Set.of(USUARIO_2), captor.getValue().destinatariosUsuario());
+    }
+
+    @Test
+    void no_publica_si_falla_el_registro_de_la_marca() {
+        when(repositorio.consultarSesionesPendientes()).thenReturn(List.of(pendiente(SESION)));
+        when(repositorio.consultarFaltas(SESION)).thenReturn(List.of(falta(SESION, USUARIO_1, "Ana Gomez", 1, "2026-11-17T13:00:00Z", 1, 1)));
+        doThrow(new IllegalStateException("db")).when(repositorio).registrarAviso(SESION, 1);
+
+        assertEquals(0, caso("").execute());
+
+        verify(realtime, never()).publish(any());
+    }
+
+    @Test
+    void no_publica_si_ningun_correo_salio() {
+        when(repositorio.consultarSesionesPendientes()).thenReturn(List.of(pendiente(SESION)));
+        when(repositorio.consultarFaltas(SESION)).thenReturn(List.of(falta(SESION, USUARIO_1, "Ana Gomez", 1, "2026-11-17T13:00:00Z", 1, 1)));
+        doThrow(new IllegalStateException("outbox")).when(notificaciones).notificar(any());
+
+        assertEquals(0, caso("").execute());
+
+        verify(repositorio, never()).registrarAviso(any(), anyInt());
+        verify(realtime, never()).publish(any());
+    }
+
+    @Test
+    void una_sesion_sin_estudiantes_con_falta_se_marca_pero_no_publica() {
+        when(repositorio.consultarSesionesPendientes()).thenReturn(List.of(pendiente(SESION)));
+        when(repositorio.consultarFaltas(SESION)).thenReturn(List.of());
+
+        assertEquals(1, caso("").execute());
+
+        verify(repositorio).registrarAviso(SESION, 0);
+        verify(realtime, never()).publish(any());
+    }
+
+    @Test
+    void un_fallo_al_publicar_no_revierte_la_marca_ni_los_correos_y_la_sesion_cuenta_como_avisada() {
+        when(repositorio.consultarSesionesPendientes()).thenReturn(List.of(pendiente(SESION), pendiente(SESION_2)));
+        when(repositorio.consultarFaltas(SESION)).thenReturn(List.of(falta(SESION, USUARIO_1, "Ana Gomez", 1, "2026-11-17T13:00:00Z", 1, 1)));
+        when(repositorio.consultarFaltas(SESION_2)).thenReturn(List.of(falta(SESION_2, USUARIO_2, "Beto Ruiz", 1, "2026-11-17T13:00:00Z", 1, 1)));
+        doThrow(new IllegalStateException("sse")).when(realtime).publish(any());
+
+        assertEquals(2, caso("").execute());
+
+        verify(notificaciones, times(2)).notificar(any());
+        verify(repositorio).registrarAviso(SESION, 1);
+        verify(repositorio).registrarAviso(SESION_2, 1);
+        verify(realtime, times(2)).publish(any());
+    }
+
     @Test
     void valida_sus_dependencias() {
-        assertThrows(NullPointerException.class, () -> new AvisarFaltasSesionUseCaseImpl(null, notificaciones, ""));
-        assertThrows(NullPointerException.class, () -> new AvisarFaltasSesionUseCaseImpl(repositorio, null, ""));
+        assertThrows(NullPointerException.class, () -> new AvisarFaltasSesionUseCaseImpl(null, notificaciones, realtime, ""));
+        assertThrows(NullPointerException.class, () -> new AvisarFaltasSesionUseCaseImpl(repositorio, null, realtime, ""));
+        assertThrows(NullPointerException.class, () -> new AvisarFaltasSesionUseCaseImpl(repositorio, notificaciones, null, ""));
     }
 }
