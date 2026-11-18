@@ -117,6 +117,12 @@ public enum MensajeUsuarioErrorCode implements ErrorDefinition {
     // FIX-CIERRE-002: la base lo publica con su propio codigo y con la fecha de fin del periodo en el texto.
     PER_007("PER_007", ErrorKind.CONFLICT,
             "El período académico aún no ha finalizado; el cierre masivo solo puede ejecutarse después de su fecha de fin ({})."),
+    // VAL-pendientes-john PRU-15: el cierre masivo ya cerro el periodo; sus sesiones no admiten tomas, lotes ni reclamos (con el
+    // nombre del periodo en el texto) y el cierre no se repite (con la fecha del primer cierre).
+    PER_008("PER_008", ErrorKind.CONFLICT,
+            "El período académico {} ya fue cerrado; no se pueden registrar ni modificar tomas, asistencias ni reclamos de sus sesiones."),
+    PER_009("PER_009", ErrorKind.CONFLICT,
+            "El período académico ya fue cerrado el {}; el cierre masivo no se puede repetir."),
     NOF_APP_003(CommonErrorCode.RESOURCE_NOT_FOUND, "El estudiante no existe en su ambito."),
     NOF_APP_004(CommonErrorCode.RESOURCE_NOT_FOUND, "El docente no existe o no esta vinculado a su programa."),
     NOF_APP_005(CommonErrorCode.RESOURCE_NOT_FOUND, "El plan de estudio indicado no existe en el programa del coordinador."),
