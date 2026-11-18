@@ -131,6 +131,21 @@ class ViewEntityProjectionMappingTest {
     }
 
     @Test
+    void facultad_proyecta_totales_de_programas_y_estudiantes_y_trata_nulos_como_cero() {
+        assertEquals(new FacultadProjection(A, "Ingenieria", B, "UCO", null, null, true, "Activa", 3, 20),
+                AcademicViewJpaProjectionMapper.toFacultad(HydratedViewRow.of(UvFacultadEntity.class,
+                        cols("id", A, "nombreFacultad", "Ingenieria", "idInstitucion", B, "nombreInstitucion", "UCO",
+                                "estaActivaFacultad", Boolean.TRUE, "estaActivaTextoFacultad", "Activa",
+                                "totalProgramas", 3, "totalEstudiantes", 20))));
+
+        final var sinTotales = AcademicViewJpaProjectionMapper.toFacultad(HydratedViewRow.of(UvFacultadEntity.class,
+                cols("id", A, "nombreFacultad", "Salud", "idInstitucion", B, "nombreInstitucion", "UCO",
+                        "estaActivaFacultad", Boolean.TRUE, "estaActivaTextoFacultad", "Activa")));
+        assertEquals(0, sinTotales.totalProgramas());
+        assertEquals(0, sinTotales.totalEstudiantes());
+    }
+
+    @Test
     void docente_proyecta_asignatura() {
         final UvDocenteEntity docente = HydratedViewRow.of(UvDocenteEntity.class, docenteColumns());
 
