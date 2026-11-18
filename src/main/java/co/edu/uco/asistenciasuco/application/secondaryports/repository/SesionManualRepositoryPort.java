@@ -33,6 +33,12 @@ public interface SesionManualRepositoryPort {
     PaginaSolicitudesSesion consultarSolicitudes(UUID coordinadorUsuarioId, boolean soloPendientes, UUID programaId, UUID grupoId,
                                                  int pagina, int tamano);
 
+    /**
+     * ATA D6 {@code usp_consultar_solicitudes_sesion_docente_paginado}: solicitudes de los grupos donde el ejecutor es docente titular
+     * (mismas columnas y orden que la del coordinador); {@code SEC_001} si no es docente, {@code PAG_001} si la pagina no es valida.
+     */
+    PaginaSolicitudesSesion consultarSolicitudesDocente(UUID docenteUsuarioId, boolean soloPendientes, UUID grupoId, int pagina, int tamano);
+
     /** {@code usp_cancelar_sesion_coordinador}. */
     SesionCancelada cancelarPorCoordinador(UUID sesionId, String codigoMotivo, String observacion, UUID coordinadorUsuarioId);
 

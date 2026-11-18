@@ -10,6 +10,8 @@ import co.edu.uco.asistenciasuco.application.features.sesionmanual.cancelarsesio
 import co.edu.uco.asistenciasuco.application.features.sesionmanual.consultarmotivos.primaryports.ConsultarMotivosCancelacionInputPort;
 import co.edu.uco.asistenciasuco.application.features.sesionmanual.consultarsolicitudes.primaryports.ConsultarSolicitudesSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.sesionmanual.consultarsolicitudes.usecase.impl.ConsultarSolicitudesSesionUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.sesionmanual.consultarsolicitudesdocente.primaryports.ConsultarSolicitudesSesionDocenteInputPort;
+import co.edu.uco.asistenciasuco.application.features.sesionmanual.consultarsolicitudesdocente.usecase.impl.ConsultarSolicitudesSesionDocenteUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.sesionmanual.consultarmotivos.usecase.impl.ConsultarMotivosCancelacionUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.sesionmanual.notificarsesionmanual.primaryports.NotificarSesionManualInputPort;
 import co.edu.uco.asistenciasuco.application.features.sesionmanual.notificarsesionmanual.primaryports.interactor.CrearSesionConAvisoInteractor;
@@ -88,6 +90,13 @@ public class SesionManualWiringConfiguration {
     @Bean
     public ConsultarSolicitudesSesionInputPort consultarSolicitudesSesionInputPort(final SesionManualRepositoryPort sesionManualRepositoryPort) {
         return new ConsultarSolicitudesSesionUseCaseImpl(sesionManualRepositoryPort);
+    }
+
+    @Bean
+    public ConsultarSolicitudesSesionDocenteInputPort consultarSolicitudesSesionDocenteInputPort(
+            final SesionManualRepositoryPort sesionManualRepositoryPort
+    ) {
+        return new ConsultarSolicitudesSesionDocenteUseCaseImpl(sesionManualRepositoryPort);
     }
 
     @Bean

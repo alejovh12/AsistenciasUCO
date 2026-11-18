@@ -262,6 +262,41 @@ class SesionManualJpaRepositoryTest {
         assertThrows(ForbiddenException.class, () -> repository.consultarSolicitudes(USUARIO, true, null, null, 1, 20));
     }
 
+    @Test
+    void solicitudes_del_docente_usan_su_sp_sin_programa_y_mapean_las_mismas_columnas() {
+        final UUID programa = UUID.randomUUID();
+        final LocalDateTime inicio = LocalDateTime.of(2026, 11, 10, 13, 0);
+        when(query.getResultList()).thenReturn(List.<Object>of((Object)
+                new Object[]{SESION, "Repaso", "S-9", GRUPO, "G01", "Calculo", programa, "Ingenieria", USUARIO, "Maria Docente",
+                        inicio, inicio.plusHours(2), "RECHAZADA", "Rechazada", inicio.minusDays(1), inicio.minusHours(20), "Ya existe", "maria",
+                        false, true, 4}));
+
+        final PaginaSolicitudesSesion pagina = repository.consultarSolicitudesDocente(USUARIO, false, GRUPO, 2, 5);
+
+        assertEquals(4, pagina.total());
+        assertEquals(new SolicitudSesion(SESION, "Repaso", "S-9", GRUPO, "G01", "Calculo", programa, "Ingenieria", USUARIO, "Maria Docente",
+                inicio, inicio.plusHours(2), "RECHAZADA", "Rechazada", inicio.minusDays(1), inicio.minusHours(20), "Ya existe"),
+                pagina.elementos().getFirst());
+        verify(entityManager).createNativeQuery(
+                "EXEC dbo.usp_consultar_solicitudes_sesion_docente_paginado @idUsuario = :idUsuario, @soloPendientes = :soloPendientes, "
+                        + "@idGrupo = :idGrupo, @numeroPagina = :numeroPagina, @tamanoPagina = :tamanoPagina, @idCorrelacion = :idCorrelacion");
+        verify(query).setParameter("soloPendientes", 0);
+        verify(query).setParameter("idGrupo", GRUPO);
+    }
+
+    @Test
+    void solicitudes_del_docente_sin_grupo_omiten_el_filtro_y_traducen_los_dbcode() {
+        when(query.getResultList()).thenReturn(List.of());
+
+        assertEquals(0, repository.consultarSolicitudesDocente(USUARIO, true, null, 1, 20).total());
+        verify(entityManager).createNativeQuery(
+                "EXEC dbo.usp_consultar_solicitudes_sesion_docente_paginado @idUsuario = :idUsuario, @soloPendientes = :soloPendientes, "
+                        + "@numeroPagina = :numeroPagina, @tamanoPagina = :tamanoPagina, @idCorrelacion = :idCorrelacion");
+
+        when(query.getResultList()).thenThrow(new PersistenceException("DBCODE=SEC_001|sin perfil"));
+        assertThrows(ForbiddenException.class, () -> repository.consultarSolicitudesDocente(USUARIO, true, null, 1, 20));
+    }
+
     private static ProcedureResult resultado(final String mensajeUsuario) {
         final ProcedureResult resultado = mock(ProcedureResult.class);
         when(resultado.getMensajeUsuarioResultado()).thenReturn(mensajeUsuario);
