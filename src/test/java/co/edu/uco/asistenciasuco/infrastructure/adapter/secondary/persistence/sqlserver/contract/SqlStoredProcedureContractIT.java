@@ -520,6 +520,12 @@ class SqlStoredProcedureContractIT {
                         input("@hasta", "date"),
                         input("@idCorrelacion", "uniqueidentifier")
                 )),
+                Arguments.of("usp_consultar_faltas_reclamables_estudiante", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int")
+                )),
                 Arguments.of("usp_consultar_destinatarios_solicitud_sesion", List.of(
                         input("@idSesion", "uniqueidentifier"),
                         input("@idCorrelacion", "uniqueidentifier"),
