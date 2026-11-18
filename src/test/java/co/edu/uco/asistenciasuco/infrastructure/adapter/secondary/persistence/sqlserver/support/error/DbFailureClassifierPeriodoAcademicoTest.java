@@ -52,4 +52,35 @@ class DbFailureClassifierPeriodoAcademicoTest {
         assertEquals("PER_007", excepcion.getErrorDefinition().orElseThrow().code());
         assertEquals(mensaje, excepcion.getMessage());
     }
+
+    /**
+     * VAL-pendientes-john PRU-15: una toma, un lote o un reclamo de un periodo ya cerrado (PER_008) es 409 con su codigo y el texto
+     * con el nombre del periodo que arma la BD, en cualquiera de las operaciones que la BD rechaza.
+     */
+    @ParameterizedTest
+    @ValueSource(strings = {"abrirTomaAsistencia", "registrarAsistenciasToma", "cerrarTomaAsistencia", "registrarAsistenciasSesion",
+        "radicarSolicitudRevisionAsistencia", "resolverSolicitudRevisionAsistencia", "retirarSolicitudRevisionAsistencia"})
+    void operacion_sobre_un_periodo_cerrado_responde_409_con_el_mensaje_de_la_base(final String operacion) {
+        assertEquals(MensajeUsuarioErrorCode.PER_008,
+                DbFailureClassifier.classify("mensaje", "DBCODE=PER_008|detalle", operacion));
+
+        final var mensaje = "El período académico 2026-1 ya fue cerrado; no se pueden registrar ni modificar tomas, asistencias ni reclamos de sus sesiones.";
+        final var excepcion = assertThrows(ConflictException.class, () -> DbExceptionTranslator.throwIfFailed(
+                false, mensaje, "DBCODE=PER_008|detalle", "c", operacion));
+        assertEquals("PER_008", excepcion.getErrorDefinition().orElseThrow().code());
+        assertEquals(mensaje, excepcion.getMessage());
+    }
+
+    /** VAL-pendientes-john PRU-15: el segundo cierre masivo de un periodo ya cerrado (PER_009) es 409, no un exito idempotente. */
+    @Test
+    void segundo_cierre_de_un_periodo_cerrado_responde_409_con_la_fecha_del_primero() {
+        assertEquals(MensajeUsuarioErrorCode.PER_009, clasificar("PER_009"));
+        assertEquals("PER_009", MensajeUsuarioErrorCode.PER_009.code());
+
+        final var mensaje = "El período académico ya fue cerrado el 18/11/2026; el cierre masivo no se puede repetir.";
+        final var excepcion = assertThrows(ConflictException.class, () -> DbExceptionTranslator.throwIfFailed(
+                false, mensaje, "DBCODE=PER_009|detalle", "c", "ejecutarCierreMasivoPeriodo"));
+        assertEquals("PER_009", excepcion.getErrorDefinition().orElseThrow().code());
+        assertEquals(mensaje, excepcion.getMessage());
+    }
 }
