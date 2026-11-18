@@ -108,7 +108,7 @@ class AsistenciaQrConcurrenciaIT {
         try {
             for (final TomaQrCargaFixture.GrupoCarga grupo : fixture.grupos()) {
                 final TomaAsistenciaResumen toma = abrirToma.execute(new AbrirTomaAsistenciaInputPort.Comando(grupo.sesion(), "QR",
-                        fixture.docenteUsuario()));
+                        fixture.docenteUsuario())).toma();
                 final QrTomaResumen qr = abrirQr.execute(new AbrirQrTomaInputPort.Comando(toma.idToma(), fixture.docenteUsuario()));
                 tokens.put(grupo.grupo(), qr.urlAsistencia().substring(qr.urlAsistencia().indexOf("?t=") + 3));
             }

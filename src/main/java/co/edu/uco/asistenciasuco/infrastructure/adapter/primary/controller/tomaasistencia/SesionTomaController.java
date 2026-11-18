@@ -1,13 +1,13 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.tomaasistencia;
 
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.abrirtoma.primaryports.AbrirTomaAsistenciaInputPort;
-import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.TomaAsistenciaResumen;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.consultarresumensesion.primaryports.ConsultarResumenTomasSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.consultartomassesion.primaryports.ConsultarTomasSesionInputPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.tomaasistencia.request.TomaAsistenciaRequests;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.tomaasistencia.response.TomaAsistenciaHttpResponses.ResumenTomasEstudianteResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.tomaasistencia.response.TomaAsistenciaHttpResponses.TomaAsistenciaResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.tomaasistencia.response.TomaAsistenciaHttpResponses.TomaCerradaAnteriorResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.tomaasistencia.response.TomaAsistenciaHttpResponses.TomasSesionResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
@@ -56,10 +56,11 @@ public final class SesionTomaController {
             @PathVariable final UUID sesionId,
             @Valid @RequestBody(required = false) final TomaAsistenciaRequests.AbrirToma request
     ) {
-        final TomaAsistenciaResumen toma = abrirToma.execute(new AbrirTomaAsistenciaInputPort.Comando(
+        final AbrirTomaAsistenciaInputPort.Resultado resultado = abrirToma.execute(new AbrirTomaAsistenciaInputPort.Comando(
                 sesionId, request == null ? null : request.modo(), authenticatedUserResolver.requireAuthenticatedUserId()));
-        return ResponseEntity.created(URI.create("/api/v1/tomas/" + toma.idToma()))
-                .body(new ApiDataResponse<>(true, TomaAsistenciaResponse.from(toma)));
+        return ResponseEntity.created(URI.create("/api/v1/tomas/" + resultado.toma().idToma()))
+                .body(new ApiDataResponse<>(true, TomaAsistenciaResponse.from(resultado.toma(),
+                        TomaCerradaAnteriorResponse.from(resultado.tomaCerradaAnterior()))));
     }
 
     @GetMapping

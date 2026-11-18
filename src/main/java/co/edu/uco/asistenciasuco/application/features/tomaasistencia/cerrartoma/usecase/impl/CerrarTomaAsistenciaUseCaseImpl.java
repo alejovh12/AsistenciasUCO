@@ -7,8 +7,6 @@ import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.Toma
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.TomaAsistenciaResumen;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.TomaAsistenciaRepositoryPort;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -51,21 +49,10 @@ public final class CerrarTomaAsistenciaUseCaseImpl implements CerrarTomaAsistenc
                 comando.tomaId(), comando.marcarAusentes(), comando.usuarioEjecutor());
         final TomaAsistenciaResumen toma = acceso.releer(comando.tomaId());
         if (!cierre.yaEstabaCerrada()) {
-            final Map<String, Object> payload = new LinkedHashMap<>();
-            payload.put("grupo", toma.idGrupo().toString());
-            payload.put("sesion", toma.idSesion().toString());
-            payload.put("toma", toma.idToma().toString());
-            payload.put("numero", toma.numero());
-            payload.put("totalAusentesMarcados", cierre.totalAusentesMarcados());
-            payload.put("totalFaltantes", cierre.totalFaltantes());
-            payload.put("automatico", false);
-            eventos.publicar(TomaAsistenciaEventos.TOMA_CERRADA, payload);
+            eventos.tomaCerrada(toma.idGrupo(), toma.idSesion(), toma.idToma(), toma.numero(), cierre.totalAusentesMarcados(),
+                    cierre.totalFaltantes(), false);
             if (cierre.totalAusentesMarcados() > 0) {
-                eventos.publicar(TomaAsistenciaEventos.ASISTENCIAS_TOMA_ACTUALIZADAS, Map.of(
-                        "grupo", toma.idGrupo().toString(),
-                        "sesion", toma.idSesion().toString(),
-                        "toma", toma.idToma().toString(),
-                        "totalRegistros", toma.totalRegistros()));
+                eventos.asistenciasTomaActualizadas(toma.idGrupo(), toma.idSesion(), toma.idToma(), toma.totalRegistros());
             }
             evaluador.evaluarYAvisar(toma.idGrupo(), null);
         }

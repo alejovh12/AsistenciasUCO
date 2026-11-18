@@ -41,6 +41,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -95,13 +96,10 @@ class TomaAsistenciaQrSqlServerIT {
         final TomaQrCargaFixture.Estudiante e3 = grupo.estudiantes().get(2);
 
         // Toma 1 MANUAL con el lote por toma.
-        final TomaAsistenciaResumen manual = abrirToma.execute(new AbrirTomaAsistenciaInputPort.Comando(grupo.sesion(), "MANUAL", docente));
+        final TomaAsistenciaResumen manual = abrirToma.execute(new AbrirTomaAsistenciaInputPort.Comando(grupo.sesion(), "MANUAL", docente)).toma();
         assertEquals(1, manual.numero());
         assertEquals("MANUAL", manual.modo());
         assertTrue(manual.estaAbierta());
-        final var comandoAbrirQr = new AbrirTomaAsistenciaInputPort.Comando(grupo.sesion(), "QR", docente);
-        assertEquals("TOM_003", assertThrows(ConflictException.class,
-                () -> abrirToma.execute(comandoAbrirQr)).getCode());
         registrarLote.execute(new RegistrarAsistenciasTomaInputPort.Comando(manual.idToma(), List.of(
                 new RegistrarAsistenciasTomaInputPort.Registro(e1.estudiante(), "AN"),
                 new RegistrarAsistenciasTomaInputPort.Registro(e2.estudiante(), "AN"),
@@ -113,7 +111,7 @@ class TomaAsistenciaQrSqlServerIT {
         assertTrue(cerrarToma.execute(new CerrarTomaAsistenciaInputPort.Comando(manual.idToma(), null, docente)).yaEstabaCerrada());
 
         // Toma 2 QR: abrir, rotar, registrar por PIN y por token (idempotente), cerrar marcando ausentes.
-        final TomaAsistenciaResumen tomaQr = abrirToma.execute(new AbrirTomaAsistenciaInputPort.Comando(grupo.sesion(), "QR", docente));
+        final TomaAsistenciaResumen tomaQr = abrirToma.execute(new AbrirTomaAsistenciaInputPort.Comando(grupo.sesion(), "QR", docente)).toma();
         assertEquals(2, tomaQr.numero());
         final QrTomaResumen qr = abrirQr.execute(new AbrirQrTomaInputPort.Comando(tomaQr.idToma(), docente));
         assertEquals(6, qr.pin().length());
@@ -173,6 +171,29 @@ class TomaAsistenciaQrSqlServerIT {
         final List<MateriaEstudianteDTO> materiasE1 = materias.execute(e1.usuario());
         assertEquals(1, materiasE1.size());
         assertNotNull(materiasE1.getFirst().indicadores());
+    }
+
+    @Test
+    void abrir_una_toma_con_otra_abierta_cierra_la_anterior_y_marca_faltas_a_quien_no_tiene_marca() {
+        final TomaQrCargaFixture.GrupoCarga grupo = fixture.grupos().getFirst();
+        final UUID docente = fixture.docenteUsuario();
+        final TomaQrCargaFixture.Estudiante e1 = grupo.estudiantes().getFirst();
+        final AbrirTomaAsistenciaInputPort.Resultado primera = abrirToma.execute(
+                new AbrirTomaAsistenciaInputPort.Comando(grupo.sesion(), "MANUAL", docente));
+        assertNull(primera.tomaCerradaAnterior());
+        registrarLote.execute(new RegistrarAsistenciasTomaInputPort.Comando(primera.toma().idToma(), List.of(
+                new RegistrarAsistenciasTomaInputPort.Registro(e1.estudiante(), "AN")), docente));
+
+        final AbrirTomaAsistenciaInputPort.Resultado segunda = abrirToma.execute(
+                new AbrirTomaAsistenciaInputPort.Comando(grupo.sesion(), "QR", docente));
+
+        assertEquals(2, segunda.toma().numero());
+        assertTrue(segunda.toma().estaAbierta());
+        assertNotNull(segunda.tomaCerradaAnterior());
+        assertEquals(primera.toma().idToma(), segunda.tomaCerradaAnterior().idToma());
+        assertEquals(1, segunda.tomaCerradaAnterior().numero());
+        assertEquals(2, segunda.tomaCerradaAnterior().totalAusentesMarcados());
+        assertTrue(cerrarToma.execute(new CerrarTomaAsistenciaInputPort.Comando(primera.toma().idToma(), null, docente)).yaEstabaCerrada());
     }
 
     private static String estadoDe(final List<AsistenciaRepositoryProjection> filas, final UUID estudiante) {

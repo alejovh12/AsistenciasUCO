@@ -83,7 +83,7 @@ class TomaAsistenciaBordesSqlServerIT {
 
         TomaAsistenciaResumen ultima = null;
         for (int numero = 1; numero <= MAXIMO_TOMAS_POR_SESION; numero++) {
-            ultima = abrirToma.execute(new AbrirTomaAsistenciaInputPort.Comando(grupo.sesion(), "MANUAL", docente));
+            ultima = abrirToma.execute(new AbrirTomaAsistenciaInputPort.Comando(grupo.sesion(), "MANUAL", docente)).toma();
             assertEquals(numero, ultima.numero());
             cerrarToma.execute(new CerrarTomaAsistenciaInputPort.Comando(ultima.idToma(), null, docente));
         }
@@ -103,7 +103,7 @@ class TomaAsistenciaBordesSqlServerIT {
         final TomaQrCargaFixture.GrupoCarga grupo = fixture.grupos().getFirst();
         final UUID docente = fixture.docenteUsuario();
         final TomaAsistenciaResumen toma = abrirToma.execute(
-                new AbrirTomaAsistenciaInputPort.Comando(grupo.sesion(), "MANUAL", docente));
+                new AbrirTomaAsistenciaInputPort.Comando(grupo.sesion(), "MANUAL", docente)).toma();
         final CerrarTomaAsistenciaInputPort.Comando cierre = new CerrarTomaAsistenciaInputPort.Comando(toma.idToma(), null, docente);
 
         final List<CerrarTomaAsistenciaInputPort.Resultado> resultados = aLaVez(
@@ -123,7 +123,7 @@ class TomaAsistenciaBordesSqlServerIT {
         final TomaQrCargaFixture.GrupoCarga grupo = fixture.grupos().getFirst();
         final UUID docente = fixture.docenteUsuario();
         final TomaAsistenciaResumen toma = abrirToma.execute(
-                new AbrirTomaAsistenciaInputPort.Comando(grupo.sesion(), "MANUAL", docente));
+                new AbrirTomaAsistenciaInputPort.Comando(grupo.sesion(), "MANUAL", docente)).toma();
         final List<RegistrarAsistenciasTomaInputPort.Registro> presentes = grupo.estudiantes().stream()
                 .map(e -> new RegistrarAsistenciasTomaInputPort.Registro(e.estudiante(), "AN"))
                 .toList();

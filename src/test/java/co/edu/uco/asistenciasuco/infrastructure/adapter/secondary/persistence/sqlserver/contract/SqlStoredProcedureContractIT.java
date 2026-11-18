@@ -84,6 +84,22 @@ class SqlStoredProcedureContractIT {
     }
 
     /**
+     * D9 (addendum ATA I.1): {@code usp_abrir_toma_asistencia} conserva sus ocho columnas y agrega al final las de la toma
+     * que cerro sola; el adaptador las lee por posicion (11 columnas).
+     */
+    @Test
+    void abrir_toma_expone_en_orden_las_ocho_columnas_vigentes_y_las_tres_de_la_toma_cerrada_anterior() {
+        final List<String> columnas = jdbcTemplate.queryForList(
+                "SELECT name FROM sys.dm_exec_describe_first_result_set_for_object(OBJECT_ID('dbo.usp_abrir_toma_asistencia'), NULL) "
+                        + "ORDER BY column_ordinal",
+                String.class);
+
+        assertEquals(List.of("idCorrelacion", "mensajeUsuarioResultado", "mensajeTecnicoResultado", "estadoResultado", "idToma",
+                "numero", "codigoModo", "usaCodigoQr", "fechaAperturaUtc", "ventanaCierreUtc", "totalTomasSesion", "horasToma",
+                "idTomaCerradaAnterior", "numeroTomaCerradaAnterior", "totalAusentesMarcadosAnterior"), columnas);
+    }
+
+    /**
      * {@code sys.parameters.has_default_value} NO distingue de forma confiable "sin default" de
      * "default = NULL" (limitacion documentada de metadata de SQL Server: el propio
      * {@code default_value} queda NULL en ambos casos). Por eso la nulabilidad de

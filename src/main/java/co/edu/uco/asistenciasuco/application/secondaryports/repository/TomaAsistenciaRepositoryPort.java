@@ -20,7 +20,16 @@ import java.util.UUID;
  */
 public interface TomaAsistenciaRepositoryPort {
 
-    record TomaAbierta(UUID idToma, int numero, String codigoModo, Instant fechaAperturaUtc) {
+    /** D9: toma que la apertura cerro por orden del SP (la que estaba abierta); {@code usp_abrir_toma_asistencia}. */
+    record TomaCerradaAnterior(UUID idToma, int numero, int totalAusentesMarcados) {
+    }
+
+    /** {@code cerradaAnterior} es nulo si no habia toma abierta que cerrar. */
+    record TomaAbierta(UUID idToma, int numero, String codigoModo, Instant fechaAperturaUtc, TomaCerradaAnterior cerradaAnterior) {
+
+        public TomaAbierta(final UUID idToma, final int numero, final String codigoModo, final Instant fechaAperturaUtc) {
+            this(idToma, numero, codigoModo, fechaAperturaUtc, null);
+        }
     }
 
     record CierreToma(UUID idToma, UUID idSesion, UUID idGrupo, int totalAusentesMarcados, int totalFaltantes,

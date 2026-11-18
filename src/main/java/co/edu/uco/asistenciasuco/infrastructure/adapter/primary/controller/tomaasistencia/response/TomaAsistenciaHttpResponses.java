@@ -4,6 +4,7 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.common.PaginaRe
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.IndicadoresAsistenciaDTO;
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.MarcaInasistenciaDTO;
 import co.edu.uco.asistenciasuco.application.features.asistencia.common.dto.ResumenAsistenciaEstudianteDTO;
+import co.edu.uco.asistenciasuco.application.features.tomaasistencia.abrirtoma.primaryports.AbrirTomaAsistenciaInputPort;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.cerrartoma.primaryports.CerrarTomaAsistenciaInputPort;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.AsistenciaTomaFila;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.FaltanteTomaFila;
@@ -36,14 +37,27 @@ public final class TomaAsistenciaHttpResponses {
                                          int totalRegistros, int totalPresentes, int totalAusentes, int totalExcusas,
                                          boolean tieneQrActivo, String fechaPuntoControlUtc, int ordenPuntoControl,
                                          int minutosTramoAnterior, int minutosTramoSiguiente, boolean esEditable,
-                                         String editableHastaUtc) {
+                                         String editableHastaUtc, TomaCerradaAnteriorResponse tomaCerradaAnterior) {
 
         public static TomaAsistenciaResponse from(final TomaAsistenciaResumen t) {
+            return from(t, null);
+        }
+
+        public static TomaAsistenciaResponse from(final TomaAsistenciaResumen t, final TomaCerradaAnteriorResponse anterior) {
             return new TomaAsistenciaResponse(t.idToma(), t.idSesion(), t.idGrupo(), t.numero(), t.modo(), t.estado(),
                     t.esImplicita(), utc(t.fechaAperturaUtc()), utc(t.fechaCierreUtc()), t.horasToma(), t.totalRegistros(),
                     t.totalPresentes(), t.totalAusentes(), t.totalExcusas(), t.tieneQrActivo(), utc(t.fechaPuntoControlUtc()),
                     t.ordenPuntoControl(), t.minutosTramoAnterior(), t.minutosTramoSiguiente(), t.esEditable(),
-                    utc(t.editableHastaUtc()));
+                    utc(t.editableHastaUtc()), anterior);
+        }
+    }
+
+    /** D9: toma que la apertura cerro sola; solo en la respuesta de abrir (en lecturas queda nulo). */
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public record TomaCerradaAnteriorResponse(UUID idToma, int numero, int totalAusentesMarcados) {
+
+        public static TomaCerradaAnteriorResponse from(final AbrirTomaAsistenciaInputPort.TomaCerradaAnterior a) {
+            return a == null ? null : new TomaCerradaAnteriorResponse(a.idToma(), a.numero(), a.totalAusentesMarcados());
         }
     }
 
