@@ -90,26 +90,28 @@ class PurgaAuditoriaSchedulerTest {
     @Test
     void valida_sus_argumentos() {
         final var puerto = (java.util.function.ToIntFunction<OffsetDateTime>) limite -> 0;
+        final var cuatroDias = cuatroDias;
+        final var unSegundoNegativo = unSegundoNegativo;
         final var unaHora = Duration.ofHours(1);
 
         assertThrows(NullPointerException.class,
-                () -> new PurgaAuditoriaScheduler(null, RELOJ_FIJO, Duration.ofDays(4), Duration.ZERO, unaHora));
+                () -> new PurgaAuditoriaScheduler(null, RELOJ_FIJO, cuatroDias, Duration.ZERO, unaHora));
         assertThrows(NullPointerException.class,
-                () -> new PurgaAuditoriaScheduler(puerto, null, Duration.ofDays(4), Duration.ZERO, unaHora));
+                () -> new PurgaAuditoriaScheduler(puerto, null, cuatroDias, Duration.ZERO, unaHora));
         assertThrows(NullPointerException.class,
                 () -> new PurgaAuditoriaScheduler(puerto, RELOJ_FIJO, null, Duration.ZERO, unaHora));
         assertThrows(NullPointerException.class,
-                () -> new PurgaAuditoriaScheduler(puerto, RELOJ_FIJO, Duration.ofDays(4), null, unaHora));
+                () -> new PurgaAuditoriaScheduler(puerto, RELOJ_FIJO, cuatroDias, null, unaHora));
         assertThrows(NullPointerException.class,
-                () -> new PurgaAuditoriaScheduler(puerto, RELOJ_FIJO, Duration.ofDays(4), Duration.ZERO, null));
+                () -> new PurgaAuditoriaScheduler(puerto, RELOJ_FIJO, cuatroDias, Duration.ZERO, null));
 
         assertThrows(IllegalArgumentException.class, () -> new PurgaAuditoriaScheduler(
                 puerto, RELOJ_FIJO, Duration.ZERO, Duration.ZERO, unaHora));
         assertThrows(IllegalArgumentException.class, () -> new PurgaAuditoriaScheduler(
-                puerto, RELOJ_FIJO, Duration.ofSeconds(-1), Duration.ZERO, unaHora));
+                puerto, RELOJ_FIJO, unSegundoNegativo, Duration.ZERO, unaHora));
         assertThrows(IllegalArgumentException.class, () -> new PurgaAuditoriaScheduler(
-                puerto, RELOJ_FIJO, Duration.ofDays(4), Duration.ZERO, Duration.ZERO));
+                puerto, RELOJ_FIJO, cuatroDias, Duration.ZERO, Duration.ZERO));
         assertThrows(IllegalArgumentException.class, () -> new PurgaAuditoriaScheduler(
-                puerto, RELOJ_FIJO, Duration.ofDays(4), Duration.ofSeconds(-1), unaHora));
+                puerto, RELOJ_FIJO, cuatroDias, unSegundoNegativo, unaHora));
     }
 }
