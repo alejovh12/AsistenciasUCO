@@ -28,7 +28,8 @@ public final class GestionarAsignaturaMapper {
                 dto.nombreArea(),
                 dto.nombreComponente(),
                 dto.codigoCaracter(),
-                dto.usuarioEjecutor()
+                dto.usuarioEjecutor(),
+                dto.horasSemanales()
         );
     }
 }

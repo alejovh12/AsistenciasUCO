@@ -55,7 +55,39 @@ class GestionarAsignaturaUseCaseImplTest {
                 org.mockito.ArgumentMatchers.eq("Calculo"), org.mockito.ArgumentMatchers.eq(3),
                 org.mockito.ArgumentMatchers.eq(plan), org.mockito.ArgumentMatchers.eq(1),
                 org.mockito.ArgumentMatchers.eq("Area"), org.mockito.ArgumentMatchers.eq("Componente"), org.mockito.ArgumentMatchers.isNull(),
-                org.mockito.ArgumentMatchers.eq(usuarioEjecutor));
+                org.mockito.ArgumentMatchers.isNull(), org.mockito.ArgumentMatchers.eq(usuarioEjecutor));
+    }
+
+    @Test
+    void SES_GEN_01_crear_propaga_horas_semanales_al_puerto() {
+        final UUID plan = UUID.randomUUID();
+        when(scopePort.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.of(PROGRAM));
+        when(planQueryPort.consultarPlanesPorPrograma(PROGRAM)).thenReturn(List.of(plan(plan, PROGRAM)));
+
+        useCase.crear(new AsignaturaDomain(null, plan, "COD1", "Calculo", 3, 1, "Area", "Componente", null, ACTOR, 4));
+
+        verify(commandPort).crearAsignatura(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq("COD1"),
+                org.mockito.ArgumentMatchers.eq("Calculo"), org.mockito.ArgumentMatchers.eq(3),
+                org.mockito.ArgumentMatchers.eq(plan), org.mockito.ArgumentMatchers.eq(1),
+                org.mockito.ArgumentMatchers.eq("Area"), org.mockito.ArgumentMatchers.eq("Componente"), org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.eq(4), org.mockito.ArgumentMatchers.eq(ACTOR));
+    }
+
+    @Test
+    void SES_GEN_01_actualizar_propaga_horas_semanales_al_puerto() {
+        final UUID id = UUID.randomUUID();
+        final UUID plan = UUID.randomUUID();
+        when(scopePort.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.of(PROGRAM));
+        when(planQueryPort.consultarPlanesPorPrograma(PROGRAM)).thenReturn(List.of(plan(plan, PROGRAM)));
+        when(queryPort.consultarAsignaturasPorPlan(plan)).thenReturn(List.of(subject(id, plan, PROGRAM)));
+
+        useCase.actualizar(new AsignaturaDomain(id, plan, "COD1", "Calculo", 3, 1, "Area", "Componente", null, ACTOR, 6));
+
+        verify(commandPort).actualizarAsignatura(org.mockito.ArgumentMatchers.eq(id), org.mockito.ArgumentMatchers.eq("COD1"),
+                org.mockito.ArgumentMatchers.eq("Calculo"), org.mockito.ArgumentMatchers.eq(3),
+                org.mockito.ArgumentMatchers.eq(plan), org.mockito.ArgumentMatchers.eq(1),
+                org.mockito.ArgumentMatchers.eq("Area"), org.mockito.ArgumentMatchers.eq("Componente"), org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.eq(6), org.mockito.ArgumentMatchers.eq(ACTOR));
     }
 
     @Test
@@ -79,7 +111,7 @@ class GestionarAsignaturaUseCaseImplTest {
                 org.mockito.ArgumentMatchers.eq("Calculo"), org.mockito.ArgumentMatchers.eq(3),
                 org.mockito.ArgumentMatchers.eq(plan), org.mockito.ArgumentMatchers.eq(1),
                 org.mockito.ArgumentMatchers.eq("Area"), org.mockito.ArgumentMatchers.eq("Componente"), org.mockito.ArgumentMatchers.isNull(),
-                org.mockito.ArgumentMatchers.eq(ACTOR));
+                org.mockito.ArgumentMatchers.isNull(), org.mockito.ArgumentMatchers.eq(ACTOR));
         assertEquals(id, idCaptor.getValue());
     }
 

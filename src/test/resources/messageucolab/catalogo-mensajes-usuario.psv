@@ -487,3 +487,17 @@ VCE_009|VCE009|Funcional|Error|VCE_009 - Defina su contraseña para activar su�
 ACT_001|ACT001|Funcional|Confirmación|ACT_001 - Se envió de nuevo el enlace de…|Se envió de nuevo el enlace de activación al correo institucional.
 ACT_002|ACT002|Funcional|Error|ACT_002 - La cuenta ya está activa; no es…|La cuenta ya está activa; no es necesario enviar el enlace de activación.
 CAL_001|CAL001|Funcional|Error|CAL_001 - El rango de fechas no es válido…|El rango de fechas no es válido: indique inicio y fin, con el fin igual o posterior y máximo 31 días.
+HOR_006|HOR006|Funcional|Error|HOR_006 - Las horas semanales del horario…|Las horas semanales del horario ({} h) no coinciden con las de la materia ({} h). Ajusta las franjas para que sumen exactamente las horas de la materia.
+HOR_007|HOR007|Funcional|Error|HOR_007 - La franja {} debe durar entre {}…|La franja {} debe durar entre {} y {} minutos.
+HOR_008|HOR008|Funcional|Error|HOR_008 - La franja {} debe estar dentro…|La franja {} debe estar dentro del horario permitido ({}).
+HOR_009|HOR009|Funcional|Error|HOR_009 - El nuevo horario se cruza con…|El nuevo horario se cruza con otros grupos de {} estudiante(s) inscrito(s) en la franja {}.
+ASI_009|ASI009|Funcional|Error|ASI_009 - Las horas semanales de la materia…|Las horas semanales de la materia deben ser un entero entre 1 y {}.
+ASI_010|ASI010|Funcional|Error|ASI_010 - La asignatura no está disponible…|La asignatura no está disponible para crear grupos: debe estar activa y vinculada a un plan activo de tus programas.
+PER_010|PER010|Funcional|Error|PER_010 - El período académico {} no está…|El período académico {} no está vigente: ya terminó, está cerrado o no es de tu institución.
+PER_011|PER011|Funcional|Error|PER_011 - El período debe durar {} semanas:…|El período debe durar {} semanas: la fecha de fin debe ser {}.
+VAL_APP_076|VALAPP076|Funcional|Error|VAL_APP_076 - El horario del grupo es…|El horario del grupo es obligatorio: envía al menos una franja.
+HOR_010|HOR010|Funcional|Error|HOR_010 - El horario programa {} h en el…|El horario programa {} h en el período y la materia espera {} h.
+HOR_011|HOR011|Funcional|Error|HOR_011 - {} h caen en días festivos ({}…|{} h caen en días festivos ({} sesión(es)); esas sesiones quedan canceladas.
+HOR_012|HOR012|Funcional|Error|HOR_012 - {} h ya no se pueden programar…|{} h ya no se pueden programar porque el período ya inició; las sesiones se programan desde {}.
+HOR_013|HOR013|Funcional|Error|HOR_013 - La materia aún no tiene horas…|La materia aún no tiene horas semanales cargadas: no se valida el total del horario.
+HOR_014|HOR014|Funcional|Error|HOR_014 - Se conservan {} sesión(es) ya…|Se conservan {} sesión(es) ya dictadas o con asistencia ({} h).

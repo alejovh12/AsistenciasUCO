@@ -158,7 +158,8 @@ public final class CoordinadorPortalController {
                 request == null ? null : request.getNombreArea(),
                 request == null ? null : request.getNombreComponente(),
                 request == null ? null : request.getCodigoCaracter(),
-                usuarioEjecutor
+                usuarioEjecutor,
+                request == null ? null : request.getHorasSemanales()
         );
     }
 }

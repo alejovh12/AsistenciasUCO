@@ -69,7 +69,7 @@ class AsignaturaPlanEstudioJpaRepositoryTest {
 
     private static Object[] filaAsignaturaPlan(final Object bool, final long total) {
         return new Object[]{ASIGNATURA.toString(), "MAT101", "Calculo", 3, UUID.randomUUID(), "Matematicas", UUID.randomUUID(), "Basico", PLAN.toString(), 2020,
-                PROGRAMA.toString(), "Sistemas", UUID.randomUUID(), 1, "S1", "OBL", "Obligatoria", bool, 1, 0, total};
+                PROGRAMA.toString(), "Sistemas", UUID.randomUUID(), 1, "S1", "OBL", "Obligatoria", bool, 1, 0, 4, total};
     }
 
     private static Object[] filaGrupo(final long total) {
@@ -152,7 +152,7 @@ class AsignaturaPlanEstudioJpaRepositoryTest {
     }
 
     @Test
-    void consultar_malla_y_asignaturas_coordinador_mapean_21_columnas_con_booleanos_flexibles() {
+    void consultar_malla_y_asignaturas_coordinador_mapean_22_columnas_con_booleanos_flexibles() {
         when(query.getResultList()).thenReturn(filas(filaAsignaturaPlan(Boolean.TRUE, 12L), filaAsignaturaPlan(0, 12L), filaAsignaturaPlan(null, 12L)));
 
         final PaginaAsignaturasPlanProjection malla = repo.consultarMalla(USUARIO, PLAN, 1, "OBL", "cal", 1, 20);
@@ -164,6 +164,7 @@ class AsignaturaPlanEstudioJpaRepositoryTest {
         assertEquals(ASIGNATURA, primera.idAsignatura());
         assertEquals(PROGRAMA, primera.idPrograma());
         assertTrue(primera.estaActivoVinculo());
+        assertEquals(4, primera.horasSemanales()); // SES-GEN-01: columna horasSemanales antes de totalRegistros
         assertFalse(malla.elementos().get(1).estaActivoVinculo());
         assertFalse(malla.elementos().get(2).estaActivoVinculo());
         verify(manager).createNativeQuery(AsignaturaPlanEstudioJpaRepository.SQL_MALLA);
@@ -180,9 +181,9 @@ class AsignaturaPlanEstudioJpaRepositoryTest {
 
     @Test
     void una_fila_con_columnas_distintas_a_las_del_contrato_es_fallo_tecnico() {
-        when(query.getResultList()).thenReturn(Collections.<Object>singletonList(new Object[20]));
+        when(query.getResultList()).thenReturn(Collections.<Object>singletonList(new Object[21]));
         final DatabaseOperationException error = assertThrows(DatabaseOperationException.class, () -> repo.consultarMalla(USUARIO, PLAN, null, null, null, 1, 20));
-        assertTrue(error.getCause().getMessage().contains("21"));
+        assertTrue(error.getCause().getMessage().contains("22"));
     }
 
     @Test

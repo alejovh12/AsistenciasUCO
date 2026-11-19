@@ -45,10 +45,11 @@ public final class AsignaturaJdbcBaseline implements AsignaturaQueryPort, Asigna
             final String nombreArea,
             final String nombreComponente,
             final String codigoCaracter,
+            final Integer horasSemanales,
             final UUID usuarioEjecutor
     ) {
         commands.crearAsignatura(idAsignatura, codigo, nombre, creditos, idPlanEstudio, semestreNumero,
-                nombreArea, nombreComponente, codigoCaracter, usuarioEjecutor);
+                nombreArea, nombreComponente, codigoCaracter, horasSemanales, usuarioEjecutor);
     }
 
     @Override
@@ -62,10 +63,11 @@ public final class AsignaturaJdbcBaseline implements AsignaturaQueryPort, Asigna
             final String nombreArea,
             final String nombreComponente,
             final String codigoCaracter,
+            final Integer horasSemanales,
             final UUID usuarioEjecutor
     ) {
         commands.actualizarAsignatura(idAsignatura, codigo, nombre, creditos, idPlanEstudio, semestreNumero,
-                nombreArea, nombreComponente, codigoCaracter, usuarioEjecutor);
+                nombreArea, nombreComponente, codigoCaracter, horasSemanales, usuarioEjecutor);
     }
 
     @Override

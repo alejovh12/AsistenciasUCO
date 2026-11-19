@@ -38,7 +38,8 @@ public final class GestionarAsignaturaUseCaseImpl implements GestionarAsignatura
         final UUID programa = resolverPrograma(domain.usuarioEjecutor());
         validarPlanDelPrograma(domain.idPlanEstudio(), programa);
         commandPort.crearAsignatura(UUID.randomUUID(), domain.codigo(), domain.nombre(), domain.creditos(), domain.idPlanEstudio(),
-                domain.semestreNumero(), domain.nombreArea(), domain.nombreComponente(), domain.codigoCaracter(), domain.usuarioEjecutor());
+                domain.semestreNumero(), domain.nombreArea(), domain.nombreComponente(), domain.codigoCaracter(), domain.horasSemanales(),
+                domain.usuarioEjecutor());
     }
 
     @Override
@@ -53,7 +54,8 @@ public final class GestionarAsignaturaUseCaseImpl implements GestionarAsignatura
             throw new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_009);
         }
         commandPort.actualizarAsignatura(domain.idAsignatura(), domain.codigo(), domain.nombre(), domain.creditos(), domain.idPlanEstudio(),
-                domain.semestreNumero(), domain.nombreArea(), domain.nombreComponente(), domain.codigoCaracter(), domain.usuarioEjecutor());
+                domain.semestreNumero(), domain.nombreArea(), domain.nombreComponente(), domain.codigoCaracter(), domain.horasSemanales(),
+                domain.usuarioEjecutor());
     }
 
     @Override

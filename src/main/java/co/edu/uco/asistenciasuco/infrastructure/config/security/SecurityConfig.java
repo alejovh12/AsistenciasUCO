@@ -235,7 +235,8 @@ public class SecurityConfig {
                 // reciben 403. Retira la excepcion F3 del docente.
                 .requestMatchers(HttpMethod.POST, "/api/v1/grupos").hasRole(ROLE_COORDINADOR)
                 .requestMatchers(HttpMethod.POST, RUTA_GRUPOS).hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
-                .requestMatchers(HttpMethod.PUT, RUTA_GRUPOS).hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
+                // SES-GEN-01 (DR-05): solo el COORDINADOR edita grupos (usp_actualizar_grupo exige ese perfil y su ambito); el administrador recibe 403.
+                .requestMatchers(HttpMethod.PUT, RUTA_GRUPOS).hasRole(ROLE_COORDINADOR)
                 .requestMatchers(HttpMethod.DELETE, RUTA_GRUPOS).hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
                 // Utilidad de desarrollo para forzar eventos SSE manualmente: no tiene todavía
                 // un rol funcional propio; se restringe a ADMINISTRADOR hasta que Realtime

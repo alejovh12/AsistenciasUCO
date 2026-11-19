@@ -226,13 +226,13 @@ class AcademicUserCommandsSpParityIT {
 
     private void crearAsignatura(final UUID idPlanEstudio, final UUID ejecutor) {
         asignaturaCommandPort.crearAsignatura(UUID.randomUUID(), fixture.nuevoToken(), "Asignatura prueba",
-                3, idPlanEstudio, 1, "AREA-NO-EXISTE", "COMPONENTE-NO-EXISTE", null, ejecutor);
+                3, idPlanEstudio, 1, "AREA-NO-EXISTE", "COMPONENTE-NO-EXISTE", null, null, ejecutor);
     }
 
     private void actualizarAsignatura(final UUID ejecutor) {
         final AcademicUserParityFixture.Semilla s = fixture.semilla();
         asignaturaCommandPort.actualizarAsignatura(UUID.randomUUID(), fixture.nuevoToken(), "Asignatura prueba",
-                3, s.planEstudio(), s.semestreNumero(), "AREA-NO-EXISTE", "COMPONENTE-NO-EXISTE", null, ejecutor);
+                3, s.planEstudio(), s.semestreNumero(), "AREA-NO-EXISTE", "COMPONENTE-NO-EXISTE", null, null, ejecutor);
     }
 
     private void cierreMasivo(final UUID ejecutor) {

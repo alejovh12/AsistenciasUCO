@@ -85,7 +85,7 @@ public class AsignaturaPlanEstudioJpaRepository implements AsignaturaPlanPort {
                  @idUsuarioEjecutor = :idUsuarioEjecutor, @idCorrelacion = :idCorrelacion, @idGrupo = :idGrupo
             """;
     static final int COLUMNAS_GRUPO_DETALLE = 12;
-    static final int COLUMNAS_ASIGNATURA_PLAN = 21;
+    static final int COLUMNAS_ASIGNATURA_PLAN = 22;
     static final int COLUMNAS_PLAN = 11;
     static final int COLUMNAS_GRUPO_FACULTAD = 13;
     static final String OP_ASOCIAR = "asociarAsignaturaPlan";
@@ -243,8 +243,8 @@ public class AsignaturaPlanEstudioJpaRepository implements AsignaturaPlanPort {
             final Object[] c = exigirColumnas((Object[]) fila, COLUMNAS_ASIGNATURA_PLAN, "consulta de asignaturas por plan");
             lista.add(new AsignaturaPlanProjection(uuid(c[0]), (String) c[1], (String) c[2], entero(c[3]), uuid(c[4]), (String) c[5], uuid(c[6]), (String) c[7],
                     uuid(c[8]), entero(c[9]), uuid(c[10]), (String) c[11], uuid(c[12]), entero(c[13]), (String) c[14], (String) c[15], (String) c[16],
-                    bool(c[17]), bool(c[18]), bool(c[19])));
-            total = ((Number) c[20]).longValue();
+                    bool(c[17]), bool(c[18]), bool(c[19]), entero(c[20])));
+            total = ((Number) c[21]).longValue();
         }
         return new PaginaAsignaturasPlanProjection(lista, total);
     }

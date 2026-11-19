@@ -37,7 +37,8 @@ public class AsignaturaJpaRepository implements AsignaturaQueryPort, AsignaturaC
                  @nombreComponente = :nombreComponente,
                  @idCorrelacion = :idCorrelacion,
                  @idUsuarioEjecutor = :idUsuarioEjecutor,
-                 @codigoCaracter = :codigoCaracter
+                 @codigoCaracter = :codigoCaracter,
+                 @horasSemanales = :horasSemanales
             """;
 
     static final String SQL_ACTUALIZAR_ASIGNATURA = """
@@ -52,7 +53,8 @@ public class AsignaturaJpaRepository implements AsignaturaQueryPort, AsignaturaC
                  @nombreComponente = :nombreComponente,
                  @idCorrelacion = :idCorrelacion,
                  @idUsuarioEjecutor = :idUsuarioEjecutor,
-                 @codigoCaracter = :codigoCaracter
+                 @codigoCaracter = :codigoCaracter,
+                 @horasSemanales = :horasSemanales
             """;
 
     static final String SQL_TOGGLE_ESTADO_ASIGNATURA = """
@@ -96,17 +98,19 @@ public class AsignaturaJpaRepository implements AsignaturaQueryPort, AsignaturaC
     @Override
     public void crearAsignatura(final UUID idAsignatura, final String codigo, final String nombre,
                                 final Integer creditos, final UUID idPlanEstudio, final Integer semestreNumero,
-                                final String nombreArea, final String nombreComponente, final String codigoCaracter, final UUID usuarioEjecutor) {
+                                final String nombreArea, final String nombreComponente, final String codigoCaracter,
+                                final Integer horasSemanales, final UUID usuarioEjecutor) {
         ejecutarCrearAsignatura(idAsignatura, codigo, nombre, creditos, idPlanEstudio, semestreNumero,
-                nombreArea, nombreComponente, codigoCaracter, usuarioEjecutor);
+                nombreArea, nombreComponente, codigoCaracter, horasSemanales, usuarioEjecutor);
     }
 
     @Override
     public void actualizarAsignatura(final UUID idAsignatura, final String codigo, final String nombre,
                                      final Integer creditos, final UUID idPlanEstudio, final Integer semestreNumero,
-                                     final String nombreArea, final String nombreComponente, final String codigoCaracter, final UUID usuarioEjecutor) {
+                                     final String nombreArea, final String nombreComponente, final String codigoCaracter,
+                                     final Integer horasSemanales, final UUID usuarioEjecutor) {
         ejecutarActualizarAsignatura(idAsignatura, codigo, nombre, creditos, idPlanEstudio, semestreNumero,
-                nombreArea, nombreComponente, codigoCaracter, usuarioEjecutor);
+                nombreArea, nombreComponente, codigoCaracter, horasSemanales, usuarioEjecutor);
     }
 
     @Override
@@ -167,6 +171,7 @@ public class AsignaturaJpaRepository implements AsignaturaQueryPort, AsignaturaC
             final String nombreArea,
             final String nombreComponente,
             final String codigoCaracter,
+            final Integer horasSemanales,
             final UUID usuarioEjecutor
     ) {
         final UUID correlationId = CorrelationIdContext.require();
@@ -183,6 +188,7 @@ public class AsignaturaJpaRepository implements AsignaturaQueryPort, AsignaturaC
         parametros.put(PARAM_ID_CORRELACION, correlationId);
         parametros.put(PARAM_ID_USUARIO_EJECUTOR, usuarioEjecutor);
         parametros.put("codigoCaracter", codigoCaracter);
+        parametros.put("horasSemanales", horasSemanales);
 
         return procedureExecutor.execute(OP_CREAR, SQL_CREAR_ASIGNATURA, parametros, correlationId);
     }
@@ -197,6 +203,7 @@ public class AsignaturaJpaRepository implements AsignaturaQueryPort, AsignaturaC
             final String nombreArea,
             final String nombreComponente,
             final String codigoCaracter,
+            final Integer horasSemanales,
             final UUID usuarioEjecutor
     ) {
         final UUID correlationId = CorrelationIdContext.require();
@@ -213,6 +220,7 @@ public class AsignaturaJpaRepository implements AsignaturaQueryPort, AsignaturaC
         parametros.put(PARAM_ID_CORRELACION, correlationId);
         parametros.put(PARAM_ID_USUARIO_EJECUTOR, usuarioEjecutor);
         parametros.put("codigoCaracter", codigoCaracter);
+        parametros.put("horasSemanales", horasSemanales);
 
         return procedureExecutor.execute(OP_ACTUALIZAR, SQL_ACTUALIZAR_ASIGNATURA, parametros, correlationId);
     }

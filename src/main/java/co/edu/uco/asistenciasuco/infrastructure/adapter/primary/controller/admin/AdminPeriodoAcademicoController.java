@@ -50,8 +50,11 @@ public final class AdminPeriodoAcademicoController {
     public ResponseEntity<ApiDataResponse<PeriodoCreadoResponse>> crear(@Valid @RequestBody final GuardarPeriodoAcademicoRequest request) {
         final UUID id = gestionarPeriodoAcademicoInputPort.crear(toDTO(null, request));
         // CULM-001 D.9-a (F-ADM-030): 201 con el periodo creado (antes 200 con datos nulos).
+        // SES-GEN-01: la fecha de fin es opcional; si no llega, se responde la que persistio la DB (inicio + 16 semanas - 1 dia).
+        final java.time.LocalDate fechaFin = request.getFechaFin() != null
+                ? request.getFechaFin() : gestionarPeriodoAcademicoInputPort.consultarFechaFin(id);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiDataResponse<>(true,
-                new PeriodoCreadoResponse(id, request.getNombre().trim(), request.getFechaInicio(), request.getFechaFin())));
+                new PeriodoCreadoResponse(id, request.getNombre().trim(), request.getFechaInicio(), fechaFin)));
     }
 
     /** CULM-001 D.9-a (F-ADM-030): periodos de la institucion del administrador, paginados, con esVigente. */
