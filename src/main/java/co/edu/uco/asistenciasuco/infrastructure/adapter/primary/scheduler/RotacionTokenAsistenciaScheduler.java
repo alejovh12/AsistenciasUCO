@@ -18,7 +18,7 @@ import java.util.Objects;
  */
 public final class RotacionTokenAsistenciaScheduler extends AbstractDaemonScheduler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RotacionTokenAsistenciaScheduler);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RotacionTokenAsistenciaScheduler.class);
 
     private final RotarTokensAsistenciaAutomaticoInputPort rotarTokens;
     private final CerrarTomasVencidasInputPort cerrarVencidas;
