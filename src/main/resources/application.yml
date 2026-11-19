@@ -45,6 +45,19 @@ spring:
       max-file-size: 5MB
       max-request-size: 6MB
       file-size-threshold: 5MB
+  # SEC-BASELINE-020: conexion AMQP al RabbitMQ del lab Security Baseline 0.1.14 (eventos de asignacion del PDP).
+  # El starter se autoconfigura aunque app.providers.security-baseline-rabbitmq.enabled sea false (valores inocuos);
+  # solo se conecta cuando @RabbitListener se registra (ver AssignmentEventsRabbitConfiguration).
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:25672}
+    virtual-host: ${RABBITMQ_VIRTUAL_HOST:/security}
+    username: ${RABBITMQ_USERNAME:}
+    password: ${RABBITMQ_PASSWORD:}
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: 1
 
 server:
   # F12-07 (asignacion de puertos): el puerto HTTP de la API se fija por entorno; 8080 por defecto.
@@ -91,6 +104,10 @@ management:
   health:
     circuitbreakers:
       enabled: true
+    # SEC-BASELINE-020: el estado de /actuator/health no depende de RabbitMQ; una caida del broker de eventos de
+    # asignacion no debe afectar liveness/readiness del backend (el efecto es solo auditoria, no autorizacion).
+    rabbit:
+      enabled: false
   metrics:
     distribution:
       # OBS (alerta LatenciaP95Alta de Prometheus): histograma de http.server.requests para histogram_quantile(0.95, ...).
@@ -229,10 +246,21 @@ app:
       provider: ${APP_ADAPTERS_REALTIME_PROVIDER:local-sse}
     audit:
       provider: ${APP_ADAPTERS_AUDIT_PROVIDER:logging}
+      # Job diario de retencion de dbo.AuditoriaEvento (PurgaAuditoriaScheduler): solo corre si hay persistencia
+      # durable de auditoria. "retencion" acepta ISO-8601 (P4D = 4 dias); recalculado en cada pasada.
+      purga:
+        retencion: ${AUDITORIA_PURGA_RETENCION:P4D}
+        retardo-inicial: ${AUDITORIA_PURGA_RETARDO_INICIAL:PT5M}
+        tick: ${AUDITORIA_PURGA_TICK:PT24H}
     notification:
       provider: ${APP_ADAPTERS_NOTIFICATION_PROVIDER:log}     # log | outbox | composite
       composite:
         targets: ${APP_ADAPTERS_NOTIFICATION_COMPOSITE_TARGETS:log,outbox}   # solo aplica con provider=composite
+    # SEC-BASELINE-020: consumidor de assignment.changed.<applicationId> del PDP (Security Baseline 0.1.14).
+    # Efecto local unico: auditar el evento de forma idempotente (dbo.AuditoriaEvento); no cambia ninguna
+    # decision de autorizacion (ver docs/work-items/SEC-BASELINE-020-eventos-rabbitmq/PLAN.md).
+    assignment-events:
+      enabled: ${APP_ADAPTERS_ASSIGNMENT_EVENTS_ENABLED:false}
 
   providers:
     # Solo aplica con app.adapters.parameter-catalog.provider=catalogoparametros.
@@ -461,6 +489,13 @@ app:
       application-credential: ${SECURITY_BASELINE_PEP_APPLICATION_CREDENTIAL:}
       connect-timeout: ${SECURITY_BASELINE_PEP_CONNECT_TIMEOUT:2s}
       request-timeout: ${SECURITY_BASELINE_PEP_REQUEST_TIMEOUT:5s}
+    # SEC-BASELINE-020: applicationId de asistencias-uco en el PDP, igual al que ya usa SecurityBaselinePdpProfileClient
+    # (aqui estatico porque nombra la cola/binding en el arranque; ver PLAN.md de este work item). Solo se lee con
+    # app.adapters.assignment-events.enabled=true.
+    security-baseline-rabbitmq:
+      application-id: ${SECURITY_BASELINE_ASSIGNMENT_EVENTS_APPLICATION_ID:}
+      exchange: ${SECURITY_BASELINE_ASSIGNMENT_EVENTS_EXCHANGE:security.assignment.events}
+      queue: security.assignment.${SECURITY_BASELINE_ASSIGNMENT_EVENTS_APPLICATION_ID:}
     # LB-004B.2: MinIO privado (bucket provisionado por docker-compose/minio-init). Credenciales
     # SOLO por variables de entorno, sin valor por defecto funcional (fail-fast si faltan).
     minio:
