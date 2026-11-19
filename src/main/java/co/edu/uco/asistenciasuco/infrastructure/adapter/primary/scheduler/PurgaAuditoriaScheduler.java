@@ -33,13 +33,18 @@ public final class PurgaAuditoriaScheduler extends AbstractDaemonScheduler {
             final Duration retardoInicial,
             final Duration tick
     ) {
-        super("purga-auditoria", retardoInicial, tick);
-        this.purgarAnterioresA = Objects.requireNonNull(purgarAnterioresA, "La operacion de purga es obligatoria.");
-        this.clock = Objects.requireNonNull(clock, "El reloj es obligatorio.");
-        this.retencion = Objects.requireNonNull(retencion, "La retencion de auditoria es obligatoria.");
+        // Java 25 permite validar argumentos antes de invocar al constructor de la clase base.
+        Objects.requireNonNull(purgarAnterioresA, "La operacion de purga es obligatoria.");
+        Objects.requireNonNull(clock, "El reloj es obligatorio.");
+        Objects.requireNonNull(retencion, "La retencion de auditoria es obligatoria.");
         if (retencion.isZero() || retencion.isNegative()) {
             throw new IllegalArgumentException("La retencion de auditoria debe ser positiva.");
         }
+
+        super("purga-auditoria", retardoInicial, tick);
+        this.purgarAnterioresA = purgarAnterioresA;
+        this.clock = clock;
+        this.retencion = retencion;
     }
 
     /** Una pasada completa; visible para pruebas. */
