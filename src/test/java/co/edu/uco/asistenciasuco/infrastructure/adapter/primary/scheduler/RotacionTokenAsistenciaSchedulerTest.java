@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.scheduler;
 
 import co.edu.uco.asistenciasuco.application.features.asistenciaqr.rotartokensasistenciaautomatico.primaryports.RotarTokensAsistenciaAutomaticoInputPort;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.avisarfaltassesion.primaryports.AvisarFaltasSesionInputPort;
+import co.edu.uco.asistenciasuco.application.features.tomaasistencia.avisarsesionessintoma.primaryports.AvisarSesionesSinTomaInputPort;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.cerrartomasvencidas.primaryports.CerrarTomasVencidasInputPort;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import org.junit.jupiter.api.Test;
@@ -27,11 +28,12 @@ class RotacionTokenAsistenciaSchedulerTest {
     private final RotarTokensAsistenciaAutomaticoInputPort rotar = mock(RotarTokensAsistenciaAutomaticoInputPort.class);
     private final CerrarTomasVencidasInputPort cerrar = mock(CerrarTomasVencidasInputPort.class);
     private final AvisarFaltasSesionInputPort avisar = mock(AvisarFaltasSesionInputPort.class);
+    private final AvisarSesionesSinTomaInputPort avisarSinToma = mock(AvisarSesionesSinTomaInputPort.class);
 
     @Test
     void cada_pasada_rota_cierra_y_avisa_aunque_la_rotacion_falle_y_limpia_su_correlacion() {
         when(rotar.execute()).thenThrow(new IllegalStateException("db"));
-        final RotacionTokenAsistenciaScheduler scheduler = new RotacionTokenAsistenciaScheduler(rotar, cerrar, avisar, Duration.ofSeconds(5));
+        final RotacionTokenAsistenciaScheduler scheduler = new RotacionTokenAsistenciaScheduler(rotar, cerrar, avisar, avisarSinToma, Duration.ofSeconds(5));
 
         scheduler.ejecutarPasada();
 
@@ -44,7 +46,7 @@ class RotacionTokenAsistenciaSchedulerTest {
     @Test
     void el_aviso_de_faltas_corre_despues_del_cierre_y_su_fallo_no_se_propaga() {
         when(avisar.execute()).thenThrow(new IllegalStateException("db"));
-        final RotacionTokenAsistenciaScheduler scheduler = new RotacionTokenAsistenciaScheduler(rotar, cerrar, avisar, Duration.ofSeconds(5));
+        final RotacionTokenAsistenciaScheduler scheduler = new RotacionTokenAsistenciaScheduler(rotar, cerrar, avisar, avisarSinToma, Duration.ofSeconds(5));
 
         scheduler.ejecutarPasada();
 
@@ -59,9 +61,39 @@ class RotacionTokenAsistenciaSchedulerTest {
     void un_fallo_del_cierre_no_impide_el_aviso_de_faltas() {
         when(cerrar.execute()).thenThrow(new IllegalStateException("db"));
 
-        new RotacionTokenAsistenciaScheduler(rotar, cerrar, avisar, Duration.ofSeconds(5)).ejecutarPasada();
+        new RotacionTokenAsistenciaScheduler(rotar, cerrar, avisar, avisarSinToma, Duration.ofSeconds(5)).ejecutarPasada();
 
         verify(avisar).execute();
+    }
+
+    @Test
+    void el_aviso_de_sesiones_sin_toma_corre_al_final_y_un_fallo_del_aviso_de_faltas_no_lo_impide() {
+        when(avisar.execute()).thenThrow(new IllegalStateException("db"));
+
+        new RotacionTokenAsistenciaScheduler(rotar, cerrar, avisar, avisarSinToma, Duration.ofSeconds(5)).ejecutarPasada();
+
+        final var orden = inOrder(rotar, cerrar, avisar, avisarSinToma);
+        orden.verify(rotar).execute();
+        orden.verify(cerrar).execute();
+        orden.verify(avisar).execute();
+        orden.verify(avisarSinToma).execute();
+        assertNull(CorrelationIdContext.get());
+    }
+
+    @Test
+    void un_fallo_del_aviso_de_sesiones_sin_toma_no_se_propaga() {
+        when(avisarSinToma.execute()).thenThrow(new IllegalStateException("db"));
+
+        new RotacionTokenAsistenciaScheduler(rotar, cerrar, avisar, avisarSinToma, Duration.ofSeconds(5)).ejecutarPasada();
+
+        verify(avisarSinToma).execute();
+        assertNull(CorrelationIdContext.get());
+    }
+
+    @Test
+    void el_aviso_de_sesiones_sin_toma_es_obligatorio() {
+        final var tick = Duration.ofSeconds(1);
+        assertThrows(NullPointerException.class, () -> new RotacionTokenAsistenciaScheduler(rotar, cerrar, avisar, null, tick));
     }
 
     @Test
@@ -70,7 +102,7 @@ class RotacionTokenAsistenciaSchedulerTest {
         CorrelationIdContext.set(existente);
         try {
             when(cerrar.execute()).thenThrow(new IllegalStateException("db"));
-            new RotacionTokenAsistenciaScheduler(rotar, cerrar, avisar, Duration.ofSeconds(5)).ejecutarPasada();
+            new RotacionTokenAsistenciaScheduler(rotar, cerrar, avisar, avisarSinToma, Duration.ofSeconds(5)).ejecutarPasada();
             assertEquals(existente, CorrelationIdContext.get());
         } finally {
             CorrelationIdContext.clear();
@@ -84,7 +116,7 @@ class RotacionTokenAsistenciaSchedulerTest {
             pasada.countDown();
             return 0;
         });
-        final RotacionTokenAsistenciaScheduler scheduler = new RotacionTokenAsistenciaScheduler(rotar, cerrar, avisar, Duration.ofMillis(20));
+        final RotacionTokenAsistenciaScheduler scheduler = new RotacionTokenAsistenciaScheduler(rotar, cerrar, avisar, avisarSinToma, Duration.ofMillis(20));
         scheduler.start();
         scheduler.start();
         assertTrue(scheduler.isRunning());
@@ -94,13 +126,13 @@ class RotacionTokenAsistenciaSchedulerTest {
         assertFalse(scheduler.isRunning());
 
         final var duration3 = Duration.ofSeconds(1);
-        assertThrows(NullPointerException.class, () -> new RotacionTokenAsistenciaScheduler(null, cerrar, avisar, duration3));
+        assertThrows(NullPointerException.class, () -> new RotacionTokenAsistenciaScheduler(null, cerrar, avisar, avisarSinToma, duration3));
         final var duration2 = Duration.ofSeconds(1);
-        assertThrows(NullPointerException.class, () -> new RotacionTokenAsistenciaScheduler(rotar, null, avisar, duration2));
-        assertThrows(NullPointerException.class, () -> new RotacionTokenAsistenciaScheduler(rotar, cerrar, null, duration2));
-        assertThrows(NullPointerException.class, () -> new RotacionTokenAsistenciaScheduler(rotar, cerrar, avisar, null));
-        assertThrows(IllegalArgumentException.class, () -> new RotacionTokenAsistenciaScheduler(rotar, cerrar, avisar, Duration.ZERO));
+        assertThrows(NullPointerException.class, () -> new RotacionTokenAsistenciaScheduler(rotar, null, avisar, avisarSinToma, duration2));
+        assertThrows(NullPointerException.class, () -> new RotacionTokenAsistenciaScheduler(rotar, cerrar, null, avisarSinToma, duration2));
+        assertThrows(NullPointerException.class, () -> new RotacionTokenAsistenciaScheduler(rotar, cerrar, avisar, avisarSinToma, null));
+        assertThrows(IllegalArgumentException.class, () -> new RotacionTokenAsistenciaScheduler(rotar, cerrar, avisar, avisarSinToma, Duration.ZERO));
         final var duration = Duration.ofSeconds(-1);
-        assertThrows(IllegalArgumentException.class, () -> new RotacionTokenAsistenciaScheduler(rotar, cerrar, avisar, duration));
+        assertThrows(IllegalArgumentException.class, () -> new RotacionTokenAsistenciaScheduler(rotar, cerrar, avisar, avisarSinToma, duration));
     }
 }

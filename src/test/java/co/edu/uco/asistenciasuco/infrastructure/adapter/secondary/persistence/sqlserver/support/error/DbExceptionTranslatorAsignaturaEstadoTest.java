@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * HU074 (migracion 57): ASI_006 (asignatura compartida con programas que el coordinador no coordina), ASI_009 (inactivar con
+ * HU074 (migracion 58): ASI_006 (asignatura compartida con programas que el coordinador no coordina), ASI_009 (inactivar con
  * grupos en el periodo vigente o futuro) y ASI_010 (asignatura inactiva al crear un grupo o asociarla a un plan) son conflictos
  * de negocio (409) con su propio codigo, para que el usuario reciba el texto del catalogo y no el generico de CONFLICT.
  */

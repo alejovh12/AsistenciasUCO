@@ -246,6 +246,12 @@ app:
       provider: ${APP_ADAPTERS_REALTIME_PROVIDER:local-sse}
     audit:
       provider: ${APP_ADAPTERS_AUDIT_PROVIDER:logging}
+      # Job diario de retencion de dbo.AuditoriaEvento (PurgaAuditoriaScheduler): solo corre si hay persistencia
+      # durable de auditoria. "retencion" acepta ISO-8601 (P4D = 4 dias); recalculado en cada pasada.
+      purga:
+        retencion: ${AUDITORIA_PURGA_RETENCION:P4D}
+        retardo-inicial: ${AUDITORIA_PURGA_RETARDO_INICIAL:PT5M}
+        tick: ${AUDITORIA_PURGA_TICK:PT24H}
     notification:
       provider: ${APP_ADAPTERS_NOTIFICATION_PROVIDER:log}     # log | outbox | composite
       composite:

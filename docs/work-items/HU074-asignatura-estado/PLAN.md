@@ -4,7 +4,7 @@
 
 - Fecha / autor o rol / base Git: 2026-11-19 / implementador (agente) por orden de John / `develop` en `9adf99fb`, rama
   `feat/HU074-HU178-asignatura-estado-ambito` (sin commit).
-- Objetivo: que el backend transporte las reglas de HU074 que la migración 57 de la BD pone en los SP:
+- Objetivo: que el backend transporte las reglas de HU074 que la migración 58 de la BD pone en los SP:
   1. `PATCH /api/v1/coordinador/asignaturas/{id}/estado` rechaza inactivar con **409 `ASI_009`** si la asignatura tiene grupos en
      el período vigente o en períodos futuros, y sigue rechazando con **409 `ASI_006`** si la comparten programas que el
      coordinador no coordina.
@@ -16,7 +16,7 @@
 - Criterios de aceptación: los tres rechazos llegan como 409 con su propio código y el texto del catálogo de mensajes (no el
   genérico de `CONFLICT`) en todos los endpoints que llaman esos SP; el 200 del PATCH trae `mensajeUsuario` y
   `datos.estaActivaAsignatura`; `mvnw verify` verde.
-- Skills y fuentes: `uco-contratos`, `uco-catalogos`, `uco-testing`; migración 57 y `docs/catalogos/catalogo-mensajes.md` del
+- Skills y fuentes: `uco-contratos`, `uco-catalogos`, `uco-testing`; migración 58 y `docs/catalogos/catalogo-mensajes.md` del
   repositorio de BD (misma rama).
 
 ## AS-IS y evidencia
@@ -63,13 +63,13 @@
 - CONTRACTS: HTTP del PATCH (aditivo: respuesta y cuerpo opcional) y cuerpo de error 409 de los tres códigos. DB: resultsets sin
   cambio; `usp_toggle_estado_asignatura` suma `@estaActivaDeseada BIT = NULL` al final (aditivo, owner de BD, misma rama);
   `SqlStoredProcedureContractIT` fija la firma nueva.
-- PROVIDERS: SQL Server (SP de la migración 57), catálogo de mensajes (MessageUcoLab / DB).
+- PROVIDERS: SQL Server (SP de la migración 58), catálogo de mensajes (MessageUcoLab / DB).
 - SECURITY_IMPACT: ninguno (RBAC y ámbito sin cambio).
 - OBSERVABILITY_IMPACT: ninguno (el log de rechazo ya registra `dbCode`).
 - TEST_LEVEL_REQUIRED: unitarias del clasificador/traductor, caso de uso y controladores (MockMvc standalone).
-- ROLLBACK: revertir los commits de la rama; la BD debe revertir la migración 57 en el mismo despliegue.
+- ROLLBACK: revertir los commits de la rama; la BD debe revertir la migración 58 en el mismo despliegue.
 - CONSUMERS: frontend (SPA) de la misma rama.
-- STOP_CONDITIONS: códigos o textos de la migración 57 distintos de los acordados → usar los de la BD y reportar.
+- STOP_CONDITIONS: códigos o textos de la migración 58 distintos de los acordados → usar los de la BD y reportar.
 
 ## Alcance
 
@@ -100,9 +100,9 @@ genérico al institucional.
 
 ## Riesgos y dependencias
 
-- Depende de la migración 57 de la BD (misma rama) **con** `@estaActivaDeseada`: el backend siempre envía el parámetro (con
+- Depende de la migración 58 de la BD (misma rama) **con** `@estaActivaDeseada`: el backend siempre envía el parámetro (con
   `NULL` si no hay cuerpo), así que una BD sin él rechaza la llamada ("no es un parámetro del procedimiento"). Despliegue
-  conjunto BD + backend. Con la migración 57 sin el código de éxito, el backend usa el estado pedido o el contrario al leído.
+  conjunto BD + backend. Con la migración 58 sin el código de éxito, el backend usa el estado pedido o el contrario al leído.
 - Las filas `ASI_009..ASI_012` deben registrarse en MessageUcoLab; mientras tanto, el 409 usa el texto de respaldo del enum y el
   200 usa el mensaje que entregó la BD.
 
@@ -112,7 +112,7 @@ Ver `TEST_PLAN.md`.
 
 ## Rollback y stop conditions
 
-Sin conflictos abiertos. Ver `VALIDATION.md` para la confirmación de los códigos contra la migración 57.
+Sin conflictos abiertos. Ver `VALIDATION.md` para la confirmación de los códigos contra la migración 58.
 
 ## Deuda conocida y validación manual
 
@@ -123,4 +123,4 @@ Sin conflictos abiertos. Ver `VALIDATION.md` para la confirmación de los códig
 
 ## Definition of Ready
 
-READY: orden de John (2026-11-19), reglas de la migración 57 descritas por el owner de BD, sin cambios de firma de SP.
+READY: orden de John (2026-11-19), reglas de la migración 58 descritas por el owner de BD, sin cambios de firma de SP.

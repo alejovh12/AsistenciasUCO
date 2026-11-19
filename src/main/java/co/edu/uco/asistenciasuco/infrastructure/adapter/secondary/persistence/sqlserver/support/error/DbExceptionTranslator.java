@@ -100,7 +100,7 @@ public final class DbExceptionTranslator {
             FacultadErrorCode.FAC_002,
             CatalogoErrorCode.TPR_002,
             CatalogoErrorCode.ARE_002,
-            // HU074 (migracion 57): asignatura compartida, inactivar con grupos vigentes o futuros y asignatura inactiva.
+            // HU074 (migracion 58): asignatura compartida, inactivar con grupos vigentes o futuros y asignatura inactiva.
             CatalogoErrorCode.ASI_006,
             CatalogoErrorCode.ASI_009,
             CatalogoErrorCode.ASI_010,

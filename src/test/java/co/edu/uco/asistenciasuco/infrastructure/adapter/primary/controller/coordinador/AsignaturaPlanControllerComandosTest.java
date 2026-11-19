@@ -63,7 +63,7 @@ class AsignaturaPlanControllerComandosTest {
                 .andExpect(jsonPath("$.code").value("SEC_002"));
     }
 
-    // HU074 (migracion 57): asociar una asignatura inactiva responde 409 ASI_010 con el texto del catalogo de mensajes.
+    // HU074 (migracion 58): asociar una asignatura inactiva responde 409 ASI_010 con el texto del catalogo de mensajes.
     @Test
     void hu074_asociar_una_asignatura_inactiva_responde_409_asi_010_con_el_mensaje_del_catalogo() throws Exception {
         final MockMvc conCatalogo = MockMvcBuilders.standaloneSetup(new AsignaturaPlanController(inputPort, identity))

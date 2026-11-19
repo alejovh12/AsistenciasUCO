@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.usecase.domain;
 
 /**
- * HU074 (migracion 57): codigos del catalogo de mensajes con los que la DB confirma el cambio de estado de una asignatura.
+ * HU074 (migracion 58): codigos del catalogo de mensajes con los que la DB confirma el cambio de estado de una asignatura.
  * El texto de aqui es solo el respaldo cuando ni el SP ni el catalogo entregan el mensaje.
  */
 public enum MensajeEstadoAsignatura {

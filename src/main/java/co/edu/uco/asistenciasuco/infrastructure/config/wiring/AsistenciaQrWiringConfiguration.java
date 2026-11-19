@@ -17,6 +17,8 @@ import co.edu.uco.asistenciasuco.application.features.asistenciaqr.rotartokensas
 import co.edu.uco.asistenciasuco.application.features.asistenciaqr.rotartokensasistenciaautomatico.usecase.impl.RotarTokensAsistenciaAutomaticoUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.avisarfaltassesion.primaryports.AvisarFaltasSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.avisarfaltassesion.usecase.impl.AvisarFaltasSesionUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.tomaasistencia.avisarsesionessintoma.primaryports.AvisarSesionesSinTomaInputPort;
+import co.edu.uco.asistenciasuco.application.features.tomaasistencia.avisarsesionessintoma.usecase.impl.AvisarSesionesSinTomaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.cerrartomasvencidas.primaryports.CerrarTomasVencidasInputPort;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.TomaAsistenciaAcceso;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.common.TomaAsistenciaEventos;
@@ -27,6 +29,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.qr.CodigoQrGenerator
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaQrRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AvisoFaltaSesionRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.AvisoSesionSinTomaRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.TomaAsistenciaRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.LimitadorIntentosPort;
@@ -125,14 +128,23 @@ public class AsistenciaQrWiringConfiguration {
         return new AvisarFaltasSesionUseCaseImpl(repositorio, notificaciones, realtime, urlPlataforma);
     }
 
+    /** NOTOMA-001: aviso a la coordinacion cuando el docente no tomo asistencia en una sesion; el enlace usa la misma URL de la plataforma del canal de correo. */
+    @Bean
+    public AvisarSesionesSinTomaInputPort avisarSesionesSinTomaInputPort(
+            final AvisoSesionSinTomaRepositoryPort repositorio, final NotificacionPort notificaciones,
+            @Value("${app.providers.smtp-notification.platform-url:}") final String urlPlataforma) {
+        return new AvisarSesionesSinTomaUseCaseImpl(repositorio, notificaciones, urlPlataforma);
+    }
+
     @Bean
     public RotacionTokenAsistenciaScheduler rotacionTokenAsistenciaScheduler(
             final RotarTokensAsistenciaAutomaticoInputPort rotarTokens,
             final CerrarTomasVencidasInputPort cerrarVencidas,
             final AvisarFaltasSesionInputPort avisarFaltas,
+            final AvisarSesionesSinTomaInputPort avisarSesionesSinToma,
             @Value("${app.asistencia-qr.rotacion.tick:PT5S}") final Duration tick
     ) {
-        return new RotacionTokenAsistenciaScheduler(rotarTokens, cerrarVencidas, avisarFaltas, tick);
+        return new RotacionTokenAsistenciaScheduler(rotarTokens, cerrarVencidas, avisarFaltas, avisarSesionesSinToma, tick);
     }
 
     /**

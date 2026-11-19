@@ -1,6 +1,6 @@
 # CONTRACT — HU074: Activar o inactivar asignaturas
 
-Contrato HTTP congelado para el frontend de la misma rama. Fuente de BD: migración 57 (`usp_toggle_estado_asignatura`,
+Contrato HTTP congelado para el frontend de la misma rama. Fuente de BD: migración 58 (`usp_toggle_estado_asignatura`,
 `usp_crear_grupo`, `usp_asociar_asignatura_plan`); resultsets canónicos sin cambio. Única firma que cambia (aditiva, ajuste de
 la revisión independiente del 2026-11-19): `usp_toggle_estado_asignatura` suma `@estaActivaDeseada BIT = NULL` como último
 parámetro.
@@ -47,7 +47,7 @@ Antes: `{"exitoso": true, "datos": null}`. Ahora (`ApiDataMensajeResponse<Estado
 
 - `datos.estaActivaAsignatura`: estado en que quedó la asignatura (mismo nombre que en la malla, `AsignaturaPlanDTO`). Sale del
   **resultado del SP**: código de éxito del canal técnico (`mensajeTecnicoResultado` = `DBCODE=ASI_011|…` → `true`,
-  `DBCODE=ASI_012|…` → `false`). Si el SP no publica el código (SP anterior a la migración 57), el estado pedido y, si se pidió
+  `DBCODE=ASI_012|…` → `false`). Si el SP no publica el código (SP anterior a la migración 58), el estado pedido y, si se pidió
   alternar, el contrario al leído en la validación de ámbito.
 - `mensajeUsuario`: texto que entregó el SP (`ASI_011` "La asignatura quedó activa." / `ASI_012` "La asignatura quedó
   inactiva."). Si el SP lo entrega vacío: catálogo de mensajes por código y, sin catálogo, el respaldo de

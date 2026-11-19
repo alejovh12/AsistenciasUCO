@@ -1,5 +1,7 @@
 # VALIDATION — HU074: Activar o inactivar asignaturas (backend)
 
+> **2026-11-19 (integración):** la migración de HU074 se renumeró a la **58** y su semilla a la **70** al integrar NOTOMA-001 (Sergio, migración 57 / seed 69), que entró antes a develop.
+
 ## Dictamen
 
 PASS local (unitarias, ArchUnit y JaCoCo) con la limitación de dependencias descrita abajo. Hubo revisión independiente
@@ -9,7 +11,7 @@ volvió a correr el gate completo. E2E manual en pantalla HECHA el 2026-11-19 (a
 
 ## Confirmación de códigos contra la BD
 
-Migración 57 del repositorio de BD (misma rama, sin commit), semilla `schema/seed/69_hu074_mensajes_estado_asignatura.sql` y
+Migración 58 del repositorio de BD (misma rama, sin commit), semilla `schema/seed/70_hu074_mensajes_estado_asignatura.sql` y
 `docs/catalogos/catalogo-mensajes.md` (filas 117-120), leídas el 2026-11-19: `ASI_009`, `ASI_010`, `ASI_011` y `ASI_012` con los
 mismos textos que usa este work item. `ASI_010` lo emite `usp_validar_asignatura_activa_interno` (llamado por `usp_crear_grupo` y
 `usp_asociar_asignatura_plan`) con `usp_obtener_mensaje_catalogo`, es decir con el canal `DBCODE=ASI_010|…` que lee el
@@ -67,7 +69,7 @@ NO APLICA: pruebas escritas junto con la implementación (sin tester independien
 
 ## E2E manual (hecha)
 
-2026-11-19, en pantalla con `uco-coordinador`, BD con la migración 57 (antes del cuerpo opcional): inactivar una asignatura con
+2026-11-19, en pantalla con `uco-coordinador`, BD con la migración 58 (antes del cuerpo opcional): inactivar una asignatura con
 grupos vigentes → 409 `ASI_009`; inactivar sin grupos → 200 `ASI_012`; crear un grupo con la asignatura inactiva → 409
 `ASI_010`; reactivar → 200 `ASI_011`. Asociar al plan una asignatura inactiva no se probó en pantalla (cubierto por MockMvc,
 T13).

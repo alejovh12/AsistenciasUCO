@@ -611,6 +611,20 @@ class SqlStoredProcedureContractIT {
                         input("@totalEstudiantesAvisados", "int"),
                         input("@idCorrelacion", "uniqueidentifier")
                 )),
+                // NOTOMA-001: aviso a la coordinacion de la sesion sin toma (comandos de sistema del job)
+                Arguments.of("usp_consultar_sesiones_pendientes_aviso_sin_toma", List.of(
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@tamanoLote", "int")
+                )),
+                Arguments.of("usp_consultar_destinatarios_aviso_sin_toma", List.of(
+                        input("@idSesion", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier")
+                )),
+                Arguments.of("usp_registrar_aviso_sesion_sin_toma", List.of(
+                        input("@idSesion", "uniqueidentifier"),
+                        input("@totalCoordinadoresAvisados", "int"),
+                        input("@idCorrelacion", "uniqueidentifier")
+                )),
                 Arguments.of("usp_registrar_asistencias_toma", List.of(
                         input("@idToma", "uniqueidentifier"),
                         input("@asistenciaJSON", "nvarchar"),

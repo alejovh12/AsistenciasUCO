@@ -110,7 +110,7 @@ class GrupoControllerWriteEndpointsTest {
         assertEquals(USUARIO_AUTENTICADO, dto.getValue().usuarioEjecutor());
     }
 
-    // HU074 (migracion 57): crear un grupo de una asignatura inactiva responde 409 ASI_010 (codigo y texto del catalogo).
+    // HU074 (migracion 58): crear un grupo de una asignatura inactiva responde 409 ASI_010 (codigo y texto del catalogo).
     @Test
     void hu074_crearGrupo_con_asignatura_inactiva_responde_409_asi_010() throws Exception {
         when(crearGrupoPort.execute(any())).thenThrow(new ConflictException(CatalogoErrorCode.ASI_010));
