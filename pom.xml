@@ -54,6 +54,16 @@
         AsistenciasUCO-Infra/docs/hardening/MESSAGE_CATALOG_SWITCH_GUIDE.md.
     -->
     <repositories>
+        <!--
+            Maven Central debe preceder al repositorio privado: dependencias publicas como Swagger UI
+            no deben buscarse primero en GitHub Packages (que solo aloja MessageUcoLab).
+        -->
+        <repository>
+            <id>central</id>
+            <url>https://repo.maven.apache.org/maven2/</url>
+            <releases><enabled>true</enabled></releases>
+            <snapshots><enabled>false</enabled></snapshots>
+        </repository>
         <repository>
             <id>github</id>
             <url>https://maven.pkg.github.com/CamiloGarcia09/MessageUcolab--Backend</url>
