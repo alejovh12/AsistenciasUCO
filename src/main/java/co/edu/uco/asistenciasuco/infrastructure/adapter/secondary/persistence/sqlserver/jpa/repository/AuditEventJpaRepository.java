@@ -62,6 +62,25 @@ public class AuditEventJpaRepository {
     }
 
     /**
+     * Inserta el evento solo si su {@code id} (idempotencia por {@code eventId} de origenes externos, p. ej.
+     * SEC-BASELINE-020) no existe todavia. Transaccion propia: la comprobacion y la insercion quedan atomicas.
+     *
+     * @return {@code true} si se inserto (nuevo); {@code false} si ya existia (duplicado, no se repite el efecto).
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public boolean insertIfAbsent(final AuditEvent event) {
+        if (ObjectHelper.isNull(event)) {
+            throw new CrosscuttingException("El evento de auditoria es obligatorio.");
+        }
+        if (entityManager.find(AuditEventEntity.class, event.id()) != null) {
+            return false;
+        }
+        entityManager.persist(toEntity(event));
+        entityManager.flush();
+        return true;
+    }
+
+    /**
      * Purga (DELETE masivo) los eventos de auditoria con {@code occurredAt} anterior a {@code limite}. Transaccion
      * propia ({@code REQUIRES_NEW}): una purga nunca debe quedar atada a la transaccion de negocio que la dispara.
      *
