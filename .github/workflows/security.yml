@@ -138,7 +138,18 @@ jobs:
           set -euo pipefail
           chmod +x mvnw
           # -U evita reutilizar respuestas negativas de artefactos (p. ej. swagger-ui) guardadas en la cache Maven.
-          ./mvnw -U -B -ntp --no-transfer-progress -DskipTests package
+          # Maven Central limita a los runners compartidos (HTTP 429): hasta 3 intentos con espera (30 s y 60 s).
+          for intento in 1 2 3; do
+            if ./mvnw -U -B -ntp --no-transfer-progress -DskipTests package; then
+              exit 0
+            fi
+            if [ "$intento" -lt 3 ]; then
+              espera=$((intento * 30))
+              echo "Build para CodeQL fallido (intento ${intento}); reintento en ${espera}s."
+              sleep "$espera"
+            fi
+          done
+          exit 1
 
       - name: Analyze with CodeQL
         uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
