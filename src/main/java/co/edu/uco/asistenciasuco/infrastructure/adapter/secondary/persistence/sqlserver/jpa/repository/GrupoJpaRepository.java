@@ -25,8 +25,13 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvGrupoEntity;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import jakarta.persistence.EntityManager;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -253,7 +258,7 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
         }
         return new GrupoRepositoryProjection(NativeRowValues.uuid(f[0]), texto(f[1]), texto(f[2]), NativeRowValues.uuid(f[3]),
                 texto(f[4]), NativeRowValues.uuid(f[5]), enteroONulo(f[6]), enteroONulo(f[7]), enteroONulo(f[8]),
-                bandera(f[9]), OfertaGruposEstudianteJpaRepository.fecha(f[10]), OfertaGruposEstudianteJpaRepository.fecha(f[11]),
+                bandera(f[9]), fecha(f[10]), fecha(f[11]),
                 List.of());
     }
 
@@ -475,6 +480,23 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
         return grupos.stream()
                 .map(grupo -> grupo.conFranjas(porGrupo.getOrDefault(grupo.getId(), List.of())))
                 .toList();
+    }
+
+    /**
+     * Columna DATE del SP. El driver puede entregarla como LocalDate, LocalDateTime o java.util.Date (subclase de
+     * java.sql, construida con la zona de la JVM): se recupera la fecha de pared sin depender de java.sql.
+     */
+    private static LocalDate fecha(final Object valor) {
+        if (valor instanceof LocalDate fecha) {
+            return fecha;
+        }
+        if (valor instanceof LocalDateTime fecha) {
+            return fecha.toLocalDate();
+        }
+        if (valor instanceof Date fecha) {
+            return LocalDate.ofInstant(Instant.ofEpochMilli(fecha.getTime()), ZoneId.systemDefault());
+        }
+        return null;
     }
 
     private static String texto(final Object valor) {
