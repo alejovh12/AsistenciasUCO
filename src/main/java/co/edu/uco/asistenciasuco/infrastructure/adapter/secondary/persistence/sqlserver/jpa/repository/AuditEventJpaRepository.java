@@ -16,6 +16,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,11 @@ public class AuditEventJpaRepository {
             order by a.occurredAt desc, a.id desc
             """;
 
+    static final String JPQL_DELETE_ANTERIORES_A = """
+            delete from AuditEventEntity a
+            where a.occurredAt < :limite
+            """;
+
     private final EntityManager entityManager;
     private final JsonParser jsonParser;
 
@@ -53,6 +59,22 @@ public class AuditEventJpaRepository {
             throw new CrosscuttingException("El evento de auditoria es obligatorio.");
         }
         entityManager.persist(toEntity(event));
+    }
+
+    /**
+     * Purga (DELETE masivo) los eventos de auditoria con {@code occurredAt} anterior a {@code limite}. Transaccion
+     * propia ({@code REQUIRES_NEW}): una purga nunca debe quedar atada a la transaccion de negocio que la dispara.
+     *
+     * @return cuantas filas se eliminaron.
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public int purgarAnterioresA(final OffsetDateTime limite) {
+        if (ObjectHelper.isNull(limite)) {
+            throw new CrosscuttingException("El limite de purga de auditoria es obligatorio.");
+        }
+        return entityManager.createQuery(JPQL_DELETE_ANTERIORES_A)
+                .setParameter("limite", limite)
+                .executeUpdate();
     }
 
     public Optional<AuditEvent> findLatestByCorrelationId(final String correlationId) {
