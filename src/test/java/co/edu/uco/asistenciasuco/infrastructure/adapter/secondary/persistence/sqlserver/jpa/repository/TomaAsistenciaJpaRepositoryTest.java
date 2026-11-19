@@ -116,17 +116,31 @@ class TomaAsistenciaJpaRepositoryTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void abrir_envia_los_parametros_y_lee_las_ocho_columnas_del_sp() {
-        when(executor.executeWithExtras(eq("abrirTomaAsistencia"), eq(TomaAsistenciaJpaRepository.SQL_ABRIR), anyMap(), eq(correlacion), eq(8)))
+    void abrir_envia_los_parametros_y_lee_las_once_columnas_del_sp_sin_toma_cerrada_anterior() {
+        when(executor.executeWithExtras(eq("abrirTomaAsistencia"), eq(TomaAsistenciaJpaRepository.SQL_ABRIR), anyMap(), eq(correlacion), eq(11)))
                 .thenReturn(new ProcedureRow(null, Arrays.asList(TOMA.toString(), (short) 2, "QR", true,
-                        Timestamp.valueOf("2026-11-07 13:05:00"), LocalDateTime.of(2026, 11, 7, 15, 30), 2, new BigDecimal("1.000000"))));
+                        Timestamp.valueOf("2026-11-07 13:05:00"), LocalDateTime.of(2026, 11, 7, 15, 30), 2, new BigDecimal("1.000000"),
+                        null, null, null)));
 
         assertEquals(new TomaAsistenciaRepositoryPort.TomaAbierta(TOMA, 2, "QR", Instant.parse("2026-11-07T13:05:00Z")),
                 repository.abrir(SESION, "QR", USUARIO));
         final ArgumentCaptor<Map<String, Object>> parametros = ArgumentCaptor.forClass(Map.class);
-        verify(executor).executeWithExtras(anyString(), anyString(), parametros.capture(), any(), eq(8));
+        verify(executor).executeWithExtras(anyString(), anyString(), parametros.capture(), any(), eq(11));
         assertEquals(Map.of("idSesion", SESION, "codigoModo", "QR", "idCorrelacion", correlacion, "idUsuarioEjecutor", USUARIO),
                 parametros.getValue());
+    }
+
+    @Test
+    void abrir_lee_la_toma_cerrada_anterior_cuando_el_sp_la_cerro() {
+        final UUID anterior = UUID.randomUUID();
+        when(executor.executeWithExtras(eq("abrirTomaAsistencia"), eq(TomaAsistenciaJpaRepository.SQL_ABRIR), anyMap(), eq(correlacion), eq(11)))
+                .thenReturn(new ProcedureRow(null, Arrays.asList(TOMA.toString(), (short) 3, "MANUAL", false,
+                        Timestamp.valueOf("2026-11-07 13:35:00"), LocalDateTime.of(2026, 11, 7, 15, 30), 3, new BigDecimal("1.000000"),
+                        anterior.toString(), (short) 2, 5)));
+
+        assertEquals(new TomaAsistenciaRepositoryPort.TomaAbierta(TOMA, 3, "MANUAL", Instant.parse("2026-11-07T13:35:00Z"),
+                        new TomaAsistenciaRepositoryPort.TomaCerradaAnterior(anterior, 2, 5)),
+                repository.abrir(SESION, "MANUAL", USUARIO));
     }
 
     @Test

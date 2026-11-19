@@ -20,8 +20,9 @@ import java.util.Objects;
 /**
  * CULM-001 B.2: abre una toma. La titularidad se valida aqui (403) antes que el estado de la sesion para no revelar datos
  * de sesiones ajenas; una sesion cancelada responde {@code ERR_SESION_CANCELADA}. La ventana con tolerancia y margen, el
- * maximo de tomas y la toma abierta previa los decide la base de datos ({@code SES_007..010}, {@code TOM_003},
- * {@code TOM_004}). Solo tras el commit publica {@code TOMA_ABIERTA}.
+ * maximo de tomas ({@code SES_007..010}, {@code TOM_004}) los decide la base de datos, que ademas cierra la toma abierta
+ * previa en la misma transaccion (D9). Solo tras el commit publica, en orden, {@code TOMA_CERRADA} y
+ * {@code ASISTENCIAS_TOMA_ACTUALIZADAS} de la anterior (si hubo) y {@code TOMA_ABIERTA}.
  */
 public final class AbrirTomaAsistenciaUseCaseImpl implements AbrirTomaAsistenciaUseCase {
 
@@ -43,7 +44,7 @@ public final class AbrirTomaAsistenciaUseCaseImpl implements AbrirTomaAsistencia
     }
 
     @Override
-    public TomaAsistenciaResumen execute(final Comando comando) {
+    public Resultado execute(final Comando comando) {
         Objects.requireNonNull(comando, "El comando para abrir la toma es obligatorio.");
         if (comando.modo() == null || comando.modo().isBlank()) {
             throw new ValidationException(TomaAsistenciaErrorCode.TOM_002);
@@ -56,6 +57,13 @@ public final class AbrirTomaAsistenciaUseCaseImpl implements AbrirTomaAsistencia
                 comando.sesionId(), comando.modo().strip().toUpperCase(Locale.ROOT), comando.usuarioEjecutor());
         final TomaAsistenciaResumen toma = acceso.releer(abierta.idToma());
 
+        final TomaAsistenciaRepositoryPort.TomaCerradaAnterior anterior = abierta.cerradaAnterior();
+        if (anterior != null) {
+            eventos.tomaCerrada(toma.idGrupo(), toma.idSesion(), anterior.idToma(), anterior.numero(),
+                    anterior.totalAusentesMarcados(), null, false);
+            final TomaAsistenciaResumen cerrada = acceso.releer(anterior.idToma());
+            eventos.asistenciasTomaActualizadas(cerrada.idGrupo(), cerrada.idSesion(), cerrada.idToma(), cerrada.totalRegistros());
+        }
         final Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("grupo", toma.idGrupo().toString());
         payload.put("sesion", toma.idSesion().toString());
@@ -64,6 +72,7 @@ public final class AbrirTomaAsistenciaUseCaseImpl implements AbrirTomaAsistencia
         payload.put("modo", toma.modo());
         payload.put("fechaAperturaUtc", String.valueOf(toma.fechaAperturaUtc()));
         eventos.publicar(TomaAsistenciaEventos.TOMA_ABIERTA, payload);
-        return toma;
+        return new Resultado(toma, anterior == null ? null
+                : new TomaCerradaAnterior(anterior.idToma(), anterior.numero(), anterior.totalAusentesMarcados()));
     }
 }

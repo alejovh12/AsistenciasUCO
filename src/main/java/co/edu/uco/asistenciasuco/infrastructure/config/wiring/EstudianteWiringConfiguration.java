@@ -44,11 +44,6 @@ import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclam
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.usecase.impl.ConsultarReclamosEstudianteUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.EstudianteRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.OfertaGruposEstudianteQueryPort;
-import co.edu.uco.asistenciasuco.application.features.estudiante.consultarofertagrupos.primaryports.ConsultarOfertaGruposInputPort;
-import co.edu.uco.asistenciasuco.application.features.estudiante.consultarofertagrupos.primaryports.interactor.ConsultarOfertaGruposInteractor;
-import co.edu.uco.asistenciasuco.application.features.estudiante.consultarofertagrupos.usecase.ConsultarOfertaGruposUseCase;
-import co.edu.uco.asistenciasuco.application.features.estudiante.consultarofertagrupos.usecase.impl.ConsultarOfertaGruposUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarplanestudio.primaryports.ConsultarPlanEstudioEstudianteInputPort;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarplanestudio.primaryports.interactor.ConsultarPlanEstudioEstudianteInteractor;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarplanestudio.usecase.ConsultarPlanEstudioEstudianteUseCase;
@@ -161,17 +156,6 @@ public class EstudianteWiringConfiguration {
     @Bean
     RetirarReclamoInputPort retirarReclamoInputPort(final RetirarReclamoUseCase useCase) {
         return new RetirarReclamoInteractor(useCase);
-    }
-
-    /** HU008: oferta de grupos (con cupos) de los programas del estudiante. */
-    @Bean
-    ConsultarOfertaGruposUseCase consultarOfertaGruposUseCase(final InstitutionalScopePort scopePort, final OfertaGruposEstudianteQueryPort port) {
-        return new ConsultarOfertaGruposUseCaseImpl(scopePort, port);
-    }
-
-    @Bean
-    ConsultarOfertaGruposInputPort consultarOfertaGruposInputPort(final ConsultarOfertaGruposUseCase useCase) {
-        return new ConsultarOfertaGruposInteractor(useCase);
     }
 
     /** HU018: estructura curricular por semestres de los planes activos del estudiante. */

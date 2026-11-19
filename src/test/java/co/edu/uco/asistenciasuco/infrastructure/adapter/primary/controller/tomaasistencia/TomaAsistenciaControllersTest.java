@@ -120,7 +120,8 @@ class TomaAsistenciaControllersTest {
 
     @Test
     void abrir_toma_responde_201_con_location_y_la_toma() throws Exception {
-        when(abrir.execute(new AbrirTomaAsistenciaInputPort.Comando(SESION, "QR", ACTOR))).thenReturn(toma());
+        when(abrir.execute(new AbrirTomaAsistenciaInputPort.Comando(SESION, "QR", ACTOR)))
+                .thenReturn(new AbrirTomaAsistenciaInputPort.Resultado(toma(), null));
 
         mvc.perform(post("/api/v1/sesiones/{s}/tomas", SESION).contentType(MediaType.APPLICATION_JSON).content("{\"modo\":\"QR\"}"))
                 .andExpect(status().isCreated())
@@ -141,7 +142,23 @@ class TomaAsistenciaControllersTest {
                 .andExpect(jsonPath("$.datos.minutosTramoAnterior").value(40))
                 .andExpect(jsonPath("$.datos.minutosTramoSiguiente").value(80))
                 .andExpect(jsonPath("$.datos.esEditable").value(true))
-                .andExpect(jsonPath("$.datos.editableHastaUtc").isEmpty());
+                .andExpect(jsonPath("$.datos.editableHastaUtc").isEmpty())
+                .andExpect(jsonPath("$.datos.tomaCerradaAnterior").value(org.hamcrest.Matchers.nullValue()));
+    }
+
+    @Test
+    void abrir_toma_que_cerro_la_anterior_incluye_tomaCerradaAnterior() throws Exception {
+        final UUID anterior = UUID.randomUUID();
+        when(abrir.execute(new AbrirTomaAsistenciaInputPort.Comando(SESION, "QR", ACTOR)))
+                .thenReturn(new AbrirTomaAsistenciaInputPort.Resultado(toma(),
+                        new AbrirTomaAsistenciaInputPort.TomaCerradaAnterior(anterior, 1, 7)));
+
+        mvc.perform(post("/api/v1/sesiones/{s}/tomas", SESION).contentType(MediaType.APPLICATION_JSON).content("{\"modo\":\"QR\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.datos.idToma").value(TOMA.toString()))
+                .andExpect(jsonPath("$.datos.tomaCerradaAnterior.idToma").value(anterior.toString()))
+                .andExpect(jsonPath("$.datos.tomaCerradaAnterior.numero").value(1))
+                .andExpect(jsonPath("$.datos.tomaCerradaAnterior.totalAusentesMarcados").value(7));
     }
 
     @Test
@@ -185,9 +202,9 @@ class TomaAsistenciaControllersTest {
     @Test
     void abrir_sin_cuerpo_delega_modo_nulo_y_los_rechazos_conservan_su_codigo() throws Exception {
         when(abrir.execute(new AbrirTomaAsistenciaInputPort.Comando(SESION, null, ACTOR)))
-                .thenThrow(new ConflictException("TOM_003", "Ya hay una toma abierta en esta sesion."));
+                .thenThrow(new ConflictException("TOM_004", "Maximo de tomas por sesion."));
         mvc.perform(post("/api/v1/sesiones/{s}/tomas", SESION))
-                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("TOM_003"));
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("TOM_004"));
 
         when(abrir.execute(new AbrirTomaAsistenciaInputPort.Comando(SESION, "MANUAL", ACTOR)))
                 .thenThrow(new ForbiddenException("No es titular"));
