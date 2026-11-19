@@ -180,7 +180,7 @@ class AcademicUserCommandsSuccessParityIT {
         final String resultadoJdbc = canonico(jdbc, corrJdbc);
 
         nuevaCorrelacion();
-        final String resultadoJpa = exitoJpa(() -> new AsignaturaJpaRepository(entityManager, new JpaProcedureExecutor(entityManager)).toggleEstadoAsignatura(idJpa, s.ejecutorCoordinador()));
+        final String resultadoJpa = exitoJpa(() -> new AsignaturaJpaRepository(entityManager, new JpaProcedureExecutor(entityManager)).toggleEstadoAsignatura(idJpa, null, s.ejecutorCoordinador()));
         final String despuesJpa = fixture.estadoAsignatura(idJpa);
 
         assertEquals("true", antesJdbc, "Estado inicial JDBC debe ser activo");

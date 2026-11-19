@@ -487,3 +487,7 @@ VCE_009|VCE009|Funcional|Error|VCE_009 - Defina su contraseña para activar su�
 ACT_001|ACT001|Funcional|Confirmación|ACT_001 - Se envió de nuevo el enlace de…|Se envió de nuevo el enlace de activación al correo institucional.
 ACT_002|ACT002|Funcional|Error|ACT_002 - La cuenta ya está activa; no es…|La cuenta ya está activa; no es necesario enviar el enlace de activación.
 CAL_001|CAL001|Funcional|Error|CAL_001 - El rango de fechas no es válido…|El rango de fechas no es válido: indique inicio y fin, con el fin igual o posterior y máximo 31 días.
+ASI_009|ASI009|Funcional|Error|ASI_009 - No puedes inactivar la asignatura…|No puedes inactivar la asignatura: tiene grupos en el período vigente o en períodos futuros.
+ASI_010|ASI010|Funcional|Error|ASI_010 - La asignatura está inactiva…|La asignatura está inactiva; actívala para usarla.
+ASI_011|ASI011|Funcional|Confirmación|ASI_011 - La asignatura quedó activa.|La asignatura quedó activa.
+ASI_012|ASI012|Funcional|Confirmación|ASI_012 - La asignatura quedó inactiva.|La asignatura quedó inactiva.

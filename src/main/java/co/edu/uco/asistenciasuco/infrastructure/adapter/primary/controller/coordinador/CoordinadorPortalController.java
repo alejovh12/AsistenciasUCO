@@ -5,11 +5,15 @@ import co.edu.uco.asistenciasuco.application.features.coordinador.consultarperio
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.primaryports.ConsultarEstudiantesProgramaInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarperiodosacademicos.primaryports.ConsultarPeriodosAcademicosInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.primaryports.GestionarAsignaturaInputPort;
+import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.primaryports.dto.EstadoAsignaturaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.primaryports.dto.GuardarAsignaturaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarplanestudio.primaryports.GestionarPlanEstudioInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarplanestudio.primaryports.dto.GuardarPlanEstudioDTO;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador.request.CambiarEstadoAsignaturaRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador.request.GuardarAsignaturaRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador.request.GuardarPlanEstudioRequest;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador.response.EstadoAsignaturaResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataMensajeResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiPageResponse;
@@ -114,10 +118,18 @@ public final class CoordinadorPortalController {
     // CULM-001 A.2-14: el stub 501 DELETE /planes-estudio/{planId}/asignaturas/{asigId} se retira; B2 la recrea con
     // usp_desvincular_asignatura_plan.
 
+    // HU074: responde el estado en que quedo la asignatura y el mensaje del catalogo (ASI_011 / ASI_012). Cambio aditivo: antes
+    // {exitoso, datos: null}. Rechazos 409: ASI_009 (grupos vigentes o futuros) y ASI_006 (compartida con programas ajenos).
+    // Cuerpo opcional {"estaActiva": true|false}: sin cuerpo o null alterna (contrato anterior).
     @PatchMapping("/asignaturas/{id}/estado")
-    public ResponseEntity<ApiDataResponse<Void>> toggleEstadoAsignatura(@PathVariable final UUID id) {
-        gestionarAsignaturaInputPort.toggleEstado(id, authenticatedUserResolver.requireAuthenticatedUserId());
-        return ResponseEntity.ok(new ApiDataResponse<>(true, null));
+    public ResponseEntity<ApiDataMensajeResponse<EstadoAsignaturaResponse>> toggleEstadoAsignatura(
+            @PathVariable final UUID id,
+            @Valid @RequestBody(required = false) final CambiarEstadoAsignaturaRequest request
+    ) {
+        final Boolean estaActivaDeseada = request == null ? null : request.getEstaActiva();
+        final EstadoAsignaturaDTO resultado = gestionarAsignaturaInputPort.toggleEstado(
+                id, estaActivaDeseada, authenticatedUserResolver.requireAuthenticatedUserId());
+        return ResponseEntity.ok(new ApiDataMensajeResponse<>(true, EstadoAsignaturaResponse.from(resultado), resultado.mensajeUsuario()));
     }
 
     @GetMapping("/periodos-academicos")
