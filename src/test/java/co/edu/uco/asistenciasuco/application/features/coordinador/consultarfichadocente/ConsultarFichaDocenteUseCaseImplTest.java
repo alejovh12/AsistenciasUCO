@@ -53,7 +53,7 @@ class ConsultarFichaDocenteUseCaseImplTest {
 
     private static DocenteProgramaProjection docente() {
         return new DocenteProgramaProjection(UUID.randomUUID(), DOCENTE, UUID.randomUUID(), "CC", 1234, "Ana", null, "Perez", null,
-                "Ana Perez", "ana@uco.edu.co", UUID.randomUUID(), "CAT", "Catedra", Instant.parse("2026-01-10T00:00:00Z"), 3, false);
+                "Ana Perez", "ana@uco.edu.co", Instant.parse("2026-01-10T00:00:00Z"), 3, false);
     }
 
     private static GrupoHistorialDocenteProjection grupo(final String estado) {
@@ -152,7 +152,6 @@ class ConsultarFichaDocenteUseCaseImplTest {
                 .execute(new ConsultarFichaDocenteDTO(ACTOR, DOCENTE, PERIODO, 1, 10));
 
         assertEquals(DOCENTE, dto.docente().idDocente());
-        assertEquals("CAT", dto.docente().codigoTipoVinculacion());
         assertEquals(1, dto.totalHistorial());
         assertEquals("FINALIZADO", dto.historial().getFirst().estadoPeriodo());
         assertEquals("Algebra", dto.historial().getFirst().nombreAsignatura());

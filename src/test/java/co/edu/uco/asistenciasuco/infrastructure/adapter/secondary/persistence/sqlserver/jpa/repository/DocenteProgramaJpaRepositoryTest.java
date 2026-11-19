@@ -70,7 +70,7 @@ class DocenteProgramaJpaRepositoryTest {
         when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{CORRELATION, "ok", "", true}));
 
         repository.vincular(new VincularDocenteProgramaCommand(null, null, TIPO, 1017555444, "Jorge", null, "Henao", null,
-                "jorge@uco.edu.co", "HASH", TIPO, PROGRAMA, EJECUTOR));
+                "jorge@uco.edu.co", "HASH", PROGRAMA, EJECUTOR));
 
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_vincular_docente_programa"));
         verify(query).setParameter("idDocente", null);
@@ -81,7 +81,6 @@ class DocenteProgramaJpaRepositoryTest {
         verify(query).setParameter("primerApellido", "Henao");
         verify(query).setParameter("correo", "jorge@uco.edu.co");
         verify(query).setParameter("password", "HASH");
-        verify(query).setParameter("idTipoVinculacion", TIPO);
         verify(query).setParameter("idPrograma", PROGRAMA);
         verify(query).setParameter("idCorrelacion", CORRELATION);
         verify(query).setParameter("idUsuarioEjecutor", EJECUTOR);
@@ -118,7 +117,7 @@ class DocenteProgramaJpaRepositoryTest {
         final UUID usuario = UUID.randomUUID();
 
         final var pagina = repository.consultar(EJECUTOR,
-                new DocentesProgramaFiltro(PROGRAMA, 2, 5, "ros", true, TIPO, docente, usuario));
+                new DocentesProgramaFiltro(PROGRAMA, 2, 5, "ros", true, docente, usuario));
 
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_consultar_docentes_programa"),
                 eq(SpDocenteProgramaPaginadoEntity.class));
@@ -129,7 +128,6 @@ class DocenteProgramaJpaRepositoryTest {
         verify(query).setParameter("tamanoPagina", 5);
         verify(query).setParameter("busqueda", "ros");
         verify(query).setParameter("estaActivo", true);
-        verify(query).setParameter("idTipoVinculacion", TIPO);
         verify(query).setParameter("idDocente", docente);
         verify(query).setParameter("idUsuario", usuario);
         assertEquals(0, pagina.total());
@@ -161,12 +159,11 @@ class DocenteProgramaJpaRepositoryTest {
         when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{CORRELATION, "ok", "", true}));
         final UUID docente = UUID.randomUUID();
 
-        repository.actualizar(new ActualizarDocenteProgramaCommand(docente, PROGRAMA, TIPO, "Nuevo", null, "Apellido", "", EJECUTOR));
+        repository.actualizar(new ActualizarDocenteProgramaCommand(docente, PROGRAMA, "Nuevo", null, "Apellido", "", EJECUTOR));
 
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_actualizar_docente_programa"));
         verify(query).setParameter("idDocente", docente);
         verify(query).setParameter("idPrograma", PROGRAMA);
-        verify(query).setParameter("idTipoVinculacion", TIPO);
         verify(query).setParameter("primerNombre", "Nuevo");
         verify(query).setParameter("segundoNombre", null);
         verify(query).setParameter("primerApellido", "Apellido");
@@ -179,7 +176,7 @@ class DocenteProgramaJpaRepositoryTest {
     void DP_PAT_008_actualizar_fallo_tecnico_se_traduce_a_database_operation_error() {
         when(query.getResultList()).thenThrow(new PersistenceException("deadlock"));
 
-        final var actualizarDocenteProgramaCommand = new ActualizarDocenteProgramaCommand(UUID.randomUUID(), PROGRAMA, null, "N", null, null, null, EJECUTOR);
+        final var actualizarDocenteProgramaCommand = new ActualizarDocenteProgramaCommand(UUID.randomUUID(), PROGRAMA, "N", null, null, null, EJECUTOR);
         assertThrows(DatabaseOperationException.class,
                 () -> repository.actualizar(actualizarDocenteProgramaCommand));
     }
@@ -210,6 +207,6 @@ class DocenteProgramaJpaRepositoryTest {
 
     private static VincularDocenteProgramaCommand comando() {
         return new VincularDocenteProgramaCommand(UUID.randomUUID(), null, null, null, null, null, null, null, null,
-                null, TIPO, PROGRAMA, EJECUTOR);
+                null, PROGRAMA, EJECUTOR);
     }
 }

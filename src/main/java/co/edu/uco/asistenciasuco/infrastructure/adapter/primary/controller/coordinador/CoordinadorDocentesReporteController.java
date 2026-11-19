@@ -22,7 +22,7 @@ import java.util.UUID;
 
 /**
  * Reportes del directorio docente del coordinador autenticado: ficha de un docente con su historial de grupos y resumen
- * de carga (HU094) y consolidado del directorio por estado y tipo de vinculacion (HU095).
+ * de carga (HU094) y consolidado del directorio por estado (HU095; sin tipo de vinculacion desde MEJORAS-SERGIO-2026-11-18).
  */
 @RestController
 @RequestMapping("/api/v1/coordinador/docentes")

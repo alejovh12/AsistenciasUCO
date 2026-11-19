@@ -30,7 +30,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/** HU094/HU095: EXEC del historial del docente (HR-01..HR-06) y del consolidado por tipo de vinculacion (RR-01..RR-03). */
+/** HU094/HU095: EXEC del historial del docente (HR-01..HR-06) y del consolidado activos/inactivos (RR-01..RR-03). */
 class DocenteProgramaReporteJpaRepositoryTest {
 
     private static final UUID CORRELATION = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
@@ -161,33 +161,27 @@ class DocenteProgramaReporteJpaRepositoryTest {
     }
 
     @Test
-    void RR01_resumen_ejecuta_el_sp_y_mapea_por_tipo_de_vinculacion() {
-        final UUID tipo = UUID.randomUUID();
-        when(query.getResultList()).thenReturn(List.<Object>of(
-                new Object[]{tipo, "CAT ", "Catedra", 2, 1},
-                new Object[]{UUID.randomUUID(), "OCA", "Ocasional", null, 0}));
+    void RR01_resumen_ejecuta_el_sp_y_mapea_la_fila_de_totales() {
+        when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{2, 1}));
 
         final var resumen = repository.consultarResumen(ACTOR);
 
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_consultar_resumen_docentes_programa"));
         verify(query).setParameter("idUsuarioEjecutor", ACTOR);
         verify(query).setParameter("idCorrelacion", CORRELATION);
-        assertEquals(2, resumen.size());
-        assertEquals(tipo, resumen.getFirst().idTipoVinculacion());
-        assertEquals("CAT", resumen.getFirst().codigoTipoVinculacion());
-        assertEquals(2, resumen.getFirst().totalActivos());
-        assertEquals(1, resumen.getFirst().totalInactivos());
-        assertEquals(0, resumen.get(1).totalActivos());
+        assertEquals(2, resumen.totalActivos());
+        assertEquals(1, resumen.totalInactivos());
     }
 
     @Test
-    void RR01b_resumen_acepta_uuid_entregado_como_string_por_sql_server() {
-        final UUID tipo = UUID.randomUUID();
-        when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{tipo.toString(), "CAT ", "Catedra", 2, 1}));
+    void RR01b_resumen_sin_filas_o_con_nulos_devuelve_ceros() {
+        when(query.getResultList()).thenReturn(List.of());
+        assertEquals(0, repository.consultarResumen(ACTOR).totalActivos());
 
+        when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{null, 0}));
         final var resumen = repository.consultarResumen(ACTOR);
-
-        assertEquals(tipo, resumen.getFirst().idTipoVinculacion());
+        assertEquals(0, resumen.totalActivos());
+        assertEquals(0, resumen.totalInactivos());
     }
 
     @Test
@@ -216,9 +210,6 @@ class DocenteProgramaReporteJpaRepositoryTest {
         assertEquals(grupo, g.idGrupo());
         assertEquals(PERIODO, g.idPeriodoAcademico());
 
-        final UUID tipo = UUID.randomUUID();
-        when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{tipo.toString(), "CAT", "Catedra", 1, 0}));
-        assertEquals(tipo, repository.consultarResumen(ACTOR).getFirst().idTipoVinculacion());
     }
 
     @Test

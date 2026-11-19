@@ -4,7 +4,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.HistorialGr
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ResumenDocentesProgramaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.GrupoHistorialDocenteProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.HistorialGruposDocentePagina;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResumenTipoVinculacionProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResumenDocentesProgramaProjection;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
@@ -99,7 +99,7 @@ public class DocenteProgramaReporteJpaRepository implements HistorialGruposDocen
     }
 
     @Override
-    public List<ResumenTipoVinculacionProjection> consultarResumen(final UUID usuarioEjecutor) {
+    public ResumenDocentesProgramaProjection consultarResumen(final UUID usuarioEjecutor) {
         if (ObjectHelper.isNull(usuarioEjecutor)) {
             throw new CrosscuttingException("El usuario ejecutor de la consulta del consolidado docente es obligatorio.");
         }
@@ -112,8 +112,9 @@ public class DocenteProgramaReporteJpaRepository implements HistorialGruposDocen
                         .setParameter("idCorrelacion", correlationId)
                         .getResultList()).stream()
                         .map(Object[].class::cast)
-                        .map(f -> new ResumenTipoVinculacionProjection(NativeRowValues.uuid(f[0]), texto(f[1]), texto(f[2]), valor(f[3]), valor(f[4])))
-                        .toList()
+                        .map(f -> new ResumenDocentesProgramaProjection(valor(f[0]), valor(f[1])))
+                        .findFirst()
+                        .orElseGet(ResumenDocentesProgramaProjection::vacio)
         );
     }
 

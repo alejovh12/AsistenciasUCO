@@ -23,9 +23,6 @@ public class SpDocenteProgramaPaginadoEntity {
     @Column(name = "segundoApellido") private String segundoApellido;
     @Column(name = "nombreCompleto") private String nombreCompleto;
     @Column(name = "correo") private String correo;
-    @Column(name = "idTipoVinculacion") private UUID idTipoVinculacion;
-    @Column(name = "codigoTipoVinculacion") private String codigoTipoVinculacion;
-    @Column(name = "nombreTipoVinculacion") private String nombreTipoVinculacion;
     @JdbcType(LocalDateTimeJdbcType.class)
     @Column(name = "fechaVinculacionUtc") private LocalDateTime fechaVinculacionUtc;
     @Column(name = "estaActivoDocentePrograma") private Boolean estaActivoDocentePrograma;
@@ -45,9 +42,6 @@ public class SpDocenteProgramaPaginadoEntity {
     public String segundoApellido() { return segundoApellido; }
     public String nombreCompleto() { return nombreCompleto; }
     public String correo() { return correo; }
-    public UUID idTipoVinculacion() { return idTipoVinculacion; }
-    public String codigoTipoVinculacion() { return codigoTipoVinculacion; }
-    public String nombreTipoVinculacion() { return nombreTipoVinculacion; }
     public LocalDateTime fechaVinculacionUtc() { return fechaVinculacionUtc; }
     public Boolean estaActivoDocentePrograma() { return estaActivoDocentePrograma; }
     public Integer totalGruposPrograma() { return totalGruposPrograma; }

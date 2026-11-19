@@ -2,7 +2,6 @@ package co.edu.uco.asistenciasuco.application.features.coordinador.consultarresu
 
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarresumendocentes.primaryports.ConsultarResumenDocentesInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarresumendocentes.primaryports.dto.ResumenDocentesProgramaDTO;
-import co.edu.uco.asistenciasuco.application.features.coordinador.consultarresumendocentes.primaryports.dto.ResumenTipoVinculacionDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarresumendocentes.usecase.ConsultarResumenDocentesUseCase;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarresumendocentes.usecase.domain.ResumenDocentesProgramaDomain;
 
@@ -20,10 +19,6 @@ public class ConsultarResumenDocentesInteractor implements ConsultarResumenDocen
     @Override
     public ResumenDocentesProgramaDTO execute(final UUID actorUsuarioId) {
         final ResumenDocentesProgramaDomain d = useCase.execute(actorUsuarioId);
-        return new ResumenDocentesProgramaDTO(d.totalDocentes(), d.totalActivos(), d.totalInactivos(),
-                d.porTipoVinculacion().stream()
-                        .map(t -> new ResumenTipoVinculacionDTO(t.idTipoVinculacion(), t.codigoTipoVinculacion(),
-                                t.nombreTipoVinculacion(), t.totalActivos(), t.totalInactivos(), t.total()))
-                        .toList());
+        return new ResumenDocentesProgramaDTO(d.totalDocentes(), d.totalActivos(), d.totalInactivos());
     }
 }

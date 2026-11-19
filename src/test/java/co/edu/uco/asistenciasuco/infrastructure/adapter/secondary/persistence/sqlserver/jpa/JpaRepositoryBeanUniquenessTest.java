@@ -47,7 +47,8 @@ class JpaRepositoryBeanUniquenessTest {
     // CIERRE-W1B: - DocenteJpaRepository (se retira el directorio general /api/v1/docentes) = 69.
     // CIERRE-W3I: + un repositorio de indicadores del docente (resumen de grupos) = 70.
     // CIERRE-W2B: + ResumenMateriasEstudianteJpaRepository (resumen del tablero del estudiante) = 71.
-    private static final int EXPECTED_REPOSITORIES = 71;
+    // MEJORAS-SERGIO-2026-11-18: - TipoVinculacionJpaRepository (se retira el tipo de vinculacion del docente) = 70.
+    private static final int EXPECTED_REPOSITORIES = 70;
 
     @Test
     void cada_port_tiene_exactamente_un_repository_activo_con_provider_sqlserver() {

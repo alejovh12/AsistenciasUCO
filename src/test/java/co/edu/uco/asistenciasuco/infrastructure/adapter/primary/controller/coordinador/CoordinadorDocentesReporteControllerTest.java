@@ -9,7 +9,6 @@ import co.edu.uco.asistenciasuco.application.features.coordinador.consultarficha
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarfichadocente.primaryports.dto.ResumenCargaDocenteDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarresumendocentes.primaryports.ConsultarResumenDocentesInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarresumendocentes.primaryports.dto.ResumenDocentesProgramaDTO;
-import co.edu.uco.asistenciasuco.application.features.coordinador.consultarresumendocentes.primaryports.dto.ResumenTipoVinculacionDTO;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
@@ -53,7 +52,7 @@ class CoordinadorDocentesReporteControllerTest {
 
     private static FichaDocenteDTO respuesta() {
         final DocenteProgramaDTO docente = new DocenteProgramaDTO(UUID.randomUUID(), DOCENTE, UUID.randomUUID(), "CC", 1234, "Ana", null,
-                "Perez", null, "Ana Perez", "ana@uco.edu.co", UUID.randomUUID(), "CAT", "Catedra", Instant.parse("2026-01-10T00:00:00Z"), 3, true);
+                "Perez", null, "Ana Perez", "ana@uco.edu.co", Instant.parse("2026-01-10T00:00:00Z"), 3, true);
         final GrupoHistorialDocenteDTO grupo = new GrupoHistorialDocenteDTO(UUID.randomUUID(), 7, "Grupo 7", UUID.randomUUID(), "Algebra",
                 PERIODO, 20261, "2026-1", LocalDate.of(2026, 1, 20), LocalDate.of(2026, 6, 10), "VIGENTE", 30, 25, 0, 2, 1);
         return new FichaDocenteDTO(docente, new ResumenCargaDocenteDTO(4, 3, 1, 25), List.of(grupo), 4);
@@ -120,9 +119,8 @@ class CoordinadorDocentesReporteControllerTest {
     }
 
     @Test
-    void RC01_resumen_usa_el_actor_autenticado_y_serializa_totales_y_tipos() throws Exception {
-        when(resumen.execute(ACTOR)).thenReturn(new ResumenDocentesProgramaDTO(5, 3, 2,
-                List.of(new ResumenTipoVinculacionDTO(UUID.randomUUID(), "CAT", "Catedra", 2, 1, 3))));
+    void RC01_resumen_usa_el_actor_autenticado_y_serializa_los_totales() throws Exception {
+        when(resumen.execute(ACTOR)).thenReturn(new ResumenDocentesProgramaDTO(5, 3, 2));
 
         mvc.perform(get("/api/v1/coordinador/docentes/resumen"))
                 .andExpect(status().isOk())
@@ -130,8 +128,7 @@ class CoordinadorDocentesReporteControllerTest {
                 .andExpect(jsonPath("$.datos.totalDocentes").value(5))
                 .andExpect(jsonPath("$.datos.totalActivos").value(3))
                 .andExpect(jsonPath("$.datos.totalInactivos").value(2))
-                .andExpect(jsonPath("$.datos.porTipoVinculacion[0].codigoTipoVinculacion").value("CAT"))
-                .andExpect(jsonPath("$.datos.porTipoVinculacion[0].total").value(3));
+                .andExpect(jsonPath("$.datos.porTipoVinculacion").doesNotExist());
         verifyNoInteractions(ficha);
     }
 

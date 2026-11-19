@@ -22,7 +22,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * HU092 (D11): edita el tipo de vinculacion del vinculo y los nombres de la persona. El programa sale del ambito del
+ * HU092 (D11): edita los nombres de la persona (el tipo de vinculacion se retiro en MEJORAS-SERGIO-2026-11-18). El programa sale del ambito del
  * coordinador; el SP revalida RBAC, titularidad y existencia del vinculo. Los nombres no se sincronizan con Keycloak
  * (el login no depende de ellos; deuda registrada hasta IAM-001). HU159 (2026-11-05): si se corrige el documento, el
  * nombre de usuario de la cuenta si se sincroniza (es el documento); un fallo queda como desfase pendiente.
@@ -57,11 +57,11 @@ public final class ActualizarDocenteProgramaUseCaseImpl implements ActualizarDoc
         final CorreccionDocumentoDTO documento = new CorreccionDocumentoDTO(
                 domain.idTipoIdentificacion(), domain.numeroIdentificacion(), domain.motivo());
         commandPort.actualizar(new ActualizarDocenteProgramaCommand(domain.idDocente(), idPrograma,
-                domain.idTipoVinculacion(), domain.primerNombre(), domain.segundoNombre(), domain.primerApellido(),
+                domain.primerNombre(), domain.segundoNombre(), domain.primerApellido(),
                 domain.segundoApellido(), domain.actorUsuarioId(), documento));
 
         final DocenteProgramaDomain actualizado = queryPort.consultar(domain.actorUsuarioId(),
-                        new DocentesProgramaFiltro(idPrograma, 1, 1, null, null, null, domain.idDocente(), null))
+                        new DocentesProgramaFiltro(idPrograma, 1, 1, null, null, domain.idDocente(), null))
                 .elementos().stream().findFirst()
                 .map(DocenteProgramaMapper::toDomain)
                 .orElseThrow(() -> new InternalApplicationException("No fue posible leer el vinculo del docente despues de actualizarlo."));

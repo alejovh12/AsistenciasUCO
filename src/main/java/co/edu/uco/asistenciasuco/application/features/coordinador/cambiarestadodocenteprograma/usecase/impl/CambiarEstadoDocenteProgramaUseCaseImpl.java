@@ -50,7 +50,7 @@ public final class CambiarEstadoDocenteProgramaUseCaseImpl implements CambiarEst
                 domain.idDocente(), idPrograma, domain.estaActivo(), domain.actorUsuarioId()));
 
         return queryPort.consultar(domain.actorUsuarioId(),
-                        new DocentesProgramaFiltro(idPrograma, 1, 1, null, null, null, domain.idDocente(), null))
+                        new DocentesProgramaFiltro(idPrograma, 1, 1, null, null, domain.idDocente(), null))
                 .elementos().stream().findFirst()
                 .map(DocenteProgramaMapper::toDomain)
                 .orElseThrow(() -> new InternalApplicationException("No fue posible leer el vinculo del docente despues de cambiar su estado."));

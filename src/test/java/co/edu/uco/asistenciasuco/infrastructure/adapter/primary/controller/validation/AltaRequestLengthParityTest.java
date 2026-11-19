@@ -122,7 +122,6 @@ class AltaRequestLengthParityTest {
         request.setPrimerNombre("Jorge");
         request.setPrimerApellido("Henao");
         request.setCorreo("jorge.henao@uco.edu.co");
-        request.setIdTipoVinculacion(UUID.randomUUID());
         return request;
     }
 

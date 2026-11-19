@@ -2,5 +2,5 @@ package co.edu.uco.asistenciasuco.application.features.coordinador.consultardoce
 
 import java.util.UUID;
 
-public record ConsultarDocentesProgramaDomain(int pagina, int tamano, String busqueda, Boolean estaActivo, UUID idTipoVinculacion) {
+public record ConsultarDocentesProgramaDomain(int pagina, int tamano, String busqueda, Boolean estaActivo) {
 }

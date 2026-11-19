@@ -94,7 +94,7 @@ public final class VincularDocenteProgramaUseCaseImpl implements VincularDocente
         commandPort.vincular(new VincularDocenteProgramaCommand(null, null, domain.idTipoIdentificacion(),
                 domain.numeroIdentificacion(), domain.primerNombre(), domain.segundoNombre(), domain.primerApellido(),
                 domain.segundoApellido(), correo, activacion.credencialLegadaInutilizable(),
-                domain.idTipoVinculacion(), idPrograma, domain.actorUsuarioId()));
+                idPrograma, domain.actorUsuarioId()));
         final UsuarioIdentidadRepositoryProjection usuario = usuarioRepositoryPort.consultarUsuarioPorCorreo(correo)
                 .orElseThrow(() -> new InternalApplicationException(
                         "No fue posible leer la persona registrada despues de vincular al docente."));
@@ -112,14 +112,14 @@ public final class VincularDocenteProgramaUseCaseImpl implements VincularDocente
 
     private DocenteProgramaProjection vincularExistente(final VincularDocenteProgramaDomain domain, final UUID idPrograma) {
         commandPort.vincular(new VincularDocenteProgramaCommand(domain.idDocente(), domain.idUsuario(), null, null, null,
-                null, null, null, null, null, domain.idTipoVinculacion(), idPrograma, domain.actorUsuarioId()));
+                null, null, null, null, null, idPrograma, domain.actorUsuarioId()));
         return releer(domain.actorUsuarioId(), idPrograma, domain.idDocente(), domain.idUsuario())
                 .orElseThrow(this::vinculoNoEncontrado);
     }
 
     private Optional<DocenteProgramaProjection> releer(
             final UUID actor, final UUID idPrograma, final UUID idDocente, final UUID idUsuario) {
-        return queryPort.consultar(actor, new DocentesProgramaFiltro(idPrograma, 1, 1, null, null, null, idDocente, idUsuario))
+        return queryPort.consultar(actor, new DocentesProgramaFiltro(idPrograma, 1, 1, null, null, idDocente, idUsuario))
                 .elementos().stream().findFirst();
     }
 

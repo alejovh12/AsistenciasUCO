@@ -11,11 +11,8 @@ import co.edu.uco.asistenciasuco.application.features.coordinador.consultardocen
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultardocentesprograma.usecase.impl.ConsultarDocentesProgramaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.coordinador.vinculardocenteprograma.primaryports.interactor.VincularDocenteProgramaInteractor;
 import co.edu.uco.asistenciasuco.application.features.coordinador.vinculardocenteprograma.usecase.impl.VincularDocenteProgramaUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.features.tipovinculacion.consultartiposvinculacion.primaryports.interactor.ConsultarTiposVinculacionInteractor;
-import co.edu.uco.asistenciasuco.application.features.tipovinculacion.consultartiposvinculacion.usecase.impl.ConsultarTiposVinculacionUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DocenteProgramaCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DocenteProgramaQueryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.TipoVinculacionQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
@@ -65,14 +62,5 @@ class DocenteProgramaWiringConfigurationTest {
         final var useCase = config.cambiarEstadoDocenteProgramaUseCase(scope, mock(DocenteProgramaCommandPort.class), query);
         assertInstanceOf(CambiarEstadoDocenteProgramaUseCaseImpl.class, useCase);
         assertInstanceOf(CambiarEstadoDocenteProgramaInteractor.class, config.cambiarEstadoDocenteProgramaInputPort(useCase));
-    }
-
-    @Test
-    void tipo_vinculacion_beans_se_construyen_con_los_adapters_esperados() {
-        final TipoVinculacionWiringConfiguration config = new TipoVinculacionWiringConfiguration();
-
-        final var useCase = config.consultarTiposVinculacionUseCase(mock(TipoVinculacionQueryPort.class));
-        assertInstanceOf(ConsultarTiposVinculacionUseCaseImpl.class, useCase);
-        assertInstanceOf(ConsultarTiposVinculacionInteractor.class, config.consultarTiposVinculacionInputPort(useCase));
     }
 }

@@ -30,6 +30,6 @@ public final class VincularDocenteProgramaInteractor implements VincularDocenteP
         return DocenteProgramaMapper.toDTO(useCase.execute(new VincularDocenteProgramaDomain(
                 dto.actorUsuarioId(), dto.idDocente(), dto.idUsuario(), dto.idTipoIdentificacion(),
                 dto.numeroIdentificacion(), dto.primerNombre(), dto.segundoNombre(), dto.primerApellido(),
-                dto.segundoApellido(), dto.correo(), dto.idTipoVinculacion())));
+                dto.segundoApellido(), dto.correo())));
     }
 }

@@ -83,8 +83,7 @@ public final class CoordinadorDocentesController {
             @RequestParam(name = "pagina", defaultValue = "1") final int pagina,
             @RequestParam(name = "tamano", defaultValue = "10") final int tamano,
             @RequestParam(name = CLAVE_BUSQUEDA, required = false) final String busqueda,
-            @RequestParam(name = "estaActivo", required = false) final Boolean estaActivo,
-            @RequestParam(name = "idTipoVinculacion", required = false) final UUID idTipoVinculacion
+            @RequestParam(name = "estaActivo", required = false) final Boolean estaActivo
     ) {
         final ValidationResultBuilder builder = new ValidationResultBuilder();
         if (pagina < 1) {
@@ -100,7 +99,7 @@ public final class CoordinadorDocentesController {
 
         final DocentesProgramaPaginaDTO resultado = consultarDocentesProgramaInputPort.execute(
                 authenticatedUserResolver.requireAuthenticatedUserId(),
-                new ConsultarDocentesProgramaDTO(pagina, tamano, busqueda, estaActivo, idTipoVinculacion));
+                new ConsultarDocentesProgramaDTO(pagina, tamano, busqueda, estaActivo));
         return ResponseEntity.ok(new ApiListResponse<>(true, resultado.elementos(), (int) resultado.total()));
     }
 
@@ -136,8 +135,7 @@ public final class CoordinadorDocentesController {
                 trim(request.getSegundoNombre()),
                 trim(request.getPrimerApellido()),
                 trim(request.getSegundoApellido()),
-                trim(request.getCorreo()),
-                request.getIdTipoVinculacion()));
+                trim(request.getCorreo())));
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiDataResponse<>(true, resultado));
     }
 
@@ -151,7 +149,6 @@ public final class CoordinadorDocentesController {
         final DocenteProgramaDTO resultado = actualizarDocenteProgramaInputPort.execute(new ActualizarDocenteProgramaDTO(
                 authenticatedUserResolver.requireAuthenticatedUserId(),
                 idDocente,
-                request.getIdTipoVinculacion(),
                 trim(request.getPrimerNombre()),
                 trim(request.getSegundoNombre()),
                 trim(request.getPrimerApellido()),

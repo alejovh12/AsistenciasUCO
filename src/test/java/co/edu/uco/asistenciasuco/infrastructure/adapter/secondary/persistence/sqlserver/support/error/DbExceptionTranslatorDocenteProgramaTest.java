@@ -30,8 +30,7 @@ class DbExceptionTranslatorDocenteProgramaTest {
     }
 
     @Test
-    void doc_004_doc_005_y_doc_007_son_validacion() {
-        assertThrows(ValidationException.class, () -> fallo("DOC_004"));
+    void doc_005_y_doc_007_son_validacion() {
         assertThrows(ValidationException.class, () -> fallo("DOC_005"));
         assertThrows(ValidationException.class, () -> fallo("DOC_007"));
     }
@@ -41,7 +40,6 @@ class DbExceptionTranslatorDocenteProgramaTest {
         assertCodigo("DOC_001", "ERR_DOCENTE_NO_EXISTE");
         assertCodigo("DOC_002", "ERR_DOCENTE_YA_REGISTRADO");
         assertCodigo("DOC_003", "ERR_PERSONA_YA_REGISTRADA");
-        assertCodigo("DOC_004", "ERR_TIPO_VINCULACION_INVALIDO");
         assertCodigo("DOC_005", "ERR_MODO_VINCULACION_INVALIDO");
         assertCodigo("DOC_006", "ERR_DOCENTE_YA_VINCULADO_PROGRAMA");
         assertCodigo("DOC_007", "ERR_BUSQUEDA_CANDIDATOS_CORTA");

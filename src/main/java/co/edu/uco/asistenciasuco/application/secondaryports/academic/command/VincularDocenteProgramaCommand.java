@@ -14,7 +14,6 @@ public record VincularDocenteProgramaCommand(
         String segundoApellido,
         String correo,
         String passwordHash,
-        UUID idTipoVinculacion,
         UUID idPrograma,
         UUID usuarioEjecutor
 ) {

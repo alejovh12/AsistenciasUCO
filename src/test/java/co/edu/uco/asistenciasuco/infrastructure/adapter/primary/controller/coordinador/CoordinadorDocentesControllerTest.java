@@ -46,7 +46,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class CoordinadorDocentesControllerTest {
 
     private static final UUID ACTOR = UUID.randomUUID();
-    private static final UUID TIPO = UUID.randomUUID();
     private static final UUID DOCENTE = UUID.randomUUID();
 
     private final ConsultarDocentesProgramaInputPort consultar = mock(ConsultarDocentesProgramaInputPort.class);
@@ -68,7 +67,7 @@ class CoordinadorDocentesControllerTest {
                 .andExpect(jsonPath("$.exitoso").value(true))
                 .andExpect(jsonPath("$.total").value(12))
                 .andExpect(jsonPath("$.datos[0].idDocente").value(DOCENTE.toString()))
-                .andExpect(jsonPath("$.datos[0].codigoTipoVinculacion").value("CAT"))
+                .andExpect(jsonPath("$.datos[0].codigoTipoVinculacion").doesNotExist())
                 .andExpect(jsonPath("$.datos[0].estaActivo").value(true));
 
         final ArgumentCaptor<ConsultarDocentesProgramaDTO> filtro = ArgumentCaptor.forClass(ConsultarDocentesProgramaDTO.class);
@@ -84,7 +83,7 @@ class CoordinadorDocentesControllerTest {
 
         mvc.perform(get("/api/v1/coordinador/docentes")
                         .param("pagina", "2").param("tamano", "5").param("busqueda", "ros")
-                        .param("estaActivo", "true").param("idTipoVinculacion", TIPO.toString()))
+                        .param("estaActivo", "true"))
                 .andExpect(status().isOk());
 
         final ArgumentCaptor<ConsultarDocentesProgramaDTO> filtro = ArgumentCaptor.forClass(ConsultarDocentesProgramaDTO.class);
@@ -93,7 +92,6 @@ class CoordinadorDocentesControllerTest {
         assertEquals(5, filtro.getValue().tamano());
         assertEquals("ros", filtro.getValue().busqueda());
         assertEquals(Boolean.TRUE, filtro.getValue().estaActivo());
-        assertEquals(TIPO, filtro.getValue().idTipoVinculacion());
     }
 
     @Test
@@ -135,8 +133,7 @@ class CoordinadorDocentesControllerTest {
 
         mvc.perform(post("/api/v1/coordinador/docentes").contentType(MediaType.APPLICATION_JSON).content("""
                         {"idTipoIdentificacion":"%s","numeroIdentificacion":"1017555444","primerNombre":"Jorge",
-                         "primerApellido":"Henao","correo":"jorge.henao@uco.edu.co",
-                         "idTipoVinculacion":"%s"}""".formatted(UUID.randomUUID(), TIPO)))
+                         "primerApellido":"Henao","correo":"jorge.henao@uco.edu.co"}""".formatted(UUID.randomUUID())))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.exitoso").value(true))
                 .andExpect(jsonPath("$.datos.idDocente").value(DOCENTE.toString()));
@@ -145,7 +142,6 @@ class CoordinadorDocentesControllerTest {
         verify(vincular).execute(captor.capture());
         assertEquals(ACTOR, captor.getValue().actorUsuarioId());
         assertEquals(1017555444, captor.getValue().numeroIdentificacion());
-        assertEquals(TIPO, captor.getValue().idTipoVinculacion());
         assertNull(captor.getValue().idDocente());
     }
 
@@ -154,7 +150,7 @@ class CoordinadorDocentesControllerTest {
         when(vincular.execute(any())).thenReturn(dto());
 
         mvc.perform(post("/api/v1/coordinador/docentes").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idDocente\":\"%s\",\"idTipoVinculacion\":\"%s\"}".formatted(DOCENTE, TIPO)))
+                        .content("{\"idDocente\":\"%s\"}".formatted(DOCENTE)))
                 .andExpect(status().isCreated());
 
         final ArgumentCaptor<VincularDocenteProgramaDTO> captor = ArgumentCaptor.forClass(VincularDocenteProgramaDTO.class);
@@ -174,7 +170,7 @@ class CoordinadorDocentesControllerTest {
         when(vincular.execute(any())).thenThrow(new ConflictException("El docente ya está vinculado a este programa."));
 
         mvc.perform(post("/api/v1/coordinador/docentes").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idDocente\":\"%s\",\"idTipoVinculacion\":\"%s\"}".formatted(DOCENTE, TIPO)))
+                        .content("{\"idDocente\":\"%s\"}".formatted(DOCENTE)))
                 .andExpect(status().isConflict());
     }
 
@@ -183,7 +179,7 @@ class CoordinadorDocentesControllerTest {
         when(actualizar.execute(any())).thenReturn(dto());
 
         mvc.perform(put("/api/v1/coordinador/docentes/{id}", DOCENTE).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idTipoVinculacion\":\"%s\",\"primerNombre\":\"Nuevo\",\"segundoApellido\":\"\"}".formatted(TIPO)))
+                        .content("{\"primerNombre\":\"Nuevo\",\"segundoApellido\":\"\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exitoso").value(true))
                 .andExpect(jsonPath("$.datos.idDocente").value(DOCENTE.toString()));
@@ -192,7 +188,6 @@ class CoordinadorDocentesControllerTest {
         verify(actualizar).execute(captor.capture());
         assertEquals(ACTOR, captor.getValue().actorUsuarioId());
         assertEquals(DOCENTE, captor.getValue().idDocente());
-        assertEquals(TIPO, captor.getValue().idTipoVinculacion());
         assertEquals("Nuevo", captor.getValue().primerNombre());
         assertEquals("", captor.getValue().segundoApellido());
         assertNull(captor.getValue().segundoNombre());
@@ -262,7 +257,7 @@ class CoordinadorDocentesControllerTest {
 
     private static DocenteProgramaDTO dto() {
         return new DocenteProgramaDTO(UUID.randomUUID(), DOCENTE, UUID.randomUUID(), "CC", 1017555444, "Jorge", null,
-                "Henao", null, "Jorge Henao", "jorge.henao@uco.edu.co", TIPO, "CAT", "Cátedra",
+                "Henao", null, "Jorge Henao", "jorge.henao@uco.edu.co",
                 Instant.parse("2026-10-22T10:00:00Z"), 0, true);
     }
 }

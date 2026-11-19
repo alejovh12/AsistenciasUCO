@@ -29,8 +29,7 @@ public final class ConsultarDocentesProgramaUseCaseImpl implements ConsultarDoce
         final UUID idPrograma = scopePort.findProgramaIdByCoordinadorUsuario(actorUsuarioId)
                 .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_006));
         final DocentesProgramaPagina pagina = queryPort.consultar(actorUsuarioId, new DocentesProgramaFiltro(idPrograma,
-                consulta.pagina(), consulta.tamano(), consulta.busqueda(), consulta.estaActivo(),
-                consulta.idTipoVinculacion(), null, null));
+                consulta.pagina(), consulta.tamano(), consulta.busqueda(), consulta.estaActivo(), null, null));
         return new DocentesProgramaPaginaDomain(
                 pagina.elementos().stream().map(DocenteProgramaMapper::toDomain).toList(), pagina.total());
     }

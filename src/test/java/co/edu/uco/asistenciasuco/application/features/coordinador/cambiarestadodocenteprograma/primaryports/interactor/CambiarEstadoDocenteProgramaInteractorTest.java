@@ -32,7 +32,7 @@ class CambiarEstadoDocenteProgramaInteractorTest {
         final UUID actor = UUID.randomUUID();
         final UUID docente = UUID.randomUUID();
         when(useCase.execute(any())).thenReturn(new DocenteProgramaDomain(UUID.randomUUID(), docente, UUID.randomUUID(), "CC",
-                1, "Ana", null, "Perez", null, "Ana Perez", "x@uco.edu.co", UUID.randomUUID(), "CAT", "Cátedra",
+                1, "Ana", null, "Perez", null, "Ana Perez", "x@uco.edu.co",
                 Instant.parse("2026-10-22T10:00:00Z"), 0, false));
 
         final DocenteProgramaDTO dto = new CambiarEstadoDocenteProgramaInteractor(useCase)

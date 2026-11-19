@@ -30,19 +30,17 @@ class ActualizarDocenteProgramaInteractorTest {
         final ActualizarDocenteProgramaUseCase useCase = mock(ActualizarDocenteProgramaUseCase.class);
         final UUID actor = UUID.randomUUID();
         final UUID docente = UUID.randomUUID();
-        final UUID tipo = UUID.randomUUID();
         when(useCase.execute(any())).thenReturn(new DocenteProgramaDomain(UUID.randomUUID(), docente, UUID.randomUUID(), "CC",
-                1, "Nuevo", null, "Apellido", null, "Nuevo Apellido", "x@uco.edu.co", tipo, "PLA", "Planta",
+                1, "Nuevo", null, "Apellido", null, "Nuevo Apellido", "x@uco.edu.co",
                 Instant.parse("2026-10-22T10:00:00Z"), 1, true));
 
         final DocenteProgramaDTO dto = new ActualizarDocenteProgramaInteractor(useCase)
-                .execute(new ActualizarDocenteProgramaDTO(actor, docente, tipo, "Nuevo", "S", "Apellido", "T"));
+                .execute(new ActualizarDocenteProgramaDTO(actor, docente, "Nuevo", "S", "Apellido", "T"));
 
         final ArgumentCaptor<ActualizarDocenteProgramaDomain> captor = ArgumentCaptor.forClass(ActualizarDocenteProgramaDomain.class);
         verify(useCase).execute(captor.capture());
         assertEquals(actor, captor.getValue().actorUsuarioId());
         assertEquals(docente, captor.getValue().idDocente());
-        assertEquals(tipo, captor.getValue().idTipoVinculacion());
         assertEquals("S", captor.getValue().segundoNombre());
         assertEquals("T", captor.getValue().segundoApellido());
         assertEquals("Nuevo Apellido", dto.nombreCompleto());

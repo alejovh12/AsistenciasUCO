@@ -211,7 +211,6 @@ final class DbFailureClassifier {
             case "DOC_001" -> DocenteErrorCode.ERR_DOCENTE_NO_EXISTE;
             case "DOC_002" -> DocenteErrorCode.ERR_DOCENTE_YA_REGISTRADO;
             case "DOC_003" -> DocenteErrorCode.ERR_PERSONA_YA_REGISTRADA;
-            case "DOC_004" -> DocenteErrorCode.ERR_TIPO_VINCULACION_INVALIDO;
             case "DOC_005" -> DocenteErrorCode.ERR_MODO_VINCULACION_INVALIDO;
             case "DOC_006" -> DocenteErrorCode.ERR_DOCENTE_YA_VINCULADO_PROGRAMA;
             case "DOC_007" -> DocenteErrorCode.ERR_BUSQUEDA_CANDIDATOS_CORTA;

@@ -18,14 +18,10 @@ public final class ActualizarDocenteProgramaRequestValidator implements Validato
         if (request == null) {
             return builder.add("request", ValidationErrorType.REQUIRED, "La informacion a actualizar es obligatoria.").build();
         }
-        if (request.getIdTipoVinculacion() == null && request.getPrimerNombre() == null && request.getSegundoNombre() == null
+        if (request.getPrimerNombre() == null && request.getSegundoNombre() == null
                 && request.getPrimerApellido() == null && request.getSegundoApellido() == null
                 && !request.solicitaCambioDocumento()) {
             builder.add("campos", ValidationErrorType.REQUIRED, "Debe indicar al menos un dato a actualizar.");
-        }
-        if (request.getIdTipoVinculacion() != null && request.getIdTipoVinculacion().getMostSignificantBits() == 0
-                && request.getIdTipoVinculacion().getLeastSignificantBits() == 0) {
-            builder.add("idTipoVinculacion", ValidationErrorType.INVALID_UUID, "El tipo de vinculacion no es valido.");
         }
         nombre(builder, "primerNombre", request.getPrimerNombre(), true);
         nombre(builder, "primerApellido", request.getPrimerApellido(), true);

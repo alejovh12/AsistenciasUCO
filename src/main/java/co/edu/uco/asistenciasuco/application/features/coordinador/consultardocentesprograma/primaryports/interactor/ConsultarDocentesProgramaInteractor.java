@@ -22,7 +22,7 @@ public final class ConsultarDocentesProgramaInteractor implements ConsultarDocen
     @Override
     public DocentesProgramaPaginaDTO execute(final UUID actorUsuarioId, final ConsultarDocentesProgramaDTO consulta) {
         final DocentesProgramaPaginaDomain pagina = useCase.execute(actorUsuarioId, new ConsultarDocentesProgramaDomain(
-                consulta.pagina(), consulta.tamano(), consulta.busqueda(), consulta.estaActivo(), consulta.idTipoVinculacion()));
+                consulta.pagina(), consulta.tamano(), consulta.busqueda(), consulta.estaActivo()));
         return new DocentesProgramaPaginaDTO(
                 pagina.elementos().stream().map(DocenteProgramaMapper::toDTO).toList(), pagina.total());
     }

@@ -46,7 +46,7 @@ class ConsultarDocentesProgramaUseCaseImplTest {
     void sin_programa_del_coordinador_lanza_forbidden() {
         when(scopePort.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.empty());
 
-        final var consultarDocentesProgramaDomain = new ConsultarDocentesProgramaDomain(1, 10, null, null, null);
+        final var consultarDocentesProgramaDomain = new ConsultarDocentesProgramaDomain(1, 10, null, null);
         assertThrows(ForbiddenException.class,
                 () -> useCase.execute(ACTOR, consultarDocentesProgramaDomain));
 
@@ -55,12 +55,11 @@ class ConsultarDocentesProgramaUseCaseImplTest {
 
     @Test
     void T_062_01_resuelve_programa_por_ambito_traslada_filtros_y_mapea_pagina() {
-        final UUID tipo = UUID.randomUUID();
         when(scopePort.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.of(PROGRAMA));
         when(queryPort.consultar(any(), any())).thenReturn(new DocentesProgramaPagina(List.of(fila()), 12));
 
         final DocentesProgramaPaginaDomain pagina = useCase.execute(ACTOR,
-                new ConsultarDocentesProgramaDomain(2, 5, "ros", true, tipo));
+                new ConsultarDocentesProgramaDomain(2, 5, "ros", true));
 
         final ArgumentCaptor<DocentesProgramaFiltro> filtro = ArgumentCaptor.forClass(DocentesProgramaFiltro.class);
         verify(queryPort).consultar(org.mockito.ArgumentMatchers.eq(ACTOR), filtro.capture());
@@ -69,18 +68,16 @@ class ConsultarDocentesProgramaUseCaseImplTest {
         assertEquals(5, filtro.getValue().tamano());
         assertEquals("ros", filtro.getValue().busqueda());
         assertEquals(Boolean.TRUE, filtro.getValue().estaActivo());
-        assertEquals(tipo, filtro.getValue().idTipoVinculacion());
         assertEquals(12, pagina.total());
         assertEquals(1, pagina.elementos().size());
         final DocenteProgramaDomain item = pagina.elementos().get(0);
         assertEquals("Jorge Henao", item.nombreCompleto());
-        assertEquals("CAT", item.codigoTipoVinculacion());
         assertTrue(item.estaActivo());
     }
 
     private static DocenteProgramaProjection fila() {
         return new DocenteProgramaProjection(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "CC", 1017555444,
-                "Jorge", null, "Henao", null, "Jorge Henao", "jorge@uco.edu.co", UUID.randomUUID(), "CAT", "Cátedra",
+                "Jorge", null, "Henao", null, "Jorge Henao", "jorge@uco.edu.co",
                 Instant.parse("2026-10-22T10:00:00Z"), 0, true);
     }
 }

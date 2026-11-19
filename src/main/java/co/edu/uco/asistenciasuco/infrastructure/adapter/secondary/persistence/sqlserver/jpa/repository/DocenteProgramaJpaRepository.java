@@ -29,7 +29,6 @@ import java.util.UUID;
 @Repository
 public class DocenteProgramaJpaRepository implements DocenteProgramaCommandPort, DocenteProgramaQueryPort {
     private static final String PARAM_ID_DOCENTE = "idDocente";
-    private static final String PARAM_ID_TIPO_VINCULACION = "idTipoVinculacion";
     private static final String PARAM_ID_PROGRAMA = "idPrograma";
     private static final String PARAM_ID_CORRELACION = "idCorrelacion";
     private static final String PARAM_ID_USUARIO_EJECUTOR = "idUsuarioEjecutor";
@@ -46,7 +45,6 @@ public class DocenteProgramaJpaRepository implements DocenteProgramaCommandPort,
                  @segundoApellido = :segundoApellido,
                  @correo = :correo,
                  @password = :password,
-                 @idTipoVinculacion = :idTipoVinculacion,
                  @idPrograma = :idPrograma,
                  @idCorrelacion = :idCorrelacion,
                  @idUsuarioEjecutor = :idUsuarioEjecutor
@@ -56,7 +54,6 @@ public class DocenteProgramaJpaRepository implements DocenteProgramaCommandPort,
             EXEC dbo.usp_actualizar_docente_programa
                  @idDocente = :idDocente,
                  @idPrograma = :idPrograma,
-                 @idTipoVinculacion = :idTipoVinculacion,
                  @primerNombre = :primerNombre,
                  @segundoNombre = :segundoNombre,
                  @primerApellido = :primerApellido,
@@ -86,7 +83,6 @@ public class DocenteProgramaJpaRepository implements DocenteProgramaCommandPort,
                  @tamanoPagina = :tamanoPagina,
                  @busqueda = :busqueda,
                  @estaActivo = :estaActivo,
-                 @idTipoVinculacion = :idTipoVinculacion,
                  @idDocente = :idDocente,
                  @idUsuario = :idUsuario
             """;
@@ -127,7 +123,6 @@ public class DocenteProgramaJpaRepository implements DocenteProgramaCommandPort,
         parametros.put("segundoApellido", command.segundoApellido());
         parametros.put("correo", command.correo());
         parametros.put("password", command.passwordHash());
-        parametros.put(PARAM_ID_TIPO_VINCULACION, command.idTipoVinculacion());
         parametros.put(PARAM_ID_PROGRAMA, command.idPrograma());
         parametros.put(PARAM_ID_CORRELACION, correlationId);
         parametros.put(PARAM_ID_USUARIO_EJECUTOR, command.usuarioEjecutor());
@@ -140,7 +135,6 @@ public class DocenteProgramaJpaRepository implements DocenteProgramaCommandPort,
         final Map<String, Object> parametros = new LinkedHashMap<>();
         parametros.put(PARAM_ID_DOCENTE, command.idDocente());
         parametros.put(PARAM_ID_PROGRAMA, command.idPrograma());
-        parametros.put(PARAM_ID_TIPO_VINCULACION, command.idTipoVinculacion());
         parametros.put("primerNombre", command.primerNombre());
         parametros.put("segundoNombre", command.segundoNombre());
         parametros.put("primerApellido", command.primerApellido());
@@ -179,7 +173,6 @@ public class DocenteProgramaJpaRepository implements DocenteProgramaCommandPort,
                             .setParameter("tamanoPagina", filtro.tamano())
                             .setParameter("busqueda", filtro.busqueda())
                             .setParameter("estaActivo", filtro.estaActivo())
-                            .setParameter(PARAM_ID_TIPO_VINCULACION, filtro.idTipoVinculacion())
                             .setParameter(PARAM_ID_DOCENTE, filtro.idDocente())
                             .setParameter("idUsuario", filtro.idUsuario())
                             .getResultList();
@@ -214,8 +207,7 @@ public class DocenteProgramaJpaRepository implements DocenteProgramaCommandPort,
         final LocalDateTime fecha = f.fechaVinculacionUtc();
         return new DocenteProgramaProjection(f.idDocentePrograma(), f.idDocente(), f.idUsuario(),
                 f.codigoTipoIdentificacion(), f.numeroIdentificacion(), f.primerNombre(), f.segundoNombre(),
-                f.primerApellido(), f.segundoApellido(), f.nombreCompleto(), f.correo(), f.idTipoVinculacion(),
-                f.codigoTipoVinculacion(), f.nombreTipoVinculacion(),
+                f.primerApellido(), f.segundoApellido(), f.nombreCompleto(), f.correo(),
                 fecha == null ? null : fecha.toInstant(ZoneOffset.UTC),
                 f.totalGruposPrograma() == null ? 0 : f.totalGruposPrograma(),
                 Boolean.TRUE.equals(f.estaActivoDocentePrograma()));

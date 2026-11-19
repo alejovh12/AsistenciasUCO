@@ -25,7 +25,6 @@ public final class VincularDocenteProgramaRequestValidator implements Validator<
         if (request == null) {
             return builder.add("request", ValidationErrorType.REQUIRED, "La informacion del docente es obligatoria.").build();
         }
-        validarUuid(builder, "idTipoVinculacion", request.getIdTipoVinculacion(), true, "El tipo de vinculacion es obligatorio.");
         validarUuid(builder, "idDocente", request.getIdDocente(), false, null);
         validarUuid(builder, "idUsuario", request.getIdUsuario(), false, null);
 

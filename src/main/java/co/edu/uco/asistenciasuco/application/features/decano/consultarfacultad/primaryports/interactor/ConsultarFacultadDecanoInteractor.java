@@ -37,7 +37,7 @@ public final class ConsultarFacultadDecanoInteractor implements ConsultarFaculta
         final var resultado = useCase.consultarEstudiantes(usuario, busqueda, idPrograma, estaActivo, pagina, tamano);
         return new PaginaDTO<>(resultado.elementos().stream()
                 .map(e -> new EstudianteFacultadDTO(e.idEstudiante(), e.numeroIdentificacion(), e.nombreCompleto(),
-                        e.correo(), e.activo(), e.programas(), e.totalGrupos()))
+                        e.correo(), e.activo(), e.programas(), e.totalGrupos(), e.codigoTipoIdentificacion()))
                 .toList(), resultado.total());
     }
 

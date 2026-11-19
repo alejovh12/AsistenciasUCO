@@ -13,7 +13,6 @@ public record VincularDocenteProgramaDTO(
         String segundoNombre,
         String primerApellido,
         String segundoApellido,
-        String correo,
-        UUID idTipoVinculacion
+        String correo
 ) {
 }

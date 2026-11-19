@@ -55,7 +55,7 @@ public final class ConsultarFichaDocenteUseCaseImpl implements ConsultarFichaDoc
                 .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_006));
 
         final DocenteProgramaDomain docente = docenteProgramaQueryPort.consultar(domain.actorUsuarioId(),
-                        new DocentesProgramaFiltro(idPrograma, 1, 1, null, null, null, idDocente, null))
+                        new DocentesProgramaFiltro(idPrograma, 1, 1, null, null, idDocente, null))
                 .elementos().stream()
                 .findFirst()
                 .map(DocenteProgramaMapper::toDomain)
