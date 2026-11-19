@@ -16,11 +16,16 @@ import co.edu.uco.asistenciasuco.application.features.coordinador.vinculardocent
 import co.edu.uco.asistenciasuco.application.features.coordinador.vinculardocenteprograma.primaryports.dto.VincularDocenteProgramaDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
+import co.edu.uco.asistenciasuco.infrastructure.config.jackson.JacksonInputConfig;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.time.Instant;
 import java.util.List;
@@ -57,6 +62,19 @@ class CoordinadorDocentesControllerTest {
     private final MockMvc mvc = MockMvcBuilders
             .standaloneSetup(new CoordinadorDocentesController(consultar, candidatos, vincular, actualizar, cambiarEstado, identity))
             .setControllerAdvice(new GlobalExceptionHandler(codigo -> Optional.empty())).build();
+    /** Con el JsonMapper de la aplicacion (JacksonInputConfig: FAIL_ON_UNKNOWN_PROPERTIES activo). */
+    private final MockMvc mvcEstricto = MockMvcBuilders
+            .standaloneSetup(new CoordinadorDocentesController(consultar, candidatos, vincular, actualizar, cambiarEstado, identity))
+            .setControllerAdvice(new GlobalExceptionHandler(codigo -> Optional.empty()))
+            .setMessageConverters(new JacksonJsonHttpMessageConverter(mapperEstricto())).build();
+
+    private static JsonMapper mapperEstricto() {
+        final JsonMapper.Builder builder = JsonMapper.builder();
+        try (var context = new AnnotationConfigApplicationContext(JacksonInputConfig.class)) {
+            context.getBean(JsonMapperBuilderCustomizer.class).customize(builder);
+        }
+        return builder.build();
+    }
 
     @Test
     void T_062_01_get_usa_el_actor_autenticado_aplica_valores_por_defecto_y_serializa_la_pagina() throws Exception {
@@ -253,6 +271,37 @@ class CoordinadorDocentesControllerTest {
         mvc.perform(patch("/api/v1/coordinador/docentes/{id}/estado", DOCENTE).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"estaActivo\":false}"))
                 .andExpect(status().isNotFound());
+    }
+
+    /**
+     * MEJORAS-SERGIO-2026-11-18 (items 1 y 12): se retiro idTipoVinculacion. Un cliente anterior (SPA en cache) que aun lo envie
+     * al vincular o al actualizar recibe 400 FIELD_UNKNOWN por la entrada estricta, sin llegar al caso de uso. Comportamiento
+     * aceptado: se despliega junto con el frontend que ya no lo envia.
+     */
+    @Test
+    void cliente_anterior_que_envia_idTipoVinculacion_recibe_400_field_unknown_al_vincular_y_al_actualizar() throws Exception {
+        mvcEstricto.perform(post("/api/v1/coordinador/docentes").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idDocente\":\"%s\",\"idTipoVinculacion\":\"%s\"}".formatted(DOCENTE, UUID.randomUUID())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details[0].field").value("idTipoVinculacion"))
+                .andExpect(jsonPath("$.details[0].code").value("FIELD_UNKNOWN"));
+
+        mvcEstricto.perform(put("/api/v1/coordinador/docentes/{id}", DOCENTE).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"primerNombre\":\"Nuevo\",\"idTipoVinculacion\":\"%s\"}".formatted(UUID.randomUUID())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details[0].field").value("idTipoVinculacion"))
+                .andExpect(jsonPath("$.details[0].code").value("FIELD_UNKNOWN"));
+
+        verifyNoInteractions(vincular, actualizar);
+    }
+
+    @Test
+    void con_la_entrada_estricta_el_cuerpo_actual_sin_tipo_de_vinculacion_se_acepta() throws Exception {
+        when(vincular.execute(any())).thenReturn(dto());
+
+        mvcEstricto.perform(post("/api/v1/coordinador/docentes").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idDocente\":\"%s\"}".formatted(DOCENTE)))
+                .andExpect(status().isCreated());
     }
 
     private static DocenteProgramaDTO dto() {
