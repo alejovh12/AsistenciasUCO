@@ -85,6 +85,7 @@ jobs:
           set -euo pipefail
 
           ./mvnw \
+            -U \
             -B \
             -ntp \
             --no-transfer-progress \
@@ -143,6 +144,7 @@ jobs:
           }
 
           ./mvnw \
+            -U \
             -B \
             -ntp \
             --no-transfer-progress \
