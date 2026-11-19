@@ -123,15 +123,43 @@ class TomaAsistenciaUseCasesTest {
         when(repositorio.abrir(SESION, "QR", USUARIO)).thenReturn(new TomaAsistenciaRepositoryPort.TomaAbierta(TOMA, 2, "QR", APERTURA));
         when(repositorio.consultarToma(TOMA)).thenReturn(Optional.of(toma("ABIERTA", 0)));
 
-        final TomaAsistenciaResumen resultado = new AbrirTomaAsistenciaUseCaseImpl(sesionTitular, repositorio, acceso, eventos)
+        final AbrirTomaAsistenciaInputPort.Resultado abierta = new AbrirTomaAsistenciaUseCaseImpl(sesionTitular, repositorio, acceso, eventos)
                 .execute(new AbrirTomaAsistenciaInputPort.Comando(SESION, " qr ", USUARIO));
+        final TomaAsistenciaResumen resultado = abierta.toma();
 
+        assertNull(abierta.tomaCerradaAnterior());
         assertEquals(TOMA, resultado.idToma());
         final List<RealtimeEvent> publicados = eventosPublicados();
         assertEquals(1, publicados.size());
         assertEquals("TOMA_ABIERTA", publicados.getFirst().type());
         assertEquals(Map.of("grupo", GRUPO.toString(), "sesion", SESION.toString(), "toma", TOMA.toString(), "numero", 2,
                 "modo", "QR", "fechaAperturaUtc", "2026-11-07T13:05:00Z"), publicados.getFirst().payload());
+    }
+
+    @Test
+    void abrir_con_toma_abierta_publica_cierre_y_actualizacion_de_la_anterior_antes_de_toma_abierta() {
+        final UUID anterior = UUID.randomUUID();
+        when(sesiones.consultarSesion(SESION)).thenReturn(Optional.of(sesion(null)));
+        when(repositorio.abrir(SESION, "MANUAL", USUARIO)).thenReturn(new TomaAsistenciaRepositoryPort.TomaAbierta(TOMA, 2, "MANUAL", APERTURA,
+                new TomaAsistenciaRepositoryPort.TomaCerradaAnterior(anterior, 1, 4)));
+        when(repositorio.consultarToma(TOMA)).thenReturn(Optional.of(toma("ABIERTA", 0)));
+        final TomaAsistenciaResumen cerrada = new TomaAsistenciaResumen(anterior, SESION, GRUPO, 1, "MANUAL", "CERRADA", false, false,
+                APERTURA, APERTURA.plusSeconds(1800), new BigDecimal("0.50"), 31, 27, 4, 0, false, APERTURA, 1, 0, 30, true, null);
+        when(repositorio.consultarToma(anterior)).thenReturn(Optional.of(cerrada));
+
+        final AbrirTomaAsistenciaInputPort.Resultado resultado = new AbrirTomaAsistenciaUseCaseImpl(sesionTitular, repositorio, acceso, eventos)
+                .execute(new AbrirTomaAsistenciaInputPort.Comando(SESION, "MANUAL", USUARIO));
+
+        assertEquals(TOMA, resultado.toma().idToma());
+        assertEquals(new AbrirTomaAsistenciaInputPort.TomaCerradaAnterior(anterior, 1, 4), resultado.tomaCerradaAnterior());
+        final List<RealtimeEvent> publicados = eventosPublicados();
+        assertEquals(List.of("TOMA_CERRADA", "ASISTENCIAS_TOMA_ACTUALIZADAS", "TOMA_ABIERTA"),
+                publicados.stream().map(RealtimeEvent::type).toList());
+        assertEquals(Map.of("grupo", GRUPO.toString(), "sesion", SESION.toString(), "toma", anterior.toString(), "numero", 1,
+                "totalAusentesMarcados", 4, "automatico", false), publicados.get(0).payload());
+        assertEquals(Map.of("grupo", GRUPO.toString(), "sesion", SESION.toString(), "toma", anterior.toString(), "totalRegistros", 31),
+                publicados.get(1).payload());
+        assertEquals(TOMA.toString(), publicados.get(2).payload().get("toma"));
     }
 
     @Test
@@ -170,11 +198,11 @@ class TomaAsistenciaUseCasesTest {
     @Test
     void abrir_con_error_del_sp_no_publica_y_un_canal_caido_no_rompe_la_respuesta() {
         when(sesiones.consultarSesion(SESION)).thenReturn(Optional.of(sesion(null)));
-        when(repositorio.abrir(SESION, "MANUAL", USUARIO)).thenThrow(new ConflictException("TOM_003", "Ya hay una toma abierta."));
+        when(repositorio.abrir(SESION, "MANUAL", USUARIO)).thenThrow(new ConflictException("TOM_004", "Maximo de tomas."));
         final AbrirTomaAsistenciaUseCaseImpl useCase = new AbrirTomaAsistenciaUseCaseImpl(sesionTitular, repositorio, acceso, eventos);
 
         final var comando4 = new AbrirTomaAsistenciaInputPort.Comando(SESION, "MANUAL", USUARIO);
-        assertEquals("TOM_003", assertThrows(ConflictException.class,
+        assertEquals("TOM_004", assertThrows(ConflictException.class,
                 () -> useCase.execute(comando4)).getCode());
         verifyNoInteractions(realtime);
 
@@ -182,7 +210,7 @@ class TomaAsistenciaUseCasesTest {
         when(repositorio.consultarToma(TOMA)).thenReturn(Optional.of(toma("ABIERTA", 0)));
         doThrow(new IllegalStateException("canal")).when(realtime).publish(any());
 
-        assertEquals(TOMA, useCase.execute(new AbrirTomaAsistenciaInputPort.Comando(SESION, "MANUAL", USUARIO)).idToma());
+        assertEquals(TOMA, useCase.execute(new AbrirTomaAsistenciaInputPort.Comando(SESION, "MANUAL", USUARIO)).toma().idToma());
     }
 
     // ------------------------------------------------------------------ consultar tomas de la sesion

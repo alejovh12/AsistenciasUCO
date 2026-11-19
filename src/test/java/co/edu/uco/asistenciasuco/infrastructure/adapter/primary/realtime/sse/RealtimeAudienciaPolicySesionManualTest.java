@@ -51,6 +51,16 @@ class RealtimeAudienciaPolicySesionManualTest {
     }
 
     @Test
+    void la_solicitud_rechazada_llega_al_ambito_y_al_titular_pero_no_a_los_estudiantes() {
+        final String rechazada = "SESION_SOLICITUD_RECHAZADA";
+        assertEquals(EnumSet.of(Audiencia.AMBITO_GRUPO, Audiencia.DOCENTE_TITULAR), policy.audienciasDe(rechazada));
+        assertTrue(policy.entrega(rechazada, Set.of(Audiencia.AMBITO_GRUPO), null, Set.of()));
+        assertTrue(policy.entrega(rechazada, Set.of(Audiencia.DOCENTE_TITULAR), null, Set.of()));
+        assertFalse(policy.entrega(rechazada, Set.of(Audiencia.ESTUDIANTE_GRUPO), null, Set.of()));
+        assertTrue(policy.tiposConocidos().contains(rechazada));
+    }
+
+    @Test
     void un_tipo_parecido_no_hereda_la_audiencia() {
         assertEquals(Set.of(Audiencia.DOCENTE_TITULAR), policy.audienciasDe("SESION_MANUAL_CREADA_X"));
         assertEquals(Set.of(Audiencia.DOCENTE_TITULAR), policy.audienciasDe("sesion_manual_creada"));

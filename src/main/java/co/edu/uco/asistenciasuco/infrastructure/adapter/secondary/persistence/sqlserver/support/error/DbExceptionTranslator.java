@@ -12,6 +12,7 @@ import co.edu.uco.asistenciasuco.application.features.revisioncancelacion.except
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.festivos.exception.FestivoErrorCode;
+import co.edu.uco.asistenciasuco.application.features.sesioncalendario.exception.CalendarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.asistenciaqr.exception.AsistenciaQrErrorCode;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.exception.TomaAsistenciaErrorCode;
 import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
@@ -170,6 +171,7 @@ public final class DbExceptionTranslator {
             SesionErrorCode.SES_021,
             RevisionCancelacionErrorCode.RCN_002,
             RevisionCancelacionErrorCode.RCN_003,
+            CalendarioErrorCode.CAL_001,
             FestivoErrorCode.FES_001,
             FestivoErrorCode.FES_002,
             FestivoErrorCode.FES_004,

@@ -486,3 +486,4 @@ ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA|ERR120|Funcional|Error|ERR_RESPUESTA_REC
 VCE_009|VCE009|Funcional|Error|VCE_009 - Defina su contraseña para activar su…|Defina su contraseña para activar su cuenta.
 ACT_001|ACT001|Funcional|Confirmación|ACT_001 - Se envió de nuevo el enlace de…|Se envió de nuevo el enlace de activación al correo institucional.
 ACT_002|ACT002|Funcional|Error|ACT_002 - La cuenta ya está activa; no es…|La cuenta ya está activa; no es necesario enviar el enlace de activación.
+CAL_001|CAL001|Funcional|Error|CAL_001 - El rango de fechas no es válido…|El rango de fechas no es válido: indique inicio y fin, con el fin igual o posterior y máximo 31 días.

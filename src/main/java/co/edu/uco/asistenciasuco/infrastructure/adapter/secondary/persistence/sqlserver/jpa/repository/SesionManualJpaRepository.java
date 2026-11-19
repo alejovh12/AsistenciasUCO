@@ -58,6 +58,7 @@ public class SesionManualJpaRepository implements SesionManualRepositoryPort {
                  @idSesion = :idSesion, @idCorrelacion = :idCorrelacion, @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
     static final String PROCEDIMIENTO_SOLICITUDES = "usp_consultar_solicitudes_sesion_coordinador_paginado";
+    static final String PROCEDIMIENTO_SOLICITUDES_DOCENTE = "usp_consultar_solicitudes_sesion_docente_paginado";
     static final String SQL_MOTIVOS = """
             EXEC dbo.usp_consultar_motivos_cancelacion_sesion
                  @idUsuarioEjecutor = :idUsuarioEjecutor, @idCorrelacion = :idCorrelacion
@@ -125,22 +126,42 @@ public class SesionManualJpaRepository implements SesionManualRepositoryPort {
     @Override
     public PaginaSolicitudesSesion consultarSolicitudes(final UUID coordinadorUsuarioId, final boolean soloPendientes,
                                                         final UUID programaId, final UUID grupoId, final int pagina, final int tamano) {
+        return consultarPaginaSolicitudes("consultarSolicitudesSesionCoordinador", PROCEDIMIENTO_SOLICITUDES,
+                parametrosSolicitudes(coordinadorUsuarioId, soloPendientes, programaId, grupoId, pagina, tamano));
+    }
+
+    @Override
+    public PaginaSolicitudesSesion consultarSolicitudesDocente(final UUID docenteUsuarioId, final boolean soloPendientes,
+                                                               final UUID grupoId, final int pagina, final int tamano) {
+        return consultarPaginaSolicitudes("consultarSolicitudesSesionDocente", PROCEDIMIENTO_SOLICITUDES_DOCENTE,
+                parametrosSolicitudes(docenteUsuarioId, soloPendientes, null, grupoId, pagina, tamano));
+    }
+
+    /** {@code programaId} nulo (el docente no filtra por programa) y cualquier otro filtro nulo se omiten del {@code EXEC}. */
+    private static Map<String, Object> parametrosSolicitudes(final UUID usuarioId, final boolean soloPendientes, final UUID programaId,
+                                                             final UUID grupoId, final int pagina, final int tamano) {
+        final Map<String, Object> parametros = new LinkedHashMap<>();
+        parametros.put("idUsuario", usuarioId);
+        parametros.put("soloPendientes", soloPendientes ? 1 : 0);
+        parametros.put("idPrograma", programaId);
+        parametros.put("idGrupo", grupoId);
+        parametros.put("numeroPagina", pagina);
+        parametros.put("tamanoPagina", tamano);
+        return parametros;
+    }
+
+    /** Ambos SP de solicitudes devuelven las mismas 20 columnas de {@code uv_solicitud_sesion} y {@code totalRegistros}. */
+    private PaginaSolicitudesSesion consultarPaginaSolicitudes(final String operacion, final String procedimiento,
+                                                               final Map<String, Object> parametros) {
         final UUID correlationId = CorrelationIdContext.require();
         return JpaQueryExecutor.execute(
-                "consultarSolicitudesSesionCoordinador",
+                operacion,
                 "No fue posible consultar las solicitudes de sesion extraordinaria.",
                 () -> {
-                    final Map<String, Object> parametros = new LinkedHashMap<>();
-                    parametros.put("idUsuario", coordinadorUsuarioId);
-                    parametros.put("soloPendientes", soloPendientes ? 1 : 0);
-                    parametros.put("idPrograma", programaId);
-                    parametros.put("idGrupo", grupoId);
-                    parametros.put("numeroPagina", pagina);
-                    parametros.put("tamanoPagina", tamano);
                     parametros.put(PARAM_ID_CORRELACION, correlationId);
                     final List<?> filas;
                     try {
-                        filas = CancelacionRowSupport.ejecutar(entityManager, PROCEDIMIENTO_SOLICITUDES, parametros);
+                        filas = CancelacionRowSupport.ejecutar(entityManager, procedimiento, parametros);
                     } catch (final PersistenceException exception) {
                         throw DbCodeTranslator.traducir(exception, PARAM_SESION);
                     }

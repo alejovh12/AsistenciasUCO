@@ -1,7 +1,7 @@
 # MEJORAS-SERGIO-2026-11-18 — Backend
 
 Orden de John (2026-11-18): ejecutar las 13 mejoras reportadas por Sergio. El plan común (13 ítems y decisiones) está en el work
-item homónimo del frontend; la migración 50 y el detalle de BD en el work item homónimo de la base de datos.
+item homónimo del frontend; la migración 56 y el detalle de BD en el work item homónimo de la base de datos.
 
 - **Clase de cambio:** retiro de un concepto de negocio (tipo de vinculación del docente) en las tres capas + campo aditivo.
 - **Contrato:** cambia de forma coordinada con la BD de la misma rama (no hay consumidores externos además del frontend).
@@ -57,7 +57,7 @@ y anotado en `docs/contracts/HTTP_AS_IS_MATRIX.md`.
 
 - **Subida y merge:** BD → BE → FE, cerrando los tres PR juntos. El CI de integración del backend usa la rama de la BD con el
   mismo nombre (`feat/mejoras-sergio-2026-11-18`) si existe; por eso la BD sube primero.
-- **Despliegue:** primero la migración 50 (`50_mejoras_sergio_retiro_tipo_vinculacion_up.sql`) y después `deploy_schema.ps1`,
+- **Despliegue:** primero la migración 56 (`56_mejoras_sergio_retiro_tipo_vinculacion_up.sql`) y después `deploy_schema.ps1`,
   nunca al revés (los cuerpos nuevos de vistas y SP no leen la columna; los viejos quedan inválidos entre ambos pasos). Luego el
   backend y al final el frontend.
 - **Manifiesto:** `DB_CULM001_D_POST_FREEZE_MANIFEST.sha256` de la BD se actualizó a propósito (3 archivos de su lista cambiaron);
@@ -69,4 +69,4 @@ Ver `VALIDATION.md` (ejecución dirigida en el equipo local; el `verify` complet
 
 ## Rollback
 
-Revertir los commits de la rama junto con la BD (migración 50 down + `deploy_schema.ps1` del commit anterior).
+Revertir los commits de la rama junto con la BD (migración 56 down + `deploy_schema.ps1` del commit anterior).

@@ -100,10 +100,14 @@ public class TomaAsistenciaJpaRepository implements TomaAsistenciaRepositoryPort
         parametros.put("codigoModo", codigoModo);
         parametros.put(P_CORRELACION, correlacion);
         parametros.put(P_USUARIO, usuarioEjecutor);
-        // idToma, numero, codigoModo, usaCodigoQr, fechaAperturaUtc, ventanaCierreUtc, totalTomasSesion, horasToma
-        final List<Object> c = procedureExecutor.executeWithExtras("abrirTomaAsistencia", SQL_ABRIR, parametros, correlacion, 8).extras();
+        // idToma, numero, codigoModo, usaCodigoQr, fechaAperturaUtc, ventanaCierreUtc, totalTomasSesion, horasToma,
+        // idTomaCerradaAnterior, numeroTomaCerradaAnterior, totalAusentesMarcadosAnterior (NULL si no se cerro ninguna)
+        final List<Object> c = procedureExecutor.executeWithExtras("abrirTomaAsistencia", SQL_ABRIR, parametros, correlacion, 11).extras();
+        final UUID idAnterior = NativeRowValues.uuid(c.get(8));
+        final TomaCerradaAnterior anterior = idAnterior == null ? null
+                : new TomaCerradaAnterior(idAnterior, NativeRowValues.entero(c.get(9)), NativeRowValues.entero(c.get(10)));
         return new TomaAbierta(NativeRowValues.uuid(c.get(0)), NativeRowValues.entero(c.get(1)), NativeRowValues.texto(c.get(2)),
-                NativeRowValues.instanteUtc(c.get(4)));
+                NativeRowValues.instanteUtc(c.get(4)), anterior);
     }
 
     @Override
@@ -279,8 +283,9 @@ public class TomaAsistenciaJpaRepository implements TomaAsistenciaRepositoryPort
                 NativeRowValues.entero(e.totalExcusas()), Boolean.TRUE.equals(e.tieneQrActivo()),
                 NativeRowValues.instanteUtc(e.fechaPuntoControlUtc()), NativeRowValues.entero(e.ordenPuntoControl()),
                 NativeRowValues.entero(e.minutosTramoAnterior()), NativeRowValues.entero(e.minutosTramoSiguiente()),
-                // La vista no trae la ventana: sin toma posterior (o abierta) se considera editable; el valor exacto lo da el listado.
-                Boolean.TRUE.equals(e.estaAbierta()) || e.fechaAperturaSiguienteUtc() == null, NativeRowValues.instanteUtc(e.fechaAperturaSiguienteUtc()));
+                // ATA D4: toda toma es editable mientras la ventana de la sesion este abierta; la vista no trae la ventana, asi que aqui se
+                // considera editable sin fecha limite y el valor exacto (esEditable y editableHastaUtc) lo da el listado por sesion.
+                true, null);
     }
 
     /** Exactamente {@code [{"idEstudiante":"<UUID>","estado":"<valor>"}]}, en el orden recibido (contrato 2.8.2). */
