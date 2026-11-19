@@ -81,7 +81,7 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x mvnw
-          ./mvnw -B -ntp --no-transfer-progress -DskipTests dependency:go-offline dependency:resolve
+          ./mvnw -U -B -ntp --no-transfer-progress -DskipTests dependency:go-offline dependency:resolve
       # TRI-01 / SEC-08 (VAL oleada 2, decision E de John 2026-11-12): primero el inventario SARIF
       # completo (no bloquea, sube a Code Scanning) y despues la compuerta que SI bloquea en HIGH/CRITICAL
       # con correccion disponible. Las excepciones viven en .trivyignore, cada una justificada y con fecha.
