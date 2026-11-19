@@ -137,6 +137,7 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x mvnw
+          # -U evita reutilizar respuestas negativas de artefactos (p. ej. swagger-ui) guardadas en la cache Maven.
           ./mvnw -U -B -ntp --no-transfer-progress -DskipTests package
 
       - name: Analyze with CodeQL

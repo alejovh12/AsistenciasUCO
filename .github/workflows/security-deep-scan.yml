@@ -41,7 +41,7 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x mvnw
-          ./mvnw -B -ntp --no-transfer-progress "-Dtest=co/edu/uco/asistenciasuco/architecture/*Test" test
+          ./mvnw -U -B -ntp --no-transfer-progress "-Dtest=co/edu/uco/asistenciasuco/architecture/*Test" test
           count=$(find target/surefire-reports -name 'TEST-co.edu.uco.asistenciasuco.architecture.*.xml' | wc -l)
           echo "Architectural test classes with XML evidence: $count"
           test "$count" -ge 20
@@ -81,7 +81,20 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x mvnw
-          ./mvnw -U -B -ntp --no-transfer-progress -DskipTests dependency:go-offline dependency:resolve
+          # Maven Central limita a los runners compartidos (HTTP 429). Sin -U (la cache de setup-java ya
+          # trae lo resuelto) y con reintentos con espera; un 429 transitorio no debe tumbar el escaneo.
+          for intento in 1 2 3; do
+            if ./mvnw -B -ntp --no-transfer-progress -DskipTests dependency:go-offline dependency:resolve; then
+              exit 0
+            fi
+            if [ "$intento" -lt 3 ]; then
+              espera=$((intento * 30))
+              echo "Resolucion de dependencias fallida (intento ${intento}); reintento en ${espera}s."
+              find ~/.m2/repository -name '*.lastUpdated' -delete || true
+              sleep "$espera"
+            fi
+          done
+          exit 1
       # TRI-01 / SEC-08 (VAL oleada 2, decision E de John 2026-11-12): primero el inventario SARIF
       # completo (no bloquea, sube a Code Scanning) y despues la compuerta que SI bloquea en HIGH/CRITICAL
       # con correccion disponible. Las excepciones viven en .trivyignore, cada una justificada y con fecha.

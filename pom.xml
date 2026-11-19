@@ -44,6 +44,8 @@
         <commons-compress.version>1.28.0</commons-compress.version>
         <!-- SEC-002: patched baggage propagation and CVE-2026-118259 (fixed in 1.67.0); align the entire OpenTelemetry core family. -->
         <opentelemetry.version>1.67.0</opentelemetry.version>
+        <!-- SEC-BASELINE-020: version corregida del cliente RabbitMQ; Trivy detecto 4 CVE HIGH en 5.27.1. -->
+        <rabbitmq-java-client.version>5.34.0</rabbitmq-java-client.version>
         <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
     </properties>
     <!--
@@ -52,6 +54,16 @@
         AsistenciasUCO-Infra/docs/hardening/MESSAGE_CATALOG_SWITCH_GUIDE.md.
     -->
     <repositories>
+        <!--
+            Maven Central debe preceder al repositorio privado: dependencias publicas como Swagger UI
+            no deben buscarse primero en GitHub Packages (que solo aloja MessageUcoLab).
+        -->
+        <repository>
+            <id>central</id>
+            <url>https://repo.maven.apache.org/maven2/</url>
+            <releases><enabled>true</enabled></releases>
+            <snapshots><enabled>false</enabled></snapshots>
+        </repository>
         <repository>
             <id>github</id>
             <url>https://maven.pkg.github.com/CamiloGarcia09/MessageUcolab--Backend</url>
@@ -248,6 +260,11 @@
             <artifactId>okhttp-jvm</artifactId>
             <version>5.3.2</version>
         </dependency>
+        <!-- SEC-BASELINE-020: consumidor de eventos de asignacion del PDP (Security Baseline 0.1.14) por RabbitMQ. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
         <!-- NOTIF-002A: Envio de correo SMTP sobre el outbox y servidor SMTP embebido en pruebas. -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -267,6 +284,12 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- SEC-BASELINE-020: Boot 4.0.8 arrastra amqp-client 5.27.1; fijar 5.34.0 corrige los HIGH reportados por Trivy. -->
+            <dependency>
+                <groupId>com.rabbitmq</groupId>
+                <artifactId>amqp-client</artifactId>
+                <version>${rabbitmq-java-client.version}</version>
+            </dependency>
             <!-- SEC-002: override transitive POI archive parser; fixes CVE-2024-25710/26308. -->
             <dependency>
                 <groupId>org.apache.commons</groupId>

@@ -33,6 +33,7 @@ env:
   # Etiqueta fija, la misma compilacion que fija Infra (F12-10); el CI de BD usa 2022-latest del mismo motor.
   MSSQL_IMAGE: mcr.microsoft.com/mssql/server:2022-CU20-GDR1-ubuntu-22.04
   MSSQL_CONTAINER: sqlserver-it
+  RABBITMQ_CONTAINER: rabbitmq-it
   APP_DATABASE_EXPECTED_NAME: gestionasistenciadb
 
 jobs:
@@ -84,7 +85,8 @@ jobs:
           sa_password="Ci-$(openssl rand -hex 16)-Aa1!"
           minio_root_password="$(openssl rand -hex 24)"
           minio_secret_key="$(openssl rand -hex 24)"
-          for value in "$sa_password" "$minio_root_password" "$minio_secret_key"; do
+          rabbitmq_password="$(openssl rand -hex 24)"
+          for value in "$sa_password" "$minio_root_password" "$minio_secret_key" "$rabbitmq_password"; do
             echo "::add-mask::${value}"
           done
           {
@@ -100,6 +102,12 @@ jobs:
             echo "MINIO_BUCKET=asistencias-soportes"
             echo "CLAMAV_HOST=localhost"
             echo "CLAMAV_PORT=3310"
+            echo "RABBITMQ_HOST=localhost"
+            echo "RABBITMQ_PORT=25672"
+            echo "RABBITMQ_AMQP_PORT=25672"
+            echo "RABBITMQ_VIRTUAL_HOST=/security"
+            echo "RABBITMQ_USERNAME=ci-rabbitmq"
+            echo "RABBITMQ_PASSWORD=${rabbitmq_password}"
           } >> "$GITHUB_ENV"
 
       - name: Start ephemeral SQL Server
@@ -111,6 +119,44 @@ jobs:
             -e MSSQL_SA_PASSWORD \
             -p 127.0.0.1:1433:1433 \
             "$MSSQL_IMAGE"
+
+      # SEC-BASELINE-020: el *IT del consumidor necesita un broker real. Se levanta aislado por job,
+      # con credenciales efimeras y el exchange compartido que en produccion aprovisiona el PDP/plataforma.
+      - name: Start ephemeral RabbitMQ for assignment-event integration tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run -d --name "$RABBITMQ_CONTAINER" \
+            -e RABBITMQ_DEFAULT_USER="$RABBITMQ_USERNAME" \
+            -e RABBITMQ_DEFAULT_PASS="$RABBITMQ_PASSWORD" \
+            -e RABBITMQ_DEFAULT_VHOST="$RABBITMQ_VIRTUAL_HOST" \
+            -p 127.0.0.1:25672:5672 \
+            -p 127.0.0.1:25673:15672 \
+            rabbitmq:4.4.1-management
+
+      - name: Wait for RabbitMQ and provision the shared PDP exchange
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 60); do
+            if curl --silent --fail --user "$RABBITMQ_USERNAME:$RABBITMQ_PASSWORD" \
+                 http://127.0.0.1:25673/api/overview >/dev/null; then
+              echo "RabbitMQ management API ready after ${attempt} attempt(s)."
+              break
+            fi
+            if [ "$attempt" -eq 60 ]; then
+              echo "::error::RabbitMQ did not become ready in time."
+              docker logs --tail 100 "$RABBITMQ_CONTAINER" || true
+              exit 1
+            fi
+            sleep 2
+          done
+          curl --silent --show-error --fail \
+            --user "$RABBITMQ_USERNAME:$RABBITMQ_PASSWORD" \
+            --header 'content-type: application/json' \
+            --request PUT \
+            --data '{"type":"direct","durable":true,"auto_delete":false,"internal":false,"arguments":{}}' \
+            'http://127.0.0.1:25673/api/exchanges/%2Fsecurity/security.assignment.events'
 
       - name: Start MinIO and ClamAV (infra/files/compose.yaml)
         shell: bash
@@ -174,7 +220,8 @@ jobs:
         run: |
           # VAL-PRU-04: una IT con @Tag("cuarentena-oleada3") se excluiria (pom.xml, failsafe.excludedGroups). La oleada 3 corrigio
           # las 12 que la tenian y hoy ninguna la lleva: el gate corre todas (docs/work-items/VAL-oleada3-pru04).
-          ./mvnw -B -ntp --no-transfer-progress verify -Pintegration
+          # -U evita reutilizar respuestas negativas cacheadas de plugins de Maven Central.
+          ./mvnw -U -B -ntp --no-transfer-progress verify -Pintegration
 
       - name: Upload unit test reports
         if: always()
@@ -200,3 +247,4 @@ jobs:
         run: |
           docker compose -f infra/files/compose.yaml down -v || true
           docker rm -f "$MSSQL_CONTAINER" || true
+          docker rm -f "$RABBITMQ_CONTAINER" || true

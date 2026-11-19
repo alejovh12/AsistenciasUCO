@@ -633,7 +633,8 @@ public class AdministracionNotificacionJpaAdapter implements AdministracionNotif
         }
     }
 
-    private static final String TIPO_PRUEBA_VERIFICACION_CORREO = "PRUEBA_VERIFICACION_CORREO";
+    /** Visibilidad de paquete: {@link PlantillaPorDefectoCatalogo#TIPOS_CONOCIDOS} lo necesita entregable. */
+    static final String TIPO_PRUEBA_VERIFICACION_CORREO = "PRUEBA_VERIFICACION_CORREO";
 
     @Override
     public void enviarCorreoPrueba(final UUID idUsuarioEjecutor, final String correoDestino) {
