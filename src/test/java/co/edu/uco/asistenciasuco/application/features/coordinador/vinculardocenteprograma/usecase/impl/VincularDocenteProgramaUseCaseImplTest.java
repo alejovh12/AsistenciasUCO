@@ -48,7 +48,6 @@ class VincularDocenteProgramaUseCaseImplTest {
 
     private static final UUID ACTOR = UUID.randomUUID();
     private static final UUID PROGRAMA = UUID.randomUUID();
-    private static final UUID TIPO_VINCULACION = UUID.randomUUID();
     private static final UUID TIPO_ID = UUID.randomUUID();
     private static final UUID ID_USUARIO = UUID.randomUUID();
     private static final UUID ID_DOCENTE = UUID.randomUUID();
@@ -117,7 +116,6 @@ class VincularDocenteProgramaUseCaseImplTest {
         assertEquals("HASH_GENERADO", comando.getValue().passwordHash());
         assertNull(comando.getValue().idDocente());
         assertEquals(PROGRAMA, comando.getValue().idPrograma());
-        assertEquals(TIPO_VINCULACION, comando.getValue().idTipoVinculacion());
         assertEquals(1017555444, comando.getValue().numeroIdentificacion());
         assertEquals(ACTOR, comando.getValue().usuarioEjecutor());
 
@@ -173,7 +171,7 @@ class VincularDocenteProgramaUseCaseImplTest {
         when(queryPort.consultar(eq(ACTOR), any())).thenReturn(pagina(fila()));
 
         useCase.execute(new VincularDocenteProgramaDomain(ACTOR, null, ID_USUARIO, null, null, null, null, null, null,
-                null, TIPO_VINCULACION));
+                null));
 
         final ArgumentCaptor<VincularDocenteProgramaCommand> comando = ArgumentCaptor.forClass(VincularDocenteProgramaCommand.class);
         verify(commandPort).vincular(comando.capture());
@@ -217,7 +215,7 @@ class VincularDocenteProgramaUseCaseImplTest {
         when(queryPort.consultar(eq(ACTOR), any())).thenReturn(pagina(fila()));
         final VincularDocenteProgramaDomain solicitud = new VincularDocenteProgramaDomain(
                 ACTOR, null, null, TIPO_ID, 1017555445, "Jorge", null, "Henao", null,
-                CORREO, TIPO_VINCULACION);
+                CORREO);
 
         final ConflictException error = assertThrows(ConflictException.class, () -> useCase.execute(solicitud));
 
@@ -248,12 +246,12 @@ class VincularDocenteProgramaUseCaseImplTest {
 
     private static VincularDocenteProgramaDomain dominioNuevo(final UUID actor) {
         return new VincularDocenteProgramaDomain(actor, null, null, TIPO_ID, 1017555444, "Jorge", null, "Henao", null,
-                CORREO, TIPO_VINCULACION);
+                CORREO);
     }
 
     private static VincularDocenteProgramaDomain dominioDocente(final UUID idDocente) {
         return new VincularDocenteProgramaDomain(ACTOR, idDocente, null, null, null, null, null, null, null,
-                null, TIPO_VINCULACION);
+                null);
     }
 
     private static UsuarioIdentidadRepositoryProjection usuario() {
@@ -262,7 +260,7 @@ class VincularDocenteProgramaUseCaseImplTest {
 
     private static DocenteProgramaProjection fila() {
         return new DocenteProgramaProjection(UUID.randomUUID(), ID_DOCENTE, ID_USUARIO, "CC", 1017555444, "Jorge", null,
-                "Henao", null, "Jorge Henao", CORREO, TIPO_VINCULACION, "CAT", "Cátedra",
+                "Henao", null, "Jorge Henao", CORREO,
                 Instant.parse("2026-10-22T10:00:00Z"), 0, true);
     }
 

@@ -14,14 +14,14 @@ public final class DocenteProgramaMapper {
     public static DocenteProgramaDomain toDomain(final DocenteProgramaProjection p) {
         return new DocenteProgramaDomain(p.idDocentePrograma(), p.idDocente(), p.idUsuario(), p.codigoTipoIdentificacion(),
                 p.numeroIdentificacion(), p.primerNombre(), p.segundoNombre(), p.primerApellido(), p.segundoApellido(),
-                p.nombreCompleto(), p.correo(), p.idTipoVinculacion(), p.codigoTipoVinculacion(), p.nombreTipoVinculacion(),
+                p.nombreCompleto(), p.correo(),
                 p.fechaVinculacionUtc(), p.totalGruposPrograma(), p.estaActivo());
     }
 
     public static DocenteProgramaDTO toDTO(final DocenteProgramaDomain d) {
         return new DocenteProgramaDTO(d.idDocentePrograma(), d.idDocente(), d.idUsuario(), d.codigoTipoIdentificacion(),
                 d.numeroIdentificacion(), d.primerNombre(), d.segundoNombre(), d.primerApellido(), d.segundoApellido(),
-                d.nombreCompleto(), d.correo(), d.idTipoVinculacion(), d.codigoTipoVinculacion(), d.nombreTipoVinculacion(),
+                d.nombreCompleto(), d.correo(),
                 d.fechaVinculacionUtc(), d.totalGruposPrograma(), d.estaActivo());
     }
 

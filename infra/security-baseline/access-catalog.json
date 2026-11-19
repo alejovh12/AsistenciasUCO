@@ -209,7 +209,6 @@
     {"method": "PUT", "path": "/api/v1/sesiones/{sesionId}", "roles": ["DOCENTE"], "access": "ROLES", "ownership": "Docente titular del grupo/sesion: validado en Application (InstitutionalScopePort)."},
     {"method": "GET", "path": "/api/v1/tipos-identificacion", "roles": ["ADMINISTRADOR", "DECANO", "COORDINADOR", "DOCENTE", "ESTUDIANTE"], "access": "AUTHENTICATED", "ownership": null},
     {"method": "GET", "path": "/api/v1/tipos-programa", "roles": ["ADMINISTRADOR", "DECANO", "COORDINADOR", "DOCENTE", "ESTUDIANTE"], "access": "AUTHENTICATED", "ownership": null},
-    {"method": "GET", "path": "/api/v1/tipos-vinculacion", "roles": ["ADMINISTRADOR", "DECANO", "COORDINADOR", "DOCENTE", "ESTUDIANTE"], "access": "AUTHENTICATED", "ownership": null},
     {"method": "GET", "path": "/api/v1/usuarios/perfil", "roles": ["ADMINISTRADOR", "DECANO", "COORDINADOR", "DOCENTE", "ESTUDIANTE"], "access": "AUTHENTICATED", "ownership": "Solo el perfil del usuario autenticado; el procedimiento almacenado lee el ejecutor."},
     {"method": "POST", "path": "/api/v2/sesiones", "roles": ["DOCENTE"], "access": "ROLES", "ownership": null},
     {"method": "GET", "path": "/api/v2/sesiones/grupo/{grupoId}", "roles": ["DOCENTE"], "access": "ROLES", "ownership": "Docente titular del grupo/sesion: validado en Application (InstitutionalScopePort) y en usp_*_sesion_v2."},

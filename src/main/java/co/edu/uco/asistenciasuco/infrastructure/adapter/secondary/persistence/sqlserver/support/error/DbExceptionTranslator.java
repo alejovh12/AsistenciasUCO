@@ -156,7 +156,6 @@ public final class DbExceptionTranslator {
             AsistenciaErrorCode.ERR_MAXIMO_SOPORTES_RECLAMO,
             AsistenciaErrorCode.ERR_SOPORTE_RECLAMO_DUPLICADO,
             AsistenciaErrorCode.ERR_RESULTADO_APROBACION_INVALIDO,
-            DocenteErrorCode.ERR_TIPO_VINCULACION_INVALIDO,
             DocenteErrorCode.ERR_MODO_VINCULACION_INVALIDO,
             DocenteErrorCode.ERR_BUSQUEDA_CANDIDATOS_CORTA,
             SesionErrorCode.SES_017,

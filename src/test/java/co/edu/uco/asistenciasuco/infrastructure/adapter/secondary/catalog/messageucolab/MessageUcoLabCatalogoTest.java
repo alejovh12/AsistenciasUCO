@@ -70,7 +70,8 @@ class MessageUcoLabCatalogoTest {
         // FIX-CIERRE-002: + PER_007 (seed 17 / migracion 48 de BD; el fixture se regenero con build-message-catalog.py).
         // VAL-pendientes-john PRU-15: + PER_008 y PER_009 (seed 17 / migracion 49 de BD; filas con el formato de build-message-catalog.py).
         // ATA D7: + CAL_001 (seed 68 / migracion 52 de BD: rango invalido del calendario de sesiones).
-        assertEquals(490, catalogo().size());
+        // MEJORAS-SERGIO-2026-11-18: - DOC_004 y ERR_TIPO_VINCULACION_INVALIDO (se retiro el tipo de vinculacion, migracion 56 de BD).
+        assertEquals(488, catalogo().size());
     }
 
     @Test
@@ -103,7 +104,8 @@ class MessageUcoLabCatalogoTest {
         // VAL-pendientes-rea-msg: + 94 ERR_* (ERR025..ERR118; los 26 anteriores conservan su codigo remoto).
         // DEC-073: + ERR_CODIGO_GRUPO_INVALIDO (ERR119) y ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA (ERR120).
         // VAL-oleada9 REA-02: + ERR_ALMACENAMIENTO_NO_DISPONIBLE (ERR121).
-        assertEquals(123, esperados.size());
+        // MEJORAS-SERGIO-2026-11-18: - ERR_TIPO_VINCULACION_INVALIDO (ERR109 queda libre, no se renumera).
+        assertEquals(122, esperados.size());
         assertEquals(esperados, aliasesDeApplicationYml());
     }
 

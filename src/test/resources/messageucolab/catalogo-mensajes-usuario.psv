@@ -99,7 +99,6 @@ ARC_003|ARC003|Funcional|Error|ARC_003 - Los datos del soporte no son validos.|L
 ARC_005|ARC005|Funcional|Error|ARC_005 - El estudiante indicado no corresponde…|El estudiante indicado no corresponde al usuario autenticado.
 DOC_002|DOC002|Funcional|Error|DOC_002 - El usuario ya se encuentra registrado…|El usuario ya se encuentra registrado como docente.
 DOC_003|DOC003|Funcional|Error|DOC_003 - Ya existe una persona registrada con…|Ya existe una persona registrada con ese documento o correo. Use la opción "Vincular docente existente".
-DOC_004|DOC004|Funcional|Error|DOC_004 - El tipo de vinculación indicado no…|El tipo de vinculación indicado no existe o está inactivo.
 DOC_005|DOC005|Funcional|Error|DOC_005 - Debe indicar un docente existente o…|Debe indicar un docente existente o los datos de un docente nuevo, pero no ambos.
 DOC_006|DOC006|Funcional|Error|DOC_006 - El docente ya está vinculado a este…|El docente ya está vinculado a este programa.
 DOC_007|DOC007|Funcional|Error|DOC_007 - La búsqueda de candidatos requiere al…|La búsqueda de candidatos requiere al menos 3 caracteres.
@@ -469,7 +468,6 @@ ERR_TIPO_IDENTIFICACION_NOMBRE_LONGITUD_INVALIDA|ERR105|Funcional|Error|ERR_TIPO
 ERR_TIPO_IDENTIFICACION_NOMBRE_REQUERIDO|ERR106|Funcional|Error|ERR_TIPO_IDENTIFICACION_NOMBRE_REQUERIDO|El nombre del tipo de identificación es obligatorio.
 ERR_TIPO_IDENTIFICACION_NO_EXISTE|ERR107|Funcional|Error|ERR_TIPO_IDENTIFICACION_NO_EXISTE|El tipo de identificación no existe.
 ERR_TIPO_IDENTIFICACION_REQUERIDA|ERR108|Funcional|Error|ERR_TIPO_IDENTIFICACION_REQUERIDA|El tipo de identificación es obligatorio.
-ERR_TIPO_VINCULACION_INVALIDO|ERR109|Funcional|Error|ERR_TIPO_VINCULACION_INVALIDO - El tipo de…|El tipo de vinculación indicado no existe o está inactivo.
 ERR_TOMA_NO_RECLAMABLE|ERR110|Funcional|Error|ERR_TOMA_NO_RECLAMABLE - Solo puedes reclamar…|Solo puedes reclamar una toma en la que quedaste ausente.
 ERR_USUARIO_DOCENTE_INVALIDO|ERR111|Funcional|Error|ERR_USUARIO_DOCENTE_INVALIDO - El identificador…|El identificador del usuario asociado al docente no es válido.
 ERR_USUARIO_DOCENTE_REQUERIDO|ERR112|Funcional|Error|ERR_USUARIO_DOCENTE_REQUERIDO - El usuario del…|El usuario del docente es obligatorio.

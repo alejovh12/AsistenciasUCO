@@ -9,7 +9,6 @@ public record DocentesProgramaFiltro(
         int tamano,
         String busqueda,
         Boolean estaActivo,
-        UUID idTipoVinculacion,
         UUID idDocente,
         UUID idUsuario
 ) {

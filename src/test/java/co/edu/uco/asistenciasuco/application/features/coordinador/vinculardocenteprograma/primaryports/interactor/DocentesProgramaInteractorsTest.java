@@ -46,18 +46,16 @@ class DocentesProgramaInteractorsTest {
     @Test
     void vincular_traduce_dto_a_dominio_y_devuelve_dto() {
         final VincularDocenteProgramaUseCase useCase = mock(VincularDocenteProgramaUseCase.class);
-        final UUID tipo = UUID.randomUUID();
         final UUID docente = UUID.randomUUID();
         when(useCase.execute(any())).thenReturn(domain(docente));
 
         final DocenteProgramaDTO dto = new VincularDocenteProgramaInteractor(useCase, CorreoInstitucionalPolicyFixture.institucional()).execute(
-                new VincularDocenteProgramaDTO(ACTOR, docente, null, null, null, null, null, null, null, null, tipo));
+                new VincularDocenteProgramaDTO(ACTOR, docente, null, null, null, null, null, null, null, null));
 
         final ArgumentCaptor<VincularDocenteProgramaDomain> captor = ArgumentCaptor.forClass(VincularDocenteProgramaDomain.class);
         verify(useCase).execute(captor.capture());
         assertEquals(ACTOR, captor.getValue().actorUsuarioId());
         assertEquals(docente, captor.getValue().idDocente());
-        assertEquals(tipo, captor.getValue().idTipoVinculacion());
         assertEquals(docente, dto.idDocente());
         assertEquals("Jorge Henao", dto.nombreCompleto());
     }
@@ -68,7 +66,7 @@ class DocentesProgramaInteractorsTest {
         when(useCase.execute(any(), any())).thenReturn(new DocentesProgramaPaginaDomain(List.of(domain(UUID.randomUUID())), 7));
 
         final DocentesProgramaPaginaDTO pagina = new ConsultarDocentesProgramaInteractor(useCase)
-                .execute(ACTOR, new ConsultarDocentesProgramaDTO(1, 10, "x", null, null));
+                .execute(ACTOR, new ConsultarDocentesProgramaDTO(1, 10, "x", null));
 
         final ArgumentCaptor<ConsultarDocentesProgramaDomain> captor = ArgumentCaptor.forClass(ConsultarDocentesProgramaDomain.class);
         verify(useCase).execute(org.mockito.ArgumentMatchers.eq(ACTOR), captor.capture());
@@ -91,7 +89,7 @@ class DocentesProgramaInteractorsTest {
 
     private static DocenteProgramaDomain domain(final UUID docente) {
         return new DocenteProgramaDomain(UUID.randomUUID(), docente, UUID.randomUUID(), "CC", 1017555444, "Jorge", null,
-                "Henao", null, "Jorge Henao", "jorge@uco.edu.co", UUID.randomUUID(), "CAT", "Cátedra",
+                "Henao", null, "Jorge Henao", "jorge@uco.edu.co",
                 Instant.parse("2026-10-22T10:00:00Z"), 0, true);
     }
 
@@ -101,7 +99,7 @@ class DocentesProgramaInteractorsTest {
         final VincularDocenteProgramaInteractor interactor =
                 new VincularDocenteProgramaInteractor(useCase, CorreoInstitucionalPolicyFixture.institucional());
         final VincularDocenteProgramaDTO conGmail = new VincularDocenteProgramaDTO(ACTOR, null, null, UUID.randomUUID(),
-                1017334455, "Ana", null, "Rios", null, "ana.rios@gmail.com", UUID.randomUUID());
+                1017334455, "Ana", null, "Rios", null, "ana.rios@gmail.com");
 
         final co.edu.uco.asistenciasuco.application.exception.validation.ValidationException exception =
                 org.junit.jupiter.api.Assertions.assertThrows(

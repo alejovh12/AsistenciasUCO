@@ -16,6 +16,8 @@ public class SpEstudianteFacultadPaginadoEntity {
     @Column(name = "programas") private String programas;
     @Column(name = "totalGrupos") private Integer totalGrupos;
     @Column(name = "totalRegistros") private Integer totalRegistros;
+    /** MEJORAS-SERGIO-2026-11-18 (item 5): ultima columna del resultset, sigla del tipo de documento. */
+    @Column(name = "codigoTipoIdentificacion") private String codigoTipoIdentificacion;
 
     protected SpEstudianteFacultadPaginadoEntity() {
     }
@@ -50,5 +52,9 @@ public class SpEstudianteFacultadPaginadoEntity {
 
     public Integer totalRegistros() {
         return totalRegistros;
+    }
+
+    public String codigoTipoIdentificacion() {
+        return codigoTipoIdentificacion;
     }
 }

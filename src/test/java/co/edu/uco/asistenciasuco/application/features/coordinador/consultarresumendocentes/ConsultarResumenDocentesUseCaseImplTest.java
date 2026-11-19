@@ -6,22 +6,23 @@ import co.edu.uco.asistenciasuco.application.features.coordinador.consultarresum
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarresumendocentes.usecase.domain.ResumenDocentesProgramaDomain;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarresumendocentes.usecase.impl.ConsultarResumenDocentesUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ResumenDocentesProgramaQueryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResumenTipoVinculacionProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResumenDocentesProgramaProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-/** HU095: consolidado del directorio docente del programa (RD-01..RD-05). */
+/**
+ * HU095: consolidado del directorio docente del programa (RD-01..RD-05). MEJORAS-SERGIO-2026-11-18: la DB entrega una sola fila
+ * (activos e inactivos); ya no hay desglose por tipo de vinculacion.
+ */
 class ConsultarResumenDocentesUseCaseImplTest {
 
     private static final UUID ACTOR = UUID.randomUUID();
@@ -31,31 +32,25 @@ class ConsultarResumenDocentesUseCaseImplTest {
     private final ConsultarResumenDocentesUseCaseImpl useCase = new ConsultarResumenDocentesUseCaseImpl(scope, port);
 
     @Test
-    void RD01_suma_activos_e_inactivos_de_todos_los_tipos() {
+    void RD01_total_es_la_suma_de_activos_e_inactivos() {
         when(scope.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.of(UUID.randomUUID()));
-        when(port.consultarResumen(ACTOR)).thenReturn(List.of(
-                new ResumenTipoVinculacionProjection(UUID.randomUUID(), "CAT", "Catedra", 2, 1),
-                new ResumenTipoVinculacionProjection(UUID.randomUUID(), "PLA", "Planta", 1, 0),
-                new ResumenTipoVinculacionProjection(UUID.randomUUID(), "OCA", "Ocasional", 0, 0)));
+        when(port.consultarResumen(ACTOR)).thenReturn(new ResumenDocentesProgramaProjection(3, 1));
 
         final ResumenDocentesProgramaDomain resumen = useCase.execute(ACTOR);
 
         assertEquals(4, resumen.totalDocentes());
         assertEquals(3, resumen.totalActivos());
         assertEquals(1, resumen.totalInactivos());
-        assertEquals(3, resumen.porTipoVinculacion().size());
-        assertEquals(3, resumen.porTipoVinculacion().getFirst().total());
     }
 
     @Test
-    void RD02_programa_sin_docentes_devuelve_ceros() {
+    void RD02_programa_sin_docentes_o_sin_fila_devuelve_ceros() {
         when(scope.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.of(UUID.randomUUID()));
-        when(port.consultarResumen(ACTOR)).thenReturn(List.of());
+        when(port.consultarResumen(ACTOR)).thenReturn(ResumenDocentesProgramaProjection.vacio());
+        assertEquals(new ResumenDocentesProgramaDomain(0, 0, 0), useCase.execute(ACTOR));
 
-        final ResumenDocentesProgramaDomain resumen = useCase.execute(ACTOR);
-
-        assertEquals(0, resumen.totalDocentes());
-        assertTrue(resumen.porTipoVinculacion().isEmpty());
+        when(port.consultarResumen(ACTOR)).thenReturn(null);
+        assertEquals(new ResumenDocentesProgramaDomain(0, 0, 0), useCase.execute(ACTOR));
     }
 
     @Test
@@ -67,18 +62,13 @@ class ConsultarResumenDocentesUseCaseImplTest {
     }
 
     @Test
-    void RD04_interactor_mapea_a_dto_con_total_por_tipo() {
+    void RD04_interactor_mapea_a_dto_con_los_totales() {
         when(scope.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.of(UUID.randomUUID()));
-        when(port.consultarResumen(ACTOR)).thenReturn(List.of(
-                new ResumenTipoVinculacionProjection(UUID.randomUUID(), "MTI", "Medio tiempo", 1, 2)));
+        when(port.consultarResumen(ACTOR)).thenReturn(new ResumenDocentesProgramaProjection(1, 2));
 
         final ResumenDocentesProgramaDTO dto = new ConsultarResumenDocentesInteractor(useCase).execute(ACTOR);
 
-        assertEquals(3, dto.totalDocentes());
-        assertEquals("MTI", dto.porTipoVinculacion().getFirst().codigoTipoVinculacion());
-        assertEquals(1, dto.porTipoVinculacion().getFirst().totalActivos());
-        assertEquals(2, dto.porTipoVinculacion().getFirst().totalInactivos());
-        assertEquals(3, dto.porTipoVinculacion().getFirst().total());
+        assertEquals(new ResumenDocentesProgramaDTO(3, 1, 2), dto);
     }
 
     @Test
@@ -86,6 +76,5 @@ class ConsultarResumenDocentesUseCaseImplTest {
         assertThrows(NullPointerException.class, () -> new ConsultarResumenDocentesUseCaseImpl(null, port));
         assertThrows(NullPointerException.class, () -> new ConsultarResumenDocentesUseCaseImpl(scope, null));
         assertThrows(NullPointerException.class, () -> new ConsultarResumenDocentesInteractor(null));
-        assertTrue(new ResumenDocentesProgramaDomain(0, 0, 0, null).porTipoVinculacion().isEmpty());
     }
 }

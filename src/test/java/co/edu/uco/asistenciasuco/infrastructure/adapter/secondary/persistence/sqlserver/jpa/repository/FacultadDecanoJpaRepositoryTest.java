@@ -70,7 +70,8 @@ class FacultadDecanoJpaRepositoryTest {
         when(query.getResultList()).thenReturn(List.of(
                 entidad(SpEstudianteFacultadPaginadoEntity.class, Map.of("idEstudiante", ESTUDIANTE,
                         "numeroIdentificacion", 1017000111, "nombreCompleto", "Ana Ruiz", "estaActivoUsuario", true,
-                        "programas", "Sistemas, Industrial", "totalGrupos", 3, "totalRegistros", 21)),
+                        "programas", "Sistemas, Industrial", "totalGrupos", 3, "totalRegistros", 21,
+                        "codigoTipoIdentificacion", "CC ")),
                 entidad(SpEstudianteFacultadPaginadoEntity.class, Map.of("idEstudiante", UUID.randomUUID()))));
 
         final var pagina = repository.consultarEstudiantes(EJECUTOR, "ana", PROGRAMA, true, 2, 5);
@@ -89,6 +90,9 @@ class FacultadDecanoJpaRepositoryTest {
         assertTrue(pagina.elementos().getFirst().activo());
         assertNull(pagina.elementos().get(1).numeroIdentificacion());
         assertFalse(pagina.elementos().get(1).activo());
+        // MEJORAS-SERGIO-2026-11-18 (item 5): sigla del tipo de documento, recortada; sin tipo queda null.
+        assertEquals("CC", pagina.elementos().getFirst().codigoTipoIdentificacion());
+        assertNull(pagina.elementos().get(1).codigoTipoIdentificacion());
     }
 
     @Test

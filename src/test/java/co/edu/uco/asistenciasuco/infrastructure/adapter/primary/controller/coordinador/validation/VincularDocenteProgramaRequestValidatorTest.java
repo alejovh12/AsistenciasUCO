@@ -22,11 +22,10 @@ class VincularDocenteProgramaRequestValidatorTest {
     }
 
     @Test
-    void rechaza_request_nulo_y_tipo_de_vinculacion_ausente() {
+    void rechaza_request_nulo_y_no_exige_tipo_de_vinculacion() {
         assertIssue(validator.validate(null), "request", ValidationErrorType.REQUIRED);
-        final VincularDocenteProgramaRequest request = existente();
-        request.setIdTipoVinculacion(null);
-        assertIssue(validator.validate(request), "idTipoVinculacion", ValidationErrorType.REQUIRED);
+        // MEJORAS-SERGIO-2026-11-18: el tipo de vinculacion se retiro; un docente existente basta para vincular.
+        assertTrue(validator.validate(existente()).isValid());
     }
 
     @Test
@@ -102,7 +101,6 @@ class VincularDocenteProgramaRequestValidatorTest {
     private static VincularDocenteProgramaRequest existente() {
         final VincularDocenteProgramaRequest request = new VincularDocenteProgramaRequest();
         request.setIdDocente(UUID.randomUUID());
-        request.setIdTipoVinculacion(UUID.randomUUID());
         return request;
     }
 
@@ -113,7 +111,6 @@ class VincularDocenteProgramaRequestValidatorTest {
         request.setPrimerNombre("Jorge");
         request.setPrimerApellido("Henao");
         request.setCorreo("jorge.henao@uco.edu.co");
-        request.setIdTipoVinculacion(UUID.randomUUID());
         return request;
     }
 

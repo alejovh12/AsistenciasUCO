@@ -15,9 +15,6 @@ public record DocenteProgramaProjection(
         String segundoApellido,
         String nombreCompleto,
         String correo,
-        UUID idTipoVinculacion,
-        String codigoTipoVinculacion,
-        String nombreTipoVinculacion,
         Instant fechaVinculacionUtc,
         int totalGruposPrograma,
         boolean estaActivo

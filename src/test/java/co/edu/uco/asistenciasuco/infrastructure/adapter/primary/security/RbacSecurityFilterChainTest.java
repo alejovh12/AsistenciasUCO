@@ -301,13 +301,6 @@ class RbacSecurityFilterChainTest {
                 .andExpect(status().isOk());
     }
 
-    @Test
-    void tipos_vinculacion_exige_autenticacion_y_es_visible_para_cualquier_rol_autenticado() throws Exception {
-        mockMvc.perform(get("/api/v1/tipos-vinculacion")).andExpect(status().isUnauthorized());
-        mockMvc.perform(get("/api/v1/tipos-vinculacion").header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
-                .andExpect(status().isOk());
-    }
-
     // --- GET /api/v1/auth/me : identidad institucional resuelta por el backend ---
 
     @Test
@@ -859,7 +852,7 @@ class RbacSecurityFilterChainTest {
             return "ok";
         }
 
-        @GetMapping({"/api/v1/coordinador/docentes", "/api/v1/coordinador/docentes/candidatos", "/api/v1/tipos-vinculacion"})
+        @GetMapping({"/api/v1/coordinador/docentes", "/api/v1/coordinador/docentes/candidatos"})
         String docentesPrograma() {
             return "ok";
         }

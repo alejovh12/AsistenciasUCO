@@ -112,7 +112,7 @@ class CambiarEstadoDocenteProgramaUseCaseImplTest {
 
     private static DocenteProgramaProjection fila(final boolean activo) {
         return new DocenteProgramaProjection(UUID.randomUUID(), DOCENTE, UUID.randomUUID(), "CC", 1017555444, "Jorge", null,
-                "Henao", null, "Jorge Henao", "x@uco.edu.co", UUID.randomUUID(), "CAT", "Cátedra",
+                "Henao", null, "Jorge Henao", "x@uco.edu.co",
                 Instant.parse("2026-10-22T10:00:00Z"), 2, activo);
     }
 }

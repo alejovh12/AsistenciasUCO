@@ -51,7 +51,8 @@ class JpaRepositoryBeanUniquenessTest {
     // ATA D7: + SesionCalendarioJpaRepository (calendario de sesiones del estudiante y del docente) = 73.
     // ATA D10: + FaltaReclamableJpaRepository (faltas por reclamar del estudiante) = 74.
     // ATA D11: - OfertaGruposEstudianteJpaRepository (se retira la oferta de grupos del estudiante, HU008) = 73.
-    private static final int EXPECTED_REPOSITORIES = 73;
+    // MEJORAS-SERGIO-2026-11-18: - TipoVinculacionJpaRepository (se retira el tipo de vinculacion del docente) = 72.
+    private static final int EXPECTED_REPOSITORIES = 72;
 
     @Test
     void cada_port_tiene_exactamente_un_repository_activo_con_provider_sqlserver() {

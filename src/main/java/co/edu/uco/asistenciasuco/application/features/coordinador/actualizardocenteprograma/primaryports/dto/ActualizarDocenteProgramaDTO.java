@@ -5,7 +5,6 @@ import java.util.UUID;
 public record ActualizarDocenteProgramaDTO(
         UUID actorUsuarioId,
         UUID idDocente,
-        UUID idTipoVinculacion,
         String primerNombre,
         String segundoNombre,
         String primerApellido,
@@ -16,9 +15,9 @@ public record ActualizarDocenteProgramaDTO(
 ) {
 
     /** Edicion sin correccion de documento (contrato original de HU092). */
-    public ActualizarDocenteProgramaDTO(final UUID actorUsuarioId, final UUID idDocente, final UUID idTipoVinculacion,
+    public ActualizarDocenteProgramaDTO(final UUID actorUsuarioId, final UUID idDocente,
             final String primerNombre, final String segundoNombre, final String primerApellido, final String segundoApellido) {
-        this(actorUsuarioId, idDocente, idTipoVinculacion, primerNombre, segundoNombre, primerApellido, segundoApellido,
+        this(actorUsuarioId, idDocente, primerNombre, segundoNombre, primerApellido, segundoApellido,
                 null, null, null);
     }
 }

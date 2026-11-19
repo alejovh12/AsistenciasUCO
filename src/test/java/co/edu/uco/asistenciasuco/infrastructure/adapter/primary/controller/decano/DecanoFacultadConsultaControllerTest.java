@@ -49,7 +49,7 @@ class DecanoFacultadConsultaControllerTest {
     @Test
     void T_104_01_get_estudiantes_con_filtros() throws Exception {
         when(inputPort.consultarEstudiantes(ACTOR, "ana", PROGRAMA, true, 2, 5)).thenReturn(new PaginaDTO<>(List.of(
-                new EstudianteFacultadDTO(ESTUDIANTE, "1017000111", "Ana Ruiz", "ana@uco.edu.co", true, "Sistemas", 3)),
+                new EstudianteFacultadDTO(ESTUDIANTE, "1017000111", "Ana Ruiz", "ana@uco.edu.co", true, "Sistemas", 3, "CC")),
                 12));
 
         mvc.perform(get("/api/v1/decano/estudiantes").param("busqueda", "ana").param("idPrograma", PROGRAMA.toString())
@@ -58,7 +58,8 @@ class DecanoFacultadConsultaControllerTest {
                 .andExpect(jsonPath("$.exitoso").value(true))
                 .andExpect(jsonPath("$.totalElementos").value(12))
                 .andExpect(jsonPath("$.elementos[0].programas").value("Sistemas"))
-                .andExpect(jsonPath("$.elementos[0].totalGrupos").value(3));
+                .andExpect(jsonPath("$.elementos[0].totalGrupos").value(3))
+                .andExpect(jsonPath("$.elementos[0].codigoTipoIdentificacion").value("CC"));
     }
 
     @Test

@@ -15,11 +15,7 @@ class ActualizarDocenteProgramaRequestValidatorTest {
     private final ActualizarDocenteProgramaRequestValidator validator = new ActualizarDocenteProgramaRequestValidator();
 
     @Test
-    void acepta_tipo_de_vinculacion_solo_o_nombres_solos() {
-        final ActualizarDocenteProgramaRequest soloTipo = new ActualizarDocenteProgramaRequest();
-        soloTipo.setIdTipoVinculacion(UUID.randomUUID());
-        assertTrue(validator.validate(soloTipo).isValid());
-
+    void acepta_nombres_solos() {
         final ActualizarDocenteProgramaRequest soloNombres = new ActualizarDocenteProgramaRequest();
         soloNombres.setPrimerNombre("Ana");
         soloNombres.setSegundoApellido("");
@@ -33,15 +29,13 @@ class ActualizarDocenteProgramaRequestValidatorTest {
     }
 
     @Test
-    void rechaza_uuid_vacio_nombres_obligatorios_en_blanco_y_longitudes() {
+    void rechaza_nombres_obligatorios_en_blanco_y_longitudes() {
         final ActualizarDocenteProgramaRequest request = new ActualizarDocenteProgramaRequest();
-        request.setIdTipoVinculacion(new UUID(0, 0));
         request.setPrimerNombre("   ");
         request.setPrimerApellido("x".repeat(51));
         request.setSegundoNombre("y".repeat(51));
         final ValidationResult result = validator.validate(request);
 
-        assertIssue(result, "idTipoVinculacion", ValidationErrorType.INVALID_UUID);
         assertIssue(result, "primerNombre", ValidationErrorType.REQUIRED);
         assertIssue(result, "primerApellido", ValidationErrorType.INVALID_LENGTH);
         assertIssue(result, "segundoNombre", ValidationErrorType.INVALID_LENGTH);

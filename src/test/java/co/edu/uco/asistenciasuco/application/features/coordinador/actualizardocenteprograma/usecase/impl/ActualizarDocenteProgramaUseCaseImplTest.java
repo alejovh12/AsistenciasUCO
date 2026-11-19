@@ -31,13 +31,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-/** HU092: edicion de tipo de vinculacion y nombres del docente del programa. */
+/** HU092: edicion de los nombres del docente del programa (sin tipo de vinculacion desde MEJORAS-SERGIO-2026-11-18). */
 class ActualizarDocenteProgramaUseCaseImplTest {
 
     private static final UUID ACTOR = UUID.randomUUID();
     private static final UUID PROGRAMA = UUID.randomUUID();
     private static final UUID DOCENTE = UUID.randomUUID();
-    private static final UUID TIPO = UUID.randomUUID();
 
     private final InstitutionalScopePort scopePort = mock(InstitutionalScopePort.class);
     private final DocenteProgramaCommandPort commandPort = mock(DocenteProgramaCommandPort.class);
@@ -80,7 +79,6 @@ class ActualizarDocenteProgramaUseCaseImplTest {
         verify(commandPort).actualizar(comando.capture());
         assertEquals(DOCENTE, comando.getValue().idDocente());
         assertEquals(PROGRAMA, comando.getValue().idPrograma());
-        assertEquals(TIPO, comando.getValue().idTipoVinculacion());
         assertEquals("Nuevo", comando.getValue().primerNombre());
         assertEquals(ACTOR, comando.getValue().usuarioEjecutor());
 
@@ -113,12 +111,12 @@ class ActualizarDocenteProgramaUseCaseImplTest {
     }
 
     private static ActualizarDocenteProgramaDomain dominio() {
-        return new ActualizarDocenteProgramaDomain(ACTOR, DOCENTE, TIPO, "Nuevo", null, "Cambiado", null);
+        return new ActualizarDocenteProgramaDomain(ACTOR, DOCENTE, "Nuevo", null, "Cambiado", null);
     }
 
     private static DocenteProgramaProjection fila() {
         return new DocenteProgramaProjection(UUID.randomUUID(), DOCENTE, UUID.randomUUID(), "CC", 1017555444, "Nuevo", null,
-                "Cambiado", null, "Nuevo Cambiado", "x@uco.edu.co", TIPO, "PLA", "Planta",
+                "Cambiado", null, "Nuevo Cambiado", "x@uco.edu.co",
                 Instant.parse("2026-10-22T10:00:00Z"), 0, true);
     }
 
@@ -132,7 +130,7 @@ class ActualizarDocenteProgramaUseCaseImplTest {
 
         final UUID tipoDocumento = UUID.randomUUID();
         useCase.execute(new co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.usecase.domain.ActualizarDocenteProgramaDomain(
-                ACTOR, DOCENTE, null, null, null, null, null, tipoDocumento, 915900041, "Cedula mal digitada"));
+                ACTOR, DOCENTE, null, null, null, null, tipoDocumento, 915900041, "Cedula mal digitada"));
 
         final ArgumentCaptor<ActualizarDocenteProgramaCommand> comando = ArgumentCaptor.forClass(ActualizarDocenteProgramaCommand.class);
         verify(commandPort, times(2)).actualizar(comando.capture());

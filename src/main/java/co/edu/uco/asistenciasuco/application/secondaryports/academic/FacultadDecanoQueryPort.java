@@ -24,8 +24,15 @@ public interface FacultadDecanoQueryPort {
     record Pagina<T>(List<T> elementos, int total) {
     }
 
+    /** MEJORAS-SERGIO-2026-11-18 (item 5): {@code codigoTipoIdentificacion} es la sigla del tipo de documento (CC, TI...). */
     record EstudianteFacultadProjection(UUID idEstudiante, String numeroIdentificacion, String nombreCompleto,
-                                        String correo, boolean activo, String programas, Integer totalGrupos) {
+                                        String correo, boolean activo, String programas, Integer totalGrupos,
+                                        String codigoTipoIdentificacion) {
+        public EstudianteFacultadProjection(final UUID idEstudiante, final String numeroIdentificacion, final String nombreCompleto,
+                                            final String correo, final boolean activo, final String programas,
+                                            final Integer totalGrupos) {
+            this(idEstudiante, numeroIdentificacion, nombreCompleto, correo, activo, programas, totalGrupos, null);
+        }
     }
 
     record MatriculaEstudianteProjection(UUID idEstudiante, String numeroIdentificacion, String nombreCompleto,
