@@ -81,6 +81,31 @@ class AuditEventJpaRepositoryTest {
     }
 
     @Test
+    void purgarAnterioresARechazaLimiteNulo() {
+        final EntityManager entityManager = mock(EntityManager.class);
+        final AuditEventJpaRepository repository = new AuditEventJpaRepository(entityManager);
+
+        assertThrows(CrosscuttingException.class, () -> repository.purgarAnterioresA(null));
+        verifyNoInteractions(entityManager);
+    }
+
+    @Test
+    void purgarAnterioresAEjecutaUnDeleteMasivoConElLimiteYDevuelveLasFilasEliminadas() {
+        final EntityManager entityManager = mock(EntityManager.class);
+        final jakarta.persistence.Query query = mock(jakarta.persistence.Query.class);
+        when(entityManager.createQuery(AuditEventJpaRepository.JPQL_DELETE_ANTERIORES_A)).thenReturn(query);
+        when(query.setParameter(eq("limite"), any(OffsetDateTime.class))).thenReturn(query);
+        when(query.executeUpdate()).thenReturn(7);
+
+        final OffsetDateTime limite = OCCURRED_AT.minusDays(4);
+        final int eliminados = new AuditEventJpaRepository(entityManager).purgarAnterioresA(limite);
+
+        assertEquals(7, eliminados);
+        verify(query).setParameter("limite", limite);
+        verify(query).executeUpdate();
+    }
+
+    @Test
     void insertPersisteEntidadPlanaConColumnasDeAuditoria() {
         final EntityManager entityManager = mock(EntityManager.class);
         new AuditEventJpaRepository(entityManager).insert(evento(Map.of("handlerType", "HTTP")));

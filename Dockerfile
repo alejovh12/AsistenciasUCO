@@ -13,7 +13,7 @@ WORKDIR /workspace
 
 COPY .mvn/ .mvn/
 COPY mvnw pom.xml ./
-RUN --mount=type=secret,id=m2settings,target=/root/.m2/settings.xml,required=false chmod +x mvnw && ./mvnw -B -ntp dependency:go-offline
+RUN --mount=type=secret,id=m2settings,target=/root/.m2/settings.xml,required=false chmod +x mvnw && ./mvnw -U -B -ntp dependency:go-offline
 
 COPY src/ src/
 COPY docs/contracts/openapi/openapi-golden-path.yaml docs/contracts/openapi/openapi-golden-path.yaml
@@ -24,7 +24,7 @@ COPY infra/security-baseline/access-catalog.json infra/security-baseline/access-
 COPY docs/security/SECRETS_INVENTORY.md docs/security/SECRETS_INVENTORY.md
 # OperationalReadinessConfigurationTest (F12-09) lee el propio Dockerfile para verificar HEALTHCHECK y ENTRYPOINT.
 COPY Dockerfile Dockerfile
-RUN --mount=type=secret,id=m2settings,target=/root/.m2/settings.xml,required=false ./mvnw -B -ntp clean verify
+RUN --mount=type=secret,id=m2settings,target=/root/.m2/settings.xml,required=false ./mvnw -U -B -ntp clean verify
 # El JAR se desempaqueta por capas (jarmode=tools de Spring Boot): las 244 librerias (~172 MB) quedan en una capa que solo
 # cambia cuando cambia el pom, y el codigo propio (~5 MB) en otra. Un cambio de codigo ya no reescribe ~185 MB de imagen.
 # De paso las clases salen de JAR normales del classpath (no anidados), requisito para la cache de clases de mas abajo.
