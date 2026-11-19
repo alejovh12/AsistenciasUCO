@@ -74,7 +74,7 @@ public final class PurgaAuditoriaScheduler implements SmartLifecycle {
                 LOGGER.info("Pasada de purga de auditoria completada. eliminados={}, limite={}", eliminados, limite);
             }
         } catch (final RuntimeException exception) {
-            LOGGER.error("Fallo la pasada de purga de auditoria: {}", exception.getClass().getSimpleName());
+            LOGGER.error("Fallo la pasada de purga de auditoria.", exception);
         } finally {
             if (correlacionPropia) {
                 CorrelationIdContext.clear();
