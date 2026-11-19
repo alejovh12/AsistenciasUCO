@@ -90,8 +90,8 @@ class PurgaAuditoriaSchedulerTest {
     @Test
     void valida_sus_argumentos() {
         final var puerto = (java.util.function.ToIntFunction<OffsetDateTime>) limite -> 0;
-        final var cuatroDias = cuatroDias;
-        final var unSegundoNegativo = unSegundoNegativo;
+        final var cuatroDias = Duration.ofDays(4);
+        final var unSegundoNegativo = Duration.ofSeconds(-1);
         final var unaHora = Duration.ofHours(1);
 
         assertThrows(NullPointerException.class,
