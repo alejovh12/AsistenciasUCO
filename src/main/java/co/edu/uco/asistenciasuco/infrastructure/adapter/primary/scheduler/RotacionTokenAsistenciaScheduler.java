@@ -2,68 +2,54 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.scheduler;
 
 import co.edu.uco.asistenciasuco.application.features.asistenciaqr.rotartokensasistenciaautomatico.primaryports.RotarTokensAsistenciaAutomaticoInputPort;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.avisarfaltassesion.primaryports.AvisarFaltasSesionInputPort;
+import co.edu.uco.asistenciasuco.application.features.tomaasistencia.avisarsesionessintoma.primaryports.AvisarSesionesSinTomaInputPort;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.cerrartomasvencidas.primaryports.CerrarTomasVencidasInputPort;
-import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.SmartLifecycle;
 
 import java.time.Duration;
 import java.util.Objects;
-import java.util.UUID;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * CULM-001 B.2 (contrato 3.5): job del SERVIDOR (patron de {@link RotacionTokenMatriculaScheduler}) que (1) rota los
- * tokens de asistencia vencidos y empuja el QR nuevo al titular por SSE, (2) cierra las tomas cuya ventana vencio y (3) ATA D1: avisa por
- * correo las faltas de las sesiones que ya terminaron (despues del cierre, para que las tomas recien cerradas ya cuenten). No es
- * polling del cliente. Cada pasada abre su propia correlacion, nunca propaga excepciones y es segura entre instancias (la
- * base de datos decide si rota o cierra). Hilo daemon {@code rotacion-token-asistencia-qr}; nunca {@code @Scheduled}.
+ * tokens de asistencia vencidos y empuja el QR nuevo al titular por SSE, (2) cierra las tomas cuya ventana vencio,
+ * (3) ATA D1: avisa por correo las faltas de las sesiones que ya terminaron (despues del cierre, para que las tomas
+ * recien cerradas ya cuenten) y (4) NOTOMA-001: avisa por correo a la coordinacion las sesiones terminadas en las que
+ * el docente no tomo asistencia. No es polling del cliente. Cada pasada abre su propia correlacion, nunca propaga
+ * excepciones y es segura entre instancias (la base de datos decide si rota o cierra).
  */
-public final class RotacionTokenAsistenciaScheduler implements SmartLifecycle {
+public final class RotacionTokenAsistenciaScheduler extends AbstractDaemonScheduler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RotacionTokenAsistenciaScheduler.class);
 
     private final RotarTokensAsistenciaAutomaticoInputPort rotarTokens;
     private final CerrarTomasVencidasInputPort cerrarVencidas;
     private final AvisarFaltasSesionInputPort avisarFaltas;
-    private final Duration tick;
-    private final AtomicBoolean running = new AtomicBoolean(false);
-    private ScheduledExecutorService executor;
+    private final AvisarSesionesSinTomaInputPort avisarSesionesSinToma;
 
     public RotacionTokenAsistenciaScheduler(
             final RotarTokensAsistenciaAutomaticoInputPort rotarTokens,
             final CerrarTomasVencidasInputPort cerrarVencidas,
             final AvisarFaltasSesionInputPort avisarFaltas,
+            final AvisarSesionesSinTomaInputPort avisarSesionesSinToma,
             final Duration tick
     ) {
+        super("rotacion-token-asistencia-qr", tick, tick);
         this.rotarTokens = Objects.requireNonNull(rotarTokens, "RotarTokensAsistenciaAutomaticoInputPort es obligatorio.");
         this.cerrarVencidas = Objects.requireNonNull(cerrarVencidas, "CerrarTomasVencidasInputPort es obligatorio.");
         this.avisarFaltas = Objects.requireNonNull(avisarFaltas, "AvisarFaltasSesionInputPort es obligatorio.");
-        this.tick = Objects.requireNonNull(tick, "El tick del scheduler es obligatorio.");
-        if (tick.isZero() || tick.isNegative()) {
-            throw new IllegalArgumentException("El tick del scheduler debe ser positivo.");
-        }
+        this.avisarSesionesSinToma = Objects.requireNonNull(avisarSesionesSinToma, "AvisarSesionesSinTomaInputPort es obligatorio.");
     }
 
-    /** Una pasada completa (rotacion, cierre y aviso de faltas); visible para pruebas. */
+    /** Una pasada completa (rotacion, cierre, aviso de faltas y aviso de sesiones sin toma); visible para pruebas. */
+    @Override
     public void ejecutarPasada() {
-        final boolean correlacionPropia = CorrelationIdContext.get() == null;
-        if (correlacionPropia) {
-            CorrelationIdContext.set(UUID.randomUUID());
-        }
-        try {
+        ejecutarConCorrelacion(() -> {
             ejecutar("rotacion de tokens de asistencia", rotarTokens::execute);
             ejecutar("cierre de tomas vencidas", cerrarVencidas::execute);
             ejecutar("aviso de faltas por sesion", avisarFaltas::execute);
-        } finally {
-            if (correlacionPropia) {
-                CorrelationIdContext.clear();
-            }
-        }
+            ejecutar("aviso de sesiones sin toma a la coordinacion", avisarSesionesSinToma::execute);
+        }, exception -> LOGGER.error("Fallo una pasada de rotacion de tokens de asistencia.", exception));
     }
 
     private static void ejecutar(final String nombre, final Runnable paso) {
@@ -72,30 +58,5 @@ public final class RotacionTokenAsistenciaScheduler implements SmartLifecycle {
         } catch (final RuntimeException exception) {
             LOGGER.error("Fallo la pasada de {}: {}", nombre, exception.getClass().getSimpleName());
         }
-    }
-
-    @Override
-    public void start() {
-        if (!running.compareAndSet(false, true)) {
-            return;
-        }
-        executor = Executors.newSingleThreadScheduledExecutor(tarea -> {
-            final Thread hilo = new Thread(tarea, "rotacion-token-asistencia-qr");
-            hilo.setDaemon(true);
-            return hilo;
-        });
-        executor.scheduleWithFixedDelay(this::ejecutarPasada, tick.toMillis(), tick.toMillis(), TimeUnit.MILLISECONDS);
-    }
-
-    @Override
-    public void stop() {
-        if (running.compareAndSet(true, false) && executor != null) {
-            executor.shutdownNow();
-        }
-    }
-
-    @Override
-    public boolean isRunning() {
-        return running.get();
     }
 }

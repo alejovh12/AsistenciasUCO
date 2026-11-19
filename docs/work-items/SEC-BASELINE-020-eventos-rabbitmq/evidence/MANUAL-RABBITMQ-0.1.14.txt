@@ -1,0 +1,299 @@
+PAGES: 9
+--- PAGE 1 ---
+Security Baseline · Eventos RabbitMQ
+MANUAL DE RABBITMQ
+Eventos de asignación:
+flujo actual, cola e implementación
+consumidora
+Security Baseline · versión de distribución 0.1.14
+PDP Outbox RabbitMQ Cola de la app Consumidora
+Guía de integración de aplicaciones consumidoras
+--- PAGE 2 ---
+Security Baseline · Eventos RabbitMQ
+1. Qué resuelve este flujo
+Cuando se asigna o revoca un rol o perfil, el PDP genera un evento. RabbitMQ lo enruta solamente a la
+cola de la aplicación afectada. Una aplicación X no consume mensajes de Y porque cada una usa una
+cola distinta y un binding que coincide con su applicationId.
+Regla principal
+RabbitMQ decide el destino antes de que el consumidor vea el cuerpo. Para un cambio de Y, la
+routing key es assignment.changed.<id-Y>; solo una cola enlazada con esa clave recibe el mensaje.
+Concepto Valor actual Responsabilidad
+Punto común de publicación; tipo
+Exchange security.assignment.events
+direct y durable.
+PDP la forma con el UUID de la
+Routing key assignment.changed.<applicationId>
+aplicación afectada.
+Una cola durable por aplicación
+Queue security.assignment.<applicationId>
+consumidora.
+JSON versionado que recibe la
+Contrato AssignmentChangedEventV1
+consumidora.
+2. Flujo actual implementado en el PDP
+El PDP ya implementa la producción fiable del evento. La mutación no depende de que RabbitMQ esté
+disponible: el evento se guarda primero en una outbox de SurrealDB y un dispatcher lo entrega
+posteriormente.
+Asignar / revocar AssignmentEventFactory Outbox Dispatcher RabbitTemplate
+rol o perfil crea V1 SurrealDB cada 5 s + confirm
+Paso Clase/capa actual Qué sucede
+AssignRole, RevokeAssignment,
+Cambia la asignación y solicita crear
+1 AssignProfile,
+evento.
+RevokeProfileAssignment
+Construye
+2 AssignmentEventFactory AssignmentChangedEventV1 con
+applicationId, usuario, roles y tipo.
+3 SurrealAssignmentOutbox Persiste payload y estado pendiente; el
+Guía de integración de aplicaciones consumidoras
+--- PAGE 3 ---
+Security Baseline · Eventos RabbitMQ
+cambio no se pierde si Rabbit cae.
+Busca pendientes, publica y espera
+4 AssignmentOutboxDispatcher
+publisher confirm.
+Envía a security.assignment.events con
+5 RabbitTemplate
+assignment.changed.<applicationId>.
+Tipos de evento actualmente emitidos: ROLE_ASSIGNED, ROLE_REVOKED, PROFILE_ASSIGNED y
+PROFILE_REVOKED.
+Consecuencia práctica
+Si RabbitMQ o el exchange no están disponibles, el PDP conserva el evento pendiente y lo reintenta.
+El cambio de rol/perfil no se revierte por una caída temporal del broker.
+3. RabbitMQ dentro de Security Baseline
+La distribución 0.1.14 levanta RabbitMQ junto a PDP, PEP, Keycloak, OPA, Redis y SurrealDB. No se
+ejecuta como aplicación local independiente.
+Desde dónde Host/puerto Uso
+App ejecutada en IntelliJ/Maven localhost:25672 AMQP desde la máquina anfitriona.
+PDP o app dentro del Compose rabbitmq:5672 AMQP dentro de la red Docker.
+Navegador http://localhost:25673 RabbitMQ Management UI.
+# security-baseline-local/.env
+SECURITY_VERSION=0.1.14
+RABBITMQ_IMAGE=rabbitmq:4.4.1-management
+RABBITMQ_USERNAME=security-local
+RABBITMQ_PASSWORD=security-local-password
+RABBITMQ_AMQP_PORT=25672
+RABBITMQ_MANAGEMENT_PORT=25673
+cd /Users/lauraagudelo/security-baseline-local
+docker compose pull
+docker compose up -d
+docker compose ps
+No usar guest/guest
+Guía de integración de aplicaciones consumidoras
+--- PAGE 4 ---
+Security Baseline · Eventos RabbitMQ
+RabbitMQ restringe guest a conexiones loopback. PDP y consumidoras que están en otros
+contenedores se conectan remotamente al broker; por eso usan security-local en local y credenciales
+específicas por ambiente en DEV/PROD.
+3.1. compose.yaml canónico del baseline
+El siguiente bloque es el cambio mínimo y completo que debe estar en security-baseline-
+local/compose.yaml. RabbitMQ se agrega como servicio propio; no se incorpora dentro de la imagen del
+PDP.
+services:
+rabbitmq:
+image: ${RABBITMQ_IMAGE:-rabbitmq:4.4.1-management}
+environment:
+RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-security-local}
+RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-security-local-password}
+RABBITMQ_DEFAULT_VHOST: /security
+ports:
+- "${RABBITMQ_AMQP_PORT:-25672}:5672"
+- "${RABBITMQ_MANAGEMENT_PORT:-25673}:15672"
+volumes: ["rabbitmq-data:/var/lib/rabbitmq"]
+healthcheck:
+test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+interval: 5s
+timeout: 3s
+retries: 24
+pdp:
+environment:
+# ... propiedades PDP existentes ...
+SPRING_RABBITMQ_HOST: rabbitmq
+SPRING_RABBITMQ_PORT: "5672"
+SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-security-local}
+SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-security-local-password}
+SPRING_RABBITMQ_VIRTUAL_HOST: /security
+depends_on:
+# ... dependencias PDP existentes ...
+rabbitmq: {condition: service_healthy}
+volumes:
+rabbitmq-data:
+No cambie los puertos internos
+Entre contenedores, el PDP se conecta a rabbitmq:5672. Los puertos 25672 y 25673 existen
+solamente para acceder desde la máquina anfitriona y evitar colisiones con otro Rabbit local.
+Guía de integración de aplicaciones consumidoras
+--- PAGE 5 ---
+Security Baseline · Eventos RabbitMQ
+4. Crear la topología de una aplicación
+Ejemplo real: la aplicación demo-integracion-v2 tiene applicationId 41ce1b83-a94e-49d7-a1fb-
+ee6d1769ca0d. Reemplace ese UUID por el de otra aplicación si configura una nueva consumidora.
+applicationId = 41ce1b83-a94e-49d7-a1fb-ee6d1769ca0d
+Exchange: security.assignment.events
+Queue: security.assignment.41ce1b83-a94e-49d7-a1fb-ee6d1769ca0d
+Routing key: assignment.changed.41ce1b83-a94e-49d7-a1fb-ee6d1769ca0d
+4.1. Crear el exchange
+1. Abra http://localhost:25673 e inicie sesión con security-local.
+2. Abra Exchanges y seleccione Add a new exchange.
+3. Cree security.assignment.events con Type=direct, Durable=true y Auto delete=false.
+4.2. Crear la cola
+4. Abra Queues and Streams y seleccione Add a new queue.
+5. Cree security.assignment.41ce1b83-a94e-49d7-a1fb-ee6d1769ca0d con Type=Classic y
+Durable=true.
+4.3. Crear el binding
+6. Abra security.assignment.events y baje a Add binding from this exchange.
+7. Seleccione To queue y escriba security.assignment.41ce1b83-a94e-49d7-a1fb-ee6d1769ca0d.
+8. En Routing key escriba assignment.changed.41ce1b83-a94e-49d7-a1fb-ee6d1769ca0d. Arguments
+queda vacío. Seleccione Bind.
+Resultado esperado
+La pantalla del exchange debe mostrar el binding hacia esa cola. Un evento publicado con otra
+routing key, por ejemplo assignment.changed.<id-X>, no llega a esta cola.
+5. Contrato que recibirá la consumidora
+El cuerpo se publica como JSON con schemaVersion=1. La consumidora debe ignorar propiedades
+adicionales compatibles, pero rechazar versiones no soportadas o applicationId ajeno.
+Guía de integración de aplicaciones consumidoras
+--- PAGE 6 ---
+Security Baseline · Eventos RabbitMQ
+{
+"eventId": "11111111-1111-1111-1111-111111111111",
+"schemaVersion": 1,
+"eventType": "ROLE_ASSIGNED",
+"occurredOn": "2026-11-17T20:00:00Z",
+"tenantId": "universidad-uco",
+"applicationId": "41ce1b83-a94e-49d7-a1fb-ee6d1769ca0d",
+"applicationName": "demo-integracion-v2",
+"userId": "user-demo",
+"correlationId": "manual-rabbit-001",
+"assignmentId": "assignment-demo-001",
+"roleId": "role-demo-001",
+"roleName": "DEMO_ROLE",
+"profileAssignmentId": null,
+"profileId": null,
+"profileName": null,
+"roles": [{"assignmentId":"assignment-demo-001","roleId":"role-demo-
+001","roleName":"DEMO_ROLE"}]
+}
+Campo Uso obligatorio en consumidora
+Clave de idempotencia: no repetir el efecto local si llega de
+eventId
+nuevo.
+schemaVersion Aceptar v1; rechazar versiones que el código no entiende.
+applicationId Debe ser igual al applicationId configurado localmente.
+eventType Decidir qué caché/proyección local se actualiza.
+tenantId, userId, roles Identificar el alcance del cambio y aplicar el efecto local.
+correlationId Propagarlo a logs y trazas si viene informado.
+6. Implementar la aplicación consumidora
+En arquitectura hexagonal o limpia, RabbitMQ es una entrada externa. El listener es un adaptador de
+entrada; traduce el mensaje a un comando y llama a un caso de uso. El dominio y la aplicación no
+importan RabbitTemplate, Channel, Message ni @RabbitListener.
+src/main/java/co/edu/uco/<app>/
+└── assignments/
+├── application/
+│ ├── port/in/ApplyAssignmentChangeUseCase.java
+│ ├── port/in/ApplyAssignmentChangeCommand.java
+│ ├── port/out/ProcessedEventRepository.java
+│ └── service/ApplyAssignmentChangeService.java
+Guía de integración de aplicaciones consumidoras
+--- PAGE 7 ---
+Security Baseline · Eventos RabbitMQ
+└── infrastructure/
+├── config/AssignmentEventsRabbitConfiguration.java
+├── adapter/in/messaging/rabbitmq/
+│ ├── AssignmentEventsRabbitListener.java
+│ ├── AssignmentChangedEventV1.java
+│ └── AssignmentChangedEventMapper.java
+└── adapter/out/persistence/ProcessedEventPersistenceAdapter.java
+6.1. Dependencia
+<dependency>
+<groupId>org.springframework.boot</groupId>
+<artifactId>spring-boot-starter-amqp</artifactId>
+</dependency>
+6.2. Propiedades
+# src/main/resources/application.properties
+spring.rabbitmq.host=${RABBITMQ_HOST:localhost}
+spring.rabbitmq.port=${RABBITMQ_PORT:25672}
+spring.rabbitmq.virtual-host=${RABBITMQ_VIRTUAL_HOST:/security}
+spring.rabbitmq.username=${RABBITMQ_USERNAME}
+spring.rabbitmq.password=${RABBITMQ_PASSWORD}
+spring.rabbitmq.listener.simple.acknowledge-mode=manual
+spring.rabbitmq.listener.simple.prefetch=1
+security.assignment-events.application-id=${SECURITY_APPLICATION_ID}
+security.assignment-events.exchange=security.assignment.events
+security.assignment-events.queue=security.assignment.${SECURITY_APPLICATION_ID}
+6.3. Configuración de cola y binding
+@Configuration
+class AssignmentEventsRabbitConfiguration {
+@Bean
+Queue assignmentQueue(AssignmentEventsProperties p) {
+return new Queue(p.queue(), true);
+}
+@Bean
+Binding assignmentBinding(Queue assignmentQueue, DirectExchange exchange,
+AssignmentEventsProperties p) {
+return BindingBuilder.bind(assignmentQueue).to(exchange)
+.with("assignment.changed." + p.applicationId());
+}
+Guía de integración de aplicaciones consumidoras
+--- PAGE 8 ---
+Security Baseline · Eventos RabbitMQ
+}
+En el demo actual, AssignmentEventsConfiguration declara también el DirectExchange. Para una
+operación más robusta, el exchange compartido debe ser aprovisionado por plataforma o por el PDP;
+cada consumidora declara su cola y binding propios.
+6.4. Listener y caso de uso
+@RabbitListener(queues = "${security.assignment-events.queue}", ackMode = "MANUAL")
+void consume(Message message, Channel channel, @Header("amqp_deliveryTag") long tag)
+throws IOException {
+try {
+AssignmentChangedEventV1 event = decode(message);
+validateSchemaAndApplication(event);
+applyAssignmentChangeUseCase.execute(mapper.toCommand(event));
+channel.basicAck(tag, false);
+} catch (PermanentContractException e) {
+channel.basicReject(tag, false);
+} catch (Exception e) {
+channel.basicNack(tag, false, true);
+}
+}
+Caso Acción Por qué
+Efecto aplicado ACK El mensaje ya produjo el efecto local.
+Es entrega al menos una vez; no se
+eventId repetido ACK
+repite el efecto.
+schema/applicationId inválido Reject sin requeue Reintentar no corregirá el contrato.
+Base de datos/caché caída NACK o retry con límite El efecto aún no ocurrió.
+Idempotencia de producción
+No use un Set en memoria como solución final. Persistir eventId junto al efecto local o usar una
+restricción única en la base de datos. Así reinicios y varias réplicas no duplican el efecto.
+7. Pruebas paso a paso
+7.1. Sin aplicación local: prueba de enrutamiento
+9. Cree exchange, cola y binding como se explica en la sección 4.
+Guía de integración de aplicaciones consumidoras
+--- PAGE 9 ---
+Security Baseline · Eventos RabbitMQ
+10. Abra el exchange, expanda Publish message y use la routing key exacta de la aplicación.
+11. Pegue el JSON de la sección 5 y publique.
+12. Abra la cola. Ready debe aumentar a 1: Rabbit enruta el mensaje aunque no haya consumidora
+activa.
+7.2. Con consumidora
+13. Arranque la consumidora con SECURITY_APPLICATION_ID igual al UUID registrado en PDP.
+14. Verifique en Rabbit que Consumers sea mayor a 0 para la cola de esa aplicación.
+15. Publique el mismo evento: Ready vuelve a 0 y el log registra el eventId.
+16. Publíquelo por segunda vez: debe reconocerse como duplicado, sin repetir el efecto.
+7.3. Aislamiento X/Y
+17. Cree la cola/binding de X con su propio UUID.
+18. Publique assignment.changed.<id-Y>.
+19. Solo la cola Y cambia; X conserva Ready=0 y no registra el evento.
+8. Checklist de entrega
+• ☐ RabbitMQ está healthy y se accede por http://localhost:25673.
+• ☐ El exchange security.assignment.events es direct y durable.
+• ☐ Cada aplicación usa applicationId, cola y binding propios.
+• ☐ La consumidora valida schemaVersion y applicationId.
+• ☐ La consumidora persiste eventId procesados y confirma después del efecto local.
+• ☐ Se probaron mensaje válido, duplicado, contrato inválido y aislamiento X/Y.
+• ☐ No hay credenciales Rabbit hardcodeadas en el repositorio de la consumidora.
+Estado actual
+RabbitMQ y el PDP 0.1.14 ya pueden ejecutarse dentro de Security Baseline. La aplicación
+consumidora debe implementar o declarar su propia cola/binding; sin consumidora, la cola conserva
+los mensajes para inspección.
+Guía de integración de aplicaciones consumidoras

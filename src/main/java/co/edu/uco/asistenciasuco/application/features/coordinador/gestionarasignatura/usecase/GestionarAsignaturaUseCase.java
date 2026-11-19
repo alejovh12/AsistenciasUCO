@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.usecase;
 
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.usecase.domain.AsignaturaDomain;
+import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.usecase.domain.EstadoAsignaturaDomain;
 import java.util.UUID;
 
 public interface GestionarAsignaturaUseCase {
@@ -9,5 +10,6 @@ public interface GestionarAsignaturaUseCase {
 
     void actualizar(AsignaturaDomain domain);
 
-    void toggleEstado(UUID asignaturaId, UUID usuarioEjecutor);
+    /** HU074: {@code estaActivaDeseada} {@code null} alterna el estado actual. */
+    EstadoAsignaturaDomain toggleEstado(UUID asignaturaId, Boolean estaActivaDeseada, UUID usuarioEjecutor);
 }

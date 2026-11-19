@@ -4,6 +4,8 @@ services:
   grafana:
     image: grafana/grafana:${GRAFANA_VERSION}
     restart: unless-stopped
+    cpus: 0.5
+    mem_limit: 384m
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
@@ -28,6 +30,8 @@ services:
   prometheus:
     image: prom/prometheus:${PROMETHEUS_VERSION}
     restart: unless-stopped
+    cpus: 1.0
+    mem_limit: 768m
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
@@ -52,6 +56,8 @@ services:
   loki:
     image: grafana/loki:${LOKI_VERSION}
     restart: unless-stopped
+    cpus: 0.5
+    mem_limit: 512m
     command:
       - -config.file=/etc/loki/loki-config.yml
     ports:
@@ -74,6 +80,8 @@ services:
   tempo:
     image: grafana/tempo:${TEMPO_VERSION}
     restart: unless-stopped
+    cpus: 0.5
+    mem_limit: 512m
     command:
       - -config.file=/etc/tempo/tempo.yml
     ports:
@@ -96,6 +104,8 @@ services:
   alloy:
     image: grafana/alloy:${ALLOY_VERSION}
     restart: unless-stopped
+    cpus: 0.3
+    mem_limit: 256m
     command:
       - run
       - --server.http.listen-addr=0.0.0.0:12345

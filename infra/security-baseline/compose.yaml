@@ -1,4 +1,4 @@
-# Security Baseline 0.1.13 — instalación local ÚNICA de AsistenciasUCO.
+# Security Baseline 0.1.14 — instalación local ÚNICA de AsistenciasUCO.
 #
 # Origen: distribution/compose.yaml del release oficial de Seguridad-UCO (imágenes
 # davidalzate/security-{keycloak-local,opa,pdp,pep}:${SECURITY_VERSION}), endurecido para este repositorio:
@@ -11,6 +11,9 @@
 #   - Keycloak escucha en ${KEYCLOAK_PORT} dentro de una red propia con IP fija; PDP/PEP resuelven
 #     keycloak.localhost por extra_hosts hacia esa IP (el resolver de Netty trata *.localhost como loopback).
 #   - NO sustituye al Keycloak legacy (infra/keycloak, puerto 8081), que es otro proyecto.
+#   - SEC-BASELINE-020 (0.1.14): RabbitMQ se agrega como servicio propio (no dentro de la imagen del PDP),
+#     siguiendo el bloque canonico del manual de integracion de eventos del PDP; AMQP solo en 127.0.0.1:25672
+#     y la consola de administracion en 127.0.0.1:25673, con las credenciales del env-file local.
 #
 # Uso:  docker compose --env-file %USERPROFILE%\.asistencias-security-lab\lab.env -f infra/security-baseline/compose.yaml up -d
 # Prohibido: `docker compose down -v`, `docker volume prune`, `docker system prune -a`.
@@ -85,6 +88,26 @@ services:
     networks: [lab]
     image: ${SECURITY_DOCKER_ORG:?Configure SECURITY_DOCKER_ORG}/security-opa:${SECURITY_VERSION:?Configure SECURITY_VERSION}
 
+  # SEC-BASELINE-020 (0.1.14): eventos de asignacion del PDP (assignment.changed.<applicationId>). Puertos de host
+  # dedicados (25672/25673) para no colisionar con otro RabbitMQ local; entre contenedores el PDP usa rabbitmq:5672.
+  rabbitmq:
+    networks: [lab]
+    image: ${RABBITMQ_IMAGE:-rabbitmq:4.4.1-management}
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:?Configure RABBITMQ_USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Configure RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_VHOST: /security
+    ports:
+      - "127.0.0.1:${RABBITMQ_AMQP_PORT:-25672}:5672"
+      - "127.0.0.1:${RABBITMQ_MANAGEMENT_PORT:-25673}:15672"
+    volumes:
+      - asistencias-security-lab-rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 24
+
   pdp:
     networks: [lab]
     extra_hosts:
@@ -117,6 +140,12 @@ services:
       # Destino del logout BFF del PDP (cierra la sesion BFF y la sesion SSO de Keycloak y vuelve a la SPA).
       PDP_FRONTEND_ORIGIN: ${PDP_FRONTEND_ORIGIN:-http://localhost:4200}
       PDP_SECURITY_MFA_ENABLED: ${PDP_SECURITY_MFA_ENABLED:-false}
+      # SEC-BASELINE-020 (0.1.14): publicacion de AssignmentChangedEventV1 en security.assignment.events.
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: "5672"
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:?Configure RABBITMQ_USERNAME}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?Configure RABBITMQ_PASSWORD}
+      SPRING_RABBITMQ_VIRTUAL_HOST: /security
     ports:
       - "127.0.0.1:${PDP_PORT:-18080}:8080"
     depends_on:
@@ -125,6 +154,8 @@ services:
       surrealdb:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
 
   pep:
@@ -160,3 +191,4 @@ volumes:
   asistencias-security-lab-keycloak-data:
   asistencias-security-lab-surrealdb-data:
   asistencias-security-lab-redis-data:
+  asistencias-security-lab-rabbitmq-data:

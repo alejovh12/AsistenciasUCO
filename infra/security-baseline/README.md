@@ -1,14 +1,16 @@
-# Security Baseline 0.1.13 — instalación local única
+# Security Baseline 0.1.14 — instalación local única
 
-Estado: 2026-10-26. Esta es **la única** instalación local de Security Baseline (PDP, PEP, OPA, Keycloak central,
-Redis, SurrealDB). El Keycloak legacy de AsistenciasUCO (`infra/keycloak`, puerto 8081) es otro proyecto y se conserva.
+Estado: 2026-11-19 (SEC-BASELINE-020: se agrega RabbitMQ para eventos de asignacion). Esta es **la única** instalación
+local de Security Baseline (PDP, PEP, OPA, Keycloak central, Redis, SurrealDB, RabbitMQ). El Keycloak legacy de
+AsistenciasUCO (`infra/keycloak`, puerto 8081) es otro proyecto y se conserva.
 
 | Servicio | Imagen | Puerto host |
 |---|---|---|
-| Keycloak central (realm `security-baseline`) | `davidalzate/security-keycloak-local:0.1.13` | `127.0.0.1:19090` (issuer `http://keycloak.localhost:19090/realms/security-baseline`) |
-| PDP | `davidalzate/security-pdp:0.1.13` | `127.0.0.1:18080` |
-| PEP | `davidalzate/security-pep:0.1.13` | `127.0.0.1:18081` |
-| OPA / Redis / SurrealDB | `security-opa:0.1.13` / `redis:7.4-alpine` / `surrealdb:v3.3.0` | solo red interna |
+| Keycloak central (realm `security-baseline`) | `davidalzate/security-keycloak-local:0.1.14` | `127.0.0.1:19090` (issuer `http://keycloak.localhost:19090/realms/security-baseline`) |
+| PDP | `davidalzate/security-pdp:0.1.14` | `127.0.0.1:18080` |
+| PEP | `davidalzate/security-pep:0.1.14` | `127.0.0.1:18081` |
+| OPA / Redis / SurrealDB | `security-opa:0.1.14` / `redis:7.4-alpine` / `surrealdb:v3.3.0` | solo red interna |
+| RabbitMQ (eventos `assignment.changed.<applicationId>`) | `rabbitmq:4.4.1-management` | `127.0.0.1:25672` (AMQP) / `127.0.0.1:25673` (consola, `http://localhost:25673`) |
 
 Proyecto Compose: **`asistencias-security-lab`** (se conserva a propósito: sus volúmenes `asistencias-security-lab_*-data`
 contienen el realm, el catálogo del PDP y las asignaciones; renombrarlo los dejaría huérfanos).

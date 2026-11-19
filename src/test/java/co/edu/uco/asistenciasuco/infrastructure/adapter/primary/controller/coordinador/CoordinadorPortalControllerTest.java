@@ -10,12 +10,16 @@ import co.edu.uco.asistenciasuco.application.features.coordinador.consultarperio
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.primaryports.ConsultarEstudiantesProgramaInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarperiodosacademicos.primaryports.ConsultarPeriodosAcademicosInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.primaryports.GestionarAsignaturaInputPort;
+import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.primaryports.dto.EstadoAsignaturaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.primaryports.dto.GuardarAsignaturaDTO;
+import co.edu.uco.asistenciasuco.application.features.admin.exception.CatalogoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarplanestudio.primaryports.GestionarPlanEstudioInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarplanestudio.primaryports.dto.GuardarPlanEstudioDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -41,6 +45,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -65,7 +70,7 @@ class CoordinadorPortalControllerTest {
     private final CoordinadorPortalController controller = new CoordinadorPortalController(
             periods, students, managePlans, manageSubjects, identity);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
-            .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
+            .setControllerAdvice(new GlobalExceptionHandler(codigo -> Optional.empty())).build();
 
     @Test
     void periodosAcademicosTrasladanElFiltroDeEstadoYElTotalEsElDeLaListaFiltrada() throws Exception {
@@ -164,9 +169,70 @@ class CoordinadorPortalControllerTest {
         assertEquals(SUBJECT, subjectCaptor.getValue().idAsignatura());
         assertEquals(ACTOR, subjectCaptor.getValue().usuarioEjecutor());
 
+        when(manageSubjects.toggleEstado(SUBJECT, null, ACTOR)).thenReturn(new EstadoAsignaturaDTO(SUBJECT, false, "La asignatura quedó inactiva."));
         mvc.perform(patch("/api/v1/coordinador/asignaturas/{id}/estado", SUBJECT))
                 .andExpect(status().isOk());
-        verify(manageSubjects).toggleEstado(SUBJECT, ACTOR);
+        verify(manageSubjects).toggleEstado(SUBJECT, null, ACTOR);
+    }
+
+    // HU074: el PATCH de estado responde el estado en que quedo la asignatura y el mensaje del catalogo (ASI_011 / ASI_012).
+    @Test
+    void hu074_toggle_estado_responde_200_con_el_estado_nuevo_y_el_mensaje_de_la_bd() throws Exception {
+        when(manageSubjects.toggleEstado(SUBJECT, null, ACTOR)).thenReturn(new EstadoAsignaturaDTO(SUBJECT, true, "La asignatura quedó activa."));
+
+        mvc.perform(patch("/api/v1/coordinador/asignaturas/{id}/estado", SUBJECT))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exitoso").value(true))
+                .andExpect(jsonPath("$.datos.idAsignatura").value(SUBJECT.toString()))
+                .andExpect(jsonPath("$.datos.estaActivaAsignatura").value(true))
+                .andExpect(jsonPath("$.mensajeUsuario").value("La asignatura quedó activa."));
+    }
+
+    // HU074: cuerpo opcional {"estaActiva": true|false}; ausente, vacio o null alterna (contrato anterior).
+    @ParameterizedTest
+    @CsvSource(delimiter = ';', nullValues = "NULL", value = {
+            "{\"estaActiva\": true};true",
+            "{\"estaActiva\": false};false",
+            "{\"estaActiva\": null};NULL",
+            "{};NULL"
+    })
+    void hu074_toggle_estado_pasa_el_estado_pedido_en_el_cuerpo(final String cuerpo, final Boolean deseada) throws Exception {
+        final boolean quedaActiva = !Boolean.FALSE.equals(deseada);
+        when(manageSubjects.toggleEstado(SUBJECT, deseada, ACTOR))
+                .thenReturn(new EstadoAsignaturaDTO(SUBJECT, quedaActiva, "Mensaje del SP."));
+
+        mvc.perform(patch("/api/v1/coordinador/asignaturas/{id}/estado", SUBJECT).contentType("application/json").content(cuerpo))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.datos.estaActivaAsignatura").value(quedaActiva))
+                .andExpect(jsonPath("$.mensajeUsuario").value("Mensaje del SP."));
+        verify(manageSubjects).toggleEstado(SUBJECT, deseada, ACTOR);
+    }
+
+    @Test
+    void hu074_toggle_estado_con_estaActiva_no_booleano_responde_400_sin_llamar_al_puerto() throws Exception {
+        mvc.perform(patch("/api/v1/coordinador/asignaturas/{id}/estado", SUBJECT).contentType("application/json")
+                        .content("{\"estaActiva\": \"quizas\"}"))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(manageSubjects);
+    }
+
+    // HU074: ASI_009 (grupos en el periodo vigente o futuros) y ASI_006 (compartida con programas ajenos) son 409 con su codigo y
+    // el texto del catalogo de mensajes.
+    @ParameterizedTest
+    @CsvSource(delimiter = ';', value = {
+            "ASI_009;No puedes inactivar la asignatura: tiene grupos en el período vigente o en períodos futuros.",
+            "ASI_006;La asignatura es compartida con programas que no coordinas; solo puedes cambiar su semestre y su carácter en tu plan."
+    })
+    void hu074_toggle_estado_rechazado_responde_409_con_el_mensaje_del_catalogo(final String codigo, final String texto) throws Exception {
+        final MockMvc conCatalogo = MockMvcBuilders.standaloneSetup(controller)
+                .setControllerAdvice(new GlobalExceptionHandler(mensaje -> codigo.equals(mensaje) ? Optional.of(texto) : Optional.empty()))
+                .build();
+        doThrow(new ConflictException(CatalogoErrorCode.valueOf(codigo))).when(manageSubjects).toggleEstado(SUBJECT, null, ACTOR);
+
+        conCatalogo.perform(patch("/api/v1/coordinador/asignaturas/{id}/estado", SUBJECT))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value(codigo))
+                .andExpect(jsonPath("$.message").value(texto));
     }
 
     @Test
@@ -174,7 +240,7 @@ class CoordinadorPortalControllerTest {
         mvc.perform(post("/api/v1/coordinador/planes-estudio").contentType("application/json"))
                 .andExpect(status().isBadRequest());
         doThrow(new FeatureUnavailableException("Sin capacidad pública"))
-                .when(manageSubjects).toggleEstado(SUBJECT, ACTOR);
+                .when(manageSubjects).toggleEstado(SUBJECT, null, ACTOR);
         mvc.perform(patch("/api/v1/coordinador/asignaturas/{id}/estado", SUBJECT))
                 .andExpect(status().isNotImplemented());
     }

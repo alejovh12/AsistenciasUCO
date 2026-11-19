@@ -60,6 +60,8 @@ public record Notificacion(
 
     /** ATA D1 (HU175): aviso al estudiante de las tomas en falta de una sesion que ya termino (un correo por estudiante y sesion). */
     public static final String TIPO_FALTA_ASISTENCIA_SESION_ESTUDIANTE = "FALTA_ASISTENCIA_SESION_ESTUDIANTE";
+    /** NOTOMA-001: aviso al coordinador de que el docente no tomo asistencia en una sesion que ya termino (un correo por coordinador y sesion). */
+    public static final String TIPO_SESION_SIN_TOMA_COORDINADOR = "SESION_SIN_TOMA_COORDINADOR";
 
     public Notificacion {
         Objects.requireNonNull(tipo, "El tipo de notificacion es obligatorio.");

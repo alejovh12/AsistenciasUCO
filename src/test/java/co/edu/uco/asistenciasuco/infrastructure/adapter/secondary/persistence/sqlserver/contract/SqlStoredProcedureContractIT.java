@@ -223,7 +223,8 @@ class SqlStoredProcedureContractIT {
                 Arguments.of("usp_toggle_estado_asignatura", List.of(
                         input("@idAsignatura", "uniqueidentifier"),
                         input("@idCorrelacion", "uniqueidentifier"),
-                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@estaActivaDeseada", "bit")   // HU074: NULL = alternar
                 )),
                 Arguments.of("usp_registrar_o_actualizar_plan_estudio", List.of(
                         input("@idPlanEstudio", "uniqueidentifier"),
@@ -608,6 +609,20 @@ class SqlStoredProcedureContractIT {
                 Arguments.of("usp_registrar_aviso_falta_sesion", List.of(
                         input("@idSesion", "uniqueidentifier"),
                         input("@totalEstudiantesAvisados", "int"),
+                        input("@idCorrelacion", "uniqueidentifier")
+                )),
+                // NOTOMA-001: aviso a la coordinacion de la sesion sin toma (comandos de sistema del job)
+                Arguments.of("usp_consultar_sesiones_pendientes_aviso_sin_toma", List.of(
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@tamanoLote", "int")
+                )),
+                Arguments.of("usp_consultar_destinatarios_aviso_sin_toma", List.of(
+                        input("@idSesion", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier")
+                )),
+                Arguments.of("usp_registrar_aviso_sesion_sin_toma", List.of(
+                        input("@idSesion", "uniqueidentifier"),
+                        input("@totalCoordinadoresAvisados", "int"),
                         input("@idCorrelacion", "uniqueidentifier")
                 )),
                 Arguments.of("usp_registrar_asistencias_toma", List.of(
