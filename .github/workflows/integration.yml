@@ -220,7 +220,8 @@ jobs:
         run: |
           # VAL-PRU-04: una IT con @Tag("cuarentena-oleada3") se excluiria (pom.xml, failsafe.excludedGroups). La oleada 3 corrigio
           # las 12 que la tenian y hoy ninguna la lleva: el gate corre todas (docs/work-items/VAL-oleada3-pru04).
-          ./mvnw -B -ntp --no-transfer-progress verify -Pintegration
+          # -U evita reutilizar respuestas negativas cacheadas de plugins de Maven Central.
+          ./mvnw -U -B -ntp --no-transfer-progress verify -Pintegration
 
       - name: Upload unit test reports
         if: always()
