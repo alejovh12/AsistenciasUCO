@@ -27,7 +27,33 @@ class JpaRepositoryBeanUniquenessTest {
     private static final String REPOSITORY_PACKAGE =
             "co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository";
     private static final String PORT_PACKAGE = "co.edu.uco.asistenciasuco.application.secondaryports.";
-    // develop has 73 active repository beans; SES-GEN-01 adds HorarioGrupoPrevisualizacionJpaRepository, for a total of 74.
+    // 31 repositories de Port (MAINT-003F: + SesionProcedenciaJpaRepository; LB-004D: + SoporteArchivoJpaRepository,
+    // SolicitudRevisionDocenteJpaRepository y AsistenciaSesionEstudianteJpaRepository) + AuditEventJpaRepository
+    // (@Repository sin Port, TD-010 OPTION A). HU076-HU078: + ProgramaAcademicoJpaRepository y CatalogoProgramaJpaRepository; HU062-HU093: + DocenteProgramaJpaRepository y TipoVinculacionJpaRepository; +1 por la integracion de HU121-HU122/HU154 (ramas que no actualizaron el conteo); HU065-HU070: + CoordinadorIndicadoresJpaRepository; HU102-HU144: + DecanoIndicadoresJpaRepository; HU133-HU139: + AdminIndicadoresJpaRepository; develop (HU096-HU098, HU064-HU060, HU104-HU145): + PeriodoAcademicoCommandJpaRepository, AsistenciaProgramaJpaRepository, FacultadDecanoJpaRepository; SEC-BASELINE-017: + ExternalIdentityLinkJpaRepository; HU010-HU011: + SolicitudRevisionEstudianteJpaRepository; HU051: + RetiroEstudianteGrupoJpaRepository; HU053-HU055: + SolicitudIngresoGrupoJpaRepository; HU008: + OfertaGruposEstudianteJpaRepository; HU094-HU095: + DocenteProgramaReporteJpaRepository; HU006: + PerfilUsuarioJpaRepository; HU112-HU157: + ConsultasTransversalesJpaRepository (HU153 agrego y luego retiro TipoIdentificacionCommandJpaRepository: catalogo de solo consulta); HU159: + CorreccionIdentidadJpaRepository; HU176B: + MatriculaQrJpaRepository; CULM-001 B.1: + SesionCancelacionJpaRepository y DiaFestivoJpaRepository.  CULM-001 DEC-064: + SesionManualJpaRepository.
+    // IDENT-001: + VerificacionCorreoJpaRepository (verificacion de correo, reenvio y token de un solo uso).
+    // F3: + OfertaCreacionGruposDocenteJpaRepository (oferta de asignaturas del docente para crear grupos).
+    // CULM-001 A: - SolicitudIngresoGrupoJpaRepository (HU053-HU055 descartadas).
+    // Integracion CULM-001 (A + B.1): 56 - 1 (A) + 2 (B.1: SesionCancelacion y DiaFestivo) = 57.
+    // CULM-001 B.2: + TomaAsistenciaJpaRepository, AsistenciaQrJpaRepository y ResumenAsistenciaJpaRepository = 60.
+    // CULM-001 D.4: + AdmisionEstudianteJpaRepository y ProgramaInstitucionJpaRepository = 62.
+    // CULM-001 D.2: + ConfiguracionReclamosJpaRepository (configuracion del formulario de reclamos) = 63.
+    // CULM-001 B2NM: + AsignaturaPlanEstudioJpaRepository = 64.
+    // CULM-001 D.5: + CargaUsuariosJpaRepository (validacion de carga masiva) = 65.
+    // CULM-001 C.1: + AlertaInasistenciaJpaRepository, RevisionCancelacionJpaRepository y RealtimeAudienciaJpaRepository = 68.
+    // DEC-065 (4): - OfertaCreacionGruposDocenteJpaRepository (el docente ya no crea grupos) = 68.
+    // HU018 / HU019: + PlanEstudioEstudianteJpaRepository y HorasProgramadasEstudianteJpaRepository = 70.
+    // DEC-074: - CargaUsuariosJpaRepository (se retira la carga masiva) = 69.
+    // INT-003: + MensajeCatalogoJpaRepository (sincronizacion de mensajes desde MessageUcoLab) = 70.
+    // CIERRE-W1B: - DocenteJpaRepository (se retira el directorio general /api/v1/docentes) = 69.
+    // CIERRE-W3I: + un repositorio de indicadores del docente (resumen de grupos) = 70.
+    // CIERRE-W2B: + ResumenMateriasEstudianteJpaRepository (resumen del tablero del estudiante) = 71.
+    // ATA D1: + AvisoFaltaSesionJpaRepository (marca de aviso de falta por sesion) = 72.
+    // ATA D7: + SesionCalendarioJpaRepository (calendario de sesiones del estudiante y del docente) = 73.
+    // ATA D10: + FaltaReclamableJpaRepository (faltas por reclamar del estudiante) = 74.
+    // ATA D11: - OfertaGruposEstudianteJpaRepository (se retira la oferta de grupos del estudiante, HU008) = 73.
+    // MEJORAS-SERGIO-2026-11-18: - TipoVinculacionJpaRepository (se retira el tipo de vinculacion del docente) = 72.
+    // Conteo del develop integrado antes de esta rama = 73; SES-GEN-01 agrega el adaptador de previsualización.
+    // SES-GEN-01: + HorarioGrupoPrevisualizacionJpaRepository = 74.
     private static final int EXPECTED_REPOSITORIES = 74;
 
     @Test
