@@ -48,7 +48,10 @@ class DbExceptionTranslatorAsignaturaEstadoTest {
                 false, "Texto del catalogo.", "DBCODE=" + codigo + "|detalle tecnico", "corr", operacion));
 
         assertEquals(codigo, exception.getCode());
-        assertEquals(CatalogoErrorCode.valueOf(codigo).defaultMessage(), exception.getMessage());
+        final String mensajeEsperado = "ASI_010".equals(codigo)
+                ? "Texto del catalogo."
+                : CatalogoErrorCode.valueOf(codigo).defaultMessage();
+        assertEquals(mensajeEsperado, exception.getMessage());
     }
 
     @ParameterizedTest

@@ -39,7 +39,7 @@ class DbExceptionTranslatorSesGen01Test {
     @CsvSource(delimiter = ';', value = {
             "HOR_007;La franja Lunes 08:00-08:30 debe durar entre 60 y 240 minutos.",
             "HOR_008;La franja Lunes 05:00-07:00 debe estar dentro del horario permitido (06:00-22:00).",
-            "ASI_009;Las horas semanales de la materia deben ser un entero entre 1 y 40.",
+            "ASI_013;Las horas semanales de la materia deben ser un entero entre 1 y 40.",
             "PER_011;El período debe durar 16 semanas: la fecha de fin debe ser 2027-05-25."
     })
     void las_entradas_invalidas_son_validacion_400_con_el_mensaje_de_la_db(final String codigo, final String mensajeDb) {

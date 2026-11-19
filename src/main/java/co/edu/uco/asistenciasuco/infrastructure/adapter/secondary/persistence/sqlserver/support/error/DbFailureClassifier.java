@@ -79,7 +79,10 @@ final class DbFailureClassifier {
         return switch (code) {
             case "SEC_001", "SEC_002", "EST_004", "COO_003" -> SecurityErrorCode.FORBIDDEN;
             // CULM-001 B2NM (DEC-019/DEC-020, CONTRACT 2.8.1): asignaturas por plan, matricula con programa y ambito de coordinacion.
-            case "ASI_002", "ASI_003", "ASI_005", "ASI_006", "MQR_008" -> CommonErrorCode.CONFLICT;
+            case "ASI_002", "ASI_003", "ASI_005", "MQR_008" -> CommonErrorCode.CONFLICT;
+            case "ASI_006" -> CatalogoErrorCode.ASI_006;
+            case "ASI_009" -> CatalogoErrorCode.ASI_009;
+            case "ASI_010" -> CatalogoErrorCode.ASI_010;
             case "ASI_004" -> CommonErrorCode.RESOURCE_NOT_FOUND;
             case "ASI_007", "EST_005", "EST_006", "COO_002" -> CommonErrorCode.VALIDATION_ERROR;
             case "ATT_001", "ATT_002", "ATT_003", "GEN_002", "RC_001", "SES_004", "PLA_001",
@@ -208,8 +211,7 @@ final class DbFailureClassifier {
             case "HOR_007" -> MensajeUsuarioErrorCode.HOR_007;
             case "HOR_008" -> MensajeUsuarioErrorCode.HOR_008;
             case "HOR_009" -> MensajeUsuarioErrorCode.HOR_009;
-            case "ASI_009" -> MensajeUsuarioErrorCode.ASI_009;
-            case "ASI_010" -> MensajeUsuarioErrorCode.ASI_010;
+            case "ASI_013" -> MensajeUsuarioErrorCode.ASI_013;
             case "PER_010" -> MensajeUsuarioErrorCode.PER_010;
             case "PER_011" -> MensajeUsuarioErrorCode.PER_011;
             // SES_005: hora local inexistente por cambio de horario al precargar las sesiones (antes caia en ERR_DB_UNCLASSIFIED).

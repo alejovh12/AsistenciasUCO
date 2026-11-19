@@ -3,8 +3,10 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsignaturaCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsignaturaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.AsignaturaProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResultadoEstadoAsignaturaProjection;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.mapper.AcademicViewJpaProjectionMapper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.projection.AsignaturaQueryRow;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.DbExceptionTranslator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.JpaProcedureExecutor;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.ProcedureResult;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
@@ -61,7 +63,8 @@ public class AsignaturaJpaRepository implements AsignaturaQueryPort, AsignaturaC
             EXEC dbo.usp_toggle_estado_asignatura
                  @idAsignatura = :idAsignatura,
                  @idCorrelacion = :idCorrelacion,
-                 @idUsuarioEjecutor = :idUsuarioEjecutor
+                 @idUsuarioEjecutor = :idUsuarioEjecutor,
+                 @estaActivaDeseada = :estaActivaDeseada
             """;
 
     // CULM-001 B2NM: una fila por vinculo activo (uv_asignatura_plan_estudio); el catalogo (uv_asignatura) ya no conoce el plan.
@@ -84,6 +87,8 @@ public class AsignaturaJpaRepository implements AsignaturaQueryPort, AsignaturaC
     static final String OP_CREAR = "crearAsignatura";
     static final String OP_ACTUALIZAR = "actualizarAsignatura";
     static final String OP_TOGGLE = "toggleEstadoAsignatura";
+    static final String DBCODE_QUEDO_ACTIVA = "ASI_011";
+    static final String DBCODE_QUEDO_INACTIVA = "ASI_012";
 
     private final EntityManager entityManager;
     private final JpaProcedureExecutor procedureExecutor;
@@ -114,8 +119,19 @@ public class AsignaturaJpaRepository implements AsignaturaQueryPort, AsignaturaC
     }
 
     @Override
-    public void toggleEstadoAsignatura(final UUID idAsignatura, final UUID usuarioEjecutor) {
-        ejecutarToggleEstadoAsignatura(idAsignatura, usuarioEjecutor);
+    public ResultadoEstadoAsignaturaProjection toggleEstadoAsignatura(final UUID idAsignatura, final Boolean estaActivaDeseada,
+                                                                      final UUID usuarioEjecutor) {
+        final ProcedureResult resultado = ejecutarToggleEstadoAsignatura(idAsignatura, estaActivaDeseada, usuarioEjecutor);
+        return new ResultadoEstadoAsignaturaProjection(resultado.getMensajeUsuarioResultado(),
+                estadoConfirmado(resultado.getMensajeTecnicoResultado()));
+    }
+
+    /** ASI_011 = quedó activa, ASI_012 = quedó inactiva; {@code null} si el SP no publica el código de éxito. */
+    private static Boolean estadoConfirmado(final String mensajeTecnico) {
+        return DbExceptionTranslator.dbCodeOf(mensajeTecnico)
+                .filter(codigo -> DBCODE_QUEDO_ACTIVA.equals(codigo) || DBCODE_QUEDO_INACTIVA.equals(codigo))
+                .map(DBCODE_QUEDO_ACTIVA::equals)
+                .orElse(null);
     }
 
     // QUERIES
@@ -225,13 +241,15 @@ public class AsignaturaJpaRepository implements AsignaturaQueryPort, AsignaturaC
         return procedureExecutor.execute(OP_ACTUALIZAR, SQL_ACTUALIZAR_ASIGNATURA, parametros, correlationId);
     }
 
-    private ProcedureResult ejecutarToggleEstadoAsignatura(final UUID idAsignatura, final UUID usuarioEjecutor) {
+    private ProcedureResult ejecutarToggleEstadoAsignatura(final UUID idAsignatura, final Boolean estaActivaDeseada,
+                                                           final UUID usuarioEjecutor) {
         final UUID correlationId = CorrelationIdContext.require();
 
         final Map<String, Object> parametros = new LinkedHashMap<>();
         parametros.put(PARAM_ID_ASIGNATURA, idAsignatura);
         parametros.put(PARAM_ID_CORRELACION, correlationId);
         parametros.put(PARAM_ID_USUARIO_EJECUTOR, usuarioEjecutor);
+        parametros.put("estaActivaDeseada", estaActivaDeseada);
 
         return procedureExecutor.execute(OP_TOGGLE, SQL_TOGGLE_ESTADO_ASIGNATURA, parametros, correlationId);
     }

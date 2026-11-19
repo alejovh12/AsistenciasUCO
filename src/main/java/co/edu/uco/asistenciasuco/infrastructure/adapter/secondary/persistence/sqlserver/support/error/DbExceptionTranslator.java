@@ -100,6 +100,10 @@ public final class DbExceptionTranslator {
             FacultadErrorCode.FAC_002,
             CatalogoErrorCode.TPR_002,
             CatalogoErrorCode.ARE_002,
+            // HU074: conservar los códigos y el 409 de asignatura compartida, inactivación y uso inactivo.
+            CatalogoErrorCode.ASI_006,
+            CatalogoErrorCode.ASI_009,
+            CatalogoErrorCode.ASI_010,
             DocenteErrorCode.ERR_PERSONA_YA_REGISTRADA,
             DocenteErrorCode.ERR_DOCENTE_YA_VINCULADO_PROGRAMA,
             DocenteErrorCode.ERR_DOCENTE_SIN_VINCULO_ACTIVO,
@@ -144,7 +148,6 @@ public final class DbExceptionTranslator {
             // SES-GEN-01: reglas del horario del grupo, asignatura/periodo no disponibles y hora local inexistente.
             MensajeUsuarioErrorCode.HOR_006,
             MensajeUsuarioErrorCode.HOR_009,
-            MensajeUsuarioErrorCode.ASI_010,
             MensajeUsuarioErrorCode.PER_010,
             MensajeUsuarioErrorCode.SES_005,
             CommonErrorCode.CONFLICT
@@ -195,7 +198,7 @@ public final class DbExceptionTranslator {
             // SES-GEN-01: duracion y ventana de la franja, horas de la materia y duracion del periodo (400).
             MensajeUsuarioErrorCode.HOR_007,
             MensajeUsuarioErrorCode.HOR_008,
-            MensajeUsuarioErrorCode.ASI_009,
+            MensajeUsuarioErrorCode.ASI_013,
             MensajeUsuarioErrorCode.PER_011,
             CommonErrorCode.VALIDATION_ERROR
     );
@@ -220,8 +223,8 @@ public final class DbExceptionTranslator {
             MensajeUsuarioErrorCode.HOR_007,
             MensajeUsuarioErrorCode.HOR_008,
             MensajeUsuarioErrorCode.HOR_009,
-            MensajeUsuarioErrorCode.ASI_009,
-            MensajeUsuarioErrorCode.ASI_010,
+            CatalogoErrorCode.ASI_010,
+            MensajeUsuarioErrorCode.ASI_013,
             MensajeUsuarioErrorCode.PER_010,
             MensajeUsuarioErrorCode.PER_011,
             MensajeUsuarioErrorCode.SES_005
@@ -235,6 +238,11 @@ public final class DbExceptionTranslator {
     );
 
     private DbExceptionTranslator() {
+    }
+
+    /** HU074: extrae el DBCODE que un SP publica también en su resultado exitoso. */
+    public static Optional<String> dbCodeOf(final String technicalMessage) {
+        return DbTechnicalError.parse(technicalMessage).map(DbTechnicalError::codigo);
     }
 
     /**

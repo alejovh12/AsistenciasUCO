@@ -75,7 +75,7 @@ Ejemplo de work item técnico cerrado: [TECH-001](TECH-001-restaurar-gate-arquit
 
 ## SES-GEN-01 — 2026-11-19
 
-- [Calendario de sesiones del semestre al definir el grupo](SES-GEN-01-calendario-semestre-grupo/PLAN.md): el coordinador define días/horas del grupo y el sistema calcula las sesiones y el total de horas del semestre con todas las validaciones. `CONTRACT_ANALYSIS` READY; implementación NOT_READY (falta la fuente de horas de la materia y el contrato). Contrato en borrador ([CONTRACT_PROPOSAL](SES-GEN-01-calendario-semestre-grupo/CONTRACT_PROPOSAL.md)) y solicitud al dueño DB en borrador ([HANDOFF_DB](SES-GEN-01-calendario-semestre-grupo/HANDOFF_DB.md)).
+- [Calendario de sesiones del semestre al definir el grupo](SES-GEN-01-calendario-semestre-grupo/PLAN.md): el coordinador define días/horas del grupo y el sistema calcula las sesiones y el total de horas del semestre con todas las validaciones. `CONTRACT_ANALYSIS` READY; la implementación fue autorizada explícitamente y ejecutada según el PLAN (2026-11-19). El PR Backend está en revisión y validación; no se ha cerrado el work item. Ver contrato implementado ([CONTRACT](SES-GEN-01-calendario-semestre-grupo/CONTRACT.md)), evidencia de análisis ([CONTRACT_PROPOSAL](SES-GEN-01-calendario-semestre-grupo/CONTRACT_PROPOSAL.md)) y el [handoff DB](SES-GEN-01-calendario-semestre-grupo/HANDOFF_DB.md).
 
 ## FASE 2B — 2026-11-15
 

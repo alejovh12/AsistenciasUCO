@@ -56,7 +56,7 @@ Calculado en la DB (`usp_previsualizar_horario_grupo`, un solo conjunto de resul
 ## 3. Asignaturas: `horasSemanales`
 
 - Lectura (aditivo): `GET /api/v1/coordinador/asignaturas` y `GET /api/v1/{coordinador,decano}/planes-estudio/{planId}/asignaturas` agregan `horasSemanales` (`number | null`). El SP devuelve 22 columnas (antes 21).
-- Escritura (aditivo): `POST/PUT /api/v1/coordinador/planes-estudio/{id}/asignaturas…` aceptan `horasSemanales` (entero ≥ 1; la DB valida el tope, `ASI_009`). En `POST`, ausente = NULL (sin cargar); en `PUT`, ausente = no cambia.
+- Escritura (aditivo): `POST/PUT /api/v1/coordinador/planes-estudio/{id}/asignaturas…` aceptan `horasSemanales` (entero ≥ 1; la DB valida el tope, `ASI_013`). En `POST`, ausente = NULL (sin cargar); en `PUT`, ausente = no cambia.
 - Decisiones: entero (sin fracciones), tabla `Asignatura`, filas existentes NULL (con NULL, B5/B8 no se evalúan y se avisa con `HOR_013`).
 
 ## 4. Período académico
@@ -73,7 +73,7 @@ Calculado en la DB (`usp_previsualizar_horario_grupo`, un solo conjunto de resul
 | `HOR_006` | 409 | B5: horas semanales de las franjas ≠ las de la materia |
 | `HOR_007` / `HOR_008` | 400 | B7: duración / ventana horaria de la franja |
 | `HOR_009` | 409 | B9: el cambio cruza con otros grupos de estudiantes inscritos |
-| `ASI_009` | 400 | `horasSemanales` fuera de 1..`ASIGNATURA/HORAS_SEMANALES_MAXIMO` |
+| `ASI_013` | 400 | `horasSemanales` fuera de 1..`ASIGNATURA/HORAS_SEMANALES_MAXIMO` |
 | `ASI_010` | 409 | B1: asignatura no disponible para crear grupos |
 | `PER_010` | 409 | B2: período no vigente o de otra institución |
 | `PER_011` | 400 | Duración del período ≠ 16 semanas |
@@ -103,7 +103,7 @@ Sin eventos ni SSE nuevos. La previsualización no se audita (no escribe), no re
 |---|---|---|
 | Unidad de la hora | Horas con decimales por definir | Entero, 60 min de reloj; totales en **minutos** en la API |
 | Valores B7 | Por definir | 60–240 min por franja, ventana 06:00–22:00, parámetros en la DB |
-| Códigos públicos | `ERR_HORAS_SEMANALES_NO_COINCIDEN`, … | Los códigos de la DB (`HOR_006`, `ASI_009`, …), como `PER_007`/`ASI_008` |
+| Códigos públicos | `ERR_HORAS_SEMANALES_NO_COINCIDEN`, … | Los códigos de la DB (`HOR_006`, `ASI_013`, …), como `PER_007`/`ASI_008` |
 | Aplicación de la DB | Entrega por fases con handoff a John | Cambios escritos en el repo DB y aplicados a la DB de desarrollo en una sola entrega |
 | SP congelado `usp_generar_sesiones_grupo` | A decidir (CC-04) | **No se toca**; solo se corrigió `numeroSemana` en la precarga |
 | Lectura tolerante de columnas | Secuencia expandir/contraer | Backend y DB se entregan juntos: el backend lee 22 columnas |

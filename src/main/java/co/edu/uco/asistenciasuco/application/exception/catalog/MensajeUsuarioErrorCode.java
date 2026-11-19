@@ -132,7 +132,7 @@ public enum MensajeUsuarioErrorCode implements ErrorDefinition {
     HOR_008("HOR_008", ErrorKind.VALIDATION, "La franja {} debe estar dentro del horario permitido ({})."),
     HOR_009("HOR_009", ErrorKind.CONFLICT,
             "El nuevo horario se cruza con otros grupos de {} estudiante(s) inscrito(s) en la franja {}."),
-    ASI_009("ASI_009", ErrorKind.VALIDATION, "Las horas semanales de la materia deben ser un entero entre 1 y {}."),
+    ASI_013("ASI_013", ErrorKind.VALIDATION, "Las horas semanales de la materia deben ser un entero entre 1 y {}."),
     ASI_010("ASI_010", ErrorKind.CONFLICT,
             "La asignatura no esta disponible para crear grupos: debe estar activa y vinculada a un plan activo de sus programas."),
     PER_010("PER_010", ErrorKind.CONFLICT,

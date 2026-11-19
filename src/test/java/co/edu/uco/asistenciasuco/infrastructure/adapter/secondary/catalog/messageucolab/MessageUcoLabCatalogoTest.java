@@ -58,8 +58,9 @@ class MessageUcoLabCatalogoTest {
     }
 
     @Test
-    void el_catalogo_trae_los_502_codigos_de_usuario_de_los_seeds() throws Exception {
-        // SES-GEN-01: + HOR_006..HOR_014, ASI_009, ASI_010, PER_010, PER_011 y VAL_APP_076 (seed 04 y 62 / migracion 57 de BD).
+    void el_catalogo_trae_los_506_codigos_de_usuario_de_los_seeds() throws Exception {
+        // SES-GEN-01: + HOR_006..HOR_014, ASI_013, ASI_014, PER_010, PER_011 y VAL_APP_076 (migraciones 57 y 59 de BD).
+        // HU074: + ASI_011 y ASI_012 de confirmacion; ASI_009/ASI_010 conservan el codigo con el significado de migracion 58.
         // CULM-001 A.1: - SIG_001..SIG_015 y ERR_SOLICITUD_MATRICULA_NO_IMPLEMENTADA (seeds 23 y 04 retirados).
         // CULM-001 A.2: + SES_017, REV_006, REV_007, REV_008, DEC_002 y DEC_003 (seed 33_culm001_a_mensajes).
         // VAL-oleada3 MSG-03: regenerado desde todos los seeds (291 que ya estaban en la BD) + 107 de MSG-05 (seed 62).
@@ -72,7 +73,7 @@ class MessageUcoLabCatalogoTest {
         // VAL-pendientes-john PRU-15: + PER_008 y PER_009 (seed 17 / migracion 49 de BD; filas con el formato de build-message-catalog.py).
         // ATA D7: + CAL_001 (seed 68 / migracion 52 de BD: rango invalido del calendario de sesiones).
         // MEJORAS-SERGIO-2026-11-18: - DOC_004 y ERR_TIPO_VINCULACION_INVALIDO (se retiro el tipo de vinculacion, migracion 56 de BD).
-        assertEquals(502, catalogo().size());
+        assertEquals(506, catalogo().size());
     }
 
     @Test
