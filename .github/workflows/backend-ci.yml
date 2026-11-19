@@ -144,6 +144,7 @@ jobs:
           }
 
           ./mvnw \
+            -U \
             -B \
             -ntp \
             --no-transfer-progress \
