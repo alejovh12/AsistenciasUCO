@@ -824,6 +824,36 @@ class SmtpNotificacionChannelSenderTest {
         assertThrows(IllegalStateException.class, () -> jakartaTransport.enviar(cNulls));
     }
 
+    @Test
+    @DisplayName("BE-S19: PRUEBA_VERIFICACION_CORREO (reenrutado por el panel admin para no emitir un token real) "
+            + "es un tipo entregable: se envia con el asunto/mensaje guardados, sin plantilla de BD ni de recursos")
+    void BE_S19_prueba_verificacion_correo_es_entregable() throws Exception {
+        assertTrue(PlantillaPorDefectoCatalogo.TIPOS_CONOCIDOS.contains("PRUEBA_VERIFICACION_CORREO"));
+
+        final UUID admin = UUID.randomUUID();
+        when(contactoResolver.consultarContactos(any()))
+                .thenReturn(List.of(new ContactoDestinatario(admin, "admin@uco.edu.co", true)));
+        when(plantillaRepository.consultarActiva("PRUEBA_VERIFICACION_CORREO", "es")).thenReturn(Optional.empty());
+
+        final SmtpNotificacionChannelSender sender = crearSender(crearProps(50, false),
+                new TopeEnvios(60, 500, Clock.systemUTC(), meterRegistry));
+        final NotificacionPersistida prueba = new NotificacionPersistida(
+                UUID.randomUUID(),
+                "PRUEBA_VERIFICACION_CORREO",
+                "Prueba de verificación de correo institucional",
+                "Hola, este es un mensaje de prueba del correo de verificación.",
+                List.of(new DestinatarioRef("ADMINISTRADOR", admin)),
+                Map.of(),
+                1,
+                Instant.now()
+        );
+
+        sender.enviar(prueba);
+
+        assertEquals(1, transport.enviados.size());
+        assertEquals("Prueba de verificación de correo institucional", transport.enviados.getFirst().asunto());
+    }
+
     private static final class FakeCorreoTransport implements CorreoTransport {
         private final List<CorreoSaliente> enviados = new ArrayList<>();
         private RuntimeException falloSimulado;
