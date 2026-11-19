@@ -5,6 +5,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsignaturaCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsignaturaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.AsignaturaProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResultadoEstadoAsignaturaProjection;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository.AsignaturaJpaRepository;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.mapping.JdbcBaselineValueMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -69,8 +70,9 @@ public final class AsignaturaJdbcBaseline implements AsignaturaQueryPort, Asigna
     }
 
     @Override
-    public void toggleEstadoAsignatura(final UUID idAsignatura, final UUID usuarioEjecutor) {
-        commands.toggleEstadoAsignatura(idAsignatura, usuarioEjecutor);
+    public ResultadoEstadoAsignaturaProjection toggleEstadoAsignatura(final UUID idAsignatura, final Boolean estaActivaDeseada,
+                                                                      final UUID usuarioEjecutor) {
+        return commands.toggleEstadoAsignatura(idAsignatura, estaActivaDeseada, usuarioEjecutor);
     }
 
     @Override

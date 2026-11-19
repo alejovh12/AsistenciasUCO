@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo;
 
+import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
+import co.edu.uco.asistenciasuco.application.features.admin.exception.CatalogoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.primaryports.ActualizarGrupoInputPort;
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.primaryports.dto.ActualizarGrupoDTO;
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.primaryports.dto.ActualizarGrupoResultadoDTO;
@@ -106,6 +108,26 @@ class GrupoControllerWriteEndpointsTest {
         assertEquals(DOCENTE, dto.getValue().idDocente());
         assertEquals(Boolean.TRUE, dto.getValue().generarSesionesAutomaticas());
         assertEquals(USUARIO_AUTENTICADO, dto.getValue().usuarioEjecutor());
+    }
+
+    // HU074 (migracion 57): crear un grupo de una asignatura inactiva responde 409 ASI_010 (codigo y texto del catalogo).
+    @Test
+    void hu074_crearGrupo_con_asignatura_inactiva_responde_409_asi_010() throws Exception {
+        when(crearGrupoPort.execute(any())).thenThrow(new ConflictException(CatalogoErrorCode.ASI_010));
+
+        mockMvc.perform(post("/api/v1/grupos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "idAsignatura": "%s",
+                                  "idPeriodoAcademico": "%s",
+                                  "codigo": 9,
+                                  "nombre": "Grupo C"
+                                }
+                                """.formatted(ASIGNATURA, PERIODO)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("ASI_010"))
+                .andExpect(jsonPath("$.message").value("La asignatura está inactiva; actívala para usarla."));
     }
 
     @Test

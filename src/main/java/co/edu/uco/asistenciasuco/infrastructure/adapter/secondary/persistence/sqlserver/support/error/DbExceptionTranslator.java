@@ -100,6 +100,10 @@ public final class DbExceptionTranslator {
             FacultadErrorCode.FAC_002,
             CatalogoErrorCode.TPR_002,
             CatalogoErrorCode.ARE_002,
+            // HU074 (migracion 57): asignatura compartida, inactivar con grupos vigentes o futuros y asignatura inactiva.
+            CatalogoErrorCode.ASI_006,
+            CatalogoErrorCode.ASI_009,
+            CatalogoErrorCode.ASI_010,
             DocenteErrorCode.ERR_PERSONA_YA_REGISTRADA,
             DocenteErrorCode.ERR_DOCENTE_YA_VINCULADO_PROGRAMA,
             DocenteErrorCode.ERR_DOCENTE_SIN_VINCULO_ACTIVO,
@@ -214,6 +218,14 @@ public final class DbExceptionTranslator {
     );
 
     private DbExceptionTranslator() {
+    }
+
+    /**
+     * HU074: codigo del canal tecnico {@code DBCODE=<codigo>|<detalle>} que publica un SP, tambien en el exito (ASI_011...).
+     * Vacio si el mensaje no trae el canal (SP anterior al codigo o mensaje libre).
+     */
+    public static Optional<String> dbCodeOf(final String technicalMessage) {
+        return DbTechnicalError.parse(technicalMessage).map(DbTechnicalError::codigo);
     }
 
     /**

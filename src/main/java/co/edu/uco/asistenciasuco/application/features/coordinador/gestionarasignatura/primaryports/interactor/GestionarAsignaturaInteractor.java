@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.primaryports.interactor;
 
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.primaryports.GestionarAsignaturaInputPort;
+import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.primaryports.dto.EstadoAsignaturaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.primaryports.dto.GuardarAsignaturaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.primaryports.mapper.GestionarAsignaturaMapper;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.usecase.GestionarAsignaturaUseCase;
@@ -17,7 +18,7 @@ public final class GestionarAsignaturaInteractor implements GestionarAsignaturaI
 
     @Override public void crear(final GuardarAsignaturaDTO dto) { useCase.crear(GestionarAsignaturaMapper.toDomain(dto)); }
     @Override public void actualizar(final GuardarAsignaturaDTO dto) { useCase.actualizar(GestionarAsignaturaMapper.toDomain(dto)); }
-    @Override public void toggleEstado(final UUID asignaturaId, final UUID usuarioEjecutor) {
-        useCase.toggleEstado(asignaturaId, usuarioEjecutor);
+    @Override public EstadoAsignaturaDTO toggleEstado(final UUID asignaturaId, final Boolean estaActivaDeseada, final UUID usuarioEjecutor) {
+        return GestionarAsignaturaMapper.toDTO(useCase.toggleEstado(asignaturaId, estaActivaDeseada, usuarioEjecutor));
     }
 }

@@ -66,7 +66,8 @@ class CoordinadorWiringConfigurationTest {
 
         final var gestionarAsignaturaUseCase = config.gestionarAsignaturaUseCase(
                 mock(AsignaturaCommandPort.class), mock(AsignaturaQueryPort.class),
-                mock(PlanEstudioQueryPort.class), scopePort);
+                mock(PlanEstudioQueryPort.class), scopePort,
+                mock(co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort.class));
         assertInstanceOf(GestionarAsignaturaUseCaseImpl.class, gestionarAsignaturaUseCase);
         assertInstanceOf(GestionarAsignaturaInteractor.class,
                 config.gestionarAsignaturaInputPort(gestionarAsignaturaUseCase));

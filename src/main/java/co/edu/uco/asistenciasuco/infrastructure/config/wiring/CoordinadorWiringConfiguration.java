@@ -39,6 +39,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.EstudianteP
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.PeriodoAcademicoQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.PlanEstudioCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.PlanEstudioQueryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -58,7 +59,7 @@ public class CoordinadorWiringConfiguration {
     @Bean ConsultarEstudiantesProgramaInputPort consultarEstudiantesProgramaInputPort(final ConsultarEstudiantesProgramaUseCase useCase) { return new ConsultarEstudiantesProgramaInteractor(useCase); }
     @Bean GestionarPlanEstudioUseCase gestionarPlanEstudioUseCase(final PlanEstudioCommandPort commandPort, final PlanEstudioQueryPort queryPort, final InstitutionalScopePort scopePort) { return new GestionarPlanEstudioUseCaseImpl(commandPort, queryPort, scopePort); }
     @Bean GestionarPlanEstudioInputPort gestionarPlanEstudioInputPort(final GestionarPlanEstudioUseCase useCase) { return new GestionarPlanEstudioInteractor(useCase); }
-    @Bean GestionarAsignaturaUseCase gestionarAsignaturaUseCase(final AsignaturaCommandPort commandPort, final AsignaturaQueryPort queryPort, final PlanEstudioQueryPort planQueryPort, final InstitutionalScopePort scopePort) { return new GestionarAsignaturaUseCaseImpl(commandPort, queryPort, planQueryPort, scopePort); }
+    @Bean GestionarAsignaturaUseCase gestionarAsignaturaUseCase(final AsignaturaCommandPort commandPort, final AsignaturaQueryPort queryPort, final PlanEstudioQueryPort planQueryPort, final InstitutionalScopePort scopePort, final MessageCatalogPort mensajes) { return new GestionarAsignaturaUseCaseImpl(commandPort, queryPort, planQueryPort, scopePort, mensajes); }
     @Bean GestionarAsignaturaInputPort gestionarAsignaturaInputPort(final GestionarAsignaturaUseCase useCase) { return new GestionarAsignaturaInteractor(useCase); }
     @Bean AsignaturaPlanUseCase asignaturaPlanUseCase(final AsignaturaPlanPort port) { return new AsignaturaPlanUseCaseImpl(port); }
     @Bean AsignaturaPlanInputPort asignaturaPlanInputPort(final AsignaturaPlanUseCase useCase) { return new AsignaturaPlanInteractor(useCase); }

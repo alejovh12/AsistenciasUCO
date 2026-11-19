@@ -1,6 +1,8 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador;
 
+import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
+import co.edu.uco.asistenciasuco.application.features.admin.exception.CatalogoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.coordinador.asignaturaplan.primaryports.AsignaturaPlanInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.asignaturaplan.primaryports.dto.AsignaturaAsociableDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.asignaturaplan.primaryports.dto.AsociarAsignaturaPlanDTO;
@@ -59,6 +61,21 @@ class AsignaturaPlanControllerComandosTest {
                         .content("{\"idAsignatura\":\"" + ASIGNATURA + "\",\"semestreNumero\":1,\"codigoCaracter\":\"OBL\"}"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("SEC_002"));
+    }
+
+    // HU074 (migracion 57): asociar una asignatura inactiva responde 409 ASI_010 con el texto del catalogo de mensajes.
+    @Test
+    void hu074_asociar_una_asignatura_inactiva_responde_409_asi_010_con_el_mensaje_del_catalogo() throws Exception {
+        final MockMvc conCatalogo = MockMvcBuilders.standaloneSetup(new AsignaturaPlanController(inputPort, identity))
+                .setControllerAdvice(new GlobalExceptionHandler(codigo -> "ASI_010".equals(codigo)
+                        ? Optional.of("La asignatura está inactiva; actívala para usarla.") : Optional.empty())).build();
+        doThrow(new ConflictException(CatalogoErrorCode.ASI_010)).when(inputPort).asociar(ACTOR, PLAN, new AsociarAsignaturaPlanDTO(ASIGNATURA, 2, "OBL"));
+
+        conCatalogo.perform(post("/api/v1/coordinador/planes-estudio/{planId}/asignaturas-asociadas", PLAN).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idAsignatura\":\"" + ASIGNATURA + "\",\"semestreNumero\":2,\"codigoCaracter\":\"OBL\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("ASI_010"))
+                .andExpect(jsonPath("$.message").value("La asignatura está inactiva; actívala para usarla."));
     }
 
     @Test

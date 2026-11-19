@@ -223,7 +223,8 @@ class SqlStoredProcedureContractIT {
                 Arguments.of("usp_toggle_estado_asignatura", List.of(
                         input("@idAsignatura", "uniqueidentifier"),
                         input("@idCorrelacion", "uniqueidentifier"),
-                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@estaActivaDeseada", "bit")   // HU074: NULL = alternar
                 )),
                 Arguments.of("usp_registrar_o_actualizar_plan_estudio", List.of(
                         input("@idPlanEstudio", "uniqueidentifier"),

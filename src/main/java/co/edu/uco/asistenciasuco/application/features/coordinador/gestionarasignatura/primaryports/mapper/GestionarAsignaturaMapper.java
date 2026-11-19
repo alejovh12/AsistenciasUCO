@@ -1,7 +1,9 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.primaryports.mapper;
 
+import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.primaryports.dto.EstadoAsignaturaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.primaryports.dto.GuardarAsignaturaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.usecase.domain.AsignaturaDomain;
+import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.usecase.domain.EstadoAsignaturaDomain;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 
@@ -30,5 +32,13 @@ public final class GestionarAsignaturaMapper {
                 dto.codigoCaracter(),
                 dto.usuarioEjecutor()
         );
+    }
+
+    /** HU074: resultado de activar o inactivar la asignatura. */
+    public static EstadoAsignaturaDTO toDTO(final EstadoAsignaturaDomain domain) {
+        if (ObjectHelper.isNull(domain)) {
+            throw new CrosscuttingException("El resultado del cambio de estado de la asignatura es obligatorio.");
+        }
+        return new EstadoAsignaturaDTO(domain.idAsignatura(), domain.estaActivaAsignatura(), domain.mensajeUsuario());
     }
 }
