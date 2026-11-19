@@ -248,6 +248,11 @@
             <artifactId>okhttp-jvm</artifactId>
             <version>5.3.2</version>
         </dependency>
+        <!-- SEC-BASELINE-020: consumidor de eventos de asignacion del PDP (Security Baseline 0.1.14) por RabbitMQ. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
         <!-- NOTIF-002A: Envio de correo SMTP sobre el outbox y servidor SMTP embebido en pruebas. -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
