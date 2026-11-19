@@ -23,6 +23,16 @@ docente; validadores; controladores del coordinador y del decano; repositorios J
 `MessageUcoLabCatalogoTest`; `JpaRepositoryBeanUniquenessTest`; `AltaRequestLengthParityTest`; `DbExceptionTranslatorDocenteProgramaTest`).
 También las de los ítems 2 y 10: `AprobarSolicitudSesionUseCaseImplTest`, `CancelarSesionUseCaseImplTest` y `DocentePortalControllerTest`.
 
+## Correcciones de la revisión independiente (2026-11-18)
+
+Prueba nueva en `CoordinadorDocentesControllerTest` con el `JsonMapper` estricto de la aplicación: un cliente anterior que envía
+`idTipoVinculacion` a `POST`/`PUT /coordinador/docentes` recibe 400 `FIELD_UNKNOWN` sin llamar al caso de uso, y el cuerpo actual
+se acepta. Mismo pom temporal (borrado al terminar, nunca versionado).
+
+| Comando | Resultado |
+|---|---|
+| `mvnw -o -f <pom temporal> test -Dtest=CoordinadorDocentesControllerTest,CoordinadorDocentesReporteControllerTest,VincularDocenteProgramaRequestValidatorTest,ActualizarDocenteProgramaRequestValidatorTest,DecanoFacultadConsultaControllerTest` | **BUILD SUCCESS: 47 pruebas, 0 fallos, 0 errores** (19 + 7 + 8 + 3 + 10). |
+
 ## Pendiente en el CI
 
 - `mvnw verify` completo (unitarias, integración con `-Pintegration`, JaCoCo) con acceso a GitHub Packages.

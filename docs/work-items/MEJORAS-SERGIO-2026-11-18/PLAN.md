@@ -36,8 +36,32 @@ describían el tipo como vigente. Quedan, a propósito:
 - `scratch/test_hu091.ps1`, `test_hu092.ps1`, `test_hu093.ps1`: E2E manuales históricos que ya estaban desactualizados (envían
   `password`, retirado por IDENT-002); no forman parte de ninguna compuerta.
 
-`GET /decano/estudiantes` (ítem 5) no tiene fila propia en `HTTP_AS_IS_MATRIX.md` (brecha previa de la matriz); el cambio es
-aditivo y lo cubre `DecanoFacultadConsultaControllerTest`.
+`GET /decano/estudiantes` (ítem 5) no tenía fila propia en `HTTP_AS_IS_MATRIX.md` (brecha previa de la matriz); se agregó, con
+`codigoTipoIdentificacion`. El cambio es aditivo y lo cubre `DecanoFacultadConsultaControllerTest`.
+
+## HU090 retirada
+
+HU090 (selector controlado de tipo de vinculación) queda **retirada el 2026-11-18** por orden de John y reporte de Sergio: el
+sistema no administra el tipo de vinculación del docente. Se marcó en el work item histórico
+`HU062-HU089-HU063-HU090-HU091-vinculacion-docente` (PLAN y TEST_PLAN) y en el `HU-CATALOG.md` de Infra. La
+`MATRIZ_HU_PRUEBAS_FRONTEND.md` del frontend también la lista: se marca en el frontend aparte.
+
+## Compatibilidad con clientes anteriores
+
+La entrada JSON es estricta (`JacksonInputConfig`: `FAIL_ON_UNKNOWN_PROPERTIES`). Un cliente anterior (SPA en caché) que aún envíe
+`idTipoVinculacion` a `POST /coordinador/docentes` o `PUT /coordinador/docentes/{idDocente}` recibe **400 `FIELD_UNKNOWN`** sin llegar
+al caso de uso. Es aceptado (se despliega con el frontend que ya no lo envía) y queda fijado en `CoordinadorDocentesControllerTest`
+y anotado en `docs/contracts/HTTP_AS_IS_MATRIX.md`.
+
+## Orden de subida y despliegue
+
+- **Subida y merge:** BD → BE → FE, cerrando los tres PR juntos. El CI de integración del backend usa la rama de la BD con el
+  mismo nombre (`feat/mejoras-sergio-2026-11-18`) si existe; por eso la BD sube primero.
+- **Despliegue:** primero la migración 50 (`50_mejoras_sergio_retiro_tipo_vinculacion_up.sql`) y después `deploy_schema.ps1`,
+  nunca al revés (los cuerpos nuevos de vistas y SP no leen la columna; los viejos quedan inválidos entre ambos pasos). Luego el
+  backend y al final el frontend.
+- **Manifiesto:** `DB_CULM001_D_POST_FREEZE_MANIFEST.sha256` de la BD se actualizó a propósito (3 archivos de su lista cambiaron);
+  mencionarlo en el PR de la BD.
 
 ## Validación
 
