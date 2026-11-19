@@ -118,7 +118,7 @@ class AcademicUserCommandsSpParityIT {
 
     @Test
     void EJE_03_cambiar_estado_asignatura_con_ejecutor_inexistente_es_USU_001_sin_efectos() {
-        afirmarUsuarioInexistente("EJE_03", () -> asignaturaCommandPort.toggleEstadoAsignatura(UUID.randomUUID(), UUID.randomUUID()));
+        afirmarUsuarioInexistente("EJE_03", () -> asignaturaCommandPort.toggleEstadoAsignatura(UUID.randomUUID(), null, UUID.randomUUID()));
     }
 
     @Test
@@ -158,7 +158,7 @@ class AcademicUserCommandsSpParityIT {
     @Test
     void PER_03_cambiar_estado_asignatura_exige_coordinador_y_un_administrador_recibe_SEC_001_sin_efectos() {
         final UUID admin = fixture.semilla().ejecutorAdmin();
-        afirmarPerfilDenegado("PER_03", () -> asignaturaCommandPort.toggleEstadoAsignatura(UUID.randomUUID(), admin));
+        afirmarPerfilDenegado("PER_03", () -> asignaturaCommandPort.toggleEstadoAsignatura(UUID.randomUUID(), null, admin));
     }
 
     @Test
@@ -205,7 +205,7 @@ class AcademicUserCommandsSpParityIT {
     void REC_03_cambiar_estado_de_asignatura_inexistente_es_VAL_002_validacion_sin_efectos() {
         final UUID coordinador = fixture.semilla().ejecutorCoordinador();
         afirmarRechazo("REC_03", ValidationException.class, CommonErrorCode.VALIDATION_ERROR,
-                () -> asignaturaCommandPort.toggleEstadoAsignatura(UUID.randomUUID(), coordinador));
+                () -> asignaturaCommandPort.toggleEstadoAsignatura(UUID.randomUUID(), null, coordinador));
     }
 
     @Test

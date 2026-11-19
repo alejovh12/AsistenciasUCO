@@ -71,7 +71,8 @@ class MessageUcoLabCatalogoTest {
         // VAL-pendientes-john PRU-15: + PER_008 y PER_009 (seed 17 / migracion 49 de BD; filas con el formato de build-message-catalog.py).
         // ATA D7: + CAL_001 (seed 68 / migracion 52 de BD: rango invalido del calendario de sesiones).
         // MEJORAS-SERGIO-2026-11-18: - DOC_004 y ERR_TIPO_VINCULACION_INVALIDO (se retiro el tipo de vinculacion, migracion 56 de BD).
-        assertEquals(488, catalogo().size());
+        // HU074: + ASI_009, ASI_010, ASI_011 y ASI_012 (migracion 58 de BD; filas con el formato de build-message-catalog.py).
+        assertEquals(492, catalogo().size());
     }
 
     @Test

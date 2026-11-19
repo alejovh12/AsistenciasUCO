@@ -79,7 +79,13 @@ final class DbFailureClassifier {
         return switch (code) {
             case "SEC_001", "SEC_002", "EST_004", "COO_003" -> SecurityErrorCode.FORBIDDEN;
             // CULM-001 B2NM (DEC-019/DEC-020, CONTRACT 2.8.1): asignaturas por plan, matricula con programa y ambito de coordinacion.
-            case "ASI_002", "ASI_003", "ASI_005", "ASI_006", "MQR_008" -> CommonErrorCode.CONFLICT;
+            case "ASI_002", "ASI_003", "ASI_005", "MQR_008" -> CommonErrorCode.CONFLICT;
+            // HU074 (migracion 58): ASI_006 (asignatura compartida con programas ajenos), ASI_009 (inactivar con grupos en el
+            // periodo vigente o futuro) y ASI_010 (asignatura inactiva al crear grupo o asociarla a un plan) son 409 con su propio
+            // codigo, para que el usuario reciba el texto del catalogo y no el generico de CONFLICT.
+            case "ASI_006" -> CatalogoErrorCode.ASI_006;
+            case "ASI_009" -> CatalogoErrorCode.ASI_009;
+            case "ASI_010" -> CatalogoErrorCode.ASI_010;
             case "ASI_004" -> CommonErrorCode.RESOURCE_NOT_FOUND;
             case "ASI_007", "EST_005", "EST_006", "COO_002" -> CommonErrorCode.VALIDATION_ERROR;
             case "ATT_001", "ATT_002", "ATT_003", "GEN_002", "RC_001", "SES_004", "PLA_001",

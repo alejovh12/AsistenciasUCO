@@ -4,13 +4,20 @@ import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenExcepti
 import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.usecase.GestionarAsignaturaUseCase;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.usecase.domain.AsignaturaDomain;
+import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.usecase.domain.EstadoAsignaturaDomain;
+import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.usecase.domain.MensajeEstadoAsignatura;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsignaturaCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsignaturaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.PlanEstudioQueryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.AsignaturaProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResultadoEstadoAsignaturaProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
+import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 public final class GestionarAsignaturaUseCaseImpl implements GestionarAsignaturaUseCase {
@@ -19,17 +26,20 @@ public final class GestionarAsignaturaUseCaseImpl implements GestionarAsignatura
     private final AsignaturaQueryPort queryPort;
     private final PlanEstudioQueryPort planQueryPort;
     private final InstitutionalScopePort scopePort;
+    private final MessageCatalogPort mensajes;
 
     public GestionarAsignaturaUseCaseImpl(
             final AsignaturaCommandPort commandPort,
             final AsignaturaQueryPort queryPort,
             final PlanEstudioQueryPort planQueryPort,
-            final InstitutionalScopePort scopePort
+            final InstitutionalScopePort scopePort,
+            final MessageCatalogPort mensajes
     ) {
         this.commandPort = Objects.requireNonNull(commandPort, "AsignaturaCommandPort es obligatorio.");
         this.queryPort = Objects.requireNonNull(queryPort, "AsignaturaQueryPort es obligatorio.");
         this.planQueryPort = Objects.requireNonNull(planQueryPort, "PlanEstudioQueryPort es obligatorio.");
         this.scopePort = Objects.requireNonNull(scopePort, "InstitutionalScopePort es obligatorio.");
+        this.mensajes = Objects.requireNonNull(mensajes, "MessageCatalogPort es obligatorio.");
     }
 
     @Override
@@ -57,18 +67,35 @@ public final class GestionarAsignaturaUseCaseImpl implements GestionarAsignatura
     }
 
     @Override
-    public void toggleEstado(final UUID asignaturaId, final UUID usuarioEjecutor) {
+    public EstadoAsignaturaDomain toggleEstado(final UUID asignaturaId, final Boolean estaActivaDeseada, final UUID usuarioEjecutor) {
         if (ObjectHelper.isNull(asignaturaId)) {
             throw new CrosscuttingException("La asignatura es obligatoria.");
         }
         final UUID programa = resolverPrograma(usuarioEjecutor);
-        final boolean perteneceAlPrograma = queryPort.consultarAsignaturasPorPrograma(programa).stream()
-                .anyMatch(asignatura -> asignaturaId.equals(asignatura.id())
-                        && programa.equals(asignatura.idPrograma()));
-        if (!perteneceAlPrograma) {
-            throw new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_009);
+        final AsignaturaProjection actual = queryPort.consultarAsignaturasPorPrograma(programa).stream()
+                .filter(asignatura -> asignaturaId.equals(asignatura.id())
+                        && programa.equals(asignatura.idPrograma()))
+                .findFirst()
+                .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_009));
+        // HU074: si el SP rechaza (ASI_009, ASI_006...) la excepcion sale antes de aqui. El estado en que quedo lo dice el codigo
+        // de exito del SP (ASI_011 / ASI_012); sin codigo (SP anterior), el estado pedido y, si se pidio alternar, el contrario
+        // al leido en la validacion de ambito.
+        final ResultadoEstadoAsignaturaProjection resultado =
+                commandPort.toggleEstadoAsignatura(asignaturaId, estaActivaDeseada, usuarioEjecutor);
+        final boolean quedaActiva = Optional.ofNullable(resultado.estaActivaResultante())
+                .orElseGet(() -> Objects.requireNonNullElse(estaActivaDeseada, !actual.estaActivaAsignatura()));
+        return new EstadoAsignaturaDomain(asignaturaId, quedaActiva, mensajeConfirmacion(resultado.mensajeUsuario(), quedaActiva));
+    }
+
+    /** Mensaje del SP; si llega vacio, el del catalogo (ASI_011/ASI_012) y, sin catalogo, el respaldo del codigo. */
+    private String mensajeConfirmacion(final String mensajeDb, final boolean quedaActiva) {
+        if (!TextHelper.isNullOrBlank(mensajeDb)) {
+            return mensajeDb.strip();
         }
-        commandPort.toggleEstadoAsignatura(asignaturaId, usuarioEjecutor);
+        final MensajeEstadoAsignatura codigo = MensajeEstadoAsignatura.para(quedaActiva);
+        return mensajes.findUserMessage(codigo.codigo())
+                .filter(texto -> !TextHelper.isNullOrBlank(texto))
+                .orElse(codigo.respaldo());
     }
 
     private UUID resolverPrograma(final UUID usuarioEjecutor) {

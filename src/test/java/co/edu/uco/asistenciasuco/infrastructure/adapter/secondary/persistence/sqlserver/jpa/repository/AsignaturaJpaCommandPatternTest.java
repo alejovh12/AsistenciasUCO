@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
 
-
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResultadoEstadoAsignaturaProjection;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.DatabaseErrorCode;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.DatabaseOperationException;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.JpaProcedureExecutor;
@@ -12,11 +12,14 @@ import jakarta.persistence.Query;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.util.Collections;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -91,13 +94,34 @@ class AsignaturaJpaCommandPatternTest {
 
     @Test
     void ASG_PAT_003_toggle_estado_usa_usp_toggle_con_correlacion() {
-        command.toggleEstadoAsignatura(ASIGNATURA, EJECUTOR);
+        // HU074: sin estado pedido se envia @estaActivaDeseada = NULL (alternar); el SP sin canal DBCODE deja el codigo vacio.
+        final ResultadoEstadoAsignaturaProjection resultado = command.toggleEstadoAsignatura(ASIGNATURA, null, EJECUTOR);
 
+        assertEquals("Asignatura creada.", resultado.mensajeUsuario());
+        assertNull(resultado.estaActivaResultante());
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_toggle_estado_asignatura"));
+        verify(entityManager).createNativeQuery(contains("@estaActivaDeseada = :estaActivaDeseada"));
         verify(query).setParameter("idAsignatura", ASIGNATURA);
         verify(query).setParameter("idCorrelacion", CORRELATION);
         verify(query).setParameter("idUsuarioEjecutor", EJECUTOR);
+        verify(query).setParameter("estaActivaDeseada", null);
         verify(query).getResultList();
+    }
+
+    // HU074: el estado pedido llega al SP y el estado confirmado sale del codigo de exito del canal tecnico
+    // (DBCODE=ASI_011|... activa, ASI_012 inactiva); otro codigo no confirma estado.
+    @ParameterizedTest
+    @CsvSource(nullValues = "NULL", value = {"true, ASI_011, true", "false, ASI_012, false", "true, GEN_004, NULL"})
+    void ASG_PAT_006_toggle_con_estado_deseado_devuelve_el_estado_del_codigo_de_exito(final boolean deseada, final String codigo,
+                                                                                      final Boolean confirmado) {
+        when(query.getResultList()).thenReturn(Collections.singletonList(
+                new Object[]{CORRELATION, "Texto del SP.", "DBCODE=" + codigo + "|detalle Correlacion: x", true}));
+
+        final ResultadoEstadoAsignaturaProjection resultado = command.toggleEstadoAsignatura(ASIGNATURA, deseada, EJECUTOR);
+
+        assertEquals("Texto del SP.", resultado.mensajeUsuario());
+        assertEquals(confirmado, resultado.estaActivaResultante());
+        verify(query).setParameter("estaActivaDeseada", deseada);
     }
 
     @Test
@@ -105,7 +129,7 @@ class AsignaturaJpaCommandPatternTest {
         when(query.getResultList()).thenThrow(new PersistenceException("connection reset"));
 
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
-                () -> command.toggleEstadoAsignatura(ASIGNATURA, EJECUTOR));
+                () -> command.toggleEstadoAsignatura(ASIGNATURA, null, EJECUTOR));
 
         assertEquals(DatabaseErrorCode.DATABASE_OPERATION_ERROR.code(), exception.getCode());
         assertTrue(exception.getCause() instanceof PersistenceException);
@@ -116,7 +140,7 @@ class AsignaturaJpaCommandPatternTest {
         when(query.getResultList()).thenReturn(Collections.emptyList());
 
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
-                () -> command.toggleEstadoAsignatura(ASIGNATURA, EJECUTOR));
+                () -> command.toggleEstadoAsignatura(ASIGNATURA, null, EJECUTOR));
 
         assertEquals(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT.code(), exception.getCode());
     }
