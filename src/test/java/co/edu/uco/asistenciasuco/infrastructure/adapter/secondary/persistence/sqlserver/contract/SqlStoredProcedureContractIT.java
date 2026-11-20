@@ -247,7 +247,10 @@ class SqlStoredProcedureContractIT {
                         input("@nombre", "nvarchar"),
                         input("@idDocente", "uniqueidentifier"),
                         input("@idCorrelacion", "uniqueidentifier"),
-                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        // DEC-077 (migracion 61 de BD): parametro aditivo con DEFAULT NULL; el Backend no lo envia (la BD toma el
+                        // programa de la asignatura que coordina el ejecutor).
+                        input("@idProgramaResponsable", "uniqueidentifier")
                 )),
                 Arguments.of("usp_actualizar_grupo", List.of(
                         input("@idGrupo", "uniqueidentifier"),

@@ -72,7 +72,8 @@ class MessageUcoLabCatalogoTest {
         // ATA D7: + CAL_001 (seed 68 / migracion 52 de BD: rango invalido del calendario de sesiones).
         // MEJORAS-SERGIO-2026-11-18: - DOC_004 y ERR_TIPO_VINCULACION_INVALIDO (se retiro el tipo de vinculacion, migracion 56 de BD).
         // HU074: + ASI_009, ASI_010, ASI_011 y ASI_012 (migracion 58 de BD; filas con el formato de build-message-catalog.py).
-        assertEquals(492, catalogo().size());
+        // DEC-076: + PER_010 (seed 17 / migracion 61 de BD: grupo nuevo en un periodo que ya termino).
+        assertEquals(493, catalogo().size());
     }
 
     @Test

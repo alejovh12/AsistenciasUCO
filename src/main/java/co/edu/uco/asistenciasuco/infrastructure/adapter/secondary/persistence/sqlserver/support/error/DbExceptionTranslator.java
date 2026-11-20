@@ -145,6 +145,8 @@ public final class DbExceptionTranslator {
             // VAL-pendientes-john PRU-15: operacion sobre un periodo cerrado y segundo cierre.
             MensajeUsuarioErrorCode.PER_008,
             MensajeUsuarioErrorCode.PER_009,
+            // DEC-076: grupo nuevo en un periodo que ya termino.
+            MensajeUsuarioErrorCode.PER_010,
             CommonErrorCode.CONFLICT
     );
     private static final Set<ErrorDefinition> VALIDATION_CODES = Set.of(
@@ -204,6 +206,8 @@ public final class DbExceptionTranslator {
             // VAL-pendientes-john PRU-15: la BD sustituye el nombre del periodo (PER_008) y la fecha del primer cierre (PER_009).
             MensajeUsuarioErrorCode.PER_008,
             MensajeUsuarioErrorCode.PER_009,
+            // DEC-076: la BD sustituye el nombre del periodo terminado (PER_010).
+            MensajeUsuarioErrorCode.PER_010,
             // DEC-073: la BD sustituye el dominio, los limites del parametro y el maximo de creditos vigentes.
             VerificacionCorreoErrorCode.VCE_008,
             AsistenciaErrorCode.ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA,

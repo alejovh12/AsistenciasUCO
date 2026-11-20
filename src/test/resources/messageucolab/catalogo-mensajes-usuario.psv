@@ -114,6 +114,7 @@ PER_006|PER006|Funcional|Confirmación|PER_006 - Período académico eliminado�
 PER_007|PER007|Funcional|Error|PER_007 - El período académico aún no ha…|El período académico aún no ha finalizado; el cierre masivo solo puede ejecutarse después de su fecha de fin ({}).
 PER_008|PER008|Funcional|Error|PER_008 - El período académico … ya fue cerrado…|El período académico {} ya fue cerrado; no se pueden registrar ni modificar tomas, asistencias ni reclamos de sus sesiones.
 PER_009|PER009|Funcional|Error|PER_009 - El período académico ya fue cerrado el…|El período académico ya fue cerrado el {}; el cierre masivo no se puede repetir.
+PER_010|PER010|Funcional|Error|PER_010 - El período académico … ya terminó…|El período académico {} ya terminó; no se pueden crear grupos en él porque no tendrían sesiones por programar.
 PLA_002|PLA002|Funcional|Error|PLA_002 - El plan de estudios indicado no existe.|El plan de estudios indicado no existe.
 PLA_003|PLA003|Funcional|Error|PLA_003 - El plan de estudios ya tiene el número…|El plan de estudios ya tiene el número máximo de semestres.
 PLA_004|PLA004|Funcional|Error|PLA_004 - El semestre indicado no pertenece al…|El semestre indicado no pertenece al plan de estudios.

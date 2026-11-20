@@ -83,4 +83,20 @@ class DbFailureClassifierPeriodoAcademicoTest {
         assertEquals("PER_009", excepcion.getErrorDefinition().orElseThrow().code());
         assertEquals(mensaje, excepcion.getMessage());
     }
+
+    /**
+     * DEC-076: crear un grupo en un periodo que ya termino (PER_010) es 409 con el nombre del periodo que arma la BD; el grupo
+     * quedaba sin sesiones porque la precarga solo genera las futuras.
+     */
+    @Test
+    void crear_grupo_en_un_periodo_terminado_responde_409_con_el_mensaje_de_la_base() {
+        assertEquals(MensajeUsuarioErrorCode.PER_010,
+                DbFailureClassifier.classify("mensaje", "DBCODE=PER_010|detalle", "crearGrupo"));
+
+        final var mensaje = "El período académico 2026-1 ya terminó; no se pueden crear grupos en él porque no tendrían sesiones por programar.";
+        final var excepcion = assertThrows(ConflictException.class, () -> DbExceptionTranslator.throwIfFailed(
+                false, mensaje, "DBCODE=PER_010|detalle", "c", "crearGrupo"));
+        assertEquals("PER_010", excepcion.getErrorDefinition().orElseThrow().code());
+        assertEquals(mensaje, excepcion.getMessage());
+    }
 }

@@ -123,6 +123,9 @@ public enum MensajeUsuarioErrorCode implements ErrorDefinition {
             "El período académico {} ya fue cerrado; no se pueden registrar ni modificar tomas, asistencias ni reclamos de sus sesiones."),
     PER_009("PER_009", ErrorKind.CONFLICT,
             "El período académico ya fue cerrado el {}; el cierre masivo no se puede repetir."),
+    // DEC-076: crear un grupo en un periodo que ya termino (la precarga no generaria sesiones); con el nombre del periodo.
+    PER_010("PER_010", ErrorKind.CONFLICT,
+            "El período académico {} ya terminó; no se pueden crear grupos en él porque no tendrían sesiones por programar."),
     NOF_APP_003(CommonErrorCode.RESOURCE_NOT_FOUND, "El estudiante no existe en su ambito."),
     NOF_APP_004(CommonErrorCode.RESOURCE_NOT_FOUND, "El docente no existe o no esta vinculado a su programa."),
     NOF_APP_005(CommonErrorCode.RESOURCE_NOT_FOUND, "El plan de estudio indicado no existe en el programa del coordinador."),
