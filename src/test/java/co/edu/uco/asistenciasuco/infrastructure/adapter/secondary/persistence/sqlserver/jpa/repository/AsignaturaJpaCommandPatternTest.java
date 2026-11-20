@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 
 
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResultadoEstadoAsignaturaProjection;
+
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.DatabaseErrorCode;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.DatabaseOperationException;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.JpaProcedureExecutor;
@@ -63,7 +64,7 @@ class AsignaturaJpaCommandPatternTest {
 
     @Test
     void ASG_PAT_001_crear_asignatura_usa_native_query_exec_con_binding_nombrado() {
-        command.crearAsignatura(ASIGNATURA, "MAT-1", "Calculo", 4, PLAN, 1, "CIENCIAS", "BASICO", null, EJECUTOR);
+        command.crearAsignatura(ASIGNATURA, "MAT-1", "Calculo", 4, PLAN, 1, "CIENCIAS", "BASICO", null, null, EJECUTOR);
 
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_crear_asignatura"));
         verify(query).setParameter("idAsignatura", ASIGNATURA);
@@ -76,25 +77,26 @@ class AsignaturaJpaCommandPatternTest {
         verify(query).setParameter("nombreComponente", "BASICO");
         verify(query).setParameter("idCorrelacion", CORRELATION);
         verify(query).setParameter("idUsuarioEjecutor", EJECUTOR);
+        verify(query).setParameter("horasSemanales", null);
         verify(query).getResultList();
         verify(entityManager, never()).createStoredProcedureQuery(anyString());
     }
 
     @Test
     void ASG_PAT_002_actualizar_asignatura_envia_usuario_ejecutor() {
-        command.actualizarAsignatura(ASIGNATURA, "MAT-1", "Calculo", 4, PLAN, 1, "CIENCIAS", "BASICO", null, EJECUTOR);
+        command.actualizarAsignatura(ASIGNATURA, "MAT-1", "Calculo", 4, PLAN, 1, "CIENCIAS", "BASICO", null, null, EJECUTOR);
 
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_actualizar_asignatura"));
         verify(entityManager).createNativeQuery(contains("@idUsuarioEjecutor = :idUsuarioEjecutor"));
         verify(query).setParameter("idAsignatura", ASIGNATURA);
         verify(query).setParameter("idCorrelacion", CORRELATION);
         verify(query).setParameter("idUsuarioEjecutor", EJECUTOR);
+        verify(query).setParameter("horasSemanales", null);
         verify(query).getResultList();
     }
 
     @Test
     void ASG_PAT_003_toggle_estado_usa_usp_toggle_con_correlacion() {
-        // HU074: sin estado pedido se envia @estaActivaDeseada = NULL (alternar); el SP sin canal DBCODE deja el codigo vacio.
         final ResultadoEstadoAsignaturaProjection resultado = command.toggleEstadoAsignatura(ASIGNATURA, null, EJECUTOR);
 
         assertEquals("Asignatura creada.", resultado.mensajeUsuario());
@@ -108,12 +110,10 @@ class AsignaturaJpaCommandPatternTest {
         verify(query).getResultList();
     }
 
-    // HU074: el estado pedido llega al SP y el estado confirmado sale del codigo de exito del canal tecnico
-    // (DBCODE=ASI_011|... activa, ASI_012 inactiva); otro codigo no confirma estado.
     @ParameterizedTest
     @CsvSource(nullValues = "NULL", value = {"true, ASI_011, true", "false, ASI_012, false", "true, GEN_004, NULL"})
-    void ASG_PAT_006_toggle_con_estado_deseado_devuelve_el_estado_del_codigo_de_exito(final boolean deseada, final String codigo,
-                                                                                      final Boolean confirmado) {
+    void ASG_PAT_006_toggle_con_estado_deseado_devuelve_el_estado_del_codigo_de_exito(
+            final boolean deseada, final String codigo, final Boolean confirmado) {
         when(query.getResultList()).thenReturn(Collections.singletonList(
                 new Object[]{CORRELATION, "Texto del SP.", "DBCODE=" + codigo + "|detalle Correlacion: x", true}));
 

@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.creargrupo.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.features.festivos.asegurarfestivos.primaryports.AsegurarFestivosPeriodoInputPort;
 import co.edu.uco.asistenciasuco.application.features.grupo.creargrupo.usecase.CrearGrupoUseCase;
@@ -27,6 +28,11 @@ public final class CrearGrupoUseCaseImpl implements CrearGrupoUseCase {
     public CrearGrupoResultadoEntity execute(final CrearGrupoDomain domain) {
         if (domain.generarSesionesAutomaticas()) {
             throw new FeatureUnavailableException(MensajeUsuarioErrorCode.DIS_APP_001);
+        }
+        // SES-GEN-01 (decision 4): todo grupo nace con horario y, por la precarga, con sus sesiones. Sin franjas no se crea; el cuerpo del
+        // PUT, en cambio, conserva el significado "ausente = el horario no cambia".
+        if (domain.franjas() == null || domain.franjas().isEmpty()) {
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_076);
         }
         // CULM-001 B.1 (§3.2.3): con horario, la creacion precarga sesiones y la DB las cancela si caen en un festivo;
         // antes de abrir esa transaccion se aseguran los festivos de los anios del periodo (nunca bloquea la creacion).

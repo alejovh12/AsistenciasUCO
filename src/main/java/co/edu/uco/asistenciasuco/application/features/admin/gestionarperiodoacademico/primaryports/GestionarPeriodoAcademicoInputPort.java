@@ -16,4 +16,7 @@ public interface GestionarPeriodoAcademicoInputPort {
     void actualizar(GuardarPeriodoAcademicoDTO dto);
 
     void eliminar(UUID idPeriodo, UUID usuario);
+
+    /** SES-GEN-01: fecha de fin persistida de un periodo (la DB la calcula como inicio + 16 semanas - 1 dia cuando no se envia). */
+    java.time.LocalDate consultarFechaFin(UUID idPeriodo);
 }

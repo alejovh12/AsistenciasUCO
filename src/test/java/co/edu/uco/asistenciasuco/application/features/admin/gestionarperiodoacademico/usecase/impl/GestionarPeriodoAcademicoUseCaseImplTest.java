@@ -12,6 +12,7 @@ import org.mockito.ArgumentCaptor;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -98,13 +99,33 @@ class GestionarPeriodoAcademicoUseCaseImplTest {
         assertThrows(ValidationException.class, () -> useCase.crear(periodoAcademicoDomain5));
         final var periodoAcademicoDomain4 = new PeriodoAcademicoDomain(null, "2027-1", null, FIN, usuario);
         assertThrows(ValidationException.class, () -> useCase.crear(periodoAcademicoDomain4));
-        final var periodoAcademicoDomain3 = new PeriodoAcademicoDomain(null, "2027-1", INICIO, null, usuario);
-        assertThrows(ValidationException.class, () -> useCase.crear(periodoAcademicoDomain3));
         final var periodoAcademicoDomain2 = new PeriodoAcademicoDomain(null, "2027-1", FIN, INICIO, usuario);
         assertThrows(ValidationException.class, () -> useCase.crear(periodoAcademicoDomain2));
         final var periodoAcademicoDomain = new PeriodoAcademicoDomain(null, "2027-1", INICIO, INICIO, usuario);
         assertThrows(ValidationException.class, () -> useCase.crear(periodoAcademicoDomain));
         verifyNoInteractions(commandPort);
+    }
+
+    @Test
+    void SES_GEN_01_la_fecha_de_fin_es_opcional_y_la_calcula_la_db() {
+        final UUID usuario = UUID.randomUUID();
+
+        final UUID id = useCase.crear(new PeriodoAcademicoDomain(null, "2027-1", INICIO, null, usuario));
+
+        verify(commandPort).crearPeriodoAcademico(id, "2027-1", INICIO, null, usuario);
+        // con fecha de fin, sigue exigiendo que sea posterior a la de inicio
+        assertThrows(ValidationException.class, () -> useCase.crear(new PeriodoAcademicoDomain(null, "2027-1", INICIO, INICIO, usuario)));
+    }
+
+    @Test
+    void SES_GEN_01_consulta_la_fecha_de_fin_persistida_de_un_periodo() {
+        final UUID periodo = UUID.randomUUID();
+        when(queryPort.consultarPeriodoAcademicoPorId(periodo)).thenReturn(java.util.Optional.of(
+                new co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PeriodoAcademicoProjection(
+                        periodo, UUID.randomUUID(), "UCO", "2027-1", "20271", INICIO, FIN, 2027)));
+
+        assertEquals(FIN, useCase.consultarFechaFin(periodo));
+        assertEquals(null, useCase.consultarFechaFin(UUID.randomUUID()));
     }
 
     @Test

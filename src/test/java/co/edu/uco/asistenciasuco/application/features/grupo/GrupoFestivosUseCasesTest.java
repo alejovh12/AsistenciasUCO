@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.grupo;
 
 import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.festivos.asegurarfestivos.primaryports.AsegurarFestivosPeriodoInputPort;
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.usecase.domain.ActualizarGrupoDomain;
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.usecase.impl.ActualizarGrupoUseCaseImpl;
@@ -52,12 +53,15 @@ class GrupoFestivosUseCasesTest {
     }
 
     @Test
-    void crear_sin_horario_no_asegura_festivos_y_la_generacion_automatica_sigue_no_disponible() {
-        when(repositorio.crearGrupo(any())).thenReturn(new GrupoCommandRepositoryProjection(UUID.randomUUID(), "ok"));
+    void crear_sin_horario_se_rechaza_sin_tocar_la_db_y_la_generacion_automatica_sigue_no_disponible() {
         final CrearGrupoUseCaseImpl useCase = new CrearGrupoUseCaseImpl(repositorio, asegurar);
-        useCase.execute(new CrearGrupoDomain(UUID.randomUUID(), UUID.randomUUID(), 1, "G1", UUID.randomUUID(), false,
-                UUID.randomUUID()));
+        // SES-GEN-01 (decision 4): todo grupo nace con horario; sin franjas (ausentes o vacias) no se crea.
+        final var sinFranjas = new CrearGrupoDomain(UUID.randomUUID(), UUID.randomUUID(), 1, "G1", UUID.randomUUID(), false, UUID.randomUUID());
+        final var franjasVacias = new CrearGrupoDomain(UUID.randomUUID(), UUID.randomUUID(), 1, "G1", UUID.randomUUID(), false, UUID.randomUUID(), List.of());
+        assertThrows(ValidationException.class, () -> useCase.execute(sinFranjas));
+        assertThrows(ValidationException.class, () -> useCase.execute(franjasVacias));
         verifyNoInteractions(asegurar);
+        verifyNoInteractions(repositorio);
 
         final var crearGrupoDomain = new CrearGrupoDomain(UUID.randomUUID(), UUID.randomUUID(), 1, "G1", UUID.randomUUID(), true, UUID.randomUUID(), FRANJAS);
         assertThrows(FeatureUnavailableException.class, () -> useCase.execute(crearGrupoDomain));

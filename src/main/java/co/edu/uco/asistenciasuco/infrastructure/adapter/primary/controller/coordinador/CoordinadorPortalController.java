@@ -118,9 +118,6 @@ public final class CoordinadorPortalController {
     // CULM-001 A.2-14: el stub 501 DELETE /planes-estudio/{planId}/asignaturas/{asigId} se retira; B2 la recrea con
     // usp_desvincular_asignatura_plan.
 
-    // HU074: responde el estado en que quedo la asignatura y el mensaje del catalogo (ASI_011 / ASI_012). Cambio aditivo: antes
-    // {exitoso, datos: null}. Rechazos 409: ASI_009 (grupos vigentes o futuros) y ASI_006 (compartida con programas ajenos).
-    // Cuerpo opcional {"estaActiva": true|false}: sin cuerpo o null alterna (contrato anterior).
     @PatchMapping("/asignaturas/{id}/estado")
     public ResponseEntity<ApiDataMensajeResponse<EstadoAsignaturaResponse>> toggleEstadoAsignatura(
             @PathVariable final UUID id,
@@ -170,7 +167,8 @@ public final class CoordinadorPortalController {
                 request == null ? null : request.getNombreArea(),
                 request == null ? null : request.getNombreComponente(),
                 request == null ? null : request.getCodigoCaracter(),
-                usuarioEjecutor
+                usuarioEjecutor,
+                request == null ? null : request.getHorasSemanales()
         );
     }
 }

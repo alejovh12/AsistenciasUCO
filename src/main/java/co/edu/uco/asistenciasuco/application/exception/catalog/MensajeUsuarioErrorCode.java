@@ -93,6 +93,7 @@ public enum MensajeUsuarioErrorCode implements ErrorDefinition {
     VAL_APP_073(CommonErrorCode.VALIDATION_ERROR, "El identificador del estudiante es obligatorio."),
     VAL_APP_074(CommonErrorCode.VALIDATION_ERROR, "El identificador del docente es obligatorio."),
     VAL_APP_075(CommonErrorCode.VALIDATION_ERROR, "El identificador del programa es obligatorio."),
+    VAL_APP_076(Codigos.ERR_CAMPO_OBLIGATORIO, ErrorKind.VALIDATION, "El horario del grupo es obligatorio: envie al menos una franja."),
     ACC_APP_001(SecurityErrorCode.FORBIDDEN, "El docente autenticado no tiene titularidad sobre el grupo consultado."),
     ACC_APP_002(SecurityErrorCode.FORBIDDEN, "El docente autenticado no tiene titularidad sobre el grupo solicitado."),
     ACC_APP_003(SecurityErrorCode.FORBIDDEN, "No fue posible resolver el docente autenticado."),
@@ -123,12 +124,24 @@ public enum MensajeUsuarioErrorCode implements ErrorDefinition {
             "El período académico {} ya fue cerrado; no se pueden registrar ni modificar tomas, asistencias ni reclamos de sus sesiones."),
     PER_009("PER_009", ErrorKind.CONFLICT,
             "El período académico ya fue cerrado el {}; el cierre masivo no se puede repetir."),
-    // DEC-076: crear un grupo en un periodo que ya termino (la precarga no generaria sesiones); con el nombre del periodo.
-    PER_010("PER_010", ErrorKind.CONFLICT,
-            "El período académico {} ya terminó; no se pueden crear grupos en él porque no tendrían sesiones por programar."),
     // Migracion 63 de la BD: semestre actual del estudiante en el programa (EST_008 sin vinculo; EST_009 con el rango del catalogo).
     EST_008("EST_008", ErrorKind.NOT_FOUND, "El estudiante no está vinculado a este programa académico."),
     EST_009("EST_009", ErrorKind.VALIDATION, "El semestre debe estar entre {} y {}."),
+    // SES-GEN-01: reglas del horario del grupo, de las horas de la materia y de la duracion del periodo. La base publica estos
+    // codigos con su propio texto (los marcadores {} los sustituye la DB); aqui solo viven el codigo, la clase y un respaldo.
+    HOR_006("HOR_006", ErrorKind.CONFLICT,
+            "Las horas semanales del horario ({} h) no coinciden con las de la materia ({} h)."),
+    HOR_007("HOR_007", ErrorKind.VALIDATION, "La franja {} debe durar entre {} y {} minutos."),
+    HOR_008("HOR_008", ErrorKind.VALIDATION, "La franja {} debe estar dentro del horario permitido ({})."),
+    HOR_009("HOR_009", ErrorKind.CONFLICT,
+            "El nuevo horario se cruza con otros grupos de {} estudiante(s) inscrito(s) en la franja {}."),
+    ASI_013("ASI_013", ErrorKind.VALIDATION, "Las horas semanales de la materia deben ser un entero entre 1 y {}."),
+    // DEC-076 + SES-GEN-01: periodo no vigente (terminado, cerrado o de otra institucion); un solo codigo, con el nombre del periodo.
+    PER_010("PER_010", ErrorKind.CONFLICT,
+            "El período académico {} no está vigente: ya terminó, está cerrado o no es de tu institución."),
+    PER_011("PER_011", ErrorKind.VALIDATION, "El periodo debe durar {} semanas: la fecha de fin debe ser {}."),
+    SES_005("SES_005", ErrorKind.CONFLICT,
+            "El horario incluye una hora local inexistente por cambio de horario; no se generaron sesiones."),
     NOF_APP_003(CommonErrorCode.RESOURCE_NOT_FOUND, "El estudiante no existe en su ambito."),
     NOF_APP_004(CommonErrorCode.RESOURCE_NOT_FOUND, "El docente no existe o no esta vinculado a su programa."),
     NOF_APP_005(CommonErrorCode.RESOURCE_NOT_FOUND, "El plan de estudio indicado no existe en el programa del coordinador."),

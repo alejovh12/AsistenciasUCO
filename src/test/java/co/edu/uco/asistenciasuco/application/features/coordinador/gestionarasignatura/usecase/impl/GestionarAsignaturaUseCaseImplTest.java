@@ -8,8 +8,8 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.PlanEstudio
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.AsignaturaProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PlanEstudioProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResultadoEstadoAsignaturaProjection;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.CatalogoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.coordinador.gestionarasignatura.usecase.domain.EstadoAsignaturaDomain;
@@ -65,11 +65,37 @@ class GestionarAsignaturaUseCaseImplTest {
 
         useCase.crear(domain);
 
-        verify(commandPort).crearAsignatura(any(), eq("COD1"),
-                eq("Calculo"), eq(3),
-                eq(plan), eq(1),
-                eq("Area"), eq("Componente"), isNull(),
-                eq(usuarioEjecutor));
+        verify(commandPort).crearAsignatura(any(), eq("COD1"), eq("Calculo"), eq(3), eq(plan), eq(1),
+                eq("Area"), eq("Componente"), isNull(), isNull(), eq(usuarioEjecutor));
+    }
+
+    @Test
+    void SES_GEN_01_crear_propaga_horas_semanales_al_puerto() {
+        final UUID plan = UUID.randomUUID();
+        when(scopePort.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.of(PROGRAM));
+        when(planQueryPort.consultarPlanesPorPrograma(PROGRAM)).thenReturn(List.of(plan(plan, PROGRAM)));
+
+        useCase.crear(new AsignaturaDomain(null, plan, "COD1", "Calculo", 3, 1, "Area", "Componente", null, ACTOR, 4));
+
+        verify(commandPort).crearAsignatura(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq("COD1"),
+                org.mockito.ArgumentMatchers.eq("Calculo"), org.mockito.ArgumentMatchers.eq(3),
+                org.mockito.ArgumentMatchers.eq(plan), org.mockito.ArgumentMatchers.eq(1),
+                org.mockito.ArgumentMatchers.eq("Area"), org.mockito.ArgumentMatchers.eq("Componente"), org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.eq(4), org.mockito.ArgumentMatchers.eq(ACTOR));
+    }
+
+    @Test
+    void SES_GEN_01_actualizar_propaga_horas_semanales_al_puerto() {
+        final UUID id = UUID.randomUUID();
+        final UUID plan = UUID.randomUUID();
+        when(scopePort.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.of(PROGRAM));
+        when(planQueryPort.consultarPlanesPorPrograma(PROGRAM)).thenReturn(List.of(plan(plan, PROGRAM)));
+        when(queryPort.consultarAsignaturasPorPlan(plan)).thenReturn(List.of(subject(id, plan, PROGRAM)));
+
+        useCase.actualizar(new AsignaturaDomain(id, plan, "COD1", "Calculo", 3, 1, "Area", "Componente", null, ACTOR, 6));
+
+        verify(commandPort).actualizarAsignatura(eq(id), eq("COD1"), eq("Calculo"), eq(3), eq(plan), eq(1),
+                eq("Area"), eq("Componente"), isNull(), eq(6), eq(ACTOR));
     }
 
     @Test
@@ -89,11 +115,8 @@ class GestionarAsignaturaUseCaseImplTest {
         useCase.actualizar(domain);
 
         final ArgumentCaptor<UUID> idCaptor = ArgumentCaptor.forClass(UUID.class);
-        verify(commandPort).actualizarAsignatura(idCaptor.capture(), eq("COD1"),
-                eq("Calculo"), eq(3),
-                eq(plan), eq(1),
-                eq("Area"), eq("Componente"), isNull(),
-                eq(ACTOR));
+        verify(commandPort).actualizarAsignatura(idCaptor.capture(), eq("COD1"), eq("Calculo"), eq(3), eq(plan), eq(1),
+                eq("Area"), eq("Componente"), isNull(), isNull(), eq(ACTOR));
         assertEquals(id, idCaptor.getValue());
     }
 
@@ -108,7 +131,7 @@ class GestionarAsignaturaUseCaseImplTest {
         final var asignaturaDomain2 = new AsignaturaDomain(id, plan, "COD1", "Calculo", 3, 1, "Area", "Componente", null, ACTOR);
         assertThrows(ForbiddenException.class, () -> useCase.actualizar(asignaturaDomain2));
 
-        verifyNoInteractions(commandPort);
+        org.mockito.Mockito.verifyNoInteractions(commandPort);
     }
 
     @Test
@@ -120,7 +143,7 @@ class GestionarAsignaturaUseCaseImplTest {
         final var asignaturaDomain = new AsignaturaDomain(null, plan, "COD1", "Calculo", 3, 1, "Area", "Componente", null, ACTOR);
         assertThrows(ForbiddenException.class, () -> useCase.crear(asignaturaDomain));
 
-        verifyNoInteractions(commandPort);
+        org.mockito.Mockito.verifyNoInteractions(commandPort);
     }
 
     @Test
@@ -176,9 +199,7 @@ class GestionarAsignaturaUseCaseImplTest {
         verifyNoInteractions(mensajes);
     }
 
-    // HU074: el estado que confirma el SP (codigo de exito ASI_011 / ASI_012, leido por el adaptador) manda aunque la lectura
-    // previa diga otra cosa (otro coordinador cambio el estado entre la lectura y el SP, o se pidio el estado que ya tenia y la
-    // BD confirmo sin cambio).
+    // El código confirmado por el SP prevalece sobre la lectura previa y sobre el estado pedido.
     @ParameterizedTest
     @CsvSource(nullValues = "NULL", value = {
             "true,  NULL,  true,  true",
@@ -197,7 +218,6 @@ class GestionarAsignaturaUseCaseImplTest {
         verify(commandPort).toggleEstadoAsignatura(id, deseada, ACTOR);
     }
 
-    // HU074: sin codigo de exito (SP anterior), el estado pedido y, si se pidio alternar, el contrario al leido.
     @ParameterizedTest
     @CsvSource(nullValues = "NULL", value = {
             "true,  NULL,  false",

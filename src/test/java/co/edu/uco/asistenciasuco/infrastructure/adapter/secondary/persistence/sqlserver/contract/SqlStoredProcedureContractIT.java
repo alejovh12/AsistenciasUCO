@@ -205,7 +205,8 @@ class SqlStoredProcedureContractIT {
                         input("@nombreComponente", "nvarchar"),
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@idUsuarioEjecutor", "uniqueidentifier"),
-                        input("@codigoCaracter", "nvarchar")   // CULM-001 B2NM (DEC-019, CONTRACT B2 2.7.2)
+                        input("@codigoCaracter", "nvarchar"),   // CULM-001 B2NM (DEC-019, CONTRACT B2 2.7.2)
+                        input("@horasSemanales", "int")   // SES-GEN-01 (migracion 64 de BD): horas semanales de la materia, NULL = sin cargar
                 )),
                 Arguments.of("usp_actualizar_asignatura", List.of(
                         input("@idAsignatura", "uniqueidentifier"),
@@ -218,7 +219,8 @@ class SqlStoredProcedureContractIT {
                         input("@nombreComponente", "nvarchar"),
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@idUsuarioEjecutor", "uniqueidentifier"),
-                        input("@codigoCaracter", "nvarchar")   // CULM-001 B2NM (DEC-019, CONTRACT B2 2.7.2)
+                        input("@codigoCaracter", "nvarchar"),   // CULM-001 B2NM (DEC-019, CONTRACT B2 2.7.2)
+                        input("@horasSemanales", "int")   // SES-GEN-01 (migracion 64 de BD): horas semanales de la materia, NULL = sin cargar
                 )),
                 Arguments.of("usp_toggle_estado_asignatura", List.of(
                         input("@idAsignatura", "uniqueidentifier"),
