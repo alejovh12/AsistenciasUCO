@@ -73,7 +73,7 @@ Sin parámetros. Responde `ApiListResponse<PlanEstudioEstudianteDTO>`; `total` e
 }
 ```
 
-- `tipoAsignatura`: `ESPECIFICA`, `BASICA` o `INSTITUCIONAL`, igual que en la oferta de grupos (HU008).
+- `tipoAsignatura`: `ESPECIFICA`, `BASICA`, `INSTITUCIONAL` o `ELECTIVA` (COMP-ELE, 2026-11-19), igual que en la oferta de grupos (HU008).
 - `idGrupoCursando` y `nombreGrupoCursando` son `null` cuando `cursando` es `false`.
 - Errores: 403 si el usuario autenticado no es un estudiante. Los errores de la BD se traducen con `DbCodeTranslator`.
 
