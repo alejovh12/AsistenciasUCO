@@ -8,7 +8,11 @@ import java.util.UUID;
 public interface MatricularEstudianteAutenticadoInputPort
         extends InteractorWithReturn<MatricularEstudianteAutenticadoInputPort.Comando, MatricularEstudianteAutenticadoInputPort.Resultado> {
 
-    record Comando(String token, String pin, String direccionIp, UUID usuarioEjecutor) {
+    /** {@code programaId}: DEC-078, programa que elige el estudiante en un grupo compartido (opcional). */
+    record Comando(String token, String pin, String direccionIp, UUID usuarioEjecutor, UUID programaId) {
+        public Comando(final String token, final String pin, final String direccionIp, final UUID usuarioEjecutor) {
+            this(token, pin, direccionIp, usuarioEjecutor, null);
+        }
     }
 
     record Resultado(UUID idGrupo) {

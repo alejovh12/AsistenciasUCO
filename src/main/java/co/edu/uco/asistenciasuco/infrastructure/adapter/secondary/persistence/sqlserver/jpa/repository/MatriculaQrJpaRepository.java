@@ -12,6 +12,9 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Query;
 import org.springframework.stereotype.Repository;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -38,6 +41,9 @@ public class MatriculaQrJpaRepository implements MatriculaQrRepositoryPort {
     private static final String P_ID_GRUPO = "idGrupo";
     private static final String P_TOKEN_HASH = "tokenHash";
     private static final String P_PIN = "pin";
+    private static final String P_ID_PROGRAMA = "idPrograma";
+    /** DEC-078: la BD entrega los programas elegibles como un arreglo JSON [{"idPrograma": "...", "nombre": "..."}]. */
+    private static final ObjectMapper JSON = JsonMapper.builder().build();
     private static final String P_ID_CORRELACION = "idCorrelacion";
     private static final String P_ID_USUARIO_EJECUTOR = "idUsuarioEjecutor";
     private static final String CODIGO_TOKEN_INVALIDO = "MQR_001";
@@ -69,11 +75,13 @@ public class MatriculaQrJpaRepository implements MatriculaQrRepositoryPort {
             """;
     static final String SQL_MATRICULAR_TOKEN = """
             EXEC dbo.usp_matricular_estudiante_por_token
-                 @tokenHash = :tokenHash, @idCorrelacion = :idCorrelacion, @idUsuarioEjecutor = :idUsuarioEjecutor
+                 @tokenHash = :tokenHash, @idCorrelacion = :idCorrelacion, @idUsuarioEjecutor = :idUsuarioEjecutor,
+                 @idPrograma = :idPrograma
             """;
     static final String SQL_MATRICULAR_PIN = """
             EXEC dbo.usp_matricular_estudiante_por_token
-                 @pin = :pin, @idCorrelacion = :idCorrelacion, @idUsuarioEjecutor = :idUsuarioEjecutor
+                 @pin = :pin, @idCorrelacion = :idCorrelacion, @idUsuarioEjecutor = :idUsuarioEjecutor,
+                 @idPrograma = :idPrograma
             """;
     private static final String SQL_REGISTRAR_BASE = """
             EXEC dbo.usp_registrar_estudiante_por_token_publico
@@ -81,7 +89,8 @@ public class MatriculaQrJpaRepository implements MatriculaQrRepositoryPort {
                  @idTipoIdentificacion = :idTipoIdentificacion, @numeroIdentificacion = :numeroIdentificacion,
                  @primerNombre = :primerNombre, @segundoNombre = :segundoNombre,
                  @primerApellido = :primerApellido, @segundoApellido = :segundoApellido,
-                 @correo = :correo, @password = :password, @idCorrelacion = :idCorrelacion
+                 @correo = :correo, @password = :password, @idCorrelacion = :idCorrelacion,
+                 @idPrograma = :idPrograma
             """;
     static final String SQL_REGISTRAR_TOKEN = SQL_REGISTRAR_BASE.formatted("@tokenHash = :tokenHash");
     static final String SQL_REGISTRAR_PIN = SQL_REGISTRAR_BASE.formatted("@pin = :pin");
@@ -197,7 +206,8 @@ public class MatriculaQrJpaRepository implements MatriculaQrRepositoryPort {
                     final Object[] c = (Object[]) filas.getFirst();
                     return new CursoMatricula(
                             aUuid(c[0]), String.valueOf(c[1]), String.valueOf(c[2]), String.valueOf(c[3]),
-                            aInstante(c[4]), ((Number) c[5]).intValue());
+                            aInstante(c[4]), ((Number) c[5]).intValue(),
+                            c.length > 6 ? programasElegibles(c[6]) : List.of());
                 }
         );
     }
@@ -221,6 +231,7 @@ public class MatriculaQrJpaRepository implements MatriculaQrRepositoryPort {
         parametros.put("correo", datos.correo());
         parametros.put("password", datos.passwordCodificada());
         parametros.put(P_ID_CORRELACION, correlationId);
+        parametros.put(P_ID_PROGRAMA, datos.programaId());
         return aMatricula(procedureExecutor.executeWithExtras(
                 "registrarEstudiantePorTokenPublico",
                 porToken ? SQL_REGISTRAR_TOKEN : SQL_REGISTRAR_PIN,
@@ -228,7 +239,8 @@ public class MatriculaQrJpaRepository implements MatriculaQrRepositoryPort {
     }
 
     @Override
-    public MatriculaRealizada matricularAutenticado(final CredencialMatricula credencial, final UUID usuarioEjecutor) {
+    public MatriculaRealizada matricularAutenticado(final CredencialMatricula credencial, final UUID usuarioEjecutor,
+                                                    final UUID programaId) {
         final UUID correlationId = CorrelationIdContext.require();
         final boolean porToken = credencial.token() != null;
         final Map<String, Object> parametros = new LinkedHashMap<>();
@@ -239,10 +251,23 @@ public class MatriculaQrJpaRepository implements MatriculaQrRepositoryPort {
         }
         parametros.put(P_ID_CORRELACION, correlationId);
         parametros.put(P_ID_USUARIO_EJECUTOR, usuarioEjecutor);
+        parametros.put(P_ID_PROGRAMA, programaId);
         return aMatricula(procedureExecutor.executeWithExtras(
                 "matricularEstudiantePorToken",
                 porToken ? SQL_MATRICULAR_TOKEN : SQL_MATRICULAR_PIN,
                 parametros, correlationId, 3));
+    }
+
+    /** DEC-078: NULL o vacio = el estudiante no elige programa. */
+    static List<ProgramaElegible> programasElegibles(final Object valor) {
+        if (valor == null || String.valueOf(valor).isBlank()) {
+            return List.of();
+        }
+        final List<ProgramaElegible> programas = new ArrayList<>();
+        for (final JsonNode nodo : JSON.readTree(String.valueOf(valor))) {
+            programas.add(new ProgramaElegible(UUID.fromString(nodo.get("idPrograma").asString()), nodo.get("nombre").asString()));
+        }
+        return List.copyOf(programas);
     }
 
     private boolean esVigente(final String token) {

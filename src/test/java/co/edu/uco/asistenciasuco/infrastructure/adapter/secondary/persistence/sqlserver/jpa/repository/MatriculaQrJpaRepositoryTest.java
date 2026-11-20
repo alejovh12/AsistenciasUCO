@@ -121,6 +121,22 @@ class MatriculaQrJpaRepositoryTest {
     }
 
     @Test
+    void DEC078_validar_lee_los_programas_elegibles_del_json_de_la_base() {
+        final Query query = mock(Query.class);
+        when(entityManager.createNativeQuery(MatriculaQrJpaRepository.SQL_VALIDAR_TOKEN)).thenReturn(query);
+        when(query.setParameter(anyString(), any())).thenReturn(query);
+        final UUID programaA = UUID.randomUUID();
+        final String json = "[{\"idPrograma\":\"" + programaA + "\",\"nombre\":\"Administración\"}]";
+        when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{GRUPO, "Constitucion", "G1", "Docente", INSTANTE, 10, json}));
+
+        final var curso = repository.validar(new CredencialMatricula(TOKEN, null));
+
+        assertEquals(List.of(new co.edu.uco.asistenciasuco.application.secondaryports.repository.MatriculaQrRepositoryPort.ProgramaElegible(programaA, "Administración")), curso.programasElegibles());
+        assertEquals(List.of(), MatriculaQrJpaRepository.programasElegibles(null));
+        assertEquals(List.of(), MatriculaQrJpaRepository.programasElegibles(" "));
+    }
+
+    @Test
     void rotar_automatico_confirma_vigencia_y_devuelve_nulo_si_no_aplico_o_vencio() {
         when(procedureExecutor.executeWithExtras(anyString(), anyString(), anyMap(), any(), eq(4)))
                 .thenReturn(new ProcedureRow(mock(ProcedureResult.class), List.of(VENTANA, DOCENTE, INSTANTE, "2026-11-04 16:00:00")));

@@ -75,7 +75,7 @@ public final class RegistrarEstudiantePorTokenUseCaseImpl implements RegistrarEs
                         comando.tipoIdentificacionId(), comando.numeroIdentificacion(),
                         comando.primerNombre(), vacioSiNulo(comando.segundoNombre()),
                         comando.primerApellido(), vacioSiNulo(comando.segundoApellido()),
-                        comando.correo(), passwordEncoder.encode(comando.password())));
+                        comando.correo(), passwordEncoder.encode(comando.password()), comando.programaId()));
 
         // DB SUCCESS a partir de aqui: el IdP nunca se invoca antes.
         provisionarIdentidad(comando, matricula);

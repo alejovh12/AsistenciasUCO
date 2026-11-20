@@ -32,7 +32,10 @@ public final class ValidarTokenMatriculaUseCaseImpl implements ValidarTokenMatri
                 new MatriculaQrRepositoryPort.CredencialMatricula(comando.token(), comando.pin()));
         return new Resultado(
                 curso.idGrupo(), curso.nombreAsignatura(), curso.nombreGrupo(), curso.nombreDocente(),
-                curso.fechaExpiracionUtc(), curso.cupoDisponible());
+                curso.fechaExpiracionUtc(), curso.cupoDisponible(),
+                curso.programasElegibles().stream()
+                        .map(p -> new ProgramaElegible(p.idPrograma(), p.nombre()))
+                        .toList());
     }
 
     static void exigirUnaSolaCredencial(final String token, final String pin) {

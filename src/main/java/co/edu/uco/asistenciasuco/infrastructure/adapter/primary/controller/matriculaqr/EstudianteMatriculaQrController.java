@@ -53,7 +53,8 @@ public final class EstudianteMatriculaQrController {
     ) {
         RequestValidationGuard.validate(VALIDATOR.validarCredencial(request));
         final var resultado = matricular.execute(new MatricularEstudianteAutenticadoInputPort.Comando(
-                request.token(), request.pin(), ipResolver.resolve(http), authenticatedUserResolver.requireAuthenticatedUserId()));
+                request.token(), request.pin(), ipResolver.resolve(http), authenticatedUserResolver.requireAuthenticatedUserId(),
+                request.idPrograma()));
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiDataResponse<>(true, new MatriculaGrupoResponse(resultado.idGrupo())));
     }
 }

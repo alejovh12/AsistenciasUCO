@@ -19,8 +19,16 @@ public interface RegistrarEstudiantePorTokenInputPort
             String primerApellido,
             String segundoApellido,
             String correo,
-            String password
+            String password,
+            UUID programaId
     ) {
+        /** Sin programa elegido (DEC-078): el de la ventana o el unico del grupo. */
+        public Comando(final String token, final String pin, final String direccionIp, final UUID tipoIdentificacionId,
+                       final Integer numeroIdentificacion, final String primerNombre, final String segundoNombre,
+                       final String primerApellido, final String segundoApellido, final String correo, final String password) {
+            this(token, pin, direccionIp, tipoIdentificacionId, numeroIdentificacion, primerNombre, segundoNombre,
+                    primerApellido, segundoApellido, correo, password, null);
+        }
     }
 
     /** {@code usuario} es el numero de identificacion con el que inicia sesion. */

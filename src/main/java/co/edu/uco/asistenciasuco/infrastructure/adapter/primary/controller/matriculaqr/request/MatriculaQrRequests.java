@@ -15,11 +15,18 @@ public final class MatriculaQrRequests {
     private MatriculaQrRequests() {
     }
 
-    /** Exactamente uno de {@code token} o {@code pin}. */
+    /**
+     * Exactamente uno de {@code token} o {@code pin}. {@code idPrograma} (DEC-078, opcional): programa que elige el estudiante
+     * al matricularse en un grupo compartido; la validacion lo ignora.
+     */
     public record Credencial(
             @Pattern(regexp = BeanValidationPatterns.BASE64URL_43_STRICT_OR_BLANK, message = "El codigo de matricula no es valido.") String token,
-            @Pattern(regexp = BeanValidationPatterns.PIN_6_STRICT_OR_BLANK, message = "El PIN debe tener 6 digitos.") String pin
+            @Pattern(regexp = BeanValidationPatterns.PIN_6_STRICT_OR_BLANK, message = "El PIN debe tener 6 digitos.") String pin,
+            UUID idPrograma
     ) {
+        public Credencial(final String token, final String pin) {
+            this(token, pin, null);
+        }
     }
 
     /** Alta publica: credencial (token o PIN) mas los datos de la persona. */
@@ -33,7 +40,15 @@ public final class MatriculaQrRequests {
             @NotBlank(message = "El campo primerApellido es obligatorio.") String primerApellido,
             String segundoApellido,
             @NotBlank(message = "El correo es obligatorio.") String correo,
-            @NotBlank(message = "La contrasena es obligatoria.") @Size(min = 8, max = 255, message = "La contrasena debe tener entre 8 y 255 caracteres.") String password
+            @NotBlank(message = "La contrasena es obligatoria.") @Size(min = 8, max = 255, message = "La contrasena debe tener entre 8 y 255 caracteres.") String password,
+            // DEC-078: programa que elige el estudiante en un grupo compartido (opcional; la BD lo valida contra el grupo).
+            UUID idPrograma
     ) {
+        public Registro(final String token, final String pin, final UUID idTipoIdentificacion, final Long numeroIdentificacion,
+                        final String primerNombre, final String segundoNombre, final String primerApellido,
+                        final String segundoApellido, final String correo, final String password) {
+            this(token, pin, idTipoIdentificacion, numeroIdentificacion, primerNombre, segundoNombre, primerApellido,
+                    segundoApellido, correo, password, null);
+        }
     }
 }
