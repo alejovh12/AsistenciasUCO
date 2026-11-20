@@ -126,20 +126,21 @@ class ConsultarPlanEstudioEstudianteUseCaseImplTest {
                 fila(PROGRAMA_1, PLAN_1, SEMESTRE_1, 1, "Propia", 3, "ESP", true),
                 fila(PROGRAMA_1, PLAN_1, SEMESTRE_1, 1, "Basica", 3, "BAS", false),
                 fila(PROGRAMA_1, PLAN_1, SEMESTRE_1, 1, "Institucional", 3, "INS", false),
+                fila(PROGRAMA_1, PLAN_1, SEMESTRE_1, 1, "Electiva", 3, "ELE", false),
                 fila(PROGRAMA_1, PLAN_1, SEMESTRE_1, 1, "Otro", 3, "XYZ", false),
                 new AsignaturaPlanEstudianteProjection(PROGRAMA_1, "Programa 1", PLAN_1, 2024, SEMESTRE_1, 1, UUID.randomUUID(), "SC",
                         "Sin componente", 1, null, "OPT", "Optativa", false, grupoFantasma, "No deberia salir")));
 
         final List<AsignaturaPlanEstudianteDomain> asignaturas = useCase.execute(ACTOR).getFirst().semestres().getFirst().asignaturas();
 
-        assertEquals(List.of("ESPECIFICA", "BASICA", "INSTITUCIONAL", "XYZ"),
-                asignaturas.stream().limit(4).map(AsignaturaPlanEstudianteDomain::tipoAsignatura).toList());
+        assertEquals(List.of("ESPECIFICA", "BASICA", "INSTITUCIONAL", "ELECTIVA", "XYZ"),
+                asignaturas.stream().limit(5).map(AsignaturaPlanEstudianteDomain::tipoAsignatura).toList());
         assertTrue(asignaturas.getFirst().cursando());
         assertEquals(GRUPO, asignaturas.getFirst().idGrupoCursando());
         assertEquals("Grupo 1", asignaturas.getFirst().nombreGrupoCursando());
         assertEquals("COD-Propia", asignaturas.getFirst().codigo());
         assertEquals("OBL", asignaturas.getFirst().codigoCaracter());
-        final AsignaturaPlanEstudianteDomain sinComponente = asignaturas.get(4);
+        final AsignaturaPlanEstudianteDomain sinComponente = asignaturas.get(5);
         assertNull(sinComponente.tipoAsignatura());
         assertFalse(sinComponente.cursando());
         assertNull(sinComponente.idGrupoCursando());

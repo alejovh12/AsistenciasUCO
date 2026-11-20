@@ -39,3 +39,12 @@ Nota de los datos del lab: el plan local solo tiene registrado el semestre 8, as
 ## Desviación
 
 Las pruebas se escribieron junto con el código, sin un commit RED separado.
+
+## Addendum COMP-ELE: tipo de asignatura ELECTIVA (2026-11-19)
+
+Cambio: el plan de estudios del estudiante reconoce el componente `ELE` de la BD (migración 60 de `gestion-asistencia-db`) y lo entrega como `tipoAsignatura = ELECTIVA` (`AsignaturaPlanEstudianteDTO`, `ConsultarPlanEstudioEstudianteUseCaseImpl`). Decisión de John (2026-11-19, opción 1): la Electiva se comporta igual que Básica; no cambia ninguna regla de matrícula.
+
+| Comprobación | Resultado |
+|---|---|
+| `ConsultarPlanEstudioEstudianteUseCaseImplTest` (caso nuevo de `ELE` → `ELECTIVA`) | **NO EJECUTADA en esta máquina.** `./mvnw -o test -Dtest=ConsultarPlanEstudioEstudianteUseCaseImplTest` (2026-11-19) falla al resolver dependencias: `co.edu.uco:messageucolab-spring-boot-starter:0.1.3` no está en el repositorio local y GitHub Packages responde 401 sin credenciales. Queda para el CI del PR. |
+| Frontend consumidor (`plan-estudio-estudiante.service.ts`) | Acepta `ELECTIVA`; suite unitaria del frontend 3665/3665 (rama `feat/manual-imagen-uco`). |

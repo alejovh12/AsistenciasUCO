@@ -25,8 +25,11 @@ import java.util.UUID;
  */
 public final class ConsultarPlanEstudioEstudianteUseCaseImpl implements ConsultarPlanEstudioEstudianteUseCase {
 
-    /** Regla de John (2026-10-27): ESP es propia del programa; BAS e INS son transversales. La misma de la oferta (HU008). */
-    private static final Map<String, String> TIPO_ASIGNATURA = Map.of("ESP", "ESPECIFICA", "BAS", "BASICA", "INS", "INSTITUCIONAL");
+    /**
+     * Regla de John (2026-10-27): ESP es propia del programa; BAS e INS son transversales. La misma de la oferta (HU008).
+     * COMP-ELE (2026-11-19): ELE (electivas) se informa como ELECTIVA.
+     */
+    private static final Map<String, String> TIPO_ASIGNATURA = Map.of("ESP", "ESPECIFICA", "BAS", "BASICA", "INS", "INSTITUCIONAL", "ELE", "ELECTIVA");
 
     private final InstitutionalScopePort scopePort;
     private final PlanEstudioEstudianteQueryPort port;
