@@ -52,11 +52,12 @@ class EstudianteProgramaDirectorioJpaRepositoryTest {
     }
 
     private static Object[] filaDirectorio(final Object id, final Object total) {
-        return new Object[]{id, UUID.randomUUID().toString(), UUID.randomUUID(), 1017123456L, "Perez", "Gomez", "Ana", null, "Ana Perez Gomez", "ana@uco.edu.co", 1, total};
+        return new Object[]{id, UUID.randomUUID().toString(), UUID.randomUUID(), 1017123456L, "Perez", "Gomez", "Ana", null, "Ana Perez Gomez", "ana@uco.edu.co", 1, total,
+                PROGRAMA.toString(), "Ingenieria de Sistemas", 4};
     }
 
     @Test
-    void directorio_ejecuta_el_sp_con_ambito_filtros_y_pagina_y_mapea_12_columnas() {
+    void directorio_ejecuta_el_sp_con_ambito_filtros_y_pagina_y_mapea_15_columnas() {
         final UUID id = UUID.randomUUID();
         when(query.getResultList()).thenReturn(filas(filaDirectorio(id.toString(), 8L), filaDirectorio(UUID.randomUUID(), 8)));
         final EstudianteProgramaJpaRepository repo = new EstudianteProgramaJpaRepository(manager);
@@ -71,7 +72,8 @@ class EstudianteProgramaDirectorioJpaRepositoryTest {
         assertEquals("Ana Perez Gomez", primera.nombreCompleto());
         assertEquals("ana@uco.edu.co", primera.correo());
         assertEquals(PROGRAMA, primera.idPrograma());
-        assertNull(primera.nombrePrograma());
+        assertEquals("Ingenieria de Sistemas", primera.nombrePrograma());
+        assertEquals(4, primera.semestreActual());
         verify(manager).createNativeQuery(EstudianteProgramaJpaRepository.SQL_DIRECTORIO);
         assertTrue(EstudianteProgramaJpaRepository.SQL_DIRECTORIO.contains("usp_consultar_directorio_estudiantes_paginado"));
         verify(query).setParameter("idUsuarioEjecutor", ACTOR);
@@ -89,13 +91,16 @@ class EstudianteProgramaDirectorioJpaRepositoryTest {
         when(query.getResultList()).thenReturn(List.of());
         assertEquals(0, repo.consultarDirectorioPrograma(ACTOR, PROGRAMA, null, null, 1, 10).total());
 
-        final Object[] nulos = {null, null, null, null, null, null, null, null, null, null, null, 1L};
+        final Object[] nulos = {null, null, null, null, null, null, null, null, null, null, null, 1L, null, null, null};
         when(query.getResultList()).thenReturn(filas(nulos));
         final EstudianteProgramaProjection fila = repo.consultarDirectorioPrograma(ACTOR, PROGRAMA, null, null, 1, 10).elementos().getFirst();
         assertNull(fila.id());
         assertNull(fila.numeroIdentificacion());
         assertNull(fila.nombreCompleto());
         assertNull(fila.correo());
+        assertNull(fila.idPrograma());
+        assertNull(fila.nombrePrograma());
+        assertNull(fila.semestreActual());
     }
 
     @Test

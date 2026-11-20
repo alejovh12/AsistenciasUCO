@@ -35,7 +35,8 @@ public final class EstudianteProgramaJdbcBaseline implements EstudianteProgramaQ
                 JdbcBaselineValueMapper.toString(rs.getObject("nombreCompleto")),
                 JdbcBaselineValueMapper.toString(rs.getObject("correo")),
                 JdbcBaselineValueMapper.toUuid(rs.getObject("idPrograma")),
-                JdbcBaselineValueMapper.toString(rs.getObject("nombrePrograma"))
+                JdbcBaselineValueMapper.toString(rs.getObject("nombrePrograma")),
+                null
         ));
     }
 

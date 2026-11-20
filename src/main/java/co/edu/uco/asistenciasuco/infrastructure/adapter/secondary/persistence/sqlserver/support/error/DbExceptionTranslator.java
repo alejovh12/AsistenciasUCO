@@ -58,6 +58,7 @@ public final class DbExceptionTranslator {
             UsuarioErrorCode.ERR_USUARIO_NO_EXISTE,
             VerificacionCorreoErrorCode.VCE_007,
             EstudianteErrorCode.ERR_ESTUDIANTE_NO_EXISTE,
+            MensajeUsuarioErrorCode.EST_008,
             DocenteErrorCode.ERR_DOCENTE_NO_EXISTE,
             DocenteErrorCode.ERR_DOCENTE_NO_VINCULADO_PROGRAMA,
             GrupoErrorCode.ERR_GRUPO_NO_EXISTE,
@@ -192,6 +193,7 @@ public final class DbExceptionTranslator {
             ParametroErrorCode.AUD_002,
             AdmisionEstudianteErrorCode.ADS_005,
             AdmisionEstudianteErrorCode.ADS_006,
+            MensajeUsuarioErrorCode.EST_009,
             CommonErrorCode.VALIDATION_ERROR
     );
 
@@ -208,6 +210,8 @@ public final class DbExceptionTranslator {
             MensajeUsuarioErrorCode.PER_009,
             // DEC-076: la BD sustituye el nombre del periodo terminado (PER_010).
             MensajeUsuarioErrorCode.PER_010,
+            // Migracion 63: la BD sustituye el minimo y el maximo del catalogo de semestres (EST_009).
+            MensajeUsuarioErrorCode.EST_009,
             // DEC-073: la BD sustituye el dominio, los limites del parametro y el maximo de creditos vigentes.
             VerificacionCorreoErrorCode.VCE_008,
             AsistenciaErrorCode.ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA,

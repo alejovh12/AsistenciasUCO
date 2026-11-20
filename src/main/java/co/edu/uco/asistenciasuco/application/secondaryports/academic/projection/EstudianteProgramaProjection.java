@@ -9,6 +9,7 @@ public record EstudianteProgramaProjection(
         String nombreCompleto,
         String correo,
         UUID idPrograma,
-        String nombrePrograma
+        String nombrePrograma,
+        Integer semestreActual
 ) {
 }

@@ -825,6 +825,14 @@ class SqlStoredProcedureContractIT {
                         input("@idFacultad", "uniqueidentifier"),
                         input("@estaActivo", "bit")
                 )),
+                // Migracion 63: semestre actual del estudiante en el programa (coordinador).
+                Arguments.of("usp_actualizar_semestre_estudiante_programa", List.of(
+                        input("@idEstudiante", "uniqueidentifier"),
+                        input("@idPrograma", "uniqueidentifier"),
+                        input("@semestreActual", "int"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
                 // CIERRE-W2A: filtro por caracter en servidor (parametro opcional al final) y opciones del consolidado con ambito.
                 Arguments.of("usp_consultar_asignaturas_coordinador_paginado", List.of(
                         input("@idUsuarioEjecutor", "uniqueidentifier"),

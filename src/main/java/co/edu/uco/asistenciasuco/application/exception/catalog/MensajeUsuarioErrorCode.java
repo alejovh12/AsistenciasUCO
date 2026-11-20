@@ -126,6 +126,9 @@ public enum MensajeUsuarioErrorCode implements ErrorDefinition {
     // DEC-076: crear un grupo en un periodo que ya termino (la precarga no generaria sesiones); con el nombre del periodo.
     PER_010("PER_010", ErrorKind.CONFLICT,
             "El período académico {} ya terminó; no se pueden crear grupos en él porque no tendrían sesiones por programar."),
+    // Migracion 63 de la BD: semestre actual del estudiante en el programa (EST_008 sin vinculo; EST_009 con el rango del catalogo).
+    EST_008("EST_008", ErrorKind.NOT_FOUND, "El estudiante no está vinculado a este programa académico."),
+    EST_009("EST_009", ErrorKind.VALIDATION, "El semestre debe estar entre {} y {}."),
     NOF_APP_003(CommonErrorCode.RESOURCE_NOT_FOUND, "El estudiante no existe en su ambito."),
     NOF_APP_004(CommonErrorCode.RESOURCE_NOT_FOUND, "El docente no existe o no esta vinculado a su programa."),
     NOF_APP_005(CommonErrorCode.RESOURCE_NOT_FOUND, "El plan de estudio indicado no existe en el programa del coordinador."),

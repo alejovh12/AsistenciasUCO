@@ -1,5 +1,10 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.coordinador.actualizarsemestreestudiante.primaryports.ActualizarSemestreEstudianteInputPort;
+import co.edu.uco.asistenciasuco.application.features.coordinador.actualizarsemestreestudiante.primaryports.interactor.ActualizarSemestreEstudianteInteractor;
+import co.edu.uco.asistenciasuco.application.features.coordinador.actualizarsemestreestudiante.usecase.ActualizarSemestreEstudianteUseCase;
+import co.edu.uco.asistenciasuco.application.features.coordinador.actualizarsemestreestudiante.usecase.impl.ActualizarSemestreEstudianteUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.EstudianteSemestreCommandPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.asignaturaplan.primaryports.AsignaturaPlanInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.asignaturaplan.usecase.impl.AsignaturaPlanUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.coordinador.asignaturaplan.usecase.AsignaturaPlanUseCase;
@@ -57,6 +62,8 @@ public class CoordinadorWiringConfiguration {
     @Bean ConsultarPeriodosAcademicosInputPort consultarPeriodosAcademicosInputPort(final ConsultarPeriodosAcademicosUseCase useCase) { return new ConsultarPeriodosAcademicosInteractor(useCase); }
     @Bean ConsultarEstudiantesProgramaUseCase consultarEstudiantesProgramaUseCase(final EstudianteProgramaQueryPort queryPort) { return new ConsultarEstudiantesProgramaUseCaseImpl(queryPort); }
     @Bean ConsultarEstudiantesProgramaInputPort consultarEstudiantesProgramaInputPort(final ConsultarEstudiantesProgramaUseCase useCase) { return new ConsultarEstudiantesProgramaInteractor(useCase); }
+    @Bean ActualizarSemestreEstudianteUseCase actualizarSemestreEstudianteUseCase(final EstudianteSemestreCommandPort commandPort) { return new ActualizarSemestreEstudianteUseCaseImpl(commandPort); }
+    @Bean ActualizarSemestreEstudianteInputPort actualizarSemestreEstudianteInputPort(final ActualizarSemestreEstudianteUseCase useCase) { return new ActualizarSemestreEstudianteInteractor(useCase); }
     @Bean GestionarPlanEstudioUseCase gestionarPlanEstudioUseCase(final PlanEstudioCommandPort commandPort, final PlanEstudioQueryPort queryPort, final InstitutionalScopePort scopePort) { return new GestionarPlanEstudioUseCaseImpl(commandPort, queryPort, scopePort); }
     @Bean GestionarPlanEstudioInputPort gestionarPlanEstudioInputPort(final GestionarPlanEstudioUseCase useCase) { return new GestionarPlanEstudioInteractor(useCase); }
     @Bean GestionarAsignaturaUseCase gestionarAsignaturaUseCase(final AsignaturaCommandPort commandPort, final AsignaturaQueryPort queryPort, final PlanEstudioQueryPort planQueryPort, final InstitutionalScopePort scopePort, final MessageCatalogPort mensajes) { return new GestionarAsignaturaUseCaseImpl(commandPort, queryPort, planQueryPort, scopePort, mensajes); }

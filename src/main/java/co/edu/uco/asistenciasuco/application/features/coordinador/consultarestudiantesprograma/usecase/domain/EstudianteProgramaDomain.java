@@ -12,6 +12,7 @@ public record EstudianteProgramaDomain(
         String nombreCompleto,
         String correo,
         UUID idPrograma,
-        String nombrePrograma
+        String nombrePrograma,
+        Integer semestreActual
 ) {
 }

@@ -27,7 +27,7 @@ class ConsultarEstudiantesProgramaUseCaseImplTest {
     void traslada_programa_filtros_y_mapea_las_filas() {
         final UUID id = UUID.randomUUID();
         when(port.consultarDirectorioPrograma(actor, programa, "ana", true, 2, 10)).thenReturn(new PaginaEstudiantesProgramaProjection(
-                List.of(new EstudianteProgramaProjection(id, id, "101", "Ana Perez", "ana@uco.edu.co", programa, "Sistemas")), 41));
+                List.of(new EstudianteProgramaProjection(id, id, "101", "Ana Perez", "ana@uco.edu.co", programa, "Sistemas", 3)), 41));
 
         final var pagina = useCase.execute(new ConsultarEstudiantesProgramaDomain(actor, programa, " ana ", true, 2, 10));
 

@@ -492,3 +492,6 @@ ASI_009|ASI009|Funcional|Error|ASI_009 - No puedes inactivar la asignatura…|No
 ASI_010|ASI010|Funcional|Error|ASI_010 - La asignatura está inactiva…|La asignatura está inactiva; actívala para usarla.
 ASI_011|ASI011|Funcional|Confirmación|ASI_011 - La asignatura quedó activa.|La asignatura quedó activa.
 ASI_012|ASI012|Funcional|Confirmación|ASI_012 - La asignatura quedó inactiva.|La asignatura quedó inactiva.
+EST_007|EST007|Funcional|Confirmación|EST_007 - El semestre del estudiante quedó…|El semestre del estudiante quedó actualizado.
+EST_008|EST008|Funcional|Error|EST_008 - El estudiante no está vinculado a este…|El estudiante no está vinculado a este programa académico.
+EST_009|EST009|Funcional|Error|EST_009 - El semestre debe estar entre … y ….|El semestre debe estar entre {} y {}.

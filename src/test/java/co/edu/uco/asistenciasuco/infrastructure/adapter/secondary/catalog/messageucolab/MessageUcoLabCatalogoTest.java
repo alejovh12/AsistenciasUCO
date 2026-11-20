@@ -73,7 +73,8 @@ class MessageUcoLabCatalogoTest {
         // MEJORAS-SERGIO-2026-11-18: - DOC_004 y ERR_TIPO_VINCULACION_INVALIDO (se retiro el tipo de vinculacion, migracion 56 de BD).
         // HU074: + ASI_009, ASI_010, ASI_011 y ASI_012 (migracion 58 de BD; filas con el formato de build-message-catalog.py).
         // DEC-076: + PER_010 (seed 17 / migracion 61 de BD: grupo nuevo en un periodo que ya termino).
-        assertEquals(493, catalogo().size());
+        // Migracion 63 de BD: + EST_007, EST_008 y EST_009 (semestre actual del estudiante en el programa).
+        assertEquals(496, catalogo().size());
     }
 
     @Test

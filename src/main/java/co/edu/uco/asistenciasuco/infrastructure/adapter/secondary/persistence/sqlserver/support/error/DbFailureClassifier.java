@@ -123,6 +123,9 @@ final class DbFailureClassifier {
             case "PER_009" -> MensajeUsuarioErrorCode.PER_009;
             // DEC-076: grupo nuevo en un periodo que ya termino: 409 con el nombre del periodo que arma la DB.
             case "PER_010" -> MensajeUsuarioErrorCode.PER_010;
+            // Migracion 63: semestre actual del estudiante en el programa (404 sin vinculo; 400 fuera del rango, con el texto de la DB).
+            case "EST_008" -> MensajeUsuarioErrorCode.EST_008;
+            case "EST_009" -> MensajeUsuarioErrorCode.EST_009;
             // HU051: retiro de un estudiante por el docente titular. RET_001 (grupo inexistente o ajeno) y RET_002
             // (sin matricula activa) son no encontrado; periodo terminado es conflicto; motivo invalido es validacion.
             case "RET_001", "RET_002" -> CommonErrorCode.RESOURCE_NOT_FOUND;

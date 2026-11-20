@@ -53,7 +53,8 @@ class JpaRepositoryBeanUniquenessTest {
     // ATA D11: - OfertaGruposEstudianteJpaRepository (se retira la oferta de grupos del estudiante, HU008) = 73.
     // MEJORAS-SERGIO-2026-11-18: - TipoVinculacionJpaRepository (se retira el tipo de vinculacion del docente) = 72.
     // NOTOMA-001: + AvisoSesionSinTomaJpaRepository (aviso a la coordinacion de la sesion sin toma) = 73.
-    private static final int EXPECTED_REPOSITORIES = 73;
+    // Migracion 63 de BD: + EstudianteSemestreJpaRepository (semestre actual del estudiante en el programa) = 74.
+    private static final int EXPECTED_REPOSITORIES = 74;
 
     @Test
     void cada_port_tiene_exactamente_un_repository_activo_con_provider_sqlserver() {
