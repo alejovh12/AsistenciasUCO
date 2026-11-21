@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.erro
 
 import co.edu.uco.asistenciasuco.application.exception.ApplicationException;
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.DependenciaErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
@@ -100,6 +101,12 @@ final class ApiErrorCatalog {
 
     static ApiErrorDescriptor resourceNotFound() {
         return from(CommonErrorCode.RESOURCE_NOT_FOUND);
+    }
+
+    /** REA-02: SQL Server sin conexion (503, codigo de catalogo propio; el 500 generico queda para los fallos no clasificados). */
+    static ApiErrorDescriptor databaseUnavailable() {
+        final ErrorDefinition definition = DependenciaErrorCode.ERR_BD_NO_DISPONIBLE;
+        return new ApiErrorDescriptor(definition.code(), definition.defaultMessage(), statusFor(definition.kind()));
     }
 
     static ApiErrorDescriptor internalError() {

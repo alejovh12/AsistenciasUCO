@@ -8,6 +8,7 @@ import co.edu.uco.asistenciasuco.crosscutting.sanitization.SensitiveDataSanitize
 import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationIssue;
 import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditRequestAttributes;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
+import co.edu.uco.asistenciasuco.infrastructure.failure.DatabaseUnavailableDetector;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -227,6 +228,9 @@ public final class GlobalExceptionHandler {
             final HttpServletRequest request
     ) {
         final ApiErrorDescriptor descriptor = ApiErrorCatalog.fromApplicationException(exception);
+        if (descriptor.status() == HttpStatus.INTERNAL_SERVER_ERROR && DatabaseUnavailableDetector.isConnectionFailure(exception)) {
+            return databaseUnavailable(exception, request);
+        }
         if (descriptor.status().is5xxServerError()) {
             logInternal(descriptor, exception, request);
         } else {
@@ -246,6 +250,9 @@ public final class GlobalExceptionHandler {
             final TechnicalException exception,
             final HttpServletRequest request
     ) {
+        if (DatabaseUnavailableDetector.isConnectionFailure(exception)) {
+            return databaseUnavailable(exception, request);
+        }
         final ApiErrorDescriptor descriptor = ApiErrorCatalog.fromTechnicalException(exception);
         logInternal(descriptor, exception, request);
         return buildResponse(descriptor, request);
@@ -256,9 +263,34 @@ public final class GlobalExceptionHandler {
             final Exception exception,
             final HttpServletRequest request
     ) {
+        if (DatabaseUnavailableDetector.isConnectionFailure(exception)) {
+            return databaseUnavailable(exception, request);
+        }
         final ApiErrorDescriptor descriptor = ApiErrorCatalog.internalError();
         logInternal(descriptor, exception, request);
         return buildResponse(descriptor, request);
+    }
+
+    /**
+     * REA-02 (revision final P3): SQL Server sin conexion responde 503 {@code ERR_BD_NO_DISPONIBLE} con {@code Retry-After}, no un
+     * 500 generico. Se registra una sola linea WARN con la clase de la causa y el correlationId, sin la traza, para no inundar el
+     * log mientras dura la caida (cada peticion repite el mismo fallo). El texto del catalogo (que vive en la propia BD) puede no
+     * resolverse: se usa el respaldo del enum.
+     */
+    private ResponseEntity<ApiErrorResponse> databaseUnavailable(final Exception exception, final HttpServletRequest request) {
+        final ApiErrorDescriptor descriptor = ApiErrorCatalog.databaseUnavailable();
+        final Throwable causa = DatabaseUnavailableDetector.find(exception);
+        LOGGER.warn(
+                "Base de datos no disponible. status={}, code={}, path={}, correlationId={}, causa={}",
+                descriptor.status().value(),
+                descriptor.code(),
+                safePath(request),
+                CorrelationIdContext.getAsString(),
+                (causa == null ? exception : causa).getClass().getName()
+        );
+        final ResponseEntity<ApiErrorResponse> respuesta = buildResponse(descriptor, request);
+        return ResponseEntity.status(respuesta.getStatusCode()).headers(respuesta.getHeaders())
+                .header(HttpHeaders.RETRY_AFTER, RETRY_AFTER_SEGUNDOS).body(respuesta.getBody());
     }
 
     private ResponseEntity<ApiErrorResponse> buildResponse(final ApiErrorDescriptor descriptor, final HttpServletRequest request) {

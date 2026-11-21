@@ -77,7 +77,8 @@ class MessageUcoLabCatalogoTest {
         // DEC-076: + PER_010 (seed 17 / migracion 61 de BD: grupo nuevo en un periodo que ya termino).
         // Migracion 63 de BD: + EST_007, EST_008 y EST_009 (semestre actual del estudiante en el programa).
         // SES-GEN-01 (migracion 64 de BD): + ASI_013, ASI_014, PER_011, VAL_APP_076 y HOR_006 a HOR_014; PER_010 sigue siendo un solo codigo.
-        assertEquals(509, catalogo().size());
+        // REA-02 (revision final P3, migracion 67 de BD): + ERR_BD_NO_DISPONIBLE (ERR122).
+        assertEquals(510, catalogo().size());
     }
 
     @Test
@@ -111,7 +112,8 @@ class MessageUcoLabCatalogoTest {
         // DEC-073: + ERR_CODIGO_GRUPO_INVALIDO (ERR119) y ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA (ERR120).
         // VAL-oleada9 REA-02: + ERR_ALMACENAMIENTO_NO_DISPONIBLE (ERR121).
         // MEJORAS-SERGIO-2026-11-18: - ERR_TIPO_VINCULACION_INVALIDO (ERR109 queda libre, no se renumera).
-        assertEquals(122, esperados.size());
+        // REA-02 (revision final P3): + ERR_BD_NO_DISPONIBLE (ERR122).
+        assertEquals(123, esperados.size());
         assertEquals(esperados, aliasesDeApplicationYml());
     }
 
