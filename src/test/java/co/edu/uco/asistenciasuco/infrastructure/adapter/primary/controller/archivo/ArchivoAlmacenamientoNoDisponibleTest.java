@@ -38,8 +38,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * REA-02 (VAL-oleada9): con el almacenamiento de objetos (MinIO) caido o con su circuit breaker abierto, subir un soporte responde
  * 503 con el codigo de catalogo {@code ERR_ALMACENAMIENTO_NO_DISPONIBLE}, como el antivirus (H3). Antes respondia 500
  * {@code INTERNAL_ERROR} (comprobado en el laboratorio el 2026-11-15 con {@code asis-datos-minio} detenido). La metadata nunca se
- * registra. Controlador, caso de uso, breaker y manejador de errores reales. La descarga no cambia: ver
- * {@code DescargarArchivoUseCaseImplTest.storage_no_disponible_no_se_disfraza_de_archivo_inexistente} (decision pendiente).
+ * registra. Controlador, caso de uso, breaker y manejador de errores reales. La descarga tiene su propia prueba:
+ * {@code DescargarArchivoAlmacenamientoNoDisponibleTest}.
  */
 class ArchivoAlmacenamientoNoDisponibleTest {
 
