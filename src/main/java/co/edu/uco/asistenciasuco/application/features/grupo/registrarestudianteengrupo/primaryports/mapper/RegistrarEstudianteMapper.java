@@ -25,7 +25,7 @@ public final class RegistrarEstudianteMapper {
         // titularidad, fila Estudiante y misma institucion dentro del SP); nunca a partir de un documento libre.
         if (TextHelper.isNullOrBlank(dto.getCorreo())) {
             return RegistrarEstudianteDomain.pendienteDeResolverPorDocumento(
-                    dto.getTipoIdentificacionId(), dto.getNumeroIdentificacion(), dto.getPassword(), dto.getGrupoId(),
+                    dto.getTipoIdentificacionId(), dto.getNumeroIdentificacion(), dto.getGrupoId(),
                     dto.getUsuarioEjecutor()).conIdPrograma(dto.getIdPrograma());
         }
         return new RegistrarEstudianteDomain(
@@ -36,7 +36,6 @@ public final class RegistrarEstudianteMapper {
                 dto.getPrimerNombre(),
                 dto.getSegundoNombre(),
                 dto.getCorreo(),
-                dto.getPassword(),
                 dto.getGrupoId(),
                 dto.getUsuarioEjecutor()
         ).conIdPrograma(dto.getIdPrograma());

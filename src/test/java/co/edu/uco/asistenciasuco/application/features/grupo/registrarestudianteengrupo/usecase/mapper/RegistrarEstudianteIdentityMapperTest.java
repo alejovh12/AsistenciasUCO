@@ -21,7 +21,7 @@ class RegistrarEstudianteIdentityMapperTest {
     void toCrearCuentaIdentidadDTO_mapea_datos_del_dominio_con_rol_estudiante() {
         final RegistrarEstudianteDomain domain = new RegistrarEstudianteDomain(
                 TIPO_IDENTIFICACION, 123456789, "Perez", "Gomez", "Ana", "Maria",
-                "ana.perez@uco.edu.co", "Clave123!", GRUPO, USUARIO_EJECUTOR
+                "ana.perez@uco.edu.co", GRUPO, USUARIO_EJECUTOR
         );
 
         final CrearCuentaIdentidadDTO dto = RegistrarEstudianteIdentityMapper.toCrearCuentaIdentidadDTO(
@@ -42,7 +42,7 @@ class RegistrarEstudianteIdentityMapperTest {
     void toCrearCuentaIdentidadDTO_propaga_password_nulo_sin_inventar_credencial() {
         final RegistrarEstudianteDomain domain = new RegistrarEstudianteDomain(
                 TIPO_IDENTIFICACION, 123456789, "Perez", "Gomez", "Ana", "Maria",
-                "ana.perez@uco.edu.co", null, GRUPO, USUARIO_EJECUTOR
+                "ana.perez@uco.edu.co", GRUPO, USUARIO_EJECUTOR
         );
 
         final CrearCuentaIdentidadDTO dto = RegistrarEstudianteIdentityMapper.toCrearCuentaIdentidadDTO(

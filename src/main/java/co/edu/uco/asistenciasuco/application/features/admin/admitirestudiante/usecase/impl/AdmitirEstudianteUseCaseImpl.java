@@ -70,13 +70,15 @@ public final class AdmitirEstudianteUseCaseImpl implements AdmitirEstudianteUseC
         }
         final String correo = domain.correo() == null ? null : domain.correo().strip().toLowerCase(Locale.ROOT);
         final boolean personaExistente = existePersona(domain, correo);
-        final String passwordHash = personaExistente ? null : exigirReglasDeAltaNueva(correo);
+        if (!personaExistente) {
+            exigirReglasDeAltaNueva(correo);
+        }
 
         final AdmisionEstudianteResultadoProjection admitido;
         try {
             admitido = comandoPort.admitir(new AdmisionEstudianteCommand(domain.tipoIdentificacionId(), domain.numeroIdentificacion(),
                     domain.primerNombre(), domain.segundoNombre(), domain.primerApellido(), domain.segundoApellido(), correo,
-                    passwordHash, domain.idPrograma(), domain.usuarioEjecutor()));
+                    domain.idPrograma(), domain.usuarioEjecutor()));
         } catch (final ConflictException conflicto) {
             if (AdmisionEstudianteErrorCode.ADS_002.code().equals(conflicto.getCode())) {
                 return repararCuentaDelYaAdmitido(domain);
@@ -106,13 +108,9 @@ public final class AdmitirEstudianteUseCaseImpl implements AdmitirEstudianteUseC
         return porCorreo || porDocumento;
     }
 
-    /**
-     * Persona nueva: correo institucional (VCE_001). IDENT-002: sin contrasena en el registro; devuelve el valor de la
-     * columna legada (hash de un secreto inutilizable).
-     */
-    private String exigirReglasDeAltaNueva(final String correo) {
+    /** Persona nueva: correo institucional (VCE_001). IDENT-002: sin contrasena en el registro (SEG-11: Usuario ya no la guarda). */
+    private void exigirReglasDeAltaNueva(final String correo) {
         dominioCorreoPolicy.exigir(correo);
-        return activacion.credencialLegadaInutilizable();
     }
 
     private AdmisionEstudianteResultadoDomain repararCuentaDelYaAdmitido(final AdmitirEstudianteDomain domain) {

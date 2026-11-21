@@ -264,7 +264,7 @@ class AcademicUserCommandsSuccessParityIT {
         final List<Long> antesJpa = fixture.conteos();
         final String resultadoJpa = exitoJpa(() -> new CoordinadorJpaRepository(entityManager, new JpaProcedureExecutor(entityManager)).crearCoordinador(UUID.randomUUID(),
                 String.valueOf(fixture.numeroIdentificacionUnico()), "Nombre", "", "Apellido", "", correoJpa,
-                s.programa(), s.facultad(), AcademicUserParityFixture.PASSWORD_IT, s.ejecutorDecano()));
+                s.programa(), s.facultad(), s.ejecutorDecano()));
         final String efectosJpa = fixture.usuarioPorCorreo(correoJpa) + "#"
                 + fixture.vinculoCoordinador(correoJpa, s.programa()) + "#"
                 + fixture.deltaConteos(antesJpa, fixture.conteos());
@@ -307,7 +307,7 @@ class AcademicUserCommandsSuccessParityIT {
         final String resultadoJpa = exitoJpa(() -> new DecanoJpaRepository(entityManager, new JpaProcedureExecutor(entityManager)).crearDecano(
                 new DecanoCommandPort.CrearDecanoCommand(UUID.randomUUID(), null, fixture.numeroIdentificacionUnico(),
                         "Nombre", "", "Apellido", "", correoJpa, s.facultad(), "",
-                        AcademicUserParityFixture.PASSWORD_IT, s.ejecutorAdmin())));
+                        s.ejecutorAdmin())));
         final String efectosJpa = fixture.usuarioPorCorreo(correoJpa) + "#"
                 + fixture.vinculoDecano(correoJpa, s.facultad()) + "#"
                 + fixture.deltaConteos(antesJpa, fixture.conteos());

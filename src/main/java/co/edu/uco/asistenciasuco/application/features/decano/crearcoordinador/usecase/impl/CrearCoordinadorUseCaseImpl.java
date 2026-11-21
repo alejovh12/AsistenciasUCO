@@ -68,12 +68,6 @@ public final class CrearCoordinadorUseCaseImpl implements CrearCoordinadorUseCas
         final Optional<UsuarioIdentidadRepositoryProjection> usuarioPreexistente =
                 resolverUsuarioPreexistente(domain);
 
-        // IDENT-002: el alta no recibe contrasena; la columna legada guarda un secreto inutilizable y el coordinador define
-        // su contrasena al activar la cuenta con el enlace del correo.
-        final String passwordParaPersistir = usuarioPreexistente.isPresent() || activacion == null
-                ? null
-                : activacion.credencialLegadaInutilizable();
-
         final UUID idCoordinador = UUID.randomUUID();
         final CrearCoordinadorResultado resultado;
         if (domain.getProgramaNuevo() != null) {
@@ -81,19 +75,19 @@ public final class CrearCoordinadorUseCaseImpl implements CrearCoordinadorUseCas
             final var creado = commandPort.crearCoordinadorConPrograma(new CoordinadorCommandPort.CrearCoordinadorConProgramaCommand(
                     idCoordinador, domain.getTipoIdentificacionId(), domain.getNumeroIdentificacion(), domain.getPrimerNombre(),
                     domain.getSegundoNombre(), domain.getPrimerApellido(), domain.getSegundoApellido(), domain.getCorreo(),
-                    passwordParaPersistir, programa.nombre(), programa.idTipoPrograma(), programa.idModalidad(),
+                    programa.nombre(), programa.idTipoPrograma(), programa.idModalidad(),
                     programa.idJornada(), facultad, domain.getUsuario()));
             resultado = new CrearCoordinadorResultado(creado.idCoordinador(), creado.idPrograma(), creado.nombrePrograma());
         } else if (domain.getTipoIdentificacionId() != null) {
             resultado = new CrearCoordinadorResultado(idCoordinador, domain.getIdPrograma(), null);
             commandPort.crearCoordinador(idCoordinador, domain.getNumeroIdentificacion(), domain.getPrimerNombre(),
                     domain.getSegundoNombre(), domain.getPrimerApellido(), domain.getSegundoApellido(), domain.getCorreo(),
-                    domain.getIdPrograma(), facultad, passwordParaPersistir, domain.getUsuario(), domain.getTipoIdentificacionId());
+                    domain.getIdPrograma(), facultad, domain.getUsuario(), domain.getTipoIdentificacionId());
         } else {
             resultado = new CrearCoordinadorResultado(idCoordinador, domain.getIdPrograma(), null);
             commandPort.crearCoordinador(idCoordinador, domain.getNumeroIdentificacion(), domain.getPrimerNombre(),
                     domain.getSegundoNombre(), domain.getPrimerApellido(), domain.getSegundoApellido(), domain.getCorreo(),
-                    domain.getIdPrograma(), facultad, passwordParaPersistir, domain.getUsuario());
+                    domain.getIdPrograma(), facultad, domain.getUsuario());
         }
 
         if (identityProviderPort != null && usuarioRepositoryPort != null) {

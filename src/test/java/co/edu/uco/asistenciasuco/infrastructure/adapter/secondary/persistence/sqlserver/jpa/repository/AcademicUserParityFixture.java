@@ -256,12 +256,11 @@ final class AcademicUserParityFixture {
     String usuarioPorCorreo(final String correo) {
         final List<String> filas = jdbc.query("""
                 SELECT primerNombre, primerApellido, numeroIdentificacion, correoConfirmado, estado,
-                       CASE WHEN tipoIdIdentificacion = ? THEN 'CC' ELSE 'OTRO' END,
-                       CASE WHEN LEN(password) > 0 THEN 'PASS_OK' ELSE 'PASS_NO' END
+                       CASE WHEN tipoIdIdentificacion = ? THEN 'CC' ELSE 'OTRO' END
                 FROM dbo.Usuario WHERE correo = ?
                 """, (rs, n) -> String.join("|", rs.getString(1), rs.getString(2),
                 (rs.getInt(3) > 0 ? "NUM" : "NONE"), String.valueOf(rs.getBoolean(4)), String.valueOf(rs.getBoolean(5)),
-                rs.getString(6), String.valueOf(rs.getBoolean(7))),
+                rs.getString(6)),
                 semilla().tipoIdentificacionCC().toString(), correo.toLowerCase());
         return filas.isEmpty() ? "AUSENTE" : filas.getFirst();
     }

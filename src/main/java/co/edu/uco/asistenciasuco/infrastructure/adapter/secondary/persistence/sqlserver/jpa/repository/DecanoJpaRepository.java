@@ -111,7 +111,7 @@ public class DecanoJpaRepository implements DecanoQueryPort, DecanoCommandPort {
         parametros.put("primerApellido", command.primerApellido());
         parametros.put("segundoApellido", command.segundoApellido());
         parametros.put("correo", command.correo());
-        parametros.put("password", command.password());
+        parametros.put("password", null); // SEG-11: parametro obsoleto del SP; la BD lo ignora y Usuario ya no guarda clave
         parametros.put("nombreFacultad", command.nombreFacultad());
         parametros.put("codigoFacultad", command.codigoFacultad());
         parametros.put("idInstitucion", command.idInstitucion());
@@ -222,7 +222,7 @@ public class DecanoJpaRepository implements DecanoQueryPort, DecanoCommandPort {
         parametros.put("correo", command.correo());
         parametros.put("idFacultad", command.idFacultad());
         parametros.put("nombreFacultad", command.nombreFacultad());
-        parametros.put("password", command.password());
+        parametros.put("password", null); // SEG-11: parametro obsoleto del SP; la BD lo ignora y Usuario ya no guarda clave
         parametros.put(PARAM_ID_CORRELACION, correlationId);
         parametros.put(PARAM_ID_USUARIO_EJECUTOR, command.usuarioEjecutor());
         // CULM-001 D.9-a (F-ADM-011): el tipo de documento elegido por el administrador (NULL = el que decide la BD).

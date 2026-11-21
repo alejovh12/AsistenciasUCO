@@ -15,7 +15,6 @@ public final class RegistrarEstudianteDTO {
     private String primerNombre;
     private String segundoNombre;
     private String correo;
-    private String password;
     private UUID grupoId;
     private UUID usuarioEjecutor;
     private UUID idPrograma;   // CULM-001 B2NM (S3): obligatorio solo si el grupo tiene varios programas
@@ -32,11 +31,10 @@ public final class RegistrarEstudianteDTO {
             final String primerNombre,
             final String segundoNombre,
             final String correo,
-            final String password,
             final UUID grupoId,
             final UUID usuarioEjecutor
     ) {
-        this(null, tipoIdentificacionId, numeroIdentificacion, primerApellido, segundoApellido, primerNombre, segundoNombre, correo, password, grupoId, usuarioEjecutor);
+        this(null, tipoIdentificacionId, numeroIdentificacion, primerApellido, segundoApellido, primerNombre, segundoNombre, correo, grupoId, usuarioEjecutor);
     }
 
     public RegistrarEstudianteDTO(
@@ -48,7 +46,6 @@ public final class RegistrarEstudianteDTO {
             final String primerNombre,
             final String segundoNombre,
             final String correo,
-            final String password,
             final UUID grupoId,
             final UUID usuarioEjecutor
     ) {
@@ -60,7 +57,6 @@ public final class RegistrarEstudianteDTO {
         setPrimerNombre(primerNombre);
         setSegundoNombre(segundoNombre);
         setCorreo(correo);
-        setPassword(password);
         setGrupoId(grupoId);
         setUsuarioEjecutor(usuarioEjecutor);
     }
@@ -127,14 +123,6 @@ public final class RegistrarEstudianteDTO {
 
     public void setCorreo(final String correo) {
         this.correo = correo;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(final String password) {
-        this.password = password;
     }
 
     public UUID getGrupoId() {

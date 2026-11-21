@@ -180,8 +180,8 @@ class VerificacionCorreoGreenMailIT {
         final UUID tipo = jdbcTemplate.queryForObject("SELECT TOP 1 id FROM dbo.TipoIdentificacion", UUID.class);
         jdbcTemplate.update(
                 "INSERT INTO dbo.Usuario (id, tipoIdIdentificacion, numeroIdentificacion, primerApellido, segundoApellido, "
-                        + "primerNombre, segundoNombre, correo, correoConfirmado, estado, [password]) "
-                        + "VALUES (?, ?, ?, N'PRUEBA', N'IDENT', N'ANA', N'MARIA', ?, ?, 1, N'HashTest')",
+                        + "primerNombre, segundoNombre, correo, correoConfirmado, estado) "
+                        + "VALUES (?, ?, ?, N'PRUEBA', N'IDENT', N'ANA', N'MARIA', ?, ?, 1)",
                 id, tipo, DOC_SEQ.incrementAndGet(), correo, confirmado ? 1 : 0);
         usuarios.add(id);
         return id;

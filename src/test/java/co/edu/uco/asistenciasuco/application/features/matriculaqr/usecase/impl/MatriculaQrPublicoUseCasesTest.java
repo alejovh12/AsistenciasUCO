@@ -22,7 +22,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.qr.CodigoQrGenerator
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimeEvent;
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.MatriculaQrRepositoryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.TokenGeneratorPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -213,21 +212,18 @@ class MatriculaQrPublicoUseCasesTest {
 
     // ---------------------------------------------------------------- registro publico
 
-    private PasswordEncoderPort encoder;
     private IdentityProviderPort identidad;
     private NotificacionPort notificaciones;
     private CorreoInstitucionalPolicy correoPolicy;
 
     private RegistrarEstudiantePorTokenUseCaseImpl registro() {
-        encoder = mock(PasswordEncoderPort.class);
         identidad = mock(IdentityProviderPort.class);
         notificaciones = mock(NotificacionPort.class);
         correoPolicy = mock(CorreoInstitucionalPolicy.class);
-        when(encoder.encode("Clave-segura-1")).thenReturn("HASH");
         when(repositorio.registrarPublico(any()))
                 .thenReturn(new MatriculaQrRepositoryPort.MatriculaRealizada(ESTUDIANTE, USUARIO, GRUPO));
         return new RegistrarEstudiantePorTokenUseCaseImpl(
-                acceso, correoPolicy, encoder, repositorio, identidad, notificaciones, realtime);
+                acceso, correoPolicy, repositorio, identidad, notificaciones, realtime);
     }
 
     private static RegistrarEstudiantePorTokenInputPort.Comando comandoRegistro(final String ip) {
@@ -242,9 +238,8 @@ class MatriculaQrPublicoUseCasesTest {
         final var resultado = useCase.execute(comandoRegistro(IP_CAMPUS));
 
         assertEquals(new RegistrarEstudiantePorTokenInputPort.Resultado(GRUPO, "1017555444"), resultado);
-        final InOrder orden = inOrder(correoPolicy, encoder, repositorio, identidad, realtime);
+        final InOrder orden = inOrder(correoPolicy, repositorio, identidad, realtime);
         orden.verify(correoPolicy).exigir("ana@uco.edu.co");
-        orden.verify(encoder).encode("Clave-segura-1");
         orden.verify(repositorio).registrarPublico(any());
         orden.verify(identidad).crearCuenta(any());
         orden.verify(realtime).publish(any());
@@ -258,14 +253,13 @@ class MatriculaQrPublicoUseCasesTest {
     }
 
     @Test
-    void T10_la_db_recibe_la_contrasena_codificada_nunca_en_claro_y_vacios_en_los_segundos_nombres() {
+    void T10_la_db_recibe_vacios_en_los_segundos_nombres_y_ninguna_clave() {
         final var useCase = registro();
 
         useCase.execute(comandoRegistro(IP_CAMPUS));
 
         final ArgumentCaptor<MatriculaQrRepositoryPort.RegistroPublico> datos = ArgumentCaptor.forClass(MatriculaQrRepositoryPort.RegistroPublico.class);
         verify(repositorio).registrarPublico(datos.capture());
-        assertEquals("HASH", datos.getValue().passwordCodificada());
         assertEquals("", datos.getValue().segundoNombre());
         assertEquals("", datos.getValue().segundoApellido());
         assertEquals(TOKEN, datos.getValue().credencial().token());

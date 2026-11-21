@@ -134,10 +134,10 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
     public void crearCoordinador(final UUID idCoordinador, final String numeroIdentificacion,
                                  final String primerNombre, final String segundoNombre,
                                  final String primerApellido, final String segundoApellido, final String correo,
-                                 final UUID idPrograma, final UUID idFacultad, final String password,
+                                 final UUID idPrograma, final UUID idFacultad,
                                  final UUID usuarioEjecutor, final UUID idTipoIdIdentificacion) {
         ejecutarCrearCoordinador(idCoordinador, numeroIdentificacion, primerNombre, segundoNombre,
-                primerApellido, segundoApellido, correo, idPrograma, idFacultad, password, usuarioEjecutor, idTipoIdIdentificacion);
+                primerApellido, segundoApellido, correo, idPrograma, idFacultad, usuarioEjecutor, idTipoIdIdentificacion);
     }
 
     @Override
@@ -152,7 +152,7 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
         parametros.put(PARAM_PRIMER_APELLIDO, command.primerApellido());
         parametros.put(PARAM_SEGUNDO_APELLIDO, command.segundoApellido());
         parametros.put(PARAM_CORREO, command.correo());
-        parametros.put("password", command.password());
+        parametros.put("password", null); // SEG-11: parametro obsoleto del SP; la BD lo ignora y Usuario ya no guarda clave
         parametros.put("nombrePrograma", command.nombrePrograma());
         parametros.put("idTipoPrograma", command.idTipoPrograma());
         parametros.put("idModalidad", command.idModalidad());
@@ -309,7 +309,6 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
             final String correo,
             final UUID idPrograma,
             final UUID idFacultad,
-            final String password,
             final UUID usuarioEjecutor,
             final UUID idTipoIdIdentificacion
     ) {
@@ -325,7 +324,7 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
         parametros.put(PARAM_CORREO, correo);
         parametros.put("idPrograma", idPrograma);
         parametros.put(PARAM_ID_FACULTAD, idFacultad);
-        parametros.put("password", password);
+        parametros.put("password", null); // SEG-11: parametro obsoleto del SP; la BD lo ignora y Usuario ya no guarda clave
         parametros.put(PARAM_ID_CORRELACION, correlationId);
         parametros.put(PARAM_ID_USUARIO_EJECUTOR, usuarioEjecutor);
         parametros.put("idTipoIdIdentificacion", idTipoIdIdentificacion);

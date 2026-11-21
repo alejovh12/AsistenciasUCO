@@ -24,13 +24,6 @@ public final class RegistrarEstudianteRepositoryMapper {
     }
 
     public static RegistrarEstudianteRepositoryDTO toRepositoryDTO(final RegistrarEstudianteDomain domain) {
-        return toRepositoryDTO(domain, domain.getPassword());
-    }
-
-    public static RegistrarEstudianteRepositoryDTO toRepositoryDTO(
-            final RegistrarEstudianteDomain domain,
-            final String password
-    ) {
         if (ObjectHelper.isNull(domain)) {
             throw new CrosscuttingException("El dominio para registrar estudiante en grupo es obligatorio.");
         }
@@ -43,7 +36,6 @@ public final class RegistrarEstudianteRepositoryMapper {
                 domain.getPrimerNombre(),
                 domain.getSegundoNombre(),
                 domain.getCorreo(),
-                password,
                 domain.getGrupoId(),
                 domain.getUsuarioEjecutor()
         );

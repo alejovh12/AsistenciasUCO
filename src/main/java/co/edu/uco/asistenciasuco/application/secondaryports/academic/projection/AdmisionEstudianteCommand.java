@@ -3,8 +3,7 @@ package co.edu.uco.asistenciasuco.application.secondaryports.academic.projection
 import java.util.UUID;
 
 /**
- * Orden de {@code usp_admitir_estudiante} (CULM-001 D.4). {@code passwordHash} es el HASH de la clave inicial (nulo si la persona ya
- * existe); su representacion de texto no lo imprime.
+ * Orden de {@code usp_admitir_estudiante} (CULM-001 D.4). La clave ya no viaja: la gestiona la identidad externa (SEG-11).
  */
 public record AdmisionEstudianteCommand(
         UUID tipoIdentificacionId,
@@ -14,7 +13,6 @@ public record AdmisionEstudianteCommand(
         String primerApellido,
         String segundoApellido,
         String correo,
-        String passwordHash,
         UUID idPrograma,
         UUID usuarioEjecutor
 ) {

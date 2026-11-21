@@ -67,7 +67,7 @@ class AdmisionEstudianteJpaRepositoryTest {
     }
 
     private static AdmisionEstudianteCommand orden() {
-        return new AdmisionEstudianteCommand(TIPO, 1017123456, "Ana", null, "Perez", "Gomez", "ana@uco.edu.co", "{hash}", PROGRAMA, ADMIN);
+        return new AdmisionEstudianteCommand(TIPO, 1017123456, "Ana", null, "Perez", "Gomez", "ana@uco.edu.co", PROGRAMA, ADMIN);
     }
 
     private static Object[] fila(final boolean exitoso, final String tecnico, final Object idUsuario, final Object idEstudiante,
@@ -92,7 +92,7 @@ class AdmisionEstudianteJpaRepositoryTest {
         verify(query).setParameter("primerApellido", "Perez");
         verify(query).setParameter("segundoApellido", "Gomez");
         verify(query).setParameter("correo", "ana@uco.edu.co");
-        verify(query).setParameter("password", "{hash}");
+        verify(query, never()).setParameter(org.mockito.ArgumentMatchers.eq("password"), org.mockito.ArgumentMatchers.any());
         verify(query).setParameter("idPrograma", PROGRAMA);
         verify(query).setParameter("idCorrelacion", CORRELACION);
         verify(query).setParameter("idUsuarioEjecutor", ADMIN);
@@ -148,7 +148,7 @@ class AdmisionEstudianteJpaRepositoryTest {
         assertThrows(CrosscuttingException.class, () -> admision3.admitir(null));
         final var admision2 = admision();
         final var admisionEstudianteCommand = new AdmisionEstudianteCommand(
-                TIPO, 1, "Ana", null, "Perez", null, "a@uco.edu.co", null, PROGRAMA, null);
+                TIPO, 1, "Ana", null, "Perez", null, "a@uco.edu.co", PROGRAMA, null);
         assertThrows(CrosscuttingException.class, () -> admision2.admitir(admisionEstudianteCommand));
         verify(manager, never()).createNativeQuery(anyString());
         assertThrows(NullPointerException.class, () -> new AdmisionEstudianteJpaRepository(null));

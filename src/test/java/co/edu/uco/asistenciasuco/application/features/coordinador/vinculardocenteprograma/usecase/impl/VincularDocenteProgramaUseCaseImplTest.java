@@ -66,7 +66,6 @@ class VincularDocenteProgramaUseCaseImplTest {
         useCase = new VincularDocenteProgramaUseCaseImpl(scopePort, commandPort, queryPort,
                 usuarioRepositoryPort, activacion, identityProviderPort);
         when(scopePort.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.of(PROGRAMA));
-        when(activacion.credencialLegadaInutilizable()).thenReturn("HASH_GENERADO");
         when(identityProviderPort.crearCuenta(any())).thenReturn(new CuentaIdentidadDTO("kc-1", true));
     }
 
@@ -113,7 +112,6 @@ class VincularDocenteProgramaUseCaseImplTest {
 
         final ArgumentCaptor<VincularDocenteProgramaCommand> comando = ArgumentCaptor.forClass(VincularDocenteProgramaCommand.class);
         verify(commandPort).vincular(comando.capture());
-        assertEquals("HASH_GENERADO", comando.getValue().passwordHash());
         assertNull(comando.getValue().idDocente());
         assertEquals(PROGRAMA, comando.getValue().idPrograma());
         assertEquals(1017555444, comando.getValue().numeroIdentificacion());
@@ -151,8 +149,6 @@ class VincularDocenteProgramaUseCaseImplTest {
         final ArgumentCaptor<VincularDocenteProgramaCommand> comando = ArgumentCaptor.forClass(VincularDocenteProgramaCommand.class);
         verify(commandPort).vincular(comando.capture());
         assertEquals(ID_DOCENTE, comando.getValue().idDocente());
-        assertNull(comando.getValue().passwordHash());
-        verify(activacion, never()).credencialLegadaInutilizable();
 
         final ArgumentCaptor<DocentesProgramaFiltro> filtro = ArgumentCaptor.forClass(DocentesProgramaFiltro.class);
         verify(queryPort).consultar(eq(ACTOR), filtro.capture());

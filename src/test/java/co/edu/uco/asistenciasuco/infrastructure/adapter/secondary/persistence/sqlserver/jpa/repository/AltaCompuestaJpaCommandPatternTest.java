@@ -90,7 +90,7 @@ class AltaCompuestaJpaCommandPatternTest {
         verify(query).setParameter("primerApellido", "PEREZ");
         verify(query).setParameter("segundoApellido", null);
         verify(query).setParameter("correo", "ana@example.test");
-        verify(query).setParameter("password", "HASH");
+        verify(query).setParameter("password", (Object) null);
         verify(query).setParameter("nombreFacultad", "Facultad de Ingenieria");
         verify(query).setParameter("codigoFacultad", "ING");
         verify(query).setParameter("idInstitucion", INSTITUCION);
@@ -166,7 +166,7 @@ class AltaCompuestaJpaCommandPatternTest {
         verify(query).setParameter("primerApellido", "PEREZ");
         verify(query).setParameter("segundoApellido", null);
         verify(query).setParameter("correo", "ana@example.test");
-        verify(query).setParameter("password", "HASH");
+        verify(query).setParameter("password", (Object) null);
         verify(query).setParameter("nombrePrograma", "Ingenieria de Sistemas");
         verify(query).setParameter("idTipoPrograma", TIPO_PROGRAMA);
         verify(query).setParameter("idModalidad", MODALIDAD);
@@ -222,11 +222,11 @@ class AltaCompuestaJpaCommandPatternTest {
 
     private static CrearDecanoConFacultadCommand comandoDecano() {
         return new CrearDecanoConFacultadCommand(DECANO, TIPO_ID, 7, "ANA", null, "PEREZ", null, "ana@example.test",
-                "HASH", "Facultad de Ingenieria", "ING", INSTITUCION, EJECUTOR);
+                "Facultad de Ingenieria", "ING", INSTITUCION, EJECUTOR);
     }
 
     private static CrearCoordinadorConProgramaCommand comandoCoordinador() {
         return new CrearCoordinadorConProgramaCommand(COORDINADOR, TIPO_ID, "1001", "ANA", null, "PEREZ", null,
-                "ana@example.test", "HASH", "Ingenieria de Sistemas", TIPO_PROGRAMA, MODALIDAD, JORNADA, FACULTAD, EJECUTOR);
+                "ana@example.test", "Ingenieria de Sistemas", TIPO_PROGRAMA, MODALIDAD, JORNADA, FACULTAD, EJECUTOR);
     }
 }

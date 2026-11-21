@@ -77,10 +77,8 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
         if (!usuarioExistente) {
             dominioCorreoPolicy.exigir(domain.getCorreo());
         }
-        final String passwordParaPersistir = resolverPasswordParaPersistir(usuarioExistente);
-
         final RegistrarEstudianteRepositoryProjection resultado = grupoRepositoryPort.registrarEstudianteEnGrupo(
-                RegistrarEstudianteRepositoryMapper.toRepositoryDTO(domain, passwordParaPersistir)
+                RegistrarEstudianteRepositoryMapper.toRepositoryDTO(domain)
         );
 
         // DB SUCCESS a partir de aqui: Identity nunca se invoca antes de este punto.
@@ -191,12 +189,5 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
             throw new ConflictException(UsuarioErrorCode.ERR_IDENTIDAD_USUARIO_CONFLICTO);
         }
         return existePorCorreo;
-    }
-
-    private String resolverPasswordParaPersistir(final boolean usuarioExistente) {
-        if (usuarioExistente) {
-            return null;
-        }
-        return activacion.credencialLegadaInutilizable();
     }
 }

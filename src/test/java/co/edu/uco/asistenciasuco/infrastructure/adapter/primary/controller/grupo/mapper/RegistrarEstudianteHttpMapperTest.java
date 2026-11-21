@@ -35,7 +35,6 @@ class RegistrarEstudianteHttpMapperTest {
         assertEquals("Maria", dto.getSegundoNombre());
         assertEquals("ana.perez@uco.edu.co", dto.getCorreo());
         // IDENT-002: el registro no lleva contrasena; el estudiante la define al activar su cuenta.
-        org.junit.jupiter.api.Assertions.assertNull(dto.getPassword());
         assertEquals(GRUPO, dto.getGrupoId());
         assertEquals(USUARIO_EJECUTOR, dto.getUsuarioEjecutor());
     }

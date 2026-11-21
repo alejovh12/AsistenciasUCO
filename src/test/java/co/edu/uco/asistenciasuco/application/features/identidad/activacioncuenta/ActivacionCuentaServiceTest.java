@@ -2,12 +2,10 @@ package co.edu.uco.asistenciasuco.application.features.identidad.activacioncuent
 
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notificacion;
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-import java.security.SecureRandom;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -25,29 +23,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * IDENT-002: secreto legado inutilizable para la columna {@code Usuario.password} y aviso {@code ACTIVACION_CUENTA} de
- * mejor esfuerzo para las cuentas registradas por otra persona.
+ * IDENT-002: aviso {@code ACTIVACION_CUENTA} de mejor esfuerzo para las cuentas registradas por otra persona.
  */
 class ActivacionCuentaServiceTest {
 
     private static final UUID USUARIO = UUID.fromString("93641bab-e3cd-485c-b275-47e7b731e18c");
 
     private final NotificacionPort notificaciones = mock(NotificacionPort.class);
-    private final PasswordEncoderPort codificador = mock(PasswordEncoderPort.class);
-    private final ActivacionCuentaService servicio = new ActivacionCuentaService(notificaciones, codificador, new SecureRandom());
-
-    @Test
-    void la_credencial_legada_es_el_hash_de_un_secreto_aleatorio_distinto_en_cada_alta() {
-        when(codificador.encode(anyString())).thenAnswer(invocacion -> "{hash}" + invocacion.getArgument(0));
-
-        final String primera = servicio.credencialLegadaInutilizable();
-        final String segunda = servicio.credencialLegadaInutilizable();
-
-        assertTrue(primera.startsWith("{hash}"));
-        // 32 bytes en Base64 URL sin relleno son 43 caracteres.
-        assertEquals("{hash}".length() + 43, primera.length());
-        assertNotEquals(primera, segunda);
-    }
+    private final ActivacionCuentaService servicio = new ActivacionCuentaService(notificaciones);
 
     @Test
     void el_aviso_va_al_usuario_con_nombre_propio_y_la_descripcion_del_rol_sin_correo_ni_token() {
@@ -95,11 +78,7 @@ class ActivacionCuentaServiceTest {
     }
 
     @Test
-    void los_colaboradores_son_obligatorios() {
-        final var secureRandom2 = new SecureRandom();
-        assertThrows(NullPointerException.class, () -> new ActivacionCuentaService(null, codificador, secureRandom2));
-        final var secureRandom = new SecureRandom();
-        assertThrows(NullPointerException.class, () -> new ActivacionCuentaService(notificaciones, null, secureRandom));
-        assertThrows(NullPointerException.class, () -> new ActivacionCuentaService(notificaciones, codificador, null));
+    void el_colaborador_es_obligatorio() {
+        assertThrows(NullPointerException.class, () -> new ActivacionCuentaService(null));
     }
 }

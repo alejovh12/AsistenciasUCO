@@ -28,7 +28,6 @@ class RegistrarEstudianteRepositoryMapperTest {
         assertEquals("ANA", dto.getPrimerNombre());
         assertEquals("MARIA", dto.getSegundoNombre());
         assertEquals("ana.perez@uco.edu.co", dto.getCorreo());
-        assertEquals("Clave123!", dto.getPassword());
         assertEquals(GRUPO, dto.getGrupoId());
         assertEquals(USUARIO_EJECUTOR, dto.getUsuarioEjecutor());
     }
@@ -52,7 +51,6 @@ class RegistrarEstudianteRepositoryMapperTest {
                 "Ana",
                 "Maria",
                 "ana.perez@uco.edu.co",
-                "Clave123!",
                 GRUPO,
                 USUARIO_EJECUTOR
         );

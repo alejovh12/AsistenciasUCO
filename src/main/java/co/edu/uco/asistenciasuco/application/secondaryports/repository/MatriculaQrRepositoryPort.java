@@ -63,16 +63,14 @@ public interface MatriculaQrRepositoryPort {
             String primerApellido,
             String segundoApellido,
             String correo,
-            String passwordCodificada,
             UUID programaId
     ) {
         /** Sin programa elegido: el de la ventana o, en un grupo de un solo programa, ese programa (lo resuelve la BD). */
         public RegistroPublico(final CredencialMatricula credencial, final UUID tipoIdentificacionId,
                                final int numeroIdentificacion, final String primerNombre, final String segundoNombre,
-                               final String primerApellido, final String segundoApellido, final String correo,
-                               final String passwordCodificada) {
+                               final String primerApellido, final String segundoApellido, final String correo) {
             this(credencial, tipoIdentificacionId, numeroIdentificacion, primerNombre, segundoNombre, primerApellido,
-                    segundoApellido, correo, passwordCodificada, null);
+                    segundoApellido, correo, null);
         }
     }
 

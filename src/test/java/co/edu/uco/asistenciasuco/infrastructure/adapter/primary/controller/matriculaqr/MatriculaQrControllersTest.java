@@ -311,7 +311,6 @@ class MatriculaQrControllersTest {
         final var scope = mock(co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort.class);
         final var repo = mock(co.edu.uco.asistenciasuco.application.secondaryports.repository.MatriculaQrRepositoryPort.class);
         final var correoPolicy = mock(co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional.CorreoInstitucionalPolicy.class);
-        final var encoder = mock(co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort.class);
         final var idp = mock(co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort.class);
         final var notif = mock(co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort.class);
         final var realtime = mock(co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort.class);
@@ -321,7 +320,7 @@ class MatriculaQrControllersTest {
         assertNotNull(config.rotarVentanaMatriculaInputPort(acceso, scope, emisor, presentador, repo));
         assertNotNull(config.cerrarVentanaMatriculaInputPort(scope, repo));
         assertNotNull(config.validarTokenMatriculaInputPort(acceso, repo));
-        assertNotNull(config.registrarEstudiantePorTokenInputPort(acceso, correoPolicy, encoder, repo, idp, notif, realtime));
+        assertNotNull(config.registrarEstudiantePorTokenInputPort(acceso, correoPolicy, repo, idp, notif, realtime));
         assertNotNull(config.matricularEstudianteAutenticadoInputPort(acceso, repo, realtime));
         final var rotarAuto = config.rotarTokensMatriculaAutomaticoInputPort(acceso, emisor, presentador, repo, realtime);
         assertNotNull(config.rotacionTokenMatriculaScheduler(rotarAuto, Duration.ofSeconds(5)));

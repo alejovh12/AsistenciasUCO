@@ -93,7 +93,7 @@ public final class VincularDocenteProgramaUseCaseImpl implements VincularDocente
         }
         commandPort.vincular(new VincularDocenteProgramaCommand(null, null, domain.idTipoIdentificacion(),
                 domain.numeroIdentificacion(), domain.primerNombre(), domain.segundoNombre(), domain.primerApellido(),
-                domain.segundoApellido(), correo, activacion.credencialLegadaInutilizable(),
+                domain.segundoApellido(), correo,
                 idPrograma, domain.actorUsuarioId()));
         final UsuarioIdentidadRepositoryProjection usuario = usuarioRepositoryPort.consultarUsuarioPorCorreo(correo)
                 .orElseThrow(() -> new InternalApplicationException(
@@ -112,7 +112,7 @@ public final class VincularDocenteProgramaUseCaseImpl implements VincularDocente
 
     private DocenteProgramaProjection vincularExistente(final VincularDocenteProgramaDomain domain, final UUID idPrograma) {
         commandPort.vincular(new VincularDocenteProgramaCommand(domain.idDocente(), domain.idUsuario(), null, null, null,
-                null, null, null, null, null, idPrograma, domain.actorUsuarioId()));
+                null, null, null, null, idPrograma, domain.actorUsuarioId()));
         return releer(domain.actorUsuarioId(), idPrograma, domain.idDocente(), domain.idUsuario())
                 .orElseThrow(this::vinculoNoEncontrado);
     }

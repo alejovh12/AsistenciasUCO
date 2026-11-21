@@ -28,7 +28,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.qr.CodigoQrGenerator
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.MatriculaQrRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.TokenGeneratorPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.MatriculaQrRateLimitFilter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.NetworkClientIpResolver;
@@ -155,14 +154,13 @@ public class MatriculaQrWiringConfiguration {
     public RegistrarEstudiantePorTokenInputPort registrarEstudiantePorTokenInputPort(
             final MatriculaQrAccesoPolicy acceso,
             final CorreoInstitucionalPolicy correoInstitucionalPolicy,
-            final PasswordEncoderPort passwordEncoderPort,
             final MatriculaQrRepositoryPort repositorio,
             final IdentityProviderPort identityProviderPort,
             final NotificacionPort notificacionPort,
             final RealtimePublisherPort realtimePublisherPort
     ) {
         return new RegistrarEstudiantePorTokenUseCaseImpl(
-                acceso, correoInstitucionalPolicy, passwordEncoderPort, repositorio,
+                acceso, correoInstitucionalPolicy, repositorio,
                 identityProviderPort, notificacionPort, realtimePublisherPort);
     }
 

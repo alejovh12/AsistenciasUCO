@@ -210,9 +210,9 @@ class MatriculaQrJpaRepositoryTest {
                 .thenReturn(new ProcedureRow(mock(ProcedureResult.class), List.of(ESTUDIANTE, USUARIO, GRUPO)));
 
         final MatriculaRealizada pubToken = repository.registrarPublico(new RegistroPublico(
-                new CredencialMatricula(TOKEN, null), TIPO_DOC, 1017555444, "Ana", "", "Gomez", "", "ana@uco.edu.co", "HASH"));
+                new CredencialMatricula(TOKEN, null), TIPO_DOC, 1017555444, "Ana", "", "Gomez", "", "ana@uco.edu.co"));
         final MatriculaRealizada pubPin = repository.registrarPublico(new RegistroPublico(
-                new CredencialMatricula(null, PIN), TIPO_DOC, 1017555444, "Ana", "", "Gomez", "", "ana@uco.edu.co", "HASH"));
+                new CredencialMatricula(null, PIN), TIPO_DOC, 1017555444, "Ana", "", "Gomez", "", "ana@uco.edu.co"));
         final MatriculaRealizada autToken = repository.matricularAutenticado(new CredencialMatricula(TOKEN, null), USUARIO);
         final MatriculaRealizada autPin = repository.matricularAutenticado(new CredencialMatricula(null, PIN), USUARIO);
 

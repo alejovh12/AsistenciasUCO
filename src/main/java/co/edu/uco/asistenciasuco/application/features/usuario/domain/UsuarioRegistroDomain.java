@@ -3,7 +3,6 @@ package co.edu.uco.asistenciasuco.application.features.usuario.domain;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.exception.TipoIdentificacionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.usuario.domain.rules.NombrePersonaRule;
-import co.edu.uco.asistenciasuco.application.features.usuario.domain.rules.PasswordRegistroRule;
 import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
 import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationHelper;
@@ -28,7 +27,6 @@ public final class UsuarioRegistroDomain {
     private final String primerNombre;
     private final String segundoNombre;
     private final String correo;
-    private final String password;
 
     private UsuarioRegistroDomain(
             final UUID tipoIdentificacionId,
@@ -37,8 +35,7 @@ public final class UsuarioRegistroDomain {
             final String segundoApellido,
             final String primerNombre,
             final String segundoNombre,
-            final String correo,
-            final String password
+            final String correo
     ) {
         this.tipoIdentificacionId = tipoIdentificacionId;
         this.numeroIdentificacion = numeroIdentificacion;
@@ -47,7 +44,6 @@ public final class UsuarioRegistroDomain {
         this.primerNombre = primerNombre;
         this.segundoNombre = segundoNombre;
         this.correo = correo;
-        this.password = password;
     }
 
     public static UsuarioRegistroDomain crear(
@@ -57,8 +53,7 @@ public final class UsuarioRegistroDomain {
             final String segundoApellido,
             final String primerNombre,
             final String segundoNombre,
-            final String correo,
-            final String password
+            final String correo
     ) {
         final Integer numeroIdentificacionValidado = validarNumeroIdentificacion(numeroIdentificacion);
         return new UsuarioRegistroDomain(
@@ -74,8 +69,7 @@ public final class UsuarioRegistroDomain {
                         UsuarioErrorCode.ERR_PRIMER_NOMBRE_REQUERIDO
                 ),
                 validarNombreOpcional(segundoNombre),
-                validarCorreo(correo),
-                PasswordRegistroRule.resolver(password, numeroIdentificacionValidado)
+                validarCorreo(correo)
         );
     }
 
@@ -161,7 +155,4 @@ public final class UsuarioRegistroDomain {
         return correo;
     }
 
-    public String getPassword() {
-        return password;
-    }
 }

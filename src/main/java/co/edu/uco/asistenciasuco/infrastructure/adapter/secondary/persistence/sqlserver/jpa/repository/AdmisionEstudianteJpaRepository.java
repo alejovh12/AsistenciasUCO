@@ -36,7 +36,6 @@ public class AdmisionEstudianteJpaRepository implements AdmisionEstudianteComman
                  @primerApellido = :primerApellido,
                  @segundoApellido = :segundoApellido,
                  @correo = :correo,
-                 @password = :password,
                  @idPrograma = :idPrograma,
                  @idCorrelacion = :idCorrelacion,
                  @idUsuarioEjecutor = :idUsuarioEjecutor
@@ -63,7 +62,6 @@ public class AdmisionEstudianteJpaRepository implements AdmisionEstudianteComman
         parametros.put("primerApellido", orden.primerApellido());
         parametros.put("segundoApellido", orden.segundoApellido());
         parametros.put("correo", orden.correo());
-        parametros.put("password", orden.passwordHash());
         parametros.put("idPrograma", orden.idPrograma());
         parametros.put("idCorrelacion", correlacion);
         parametros.put("idUsuarioEjecutor", orden.usuarioEjecutor());

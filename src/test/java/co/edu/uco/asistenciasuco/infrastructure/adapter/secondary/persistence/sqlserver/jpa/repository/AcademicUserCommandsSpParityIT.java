@@ -241,13 +241,13 @@ class AcademicUserCommandsSpParityIT {
 
     private void crearCoordinador(final UUID idPrograma, final UUID idFacultad, final UUID ejecutor) {
         coordinadorCommandPort.crearCoordinador(UUID.randomUUID(), String.valueOf(fixture.numeroIdentificacionUnico()),
-                "Nombre", null, "Apellido", null, fixture.emailDe(fixture.nuevoToken()), idPrograma, idFacultad, CLAVE, ejecutor);
+                "Nombre", null, "Apellido", null, fixture.emailDe(fixture.nuevoToken()), idPrograma, idFacultad, ejecutor);
     }
 
     private void crearDecano(final UUID ejecutor) {
         decanoCommandPort.crearDecano(new DecanoCommandPort.CrearDecanoCommand(
                 UUID.randomUUID(), null, fixture.numeroIdentificacionUnico(), "Nombre", null, "Apellido", null,
-                fixture.emailDe(fixture.nuevoToken()), UUID.randomUUID(), "FACULTAD-NO-EXISTE", CLAVE, ejecutor));
+                fixture.emailDe(fixture.nuevoToken()), UUID.randomUUID(), "FACULTAD-NO-EXISTE", ejecutor));
     }
 
     private void registrarPlan(final UUID idPrograma, final UUID ejecutor) {

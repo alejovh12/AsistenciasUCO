@@ -68,7 +68,7 @@ class CrearCoordinadorUseCaseImplTest {
                 org.mockito.ArgumentMatchers.eq("ANA"), org.mockito.ArgumentMatchers.eq("MARIA"),
                 org.mockito.ArgumentMatchers.eq("PEREZ"), org.mockito.ArgumentMatchers.eq("GOMEZ"),
                 org.mockito.ArgumentMatchers.eq("ana@uco.edu.co"), org.mockito.ArgumentMatchers.eq(programa),
-                facultadCaptor.capture(), org.mockito.ArgumentMatchers.isNull(),
+                facultadCaptor.capture(),
                 org.mockito.ArgumentMatchers.eq(usuario));
         assertEquals(facultad, facultadCaptor.getValue());
     }
@@ -89,7 +89,6 @@ class CrearCoordinadorUseCaseImplTest {
                 "1017555444", "JORGE", "LUIS", "HENAO", "PEREZ", "jorge.henao@uco.edu.co", null, actorDecano);
 
         when(scopePort.findFacultadIdByDecanoUsuario(actorDecano)).thenReturn(Optional.of(facultad));
-        when(activacion.credencialLegadaInutilizable()).thenReturn("HASH_GENERADO");
         when(usuarioRepositoryPort.consultarUsuarioPorCorreo("jorge.henao@uco.edu.co"))
                 .thenReturn(Optional.empty())
                 .thenReturn(Optional.of(new UsuarioIdentidadRepositoryProjection(
@@ -99,15 +98,13 @@ class CrearCoordinadorUseCaseImplTest {
         useCaseConIam.execute(domain);
 
         final ArgumentCaptor<UUID> programaCaptor = ArgumentCaptor.forClass(UUID.class);
-        final ArgumentCaptor<String> passwordCaptor = ArgumentCaptor.forClass(String.class);
         verify(commandPort).crearCoordinador(any(UUID.class), org.mockito.ArgumentMatchers.eq("1017555444"),
                 org.mockito.ArgumentMatchers.eq("JORGE"), org.mockito.ArgumentMatchers.eq("LUIS"),
                 org.mockito.ArgumentMatchers.eq("HENAO"), org.mockito.ArgumentMatchers.eq("PEREZ"),
                 org.mockito.ArgumentMatchers.eq("jorge.henao@uco.edu.co"), programaCaptor.capture(),
-                org.mockito.ArgumentMatchers.eq(facultad), passwordCaptor.capture(),
+                org.mockito.ArgumentMatchers.eq(facultad),
                 org.mockito.ArgumentMatchers.eq(actorDecano));
         assertNull(programaCaptor.getValue());
-        assertEquals("HASH_GENERADO", passwordCaptor.getValue());
 
         final ArgumentCaptor<CrearCuentaIdentidadDTO> cuentaCaptor = ArgumentCaptor.forClass(CrearCuentaIdentidadDTO.class);
         verify(identityProviderPort).crearCuenta(cuentaCaptor.capture());
@@ -147,15 +144,12 @@ class CrearCoordinadorUseCaseImplTest {
         when(identityProviderPort.crearCuenta(any())).thenReturn(new CuentaIdentidadDTO("kc-coord-1", false));
 
         useCaseConIam.execute(domain);
-
-        final ArgumentCaptor<String> passwordCaptor = ArgumentCaptor.forClass(String.class);
         verify(commandPort).crearCoordinador(any(UUID.class), org.mockito.ArgumentMatchers.eq("1017555444"),
                 org.mockito.ArgumentMatchers.eq("JORGE"), org.mockito.ArgumentMatchers.eq(""),
                 org.mockito.ArgumentMatchers.eq("HENAO"), org.mockito.ArgumentMatchers.eq(""),
                 org.mockito.ArgumentMatchers.eq("jorge.henao@uco.edu.co"), org.mockito.ArgumentMatchers.isNull(),
-                org.mockito.ArgumentMatchers.eq(facultad), passwordCaptor.capture(),
+                org.mockito.ArgumentMatchers.eq(facultad),
                 org.mockito.ArgumentMatchers.eq(actorDecano));
-        assertNull(passwordCaptor.getValue());
 
         final ArgumentCaptor<CrearCuentaIdentidadDTO> cuentaCaptor = ArgumentCaptor.forClass(CrearCuentaIdentidadDTO.class);
         verify(identityProviderPort).crearCuenta(cuentaCaptor.capture());
@@ -195,7 +189,7 @@ class CrearCoordinadorUseCaseImplTest {
                 org.mockito.ArgumentMatchers.eq("VALENCIA"), org.mockito.ArgumentMatchers.isNull(),
                 org.mockito.ArgumentMatchers.eq("coordinador231@uco.edu.co"),
                 org.mockito.ArgumentMatchers.eq(programa), any(UUID.class),
-                org.mockito.ArgumentMatchers.isNull(), org.mockito.ArgumentMatchers.eq(actorDecano));
+                org.mockito.ArgumentMatchers.eq(actorDecano));
         final ArgumentCaptor<CrearCuentaIdentidadDTO> cuentaCaptor = ArgumentCaptor.forClass(CrearCuentaIdentidadDTO.class);
         verify(identityProviderPort).crearCuenta(cuentaCaptor.capture());
         assertEquals(usuarioId, cuentaCaptor.getValue().idUsuario());
@@ -235,7 +229,6 @@ class CrearCoordinadorUseCaseImplTest {
                 commandPort, scopePort, usuarioRepositoryPort, activacion, identityProviderPort);
         final UUID actorDecano = UUID.randomUUID();
         when(scopePort.findFacultadIdByDecanoUsuario(actorDecano)).thenReturn(Optional.of(UUID.randomUUID()));
-        when(activacion.credencialLegadaInutilizable()).thenReturn("HASH");
         when(usuarioRepositoryPort.consultarUsuarioPorCorreo("nuevo@uco.edu.co"))
                 .thenReturn(Optional.empty());
         when(usuarioRepositoryPort.consultarUsuarioPorNumeroIdentificacion(1023465765))
@@ -264,7 +257,6 @@ class CrearCoordinadorUseCaseImplTest {
                 "1017555444", "JORGE", null, "HENAO", null, "jorge.henao@uco.edu.co", null, actorDecano);
 
         when(scopePort.findFacultadIdByDecanoUsuario(actorDecano)).thenReturn(Optional.of(facultad));
-        when(activacion.credencialLegadaInutilizable()).thenReturn("HASH");
         when(usuarioRepositoryPort.consultarUsuarioPorCorreo("jorge.henao@uco.edu.co"))
                 .thenReturn(Optional.empty())
                 .thenReturn(Optional.of(new UsuarioIdentidadRepositoryProjection(
@@ -287,7 +279,6 @@ class CrearCoordinadorUseCaseImplTest {
         final UUID actorDecano = UUID.randomUUID();
         final UUID usuarioCreadoId = UUID.randomUUID();
         when(scopePort.findFacultadIdByDecanoUsuario(actorDecano)).thenReturn(Optional.of(UUID.randomUUID()));
-        when(activacion.credencialLegadaInutilizable()).thenReturn("SECRETO_INUTILIZABLE");
         when(usuarioRepositoryPort.consultarUsuarioPorCorreo("jorge.henao@uco.edu.co"))
                 .thenReturn(Optional.empty())
                 .thenReturn(Optional.of(new UsuarioIdentidadRepositoryProjection(
@@ -298,7 +289,7 @@ class CrearCoordinadorUseCaseImplTest {
                 "1017555444", "JORGE", null, "HENAO", null, "jorge.henao@uco.edu.co", null, actorDecano));
 
         verify(commandPort).crearCoordinador(any(UUID.class), anyString(), anyString(), any(), anyString(), any(),
-                anyString(), any(), any(UUID.class), org.mockito.ArgumentMatchers.eq("SECRETO_INUTILIZABLE"), any(UUID.class));
+                anyString(), any(), any(UUID.class), any(UUID.class));
         verify(activacion).avisar(usuarioCreadoId, "JORGE", InstitutionalRole.COORDINADOR);
     }
 
@@ -376,7 +367,6 @@ class CrearCoordinadorUseCaseImplTest {
                 commandPort, scopePort, usuarios, activacion, identityProviderPort);
         final UUID actorDecano = decanoConFacultad();
         final UUID usuarioCreadoId = UUID.randomUUID();
-        when(activacion.credencialLegadaInutilizable()).thenReturn("HASH");
         when(usuarios.consultarUsuarioPorCorreo(CORREO))
                 .thenReturn(Optional.empty())
                 .thenReturn(Optional.of(usuario(usuarioCreadoId, CORREO)));
@@ -425,18 +415,17 @@ class CrearCoordinadorUseCaseImplTest {
         final CrearCoordinadorUseCaseImpl useCaseSinIam = new CrearCoordinadorUseCaseImpl(
                 commandPort, scopePort, usuarios, activacion, null);
         final UUID actorDecano = decanoConFacultad();
-        when(activacion.credencialLegadaInutilizable()).thenReturn("HASH");
         when(usuarios.consultarUsuarioPorCorreo(CORREO)).thenReturn(Optional.empty());
         when(usuarios.consultarUsuarioPorNumeroIdentificacion(1017555444)).thenReturn(Optional.empty());
 
         useCaseSinIam.execute(dominio("1017555444", CORREO, actorDecano));
 
         verify(commandPort).crearCoordinador(any(UUID.class), anyString(), anyString(), any(), anyString(), any(),
-                anyString(), any(), any(UUID.class), org.mockito.ArgumentMatchers.eq("HASH"), any(UUID.class));
+                anyString(), any(), any(UUID.class), any(UUID.class));
     }
 
     @Test
-    void execute_sin_servicio_de_activacion_persiste_credencial_nula() {
+    void execute_sin_servicio_de_activacion_crea_el_coordinador() {
         final UsuarioRepositoryPort usuarios = mock(UsuarioRepositoryPort.class);
         final CrearCoordinadorUseCaseImpl useCaseSinCodificador = new CrearCoordinadorUseCaseImpl(
                 commandPort, scopePort, usuarios, null, null);
@@ -447,7 +436,7 @@ class CrearCoordinadorUseCaseImplTest {
         useCaseSinCodificador.execute(dominio("1017555444", CORREO, actorDecano));
 
         verify(commandPort).crearCoordinador(any(UUID.class), anyString(), anyString(), any(), anyString(), any(),
-                anyString(), any(), any(UUID.class), org.mockito.ArgumentMatchers.isNull(), any(UUID.class));
+                anyString(), any(), any(UUID.class), any(UUID.class));
     }
 
     @Test

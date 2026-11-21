@@ -89,7 +89,7 @@ public class MatriculaQrJpaRepository implements MatriculaQrRepositoryPort {
                  @idTipoIdentificacion = :idTipoIdentificacion, @numeroIdentificacion = :numeroIdentificacion,
                  @primerNombre = :primerNombre, @segundoNombre = :segundoNombre,
                  @primerApellido = :primerApellido, @segundoApellido = :segundoApellido,
-                 @correo = :correo, @password = :password, @idCorrelacion = :idCorrelacion,
+                 @correo = :correo, @idCorrelacion = :idCorrelacion,
                  @idPrograma = :idPrograma
             """;
     static final String SQL_REGISTRAR_TOKEN = SQL_REGISTRAR_BASE.formatted("@tokenHash = :tokenHash");
@@ -229,7 +229,6 @@ public class MatriculaQrJpaRepository implements MatriculaQrRepositoryPort {
         parametros.put("primerApellido", datos.primerApellido());
         parametros.put("segundoApellido", datos.segundoApellido());
         parametros.put("correo", datos.correo());
-        parametros.put("password", datos.passwordCodificada());
         parametros.put(P_ID_CORRELACION, correlationId);
         parametros.put(P_ID_PROGRAMA, datos.programaId());
         return aMatricula(procedureExecutor.executeWithExtras(

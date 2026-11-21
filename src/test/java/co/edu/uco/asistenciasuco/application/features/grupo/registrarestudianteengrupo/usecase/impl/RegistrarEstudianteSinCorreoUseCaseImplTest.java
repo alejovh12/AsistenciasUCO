@@ -51,7 +51,7 @@ class RegistrarEstudianteSinCorreoUseCaseImplTest {
             new RegistrarEstudianteUseCaseImpl(grupos, usuarios, identidad, correoPolicy, activacion);
 
     private static RegistrarEstudianteDomain pendiente() {
-        return RegistrarEstudianteDomain.pendienteDeResolverPorDocumento(TIPO, DOCUMENTO, null, GRUPO, DOCENTE);
+        return RegistrarEstudianteDomain.pendienteDeResolverPorDocumento(TIPO, DOCUMENTO, GRUPO, DOCENTE);
     }
 
     private static EstudianteBusquedaRepositoryProjection encontrado() {
@@ -81,7 +81,6 @@ class RegistrarEstudianteSinCorreoUseCaseImplTest {
         assertEquals(GRUPO, dto.getValue().getGrupoId());
         // Usuario existente: no se revalida el dominio, no se genera credencial nueva ni se envia activacion.
         verify(correoPolicy, never()).exigir(any());
-        verify(activacion, never()).credencialLegadaInutilizable();
         verify(activacion, never()).avisar(any(), any(), any());
     }
 
@@ -115,7 +114,7 @@ class RegistrarEstudianteSinCorreoUseCaseImplTest {
     @Test
     void sin_documento_responde_400_sin_buscar() {
         final RegistrarEstudianteDomain sinDocumento =
-                RegistrarEstudianteDomain.pendienteDeResolverPorDocumento(null, null, null, GRUPO, DOCENTE);
+                RegistrarEstudianteDomain.pendienteDeResolverPorDocumento(null, null, GRUPO, DOCENTE);
 
         assertEquals("FIELD_REQUIRED", assertThrows(ValidationException.class, () -> useCase.execute(sinDocumento)).getCode());
         verify(grupos, never()).buscarEstudiantePorDocumento(any(), any(), any(), any());

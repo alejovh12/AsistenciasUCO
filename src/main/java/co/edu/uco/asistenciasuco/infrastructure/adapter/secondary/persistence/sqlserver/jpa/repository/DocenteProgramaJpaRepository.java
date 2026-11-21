@@ -44,7 +44,6 @@ public class DocenteProgramaJpaRepository implements DocenteProgramaCommandPort,
                  @primerApellido = :primerApellido,
                  @segundoApellido = :segundoApellido,
                  @correo = :correo,
-                 @password = :password,
                  @idPrograma = :idPrograma,
                  @idCorrelacion = :idCorrelacion,
                  @idUsuarioEjecutor = :idUsuarioEjecutor
@@ -122,7 +121,6 @@ public class DocenteProgramaJpaRepository implements DocenteProgramaCommandPort,
         parametros.put("primerApellido", command.primerApellido());
         parametros.put("segundoApellido", command.segundoApellido());
         parametros.put("correo", command.correo());
-        parametros.put("password", command.passwordHash());
         parametros.put(PARAM_ID_PROGRAMA, command.idPrograma());
         parametros.put(PARAM_ID_CORRELACION, correlationId);
         parametros.put(PARAM_ID_USUARIO_EJECUTOR, command.usuarioEjecutor());

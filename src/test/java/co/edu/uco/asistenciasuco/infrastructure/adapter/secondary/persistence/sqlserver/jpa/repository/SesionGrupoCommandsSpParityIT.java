@@ -241,7 +241,7 @@ class SesionGrupoCommandsSpParityIT {
 
         final Outcome outcome = ejecutar("GRP_04", () -> grupoRepositoryPort.registrarEstudianteEnGrupo(
                 new RegistrarEstudianteRepositoryDTO(tipo.get(), ThreadLocalRandom.current().nextInt(100_000_000, 999_999_999),
-                        "PEREZ", "GOMEZ", "ANA", "MARIA", PREFIJO.toLowerCase() + "ana-" + UUID.randomUUID().toString().substring(0, 8) + dominioInstitucional(), "Clave123!", grupo,
+                        "PEREZ", "GOMEZ", "ANA", "MARIA", PREFIJO.toLowerCase() + "ana-" + UUID.randomUUID().toString().substring(0, 8) + dominioInstitucional(), grupo,
                         docenteUsuario)),
                 () -> contarUsuariosPerez() - usuariosAntes);
 
@@ -256,7 +256,7 @@ class SesionGrupoCommandsSpParityIT {
 
         final Outcome outcome = ejecutar("GRP_05", () -> grupoRepositoryPort.registrarEstudianteEnGrupo(
                 new RegistrarEstudianteRepositoryDTO(tipo.get(), ThreadLocalRandom.current().nextInt(100_000_000, 999_999_999),
-                        "PEREZ", "GOMEZ", "ANA", "MARIA", PREFIJO.toLowerCase() + "sinejecutor@example.test", "Clave123!", grupo,
+                        "PEREZ", "GOMEZ", "ANA", "MARIA", PREFIJO.toLowerCase() + "sinejecutor@example.test", grupo,
                         null)),
                 () -> contarUsuariosPerez() - usuariosAntes);
 

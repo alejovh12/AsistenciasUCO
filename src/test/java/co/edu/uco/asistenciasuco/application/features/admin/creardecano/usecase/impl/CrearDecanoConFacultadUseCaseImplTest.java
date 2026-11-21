@@ -70,7 +70,6 @@ class CrearDecanoConFacultadUseCaseImplTest {
         command = mock(DecanoCommandPort.class);
         usuarios = mock(UsuarioRepositoryPort.class);
         activacion = mock(ActivacionCuentaService.class);
-        when(activacion.credencialLegadaInutilizable()).thenReturn(HASH);
         identity = mock(IdentityProviderPort.class);
         when(identity.crearCuenta(any())).thenReturn(new CuentaIdentidadDTO("kc-1", true));
         useCase = new CrearDecanoUseCaseImpl(facultad, command, usuarios,
@@ -104,7 +103,6 @@ class CrearDecanoConFacultadUseCaseImplTest {
         assertEquals("Perez", db.getValue().primerApellido());
         assertEquals("Gomez", db.getValue().segundoApellido());
         assertEquals(CORREO, db.getValue().correo());
-        assertEquals(HASH, db.getValue().password());
         assertEquals("Facultad de Ingenieria", db.getValue().nombreFacultad());
         assertEquals("ING", db.getValue().codigoFacultad());
         assertEquals(INSTITUCION_ID, db.getValue().idInstitucion());
@@ -130,9 +128,7 @@ class CrearDecanoConFacultadUseCaseImplTest {
         final ArgumentCaptor<DecanoCommandPort.CrearDecanoConFacultadCommand> db =
                 ArgumentCaptor.forClass(DecanoCommandPort.CrearDecanoConFacultadCommand.class);
         verify(command).crearDecanoConFacultad(db.capture());
-        assertNull(db.getValue().password());
         assertNull(db.getValue().codigoFacultad());
-        verify(activacion, never()).credencialLegadaInutilizable();
     }
 
     @Test

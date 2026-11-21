@@ -419,7 +419,7 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
         parametros.put("primerApellido", dto.getPrimerApellido());
         parametros.put("segundoApellido", dto.getSegundoApellido());
         parametros.put("correo", dto.getCorreo());
-        parametros.put("password", dto.getPassword());
+        parametros.put("password", null); // SEG-11: parametro obsoleto del SP; la BD lo ignora y Usuario ya no guarda clave
         parametros.put(P_CORRELACION, correlationId);
         parametros.put(P_USUARIO, dto.getUsuarioEjecutor());
         parametros.put("idTipoIdIdentificacion", dto.getTipoIdentificacionId());

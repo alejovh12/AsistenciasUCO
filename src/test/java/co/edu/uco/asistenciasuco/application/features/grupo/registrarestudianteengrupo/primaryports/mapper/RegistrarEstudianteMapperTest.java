@@ -26,7 +26,7 @@ class RegistrarEstudianteMapperTest {
         final UUID grupoId = UUID.randomUUID();
         final UUID usuarioEjecutor = UUID.randomUUID();
         final RegistrarEstudianteDTO dto = new RegistrarEstudianteDTO(
-                tipoId, 123456789, "PEREZ", "GOMEZ", "ANA", "MARIA", "ana@uco.edu.co", "Clave123!", grupoId,
+                tipoId, 123456789, "PEREZ", "GOMEZ", "ANA", "MARIA", "ana@uco.edu.co", grupoId,
                 usuarioEjecutor);
 
         final RegistrarEstudianteDomain domain = RegistrarEstudianteMapper.toDomain(dto);

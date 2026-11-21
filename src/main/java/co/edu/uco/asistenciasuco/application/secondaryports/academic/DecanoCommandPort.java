@@ -25,7 +25,6 @@ public interface DecanoCommandPort {
             String primerApellido,
             String segundoApellido,
             String correo,
-            String password,
             String nombreFacultad,
             String codigoFacultad,
             UUID idInstitucion,
@@ -54,7 +53,6 @@ public interface DecanoCommandPort {
             String correo,
             UUID idFacultad,
             String nombreFacultad,
-            String password,
             UUID usuarioEjecutor
     ) {
     }

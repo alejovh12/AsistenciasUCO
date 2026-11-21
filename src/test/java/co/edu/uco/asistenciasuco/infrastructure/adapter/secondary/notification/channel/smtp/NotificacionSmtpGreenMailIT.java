@@ -248,8 +248,8 @@ class NotificacionSmtpGreenMailIT {
         jdbcTemplate.update(
                 "INSERT INTO dbo.Usuario (" +
                         "id, tipoIdIdentificacion, numeroIdentificacion, primerApellido, segundoApellido, " +
-                        "primerNombre, segundoNombre, correo, correoConfirmado, estado, [password]" +
-                        ") VALUES (?, ?, ?, N'TestNotif', N'Uco', N'Usuario', N'', ?, ?, ?, N'HashTest')",
+                        "primerNombre, segundoNombre, correo, correoConfirmado, estado" +
+                        ") VALUES (?, ?, ?, N'TestNotif', N'Uco', N'Usuario', N'', ?, ?, ?)",
                 userId, idTipoDoc, numDoc, correo, confirmado ? 1 : 0, habilitado ? 1 : 0
         );
         trackedUserIds.add(userId);
