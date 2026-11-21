@@ -22,6 +22,9 @@ public class SpGrupoProgramaPaginadoEntity {
     @Column(name = "fechaInicioPeriodoAcademico") private LocalDate fechaInicioPeriodoAcademico;
     @Column(name = "fechaFinPeriodoAcademico") private LocalDate fechaFinPeriodoAcademico;
     @Column(name = "totalRegistros") private Integer totalRegistros;
+    @Column(name = "idProgramaResponsable") private UUID idProgramaResponsable;
+    @Column(name = "nombreProgramaResponsable") private String nombreProgramaResponsable;
+    @Column(name = "esResponsable") private Boolean esResponsable;
 
     protected SpGrupoProgramaPaginadoEntity() {
     }
@@ -76,5 +79,17 @@ public class SpGrupoProgramaPaginadoEntity {
 
     public Integer totalRegistros() {
         return totalRegistros;
+    }
+
+    public UUID idProgramaResponsable() {
+        return idProgramaResponsable;
+    }
+
+    public String nombreProgramaResponsable() {
+        return nombreProgramaResponsable;
+    }
+
+    public Boolean esResponsable() {
+        return esResponsable;
     }
 }

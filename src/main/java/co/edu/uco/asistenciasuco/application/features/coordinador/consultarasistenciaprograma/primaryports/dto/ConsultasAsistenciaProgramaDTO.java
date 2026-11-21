@@ -20,7 +20,17 @@ public final class ConsultasAsistenciaProgramaDTO {
     public record GrupoProgramaDTO(UUID id, Integer codigo, String nombre, UUID idAsignatura, String nombreAsignatura,
                                    UUID idDocente, Integer capacidadMaxima, Integer estudiantesActivos,
                                    Integer cuposDisponibles, boolean habilitado, LocalDate inicioPeriodo,
-                                   LocalDate finPeriodo, List<FranjaHorarioDTO> franjas) {
+                                   LocalDate finPeriodo, List<FranjaHorarioDTO> franjas,
+                                   UUID idProgramaResponsable, String nombreProgramaResponsable, boolean esResponsable) {
+
+        /** Sin programa responsable (DEC-077): para pruebas y consumidores que no lo necesitan. */
+        public GrupoProgramaDTO(UUID id, Integer codigo, String nombre, UUID idAsignatura, String nombreAsignatura,
+                                UUID idDocente, Integer capacidadMaxima, Integer estudiantesActivos,
+                                Integer cuposDisponibles, boolean habilitado, LocalDate inicioPeriodo,
+                                LocalDate finPeriodo, List<FranjaHorarioDTO> franjas) {
+            this(id, codigo, nombre, idAsignatura, nombreAsignatura, idDocente, capacidadMaxima, estudiantesActivos,
+                    cuposDisponibles, habilitado, inicioPeriodo, finPeriodo, franjas, null, null, false);
+        }
 
         /** Sin horario: solo para pruebas y consumidores que no lo necesitan. */
         public GrupoProgramaDTO(UUID id, Integer codigo, String nombre, UUID idAsignatura, String nombreAsignatura,

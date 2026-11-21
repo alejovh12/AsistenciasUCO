@@ -67,6 +67,24 @@ class CoordinadorAsistenciaProgramaControllerTest {
     }
 
     @Test
+    void DEC077_get_grupos_expone_programa_responsable_y_es_responsable() throws Exception {
+        final UUID programa = UUID.randomUUID();
+        when(inputPort.consultarGrupos(ACTOR, null, null, null, null)).thenReturn(new PaginaDTO<>(List.of(
+                new GrupoProgramaDTO(GRUPO, 1, "Grupo 1", UUID.randomUUID(), "Calculo", UUID.randomUUID(), 30, 20, 10,
+                        true, LocalDate.of(2026, 1, 20), LocalDate.of(2026, 6, 5), List.of(),
+                        programa, "Ingenieria de Sistemas", true),
+                new GrupoProgramaDTO(UUID.randomUUID(), 2, "Grupo 2", UUID.randomUUID(), "Fisica", UUID.randomUUID(), 30, 20,
+                        10, true, LocalDate.of(2026, 1, 20), LocalDate.of(2026, 6, 5))), 2, 1, 10));
+
+        mvc.perform(get("/api/v1/coordinador/grupos")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.elementos[0].idProgramaResponsable").value(programa.toString()))
+                .andExpect(jsonPath("$.elementos[0].nombreProgramaResponsable").value("Ingenieria de Sistemas"))
+                .andExpect(jsonPath("$.elementos[0].esResponsable").value(true))
+                .andExpect(jsonPath("$.elementos[1].esResponsable").value(false))
+                .andExpect(jsonPath("$.elementos[1].idProgramaResponsable").doesNotExist());
+    }
+
+    @Test
     void T_064_02_get_grupos_sin_parametros_delega_nulos() throws Exception {
         when(inputPort.consultarGrupos(eq(ACTOR), isNull(), isNull(), isNull(), isNull()))
                 .thenReturn(new PaginaDTO<>(List.of(), 0, 1, 10));

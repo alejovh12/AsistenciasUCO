@@ -96,7 +96,9 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
                  @tamanoPagina = :tamanoPagina
             """;
     static final int TAMANO_PAGINA_GRUPOS = 100;
-    static final int COLUMNAS_GRUPOS = 13;
+    // 12 columnas de datos + totalRegistros + idProgramaResponsable, nombreProgramaResponsable y esResponsable (DEC-077, al final).
+    static final int COLUMNAS_GRUPOS = 16;
+    static final int COLUMNA_TOTAL_GRUPOS = 12;
     static final String HQL_GRUPOS_POR_FACULTAD = """
             select g
             from UvGrupoEntity g
@@ -246,7 +248,7 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
             for (final Object[] fila : filas) {
                 grupos.add(toGrupo(fila));
             }
-            total = entero(filas.getFirst()[COLUMNAS_GRUPOS - 1]);
+            total = entero(filas.getFirst()[COLUMNA_TOTAL_GRUPOS]);
         }
         return grupos;
     }
