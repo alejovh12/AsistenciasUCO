@@ -88,11 +88,19 @@ public class EstudianteProgramaJpaRepository implements EstudianteProgramaQueryP
                 }
                 lista.add(new EstudianteProgramaProjection(uuid(f[0]), uuid(f[1]), f[3] == null ? null : String.valueOf(f[3]), f[8] == null ? null : f[8].toString(),
                         f[9] == null ? null : f[9].toString(), uuid(f[12]), f[13] == null ? null : f[13].toString(),
-                        f[14] == null ? null : ((Number) f[14]).intValue()));
+                        f[14] == null ? null : ((Number) f[14]).intValue(),
+                        booleano(f[10])));
                 total = ((Number) f[11]).longValue();
             }
             return new PaginaEstudiantesProgramaProjection(lista, total);
         });
+    }
+
+    private static Boolean booleano(final Object valor) {
+        if (valor == null) {
+            return null;
+        }
+        return valor instanceof Boolean b ? b : ((Number) valor).intValue() != 0;
     }
 
     private static UUID uuid(final Object valor) {

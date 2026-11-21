@@ -17,7 +17,8 @@ public final class ConsultarEstudiantesProgramaMapper {
                 domain.correo(),
                 domain.idPrograma(),
                 domain.nombrePrograma(),
-                domain.semestreActual()
+                domain.semestreActual(),
+                domain.estaActivoUsuario()
         );
     }
 }

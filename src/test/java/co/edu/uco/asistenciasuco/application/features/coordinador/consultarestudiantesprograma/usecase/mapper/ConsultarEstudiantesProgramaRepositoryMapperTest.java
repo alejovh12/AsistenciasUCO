@@ -14,12 +14,13 @@ class ConsultarEstudiantesProgramaRepositoryMapperTest {
     void toDomain_mapea_todos_los_campos() {
         final UUID id = UUID.randomUUID();
         final EstudianteProgramaProjection projection = new EstudianteProgramaProjection(
-                id, UUID.randomUUID(), "123456", "Ana Perez", "ana@uco.edu.co", UUID.randomUUID(), "Ingenieria", 4);
+                id, UUID.randomUUID(), "123456", "Ana Perez", "ana@uco.edu.co", UUID.randomUUID(), "Ingenieria", 4, false);
 
         final EstudianteProgramaDomain domain = ConsultarEstudiantesProgramaRepositoryMapper.toDomain(projection);
 
         assertEquals(id, domain.id());
         assertEquals("Ana Perez", domain.nombreCompleto());
         assertEquals(4, domain.semestreActual());
+        assertEquals(Boolean.FALSE, domain.estaActivoUsuario());
     }
 }

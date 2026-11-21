@@ -74,6 +74,7 @@ class EstudianteProgramaDirectorioJpaRepositoryTest {
         assertEquals(PROGRAMA, primera.idPrograma());
         assertEquals("Ingenieria de Sistemas", primera.nombrePrograma());
         assertEquals(4, primera.semestreActual());
+        assertEquals(Boolean.TRUE, primera.estaActivoUsuario());
         verify(manager).createNativeQuery(EstudianteProgramaJpaRepository.SQL_DIRECTORIO);
         assertTrue(EstudianteProgramaJpaRepository.SQL_DIRECTORIO.contains("usp_consultar_directorio_estudiantes_paginado"));
         verify(query).setParameter("idUsuarioEjecutor", ACTOR);
@@ -101,6 +102,7 @@ class EstudianteProgramaDirectorioJpaRepositoryTest {
         assertNull(fila.idPrograma());
         assertNull(fila.nombrePrograma());
         assertNull(fila.semestreActual());
+        assertNull(fila.estaActivoUsuario());
     }
 
     @Test

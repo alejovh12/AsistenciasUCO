@@ -14,7 +14,7 @@ class ConsultarEstudiantesProgramaMapperTest {
     void toDTO_mapea_todos_los_campos() {
         final UUID id = UUID.randomUUID();
         final EstudianteProgramaDomain domain = new EstudianteProgramaDomain(
-                id, UUID.randomUUID(), "123456", "Ana Perez", "ana@uco.edu.co", UUID.randomUUID(), "Ingenieria", 4);
+                id, UUID.randomUUID(), "123456", "Ana Perez", "ana@uco.edu.co", UUID.randomUUID(), "Ingenieria", 4, false);
 
         final EstudianteProgramaDTO dto = ConsultarEstudiantesProgramaMapper.toDTO(domain);
 
@@ -22,5 +22,6 @@ class ConsultarEstudiantesProgramaMapperTest {
         assertEquals("Ana Perez", dto.nombreCompleto());
         assertEquals("Ingenieria", dto.nombrePrograma());
         assertEquals(4, dto.semestreActual());
+        assertEquals(Boolean.FALSE, dto.estaActivoUsuario());
     }
 }

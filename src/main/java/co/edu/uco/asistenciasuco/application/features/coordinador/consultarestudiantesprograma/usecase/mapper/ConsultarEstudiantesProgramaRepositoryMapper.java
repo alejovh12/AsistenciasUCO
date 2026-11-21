@@ -17,7 +17,8 @@ public final class ConsultarEstudiantesProgramaRepositoryMapper {
                 projection.correo(),
                 projection.idPrograma(),
                 projection.nombrePrograma(),
-                projection.semestreActual()
+                projection.semestreActual(),
+                projection.estaActivoUsuario()
         );
     }
 }
