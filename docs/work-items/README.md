@@ -73,6 +73,10 @@ Ejemplo de work item técnico cerrado: [TECH-001](TECH-001-restaurar-gate-arquit
 
 - [Arranque controlado, altas individuales e IDENTITY_DRIFT](FASE-2A-altas-identity-drift/PLAN.md): autorización explícita del usuario para validación funcional en navegador integrado y corrección de defectos propios del Backend demostrados. No autoriza cambios en Frontend, DB/SP ni providers externos; el arranque espera preflight seguro.
 
+## SES-GEN-01 — 2026-11-19
+
+- [Calendario de sesiones del semestre al definir el grupo](SES-GEN-01-calendario-semestre-grupo/PLAN.md): el coordinador define días/horas del grupo y el sistema calcula las sesiones y el total de horas del semestre con todas las validaciones. `CONTRACT_ANALYSIS` READY; la implementación fue autorizada explícitamente y ejecutada según el PLAN (2026-11-19). El PR Backend está en revisión y validación; no se ha cerrado el work item. Ver contrato implementado ([CONTRACT](SES-GEN-01-calendario-semestre-grupo/CONTRACT.md)), evidencia de análisis ([CONTRACT_PROPOSAL](SES-GEN-01-calendario-semestre-grupo/CONTRACT_PROPOSAL.md)) y el [handoff DB](SES-GEN-01-calendario-semestre-grupo/HANDOFF_DB.md).
+
 ## FASE 2B — 2026-11-15
 
 - [Certificación integral de sesiones, tomas, asistencia, matrícula y reclamos](FASE-2B-certificacion-integral/PLAN.md): recorrido manual completo en navegador integrado con login real de los 5 roles (ADMINISTRADOR, DECANO, COORDINADOR, DOCENTE, ESTUDIANTE). 15 hallazgos documentados en VALIDATION.md (1 P1 crítico que bloquea el flujo de decisión por inasistencia del docente, varios P1/P2 por un patrón sistémico de errores de backend no mostrados en el frontend, y KPIs de dashboard desincronizados de sus propias pantallas en 3 roles). Escrituras y cambios de comportamiento siguen NOT_READY por falta de fixture seguro y conflictos contractuales documentados.

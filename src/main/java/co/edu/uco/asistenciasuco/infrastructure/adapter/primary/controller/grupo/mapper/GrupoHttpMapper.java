@@ -5,10 +5,12 @@ import co.edu.uco.asistenciasuco.application.exception.validation.ValidationExce
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.primaryports.dto.ActualizarGrupoDTO;
 import co.edu.uco.asistenciasuco.application.features.grupo.common.dto.FranjaHorarioDTO;
 import co.edu.uco.asistenciasuco.application.features.grupo.creargrupo.primaryports.dto.CrearGrupoDTO;
+import co.edu.uco.asistenciasuco.application.features.grupo.previsualizarhorario.primaryports.dto.PrevisualizarHorarioGrupoDTO;
 import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo.request.ActualizarGrupoRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo.request.CrearGrupoRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo.request.FranjaHorarioRequest;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo.request.PrevisualizarHorarioGrupoRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.HttpTemporalParser;
 
 import java.text.Normalizer;
@@ -57,6 +59,17 @@ public final class GrupoHttpMapper {
                 usuarioEjecutor,
                 toFranjas(request.getFranjas(), request.getDias(), request.getHoraInicio(), request.getHoraFin())
         );
+    }
+
+    /** SES-GEN-01: horario propuesto para previsualizar; mismas reglas de forma de la franja que crear/actualizar grupo. */
+    public static PrevisualizarHorarioGrupoDTO toApplicationDTO(final PrevisualizarHorarioGrupoRequest request, final UUID usuarioEjecutor) {
+        Objects.requireNonNull(request, "El request HTTP para previsualizar el horario es obligatorio.");
+        final List<FranjaHorarioDTO> franjas = toFranjas(request.getFranjas(), null, null, null);
+        if (franjas == null || franjas.isEmpty()) {
+            throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_076);
+        }
+        return new PrevisualizarHorarioGrupoDTO(request.getIdGrupo(), request.getIdAsignatura(), request.getIdPeriodoAcademico(),
+                request.getIdDocente(), franjas, usuarioEjecutor);
     }
 
     /**

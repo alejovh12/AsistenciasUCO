@@ -80,9 +80,6 @@ final class DbFailureClassifier {
             case "SEC_001", "SEC_002", "EST_004", "COO_003" -> SecurityErrorCode.FORBIDDEN;
             // CULM-001 B2NM (DEC-019/DEC-020, CONTRACT 2.8.1): asignaturas por plan, matricula con programa y ambito de coordinacion.
             case "ASI_002", "ASI_003", "ASI_005", "MQR_008" -> CommonErrorCode.CONFLICT;
-            // HU074 (migracion 58): ASI_006 (asignatura compartida con programas ajenos), ASI_009 (inactivar con grupos en el
-            // periodo vigente o futuro) y ASI_010 (asignatura inactiva al crear grupo o asociarla a un plan) son 409 con su propio
-            // codigo, para que el usuario reciba el texto del catalogo y no el generico de CONFLICT.
             case "ASI_006" -> CatalogoErrorCode.ASI_006;
             case "ASI_009" -> CatalogoErrorCode.ASI_009;
             case "ASI_010" -> CatalogoErrorCode.ASI_010;
@@ -208,6 +205,17 @@ final class DbFailureClassifier {
             case "HOR_003", "HOR_004" -> CommonErrorCode.VALIDATION_ERROR;
             // F3: el docente titular ya definio el horario inicial; los cambios los hace el coordinador (usp_guardar_horarios_grupo).
             case "HOR_005" -> CommonErrorCode.CONFLICT;
+            // SES-GEN-01: B5 (horas de las franjas frente a las de la materia), B7 (duracion y ventana), B9 (estudiantes inscritos),
+            // B1 (asignatura no disponible), B2 (periodo no vigente o de otra institucion), duracion del periodo y horas de la materia.
+            case "HOR_006" -> MensajeUsuarioErrorCode.HOR_006;
+            case "HOR_007" -> MensajeUsuarioErrorCode.HOR_007;
+            case "HOR_008" -> MensajeUsuarioErrorCode.HOR_008;
+            case "HOR_009" -> MensajeUsuarioErrorCode.HOR_009;
+            case "ASI_013" -> MensajeUsuarioErrorCode.ASI_013;
+            case "PER_010" -> MensajeUsuarioErrorCode.PER_010;
+            case "PER_011" -> MensajeUsuarioErrorCode.PER_011;
+            // SES_005: hora local inexistente por cambio de horario al precargar las sesiones (antes caia en ERR_DB_UNCLASSIFIED).
+            case "SES_005" -> MensajeUsuarioErrorCode.SES_005;
             case "SES_001", "PROG_001", "PER_001", "FAC_001", "DEC_001" -> CommonErrorCode.RESOURCE_NOT_FOUND;
             // Catalogos administrativos (HU154/HU151): codigos propios con mensaje institucional.
             case "TPR_001" -> CatalogoErrorCode.TPR_001;

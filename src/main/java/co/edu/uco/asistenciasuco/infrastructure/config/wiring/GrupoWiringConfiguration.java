@@ -25,6 +25,11 @@ import co.edu.uco.asistenciasuco.application.features.grupo.creargrupo.primarypo
 import co.edu.uco.asistenciasuco.application.features.grupo.creargrupo.primaryports.interactor.CrearGrupoInteractor;
 import co.edu.uco.asistenciasuco.application.features.grupo.creargrupo.usecase.CrearGrupoUseCase;
 import co.edu.uco.asistenciasuco.application.features.grupo.creargrupo.usecase.impl.CrearGrupoUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.grupo.previsualizarhorario.primaryports.PrevisualizarHorarioGrupoInputPort;
+import co.edu.uco.asistenciasuco.application.features.grupo.previsualizarhorario.primaryports.interactor.PrevisualizarHorarioGrupoInteractor;
+import co.edu.uco.asistenciasuco.application.features.grupo.previsualizarhorario.usecase.PrevisualizarHorarioGrupoUseCase;
+import co.edu.uco.asistenciasuco.application.features.grupo.previsualizarhorario.usecase.impl.PrevisualizarHorarioGrupoUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.HorarioGrupoPrevisualizacionPort;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.primaryports.RegistrarEstudianteInputPort;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.primaryports.interactor.RegistrarEstudianteInteractor;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.RegistrarEstudianteUseCase;
@@ -51,6 +56,19 @@ public class GrupoWiringConfiguration {
     @Bean
     public CrearGrupoInputPort crearGrupoInputPort(final CrearGrupoUseCase crearGrupoUseCase) {
         return new CrearGrupoInteractor(crearGrupoUseCase);
+    }
+
+    @Bean
+    public PrevisualizarHorarioGrupoUseCase previsualizarHorarioGrupoUseCase(
+            final HorarioGrupoPrevisualizacionPort horarioGrupoPrevisualizacionPort,
+            final AsegurarFestivosPeriodoInputPort asegurarFestivosPeriodoInputPort
+    ) {
+        return new PrevisualizarHorarioGrupoUseCaseImpl(horarioGrupoPrevisualizacionPort, asegurarFestivosPeriodoInputPort);
+    }
+
+    @Bean
+    public PrevisualizarHorarioGrupoInputPort previsualizarHorarioGrupoInputPort(final PrevisualizarHorarioGrupoUseCase previsualizarHorarioGrupoUseCase) {
+        return new PrevisualizarHorarioGrupoInteractor(previsualizarHorarioGrupoUseCase);
     }
 
     @Bean

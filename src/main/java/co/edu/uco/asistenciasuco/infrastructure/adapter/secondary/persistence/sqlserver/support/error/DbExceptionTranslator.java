@@ -100,7 +100,7 @@ public final class DbExceptionTranslator {
             FacultadErrorCode.FAC_002,
             CatalogoErrorCode.TPR_002,
             CatalogoErrorCode.ARE_002,
-            // HU074 (migracion 58): asignatura compartida, inactivar con grupos vigentes o futuros y asignatura inactiva.
+            // HU074: conservar los códigos y el 409 de asignatura compartida, inactivación y uso inactivo.
             CatalogoErrorCode.ASI_006,
             CatalogoErrorCode.ASI_009,
             CatalogoErrorCode.ASI_010,
@@ -145,6 +145,11 @@ public final class DbExceptionTranslator {
             // VAL-pendientes-john PRU-15: operacion sobre un periodo cerrado y segundo cierre.
             MensajeUsuarioErrorCode.PER_008,
             MensajeUsuarioErrorCode.PER_009,
+            // SES-GEN-01: reglas del horario del grupo, asignatura/periodo no disponibles y hora local inexistente.
+            MensajeUsuarioErrorCode.HOR_006,
+            MensajeUsuarioErrorCode.HOR_009,
+            MensajeUsuarioErrorCode.PER_010,
+            MensajeUsuarioErrorCode.SES_005,
             CommonErrorCode.CONFLICT
     );
     private static final Set<ErrorDefinition> VALIDATION_CODES = Set.of(
@@ -190,6 +195,11 @@ public final class DbExceptionTranslator {
             ParametroErrorCode.AUD_002,
             AdmisionEstudianteErrorCode.ADS_005,
             AdmisionEstudianteErrorCode.ADS_006,
+            // SES-GEN-01: duracion y ventana de la franja, horas de la materia y duracion del periodo (400).
+            MensajeUsuarioErrorCode.HOR_007,
+            MensajeUsuarioErrorCode.HOR_008,
+            MensajeUsuarioErrorCode.ASI_013,
+            MensajeUsuarioErrorCode.PER_011,
             CommonErrorCode.VALIDATION_ERROR
     );
 
@@ -207,7 +217,17 @@ public final class DbExceptionTranslator {
             // DEC-073: la BD sustituye el dominio, los limites del parametro y el maximo de creditos vigentes.
             VerificacionCorreoErrorCode.VCE_008,
             AsistenciaErrorCode.ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA,
-            CatalogoErrorCode.ASI_008
+            CatalogoErrorCode.ASI_008,
+            // SES-GEN-01: la BD sustituye horas, franja, estudiantes, tope, nombre del periodo y fecha de fin calculada.
+            MensajeUsuarioErrorCode.HOR_006,
+            MensajeUsuarioErrorCode.HOR_007,
+            MensajeUsuarioErrorCode.HOR_008,
+            MensajeUsuarioErrorCode.HOR_009,
+            CatalogoErrorCode.ASI_010,
+            MensajeUsuarioErrorCode.ASI_013,
+            MensajeUsuarioErrorCode.PER_010,
+            MensajeUsuarioErrorCode.PER_011,
+            MensajeUsuarioErrorCode.SES_005
     );
 
     private static final Map<Set<ErrorDefinition>, ExceptionFactory> EXCEPTION_BY_CODES = Map.of(
@@ -220,10 +240,7 @@ public final class DbExceptionTranslator {
     private DbExceptionTranslator() {
     }
 
-    /**
-     * HU074: codigo del canal tecnico {@code DBCODE=<codigo>|<detalle>} que publica un SP, tambien en el exito (ASI_011...).
-     * Vacio si el mensaje no trae el canal (SP anterior al codigo o mensaje libre).
-     */
+    /** HU074: extrae el DBCODE que un SP publica también en su resultado exitoso. */
     public static Optional<String> dbCodeOf(final String technicalMessage) {
         return DbTechnicalError.parse(technicalMessage).map(DbTechnicalError::codigo);
     }

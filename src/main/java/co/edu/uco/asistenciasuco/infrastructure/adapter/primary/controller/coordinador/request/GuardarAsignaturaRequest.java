@@ -30,6 +30,8 @@ public final class GuardarAsignaturaRequest {
     @Size(max = 3, message = "El codigo del caracter no puede superar 3 caracteres.")
     @TextoSeguro
     private String codigoCaracter;
+    @Positive(message = "Las horas semanales deben ser un entero positivo.")
+    private Integer horasSemanales;
     public String getCodigo() { return codigo; }
     public void setCodigo(final String codigo) { this.codigo = codigo; }
     public String getNombre() { return nombre; }
@@ -42,6 +44,8 @@ public final class GuardarAsignaturaRequest {
     public void setNombreArea(final String nombreArea) { this.nombreArea = nombreArea; }
     public String getCodigoCaracter() { return codigoCaracter; }
     public void setCodigoCaracter(final String codigoCaracter) { this.codigoCaracter = codigoCaracter; }
+    public Integer getHorasSemanales() { return horasSemanales; }
+    public void setHorasSemanales(final Integer horasSemanales) { this.horasSemanales = horasSemanales; }
     public String getNombreComponente() { return nombreComponente; }
     public void setNombreComponente(final String nombreComponente) { this.nombreComponente = nombreComponente; }
 }

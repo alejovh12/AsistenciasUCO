@@ -88,6 +88,6 @@ public final class AsignaturaPlanInteractor implements AsignaturaPlanInputPort {
         return new PaginaAsignaturasPlanDTO(p.elementos().stream().map(a -> new AsignaturaPlanDTO(a.idAsignatura(), a.codigo(), a.nombre(), a.credito(), a.idArea(),
                 a.nombreArea(), a.idComponente(), a.nombreComponente(), a.idPlanEstudio(), a.inpPlanEstudio(), a.idPrograma(), a.nombrePrograma(),
                 a.idSemestrePlanEstudio(), a.numeroSemestre(), a.codigoSemestre(), a.codigoCaracter(), a.nombreCaracter(), a.estaActivoVinculo(),
-                a.estaActivaAsignatura(), a.compartida())).toList(), p.total());
+                a.estaActivaAsignatura(), a.compartida(), a.horasSemanales())).toList(), p.total());
     }
 }
