@@ -308,16 +308,11 @@ Puntos de diseño:
   `consultarUsuarioPorIdentificacion(...)` no encuentra al usuario, es un error técnico
   (`InternalApplicationException`, mensaje neutral, sin mencionar Identity/Keycloak) — nunca un
   404 funcional, nunca un intento de reparar la DB, nunca una llamada a Identity.
-- **Password raw vs. hash, nunca confundidos**: la contraseña que llega a
-  `PasswordEncoderPort`/DB es siempre distinta del valor que llega a `IdentityProviderPort`.
-  Usuario DB nuevo: `PasswordEncoderPort.encode(...)` produce el hash para el SP; el raw original
-  (`domain.getPassword()`) es lo que se envía a Identity. Usuario DB existente: el password para
-  persistir sigue siendo `null` (no se toca el password DB); Identity recibe igualmente el raw
-  disponible (puede ser `null` si el request no lo trajo) — nunca el hash, nunca inventado. Si
-  ese raw es insuficiente para una identidad de IdP que resulta no existir, el fallo lo produce
-  el propio `KeycloakIdentityProviderAdapter` (rechaza password inválido/nulo) y se propaga como
-  el mismo error controlado de Identity-tras-DB-success — esta microfase no añade recuperación de
-  contraseña.
+- **Sin contraseña en la BD (SEG-11)**: `dbo.Usuario.password` se eliminó; el backend ya no codifica
+  ni guarda ninguna clave (se retiró `PasswordEncoderPort`). Los SP conservan un parámetro `@password`
+  obsoleto que se ignora: los comandos que aún lo exigen reciben `NULL`. La única contraseña que
+  existe es la que el titular define en el proveedor de identidad (activación de cuenta) o, en la
+  matrícula pública por QR, la que el estudiante escribe y se envía solo a `IdentityProviderPort`.
 - **Rol determinado por el servidor**: `RegistrarEstudianteUseCaseImpl` es específico a
   "registrar estudiante" — no puede producir otro rol funcionalmente, así que fija
   `InstitutionalRole.ESTUDIANTE` internamente (constante tipada). El request HTTP no puede influir
@@ -340,8 +335,7 @@ Desde 2B.2-C1.2, `CrearDecanoUseCaseImpl` también es DB-first: valida Facultad 
 `numeroIdentificacion`). Solo trata al usuario como nuevo cuando ambas consultas no encuentran
 nada, o como preexistente cuando ambas devuelven el mismo UUID. Una resolución parcial o dos
 UUID distintos producen `ERR_IDENTIDAD_USUARIO_CONFLICTO` antes del command; la misma regla de
-DB se traduce a HTTP 409 si una carrera llega al SP. Para un usuario nuevo, envía a DB el hash
-de `PasswordEncoderPort`; para uno existente, envía password `null`. Tras el command, relee el
+DB se traduce a HTTP 409 si una carrera llega al SP. El command ya no lleva contraseña (SEG-11). Tras el command, relee el
 perfil canónico completo de `dbo.uv_usuario`: por `idUsuario` preexistente o, si era nuevo, por
 documento compuesto y verifica el correo normalizado. `CrearDecanoIdentityMapper` usa el UUID,
 número, correo, primer nombre y primer apellido canónicos, conserva el raw password del request
