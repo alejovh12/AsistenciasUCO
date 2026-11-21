@@ -55,7 +55,8 @@ class JpaRepositoryBeanUniquenessTest {
     // NOTOMA-001: + AvisoSesionSinTomaJpaRepository (aviso a la coordinacion de la sesion sin toma) = 73.
     // Migracion 63 de BD: + EstudianteSemestreJpaRepository (semestre actual del estudiante en el programa) = 74.
     // SES-GEN-01: + HorarioGrupoPrevisualizacionJpaRepository (previsualizacion del horario del grupo) = 75.
-    private static final int EXPECTED_REPOSITORIES = 75;
+    // Migracion 65 de BD: + CategoriaJustificacionAdminJpaRepository y MotivoCancelacionAdminJpaRepository = 77.
+    private static final int EXPECTED_REPOSITORIES = 77;
 
     @Test
     void cada_port_tiene_exactamente_un_repository_activo_con_provider_sqlserver() {

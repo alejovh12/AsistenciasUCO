@@ -222,6 +222,13 @@ final class DbFailureClassifier {
             case "SES_005" -> MensajeUsuarioErrorCode.SES_005;
             case "SES_001", "PROG_001", "PER_001", "FAC_001", "DEC_001" -> CommonErrorCode.RESOURCE_NOT_FOUND;
             // Catalogos administrativos (HU154/HU151): codigos propios con mensaje institucional.
+            // Migracion 65: administracion de categorias de justificacion y motivos de cancelacion (CTG_001..CTG_006).
+            case "CTG_001" -> CatalogoErrorCode.CTG_001;
+            case "CTG_002" -> CatalogoErrorCode.CTG_002;
+            case "CTG_003" -> CatalogoErrorCode.CTG_003;
+            case "CTG_004" -> CatalogoErrorCode.CTG_004;
+            case "CTG_005" -> CatalogoErrorCode.CTG_005;
+            case "CTG_006" -> CatalogoErrorCode.CTG_006;
             case "TPR_001" -> CatalogoErrorCode.TPR_001;
             case "TPR_002" -> CatalogoErrorCode.TPR_002;
             case "ARE_001" -> CatalogoErrorCode.ARE_001;

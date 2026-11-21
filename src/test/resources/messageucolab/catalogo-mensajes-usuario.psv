@@ -508,3 +508,11 @@ HOR_011|HOR011|Funcional|Error|HOR_011 - {} h caen en días festivos ({}…|{} h
 HOR_012|HOR012|Funcional|Error|HOR_012 - {} h ya no se pueden programar…|{} h ya no se pueden programar porque el período ya inició; las sesiones se programan desde {}.
 HOR_013|HOR013|Funcional|Error|HOR_013 - La materia aún no tiene horas…|La materia aún no tiene horas semanales cargadas: no se valida el total del horario.
 HOR_014|HOR014|Funcional|Error|HOR_014 - Se conservan {} sesión(es) ya…|Se conservan {} sesión(es) ya dictadas o con asistencia ({} h).
+CTG_001|CTG001|Funcional|Error|CTG_001 - El campo … es obligatorio, admite…|El campo {} es obligatorio, admite hasta {} caracteres y solo letras, números, espacios y los signos . , - _ ( ) / # :.
+CTG_002|CTG002|Funcional|Error|CTG_002 - El código es obligatorio, admite hasta…|El código es obligatorio, admite hasta {} caracteres y solo letras mayúsculas, números y guion bajo (_).
+CTG_003|CTG003|Funcional|Error|CTG_003 - No se puede desactivar el último…|No se puede desactivar el último registro activo del catálogo de {}: debe quedar al menos uno disponible.
+CTG_004|CTG004|Funcional|Error|CTG_004 - La descripción admite hasta ……|La descripción admite hasta {} caracteres y no puede contener los símbolos < ni >.
+CTG_005|CTG005|Funcional|Error|CTG_005 - El registro indicado del catálogo de ……|El registro indicado del catálogo de {} no existe.
+CTG_006|CTG006|Funcional|Error|CTG_006 - Ya existe un registro del catálogo de…|Ya existe un registro del catálogo de {} con el mismo {}.
+CTG_007|CTG007|Funcional|Confirmación|CTG_007 - El registro del catálogo de … quedó…|El registro del catálogo de {} quedó guardado.
+CTG_008|CTG008|Funcional|Confirmación|CTG_008 - El registro del catálogo de … quedó ….|El registro del catálogo de {} quedó {}.

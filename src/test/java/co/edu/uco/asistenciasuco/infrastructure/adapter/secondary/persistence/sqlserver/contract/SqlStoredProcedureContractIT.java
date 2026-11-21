@@ -835,6 +835,51 @@ class SqlStoredProcedureContractIT {
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@idUsuarioEjecutor", "uniqueidentifier")
                 )),
+                // Migracion 65: administracion de categorias de justificacion y motivos de cancelacion (ADMINISTRADOR).
+                Arguments.of("usp_crear_categoria_justificacion", List.of(
+                        input("@id", "uniqueidentifier"),
+                        input("@codigo", "nvarchar"),
+                        input("@nombre", "nvarchar"),
+                        input("@descripcion", "nvarchar"),
+                        input("@requiereSoporte", "bit"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_actualizar_categoria_justificacion", List.of(
+                        input("@id", "uniqueidentifier"),
+                        input("@nombre", "nvarchar"),
+                        input("@descripcion", "nvarchar"),
+                        input("@requiereSoporte", "bit"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_cambiar_estado_categoria_justificacion", List.of(
+                        input("@id", "uniqueidentifier"),
+                        input("@estaActiva", "bit"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_crear_motivo_cancelacion_sesion", List.of(
+                        input("@id", "uniqueidentifier"),
+                        input("@codigo", "nvarchar"),
+                        input("@nombre", "nvarchar"),
+                        input("@orden", "int"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_actualizar_motivo_cancelacion_sesion", List.of(
+                        input("@id", "uniqueidentifier"),
+                        input("@nombre", "nvarchar"),
+                        input("@orden", "int"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_cambiar_estado_motivo_cancelacion_sesion", List.of(
+                        input("@id", "uniqueidentifier"),
+                        input("@estaActivo", "bit"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
                 // CIERRE-W2A: filtro por caracter en servidor (parametro opcional al final) y opciones del consolidado con ambito.
                 Arguments.of("usp_consultar_asignaturas_coordinador_paginado", List.of(
                         input("@idUsuarioEjecutor", "uniqueidentifier"),

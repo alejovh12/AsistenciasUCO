@@ -66,6 +66,7 @@ public final class DbExceptionTranslator {
             SesionErrorCode.ERR_SESION_NO_EXISTE,
             AsistenciaErrorCode.ERR_RECLAMO_NO_EXISTE,
             CatalogoErrorCode.TPR_001,
+            CatalogoErrorCode.CTG_005,
             CatalogoErrorCode.ARE_001,
             FestivoErrorCode.FES_007,
             ParametroErrorCode.PRM_002,
@@ -101,6 +102,8 @@ public final class DbExceptionTranslator {
             FacultadErrorCode.FAC_002,
             CatalogoErrorCode.TPR_002,
             CatalogoErrorCode.ARE_002,
+            CatalogoErrorCode.CTG_003,
+            CatalogoErrorCode.CTG_006,
             // HU074: conservar los códigos y el 409 de asignatura compartida, inactivación y uso inactivo.
             CatalogoErrorCode.ASI_006,
             CatalogoErrorCode.ASI_009,
@@ -174,6 +177,9 @@ public final class DbExceptionTranslator {
             VerificacionCorreoErrorCode.VCE_008,
             AsistenciaErrorCode.ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA,
             CatalogoErrorCode.ASI_008,
+            CatalogoErrorCode.CTG_001,
+            CatalogoErrorCode.CTG_002,
+            CatalogoErrorCode.CTG_004,
             GrupoErrorCode.ERR_CODIGO_GRUPO_INVALIDO,
             // CULM-001 B.1: motivo de cancelacion y datos de festivos.
             SesionErrorCode.SES_013,
@@ -222,6 +228,13 @@ public final class DbExceptionTranslator {
             VerificacionCorreoErrorCode.VCE_008,
             AsistenciaErrorCode.ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA,
             CatalogoErrorCode.ASI_008,
+            // Migracion 65: la BD sustituye el campo, el limite y el nombre del catalogo.
+            CatalogoErrorCode.CTG_001,
+            CatalogoErrorCode.CTG_002,
+            CatalogoErrorCode.CTG_003,
+            CatalogoErrorCode.CTG_004,
+            CatalogoErrorCode.CTG_005,
+            CatalogoErrorCode.CTG_006,
             // SES-GEN-01: la BD sustituye horas, franja, estudiantes, tope, nombre del periodo y fecha de fin calculada.
             MensajeUsuarioErrorCode.HOR_006,
             MensajeUsuarioErrorCode.HOR_007,
