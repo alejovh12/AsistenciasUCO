@@ -45,7 +45,7 @@ class DocenteSesionSolicitudControllerTest {
                         new ConsultarSolicitudesSesionInputPort.Solicitud(sesion, "Repaso", "S-9", grupo, "G01 de Calculo", "Calculo",
                                 programa, "Ingenieria", docente, "Maria Docente", Instant.parse("2026-11-10T13:00:00Z"),
                                 Instant.parse("2026-11-10T15:00:00Z"), "RECHAZADA", "Rechazada",
-                                Instant.parse("2026-11-09T14:00:00Z"), Instant.parse("2026-11-09T16:00:00Z"), "Ya existe")), 11, 2, 5));
+                                Instant.parse("2026-11-09T14:00:00Z"), Instant.parse("2026-11-09T16:00:00Z"), "Ya existe", "Ingenieria", "Carlos Coordinador")), 11, 2, 5));
 
         mvc.perform(get(RUTA).param("soloPendientes", "false").param("grupoId", grupo.toString()).param("pagina", "2").param("tamano", "5"))
                 .andExpect(status().isOk())
@@ -66,7 +66,9 @@ class DocenteSesionSolicitudControllerTest {
                 .andExpect(jsonPath("$.elementos[0].nombreEstadoSolicitud").value("Rechazada"))
                 .andExpect(jsonPath("$.elementos[0].fechaSolicitudUtc").value("2026-11-09T14:00:00Z"))
                 .andExpect(jsonPath("$.elementos[0].fechaResolucionUtc").value("2026-11-09T16:00:00Z"))
-                .andExpect(jsonPath("$.elementos[0].observacion").value("Ya existe"));
+                .andExpect(jsonPath("$.elementos[0].observacion").value("Ya existe"))
+                .andExpect(jsonPath("$.elementos[0].nombreProgramaResponsable").value("Ingenieria"))
+                .andExpect(jsonPath("$.elementos[0].nombreCoordinadorResolutor").value("Carlos Coordinador"));
     }
 
     @Test
@@ -86,7 +88,7 @@ class DocenteSesionSolicitudControllerTest {
         final UUID sesion = UUID.randomUUID();
         when(consultar.execute(any())).thenReturn(new ConsultarSolicitudesSesionInputPort.Resultado(List.of(
                 new ConsultarSolicitudesSesionInputPort.Solicitud(sesion, "Repaso", "S-9", UUID.randomUUID(), "G01", "Calculo",
-                        UUID.randomUUID(), "Ingenieria", UUID.randomUUID(), "Maria", null, null, "PENDIENTE", "Pendiente", null, null, null)),
+                        UUID.randomUUID(), "Ingenieria", UUID.randomUUID(), "Maria", null, null, "PENDIENTE", "Pendiente", null, null, null, null, null)),
                 1, 1, 20));
 
         mvc.perform(get(RUTA))

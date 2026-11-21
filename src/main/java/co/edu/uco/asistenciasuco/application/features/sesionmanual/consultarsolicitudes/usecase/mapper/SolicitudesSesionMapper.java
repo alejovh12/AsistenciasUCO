@@ -26,7 +26,8 @@ public final class SolicitudesSesionMapper {
         return new Solicitud(s.idSesion(), s.nombreSesion(), s.codigoSesion(), s.idGrupo(), s.nombreGrupo(), s.nombreAsignatura(),
                 s.idPrograma(), s.nombrePrograma(), s.idDocente(), s.nombreDocente(), instante(s.fechaHoraInicio()),
                 instante(s.fechaHoraFin()), s.estadoSolicitud(), s.nombreEstadoSolicitud(), instante(s.fechaSolicitudUtc()),
-                instante(s.fechaResolucionUtc()), s.observacion());
+                instante(s.fechaResolucionUtc()), s.observacion(), s.nombreProgramaResponsable(),
+                s.nombreCoordinadorResolutor());
     }
 
     private static Instant instante(final LocalDateTime utc) {

@@ -150,7 +150,10 @@ public class SesionManualJpaRepository implements SesionManualRepositoryPort {
         return parametros;
     }
 
-    /** Ambos SP de solicitudes devuelven las mismas 20 columnas de {@code uv_solicitud_sesion} y {@code totalRegistros}. */
+    /**
+     * Ambos SP de solicitudes devuelven las columnas de {@code uv_solicitud_sesion} y {@code totalRegistros} (indice 20); el SP del docente
+     * agrega al final {@code nombreProgramaResponsable} (21) y {@code nombreCoordinadorResolutor} (22), ausentes en el del coordinador.
+     */
     private PaginaSolicitudesSesion consultarPaginaSolicitudes(final String operacion, final String procedimiento,
                                                                final Map<String, Object> parametros) {
         final UUID correlationId = CorrelationIdContext.require();
@@ -175,7 +178,8 @@ public class SesionManualJpaRepository implements SesionManualRepositoryPort {
                                 texto(c[5]), NativeRowValues.uuid(c[6]), texto(c[7]), NativeRowValues.uuid(c[8]), texto(c[9]),
                                 SesionCancelacionJpaRepository.fechaHora(c[10]), SesionCancelacionJpaRepository.fechaHora(c[11]),
                                 texto(c[12]), texto(c[13]), SesionCancelacionJpaRepository.fechaHora(c[14]),
-                                SesionCancelacionJpaRepository.fechaHora(c[15]), texto(c[16])));
+                                SesionCancelacionJpaRepository.fechaHora(c[15]), texto(c[16]),
+                                c.length > 22 ? texto(c[21]) : null, c.length > 22 ? texto(c[22]) : null));
                     }
                     return new PaginaSolicitudesSesion(solicitudes, total);
                 });
