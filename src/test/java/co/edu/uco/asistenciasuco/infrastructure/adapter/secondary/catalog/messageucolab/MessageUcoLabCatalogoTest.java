@@ -77,8 +77,7 @@ class MessageUcoLabCatalogoTest {
         // DEC-076: + PER_010 (seed 17 / migracion 61 de BD: grupo nuevo en un periodo que ya termino).
         // Migracion 63 de BD: + EST_007, EST_008 y EST_009 (semestre actual del estudiante en el programa).
         // SES-GEN-01 (migracion 64 de BD): + ASI_013, ASI_014, PER_011, VAL_APP_076 y HOR_006 a HOR_014; PER_010 sigue siendo un solo codigo.
-        // Migracion 65 de BD: + CTG_001..CTG_008 (administracion de categorias de justificacion y motivos de cancelacion).
-        assertEquals(517, catalogo().size());
+        assertEquals(509, catalogo().size());
     }
 
     @Test

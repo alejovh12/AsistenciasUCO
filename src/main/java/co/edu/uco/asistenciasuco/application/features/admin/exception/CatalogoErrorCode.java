@@ -21,14 +21,7 @@ public enum CatalogoErrorCode implements ErrorDefinition {
     ASI_010("ASI_010", "La asignatura está inactiva; actívala para usarla.", ErrorKind.CONFLICT),
     TPR_002("TPR_002", "Ya existe un tipo de programa con el mismo codigo o nombre.", ErrorKind.CONFLICT),
     ARE_001("ARE_001", "El area de conocimiento especificada no existe en el sistema.", ErrorKind.NOT_FOUND),
-    ARE_002("ARE_002", "Ya existe un area de conocimiento con el mismo codigo o nombre.", ErrorKind.CONFLICT),
-    /** Migracion 65: administracion de categorias de justificacion y motivos de cancelacion (texto con los limites que arma la DB). */
-    CTG_001("CTG_001", "El campo {} es obligatorio, admite hasta {} caracteres y solo letras, números, espacios y los signos . , - _ ( ) / # :.", ErrorKind.VALIDATION),
-    CTG_002("CTG_002", "El código es obligatorio, admite hasta {} caracteres y solo letras mayúsculas, números y guion bajo (_).", ErrorKind.VALIDATION),
-    CTG_003("CTG_003", "No se puede desactivar el último registro activo del catálogo de {}: debe quedar al menos uno disponible.", ErrorKind.CONFLICT),
-    CTG_004("CTG_004", "La descripción admite hasta {} caracteres y no puede contener los símbolos < ni >.", ErrorKind.VALIDATION),
-    CTG_005("CTG_005", "El registro indicado del catálogo de {} no existe.", ErrorKind.NOT_FOUND),
-    CTG_006("CTG_006", "Ya existe un registro del catálogo de {} con el mismo {}.", ErrorKind.CONFLICT);
+    ARE_002("ARE_002", "Ya existe un area de conocimiento con el mismo codigo o nombre.", ErrorKind.CONFLICT);
 
     private final String code;
     private final String defaultMessage;
