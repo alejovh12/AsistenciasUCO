@@ -32,9 +32,10 @@ public class SesionProcedenciaJpaRepository implements SesionProcedenciaQueryPor
             join UvSesionEstadoEntity e on e.idSesion = s.id
             """;
     static final String HQL_POR_ID = SELECT_ROW + " where s.id = :idSesion order by s.id";
+    // BD-6: una solicitud de sesion rechazada nunca existio como clase: no entra al cronograma del grupo (queda en las solicitudes).
     // Mismo orden que v1 (uv_sesion), con id como desempate estable para filas sin numero distinto.
     static final String HQL_POR_GRUPO = SELECT_ROW
-            + " where s.idGrupo = :idGrupo order by s.fechaHoraInicio, s.numero, s.id";
+            + " where s.idGrupo = :idGrupo and e.solicitudRechazada = false order by s.fechaHoraInicio, s.numero, s.id";
 
     // Solo las sesiones indicadas, mismo orden que por grupo; los bloques respetan el tope de parametros de SQL Server.
     static final String HQL_POR_IDS = SELECT_ROW

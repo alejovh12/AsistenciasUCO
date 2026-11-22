@@ -68,6 +68,19 @@ class SesionProcedenciaJpaRepositoryTest {
     }
 
     @Test
+    void el_listado_por_grupo_excluye_las_solicitudes_rechazadas_y_la_consulta_por_id_no() {
+        // BD-6: una solicitud rechazada nunca existio como clase: no entra a la tabla del cronograma del docente.
+        when(query.getResultList()).thenReturn(List.of());
+        repository.consultarSesionesPorGrupo(GRUPO);
+        org.mockito.Mockito.verify(entityManager).createQuery(
+                org.mockito.ArgumentMatchers.contains("e.solicitudRechazada = false"), eq(Object[].class));
+        repository.consultarSesion(SESION);
+        org.mockito.Mockito.verify(entityManager).createQuery(
+                org.mockito.ArgumentMatchers.argThat((String q) -> q.contains("s.id = :idSesion") && !q.contains("solicitudRechazada")),
+                eq(Object[].class));
+    }
+
+    @Test
     void una_sesion_cancelada_trae_su_cancelacion_de_uv_sesion_estado() {
         final UvSesionEstadoEntity cancelada = estado(true);
         when(query.getResultList()).thenReturn(List.<Object[]>of(new Object[]{entity("UTC_V2"), cancelada}));
