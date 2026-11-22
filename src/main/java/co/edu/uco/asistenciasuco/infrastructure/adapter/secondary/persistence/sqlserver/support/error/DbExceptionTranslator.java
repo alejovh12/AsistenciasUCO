@@ -59,6 +59,7 @@ public final class DbExceptionTranslator {
             VerificacionCorreoErrorCode.VCE_007,
             EstudianteErrorCode.ERR_ESTUDIANTE_NO_EXISTE,
             MensajeUsuarioErrorCode.EST_008,
+            MensajeUsuarioErrorCode.REC_009,
             DocenteErrorCode.ERR_DOCENTE_NO_EXISTE,
             DocenteErrorCode.ERR_DOCENTE_NO_VINCULADO_PROGRAMA,
             GrupoErrorCode.ERR_GRUPO_NO_EXISTE,
@@ -151,6 +152,11 @@ public final class DbExceptionTranslator {
             MensajeUsuarioErrorCode.HOR_009,
             MensajeUsuarioErrorCode.PER_010,
             MensajeUsuarioErrorCode.SES_005,
+            // DEC-081: receso academico (festivo, repetido, periodo cerrado y dia ya aplicado).
+            MensajeUsuarioErrorCode.REC_005,
+            MensajeUsuarioErrorCode.REC_006,
+            MensajeUsuarioErrorCode.REC_007,
+            MensajeUsuarioErrorCode.REC_010,
             CommonErrorCode.CONFLICT
     );
     private static final Set<ErrorDefinition> VALIDATION_CODES = Set.of(
@@ -202,6 +208,10 @@ public final class DbExceptionTranslator {
             MensajeUsuarioErrorCode.HOR_008,
             MensajeUsuarioErrorCode.ASI_013,
             MensajeUsuarioErrorCode.PER_011,
+            // DEC-081: fecha fuera del periodo, no futura y motivo invalido.
+            MensajeUsuarioErrorCode.REC_003,
+            MensajeUsuarioErrorCode.REC_004,
+            MensajeUsuarioErrorCode.REC_008,
             CommonErrorCode.VALIDATION_ERROR
     );
 
@@ -231,7 +241,13 @@ public final class DbExceptionTranslator {
             MensajeUsuarioErrorCode.ASI_013,
             MensajeUsuarioErrorCode.PER_010,
             MensajeUsuarioErrorCode.PER_011,
-            MensajeUsuarioErrorCode.SES_005
+            MensajeUsuarioErrorCode.SES_005,
+            // DEC-081: la BD sustituye fechas, nombre del periodo, longitud maxima, festivo y clases canceladas.
+            MensajeUsuarioErrorCode.REC_003,
+            MensajeUsuarioErrorCode.REC_005,
+            MensajeUsuarioErrorCode.REC_007,
+            MensajeUsuarioErrorCode.REC_008,
+            MensajeUsuarioErrorCode.REC_010
     );
 
     private static final Map<Set<ErrorDefinition>, ExceptionFactory> EXCEPTION_BY_CODES = Map.of(

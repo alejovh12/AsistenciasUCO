@@ -100,6 +100,33 @@ class SqlStoredProcedureContractIT {
     }
 
     /**
+     * DEC-081: {@code usp_crear_receso_academico} devuelve primero la tupla canonica con tres columnas extra y, con
+     * {@code @incluirDetalle = 1}, un segundo conjunto con las sesiones canceladas; el adaptador las lee por posicion.
+     */
+    @Test
+    void crear_receso_expone_las_siete_columnas_de_la_tupla_con_el_conteo_de_sesiones() {
+        final List<String> columnas = jdbcTemplate.queryForList(
+                "SELECT name FROM sys.dm_exec_describe_first_result_set_for_object(OBJECT_ID('dbo.usp_crear_receso_academico'), NULL) "
+                        + "ORDER BY column_ordinal",
+                String.class);
+
+        assertEquals(List.of("idCorrelacion", "mensajeUsuarioResultado", "mensajeTecnicoResultado", "estadoResultado", "idReceso",
+                "sesionesCanceladas", "sesionesConAsistencia"), columnas);
+    }
+
+    /** DEC-081: {@code usp_previsualizar_horario_grupo} agrega {@code entero19} y {@code entero20} al final (36 columnas). */
+    @Test
+    void previsualizar_horario_agrega_los_conteos_de_receso_al_final_de_las_treinta_y_cuatro_columnas_previas() {
+        final List<String> columnas = jdbcTemplate.queryForList(
+                "SELECT name FROM sys.dm_exec_describe_first_result_set_for_object(OBJECT_ID('dbo.usp_previsualizar_horario_grupo'), NULL) "
+                        + "ORDER BY column_ordinal",
+                String.class);
+
+        assertEquals(36, columnas.size());
+        assertEquals(List.of("bandera1", "bandera2", "entero19", "entero20"), columnas.subList(32, 36));
+    }
+
+    /**
      * {@code sys.parameters.has_default_value} NO distingue de forma confiable "sin default" de
      * "default = NULL" (limitacion documentada de metadata de SQL Server: el propio
      * {@code default_value} queda NULL en ambos casos). Por eso la nulabilidad de
@@ -855,6 +882,31 @@ class SqlStoredProcedureContractIT {
                         input("@idUsuarioEjecutor", "uniqueidentifier"),
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@idPeriodoAcademico", "uniqueidentifier")
+                )),
+                // DEC-081 (migracion 68): receso academico del periodo (crear con dos conjuntos de resultados, retirar, consultar y avisar).
+                Arguments.of("usp_crear_receso_academico", List.of(
+                        input("@idPeriodo", "uniqueidentifier"),
+                        input("@fecha", "date"),
+                        input("@motivo", "nvarchar"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idReceso", "uniqueidentifier"),
+                        input("@incluirDetalle", "bit")
+                )),
+                Arguments.of("usp_retirar_receso_academico", List.of(
+                        input("@idReceso", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_recesos_periodo", List.of(
+                        input("@idPeriodo", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_destinatarios_receso_academico", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idReceso", "uniqueidentifier")
                 ))
         );
     }

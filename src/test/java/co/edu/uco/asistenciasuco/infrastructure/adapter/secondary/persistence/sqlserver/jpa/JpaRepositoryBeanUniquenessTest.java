@@ -56,7 +56,8 @@ class JpaRepositoryBeanUniquenessTest {
     // Migracion 63 de BD: + EstudianteSemestreJpaRepository (semestre actual del estudiante en el programa) = 74.
     // SES-GEN-01: + HorarioGrupoPrevisualizacionJpaRepository (previsualizacion del horario del grupo) = 75.
     // Catalogos del sistema (solo lectura): + CatalogosSistemaJpaRepository = 76.
-    private static final int EXPECTED_REPOSITORIES = 76;
+    // DEC-081: + RecesoAcademicoJpaRepository (receso academico del periodo) = 77.
+    private static final int EXPECTED_REPOSITORIES = 77;
 
     @Test
     void cada_port_tiene_exactamente_un_repository_activo_con_provider_sqlserver() {

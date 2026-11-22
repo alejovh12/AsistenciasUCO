@@ -218,6 +218,15 @@ final class DbFailureClassifier {
             case "HOR_009" -> MensajeUsuarioErrorCode.HOR_009;
             case "ASI_013" -> MensajeUsuarioErrorCode.ASI_013;
             case "PER_011" -> MensajeUsuarioErrorCode.PER_011;
+            // DEC-081: receso academico (migracion 68). 400 fecha/motivo invalidos, 404 inexistente, 409 festivo/repetido/cerrado/aplicado.
+            case "REC_003" -> MensajeUsuarioErrorCode.REC_003;
+            case "REC_004" -> MensajeUsuarioErrorCode.REC_004;
+            case "REC_005" -> MensajeUsuarioErrorCode.REC_005;
+            case "REC_006" -> MensajeUsuarioErrorCode.REC_006;
+            case "REC_007" -> MensajeUsuarioErrorCode.REC_007;
+            case "REC_008" -> MensajeUsuarioErrorCode.REC_008;
+            case "REC_009" -> MensajeUsuarioErrorCode.REC_009;
+            case "REC_010" -> MensajeUsuarioErrorCode.REC_010;
             // SES_005: hora local inexistente por cambio de horario al precargar las sesiones (antes caia en ERR_DB_UNCLASSIFIED).
             case "SES_005" -> MensajeUsuarioErrorCode.SES_005;
             case "SES_001", "PROG_001", "PER_001", "FAC_001", "DEC_001" -> CommonErrorCode.RESOURCE_NOT_FOUND;

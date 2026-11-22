@@ -42,6 +42,8 @@ public class PlantillaPorDefectoCatalogo {
             Notificacion.TIPO_SESION_SOLICITUD_RECHAZADA_DOCENTE,
             Notificacion.TIPO_FALTA_ASISTENCIA_SESION_ESTUDIANTE,
             Notificacion.TIPO_SESION_SIN_TOMA_COORDINADOR,
+            Notificacion.TIPO_RECESO_CLASES_CANCELADAS_ESTUDIANTE,
+            Notificacion.TIPO_RECESO_CLASES_CANCELADAS_DOCENTE,
             // El panel admin reenruta las pruebas de VERIFICACION_CORREO/ACTIVACION_CUENTA a este tipo para no
             // emitir un token real (AdministracionNotificacionJpaAdapter#enviarCorreoPrueba); sin esta entrada
             // quedaba sin asunto/mensaje guardados en el nivel 3 del renderer y se marcaba como fallo definitivo.

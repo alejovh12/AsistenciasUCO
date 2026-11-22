@@ -142,6 +142,17 @@ public enum MensajeUsuarioErrorCode implements ErrorDefinition {
     PER_011("PER_011", ErrorKind.VALIDATION, "El periodo debe durar {} semanas: la fecha de fin debe ser {}."),
     SES_005("SES_005", ErrorKind.CONFLICT,
             "El horario incluye una hora local inexistente por cambio de horario; no se generaron sesiones."),
+    // DEC-081 (migracion 68 de BD): receso academico del periodo. La base publica estos codigos con su propio texto (los marcadores {}
+    // los sustituye la DB); aqui solo viven el codigo, la clase HTTP y un respaldo. REC_001/REC_002 (exito) y REC_011 (aviso de la
+    // previsualizacion) no son errores y no viven aqui.
+    REC_003("REC_003", ErrorKind.VALIDATION, "La fecha del receso debe estar dentro del período académico, del {} al {}."),
+    REC_004("REC_004", ErrorKind.VALIDATION, "La fecha del receso debe ser posterior a hoy; elige una fecha desde mañana."),
+    REC_005("REC_005", ErrorKind.CONFLICT, "Ese día ya es festivo ({}); no necesita receso académico."),
+    REC_006("REC_006", ErrorKind.CONFLICT, "Ya hay un receso académico registrado para esa fecha en este período."),
+    REC_007("REC_007", ErrorKind.CONFLICT, "El período académico {} está cerrado; no se pueden registrar ni retirar días de receso."),
+    REC_008("REC_008", ErrorKind.VALIDATION, "El motivo del receso es obligatorio y puede tener hasta {} caracteres."),
+    REC_009("REC_009", ErrorKind.NOT_FOUND, "El día de receso académico no existe o ya fue retirado."),
+    REC_010("REC_010", ErrorKind.CONFLICT, "Este día de receso ya canceló {} clases y no se puede retirar ni cambiar."),
     NOF_APP_003(CommonErrorCode.RESOURCE_NOT_FOUND, "El estudiante no existe en su ambito."),
     NOF_APP_004(CommonErrorCode.RESOURCE_NOT_FOUND, "El docente no existe o no esta vinculado a su programa."),
     NOF_APP_005(CommonErrorCode.RESOURCE_NOT_FOUND, "El plan de estudio indicado no existe en el programa del coordinador."),

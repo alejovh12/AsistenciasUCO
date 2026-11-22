@@ -63,6 +63,11 @@ public record Notificacion(
     /** NOTOMA-001: aviso al coordinador de que el docente no tomo asistencia en una sesion que ya termino (un correo por coordinador y sesion). */
     public static final String TIPO_SESION_SIN_TOMA_COORDINADOR = "SESION_SIN_TOMA_COORDINADOR";
 
+    /** DEC-081: un dia de receso academico cancelo clases del estudiante (un correo por persona con el resumen de sus clases). */
+    public static final String TIPO_RECESO_CLASES_CANCELADAS_ESTUDIANTE = "RECESO_CLASES_CANCELADAS_ESTUDIANTE";
+    /** DEC-081: un dia de receso academico cancelo clases del docente titular (un correo por persona con el resumen de sus clases). */
+    public static final String TIPO_RECESO_CLASES_CANCELADAS_DOCENTE = "RECESO_CLASES_CANCELADAS_DOCENTE";
+
     public Notificacion {
         Objects.requireNonNull(tipo, "El tipo de notificacion es obligatorio.");
         destinatarios = destinatarios == null ? List.of() : List.copyOf(destinatarios);

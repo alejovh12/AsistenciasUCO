@@ -509,3 +509,14 @@ HOR_012|HOR012|Funcional|Error|HOR_012 - {} h ya no se pueden programar…|{} h 
 HOR_013|HOR013|Funcional|Error|HOR_013 - La materia aún no tiene horas…|La materia aún no tiene horas semanales cargadas: no se valida el total del horario.
 HOR_014|HOR014|Funcional|Error|HOR_014 - Se conservan {} sesión(es) ya…|Se conservan {} sesión(es) ya dictadas o con asistencia ({} h).
 ERR_BD_NO_DISPONIBLE|ERR122|Técnico|Error|ERR_BD_NO_DISPONIBLE|El servicio no está disponible en este momento. Intenta de nuevo en unos minutos.
+REC_001|REC001|Funcional|Confirmación|REC_001 - Se registró el receso académico del ……|Se registró el receso académico del {}; se cancelaron {} clases.
+REC_002|REC002|Funcional|Confirmación|REC_002 - Se retiró el receso académico del ….|Se retiró el receso académico del {}.
+REC_003|REC003|Funcional|Error|REC_003 - La fecha del receso debe estar dentro…|La fecha del receso debe estar dentro del período académico, del {} al {}.
+REC_004|REC004|Funcional|Error|REC_004 - La fecha del receso debe ser posterior…|La fecha del receso debe ser posterior a hoy; elige una fecha desde mañana.
+REC_005|REC005|Funcional|Error|REC_005 - Ese día ya es festivo (…); no necesita…|Ese día ya es festivo ({}); no necesita receso académico.
+REC_006|REC006|Funcional|Error|REC_006 - Ya hay un receso académico registrado…|Ya hay un receso académico registrado para esa fecha en este período.
+REC_007|REC007|Funcional|Error|REC_007 - El período académico … está cerrado…|El período académico {} está cerrado; no se pueden registrar ni retirar días de receso.
+REC_008|REC008|Funcional|Error|REC_008 - El motivo del receso es obligatorio y…|El motivo del receso es obligatorio y puede tener hasta {} caracteres.
+REC_009|REC009|Funcional|Error|REC_009 - El día de receso académico no existe o…|El día de receso académico no existe o ya fue retirado.
+REC_010|REC010|Funcional|Error|REC_010 - Este día de receso ya canceló … clases…|Este día de receso ya canceló {} clases y no se puede retirar ni cambiar.
+REC_011|REC011|Funcional|Información|REC_011 - … h caen en días de receso académico…|{} h caen en días de receso académico ({} sesión(es)); esas sesiones quedan canceladas.
