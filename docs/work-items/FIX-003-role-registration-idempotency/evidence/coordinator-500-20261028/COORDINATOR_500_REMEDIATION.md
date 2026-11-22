@@ -86,3 +86,8 @@ El archivo local no versionado permanece `??` y sin cambios; su SHA-256 actual e
 - No se declara `E2E_PASS`: la validación HTTP con la sesión legítima de Jorge quedó `BLOCKED_BY_MISSING_LEGITIMATE_SESSION` porque el helper de navegador no pudo determinar de forma segura la URL actual; no se forzó autenticación ni se usó otra identidad.
 - El inventario completo aún identifica como brechas no intervenidas `usp_consultar_bitacora_estudiante_programa`, `usp_consultar_ficha_estudiante_programa`, `usp_consultar_historial_grupos_docente_programa`, `usp_consultar_resumen_asistencia_estudiante_programa` y tres SP de áreas. No se crearon porque exceden la corrección de estos tres 500 y requieren su propia validación/alcance.
 - Queda pendiente repetir con la sesión legítima los tres HTTP del Coordinador y la regresión HTTP de Administrador/Decano antes de declarar cierre E2E.
+
+
+## Nota de retiro del respaldo
+
+El respaldo `.bak` de SQL Server (26 MB) que estaba en este directorio se retiro del arbol por posible informacion personal. Sigue en el historial (commit 9a81d8e7, 2026-11-09); depurar el historial es decision del propietario del repositorio.
