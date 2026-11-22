@@ -1,5 +1,8 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesion.v2;
 
+import co.edu.uco.asistenciasuco.application.features.catalogo.resolvermensajeusuario.primaryports.ResolverMensajeUsuarioInputPort;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.MensajesExito;
+import org.springframework.beans.factory.annotation.Autowired;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.MensajesExitoHttp;
 import co.edu.uco.asistenciasuco.application.features.sesion.actualizarsesion.primaryports.ActualizarSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.sesion.actualizarsesion.primaryports.dto.ActualizarSesionDTO;
@@ -37,12 +40,24 @@ public final class SesionV2Controller {
     private final CrearSesionInputPort crearSesionInputPort;
     private final ActualizarSesionInputPort actualizarSesionInputPort;
     private final AuthenticatedUserResolver authenticatedUserResolver;
+    private final MensajesExito mensajes;
 
     public SesionV2Controller(
             final CrearSesionInputPort crearSesionInputPort,
             final ActualizarSesionInputPort actualizarSesionInputPort,
             final AuthenticatedUserResolver authenticatedUserResolver
     ) {
+        this(crearSesionInputPort, actualizarSesionInputPort, authenticatedUserResolver, null);
+    }
+
+    @Autowired // dos constructores publicos (el corto lo usan las pruebas): Spring debe usar el que resuelve las confirmaciones por catalogo
+    public SesionV2Controller(
+            final CrearSesionInputPort crearSesionInputPort,
+            final ActualizarSesionInputPort actualizarSesionInputPort,
+            final AuthenticatedUserResolver authenticatedUserResolver,
+            final ResolverMensajeUsuarioInputPort resolverMensajeUsuario
+    ) {
+        this.mensajes = new MensajesExito(resolverMensajeUsuario);
         this.crearSesionInputPort = Objects.requireNonNull(crearSesionInputPort, "CrearSesionInputPort es obligatorio.");
         this.actualizarSesionInputPort = Objects.requireNonNull(actualizarSesionInputPort, "ActualizarSesionInputPort es obligatorio.");
         this.authenticatedUserResolver = Objects.requireNonNull(authenticatedUserResolver, "AuthenticatedUserResolver es obligatorio.");
@@ -62,7 +77,7 @@ public final class SesionV2Controller {
         ));
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiMessageResponse(true,
-                        mensajeUsuario == null || mensajeUsuario.isBlank() ? MensajesExitoHttp.SESION_CREADA : mensajeUsuario));
+                        mensajeUsuario == null || mensajeUsuario.isBlank() ? mensajes.de(MensajesExitoHttp.SESION_CREADA) : mensajeUsuario));
     }
 
     /** Reemplazo completo de nombre y ambos instantes (sin PUT en v2, UTC-D09). */

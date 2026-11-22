@@ -1,5 +1,8 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia;
 
+import co.edu.uco.asistenciasuco.application.features.catalogo.resolvermensajeusuario.primaryports.ResolverMensajeUsuarioInputPort;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.MensajesExito;
+import org.springframework.beans.factory.annotation.Autowired;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.MensajesExitoHttp;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.RegistrarAsistenciasSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.dto.RegistrarAsistenciasSesionDTO;
@@ -38,12 +41,24 @@ public final class AsistenciaController {
     private final RegistrarAsistenciasSesionInputPort registrarAsistenciasSesionInputPort;
     private final SolicitarRevisionAsistenciaInputPort solicitarRevisionAsistenciaInputPort;
     private final AuthenticatedUserResolver authenticatedUserResolver;
+    private final MensajesExito mensajes;
 
     public AsistenciaController(
             final RegistrarAsistenciasSesionInputPort registrarAsistenciasSesionInputPort,
             final SolicitarRevisionAsistenciaInputPort solicitarRevisionAsistenciaInputPort,
             final AuthenticatedUserResolver authenticatedUserResolver
     ) {
+        this(registrarAsistenciasSesionInputPort, solicitarRevisionAsistenciaInputPort, authenticatedUserResolver, null);
+    }
+
+    @Autowired // dos constructores publicos (el corto lo usan las pruebas): Spring debe usar el que resuelve las confirmaciones por catalogo
+    public AsistenciaController(
+            final RegistrarAsistenciasSesionInputPort registrarAsistenciasSesionInputPort,
+            final SolicitarRevisionAsistenciaInputPort solicitarRevisionAsistenciaInputPort,
+            final AuthenticatedUserResolver authenticatedUserResolver,
+            final ResolverMensajeUsuarioInputPort resolverMensajeUsuario
+    ) {
+        this.mensajes = new MensajesExito(resolverMensajeUsuario);
         this.registrarAsistenciasSesionInputPort = Objects.requireNonNull(registrarAsistenciasSesionInputPort,
                 "RegistrarAsistenciasSesionInputPort es obligatorio.");
         this.solicitarRevisionAsistenciaInputPort = Objects.requireNonNull(solicitarRevisionAsistenciaInputPort,
@@ -65,7 +80,7 @@ public final class AsistenciaController {
         solicitarRevisionAsistenciaInputPort.execute(dto);
 
         return ResponseEntity.status(HttpStatus.ACCEPTED)
-                .body(new ApiMessageResponse(true, MensajesExitoHttp.SOLICITUD_REVISION_REGISTRADA));
+                .body(new ApiMessageResponse(true, mensajes.de(MensajesExitoHttp.SOLICITUD_REVISION_REGISTRADA)));
     }
 
     @PostMapping("/lote")
@@ -79,6 +94,6 @@ public final class AsistenciaController {
         );
         registrarAsistenciasSesionInputPort.execute(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ApiMessageResponse(true, MensajesExitoHttp.ASISTENCIAS_SESION_REGISTRADAS));
+                .body(new ApiMessageResponse(true, mensajes.de(MensajesExitoHttp.ASISTENCIAS_SESION_REGISTRADAS)));
     }
 }

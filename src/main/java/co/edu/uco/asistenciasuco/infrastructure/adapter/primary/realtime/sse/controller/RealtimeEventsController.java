@@ -1,5 +1,8 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.controller;
 
+import co.edu.uco.asistenciasuco.application.features.catalogo.resolvermensajeusuario.primaryports.ResolverMensajeUsuarioInputPort;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.MensajesExito;
+import org.springframework.beans.factory.annotation.Autowired;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.MensajesExitoHttp;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.validation.RealtimeEmitValidator;
@@ -41,11 +44,22 @@ public class RealtimeEventsController {
 
     private final RealtimeStreamGateway realtimeStreamGateway;
     private final AuthenticatedUserResolver authenticatedUserResolver;
+    private final MensajesExito mensajes;
 
     public RealtimeEventsController(
             final RealtimeStreamGateway realtimeStreamGateway,
             final AuthenticatedUserResolver authenticatedUserResolver
     ) {
+        this(realtimeStreamGateway, authenticatedUserResolver, null);
+    }
+
+    @Autowired // dos constructores publicos (el corto lo usan las pruebas): Spring debe usar el que resuelve las confirmaciones por catalogo
+    public RealtimeEventsController(
+            final RealtimeStreamGateway realtimeStreamGateway,
+            final AuthenticatedUserResolver authenticatedUserResolver,
+            final ResolverMensajeUsuarioInputPort resolverMensajeUsuario
+    ) {
+        this.mensajes = new MensajesExito(resolverMensajeUsuario);
         this.realtimeStreamGateway = Objects.requireNonNull(
                 realtimeStreamGateway,
                 "RealtimeStreamGateway es requerido."
@@ -111,7 +125,7 @@ public class RealtimeEventsController {
 
         return ResponseEntity.ok(new ApiDataResponse<>(true, Map.of(
                 "mensajeUsuario",
-                String.format(MensajesExitoHttp.EVENTO_EMITIDO, realtimeStreamGateway.activeSubscribersCount())
+                mensajes.de(MensajesExitoHttp.EVENTO_EMITIDO, realtimeStreamGateway.activeSubscribersCount())
         )));
     }
 
