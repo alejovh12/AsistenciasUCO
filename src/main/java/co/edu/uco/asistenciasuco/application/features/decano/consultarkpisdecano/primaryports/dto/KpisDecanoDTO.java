@@ -29,13 +29,19 @@ public record KpisDecanoDTO(
         BigDecimal horasDictadas,
         BigDecimal horasFalta,
         int totalCoordinadores,
-        int totalDocentes
+        int totalDocentes,
+        BigDecimal horasPeriodo
 ) {
 
 
     /** Forma previa a CULM-001 B.2 (sin las columnas de horas: cero y nulas). */
     public KpisDecanoDTO(final UUID idFacultad, final String nombreFacultad, final UUID idPeriodoAcademico, final String nombrePeriodoAcademico, final int totalProgramas, final int totalEstudiantes, final int estudiantesRegulares, final int estudiantesRiesgo, final int estudiantesPerdida, final BigDecimal tasaRetencion, final int sesionesEjecutadas, final int faltasSinJustaCausa, final BigDecimal porcentajeAusentismo, final BigDecimal porcentajeAsistencia, final int gruposActivos, final int cupoTotal, final int matriculadosActivos, final BigDecimal tasaAforo, final BigDecimal umbralAdvertencia, final BigDecimal umbralPerdida) {
-        this(idFacultad, nombreFacultad, idPeriodoAcademico, nombrePeriodoAcademico, totalProgramas, totalEstudiantes, estudiantesRegulares, estudiantesRiesgo, estudiantesPerdida, tasaRetencion, sesionesEjecutadas, faltasSinJustaCausa, porcentajeAusentismo, porcentajeAsistencia, gruposActivos, cupoTotal, matriculadosActivos, tasaAforo, umbralAdvertencia, umbralPerdida, 0, null, null, 0, 0);
+        this(idFacultad, nombreFacultad, idPeriodoAcademico, nombrePeriodoAcademico, totalProgramas, totalEstudiantes, estudiantesRegulares, estudiantesRiesgo, estudiantesPerdida, tasaRetencion, sesionesEjecutadas, faltasSinJustaCausa, porcentajeAusentismo, porcentajeAsistencia, gruposActivos, cupoTotal, matriculadosActivos, tasaAforo, umbralAdvertencia, umbralPerdida, 0, null, null, 0, 0, null);
+    }
+
+    /** Forma previa a la revision final P3 (BD-7): sin horasPeriodo (nulo). */
+    public KpisDecanoDTO(final UUID idFacultad, final String nombreFacultad, final UUID idPeriodoAcademico, final String nombrePeriodoAcademico, final int totalProgramas, final int totalEstudiantes, final int estudiantesRegulares, final int estudiantesRiesgo, final int estudiantesPerdida, final BigDecimal tasaRetencion, final int sesionesEjecutadas, final int faltasSinJustaCausa, final BigDecimal porcentajeAusentismo, final BigDecimal porcentajeAsistencia, final int gruposActivos, final int cupoTotal, final int matriculadosActivos, final BigDecimal tasaAforo, final BigDecimal umbralAdvertencia, final BigDecimal umbralPerdida, final int tomasDictadas, final BigDecimal horasDictadas, final BigDecimal horasFalta, final int totalCoordinadores, final int totalDocentes) {
+        this(idFacultad, nombreFacultad, idPeriodoAcademico, nombrePeriodoAcademico, totalProgramas, totalEstudiantes, estudiantesRegulares, estudiantesRiesgo, estudiantesPerdida, tasaRetencion, sesionesEjecutadas, faltasSinJustaCausa, porcentajeAusentismo, porcentajeAsistencia, gruposActivos, cupoTotal, matriculadosActivos, tasaAforo, umbralAdvertencia, umbralPerdida, tomasDictadas, horasDictadas, horasFalta, totalCoordinadores, totalDocentes, null);
     }
 
 }

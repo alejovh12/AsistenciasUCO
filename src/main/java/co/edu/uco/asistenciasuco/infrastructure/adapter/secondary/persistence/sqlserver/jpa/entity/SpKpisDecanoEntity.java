@@ -37,6 +37,8 @@ public class SpKpisDecanoEntity {
     // CIERRE-W3I: columnas nuevas al final del SP (se leen por nombre).
     @Column(name = "totalCoordinadores") private Integer totalCoordinadores;
     @Column(name = "totalDocentes") private Integer totalDocentes;
+    // Revision final P3 (BD-7): horasPeriodo AL FINAL = base real del porcentaje de ausentismo (se lee por nombre).
+    @Column(name = "horasPeriodo") private BigDecimal horasPeriodo;
 
     protected SpKpisDecanoEntity() {
     }
@@ -139,5 +141,9 @@ public class SpKpisDecanoEntity {
 
     public Integer totalDocentes() {
         return totalDocentes;
+    }
+
+    public BigDecimal horasPeriodo() {
+        return horasPeriodo;
     }
 }

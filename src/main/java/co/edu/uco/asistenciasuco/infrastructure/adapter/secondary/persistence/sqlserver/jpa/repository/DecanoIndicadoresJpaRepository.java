@@ -74,7 +74,7 @@ public class DecanoIndicadoresJpaRepository implements DecanoIndicadoresQueryPor
                             e.porcentajeAusentismo(), e.porcentajeAsistencia(), cero(e.gruposActivos()), cero(e.cupoTotal()),
                             cero(e.matriculadosActivos()), e.tasaAforo(), e.umbralAdvertencia(), e.umbralPerdida(),
                             cero(e.tomasDictadas()), e.horasDictadas(), e.horasFalta(),
-                            cero(e.totalCoordinadores()), cero(e.totalDocentes()));
+                            cero(e.totalCoordinadores()), cero(e.totalDocentes()), e.horasPeriodo());
                 });
     }
 
@@ -85,7 +85,7 @@ public class DecanoIndicadoresJpaRepository implements DecanoIndicadoresQueryPor
                 () -> ejecutar(SQL_COMPARATIVA, SpComparativaProgramaEntity.class, correlationId, actorUsuarioId, Map.of(), idPeriodoAcademico).stream()
                         .map(e -> new ComparativaProgramaProjection(e.idPrograma(), e.nombrePrograma(), verdadero(e.estaActivoPrograma()),
                                 cero(e.totalEstudiantes()), cero(e.estudiantesRiesgo()), cero(e.estudiantesPerdida()), e.tasaRetencion(),
-                                cero(e.sesionesEjecutadas()), cero(e.faltasSinJustaCausa()), e.porcentajeAusentismo(), e.horasDictadas(), e.horasFalta()))
+                                cero(e.sesionesEjecutadas()), cero(e.faltasSinJustaCausa()), e.porcentajeAusentismo(), e.horasDictadas(), e.horasFalta(), e.horasPeriodo()))
                         .toList());
     }
 

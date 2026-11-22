@@ -21,6 +21,8 @@ public class SpComparativaProgramaEntity {
     @Column(name = "porcentajeAusentismo") private BigDecimal porcentajeAusentismo;
     @Column(name = "horasDictadas") private BigDecimal horasDictadas;
     @Column(name = "horasFalta") private BigDecimal horasFalta;
+    // Revision final P3 (BD-7): horasPeriodo AL FINAL = base real del porcentaje de ausentismo (se lee por nombre).
+    @Column(name = "horasPeriodo") private BigDecimal horasPeriodo;
 
     protected SpComparativaProgramaEntity() {
     }
@@ -71,5 +73,9 @@ public class SpComparativaProgramaEntity {
 
     public BigDecimal horasFalta() {
         return horasFalta;
+    }
+
+    public BigDecimal horasPeriodo() {
+        return horasPeriodo;
     }
 }
