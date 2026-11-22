@@ -84,7 +84,7 @@ public enum MensajeUsuarioErrorCode implements ErrorDefinition {
     VAL_APP_065(CommonErrorCode.VALIDATION_ERROR, "El coordinador del programa es obligatorio."),
     VAL_APP_066(CommonErrorCode.VALIDATION_ERROR, "El estado deseado del programa es obligatorio."),
     VAL_APP_067(Codigos.ERR_CAMPO_OBLIGATORIO, ErrorKind.VALIDATION, "Cada franja del horario es obligatoria."),
-    VAL_APP_068(Codigos.ERR_CAMPO_OBLIGATORIO, ErrorKind.VALIDATION, "El campo dias es obligatorio cuando se envía el horario."),
+    VAL_APP_068(Codigos.ERR_CAMPO_OBLIGATORIO, ErrorKind.VALIDATION, "El campo días es obligatorio cuando se envía el horario."),
     VAL_APP_069(Codigos.ERR_CAMPO_OBLIGATORIO, ErrorKind.VALIDATION, "El campo {} es obligatorio."),
     VAL_APP_070("ERR_FECHA_HORA_INVALIDA", ErrorKind.VALIDATION, "El campo {} debe usar formato ISO local {}."),
     PAG_001(CommonErrorCode.VALIDATION_ERROR, "Los parámetros de paginación no son válidos."),

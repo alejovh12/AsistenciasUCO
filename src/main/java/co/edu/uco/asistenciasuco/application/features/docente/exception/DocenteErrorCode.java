@@ -4,7 +4,7 @@ import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorDefinition;
 import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorKind;
 
 public enum DocenteErrorCode implements ErrorDefinition {
-    ERR_DOCENTE_NO_EXISTE("ERR_DOCENTE_NO_EXISTE", "El docente especificado no existe o esta inactivo.", ErrorKind.NOT_FOUND),
+    ERR_DOCENTE_NO_EXISTE("ERR_DOCENTE_NO_EXISTE", "El docente especificado no existe o está inactivo.", ErrorKind.NOT_FOUND),
     ERR_DOCENTE_INACTIVO("ERR_DOCENTE_INACTIVO", "El docente se encuentra inactivo.", ErrorKind.CONFLICT),
     ERR_DOCENTE_YA_REGISTRADO("ERR_DOCENTE_YA_REGISTRADO", "El usuario ya se encuentra registrado como docente.", ErrorKind.CONFLICT),
     ERR_DOCENTE_REQUERIDO("ERR_DOCENTE_REQUERIDO", "El docente es obligatorio.", ErrorKind.VALIDATION),

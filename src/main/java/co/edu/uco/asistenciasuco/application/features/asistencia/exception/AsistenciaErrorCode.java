@@ -4,7 +4,7 @@ import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorDefinition;
 import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorKind;
 
 public enum AsistenciaErrorCode implements ErrorDefinition {
-    ERR_ESTUDIANTE_NO_PERTENECE_SESION("ERR_ESTUDIANTE_NO_PERTENECE_SESION", "El estudiante no pertenece al grupo de la sesion seleccionada.", ErrorKind.FORBIDDEN),
+    ERR_ESTUDIANTE_NO_PERTENECE_SESION("ERR_ESTUDIANTE_NO_PERTENECE_SESION", "El estudiante no pertenece al grupo de la sesión seleccionada.", ErrorKind.FORBIDDEN),
     ERR_ASISTENCIA_REQUERIDA("ERR_ASISTENCIA_REQUERIDA", "La asistencia es obligatoria.", ErrorKind.VALIDATION),
     ERR_PRESENTE_REQUERIDO("ERR_PRESENTE_REQUERIDO", "Debe indicar si el estudiante asistió.", ErrorKind.VALIDATION),
     ERR_SESION_ASISTENCIA_REQUERIDA("ERR_SESION_ASISTENCIA_REQUERIDA", "La sesión de asistencia es obligatoria.", ErrorKind.VALIDATION),

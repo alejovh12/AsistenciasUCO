@@ -503,7 +503,7 @@ class DbExceptionTranslatorTest {
         final ForbiddenException exception = assertThrows(
                 ForbiddenException.class,
                 () -> translateFailure(
-                        "El estudiante no pertenece al grupo de la sesion seleccionada.",
+                        "El estudiante no pertenece al grupo de la sesión seleccionada.",
                         "Validación de pertenencia fallida: El estudiante no está inscrito en el grupo de la sesión.",
                         "registrarAsistenciasSesion"
                 )

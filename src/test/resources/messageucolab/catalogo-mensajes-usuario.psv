@@ -1,6 +1,6 @@
 # canonico|codigo remoto|tipo|categoria|titulo|contenido -- generado por AsistenciasUCO-Infra/components/messages/build-message-catalog.py desde los seeds de mensajes de usuario
 CORR_001|CORR001|Funcional|Error|CORR_001 - El identificador de correlación no…|El identificador de correlación no está presente o está vacío.
-ERR_CORRELACION_REQUERIDA|ERR001|Funcional|Error|ERR_CORRELACION_REQUERIDA - El codigo de…|El codigo de correlacion es requerido.
+ERR_CORRELACION_REQUERIDA|ERR001|Funcional|Error|ERR_CORRELACION_REQUERIDA - El codigo de…|El código de correlación es requerido.
 GEN_001|GEN001|Funcional|Error|GEN_001 - El … especificado no existe en el…|El {} especificado no existe en el sistema.
 GEN_002|GEN002|Funcional|Error|GEN_002 - El … no puede estar vacío o no está…|El {} no puede estar vacío o no está presente.
 GEN_003|GEN003|Funcional|Error|GEN_003 - Ya existe un … registrado con este ….|Ya existe un {} registrado con este {}.
@@ -17,16 +17,16 @@ USU_001|USU001|Funcional|Error|USU_001 - El usuario especificado no existe en…
 ERR_USUARIO_NO_EXISTE|ERR002|Funcional|Error|ERR_USUARIO_NO_EXISTE - El usuario especificado…|El usuario especificado no existe.
 USU_002|USU002|Funcional|Error|USU_002 - El usuario especificado se encuentra…|El usuario especificado se encuentra inactivo en la plataforma.
 ERR_UNICIDAD_CORREO|ERR003|Funcional|Error|ERR_UNICIDAD_CORREO - El correo electronico ya…|El correo electronico ya se encuentra registrado.
-ERR_UNICIDAD_DOCUMENTO|ERR004|Funcional|Error|ERR_UNICIDAD_DOCUMENTO - El numero de documento…|El numero de documento ya esta registrado para este tipo de identificacion.
+ERR_UNICIDAD_DOCUMENTO|ERR004|Funcional|Error|ERR_UNICIDAD_DOCUMENTO - El numero de documento…|El número de documento ya está registrado para este tipo de identificación.
 EST_001|EST001|Funcional|Error|EST_001 - El estudiante especificado no existe…|El estudiante especificado no existe en el sistema.
 ERR_ESTUDIANTE_NO_EXISTE|ERR005|Funcional|Error|ERR_ESTUDIANTE_NO_EXISTE - El estudiante…|El estudiante especificado no existe.
 EST_002|EST002|Funcional|Error|EST_002 - El estudiante ya se encuentra…|El estudiante ya se encuentra matriculado o registrado en este grupo.
 ERR_MATRICULA_DUPLICADA|ERR006|Funcional|Error|ERR_MATRICULA_DUPLICADA - Usted ya se encuentra…|Usted ya se encuentra registrado o matriculado en este grupo.
 EST_003|EST003|Funcional|Error|EST_003 - El estudiante ya pertenece a este…|El estudiante ya pertenece a este programa académico.
-EST_004|EST004|Funcional|Error|EST_004 - El estudiante no pertenece al grupo de…|El estudiante no pertenece al grupo de la sesion seleccionada.
-ERR_ESTUDIANTE_NO_PERTENECE_SESION|ERR007|Funcional|Error|ERR_ESTUDIANTE_NO_PERTENECE_SESION|El estudiante no pertenece al grupo de la sesion seleccionada.
+EST_004|EST004|Funcional|Error|EST_004 - El estudiante no pertenece al grupo de…|El estudiante no pertenece al grupo de la sesión seleccionada.
+ERR_ESTUDIANTE_NO_PERTENECE_SESION|ERR007|Funcional|Error|ERR_ESTUDIANTE_NO_PERTENECE_SESION|El estudiante no pertenece al grupo de la sesión seleccionada.
 DOC_001|DOC001|Funcional|Error|DOC_001 - El docente especificado no existe o se…|El docente especificado no existe o se encuentra inactivo.
-ERR_DOCENTE_NO_EXISTE|ERR008|Funcional|Error|ERR_DOCENTE_NO_EXISTE - El docente especificado…|El docente especificado no existe o esta inactivo.
+ERR_DOCENTE_NO_EXISTE|ERR008|Funcional|Error|ERR_DOCENTE_NO_EXISTE - El docente especificado…|El docente especificado no existe o está inactivo.
 ERR_DOCENTE_NO_TITULAR_GRUPO|ERR009|Funcional|Error|ERR_DOCENTE_NO_TITULAR_GRUPO - El docente…|El docente indicado no es el titular del grupo seleccionado.
 PROG_001|PROG001|Funcional|Error|PROG_001 - El programa académico especificado no…|El programa académico especificado no existe en el sistema.
 FAC_001|FAC001|Funcional|Error|FAC_001 - La facultad especificada no existe en…|La facultad especificada no existe en el sistema.
@@ -39,8 +39,8 @@ FAC_002|FAC002|Funcional|Error|FAC_002 - El decano seleccionado ya es titular…
 COO_001|COO001|Funcional|Error|COO_001 - No se puede desactivar al coordinador…|No se puede desactivar al coordinador mientras tenga un programa activo a cargo. Reasigne o desactive el programa primero.
 ERR_PROGRAMA_GRUPO_NO_ENCONTRADO|ERR010|Funcional|Error|ERR_PROGRAMA_GRUPO_NO_ENCONTRADO|No se encontro un programa academico asociado a este grupo.
 GRUP_001|GRUP001|Funcional|Error|GRUP_001 - El grupo seleccionado no existe o no…|El grupo seleccionado no existe o no se encuentra habilitado.
-ERR_GRUPO_NO_EXISTE|ERR011|Funcional|Error|ERR_GRUPO_NO_EXISTE - El grupo seleccionado no…|El grupo seleccionado no existe o no esta habilitado.
-ERR_GRUPO_NO_HABILITADO|ERR012|Funcional|Error|ERR_GRUPO_NO_HABILITADO - El grupo seleccionado…|El grupo seleccionado no se encuentra habilitado para matricula.
+ERR_GRUPO_NO_EXISTE|ERR011|Funcional|Error|ERR_GRUPO_NO_EXISTE - El grupo seleccionado no…|El grupo seleccionado no existe o no está habilitado.
+ERR_GRUPO_NO_HABILITADO|ERR012|Funcional|Error|ERR_GRUPO_NO_HABILITADO - El grupo seleccionado…|El grupo seleccionado no se encuentra habilitado para matrícula.
 GRUP_002|GRUP002|Funcional|Error|GRUP_002 - El grupo ha alcanzado o superado la…|El grupo ha alcanzado o superado la capacidad máxima de estudiantes permitida.
 ERR_CUPO_SUPERADO|ERR013|Funcional|Error|ERR_CUPO_SUPERADO - El grupo ha superado la…|El grupo ha superado la capacidad maxima de estudiantes permitida.
 ERR_CAPACIDAD_GRUPO_INVALIDA|ERR014|Técnico|Error|ERR_CAPACIDAD_GRUPO_INVALIDA - No fue posible…|No fue posible determinar una capacidad máxima válida para el grupo.
@@ -54,7 +54,7 @@ HOR_003|HOR003|Funcional|Error|HOR_003 - Las franjas del horario del grupo no…
 HOR_004|HOR004|Funcional|Error|HOR_004 - El horario del grupo no es válido: ….|El horario del grupo no es válido: {}.
 HOR_005|HOR005|Funcional|Error|HOR_005 - El grupo ya tiene un horario definido…|El grupo ya tiene un horario definido. Para cambiarlo, solicita la aprobación del coordinador.
 SES_001|SES001|Funcional|Error|SES_001 - La sesión de clase especificada no…|La sesión de clase especificada no existe o no se encuentra activa.
-ERR_SESION_NO_EXISTE|ERR018|Funcional|Error|ERR_SESION_NO_EXISTE - La sesion de clase no…|La sesion de clase no existe o no esta abierta.
+ERR_SESION_NO_EXISTE|ERR018|Funcional|Error|ERR_SESION_NO_EXISTE - La sesion de clase no…|La sesión de clase no existe o no está abierta.
 SES_002|SES002|Funcional|Error|SES_002 - El código de verificación de…|El código de verificación de asistencia es incorrecto o ha expirado.
 SES_003|SES003|Funcional|Error|SES_003 - El cierre de sesión no está soportado…|El cierre de sesión no está soportado por el contrato vigente de base de datos.
 SES_004|SES004|Funcional|Error|SES_004 - La fecha y hora de fin de sesión debe…|La fecha y hora de fin de sesión debe ser posterior a la fecha y hora de inicio.
@@ -63,7 +63,7 @@ SES_006|SES006|Funcional|Error|SES_006 - La sesión no coincide con el…|La ses
 SES_007|SES007|Funcional|Error|SES_007 - La sesión de clase aún no ha iniciado…|La sesión de clase aún no ha iniciado; la asistencia solo se registra durante la sesión.
 SES_008|SES008|Funcional|Error|SES_008 - La sesión de clase ya finalizó; la…|La sesión de clase ya finalizó; la asistencia solo puede modificarse mediante un reclamo.
 SES_009|SES009|Funcional|Error|SES_009 - El horario de la sesión no está…|El horario de la sesión no está confirmado; no es posible registrar asistencia.
-ERR_TOKEN_VERIFICACION_INVALIDO|ERR019|Funcional|Error|ERR_TOKEN_VERIFICACION_INVALIDO|El codigo de verificacion de asistencia es incorrecto o ha expirado.
+ERR_TOKEN_VERIFICACION_INVALIDO|ERR019|Funcional|Error|ERR_TOKEN_VERIFICACION_INVALIDO|El código de verificación de asistencia es incorrecto o ha expirado.
 INST_001|INST001|Funcional|Error|INST_001 - El estudiante, programa y facultad…|El estudiante, programa y facultad deben pertenecer a la misma institución.
 ERR_PROGRAMA_FACULTAD_INCONSISTENTE|ERR020|Funcional|Error|ERR_PROGRAMA_FACULTAD_INCONSISTENTE|El programa académico indicado no pertenece a la facultad especificada.
 RC_001|RC001|Funcional|Error|RC_001 - El estado de asistencia … no…|El estado de asistencia {} no corresponde a una razón de causa válida.
@@ -93,9 +93,9 @@ ERR_INESPERADO_REGISTRO_ASISTENCIA|ERR024|Técnico|Error|ERR_INESPERADO_REGISTRO
 SUC_REGISTRO_ESTUDIANTE_GRUPO|SUC001|Funcional|Confirmación|SUC_REGISTRO_ESTUDIANTE_GRUPO - Se ha registrado…|Se ha registrado el estudiante en el grupo de forma satisfactoria.
 SUC_REGISTRO_DOCENTE_GRUPO|SUC002|Funcional|Confirmación|SUC_REGISTRO_DOCENTE_GRUPO - Se ha registrado el…|Se ha registrado el docente en el grupo de forma satisfactoria.
 SUC_REGISTRO_ASISTENCIA|SUC003|Funcional|Confirmación|SUC_REGISTRO_ASISTENCIA - Asistencia registrada…|Asistencia registrada de forma satisfactoria.
-ARC_001|ARC001|Funcional|Error|ARC_001 - El soporte indicado no esta disponible…|El soporte indicado no esta disponible para esta solicitud.
+ARC_001|ARC001|Funcional|Error|ARC_001 - El soporte indicado no esta disponible…|El soporte indicado no está disponible para esta solicitud.
 ARC_002|ARC002|Funcional|Error|ARC_002 - No fue posible registrar el soporte.|No fue posible registrar el soporte.
-ARC_003|ARC003|Funcional|Error|ARC_003 - Los datos del soporte no son validos.|Los datos del soporte no son validos.
+ARC_003|ARC003|Funcional|Error|ARC_003 - Los datos del soporte no son válidos.|Los datos del soporte no son válidos.
 ARC_005|ARC005|Funcional|Error|ARC_005 - El estudiante indicado no corresponde…|El estudiante indicado no corresponde al usuario autenticado.
 DOC_002|DOC002|Funcional|Error|DOC_002 - El usuario ya se encuentra registrado…|El usuario ya se encuentra registrado como docente.
 DOC_003|DOC003|Funcional|Error|DOC_003 - Ya existe una persona registrada con…|Ya existe una persona registrada con ese documento o correo. Use la opción "Vincular docente existente".
@@ -171,8 +171,8 @@ FES_002|FES002|Funcional|Error|FES_002 - El listado de festivos recibido no es�
 FES_003|FES003|Funcional|Error|FES_003 - El listado de festivos no tiene una…|El listado de festivos no tiene una cantidad válida de días.
 FES_004|FES004|Funcional|Error|FES_004 - La fuente de festivos no es válida.|La fuente de festivos no es válida.
 FES_005|FES005|Funcional|Confirmación|FES_005 - Se cargaron … días festivos de ….|Se cargaron {} días festivos de {}.
-FES_006|FES006|Funcional|Error|FES_006 - Indica el periodo académico o el año…|Indica el periodo académico o el año, no ambos.
-FES_007|FES007|Funcional|Error|FES_007 - El periodo académico no existe.|El periodo académico no existe.
+FES_006|FES006|Funcional|Error|FES_006 - Indica el periodo académico o el año…|Indica el período académico o el año, no ambos.
+FES_007|FES007|Funcional|Error|FES_007 - El período académico no existe.|El período académico no existe.
 FES_008|FES008|Funcional|Confirmación|FES_008 - Se cancelaron … sesiones por festivo…|Se cancelaron {} sesiones por festivo; {} sesiones con asistencia quedaron sin cambios.
 FES_009|FES009|Funcional|Error|FES_009 - Algunos grupos no se pudieron…|Algunos grupos no se pudieron actualizar con los festivos.
 FES_010|FES010|Técnico|Error|FES_010 - No fue posible obtener los festivos…|No fue posible obtener los festivos del año; se usó el cálculo local.
@@ -344,7 +344,7 @@ VAL_APP_064|VALAPP064|Funcional|Error|VAL_APP_064 - El tipo de programa es oblig
 VAL_APP_065|VALAPP065|Funcional|Error|VAL_APP_065 - El coordinador del programa es…|El coordinador del programa es obligatorio.
 VAL_APP_066|VALAPP066|Funcional|Error|VAL_APP_066 - El estado deseado del programa es…|El estado deseado del programa es obligatorio.
 VAL_APP_067|VALAPP067|Funcional|Error|VAL_APP_067 - Cada franja del horario es…|Cada franja del horario es obligatoria.
-VAL_APP_068|VALAPP068|Funcional|Error|VAL_APP_068 - El campo dias es obligatorio…|El campo dias es obligatorio cuando se envía el horario.
+VAL_APP_068|VALAPP068|Funcional|Error|VAL_APP_068 - El campo dias es obligatorio…|El campo días es obligatorio cuando se envía el horario.
 VAL_APP_069|VALAPP069|Funcional|Error|VAL_APP_069 - El campo … es obligatorio.|El campo {} es obligatorio.
 VAL_APP_070|VALAPP070|Funcional|Error|VAL_APP_070 - El campo … debe usar formato ISO…|El campo {} debe usar formato ISO local {}.
 VAL_APP_071|VALAPP071|Funcional|Error|VAL_APP_071 - Los datos de la consulta no son…|Los datos de la consulta no son válidos.

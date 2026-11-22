@@ -4,7 +4,7 @@ import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorDefinition;
 import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorKind;
 
 public enum SesionErrorCode implements ErrorDefinition {
-    ERR_SESION_NO_EXISTE("ERR_SESION_NO_EXISTE", "La sesion de clase no existe o no esta abierta.", ErrorKind.NOT_FOUND),
+    ERR_SESION_NO_EXISTE("ERR_SESION_NO_EXISTE", "La sesión de clase no existe o no está abierta.", ErrorKind.NOT_FOUND),
     ERR_SESION_REQUERIDA("ERR_SESION_REQUERIDA", "La sesión es obligatoria.", ErrorKind.VALIDATION),
     ERR_NOMBRE_SESION_REQUERIDO("ERR_NOMBRE_SESION_REQUERIDO", "El nombre de la sesión es obligatorio.", ErrorKind.VALIDATION),
     ERR_NOMBRE_SESION_LONGITUD_INVALIDA("ERR_NOMBRE_SESION_LONGITUD_INVALIDA", "El nombre de la sesión debe tener entre 1 y 50 caracteres.", ErrorKind.VALIDATION),
