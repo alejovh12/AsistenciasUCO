@@ -34,8 +34,6 @@ import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -459,12 +457,12 @@ public final class GlobalExceptionHandler {
             final HttpServletRequest request
     ) {
         LOGGER.error(
-                "Handled internal exception. status={}, code={}, path={}, correlationId={}, stackTrace={}",
+                "Handled internal exception. status={}, code={}, path={}, correlationId={}",
                 descriptor.status().value(),
                 descriptor.code(),
                 safePath(request),
                 CorrelationIdContext.getAsString(),
-                safeStackTrace(exception)
+                sanitizedCopy(exception)
         );
     }
 
@@ -472,9 +470,32 @@ public final class GlobalExceptionHandler {
         return SensitiveDataSanitizer.sanitizeForLog(request.getRequestURI(), 240);
     }
 
-    private String safeStackTrace(final Exception exception) {
-        final StringWriter writer = new StringWriter();
-        exception.printStackTrace(new PrintWriter(writer));
-        return SensitiveDataSanitizer.sanitizeForLog(writer.toString(), 8_000);
+    /**
+     * La traza viaja como throwable (ultimo argumento del logger) para que el encoder JSON la emita como {@code stack_trace}
+     * estructurado y no incrustada en el mensaje. Se copia con el mensaje saneado (sin credenciales ni datos sensibles) y la
+     * misma pila.
+     */
+    static Throwable sanitizedCopy(final Throwable original) {
+        return sanitizedCopy(original, java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>()));
+    }
+
+    /** Las causas ciclicas se cortan al volver a un throwable ya copiado. */
+    private static Throwable sanitizedCopy(final Throwable original, final java.util.Set<Throwable> vistos) {
+        vistos.add(original);
+        final Throwable causa = original.getCause();
+        final SanitizedThrowable copy = new SanitizedThrowable(original,
+                causa == null || vistos.contains(causa) ? null : sanitizedCopy(causa, vistos));
+        copy.setStackTrace(original.getStackTrace());
+        return copy;
+    }
+
+    /** Copia saneada de una excepcion: conserva el tipo original en el texto y la pila. */
+    static final class SanitizedThrowable extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+
+        SanitizedThrowable(final Throwable original, final Throwable cause) {
+            super(original.getClass().getName() + ": "
+                    + SensitiveDataSanitizer.sanitizeForLog(original.getMessage(), 2_000), cause, true, true);
+        }
     }
 }
