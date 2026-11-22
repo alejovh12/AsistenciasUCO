@@ -120,6 +120,17 @@ class ReactorRealtimeAdapterTest {
         assertEquals(0, adapter.activeSubscribersCount());
     }
 
+    /** M-09: publicar sin nadie conectado se cuenta aparte (y se registra en DEBUG), no es un fallo que merezca WARN. */
+    @Test
+    void publicar_sin_subscriptores_incrementa_el_contador_de_sin_suscriptores() {
+        final double antes = counter("realtime.events.no_subscribers");
+
+        adapter.publish(RealtimeEvent.of("SIN_SUBSCRIPTORES", Map.of()));
+        adapter.publish(RealtimeEvent.of("SIN_SUBSCRIPTORES", Map.of()));
+
+        assertEquals(antes + 2, counter("realtime.events.no_subscribers"));
+    }
+
     @Test
     void evento_publicado_antes_de_conectar_no_se_reproduce_a_un_subscriptor_tardio() {
         adapter.publish(RealtimeEvent.of("ANTES", Map.of()));

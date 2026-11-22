@@ -54,6 +54,7 @@ public final class ReactorRealtimeAdapter implements RealtimePublisherPort {
     private final Flux<RealtimeEvent> events;
     private final Counter publishedCounter;
     private final Counter droppedCounter;
+    private final Counter noSubscribersCounter;
     private final MeterRegistry meterRegistry;
 
     public ReactorRealtimeAdapter(final MeterRegistry meterRegistry) {
@@ -74,6 +75,10 @@ public final class ReactorRealtimeAdapter implements RealtimePublisherPort {
 
         this.droppedCounter = Counter.builder("realtime.events.dropped")
                 .description("Intentos realtime rechazados por el sink local, por ejemplo sin suscriptores o por concurrencia.")
+                .register(meterRegistry);
+
+        this.noSubscribersCounter = Counter.builder("realtime.events.no_subscribers")
+                .description("Eventos realtime publicados cuando no habia ningun cliente SSE conectado (subconjunto de los descartados).")
                 .register(meterRegistry);
     }
 
@@ -101,6 +106,13 @@ public final class ReactorRealtimeAdapter implements RealtimePublisherPort {
         }
 
         droppedCounter.increment();
+        if (result == Sinks.EmitResult.FAIL_ZERO_SUBSCRIBER) {
+            // Sin suscriptores no es un fallo: nadie escucha ese canal. Se cuenta, pero no ensucia el log por cada evento.
+            noSubscribersCounter.increment();
+            LOGGER.debug("Evento realtime sin suscriptores. type={} eventId={} correlationId={}",
+                    event.type(), event.eventId(), enriched.correlationId());
+            return;
+        }
         LOGGER.warn(
                 "Evento realtime descartado. type={} eventId={} correlationId={} emitResult={}",
                 event.type(), event.eventId(), enriched.correlationId(), result
