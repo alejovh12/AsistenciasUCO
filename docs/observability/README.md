@@ -64,7 +64,7 @@ detalles solo llevan host, puerto, emisor, estado HTTP y el tipo de error; nunca
 
 ## Muestreo de trazas (OBS-09)
 
-`management.tracing.sampling.probability` se fija con `MANAGEMENT_TRACING_SAMPLING_PROBABILITY` (por defecto `1.0`, todas las
+`management.tracing.sampling.probability` se fija con `MANAGEMENT_TRACING_SAMPLING_PROBABILITY` (por defecto `0.1`; el laboratorio lo fija en `1.0` desde `infra.ps1`, todas las
 trazas). Valores recomendados por ambiente:
 
 | Ambiente | Valor | Motivo |
