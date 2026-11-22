@@ -189,7 +189,7 @@ public final class ServicioNotificacionChannelSender implements NotificacionChan
     private Map<String, String> combinarDatos(final NotificacionPersistida notificacion, final List<UUID> idsUsuarios)
             throws NotificacionNoEntregableException {
         final Map<String, String> combinados = new LinkedHashMap<>(notificacion.datos());
-        final Map<String, String> dinamicos = marcadoresDinamicos.resolver(notificacion.tipo(), idsUsuarios);
+        final Map<String, String> dinamicos = marcadoresDinamicos.resolver(notificacion.id(), notificacion.tipo(), idsUsuarios);
         if (dinamicos != null) {
             combinados.putAll(dinamicos);
         }

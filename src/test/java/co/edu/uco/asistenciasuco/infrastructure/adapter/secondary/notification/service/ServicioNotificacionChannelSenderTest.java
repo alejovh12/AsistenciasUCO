@@ -187,6 +187,29 @@ class ServicioNotificacionChannelSenderTest {
         assertEquals(n.id().toString(), cuerpo(1).get("idempotencyKey").asText());
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {Notificacion.TIPO_VERIFICACION_CORREO, Notificacion.TIPO_ACTIVACION_CUENTA})
+    void el_reintento_tras_un_fallo_reenvia_el_mismo_enlace_y_no_revoca_el_ya_entregado(final String tipo) throws Exception {
+        final List<byte[]> registrados = new ArrayList<>();
+        final MarcadorDinamicoProvider real = new co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.verificacion
+                .VerificacionCorreoMarcadorProvider((idUsuario, hash) -> registrados.add(hash), "https://asistencia.uco.edu.co",
+                new java.security.SecureRandom());
+        final NotificacionesServiceProperties props = new NotificacionesServiceProperties(
+                servidor.url(), "clave", Duration.ofSeconds(1), Duration.ofSeconds(5), "asistencias", "es", false, "");
+        final ServicioNotificacionChannelSender sender = new ServicioNotificacionChannelSender(
+                new NotificacionesServiceClient(HttpClient.newHttpClient(), props, breaker, MAPPER),
+                ids -> contactos.stream().filter(c -> ids.contains(c.idUsuario())).toList(), real, props, metricas);
+        final NotificacionPersistida n = notificacion(tipo, usuario);
+        servidor.responder(503, "{\"code\":\"ERROR_INTERNO\",\"message\":\"x\"}");
+
+        assertThrows(RuntimeException.class, () -> sender.enviar(n));
+        servidor.responder(202, ACEPTADA);
+        sender.enviar(n);
+
+        assertEquals(cuerpo(0).get("datos").get("enlace").asText(), cuerpo(1).get("datos").get("enlace").asText());
+        assertEquals(1, registrados.size(), "el reintento no debe emitir otro token (revocaria el enlace ya entregado)");
+    }
+
     @Test
     void sin_destinatarios_con_correo_valido_es_definitivo_y_no_llama_al_servicio() {
         contactos = List.of(new ContactoDestinatario(usuario, "no es un correo", true));

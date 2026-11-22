@@ -83,6 +83,41 @@ class VerificacionCorreoMarcadorProviderTest {
     }
 
     @Test
+    void el_mismo_aviso_del_outbox_conserva_su_token_aunque_se_reintente() throws NotificacionNoEntregableException {
+        final VerificacionCorreoMarcadorProvider provider = provider(repositorioOk(), PLATFORM_URL);
+        final UUID aviso = UUID.randomUUID();
+        final List<UUID> destinatarios = List.of(USUARIO);
+
+        final String primero = provider.resolver(aviso, Notificacion.TIPO_VERIFICACION_CORREO, destinatarios).get("enlace");
+        final String reintento = provider.resolver(aviso, Notificacion.TIPO_VERIFICACION_CORREO, destinatarios).get("enlace");
+        final String otroAviso = provider.resolver(UUID.randomUUID(), Notificacion.TIPO_VERIFICACION_CORREO, destinatarios).get("enlace");
+
+        assertEquals(primero, reintento);
+        assertNotEquals(primero, otroAviso);
+        assertEquals(2, hashes.size(), "solo un registro por aviso: un reintento no revoca el enlace ya entregado");
+    }
+
+    @Test
+    void si_el_registro_falla_el_reintento_vuelve_a_intentarlo_en_lugar_de_recordar_un_token_no_registrado() throws NotificacionNoEntregableException {
+        final int[] llamadas = {0};
+        final VerificacionCorreoMarcadorProvider provider = provider((idUsuario, hash) -> {
+            if (llamadas[0]++ == 0) {
+                throw new IllegalStateException("BD caida");
+            }
+            hashes.add(hash);
+        }, PLATFORM_URL);
+        final UUID aviso = UUID.randomUUID();
+        final List<UUID> destinatarios = List.of(USUARIO);
+
+        assertThrows(IllegalStateException.class,
+                () -> provider.resolver(aviso, Notificacion.TIPO_VERIFICACION_CORREO, destinatarios));
+        final String enlace = provider.resolver(aviso, Notificacion.TIPO_VERIFICACION_CORREO, destinatarios).get("enlace");
+
+        assertEquals(1, hashes.size());
+        assertTrue(enlace.contains("#token="));
+    }
+
+    @Test
     void otros_tipos_no_emiten_token_ni_marcadores() throws NotificacionNoEntregableException {
         final List<UUID> destinatarios = List.of(USUARIO);
         final Map<String, String> marcadores =

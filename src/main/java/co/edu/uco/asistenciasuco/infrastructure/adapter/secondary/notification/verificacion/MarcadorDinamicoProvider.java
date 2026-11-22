@@ -18,4 +18,13 @@ public interface MarcadorDinamicoProvider {
     MarcadorDinamicoProvider NINGUNO = (tipo, idsUsuarios) -> Map.of();
 
     Map<String, String> resolver(String tipo, List<UUID> idsUsuarios) throws NotificacionNoEntregableException;
+
+    /**
+     * Igual que {@link #resolver(String, List)} pero identifica el aviso del outbox, para que un reintento del mismo aviso
+     * reciba los mismos marcadores (por ejemplo el mismo enlace) y no emita secretos nuevos que invaliden los ya entregados.
+     */
+    default Map<String, String> resolver(final UUID idNotificacion, final String tipo, final List<UUID> idsUsuarios)
+            throws NotificacionNoEntregableException {
+        return resolver(tipo, idsUsuarios);
+    }
 }

@@ -6,7 +6,11 @@ import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notific
 import co.edu.uco.asistenciasuco.crosscutting.util.TokenHashHelper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.outbox.NotificacionNoEntregableException;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +22,11 @@ import java.util.UUID;
  * {@link SecureRandom} en base64url) nunca se persiste ni se registra en logs: solo su SHA-256 llega a la base de datos.
  * IDENT-002: el aviso de activacion ({@code ACTIVACION_CUENTA}) usa el mismo token con la ruta {@code /activar-cuenta}.
  * El enlace usa el fragmento {@code #token=} para que el token no viaje en la peticion HTTP de la pagina ni en
- * {@code Referer}. Un correo ya verificado o un usuario inexistente es un fallo permanente; cualquier otro, reintentable.
+ * {@code Referer}.
+ * Idempotencia por aviso: registrar un token revoca el activo anterior del usuario, asi que reemitirlo en cada intento de
+ * despacho podia invalidar el enlace que ya habia llegado (2xx perdido tras entregar). Por eso el token se emite una sola vez por
+ * aviso del outbox y los reintentos reenvian el mismo enlace; el token vive solo en memoria (acotado y con vencimiento menor que el
+ * TTL del token) y, si el proceso se reinicia entre intentos, se emite uno nuevo. Un correo ya verificado o un usuario inexistente es un fallo permanente; cualquier otro, reintentable.
  */
 public final class VerificacionCorreoMarcadorProvider implements MarcadorDinamicoProvider {
 
@@ -26,10 +34,15 @@ public final class VerificacionCorreoMarcadorProvider implements MarcadorDinamic
     static final String RUTA_ACTIVACION = "/activar-cuenta#token=";
     static final String MARCADOR_ENLACE = "enlace";
     private static final int BYTES_TOKEN = 32;
+    private static final long MAX_AVISOS_RECORDADOS = 10_000;
+    /** Menor que TTL_HORAS (24 h) del token: pasado ese tiempo un reintento ya debe emitir un enlace vigente. */
+    private static final Duration VIGENCIA_ENLACE_RECORDADO = Duration.ofHours(12);
 
     private final TokenVerificacionCorreoRepository repositorio;
     private final String platformUrl;
     private final SecureRandom random;
+    private final Cache<UUID, String> enlacesPorAviso = Caffeine.newBuilder()
+            .maximumSize(MAX_AVISOS_RECORDADOS).expireAfterWrite(VIGENCIA_ENLACE_RECORDADO).build();
 
     public VerificacionCorreoMarcadorProvider(
             final TokenVerificacionCorreoRepository repositorio,
@@ -43,6 +56,12 @@ public final class VerificacionCorreoMarcadorProvider implements MarcadorDinamic
 
     @Override
     public Map<String, String> resolver(final String tipo, final List<UUID> idsUsuarios)
+            throws NotificacionNoEntregableException {
+        return resolver(null, tipo, idsUsuarios);
+    }
+
+    @Override
+    public Map<String, String> resolver(final UUID idNotificacion, final String tipo, final List<UUID> idsUsuarios)
             throws NotificacionNoEntregableException {
         final String ruta;
         if (Notificacion.TIPO_VERIFICACION_CORREO.equals(tipo)) {
@@ -61,6 +80,11 @@ public final class VerificacionCorreoMarcadorProvider implements MarcadorDinamic
                     "No hay URL de plataforma configurada para armar el enlace de verificacion.");
         }
 
+        final String recordado = idNotificacion == null ? null : enlacesPorAviso.getIfPresent(idNotificacion);
+        if (recordado != null) {
+            return Map.of(MARCADOR_ENLACE, recordado);
+        }
+
         final byte[] aleatorio = new byte[BYTES_TOKEN];
         random.nextBytes(aleatorio);
         final String token = Base64.getUrlEncoder().withoutPadding().encodeToString(aleatorio);
@@ -71,7 +95,11 @@ public final class VerificacionCorreoMarcadorProvider implements MarcadorDinamic
             throw new NotificacionNoEntregableException(
                     "El usuario ya verifico su correo o no esta disponible para verificarlo.", exception);
         }
-        return Map.of(MARCADOR_ENLACE, baseSinBarraFinal() + ruta + token);
+        final String enlace = baseSinBarraFinal() + ruta + token;
+        if (idNotificacion != null) {
+            enlacesPorAviso.put(idNotificacion, enlace);
+        }
+        return Map.of(MARCADOR_ENLACE, enlace);
     }
 
     private String baseSinBarraFinal() {
