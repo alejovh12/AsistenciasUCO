@@ -64,7 +64,7 @@ public final class AsistenciaController {
         solicitarRevisionAsistenciaInputPort.execute(dto);
 
         return ResponseEntity.status(HttpStatus.ACCEPTED)
-                .body(new ApiMessageResponse(true, "Solicitud de revision registrada correctamente."));
+                .body(new ApiMessageResponse(true, "Solicitud de revisión registrada correctamente."));
     }
 
     @PostMapping("/lote")
