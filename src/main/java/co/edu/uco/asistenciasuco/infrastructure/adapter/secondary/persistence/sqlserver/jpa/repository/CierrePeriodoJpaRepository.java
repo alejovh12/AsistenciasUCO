@@ -46,6 +46,8 @@ public class CierrePeriodoJpaRepository implements CierrePeriodoCommandPort, His
             FROM dbo.AuditoriaEvento a
             LEFT JOIN dbo.uv_periodo_academico p ON p.id = TRY_CAST(a.resourceId AS UNIQUEIDENTIFIER)
             WHERE a.action = 'CIERRE_MASIVO_PERIODO'
+              AND a.result = 'SUCCESS'
+              AND JSON_VALUE(a.metadata, '$.procesados') IS NOT NULL
             ORDER BY a.occurredAt DESC
             """;
 
