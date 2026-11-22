@@ -375,24 +375,70 @@ class AsistenciaQrUseCasesTest {
     }
 
     @Test
-    void registrar_reintenta_3_veces_ante_interbloqueo_con_espera_de_20_a_80_ms_y_luego_propaga() {
+    void registrar_reintenta_ante_interbloqueo_con_retroceso_exponencial_y_luego_propaga() {
         final AtomicInteger llamadas = new AtomicInteger();
         when(repositorio.registrarPorToken(TOKEN, null, USUARIO)).thenAnswer(invocacion -> {
-            if (llamadas.incrementAndGet() <= 3) {
+            if (llamadas.incrementAndGet() <= RegistrarAsistenciaPorTokenUseCaseImpl.MAX_REINTENTOS) {
                 throw new AsistenciaQrRepositoryPort.ConflictoConcurrenciaException("1205");
             }
             return registro(true);
         });
 
         assertTrue(registrar().execute(new RegistrarAsistenciaPorTokenInputPort.Comando(TOKEN, null, IP, USUARIO)).yaRegistrado());
-        assertEquals(4, llamadas.get());
-        assertEquals(3, esperas.size());
-        assertTrue(esperas.stream().allMatch(ms -> ms >= 20 && ms <= 80));
+        assertEquals(RegistrarAsistenciaPorTokenUseCaseImpl.MAX_REINTENTOS + 1, llamadas.get());
+        assertEquals(RegistrarAsistenciaPorTokenUseCaseImpl.MAX_REINTENTOS, esperas.size());
+        for (int i = 0; i < esperas.size(); i++) {
+            assertTrue(esperas.get(i) >= EsperaReintento.MINIMO_MS && esperas.get(i) <= EsperaReintento.ventanaMaximaMs(i + 1),
+                    "espera " + (i + 1) + " fuera de ventana: " + esperas.get(i));
+        }
 
+        esperas.clear();
         doThrow(new AsistenciaQrRepositoryPort.ConflictoConcurrenciaException("1205")).when(repositorio).registrarPorToken(TOKEN, null, USUARIO);
         assertThrows(AsistenciaQrRepositoryPort.ConflictoConcurrenciaException.class,
                 () -> registrar().execute(new RegistrarAsistenciaPorTokenInputPort.Comando(TOKEN, null, IP, USUARIO)));
-        assertEquals(6, esperas.size());
+        assertEquals(RegistrarAsistenciaPorTokenUseCaseImpl.MAX_REINTENTOS, esperas.size());
+        verifyNoInteractions(realtime);
+    }
+
+    @Test
+    void la_ventana_de_espera_crece_exponencialmente_con_tope_y_suma_menos_de_1_5_segundos() {
+        assertEquals(40, EsperaReintento.ventanaMaximaMs(1));
+        assertEquals(80, EsperaReintento.ventanaMaximaMs(2));
+        assertEquals(160, EsperaReintento.ventanaMaximaMs(3));
+        assertEquals(EsperaReintento.MAXIMO_MS, EsperaReintento.ventanaMaximaMs(4));
+        assertEquals(EsperaReintento.MAXIMO_MS, EsperaReintento.ventanaMaximaMs(500));
+        long acumulado = 0;
+        for (int intento = 1; intento <= RegistrarAsistenciaPorTokenUseCaseImpl.MAX_REINTENTOS; intento++) {
+            acumulado += EsperaReintento.ventanaMaximaMs(intento);
+        }
+        assertTrue(acumulado <= 1600, "espera acumulada maxima " + acumulado);
+    }
+
+    @Test
+    void un_error_de_negocio_no_se_reintenta_ni_espera() {
+        final AtomicInteger llamadas = new AtomicInteger();
+        when(repositorio.registrarPorToken(TOKEN, null, USUARIO)).thenAnswer(invocacion -> {
+            llamadas.incrementAndGet();
+            throw new ResourceNotFoundException("AQR_001", "Codigo invalido");
+        });
+
+        final var registrar = registrar();
+        final var comando = new RegistrarAsistenciaPorTokenInputPort.Comando(TOKEN, null, IP, USUARIO);
+        assertThrows(ResourceNotFoundException.class, () -> registrar.execute(comando));
+        assertEquals(1, llamadas.get());
+        assertTrue(esperas.isEmpty());
+    }
+
+    @Test
+    void el_reintento_tras_interbloqueo_que_ya_habia_confirmado_responde_ya_registrado_sin_segundo_aviso() {
+        when(repositorio.registrarPorToken(TOKEN, null, USUARIO))
+                .thenThrow(new AsistenciaQrRepositoryPort.ConflictoConcurrenciaException("1205"))
+                .thenReturn(registro(true));
+
+        final var resultado = registrar().execute(new RegistrarAsistenciaPorTokenInputPort.Comando(TOKEN, null, IP, USUARIO));
+        assertTrue(resultado.yaRegistrado());
+        assertEquals(1, esperas.size());
+        verifyNoInteractions(realtime);
     }
 
     @Test
