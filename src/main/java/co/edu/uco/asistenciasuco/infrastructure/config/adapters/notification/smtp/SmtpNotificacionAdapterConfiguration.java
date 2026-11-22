@@ -10,11 +10,11 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.o
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.PlantillaNotificacionJpaRepository;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.PlantillaNotificacionRepository;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.PlantillaPorDefectoCatalogo;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.MarcadorDinamicoProvider;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.verificacion.MarcadorDinamicoProvider;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.PlantillaRenderer;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.TokenVerificacionCorreoJpaRepository;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.TokenVerificacionCorreoRepository;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.VerificacionCorreoMarcadorProvider;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.verificacion.TokenVerificacionCorreoJpaRepository;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.verificacion.TokenVerificacionCorreoRepository;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.verificacion.VerificacionCorreoMarcadorProvider;
 import co.edu.uco.asistenciasuco.infrastructure.config.adapters.notification.condition.OutboxAdapterCondition;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.SmtpNotificationProperties;
 import io.micrometer.core.instrument.MeterRegistry;

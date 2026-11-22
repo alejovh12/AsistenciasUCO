@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template;
+package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.verificacion;
 
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.ProcedureResult;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.ProcedureResultMapper;

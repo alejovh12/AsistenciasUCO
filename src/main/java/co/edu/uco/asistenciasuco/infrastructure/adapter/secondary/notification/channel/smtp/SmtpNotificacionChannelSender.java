@@ -8,7 +8,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.o
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.outbox.NotificacionNoEntregableException;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.outbox.NotificacionPersistida;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.ContenidoRenderizado;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.MarcadorDinamicoProvider;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.verificacion.MarcadorDinamicoProvider;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.PlantillaPorDefectoCatalogo;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.PlantillaRenderer;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.SmtpNotificationProperties;

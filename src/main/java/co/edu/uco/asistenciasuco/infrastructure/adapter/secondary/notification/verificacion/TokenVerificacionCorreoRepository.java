@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template;
+package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.verificacion;
 
 import java.util.UUID;
 
