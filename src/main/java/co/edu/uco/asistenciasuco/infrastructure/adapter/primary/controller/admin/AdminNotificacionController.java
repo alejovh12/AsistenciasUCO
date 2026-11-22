@@ -213,7 +213,8 @@ public class AdminNotificacionController {
                 p.cuerpoActivo(),
                 p.actualizadoEn(),
                 marcadores,
-                versiones
+                versiones,
+                p.descripcion()
         );
     }
 
