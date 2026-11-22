@@ -246,7 +246,8 @@ public class AdminNotificacionController {
                 n.entregadoEn(),
                 n.codigoError(),
                 n.detalleError(),
-                n.referenciaTraza()
+                n.referenciaTraza(),
+                n.aplicacion()
         );
     }
 }

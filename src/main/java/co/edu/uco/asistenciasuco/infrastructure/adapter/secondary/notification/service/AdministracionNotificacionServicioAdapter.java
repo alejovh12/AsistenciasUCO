@@ -286,7 +286,8 @@ public final class AdministracionNotificacionServicioAdapter implements Administ
                 instante(nodo.path("entregadoEn")),
                 textoONulo(nodo, "codigoError"),
                 textoONulo(nodo, "detalleError"),
-                uuid(nodo.path("idCorrelacion")));
+                uuid(nodo.path("idCorrelacion")),
+                textoONulo(nodo, "aplicacion"));
     }
 
     private static String texto(final JsonNode nodo, final String campo, final String porDefecto) {

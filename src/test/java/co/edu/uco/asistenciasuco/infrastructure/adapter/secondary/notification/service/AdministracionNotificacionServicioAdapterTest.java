@@ -166,6 +166,7 @@ class AdministracionNotificacionServicioAdapterTest {
         assertEquals("SMTP_RECHAZADO", item.codigoError());
         assertNull(item.proximoIntentoEn());
         assertEquals(UUID.fromString(correlacion), item.referenciaTraza());
+        assertEquals("asistencias", item.aplicacion());
     }
 
     @Test

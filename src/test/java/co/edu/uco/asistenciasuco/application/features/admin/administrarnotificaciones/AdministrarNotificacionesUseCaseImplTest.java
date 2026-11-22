@@ -138,7 +138,7 @@ class AdministrarNotificacionesUseCaseImplTest {
     private static co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.NotificacionSalienteAdminProjection cola(
             final String estado, final java.time.Instant creado, final java.time.Instant entregado, final String codigoError) {
         return new co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.NotificacionSalienteAdminProjection(
-                UUID.randomUUID(), "T", "a", estado, estado, false, 1, 1, creado, null, entregado, codigoError, null, null);
+                UUID.randomUUID(), "T", "a", estado, estado, false, 1, 1, creado, null, entregado, codigoError, null, null, "asistencias");
     }
 
     private static co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.PaginaColaNotificacionProjection pagina(
