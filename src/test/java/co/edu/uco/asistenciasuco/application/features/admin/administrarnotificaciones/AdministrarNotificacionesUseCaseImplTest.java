@@ -106,6 +106,20 @@ class AdministrarNotificacionesUseCaseImplTest {
     }
 
     @Test
+    void estadoCanalPublico_responde_sin_historial_cuando_la_cola_del_servicio_no_esta_disponible() {
+        when(port.consultarEstadoCanal()).thenReturn(estado(true, true));
+        when(port.consultarCola(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.eq(1), org.mockito.ArgumentMatchers.eq(1), org.mockito.ArgumentMatchers.eq(admin)))
+                .thenThrow(new co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException("caido"));
+
+        final var publico = interactor.consultarEstadoCanalPublico(admin);
+
+        assertEquals(true, publico.canalActivo());
+        assertEquals(null, publico.ultimoEnvioUtc());
+        assertEquals(null, publico.ultimoError());
+    }
+
+    @Test
     void estadoCanalPublico_con_despachador_apagado_no_esta_activo() {
         when(port.consultarEstadoCanal()).thenReturn(estado(false, true));
         when(port.consultarCola(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.isNull(),

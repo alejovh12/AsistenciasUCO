@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.ApplicationException;
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.AdministrarNotificacionesUseCase;
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.admin.AdministracionNotificacionPort;
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.EstadoCanalNotificacionProjection;
@@ -51,7 +52,13 @@ public final class AdministrarNotificacionesUseCaseImpl implements AdministrarNo
     }
 
     private Optional<NotificacionSalienteAdminProjection> masReciente(final String codigoEstado, final UUID idUsuarioEjecutor) {
-        return port.consultarCola(codigoEstado, null, 1, 1, idUsuarioEjecutor).elementos().stream().findFirst();
+        try {
+            return port.consultarCola(codigoEstado, null, 1, 1, idUsuarioEjecutor).elementos().stream().findFirst();
+        } catch (final ApplicationException _) {
+            // F4: la cola vive en el Servicio de Notificaciones; si no responde, el estado del canal sigue contestando (sin
+            // ultimo envio ni ultimo error) en lugar de fallar con 503.
+            return Optional.empty();
+        }
     }
     @Override public List<TipoPlantillaAdminProjection> consultarPlantillas(final String idioma, final UUID idUsuarioEjecutor) { return port.consultarPlantillas(idioma, idUsuarioEjecutor); }
     @Override public VersionPlantillaProjection crearVersionPlantilla(final String tipo, final String idioma, final String asunto, final String cuerpo, final UUID creadoPor) { return port.crearVersionPlantilla(tipo, idioma, asunto, cuerpo, creadoPor); }

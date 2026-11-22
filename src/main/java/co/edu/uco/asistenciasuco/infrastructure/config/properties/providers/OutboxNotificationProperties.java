@@ -97,8 +97,14 @@ public record OutboxNotificationProperties(
         return host + "-" + hex;
     }
 
+    /**
+     * Canal de salida del outbox. {@code SERVICIO} es el Servicio de Notificaciones UCO; {@code SMTP} se conserva solo como
+     * alias heredado de {@code SERVICIO} para no romper un {@code .env} existente. Vacio significa «automatico»: servicio si
+     * hay URL configurada y log en caso contrario (lo decide {@code OutboxSenderServicioCondition}, no este valor).
+     */
     public enum Sender {
         LOG,
+        SERVICIO,
         SMTP
     }
 }

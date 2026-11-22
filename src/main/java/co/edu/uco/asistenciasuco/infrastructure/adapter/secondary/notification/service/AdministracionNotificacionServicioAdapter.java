@@ -10,6 +10,7 @@ import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificac
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.VersionPlantillaProjection;
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.VistaPreviaPlantillaProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.admin.AdministracionNotificacionPort;
+import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.CommonErrorCode;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.contact.ContactoDestinatario;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.contact.ContactoDestinatarioResolver;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.NotificacionesServiceProperties;
@@ -215,7 +216,8 @@ public final class AdministracionNotificacionServicioAdapter implements Administ
     }
 
     private static ValidationException sinCorreoDeDestino() {
-        return new ValidationException("Indique un correo de destino: el administrador no tiene un correo registrado.");
+        return new ValidationException(CommonErrorCode.VALIDATION_ERROR,
+                "Indique un correo de destino: el administrador no tiene un correo registrado.");
     }
 
     private RespuestaServicio llamar(final Supplier<RespuestaServicio> llamada) {

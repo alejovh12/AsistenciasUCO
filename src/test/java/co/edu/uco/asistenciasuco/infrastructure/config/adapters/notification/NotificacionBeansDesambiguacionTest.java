@@ -1,10 +1,9 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.adapters.notification;
 
-import co.edu.uco.asistenciasuco.infrastructure.config.adapters.notification.smtp.SmtpNotificacionAdapterConfiguration;
+import co.edu.uco.asistenciasuco.infrastructure.config.adapters.notification.servicio.ServicioNotificacionesAdapterConfiguration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -14,83 +13,40 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * QUALITY-SONAR-RELIABILITY (java:S9352): cuando dos Composition Roots declaran beans del mismo tipo
- * (Admin y Smtp), cada punto de inyeccion de la configuracion SMTP debe resolverse sin ambiguedad,
- * es decir, exactamente un candidato marcado {@code @Primary}.
+ * QUALITY-SONAR-RELIABILITY (java:S9352): el modulo de notificaciones tiene un unico Composition Root con beans propios
+ * (F4: ya no coexisten la configuracion de administracion y la del canal SMTP). Cada dependencia concreta de sus fabricas
+ * debe tener a lo sumo un candidato dentro de ese Composition Root, de modo que ninguna se resuelva por ambiguedad.
  */
 class NotificacionBeansDesambiguacionTest {
 
-    private static final List<Class<?>> COMPOSITION_ROOTS = List.of(
-            AdminNotificacionAdapterConfiguration.class,
-            SmtpNotificacionAdapterConfiguration.class
-    );
-
     @Test
-    @DisplayName("S9352: cada dependencia concreta de la configuracion SMTP con varios candidatos tiene un unico @Primary")
-    void dependencias_de_smtp_con_varios_candidatos_tienen_un_unico_primary() {
+    @DisplayName("S9352: cada dependencia de las fabricas del servicio de notificaciones tiene a lo sumo un candidato en su Composition Root")
+    void las_dependencias_no_tienen_candidatos_ambiguos() {
         final List<String> ambiguas = new ArrayList<>();
-        for (final Method factory : beanMethods(SmtpNotificacionAdapterConfiguration.class)) {
+        for (final Method factory : beanMethods()) {
             for (final Parameter dependencia : factory.getParameters()) {
-                final List<Method> candidatos = candidatosAsignables(dependencia.getType());
-                final long primarios = candidatos.stream().filter(m -> m.isAnnotationPresent(Primary.class)).count();
-                if (candidatos.size() > 1 && primarios != 1) {
-                    ambiguas.add(factory.getName() + "(" + dependencia.getType().getSimpleName() + ") candidatos="
-                            + candidatos.stream().map(Method::getName).toList() + " primarios=" + primarios);
+                final List<String> candidatos = beanMethods().stream()
+                        .filter(m -> dependencia.getType().isAssignableFrom(m.getReturnType()))
+                        .map(Method::getName)
+                        .toList();
+                if (candidatos.size() > 1) {
+                    ambiguas.add(factory.getName() + "(" + dependencia.getType().getSimpleName() + ") candidatos=" + candidatos);
                 }
             }
         }
-        assertThat(ambiguas)
-                .as("dependencias ambiguas sin @Primary unico")
-                .isEmpty();
+        assertThat(ambiguas).as("dependencias con mas de un candidato").isEmpty();
     }
 
     @Test
-    @DisplayName("S9352: las dependencias de tipo repositorio y catalogo de plantillas si tienen varios candidatos (el guard es efectivo)")
-    void el_guard_detecta_los_candidatos_duplicados_conocidos() {
-        final List<String> tipos = List.of("PlantillaNotificacionRepository", "PlantillaPorDefectoCatalogo");
-        for (final String tipo : tipos) {
-            final long candidatos = beanMethods(AdminNotificacionAdapterConfiguration.class).stream()
-                    .filter(m -> m.getReturnType().getSimpleName().startsWith("Plantilla"))
-                    .filter(m -> tipoAsignable(tipo, m.getReturnType()))
-                    .count()
-                    + beanMethods(SmtpNotificacionAdapterConfiguration.class).stream()
-                    .filter(m -> tipoAsignable(tipo, m.getReturnType()))
-                    .count();
-            assertThat(candidatos).as("candidatos para " + tipo).isGreaterThan(1);
-        }
+    @DisplayName("S9352: el guard es efectivo: hay fabricas con dependencias que resolver")
+    void el_guard_revisa_fabricas_reales() {
+        assertThat(beanMethods()).isNotEmpty();
+        assertThat(beanMethods().stream().flatMap(m -> java.util.Arrays.stream(m.getParameters())).count()).isGreaterThan(5);
     }
 
-    private static boolean tipoAsignable(final String nombreTipo, final Class<?> retorno) {
-        Class<?> actual = retorno;
-        while (actual != null) {
-            if (actual.getSimpleName().equals(nombreTipo)) {
-                return true;
-            }
-            for (final Class<?> interfaz : actual.getInterfaces()) {
-                if (interfaz.getSimpleName().equals(nombreTipo)) {
-                    return true;
-                }
-            }
-            actual = actual.getSuperclass();
-        }
-        return false;
-    }
-
-    private static List<Method> candidatosAsignables(final Class<?> tipo) {
-        final List<Method> candidatos = new ArrayList<>();
-        for (final Class<?> raiz : COMPOSITION_ROOTS) {
-            for (final Method metodo : beanMethods(raiz)) {
-                if (tipo.isAssignableFrom(metodo.getReturnType())) {
-                    candidatos.add(metodo);
-                }
-            }
-        }
-        return candidatos;
-    }
-
-    private static List<Method> beanMethods(final Class<?> raiz) {
+    private static List<Method> beanMethods() {
         final List<Method> metodos = new ArrayList<>();
-        for (final Method metodo : raiz.getDeclaredMethods()) {
+        for (final Method metodo : ServicioNotificacionesAdapterConfiguration.class.getDeclaredMethods()) {
             if (metodo.isAnnotationPresent(Bean.class)) {
                 metodos.add(metodo);
             }

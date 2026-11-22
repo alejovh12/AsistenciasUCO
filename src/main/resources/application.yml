@@ -79,6 +79,20 @@ server:
 asistencias:
   swagger-ui:
     enabled: ${ASISTENCIAS_SWAGGER_UI_ENABLED:false}
+  # F4: Servicio de Notificaciones UCO (plantillas, cola y envio SMTP viven alla; ver Complementos/Notificaciones). Sin URL el
+  # canal del outbox es el de log y la administracion de plantillas responde 503. La clave es un secreto: nunca en el repositorio.
+  notificaciones:
+    service:
+      url: ${NOTIFICACIONES_SERVICE_URL:}
+      api-key: ${NOTIFICACIONES_API_KEY:}
+      connect-timeout: ${NOTIFICACIONES_SERVICE_CONNECT_TIMEOUT:2s}
+      read-timeout: ${NOTIFICACIONES_SERVICE_READ_TIMEOUT:10s}
+      aplicacion: ${NOTIFICACIONES_APLICACION:asistencias}
+      idioma: ${NOTIFICACIONES_IDIOMA:es}
+      # Solo se envia a correos confirmados (verificacion y activacion son la excepcion). Alias heredado: SMTP_NOTIFICATION_*.
+      require-confirmed-email: ${NOTIFICACIONES_REQUIRE_CONFIRMED_EMAIL:${SMTP_NOTIFICATION_REQUIRE_CONFIRMED_EMAIL:false}}
+      # URL publica del frontend para armar los enlaces de verificacion y activacion (vacio => sin enlace).
+      platform-url: ${NOTIFICACIONES_PLATFORM_URL:${SMTP_NOTIFICATION_PLATFORM_URL:}}
 
 management:
   # CULM-001 D.9-a (F-TRX-020): Actuator y Prometheus salen por un puerto de gestion propio, solo en loopback; el puerto de la
@@ -200,6 +214,12 @@ resilience4j:
         base-config: default
         wait-duration-in-open-state: ${RESILIENCE_CB_STORAGE_WAIT_DURATION_IN_OPEN_STATE:30s}
         slow-call-duration-threshold: ${RESILIENCE_CB_STORAGE_SLOW_CALL_DURATION_THRESHOLD:10s}
+      # F4: llamadas al Servicio de Notificaciones. Con el breaker abierto el canal informa no disponible (el despachador no
+      # consume intentos) y la administracion responde 503. Un 4xx no cuenta como falla.
+      notificacionesServicio:
+        base-config: default
+        wait-duration-in-open-state: ${RESILIENCE_CB_NOTIFICACIONES_WAIT_DURATION_IN_OPEN_STATE:30s}
+        slow-call-duration-threshold: ${RESILIENCE_CB_NOTIFICACIONES_SLOW_CALL_DURATION_THRESHOLD:8s}
       malwareScan:
         base-config: default
         wait-duration-in-open-state: ${RESILIENCE_CB_MALWARE_SCAN_WAIT_DURATION_IN_OPEN_STATE:30s}
@@ -520,7 +540,7 @@ app:
       connect-timeout-millis: ${CLAMAV_CONNECT_TIMEOUT_MILLIS:5000}
       read-timeout-millis: ${CLAMAV_READ_TIMEOUT_MILLIS:15000}
     outbox-notification:
-      sender: ${OUTBOX_NOTIFICATION_SENDER:log}               # log | smtp
+      sender: ${OUTBOX_NOTIFICATION_SENDER:}                  # vacio (automatico: servicio si hay NOTIFICACIONES_SERVICE_URL, si no log) | servicio | log; smtp es alias heredado de servicio
       dispatcher-enabled: ${OUTBOX_NOTIFICATION_DISPATCHER_ENABLED:true}
       batch-size: ${OUTBOX_NOTIFICATION_BATCH_SIZE:50}        # 1..500
       lease: ${OUTBOX_NOTIFICATION_LEASE:60s}                 # 5s..1h
@@ -531,29 +551,9 @@ app:
       retention-days: ${OUTBOX_NOTIFICATION_RETENTION_DAYS:30}   # 1..3650
       retention-interval: ${OUTBOX_NOTIFICATION_RETENTION_INTERVAL:6h}
       instance-id: ${OUTBOX_NOTIFICATION_INSTANCE_ID:}        # vacío => <hostname>-<8 hex aleatorios>
-    smtp-notification:
-      host: ${SMTP_NOTIFICATION_HOST:}
-      port: ${SMTP_NOTIFICATION_PORT:587}
-      username: ${SMTP_NOTIFICATION_USERNAME:}
-      password: ${SMTP_NOTIFICATION_PASSWORD:}                # nunca en el repositorio
-      starttls: ${SMTP_NOTIFICATION_STARTTLS:true}
-      ssl: ${SMTP_NOTIFICATION_SSL:false}
-      from-address: ${SMTP_NOTIFICATION_FROM_ADDRESS:}
-      from-name: ${SMTP_NOTIFICATION_FROM_NAME:Asistencia UCO}
-      connect-timeout: ${SMTP_NOTIFICATION_CONNECT_TIMEOUT:10s}
-      read-timeout: ${SMTP_NOTIFICATION_READ_TIMEOUT:20s}
-      max-bcc: ${SMTP_NOTIFICATION_MAX_BCC:50}                # 1..100
-      rate-per-minute: ${SMTP_NOTIFICATION_RATE_PER_MINUTE:60}     # 1..10000
-      rate-per-day: ${SMTP_NOTIFICATION_RATE_PER_DAY:500}          # >= rate-per-minute
-      require-confirmed-email: ${SMTP_NOTIFICATION_REQUIRE_CONFIRMED_EMAIL:false}
-      platform-url: ${SMTP_NOTIFICATION_PLATFORM_URL:}        # vacío => el correo no incluye enlace (si se define: http:// o https://)
-      template-cache-ttl: ${SMTP_NOTIFICATION_TEMPLATE_CACHE_TTL:60s}
-      test-mode:
-        enabled: ${SMTP_NOTIFICATION_TEST_MODE_ENABLED:false} # D15: true => redirige TODO a redirect-to
-        redirect-to: ${SMTP_NOTIFICATION_TEST_MODE_REDIRECT_TO:} # 1..5 direcciones separadas por coma; obligatorio si enabled=true
 
   # SEC-02 (VAL-oleada3-baul-secretos): con app.adapters.vault.provider=azure_keyvault los secretos de ejecucion
-  # (BD, Keycloak, PDP/PEP, MinIO, SMTP, webhook Event Grid) se leen del baul al arrancar; un secreto ausente en el baul
+  # (BD, Keycloak, PDP/PEP, MinIO, notificaciones, webhook Event Grid) se leen del baul al arrancar; un secreto ausente en el baul
   # cae a su variable de entorno. Inventario: docs/security/SECRETS_INVENTORY.md. false desactiva solo esta carga.
   secrets:
     runtime-from-vault:

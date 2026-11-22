@@ -17,14 +17,6 @@ public enum DependenciaErrorCode implements SpecErrorDefinition {
      */
     ERR_BD_NO_DISPONIBLE(new ErrorSpec("ERR_BD_NO_DISPONIBLE",
             "El servicio no está disponible en este momento. Intenta de nuevo en unos minutos.",
-            ErrorKind.SERVICE_UNAVAILABLE)),
-    /**
-     * F4 (Servicio de Notificaciones): la administracion de plantillas y de la cola no pudo hablar con el servicio (caido, tiempo
-     * agotado, circuit breaker abierto, sin configurar o clave API rechazada). Se publica como 503. Pendiente: sembrar este
-     * codigo en el catalogo de mensajes de la BD (F5); mientras tanto se usa el texto de aqui.
-     */
-    ERR_NOTIFICACIONES_NO_DISPONIBLE(new ErrorSpec("ERR_NOTIFICACIONES_NO_DISPONIBLE",
-            "El servicio de notificaciones no está disponible en este momento. Intente de nuevo en unos minutos.",
             ErrorKind.SERVICE_UNAVAILABLE));
 
     private final ErrorSpec spec;
