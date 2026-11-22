@@ -154,6 +154,7 @@ public final class DbExceptionTranslator {
             MensajeUsuarioErrorCode.HOR_006,
             MensajeUsuarioErrorCode.HOR_009,
             MensajeUsuarioErrorCode.ASI_014,
+            MensajeUsuarioErrorCode.PER_012,
             MensajeUsuarioErrorCode.PER_010,
             MensajeUsuarioErrorCode.SES_005,
             // DEC-081: receso academico (festivo, repetido, periodo cerrado y dia ya aplicado).
@@ -207,6 +208,8 @@ public final class DbExceptionTranslator {
             AdmisionEstudianteErrorCode.ADS_005,
             AdmisionEstudianteErrorCode.ADS_006,
             MensajeUsuarioErrorCode.EST_009,
+            MensajeUsuarioErrorCode.EST_010,
+            MensajeUsuarioErrorCode.EST_011,
             // SES-GEN-01: duracion y ventana de la franja, horas de la materia y duracion del periodo (400).
             MensajeUsuarioErrorCode.HOR_007,
             MensajeUsuarioErrorCode.HOR_008,
@@ -244,6 +247,9 @@ public final class DbExceptionTranslator {
             CatalogoErrorCode.ASI_010,
             MensajeUsuarioErrorCode.ASI_013,
             MensajeUsuarioErrorCode.ASI_014,
+            MensajeUsuarioErrorCode.PER_012,
+            MensajeUsuarioErrorCode.EST_010,
+            MensajeUsuarioErrorCode.EST_011,
             MensajeUsuarioErrorCode.PER_010,
             MensajeUsuarioErrorCode.PER_011,
             MensajeUsuarioErrorCode.SES_005,

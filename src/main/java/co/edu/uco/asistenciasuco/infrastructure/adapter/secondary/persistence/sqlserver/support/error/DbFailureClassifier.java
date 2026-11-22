@@ -221,6 +221,10 @@ final class DbFailureClassifier {
             case "ASI_013" -> MensajeUsuarioErrorCode.ASI_013;
             // Revision final BE-1: asignatura sin vinculo activo a un plan activo de los programas del coordinador (409).
             case "ASI_014" -> MensajeUsuarioErrorCode.ASI_014;
+            // Revision final BE-4: periodos solapados (BD-3, 409) y matricula manual sin programa comun (BD-4, 400).
+            case "PER_012" -> MensajeUsuarioErrorCode.PER_012;
+            case "EST_010" -> MensajeUsuarioErrorCode.EST_010;
+            case "EST_011" -> MensajeUsuarioErrorCode.EST_011;
             case "PER_011" -> MensajeUsuarioErrorCode.PER_011;
             // DEC-081: receso academico (migracion 68). 400 fecha/motivo invalidos, 404 inexistente, 409 festivo/repetido/cerrado/aplicado.
             case "REC_003" -> MensajeUsuarioErrorCode.REC_003;

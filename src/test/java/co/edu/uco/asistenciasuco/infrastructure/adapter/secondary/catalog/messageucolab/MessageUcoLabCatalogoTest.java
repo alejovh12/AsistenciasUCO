@@ -79,7 +79,8 @@ class MessageUcoLabCatalogoTest {
         // SES-GEN-01 (migracion 64 de BD): + ASI_013, ASI_014, PER_011, VAL_APP_076 y HOR_006 a HOR_014; PER_010 sigue siendo un solo codigo.
         // REA-02 (revision final P3, migracion 67 de BD): + ERR_BD_NO_DISPONIBLE (ERR122).
         // DEC-081 (migracion 68 de BD): + REC_001..REC_011 (receso academico; todos caben en 10 caracteres, sin alias).
-        assertEquals(521, catalogo().size());
+        // Revision final P3 (seed 73 de BD): + PER_012 (periodos solapados), EST_010 y EST_011 (matricula manual con programa comun).
+        assertEquals(524, catalogo().size());
     }
 
     @Test

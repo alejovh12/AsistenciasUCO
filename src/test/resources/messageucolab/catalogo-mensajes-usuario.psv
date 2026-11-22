@@ -520,3 +520,6 @@ REC_008|REC008|Funcional|Error|REC_008 - El motivo del receso es obligatorio y�
 REC_009|REC009|Funcional|Error|REC_009 - El día de receso académico no existe o…|El día de receso académico no existe o ya fue retirado.
 REC_010|REC010|Funcional|Error|REC_010 - Este día de receso ya canceló … clases…|Este día de receso ya canceló {} clases y no se puede retirar ni cambiar.
 REC_011|REC011|Funcional|Información|REC_011 - … h caen en días de receso académico…|{} h caen en días de receso académico ({} sesión(es)); esas sesiones quedan canceladas.
+PER_012|PER012|Funcional|Error|PER_012 - Las fechas del período se cruzan con…|Las fechas del período se cruzan con el período {}; los períodos de la institución no pueden solaparse.
+EST_010|EST010|Funcional|Error|EST_010 - El estudiante no pertenece a ningún…|El estudiante no pertenece a ningún programa de este grupo; solo puedes matricular estudiantes de los programas del grupo.
+EST_011|EST011|Funcional|Error|EST_011 - El programa indicado no es uno de…|El programa indicado no es uno de los programas del estudiante; elige uno de sus programas del grupo.

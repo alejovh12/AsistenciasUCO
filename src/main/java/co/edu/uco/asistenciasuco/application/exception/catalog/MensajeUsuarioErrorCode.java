@@ -137,6 +137,14 @@ public enum MensajeUsuarioErrorCode implements ErrorDefinition {
             "El nuevo horario se cruza con otros grupos de {} estudiante(s) inscrito(s) en la franja {}."),
     // Revision final BE-1: la asignatura no tiene vinculo activo con un plan activo de los programas del coordinador (usp_crear_grupo y
     // usp_previsualizar_horario_grupo); antes llegaba sin clasificar como un 500.
+    // Revision final BE-4 (BD-3): fechas del periodo que se cruzan con otro periodo de la institucion (con su nombre en el texto).
+    PER_012("PER_012", ErrorKind.CONFLICT,
+            "Las fechas del período se cruzan con el período {}; los períodos de la institución no pueden solaparse."),
+    // Revision final BE-4 (BD-4): matricula manual solo con un programa comun entre el estudiante y el grupo (misma familia que EST_006: 400).
+    EST_010("EST_010", ErrorKind.VALIDATION,
+            "El estudiante no pertenece a ningún programa de este grupo; solo puedes matricular estudiantes de los programas del grupo."),
+    EST_011("EST_011", ErrorKind.VALIDATION,
+            "El programa indicado no es uno de los programas del estudiante; elige uno de sus programas del grupo."),
     ASI_014("ASI_014", ErrorKind.CONFLICT,
             "La asignatura no tiene un vínculo activo con un plan activo de los programas que coordinas."),
     ASI_013("ASI_013", ErrorKind.VALIDATION, "Las horas semanales de la materia deben ser un entero entre 1 y {}."),
