@@ -105,7 +105,9 @@ class OperationalReadinessConfigurationTest {
     void f12_08_pool_de_conexiones_dimensionado_por_variable_y_por_replica() {
         assertEquals("${SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE:10}", valor("spring.datasource.hikari.maximum-pool-size"));
         assertEquals("${SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE:10}", valor("spring.datasource.hikari.minimum-idle"));
-        assertEquals("${SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT:30000}", valor("spring.datasource.hikari.connection-timeout"));
+        // Falla rapida con SQL Server caido (503 ERR_BD_NO_DISPONIBLE): 5 s en vez de los 30 s por defecto de Hikari.
+        assertEquals("${SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT:5000}", valor("spring.datasource.hikari.connection-timeout"));
+        assertEquals("${SPRING_DATASOURCE_LOGIN_TIMEOUT_SECONDS:5}", valor("spring.datasource.hikari.data-source-properties.loginTimeout"));
     }
 
     @Test

@@ -12,7 +12,12 @@ spring:
     hikari:
       maximum-pool-size: ${SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE:10}
       minimum-idle: ${SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE:10}
-      connection-timeout: ${SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT:30000}
+      # Con SQL Server caido la API debe responder 503 ERR_BD_NO_DISPONIBLE pronto: espera maxima de una conexion del pool
+      # (ms, minimo 250) y tiempo de login del driver (s) acotados a 5; configurables por variable. Ver
+      # docs/architecture/degradacion-por-dependencia.md.
+      connection-timeout: ${SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT:5000}
+      data-source-properties:
+        loginTimeout: ${SPRING_DATASOURCE_LOGIN_TIMEOUT_SECONDS:5}
   # LB-008 / JPA-02A: bootstrap JPA estandar de Spring Boot. Hibernate no administra el schema;
   # ddl-auto permanece deshabilitado y el acceso a metadata JDBC se controla desde la configuracion JPA.
   jpa:

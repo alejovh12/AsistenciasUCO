@@ -46,3 +46,19 @@ el texto sale del respaldo del enum (mismo significado). Se registra una sola l�
 
 - **Emisor de identidad:** medir cuánto tiempo siguen validando los tokens con el emisor caído (caché de JWKS).
 - **SQL Server caído:** medirlo en un entorno propio (hoy solo hay prueba automática).
+
+### Tiempo de espera con SQL Server caído
+
+Con la BD apagada la respuesta 503 llega tras la espera por una conexión del pool, no antes. Por defecto (Hikari) eran 30 s; ahora
+son **5 s** y se ajustan por variable:
+
+| Variable | Defecto | Efecto |
+| :--- | :--- | :--- |
+| `SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT` | `5000` (ms; mínimo de Hikari 250) | Espera máxima de una petición por una conexión; al vencer, `SQLTransientConnectionException` → 503 `ERR_BD_NO_DISPONIBLE`. |
+| `SPRING_DATASOURCE_LOGIN_TIMEOUT_SECONDS` | `5` (s) | `loginTimeout` del driver (`hikari.data-source-properties`), para que un intento de conexión colgado no supere el plazo del pool. |
+
+No hay bucle de reintentos que multiplique la espera: `open-in-view` está apagado, cada petición obtiene la conexión una sola vez al abrir su
+transacción, y el único reintento de la capa de aplicación (registro por QR, hasta 3 veces) solo aplica a interbloqueos SQL 1205, no a
+conexiones caídas. Peor caso por petición: el plazo configurado. Subirlo solo si el arranque o los picos de latencia de red lo exigen.
+Prueba: `OperationalReadinessConfigurationTest.f12_08_pool_de_conexiones_dimensionado_por_variable_y_por_replica`. Sin medición en vivo
+(SQL Server compartido).
