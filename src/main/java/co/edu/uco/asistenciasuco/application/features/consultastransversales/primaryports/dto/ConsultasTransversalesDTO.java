@@ -94,7 +94,12 @@ public final class ConsultasTransversalesDTO {
                                       int asistencias, int faltasSinJustaCausa, int excusas,
                                       BigDecimal porcentajeAsistencia, BigDecimal porcentajeInasistencia,
                                       int estudiantesRiesgo, int estudiantesPerdida, BigDecimal horasDictadas,
-                                      BigDecimal porcentajeExcusa, BigDecimal porcentajeSinRegistro, String codigoPermanencia) {
+                                      BigDecimal porcentajeExcusa, BigDecimal porcentajeSinRegistro, String codigoPermanencia,
+                                      BigDecimal porcentajePorDictar) {
+        /** Forma previa a la revision final P3 (BD-8): sin porcentajePorDictar (nulo). */
+        public ConsolidadoGrupoDTO(UUID idGrupo, Integer codigoGrupo, String nombreGrupo, UUID idPeriodoAcademico, String nombrePeriodoAcademico, UUID idPrograma, String nombrePrograma, UUID idAsignatura, String nombreAsignatura, UUID idDocente, String nombreDocente, int estudiantesActivos, int sesionesEjecutadas, int asistencias, int faltasSinJustaCausa, int excusas, BigDecimal porcentajeAsistencia, BigDecimal porcentajeInasistencia, int estudiantesRiesgo, int estudiantesPerdida, BigDecimal horasDictadas, BigDecimal porcentajeExcusa, BigDecimal porcentajeSinRegistro, String codigoPermanencia) {
+            this(idGrupo, codigoGrupo, nombreGrupo, idPeriodoAcademico, nombrePeriodoAcademico, idPrograma, nombrePrograma, idAsignatura, nombreAsignatura, idDocente, nombreDocente, estudiantesActivos, sesionesEjecutadas, asistencias, faltasSinJustaCausa, excusas, porcentajeAsistencia, porcentajeInasistencia, estudiantesRiesgo, estudiantesPerdida, horasDictadas, porcentajeExcusa, porcentajeSinRegistro, codigoPermanencia, null);
+        }
     }
 
     public record EventoAuditoriaDTO(UUID id, OffsetDateTime ocurridoEn, String idActor, String tipoActor,
