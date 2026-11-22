@@ -16,6 +16,7 @@ import co.edu.uco.asistenciasuco.application.features.sesioncalendario.exception
 import co.edu.uco.asistenciasuco.application.features.asistenciaqr.exception.AsistenciaQrErrorCode;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.exception.TomaAsistenciaErrorCode;
 import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
+import co.edu.uco.asistenciasuco.application.features.matriculaqr.exception.MatriculaQrErrorCode;
 import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.exception.TipoIdentificacionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
@@ -144,6 +145,8 @@ public final class DbExceptionTranslator {
             RevisionCancelacionErrorCode.RCN_014,
             // FIX-CIERRE-002: cierre masivo de un periodo que aun no termino.
             MensajeUsuarioErrorCode.PER_007,
+            // DEC-078: grupo compartido por varios programas, el estudiante debe elegir el suyo.
+            MatriculaQrErrorCode.MQR_008,
             // VAL-pendientes-john PRU-15: operacion sobre un periodo cerrado y segundo cierre.
             MensajeUsuarioErrorCode.PER_008,
             MensajeUsuarioErrorCode.PER_009,

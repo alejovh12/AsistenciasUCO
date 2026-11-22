@@ -16,7 +16,7 @@ class DbFailureClassifierAsignaturaPlanTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"ASI_002", "ASI_003", "ASI_005", "MQR_008"})
+    @ValueSource(strings = {"ASI_002", "ASI_003", "ASI_005"})
     void conflictos_responden_409(final String codigo) {
         assertEquals(CommonErrorCode.CONFLICT, clasificar(codigo));
     }

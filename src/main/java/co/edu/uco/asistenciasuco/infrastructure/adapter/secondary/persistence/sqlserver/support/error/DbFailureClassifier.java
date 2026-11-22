@@ -79,7 +79,7 @@ final class DbFailureClassifier {
         return switch (code) {
             case "SEC_001", "SEC_002", "EST_004", "COO_003" -> SecurityErrorCode.FORBIDDEN;
             // CULM-001 B2NM (DEC-019/DEC-020, CONTRACT 2.8.1): asignaturas por plan, matricula con programa y ambito de coordinacion.
-            case "ASI_002", "ASI_003", "ASI_005", "MQR_008" -> CommonErrorCode.CONFLICT;
+            case "ASI_002", "ASI_003", "ASI_005" -> CommonErrorCode.CONFLICT;
             case "ASI_006" -> CatalogoErrorCode.ASI_006;
             case "ASI_009" -> CatalogoErrorCode.ASI_009;
             case "ASI_010" -> CatalogoErrorCode.ASI_010;
@@ -149,6 +149,8 @@ final class DbFailureClassifier {
             case "MQR_005" -> MatriculaQrErrorCode.MQR_005;
             case "MQR_006" -> MatriculaQrErrorCode.MQR_006;
             case "MQR_007" -> MatriculaQrErrorCode.MQR_007;
+            // DEC-078: grupo compartido sin programa elegido; conserva su codigo para que el frontend muestre el selector (antes CONFLICT generico).
+            case "MQR_008" -> MatriculaQrErrorCode.MQR_008;
             case "VCE_001" -> VerificacionCorreoErrorCode.VCE_001;
             // DEC-073: correo institucional del personal nuevo (decano, coordinador, docente).
             case "VCE_008" -> VerificacionCorreoErrorCode.VCE_008;
