@@ -17,6 +17,13 @@ public enum DependenciaErrorCode implements SpecErrorDefinition {
      */
     ERR_BD_NO_DISPONIBLE(new ErrorSpec("ERR_BD_NO_DISPONIBLE",
             "El servicio no está disponible en este momento. Intenta de nuevo en unos minutos.",
+            ErrorKind.SERVICE_UNAVAILABLE)),
+    /**
+     * P3 F5 (migracion 71, seed 74 de BD): el Servicio de Notificaciones no responde, agota el tiempo, contesta 5xx, 408 o 429, rechaza
+     * la credencial de administracion o su circuit breaker esta abierto. Los avisos pendientes siguen en la outbox y se reintentan.
+     */
+    ERR_NOTIFICACIONES_NO_DISPONIBLE(new ErrorSpec("ERR_NOTIFICACIONES_NO_DISPONIBLE",
+            "El servicio de notificaciones no está disponible en este momento. Intenta de nuevo en unos minutos.",
             ErrorKind.SERVICE_UNAVAILABLE));
 
     private final ErrorSpec spec;

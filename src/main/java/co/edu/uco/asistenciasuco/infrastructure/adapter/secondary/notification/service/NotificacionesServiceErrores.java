@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.service;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
+import co.edu.uco.asistenciasuco.application.exception.catalog.DependenciaErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
@@ -22,32 +23,8 @@ final class NotificacionesServiceErrores {
     private static final Logger LOGGER = LoggerFactory.getLogger(NotificacionesServiceErrores.class);
     private static final String PREFIJO_TEXTO_DEL_SERVICIO = "NTF_SERVICIO_";
 
-    /**
-     * 503 publico del servicio de notificaciones. Su texto de usuario sale de la fila existente del catalogo
-     * {@code ERR_BD_NO_DISPONIBLE} («El servicio no esta disponible en este momento...»): asi no se necesita un codigo nuevo en
-     * el seed de la BD. Si F5 siembra un codigo propio, solo cambia {@code messageCode()}.
-     */
-    static final ErrorDefinition NOTIFICACIONES_NO_DISPONIBLE = new ErrorDefinition() {
-        @Override
-        public String code() {
-            return "ERR_NOTIFICACIONES_NO_DISPONIBLE";
-        }
-
-        @Override
-        public String defaultMessage() {
-            return "El servicio de notificaciones no está disponible en este momento. Intente de nuevo en unos minutos.";
-        }
-
-        @Override
-        public ErrorKind kind() {
-            return ErrorKind.SERVICE_UNAVAILABLE;
-        }
-
-        @Override
-        public String messageCode() {
-            return "ERR_BD_NO_DISPONIBLE";
-        }
-    };
+    /** 503 publico del servicio de notificaciones, con su propia fila del catalogo de mensajes (seed 74 de la BD). */
+    static final ErrorDefinition NOTIFICACIONES_NO_DISPONIBLE = DependenciaErrorCode.ERR_NOTIFICACIONES_NO_DISPONIBLE;
 
     private NotificacionesServiceErrores() {
     }

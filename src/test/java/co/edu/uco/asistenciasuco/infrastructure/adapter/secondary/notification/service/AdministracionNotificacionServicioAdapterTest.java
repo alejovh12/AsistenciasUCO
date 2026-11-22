@@ -293,6 +293,10 @@ class AdministracionNotificacionServicioAdapterTest {
             final InternalApplicationException e = assertThrows(InternalApplicationException.class,
                     () -> adapter.consultarPlantillas("es", admin));
             assertEquals(ErrorKind.SERVICE_UNAVAILABLE, e.getErrorDefinition().orElseThrow().kind());
+            // P3 F5: codigo propio del catalogo (antes reutilizaba el texto de ERR_BD_NO_DISPONIBLE).
+            assertEquals("ERR_NOTIFICACIONES_NO_DISPONIBLE", e.getErrorDefinition().orElseThrow().messageCode());
+            assertEquals("El servicio de notificaciones no está disponible en este momento. Intenta de nuevo en unos minutos.",
+                    e.getErrorDefinition().orElseThrow().defaultMessage());
         }
         final String urlCerrada = servidor.url();
         servidor.close();
