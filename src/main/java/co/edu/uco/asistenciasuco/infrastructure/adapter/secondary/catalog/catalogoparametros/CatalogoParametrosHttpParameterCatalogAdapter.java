@@ -15,7 +15,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -51,6 +53,7 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
     private static final ObjectMapper JSON = JsonMapper.builder().build();
 
     private final HttpClient httpClient;
+    private final Clock clock;
     private final CatalogoParametrosProviderProperties properties;
     private final URI uri;
     private final long ttlNanos;
@@ -62,12 +65,20 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
 
     public CatalogoParametrosHttpParameterCatalogAdapter(final HttpClient httpClient,
                                                          final CatalogoParametrosProviderProperties properties) {
+        this(httpClient, properties, Clock.systemUTC());
+    }
+
+    /** Constructor con fuente de tiempo inyectable (pruebas deterministas del TTL y la gracia). */
+    public CatalogoParametrosHttpParameterCatalogAdapter(final HttpClient httpClient,
+                                                         final CatalogoParametrosProviderProperties properties,
+                                                         final Clock clock) {
+        this.clock = Objects.requireNonNull(clock, "El reloj es obligatorio.");
         this.httpClient = Objects.requireNonNull(httpClient, "El HttpClient es obligatorio.");
         this.properties = Objects.requireNonNull(properties, "Las propiedades del catalogo son obligatorias.");
         this.uri = URI.create(properties.baseUrl() + "/tokens/" + properties.tokenId() + "/parametros");
         this.ttlNanos = properties.cacheTtl().toNanos();
         this.graciaNanos = Math.min(ttlNanos, GRACIA_MAXIMA_TRAS_FALLO.toNanos());
-        this.reintentarDesde = System.nanoTime();
+        this.reintentarDesde = ahora();
     }
 
     @Override
@@ -122,6 +133,11 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
         snapshot.set(null);
     }
 
+    private long ahora() {
+        final Instant instante = clock.instant();
+        return instante.getEpochSecond() * 1_000_000_000L + instante.getNano();
+    }
+
     private Map<String, String> valores() {
         final Snapshot actual = snapshot.get();
         if (vigente(actual)) {
@@ -135,7 +151,7 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
     }
 
     private boolean vigente(final Snapshot candidato) {
-        return ttlNanos > 0 && candidato != null && System.nanoTime() - candidato.cargadoEn() < ttlNanos;
+        return ttlNanos > 0 && candidato != null && ahora() - candidato.cargadoEn() < ttlNanos;
     }
 
     /**
@@ -150,13 +166,13 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
             if (vigente(recheck)) {
                 return recheck.valores();
             }
-            if (System.nanoTime() - reintentarDesde < 0) {
+            if (ahora() - reintentarDesde < 0) {
                 throw new ParameterCatalogException(
                         "Catalogo de Parametros no disponible; la carga se reintentara al terminar la gracia.");
             }
             try {
                 final Map<String, String> cargados = interpretarRespuesta(enviar());
-                snapshot.set(new Snapshot(cargados, System.nanoTime()));
+                snapshot.set(new Snapshot(cargados, ahora()));
                 return cargados;
             } catch (final ParameterCatalogException exception) {
                 registrarFalloDeCarga(exception.getMessage());
@@ -168,14 +184,14 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
     }
 
     private void registrarFalloDeCarga(final String detalle) {
-        reintentarDesde = System.nanoTime() + graciaNanos;
+        reintentarDesde = ahora() + graciaNanos;
         LOGGER.warn("Catalogo de Parametros no disponible en la carga inicial; se aplican los valores por defecto y no se "
                 + "reintenta durante {} s. causa={}", graciaNanos / 1_000_000_000L, detalle);
     }
 
     /** Cache vencida: un solo refresco en vuelo; mientras tanto (y si falla) se sirven los valores vencidos. */
     private void refrescarEnSegundoPlano() {
-        if (System.nanoTime() - reintentarDesde < 0 || !refrescando.compareAndSet(false, true)) {
+        if (ahora() - reintentarDesde < 0 || !refrescando.compareAndSet(false, true)) {
             return;
         }
         final CompletableFuture<HttpResponse<String>> envio;
@@ -192,7 +208,7 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
                     registrarFalloDeRefresco(causa(error).getClass().getSimpleName());
                     return;
                 }
-                snapshot.set(new Snapshot(interpretarRespuesta(response), System.nanoTime()));
+                snapshot.set(new Snapshot(interpretarRespuesta(response), ahora()));
             } catch (final ParameterCatalogException exception) {
                 registrarFalloDeRefresco(exception.getMessage());
             } finally {
@@ -202,7 +218,7 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
     }
 
     private void registrarFalloDeRefresco(final String detalle) {
-        reintentarDesde = System.nanoTime() + graciaNanos;
+        reintentarDesde = ahora() + graciaNanos;
         LOGGER.warn("Catalogo de Parametros no disponible; se conservan los valores vencidos y no se reintenta "
                 + "durante {} s. causa={}", graciaNanos / 1_000_000_000L, detalle);
     }

@@ -64,6 +64,30 @@ class CatalogoParametrosHttpParameterCatalogAdapterTest {
         return new CatalogoParametrosHttpParameterCatalogAdapter(http, props(ttl));
     }
 
+    /** Reloj mutable: el TTL y la gracia se prueban sin depender del tiempo real. */
+    private static final class RelojMutable extends java.time.Clock {
+        private java.time.Instant ahora = java.time.Instant.parse("2026-01-01T00:00:00Z");
+
+        void avanzar(final Duration lapso) {
+            ahora = ahora.plus(lapso);
+        }
+
+        @Override
+        public java.time.ZoneId getZone() {
+            return java.time.ZoneOffset.UTC;
+        }
+
+        @Override
+        public java.time.Clock withZone(final java.time.ZoneId zone) {
+            return this;
+        }
+
+        @Override
+        public java.time.Instant instant() {
+            return ahora;
+        }
+    }
+
     private static HttpResponse<String> respuesta(final int status, final String body) {
         final HttpResponse<String> response = mock(HttpResponse.class);
         when(response.statusCode()).thenReturn(status);
@@ -229,17 +253,18 @@ class CatalogoParametrosHttpParameterCatalogAdapterTest {
     @Test
     void refresco_fallido_conserva_los_valores_vencidos_sin_propagar_y_respeta_la_gracia() throws Exception {
         responde(200, JSON);
-        final var a = adaptor(Duration.ofMillis(1));
+        final var reloj = new RelojMutable();
+        final var a = new CatalogoParametrosHttpParameterCatalogAdapter(http, props(Duration.ofMillis(1)), reloj);
         a.getParameter("G", "SINACTIVO");
-        Thread.sleep(10);
+        reloj.avanzar(Duration.ofMillis(10));
         respondeAsincrono(CompletableFuture.failedFuture(new HttpTimeoutException("el catalogo tardo demasiado")));
 
         assertEquals("presente", a.getParameter("G", "SINACTIVO").orElseThrow());
         assertEquals("presente", a.getParameter("G", "SINACTIVO").orElseThrow());
 
-        // Con TTL 1 ms la gracia es 1 ms: sin esperar no se reintenta; tras esperar, si.
+        // Con TTL 1 ms la gracia es 1 ms: sin avanzar el reloj no se reintenta; tras avanzarlo, si.
         verify(http, times(1)).sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
-        Thread.sleep(10);
+        reloj.avanzar(Duration.ofMillis(10));
         assertEquals("presente", a.getParameter("G", "SINACTIVO").orElseThrow());
         verify(http, times(2)).sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
     }

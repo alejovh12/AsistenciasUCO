@@ -6,12 +6,14 @@ import co.edu.uco.asistenciasuco.infrastructure.config.adapters.catalog.composit
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.CatalogoParametrosProviderProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.net.http.HttpClient;
+import java.time.Clock;
 
 /**
  * Composition Root del proveedor "Catalogo de Parametros" (componente externo por HTTP). Se activa unicamente con
@@ -26,10 +28,12 @@ public class CatalogoParametrosAdapterConfiguration {
     private static final Logger LOGGER = LoggerFactory.getLogger(CatalogoParametrosAdapterConfiguration.class);
 
     @Bean(ParametroConValorPorDefectoConfiguration.DELEGADO)
-    public ParameterCatalogPort parameterCatalogPort(final CatalogoParametrosProviderProperties properties) {
+    public ParameterCatalogPort parameterCatalogPort(final CatalogoParametrosProviderProperties properties,
+                                                final ObjectProvider<Clock> clockProvider) {
         LOGGER.info("Catalogo de parametros: proveedor catalogoparametros (baseUrl={}, tokenId={}, cacheTtl={}).",
                 properties.baseUrl(), properties.tokenId(), properties.cacheTtl());
         final HttpClient httpClient = HttpClient.newBuilder().connectTimeout(properties.timeout()).build();
-        return new CatalogoParametrosHttpParameterCatalogAdapter(httpClient, properties);
+        return new CatalogoParametrosHttpParameterCatalogAdapter(httpClient, properties,
+                clockProvider.getIfAvailable(Clock::systemUTC));
     }
 }
