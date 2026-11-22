@@ -79,7 +79,7 @@ class MatriculaQrControllersTest {
         mvc = MockMvcBuilders.standaloneSetup(
                 new GrupoMatriculaQrController(abrir, rotar, cerrar, usuario),
                 new MatriculaQrPublicaController(validar, registrar, tipos, ip),
-                new EstudianteMatriculaQrController(matricular, ip, usuario)
+                new EstudianteMatriculaQrController(matricular, validar, ip, usuario)
         ).build();
     }
 
@@ -116,6 +116,22 @@ class MatriculaQrControllersTest {
         mvc.perform(delete("/api/v1/grupos/{g}/matricula-qr", GRUPO)).andExpect(status().isOk());
 
         verify(cerrar).execute(new CerrarVentanaMatriculaInputPort.Comando(GRUPO, ACTOR));
+    }
+
+    @Test
+    void validar_del_estudiante_pasa_su_usuario_y_devuelve_solo_los_programas_comunes() throws Exception {
+        final UUID programa = UUID.fromString("77777777-7777-7777-7777-777777777777");
+        when(validar.execute(new ValidarTokenMatriculaInputPort.Comando(TOKEN, null, "127.0.0.1", ACTOR)))
+                .thenReturn(new ValidarTokenMatriculaInputPort.Resultado(GRUPO, "Calculo", "G1", "Maria Perez",
+                        Instant.parse("2026-11-04T16:00:00Z"), 7,
+                        java.util.List.of(new ValidarTokenMatriculaInputPort.ProgramaElegible(programa, "Sistemas"))));
+
+        mvc.perform(post("/api/v1/estudiante/matricula-qr/validar").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"token\":\"" + TOKEN + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.datos.nombreAsignatura").value("Calculo"))
+                .andExpect(jsonPath("$.datos.programasElegibles[0].idPrograma").value(programa.toString()))
+                .andExpect(jsonPath("$.datos.programasElegibles[0].nombre").value("Sistemas"));
     }
 
     @Test

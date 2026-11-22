@@ -137,6 +137,24 @@ class MatriculaQrJpaRepositoryTest {
     }
 
     @Test
+    void validar_con_estudiante_conocido_envia_su_usuario_al_sp_para_estrechar_los_programas() {
+        final Query porToken = mock(Query.class);
+        final Query porPin = mock(Query.class);
+        when(entityManager.createNativeQuery(MatriculaQrJpaRepository.SQL_VALIDAR_TOKEN_ESTUDIANTE)).thenReturn(porToken);
+        when(entityManager.createNativeQuery(MatriculaQrJpaRepository.SQL_VALIDAR_PIN_ESTUDIANTE)).thenReturn(porPin);
+        for (final Query q : List.of(porToken, porPin)) {
+            when(q.setParameter(anyString(), any())).thenReturn(q);
+            when(q.getResultList()).thenReturn(Collections.singletonList(new Object[]{GRUPO, "Calculo", "G1", "Docente", INSTANTE, 10, null}));
+        }
+
+        assertEquals(List.of(), repository.validar(new CredencialMatricula(TOKEN, null), DOCENTE).programasElegibles());
+        assertEquals(List.of(), repository.validar(new CredencialMatricula(null, PIN), DOCENTE).programasElegibles());
+
+        org.mockito.Mockito.verify(porToken).setParameter("idUsuarioEjecutor", DOCENTE);
+        org.mockito.Mockito.verify(porPin).setParameter("idUsuarioEjecutor", DOCENTE);
+    }
+
+    @Test
     void rotar_automatico_confirma_vigencia_y_devuelve_nulo_si_no_aplico_o_vencio() {
         when(procedureExecutor.executeWithExtras(anyString(), anyString(), anyMap(), any(), eq(4)))
                 .thenReturn(new ProcedureRow(mock(ProcedureResult.class), List.of(VENTANA, DOCENTE, INSTANTE, "2026-11-04 16:00:00")));

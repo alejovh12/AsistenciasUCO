@@ -132,6 +132,18 @@ class MatriculaQrPublicoUseCasesTest {
     }
 
     @Test
+    void validar_con_estudiante_conocido_consulta_con_su_usuario() {
+        final java.util.UUID estudiante = java.util.UUID.fromString("55555555-5555-5555-5555-555555555555");
+        when(repositorio.validar(new MatriculaQrRepositoryPort.CredencialMatricula(TOKEN, null), estudiante))
+                .thenReturn(new MatriculaQrRepositoryPort.CursoMatricula(GRUPO, "Calculo", "G1", "Maria Perez", FIN, 7));
+
+        final var resultado = new ValidarTokenMatriculaUseCaseImpl(acceso, repositorio)
+                .execute(new ValidarTokenMatriculaInputPort.Comando(TOKEN, null, IP_CAMPUS, estudiante));
+
+        assertEquals(new ValidarTokenMatriculaInputPort.Resultado(GRUPO, "Calculo", "G1", "Maria Perez", FIN, 7), resultado);
+    }
+
+    @Test
     void DEC078_validar_entrega_los_programas_entre_los_que_elige_el_estudiante() {
         final UUID programaA = UUID.randomUUID();
         final UUID programaB = UUID.randomUUID();

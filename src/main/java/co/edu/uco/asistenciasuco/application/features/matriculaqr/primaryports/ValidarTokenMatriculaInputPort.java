@@ -11,7 +11,11 @@ public interface ValidarTokenMatriculaInputPort
         extends InteractorWithReturn<ValidarTokenMatriculaInputPort.Comando, ValidarTokenMatriculaInputPort.Resultado> {
 
     /** Exactamente uno de {@code token} o {@code pin}. {@code direccionIp} ya viene resuelta por la infraestructura. */
-    record Comando(String token, String pin, String direccionIp) {
+    record Comando(String token, String pin, String direccionIp, UUID idUsuario) {
+        /** Validacion anonima: la lista de programas es la del grupo. */
+        public Comando(final String token, final String pin, final String direccionIp) {
+            this(token, pin, direccionIp, null);
+        }
     }
 
     /** DEC-078: programa del grupo que el estudiante puede elegir al matricularse en un grupo compartido. */

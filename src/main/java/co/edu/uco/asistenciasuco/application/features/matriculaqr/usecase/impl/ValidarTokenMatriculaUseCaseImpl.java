@@ -28,8 +28,10 @@ public final class ValidarTokenMatriculaUseCaseImpl implements ValidarTokenMatri
         acceso.exigirHabilitada();
         acceso.exigirRedCampus(comando.direccionIp());
         exigirUnaSolaCredencial(comando.token(), comando.pin());
-        final MatriculaQrRepositoryPort.CursoMatricula curso = repositorio.validar(
-                new MatriculaQrRepositoryPort.CredencialMatricula(comando.token(), comando.pin()));
+        final var credencial = new MatriculaQrRepositoryPort.CredencialMatricula(comando.token(), comando.pin());
+        final MatriculaQrRepositoryPort.CursoMatricula curso = comando.idUsuario() == null
+                ? repositorio.validar(credencial)
+                : repositorio.validar(credencial, comando.idUsuario());
         return new Resultado(
                 curso.idGrupo(), curso.nombreAsignatura(), curso.nombreGrupo(), curso.nombreDocente(),
                 curso.fechaExpiracionUtc(), curso.cupoDisponible(),

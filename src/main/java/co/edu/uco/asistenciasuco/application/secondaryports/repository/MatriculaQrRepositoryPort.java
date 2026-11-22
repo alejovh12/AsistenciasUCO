@@ -92,6 +92,14 @@ public interface MatriculaQrRepositoryPort {
 
     CursoMatricula validar(CredencialMatricula credencial);
 
+    /**
+     * Revision final P3: con el estudiante conocido ({@code usuarioEjecutor} no nulo), {@link CursoMatricula#programasElegibles()} es la
+     * interseccion entre sus programas y los del grupo; {@code null} equivale a {@link #validar(CredencialMatricula)}.
+     */
+    default CursoMatricula validar(final CredencialMatricula credencial, final UUID usuarioEjecutor) {
+        return validar(credencial);
+    }
+
     MatriculaRealizada registrarPublico(RegistroPublico datos);
 
     default MatriculaRealizada matricularAutenticado(final CredencialMatricula credencial, final UUID usuarioEjecutor) {

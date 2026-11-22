@@ -73,6 +73,14 @@ public class MatriculaQrJpaRepository implements MatriculaQrRepositoryPort {
     static final String SQL_VALIDAR_PIN = """
             EXEC dbo.usp_validar_token_matricula_publico @pin = :pin, @idCorrelacion = :idCorrelacion
             """;
+    static final String SQL_VALIDAR_TOKEN_ESTUDIANTE = """
+            EXEC dbo.usp_validar_token_matricula_publico @tokenHash = :tokenHash, @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
+            """;
+    static final String SQL_VALIDAR_PIN_ESTUDIANTE = """
+            EXEC dbo.usp_validar_token_matricula_publico @pin = :pin, @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
+            """;
     static final String SQL_MATRICULAR_TOKEN = """
             EXEC dbo.usp_matricular_estudiante_por_token
                  @tokenHash = :tokenHash, @idCorrelacion = :idCorrelacion, @idUsuarioEjecutor = :idUsuarioEjecutor,
@@ -186,7 +194,13 @@ public class MatriculaQrJpaRepository implements MatriculaQrRepositoryPort {
 
     @Override
     public CursoMatricula validar(final CredencialMatricula credencial) {
+        return validar(credencial, null);
+    }
+
+    @Override
+    public CursoMatricula validar(final CredencialMatricula credencial, final UUID usuarioEjecutor) {
         final UUID correlationId = CorrelationIdContext.require();
+        final boolean conEstudiante = usuarioEjecutor != null;
         return JpaQueryExecutor.execute(
                 "validarTokenMatriculaPublico",
                 "No fue posible validar el token de matricula desde base de datos.",
@@ -194,9 +208,15 @@ public class MatriculaQrJpaRepository implements MatriculaQrRepositoryPort {
                     final List<?> filas;
                     try {
                         final Query consulta = credencial.token() != null
-                                ? entityManager.createNativeQuery(SQL_VALIDAR_TOKEN).setParameter(P_TOKEN_HASH, TokenHashHelper.sha256(credencial.token()))
-                                : entityManager.createNativeQuery(SQL_VALIDAR_PIN).setParameter(P_PIN, credencial.pin());
-                        filas = consulta.setParameter(P_ID_CORRELACION, correlationId).getResultList();
+                                ? entityManager.createNativeQuery(conEstudiante ? SQL_VALIDAR_TOKEN_ESTUDIANTE : SQL_VALIDAR_TOKEN)
+                                        .setParameter(P_TOKEN_HASH, TokenHashHelper.sha256(credencial.token()))
+                                : entityManager.createNativeQuery(conEstudiante ? SQL_VALIDAR_PIN_ESTUDIANTE : SQL_VALIDAR_PIN)
+                                        .setParameter(P_PIN, credencial.pin());
+                        consulta.setParameter(P_ID_CORRELACION, correlationId);
+                        if (conEstudiante) {
+                            consulta.setParameter(P_ID_USUARIO_EJECUTOR, usuarioEjecutor);
+                        }
+                        filas = consulta.getResultList();
                     } catch (final PersistenceException exception) {
                         throw DbCodeTranslator.traducir(exception);
                     }
