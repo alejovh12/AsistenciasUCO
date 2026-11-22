@@ -54,12 +54,13 @@ class PrevisualizarHorarioGrupoTest {
         return new Resumen(existente ? GRUPO : null, ASIGNATURA, PERIODO, "ARQ-402", "Arquitectura", "2027-1", "PLANEACION", "America/Bogota",
                 LocalDate.of(2027, 2, 3), LocalDate.of(2027, 5, 25), horasMateria, minutosSemanales, 2, 112, 32, 30, 2, 0, 3840, minutosProgramados,
                 240, 0, minutosEsperados, existente ? 3 : null, minutosConservados, existente ? 1 : null, existente ? 2 : null, existente ? 5 : null, true,
-                existente);
+                existente, 1, 120);
     }
 
     private static PrevisualizacionHorarioGrupoProjection proyeccion(final Resumen resumen) {
         return new PrevisualizacionHorarioGrupoProjection(resumen, List.of(), List.of(), List.of(),
-                List.of(new PrevisualizacionHorarioGrupoProjection.Conflicto("HOR_006", "BLOQUEANTE", "mensaje", null)));
+                List.of(new PrevisualizacionHorarioGrupoProjection.Conflicto("HOR_006", "BLOQUEANTE", "mensaje", null)),
+                List.of(new PrevisualizacionHorarioGrupoProjection.Receso(LocalDate.of(2027, 3, 3), "Receso académico: Jornada", 1)));
     }
 
     @Test
@@ -123,6 +124,13 @@ class PrevisualizarHorarioGrupoTest {
         assertNull(dto.cambioSobreGrupoExistente());
         assertEquals("HOR_006", dto.conflictos().getFirst().codigo());
         assertTrue(dto.puedeConfirmar());
+        // DEC-081: conteos y dias de receso (campos aditivos)
+        assertEquals(1, dto.resumenPeriodo().sesionesEnReceso());
+        assertEquals(120, dto.resumenPeriodo().minutosPerdidosReceso());
+        assertEquals(1, dto.recesos().size());
+        assertEquals(LocalDate.of(2027, 3, 3), dto.recesos().getFirst().fecha());
+        assertEquals("Receso académico: Jornada", dto.recesos().getFirst().motivo());
+        assertEquals(1, dto.recesos().getFirst().sesionesAfectadas());
     }
 
     @Test

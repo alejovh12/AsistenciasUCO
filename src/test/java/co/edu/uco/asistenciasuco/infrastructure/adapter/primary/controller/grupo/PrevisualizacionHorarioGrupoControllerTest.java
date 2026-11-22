@@ -50,10 +50,14 @@ class PrevisualizacionHorarioGrupoControllerTest {
                 "America/Bogota",
                 List.of(new PrevisualizacionHorarioGrupoDTO.Franja("LU", "Lunes", "08:00", "10:00", 120)),
                 new PrevisualizacionHorarioGrupoDTO.ResumenSemanal(1, 120, 240, -120, false),
-                new PrevisualizacionHorarioGrupoDTO.ResumenPeriodo(16, 16, 0, 0, 1920, 1920, 0, 0, 3840, -1920, false),
+                new PrevisualizacionHorarioGrupoDTO.ResumenPeriodo(16, 16, 0, 0, 1920, 1920, 0, 0, 3840, -1920, false, 1, 120),
                 List.of(),
+                List.of(new PrevisualizacionHorarioGrupoDTO.Receso(LocalDate.of(2027, 3, 3), "Receso académico: Jornada", 1)),
                 List.of(new PrevisualizacionHorarioGrupoDTO.Sesion(1, 1, LocalDate.of(2027, 2, 8), "08:00", "10:00",
-                        Instant.parse("2027-02-08T13:00:00Z"), Instant.parse("2027-02-08T15:00:00Z"), 120, "PROGRAMADA", null)),
+                        Instant.parse("2027-02-08T13:00:00Z"), Instant.parse("2027-02-08T15:00:00Z"), 120, "PROGRAMADA", null, null),
+                        new PrevisualizacionHorarioGrupoDTO.Sesion(2, 4, LocalDate.of(2027, 3, 3), "08:00", "10:00",
+                        Instant.parse("2027-03-03T13:00:00Z"), Instant.parse("2027-03-03T15:00:00Z"), 120, "CANCELADA_POR_RECESO", null,
+                        "Receso académico: Jornada")),
                 null,
                 List.of(new PrevisualizacionHorarioGrupoDTO.Conflicto("HOR_006", "BLOQUEANTE", "Las horas no coinciden.", null)),
                 false);
@@ -74,6 +78,13 @@ class PrevisualizacionHorarioGrupoControllerTest {
                 .andExpect(jsonPath("$.datos.periodo.diasPeriodo").value(112))
                 .andExpect(jsonPath("$.datos.periodo.semanasPeriodo").value(16))
                 .andExpect(jsonPath("$.datos.resumenPeriodo.sesionesCalendario").value(16))
+                .andExpect(jsonPath("$.datos.resumenPeriodo.sesionesEnReceso").value(1))
+                .andExpect(jsonPath("$.datos.resumenPeriodo.minutosPerdidosReceso").value(120))
+                .andExpect(jsonPath("$.datos.recesos[0].fecha").value("2027-03-03"))
+                .andExpect(jsonPath("$.datos.recesos[0].motivo").value("Receso académico: Jornada"))
+                .andExpect(jsonPath("$.datos.recesos[0].sesionesAfectadas").value(1))
+                .andExpect(jsonPath("$.datos.sesiones[1].estado").value("CANCELADA_POR_RECESO"))
+                .andExpect(jsonPath("$.datos.sesiones[1].motivoReceso").value("Receso académico: Jornada"))
                 .andExpect(jsonPath("$.datos.resumenSemanal.coincideConMateria").value(false))
                 .andExpect(jsonPath("$.datos.sesiones[0].fechaHoraInicioUtc").value("2027-02-08T13:00:00Z"))
                 .andExpect(jsonPath("$.datos.conflictos[0].codigo").value("HOR_006"))

@@ -14,7 +14,8 @@ public record PrevisualizacionHorarioGrupoProjection(
         List<Franja> franjas,
         List<Sesion> sesiones,
         List<Festivo> festivos,
-        List<Conflicto> conflictos
+        List<Conflicto> conflictos,
+        List<Receso> recesos
 ) {
 
     public record Resumen(
@@ -26,7 +27,8 @@ public record PrevisualizacionHorarioGrupoProjection(
             Integer minutosEsperadosMateria,
             Integer sesionesConservadas, Integer minutosConservados, Integer sesionesFuturasQueSeRetiran,
             Integer sesionesFuturasQueSeCrean, Integer sesionesFuturasQueSeConservan,
-            boolean puedeConfirmar, boolean esGrupoExistente
+            boolean puedeConfirmar, boolean esGrupoExistente,
+            int sesionesEnReceso, int minutosPerdidosReceso
     ) {
     }
 
@@ -35,11 +37,16 @@ public record PrevisualizacionHorarioGrupoProjection(
 
     public record Sesion(
             int numero, int numeroSemana, LocalDate fecha, String horaInicio, String horaFin,
-            Instant fechaHoraInicioUtc, Instant fechaHoraFinUtc, int minutos, String estado, String nombreFestivo
+            Instant fechaHoraInicioUtc, Instant fechaHoraFinUtc, int minutos, String estado, String nombreFestivo,
+            String motivoReceso
     ) {
     }
 
     public record Festivo(LocalDate fecha, String nombre, int sesionesAfectadas) {
+    }
+
+    /** DEC-081: dia de receso academico del periodo; {@code motivo} ya lleva el prefijo del parametro RECESO/PREFIJO_MOTIVO_CANCELACION. */
+    public record Receso(LocalDate fecha, String motivo, int sesionesAfectadas) {
     }
 
     /** {@code severidad}: BLOQUEANTE (la confirmacion lo rechazaria), ADVERTENCIA o INFORMATIVO. El mensaje sale del catalogo de la DB. */

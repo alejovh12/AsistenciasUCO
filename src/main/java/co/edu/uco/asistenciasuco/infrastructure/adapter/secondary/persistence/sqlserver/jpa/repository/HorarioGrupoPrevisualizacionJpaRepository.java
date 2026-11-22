@@ -5,6 +5,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PrevisualizacionHorarioGrupoProjection.Conflicto;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PrevisualizacionHorarioGrupoProjection.Festivo;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PrevisualizacionHorarioGrupoProjection.Franja;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PrevisualizacionHorarioGrupoProjection.Receso;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PrevisualizacionHorarioGrupoProjection.Resumen;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PrevisualizacionHorarioGrupoProjection.Sesion;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.FranjaHorarioRepositoryDTO;
@@ -51,8 +52,8 @@ public class HorarioGrupoPrevisualizacionJpaRepository implements HorarioGrupoPr
                  @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
 
-    /** tipoFila, orden, id1..id3, texto1..texto5, fecha1..fecha2, instante1..instante2, entero1..entero18, bandera1..bandera2. */
-    static final int COLUMNAS_PREVISUALIZACION = 34;
+    /** tipoFila, orden, id1..id3, texto1..texto5, fecha1..fecha2, instante1..instante2, entero1..entero18, bandera1..bandera2, entero19..entero20 (DEC-081). */
+    static final int COLUMNAS_PREVISUALIZACION = 36;
 
     private static final String OP_PREVISUALIZAR = "previsualizarHorarioGrupo";
     private static final ObjectMapper OBJECT_MAPPER = JsonMapper.builder().build();
@@ -95,6 +96,7 @@ public class HorarioGrupoPrevisualizacionJpaRepository implements HorarioGrupoPr
         final List<Franja> franjas = new ArrayList<>();
         final List<Sesion> sesiones = new ArrayList<>();
         final List<Festivo> festivos = new ArrayList<>();
+        final List<Receso> recesos = new ArrayList<>();
         final List<Conflicto> conflictos = new ArrayList<>();
         for (final Object fila : filas) {
             final Object[] c = exigirColumnas((Object[]) fila);
@@ -102,11 +104,13 @@ public class HorarioGrupoPrevisualizacionJpaRepository implements HorarioGrupoPr
                 case "RESUMEN" -> resumen = new Resumen(uuid(c[2]), uuid(c[3]), uuid(c[4]), (String) c[5], (String) c[6], (String) c[7], (String) c[8],
                         (String) c[9], fecha(c[10]), fecha(c[11]), entero(c[14]), nulo0(c[15]), nulo0(c[16]), nulo0(c[17]), nulo0(c[18]), nulo0(c[19]),
                         nulo0(c[20]), nulo0(c[21]), nulo0(c[22]), nulo0(c[23]), nulo0(c[24]), nulo0(c[25]), entero(c[26]), entero(c[27]), entero(c[28]),
-                        entero(c[29]), entero(c[30]), entero(c[31]), bool(c[32]), bool(c[33]));
+                        entero(c[29]), entero(c[30]), entero(c[31]), bool(c[32]), bool(c[33]), nulo0(c[34]), nulo0(c[35]));
                 case "FRANJA" -> franjas.add(new Franja((String) c[5], (String) c[6], (String) c[7], (String) c[8], nulo0(c[14])));
                 case "SESION" -> sesiones.add(new Sesion(nulo0(c[14]), nulo0(c[15]), fecha(c[10]), (String) c[7], (String) c[8], instante(c[12]),
-                        instante(c[13]), nulo0(c[16]), (String) c[5], (String) c[6]));
+                        instante(c[13]), nulo0(c[16]), (String) c[5],
+                        esReceso(c) ? null : (String) c[6], esReceso(c) ? (String) c[6] : null));
                 case "FESTIVO" -> festivos.add(new Festivo(fecha(c[10]), (String) c[5], nulo0(c[14])));
+                case "RECESO" -> recesos.add(new Receso(fecha(c[10]), (String) c[5], nulo0(c[14])));
                 case "CONFLICTO" -> conflictos.add(new Conflicto((String) c[5], (String) c[6], (String) c[7], (String) c[8]));
                 default -> throw new IllegalStateException("usp_previsualizar_horario_grupo devolvio un tipo de fila desconocido: " + c[0]);
             }
@@ -114,7 +118,11 @@ public class HorarioGrupoPrevisualizacionJpaRepository implements HorarioGrupoPr
         if (resumen == null) {
             throw new IllegalStateException("usp_previsualizar_horario_grupo no devolvio la fila RESUMEN.");
         }
-        return new PrevisualizacionHorarioGrupoProjection(resumen, franjas, sesiones, festivos, conflictos);
+        return new PrevisualizacionHorarioGrupoProjection(resumen, franjas, sesiones, festivos, conflictos, recesos);
+    }
+
+    private static boolean esReceso(final Object[] c) {
+        return "CANCELADA_POR_RECESO".equals(c[5]);
     }
 
     private static Object[] exigirColumnas(final Object[] fila) {

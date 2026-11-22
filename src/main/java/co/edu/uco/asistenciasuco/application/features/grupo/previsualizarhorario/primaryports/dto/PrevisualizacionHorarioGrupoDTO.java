@@ -19,6 +19,7 @@ public record PrevisualizacionHorarioGrupoDTO(
         ResumenSemanal resumenSemanal,
         ResumenPeriodo resumenPeriodo,
         List<Festivo> festivos,
+        List<Receso> recesos,
         List<Sesion> sesiones,
         CambioSobreGrupoExistente cambioSobreGrupoExistente,
         List<Conflicto> conflictos,
@@ -43,15 +44,23 @@ public record PrevisualizacionHorarioGrupoDTO(
     /** {@code minutosEsperadosMateria} = horasSemanales x 60 x dias del periodo / 7; nulo si la materia no tiene horas. Informa, no bloquea. */
     public record ResumenPeriodo(int sesionesCalendario, int sesionesProgramadas, int sesionesEnFestivo, int sesionesNoProgramables,
                                  int minutosCalendario, int minutosProgramados, int minutosPerdidosFestivo, int minutosNoProgramables,
-                                 Integer minutosEsperadosMateria, Integer diferenciaMinutos, Boolean cubreTotalEsperado) {
+                                 Integer minutosEsperadosMateria, Integer diferenciaMinutos, Boolean cubreTotalEsperado,
+                                 int sesionesEnReceso, int minutosPerdidosReceso) {
     }
 
     public record Festivo(LocalDate fecha, String nombre, int sesionesAfectadas) {
     }
 
-    /** {@code estado}: PROGRAMADA, CANCELADA_POR_FESTIVO o NO_PROGRAMABLE_POR_FECHA (ya inicio: el pasado no se genera). */
+    /** DEC-081: dia de receso academico del periodo; {@code motivo} ya lleva el prefijo institucional («Receso academico: ...»). */
+    public record Receso(LocalDate fecha, String motivo, int sesionesAfectadas) {
+    }
+
+    /**
+     * {@code estado}: PROGRAMADA, CANCELADA_POR_FESTIVO, CANCELADA_POR_RECESO o NO_PROGRAMABLE_POR_FECHA (ya inicio: el pasado no se
+     * genera). {@code motivoReceso} solo viene en CANCELADA_POR_RECESO; {@code nombreFestivo} solo en CANCELADA_POR_FESTIVO.
+     */
     public record Sesion(int numero, int numeroSemana, LocalDate fecha, String horaInicio, String horaFin, Instant fechaHoraInicioUtc,
-                         Instant fechaHoraFinUtc, int minutos, String estado, String nombreFestivo) {
+                         Instant fechaHoraFinUtc, int minutos, String estado, String nombreFestivo, String motivoReceso) {
     }
 
     /** Solo al editar un grupo existente: lo ya dictado, con asistencia, toma o clasificacion, o creado a mano, se conserva. */

@@ -30,7 +30,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * SES-GEN-01: adaptador de {@code usp_previsualizar_horario_grupo}. El SP devuelve UN conjunto de resultados de 34 columnas fijas con filas
+ * SES-GEN-01: adaptador de {@code usp_previsualizar_horario_grupo}. El SP devuelve UN conjunto de resultados de 36 columnas fijas con filas
  * discriminadas por {@code tipoFila}; el adaptador lee por posicion y con conteo estricto, igual que las demas lecturas de SP.
  */
 class HorarioGrupoPrevisualizacionJpaRepositoryTest {
@@ -91,6 +91,8 @@ class HorarioGrupoPrevisualizacionJpaRepositoryTest {
         c[26] = 3840;       // minutosEsperadosMateria
         c[32] = true;       // puedeConfirmar
         c[33] = 0;          // esGrupoExistente (BIT como entero)
+        c[34] = 1;          // sesionesEnReceso (DEC-081, entero19)
+        c[35] = 120;        // minutosPerdidosReceso (DEC-081, entero20)
         return c;
     }
 
@@ -140,6 +142,21 @@ class HorarioGrupoPrevisualizacionJpaRepositoryTest {
         sesion[14] = 1;
         sesion[15] = 1;
         sesion[16] = 120;
+        final Object[] sesionReceso = fila("SESION", 2);
+        sesionReceso[5] = "CANCELADA_POR_RECESO";
+        sesionReceso[6] = "Receso académico: Jornada institucional";
+        sesionReceso[7] = "08:00";
+        sesionReceso[8] = "10:00";
+        sesionReceso[10] = LocalDate.of(2027, 2, 10);
+        sesionReceso[12] = Timestamp.valueOf(LocalDateTime.of(2027, 2, 10, 13, 0));
+        sesionReceso[13] = LocalDateTime.of(2027, 2, 10, 15, 0);
+        sesionReceso[14] = 2;
+        sesionReceso[15] = 1;
+        sesionReceso[16] = 120;
+        final Object[] receso = fila("RECESO", 1);
+        receso[5] = "Receso académico: Jornada institucional";
+        receso[10] = LocalDate.of(2027, 2, 10);
+        receso[14] = 1;
         final Object[] festivo = fila("FESTIVO", 1);
         festivo[5] = "Festivo";
         festivo[10] = LocalDate.of(2027, 3, 22);
@@ -148,7 +165,7 @@ class HorarioGrupoPrevisualizacionJpaRepositoryTest {
         conflicto[5] = "HOR_011";
         conflicto[6] = "INFORMATIVO";
         conflicto[7] = "4 h caen en días festivos.";
-        respuesta(resumen(), franja, sesion, festivo, conflicto);
+        respuesta(resumen(), franja, sesion, sesionReceso, festivo, receso, conflicto);
 
         final PrevisualizacionHorarioGrupoProjection p = repo.previsualizar(null, ASIGNATURA, PERIODO, DOCENTE, franjas(), EJECUTOR);
 
@@ -162,10 +179,19 @@ class HorarioGrupoPrevisualizacionJpaRepositoryTest {
         assertEquals(false, p.resumen().esGrupoExistente());
         assertEquals(LocalDate.of(2027, 5, 25), p.resumen().fechaFinPeriodo());
         assertEquals(List.of(new PrevisualizacionHorarioGrupoProjection.Franja("LU", "Lunes", "08:00", "10:00", 120)), p.franjas());
-        assertEquals(1, p.sesiones().size());
+        assertEquals(2, p.sesiones().size());
         assertEquals(Instant.parse("2027-02-03T13:00:00Z"), p.sesiones().getFirst().fechaHoraInicioUtc());
         assertEquals(Instant.parse("2027-02-03T15:00:00Z"), p.sesiones().getFirst().fechaHoraFinUtc());
         assertEquals("PROGRAMADA", p.sesiones().getFirst().estado());
+        assertNull(p.sesiones().getFirst().motivoReceso());
+        // DEC-081: texto2 de una sesion en receso es el motivo con prefijo, no un nombre de festivo
+        assertEquals("CANCELADA_POR_RECESO", p.sesiones().get(1).estado());
+        assertEquals("Receso académico: Jornada institucional", p.sesiones().get(1).motivoReceso());
+        assertNull(p.sesiones().get(1).nombreFestivo());
+        assertEquals(1, p.resumen().sesionesEnReceso());
+        assertEquals(120, p.resumen().minutosPerdidosReceso());
+        assertEquals(List.of(new PrevisualizacionHorarioGrupoProjection.Receso(LocalDate.of(2027, 2, 10),
+                "Receso académico: Jornada institucional", 1)), p.recesos());
         assertEquals(List.of(new PrevisualizacionHorarioGrupoProjection.Festivo(LocalDate.of(2027, 3, 22), "Festivo", 1)), p.festivos());
         assertEquals("HOR_011", p.conflictos().getFirst().codigo());
         assertEquals("INFORMATIVO", p.conflictos().getFirst().severidad());
@@ -175,7 +201,7 @@ class HorarioGrupoPrevisualizacionJpaRepositoryTest {
     void una_fila_con_columnas_distintas_a_las_del_contrato_es_fallo_tecnico() {
         respuesta((Object) new Object[33]);
         final RuntimeException error = assertThrows(RuntimeException.class, () -> repo.previsualizar(null, ASIGNATURA, PERIODO, DOCENTE, franjas(), EJECUTOR));
-        assertTrue(error.getCause().getMessage().contains("34"));
+        assertTrue(error.getCause().getMessage().contains("36"));
     }
 
     @Test
