@@ -32,7 +32,7 @@ public final class ConsultarAsistenciaProgramaInteractor implements ConsultarAsi
                         g.idDocente(), g.capacidadMaxima(), g.estudiantesActivos(), g.cuposDisponibles(),
                         g.habilitado(), g.inicioPeriodo(), g.finPeriodo(),
                         FranjaHorarioMapper.toDTOs(FranjaHorarioMapper.fromProjections(g.franjas())),
-                        g.idProgramaResponsable(), g.nombreProgramaResponsable(), g.esResponsable()));
+                        g.idProgramaResponsable(), g.nombreProgramaResponsable(), g.esResponsable(), g.nombreDocente()));
     }
 
     @Override

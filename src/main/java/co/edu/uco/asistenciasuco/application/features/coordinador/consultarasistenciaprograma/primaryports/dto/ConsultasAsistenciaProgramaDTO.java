@@ -21,7 +21,19 @@ public final class ConsultasAsistenciaProgramaDTO {
                                    UUID idDocente, Integer capacidadMaxima, Integer estudiantesActivos,
                                    Integer cuposDisponibles, boolean habilitado, LocalDate inicioPeriodo,
                                    LocalDate finPeriodo, List<FranjaHorarioDTO> franjas,
-                                   UUID idProgramaResponsable, String nombreProgramaResponsable, boolean esResponsable) {
+                                   UUID idProgramaResponsable, String nombreProgramaResponsable, boolean esResponsable,
+                                   String nombreDocente) {
+
+        /** Forma previa a la revision final P3 (BD-9): sin nombreDocente (nulo). */
+        public GrupoProgramaDTO(UUID id, Integer codigo, String nombre, UUID idAsignatura, String nombreAsignatura,
+                                UUID idDocente, Integer capacidadMaxima, Integer estudiantesActivos,
+                                Integer cuposDisponibles, boolean habilitado, LocalDate inicioPeriodo,
+                                LocalDate finPeriodo, List<FranjaHorarioDTO> franjas,
+                                UUID idProgramaResponsable, String nombreProgramaResponsable, boolean esResponsable) {
+            this(id, codigo, nombre, idAsignatura, nombreAsignatura, idDocente, capacidadMaxima, estudiantesActivos,
+                    cuposDisponibles, habilitado, inicioPeriodo, finPeriodo, franjas, idProgramaResponsable,
+                    nombreProgramaResponsable, esResponsable, null);
+        }
 
         /** Sin programa responsable (DEC-077): para pruebas y consumidores que no lo necesitan. */
         public GrupoProgramaDTO(UUID id, Integer codigo, String nombre, UUID idAsignatura, String nombreAsignatura,
@@ -29,7 +41,7 @@ public final class ConsultasAsistenciaProgramaDTO {
                                 Integer cuposDisponibles, boolean habilitado, LocalDate inicioPeriodo,
                                 LocalDate finPeriodo, List<FranjaHorarioDTO> franjas) {
             this(id, codigo, nombre, idAsignatura, nombreAsignatura, idDocente, capacidadMaxima, estudiantesActivos,
-                    cuposDisponibles, habilitado, inicioPeriodo, finPeriodo, franjas, null, null, false);
+                    cuposDisponibles, habilitado, inicioPeriodo, finPeriodo, franjas, null, null, false, null);
         }
 
         /** Sin horario: solo para pruebas y consumidores que no lo necesitan. */

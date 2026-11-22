@@ -77,7 +77,7 @@ public class AsistenciaProgramaJpaRepository implements AsistenciaProgramaQueryP
                         e.idDocente(), e.capacidadMaximaPermitida(), e.estudiantesActivos(), e.cuposDisponibles(),
                         Boolean.TRUE.equals(e.grupoEstaHablitado()), e.fechaInicioPeriodoAcademico(),
                         e.fechaFinPeriodoAcademico(), List.of(), e.idProgramaResponsable(),
-                        e.nombreProgramaResponsable(), Boolean.TRUE.equals(e.esResponsable()))));
+                        e.nombreProgramaResponsable(), Boolean.TRUE.equals(e.esResponsable()), e.nombreDocente())));
     }
 
     /** CIERRE-W2A: agrega a cada grupo de la pagina su horario semanal (una sola consulta para toda la pagina). */
@@ -93,7 +93,7 @@ public class AsistenciaProgramaJpaRepository implements AsistenciaProgramaQueryP
                 .map(g -> new GrupoProgramaProjection(g.id(), g.codigo(), g.nombre(), g.idAsignatura(), g.nombreAsignatura(),
                         g.idDocente(), g.capacidadMaxima(), g.estudiantesActivos(), g.cuposDisponibles(), g.habilitado(),
                         g.inicioPeriodo(), g.finPeriodo(), porGrupo.getOrDefault(g.id(), List.of()),
-                        g.idProgramaResponsable(), g.nombreProgramaResponsable(), g.esResponsable()))
+                        g.idProgramaResponsable(), g.nombreProgramaResponsable(), g.esResponsable(), g.nombreDocente()))
                 .toList(), grupos.total());
     }
 
