@@ -444,6 +444,27 @@ app:
         "[ERR_BD_NO_DISPONIBLE]": ERR122
         "[ERR_CODIGO_GRUPO_INVALIDO]": ERR119
         "[ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA]": ERR120
+        "[ERR_NOTIFICACIONES_NO_DISPONIBLE]": ERR123
+        "[OK_ASISTENCIA_001]": SUC004
+        "[OK_ASISTENCIA_002]": SUC005
+        "[OK_SESION_001]": SUC006
+        "[OK_SESION_002]": SUC007
+        "[OK_SESION_003]": SUC008
+        "[OK_REALTIME_001]": SUC009
+        "[RPT_ASISTENCIA_CODIGO_GRUPO]": INF001
+        "[RPT_ASISTENCIA_GRUPO]": INF002
+        "[RPT_ASISTENCIA_NUMERO_SESION]": INF003
+        "[RPT_ASISTENCIA_SESION]": INF004
+        "[RPT_ASISTENCIA_INICIO]": INF005
+        "[RPT_ASISTENCIA_FIN]": INF006
+        "[RPT_ASISTENCIA_DOCUMENTO]": INF007
+        "[RPT_ASISTENCIA_ESTUDIANTE]": INF008
+        "[RPT_ASISTENCIA_CORREO]": INF009
+        "[RPT_ASISTENCIA_ESTADO]": INF010
+        "[RPT_ASISTENCIA_OBSERVACION]": INF011
+        "[RPT_ASISTENCIA_ESTADO_SIN_REGISTRO]": INF012
+        "[RPT_ASISTENCIA_ESTADO_ASISTIO]": INF013
+        "[RPT_ASISTENCIA_ESTADO_NO_ASISTIO]": INF014
     # Azure Key Vault y App Configuration (autenticacion por DefaultAzureCredential con Azure CLI).
     # SEC-12: sin nombres de recursos reales por defecto. Con un proveedor Azure activo y el endpoint vacio, el arranque
     # falla con un mensaje claro; los perfiles local/dev usan proveedores sin Azure salvo que se definan las variables.

@@ -58,7 +58,7 @@ class MessageUcoLabCatalogoTest {
     }
 
     @Test
-    void el_catalogo_trae_los_506_codigos_de_usuario_de_los_seeds() throws Exception {
+    void el_catalogo_trae_los_543_codigos_de_usuario_de_los_seeds() throws Exception {
         // SES-GEN-01: + HOR_006..HOR_014, ASI_013, ASI_014, PER_010, PER_011 y VAL_APP_076 (migraciones 57 y 59 de BD).
         // HU074: + ASI_011 y ASI_012 de confirmacion; ASI_009/ASI_010 conservan el codigo con el significado de migracion 58.
         // CULM-001 A.1: - SIG_001..SIG_015 y ERR_SOLICITUD_MATRICULA_NO_IMPLEMENTADA (seeds 23 y 04 retirados).
@@ -80,7 +80,10 @@ class MessageUcoLabCatalogoTest {
         // REA-02 (revision final P3, migracion 67 de BD): + ERR_BD_NO_DISPONIBLE (ERR122).
         // DEC-081 (migracion 68 de BD): + REC_001..REC_011 (receso academico; todos caben en 10 caracteres, sin alias).
         // Revision final P3 (seed 73 de BD): + PER_012 (periodos solapados), EST_010 y EST_011 (matricula manual con programa comun).
-        assertEquals(524, catalogo().size());
+        // P3 F5 (migracion 71 y seed 74 de BD): - NTF_006, NTF_007 y NTF_009 (plantillas y cola salen al Servicio de Notificaciones);
+        // + ERR_NOTIFICACIONES_NO_DISPONIBLE (ERR123), OK_* de confirmacion y RPT_ASISTENCIA_* (rotulos del Excel).
+        // Ademas el fixture quedo al dia con los seeds: MQR_008 (DEC-078), HOR_* y ERR_BD_NO_DISPONIBLE ya existian en la BD.
+        assertEquals(543, catalogo().size());
     }
 
     @Test
@@ -115,7 +118,8 @@ class MessageUcoLabCatalogoTest {
         // VAL-oleada9 REA-02: + ERR_ALMACENAMIENTO_NO_DISPONIBLE (ERR121).
         // MEJORAS-SERGIO-2026-11-18: - ERR_TIPO_VINCULACION_INVALIDO (ERR109 queda libre, no se renumera).
         // REA-02 (revision final P3): + ERR_BD_NO_DISPONIBLE (ERR122).
-        assertEquals(123, esperados.size());
+        // P3 F5 (seed 74): + ERR_NOTIFICACIONES_NO_DISPONIBLE (ERR123), OK_* con codigo largo (SUC004..SUC009) y RPT_ASISTENCIA_* (INF001..INF014).
+        assertEquals(144, esperados.size());
         assertEquals(esperados, aliasesDeApplicationYml());
     }
 

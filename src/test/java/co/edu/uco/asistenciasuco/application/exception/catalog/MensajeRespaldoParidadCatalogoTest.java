@@ -34,9 +34,7 @@ class MensajeRespaldoParidadCatalogoTest {
             "ADS_005", "PRM_004", "PRM_005", "PRM_006", "PRM_007", "PRM_009", "ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA",
             "TOM_004", "TOM_012", "RCN_003", "RCN_004", "RCN_006", "RCN_012", "SES_013", "SES_021",
             // el catalogo agrega "y terminar en {}" (dominio institucional)
-            "VCE_001",
-            // DEC-078: el respaldo pide elegir programa (selector del frontend); el seed de la BD aun trae el texto anterior
-            "MQR_008");
+            "VCE_001");
 
     @Test
     void el_respaldo_de_cada_codigo_coincide_con_el_texto_del_catalogo() throws Exception {

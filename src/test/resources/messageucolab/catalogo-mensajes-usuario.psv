@@ -1,6 +1,6 @@
 # canonico|codigo remoto|tipo|categoria|titulo|contenido -- generado por AsistenciasUCO-Infra/components/messages/build-message-catalog.py desde los seeds de mensajes de usuario
 CORR_001|CORR001|Funcional|Error|CORR_001 - El identificador de correlación no…|El identificador de correlación no está presente o está vacío.
-ERR_CORRELACION_REQUERIDA|ERR001|Funcional|Error|ERR_CORRELACION_REQUERIDA - El codigo de…|El código de correlación es requerido.
+ERR_CORRELACION_REQUERIDA|ERR001|Funcional|Error|ERR_CORRELACION_REQUERIDA - El código de…|El código de correlación es requerido.
 GEN_001|GEN001|Funcional|Error|GEN_001 - El … especificado no existe en el…|El {} especificado no existe en el sistema.
 GEN_002|GEN002|Funcional|Error|GEN_002 - El … no puede estar vacío o no está…|El {} no puede estar vacío o no está presente.
 GEN_003|GEN003|Funcional|Error|GEN_003 - Ya existe un … registrado con este ….|Ya existe un {} registrado con este {}.
@@ -17,7 +17,7 @@ USU_001|USU001|Funcional|Error|USU_001 - El usuario especificado no existe en…
 ERR_USUARIO_NO_EXISTE|ERR002|Funcional|Error|ERR_USUARIO_NO_EXISTE - El usuario especificado…|El usuario especificado no existe.
 USU_002|USU002|Funcional|Error|USU_002 - El usuario especificado se encuentra…|El usuario especificado se encuentra inactivo en la plataforma.
 ERR_UNICIDAD_CORREO|ERR003|Funcional|Error|ERR_UNICIDAD_CORREO - El correo electronico ya…|El correo electronico ya se encuentra registrado.
-ERR_UNICIDAD_DOCUMENTO|ERR004|Funcional|Error|ERR_UNICIDAD_DOCUMENTO - El numero de documento…|El número de documento ya está registrado para este tipo de identificación.
+ERR_UNICIDAD_DOCUMENTO|ERR004|Funcional|Error|ERR_UNICIDAD_DOCUMENTO - El número de documento…|El número de documento ya está registrado para este tipo de identificación.
 EST_001|EST001|Funcional|Error|EST_001 - El estudiante especificado no existe…|El estudiante especificado no existe en el sistema.
 ERR_ESTUDIANTE_NO_EXISTE|ERR005|Funcional|Error|ERR_ESTUDIANTE_NO_EXISTE - El estudiante…|El estudiante especificado no existe.
 EST_002|EST002|Funcional|Error|EST_002 - El estudiante ya se encuentra…|El estudiante ya se encuentra matriculado o registrado en este grupo.
@@ -53,8 +53,21 @@ ERR_CRUCE_HORARIO_DOCENTE|ERR017|Funcional|Error|ERR_CRUCE_HORARIO_DOCENTE - Exi
 HOR_003|HOR003|Funcional|Error|HOR_003 - Las franjas del horario del grupo no…|Las franjas del horario del grupo no pueden cruzarse: {} se cruza con {}.
 HOR_004|HOR004|Funcional|Error|HOR_004 - El horario del grupo no es válido: ….|El horario del grupo no es válido: {}.
 HOR_005|HOR005|Funcional|Error|HOR_005 - El grupo ya tiene un horario definido…|El grupo ya tiene un horario definido. Para cambiarlo, solicita la aprobación del coordinador.
+HOR_006|HOR006|Funcional|Error|HOR_006 - Las horas semanales del horario (… h)…|Las horas semanales del horario ({} h) no coinciden con las de la materia ({} h). Ajusta las franjas para que sumen exactamente las horas de la materia.
+HOR_007|HOR007|Funcional|Error|HOR_007 - La franja … debe durar entre … y ……|La franja {} debe durar entre {} y {} minutos.
+HOR_008|HOR008|Funcional|Error|HOR_008 - La franja … debe estar dentro del…|La franja {} debe estar dentro del horario permitido ({}).
+HOR_009|HOR009|Funcional|Error|HOR_009 - El nuevo horario se cruza con otros…|El nuevo horario se cruza con otros grupos de {} estudiante(s) inscrito(s) en la franja {}.
+HOR_010|HOR010|Funcional|Información|HOR_010 - El horario programa … h en el período…|El horario programa {} h en el período y la materia espera {} h.
+HOR_011|HOR011|Funcional|Información|HOR_011 - … h caen en días festivos (……|{} h caen en días festivos ({} sesión(es)); esas sesiones quedan canceladas.
+HOR_012|HOR012|Funcional|Información|HOR_012 - … h ya no se pueden programar porque…|{} h ya no se pueden programar porque el período ya inició; las sesiones se programan desde {}.
+HOR_013|HOR013|Funcional|Información|HOR_013 - La materia aún no tiene horas…|La materia aún no tiene horas semanales cargadas: no se valida el total del horario.
+HOR_014|HOR014|Funcional|Información|HOR_014 - Se conservan … sesión(es) ya dictadas…|Se conservan {} sesión(es) ya dictadas o con asistencia ({} h).
+ASI_013|ASI013|Funcional|Error|ASI_013 - Las horas semanales de la materia…|Las horas semanales de la materia deben ser un entero entre 1 y {}.
+ASI_014|ASI014|Funcional|Error|ASI_014 - La asignatura no tiene un vínculo…|La asignatura no tiene un vínculo activo con un plan activo de los programas que coordinas.
+PER_010|PER010|Funcional|Error|PER_010 - El período académico … no está…|El período académico {} no está vigente: ya terminó, está cerrado o no es de tu institución.
+PER_011|PER011|Funcional|Error|PER_011 - El período debe durar … semanas: la…|El período debe durar {} semanas: la fecha de fin debe ser {}.
 SES_001|SES001|Funcional|Error|SES_001 - La sesión de clase especificada no…|La sesión de clase especificada no existe o no se encuentra activa.
-ERR_SESION_NO_EXISTE|ERR018|Funcional|Error|ERR_SESION_NO_EXISTE - La sesion de clase no…|La sesión de clase no existe o no está abierta.
+ERR_SESION_NO_EXISTE|ERR018|Funcional|Error|ERR_SESION_NO_EXISTE - La sesión de clase no…|La sesión de clase no existe o no está abierta.
 SES_002|SES002|Funcional|Error|SES_002 - El código de verificación de…|El código de verificación de asistencia es incorrecto o ha expirado.
 SES_003|SES003|Funcional|Error|SES_003 - El cierre de sesión no está soportado…|El cierre de sesión no está soportado por el contrato vigente de base de datos.
 SES_004|SES004|Funcional|Error|SES_004 - La fecha y hora de fin de sesión debe…|La fecha y hora de fin de sesión debe ser posterior a la fecha y hora de inicio.
@@ -82,10 +95,7 @@ NTF_002|NTF002|Funcional|Error|NTF_002 - La notificación especificada no existe
 NTF_003|NTF003|Funcional|Error|NTF_003 - La notificación ya no está reservada…|La notificación ya no está reservada por este proceso.
 NTF_004|NTF004|Funcional|Error|NTF_004 - La plantilla de notificación no…|La plantilla de notificación no contiene todos los marcadores obligatorios o incluye marcadores no permitidos para este tipo.
 NTF_005|NTF005|Funcional|Error|NTF_005 - No existe la versión de plantilla…|No existe la versión de plantilla solicitada para el tipo e idioma indicados.
-NTF_006|NTF006|Funcional|Confirmación|NTF_006 - La plantilla de correo se actualizó y…|La plantilla de correo se actualizó y activó correctamente en una nueva versión.
-NTF_007|NTF007|Funcional|Confirmación|NTF_007 - La notificación fallida fue reencolada…|La notificación fallida fue reencolada exitosamente para un nuevo intento de envío.
 NTF_008|NTF008|Funcional|Error|NTF_008 - Solo se pueden reencolar…|Solo se pueden reencolar notificaciones en estado fallido definitivo o reintentable.
-NTF_009|NTF009|Funcional|Confirmación|NTF_009 - Correo de prueba encolado correctamente.|Correo de prueba encolado correctamente.
 SYS_001|SYS001|Técnico|Error|SYS_001 - Ocurrió un error inesperado al…|Ocurrió un error inesperado al procesar la solicitud.
 ERR_INESPERADO_REGISTRO_ESTUDIANTE|ERR022|Técnico|Error|ERR_INESPERADO_REGISTRO_ESTUDIANTE|Hubo un error inesperado al procesar el registro completo del estudiante.
 ERR_INESPERADO_REGISTRO_DOCENTE|ERR023|Técnico|Error|ERR_INESPERADO_REGISTRO_DOCENTE|Hubo un error inesperado al procesar el registro completo del docente.
@@ -93,7 +103,7 @@ ERR_INESPERADO_REGISTRO_ASISTENCIA|ERR024|Técnico|Error|ERR_INESPERADO_REGISTRO
 SUC_REGISTRO_ESTUDIANTE_GRUPO|SUC001|Funcional|Confirmación|SUC_REGISTRO_ESTUDIANTE_GRUPO - Se ha registrado…|Se ha registrado el estudiante en el grupo de forma satisfactoria.
 SUC_REGISTRO_DOCENTE_GRUPO|SUC002|Funcional|Confirmación|SUC_REGISTRO_DOCENTE_GRUPO - Se ha registrado el…|Se ha registrado el docente en el grupo de forma satisfactoria.
 SUC_REGISTRO_ASISTENCIA|SUC003|Funcional|Confirmación|SUC_REGISTRO_ASISTENCIA - Asistencia registrada…|Asistencia registrada de forma satisfactoria.
-ARC_001|ARC001|Funcional|Error|ARC_001 - El soporte indicado no esta disponible…|El soporte indicado no está disponible para esta solicitud.
+ARC_001|ARC001|Funcional|Error|ARC_001 - El soporte indicado no está disponible…|El soporte indicado no está disponible para esta solicitud.
 ARC_002|ARC002|Funcional|Error|ARC_002 - No fue posible registrar el soporte.|No fue posible registrar el soporte.
 ARC_003|ARC003|Funcional|Error|ARC_003 - Los datos del soporte no son válidos.|Los datos del soporte no son válidos.
 ARC_005|ARC005|Funcional|Error|ARC_005 - El estudiante indicado no corresponde…|El estudiante indicado no corresponde al usuario autenticado.
@@ -171,7 +181,7 @@ FES_002|FES002|Funcional|Error|FES_002 - El listado de festivos recibido no es�
 FES_003|FES003|Funcional|Error|FES_003 - El listado de festivos no tiene una…|El listado de festivos no tiene una cantidad válida de días.
 FES_004|FES004|Funcional|Error|FES_004 - La fuente de festivos no es válida.|La fuente de festivos no es válida.
 FES_005|FES005|Funcional|Confirmación|FES_005 - Se cargaron … días festivos de ….|Se cargaron {} días festivos de {}.
-FES_006|FES006|Funcional|Error|FES_006 - Indica el periodo académico o el año…|Indica el período académico o el año, no ambos.
+FES_006|FES006|Funcional|Error|FES_006 - Indica el período académico o el año…|Indica el período académico o el año, no ambos.
 FES_007|FES007|Funcional|Error|FES_007 - El período académico no existe.|El período académico no existe.
 FES_008|FES008|Funcional|Confirmación|FES_008 - Se cancelaron … sesiones por festivo…|Se cancelaron {} sesiones por festivo; {} sesiones con asistencia quedaron sin cambios.
 FES_009|FES009|Funcional|Error|FES_009 - Algunos grupos no se pudieron…|Algunos grupos no se pudieron actualizar con los festivos.
@@ -205,7 +215,7 @@ ASI_006|ASI006|Funcional|Error|ASI_006 - La asignatura es compartida con…|La a
 ASI_007|ASI007|Funcional|Error|ASI_007 - El carácter de la asignatura no es…|El carácter de la asignatura no es válido.
 EST_005|EST005|Funcional|Error|EST_005 - El grupo pertenece a varios programas…|El grupo pertenece a varios programas: indica el programa.
 EST_006|EST006|Funcional|Error|EST_006 - El programa indicado no corresponde a…|El programa indicado no corresponde a los programas del grupo.
-MQR_008|MQR008|Funcional|Error|MQR_008 - No se pudo determinar tu programa en…|No se pudo determinar tu programa en este grupo. Pide a tu docente que te matricule.
+MQR_008|MQR008|Funcional|Error|MQR_008 - Este grupo lo comparten varios…|Este grupo lo comparten varios programas: elige el programa al que perteneces para matricularte.
 COO_002|COO002|Funcional|Error|COO_002 - Coordinas varios programas: selecciona…|Coordinas varios programas: selecciona el programa que quieres consultar.
 COO_003|COO003|Funcional|Error|COO_003 - El programa indicado no pertenece a tu…|El programa indicado no pertenece a tu coordinación.
 ALR_001|ALR001|Funcional|Confirmación|ALR_001 - Las alertas de inasistencia están…|Las alertas de inasistencia están deshabilitadas.
@@ -344,7 +354,7 @@ VAL_APP_064|VALAPP064|Funcional|Error|VAL_APP_064 - El tipo de programa es oblig
 VAL_APP_065|VALAPP065|Funcional|Error|VAL_APP_065 - El coordinador del programa es…|El coordinador del programa es obligatorio.
 VAL_APP_066|VALAPP066|Funcional|Error|VAL_APP_066 - El estado deseado del programa es…|El estado deseado del programa es obligatorio.
 VAL_APP_067|VALAPP067|Funcional|Error|VAL_APP_067 - Cada franja del horario es…|Cada franja del horario es obligatoria.
-VAL_APP_068|VALAPP068|Funcional|Error|VAL_APP_068 - El campo dias es obligatorio…|El campo días es obligatorio cuando se envía el horario.
+VAL_APP_068|VALAPP068|Funcional|Error|VAL_APP_068 - El campo días es obligatorio…|El campo días es obligatorio cuando se envía el horario.
 VAL_APP_069|VALAPP069|Funcional|Error|VAL_APP_069 - El campo … es obligatorio.|El campo {} es obligatorio.
 VAL_APP_070|VALAPP070|Funcional|Error|VAL_APP_070 - El campo … debe usar formato ISO…|El campo {} debe usar formato ISO local {}.
 VAL_APP_071|VALAPP071|Funcional|Error|VAL_APP_071 - Los datos de la consulta no son…|Los datos de la consulta no son válidos.
@@ -352,6 +362,7 @@ VAL_APP_072|VALAPP072|Funcional|Error|VAL_APP_072 - La sesión es obligatoria.|L
 VAL_APP_073|VALAPP073|Funcional|Error|VAL_APP_073 - El identificador del estudiante es…|El identificador del estudiante es obligatorio.
 VAL_APP_074|VALAPP074|Funcional|Error|VAL_APP_074 - El identificador del docente es…|El identificador del docente es obligatorio.
 VAL_APP_075|VALAPP075|Funcional|Error|VAL_APP_075 - El identificador del programa es…|El identificador del programa es obligatorio.
+VAL_APP_076|VALAPP076|Funcional|Error|VAL_APP_076 - El horario del grupo es…|El horario del grupo es obligatorio: envía al menos una franja.
 ACC_APP_001|ACCAPP001|Funcional|Error|ACC_APP_001 - El docente autenticado no tiene…|El docente autenticado no tiene titularidad sobre el grupo consultado.
 ACC_APP_002|ACCAPP002|Funcional|Error|ACC_APP_002 - El docente autenticado no tiene…|El docente autenticado no tiene titularidad sobre el grupo solicitado.
 ACC_APP_003|ACCAPP003|Funcional|Error|ACC_APP_003 - No fue posible resolver el docente…|No fue posible resolver el docente autenticado.
@@ -478,6 +489,7 @@ ERR_USUARIO_REQUERIDO|ERR116|Funcional|Error|ERR_USUARIO_REQUERIDO - El usuario 
 ERR_CORREO_REQUERIDO_MATRICULA|ERR117|Funcional|Error|ERR_CORREO_REQUERIDO_MATRICULA - El correo es…|El correo es obligatorio: no hay un estudiante registrado que se pueda matricular con ese documento.
 ERR_ANTIVIRUS_NO_DISPONIBLE|ERR118|Técnico|Error|ERR_ANTIVIRUS_NO_DISPONIBLE - El antivirus no…|El antivirus no está disponible; el archivo no se guardó. Intente de nuevo en unos minutos.
 ERR_ALMACENAMIENTO_NO_DISPONIBLE|ERR121|Técnico|Error|ERR_ALMACENAMIENTO_NO_DISPONIBLE|El almacenamiento de soportes no está disponible en este momento. Intente de nuevo en unos minutos.
+ERR_BD_NO_DISPONIBLE|ERR122|Técnico|Error|ERR_BD_NO_DISPONIBLE - El servicio no está…|El servicio no está disponible en este momento. Intenta de nuevo en unos minutos.
 VCE_008|VCE008|Funcional|Error|VCE_008 - El correo debe ser institucional y…|El correo debe ser institucional y terminar en {}.
 SES_028|SES028|Funcional|Error|SES_028 - La sesión debe terminar el mismo día…|La sesión debe terminar el mismo día en que empieza; no puede pasar de la medianoche.
 ASI_008|ASI008|Funcional|Error|ASI_008 - Los créditos de la asignatura no…|Los créditos de la asignatura no pueden superar {}.
@@ -487,10 +499,6 @@ VCE_009|VCE009|Funcional|Error|VCE_009 - Defina su contraseña para activar su�
 ACT_001|ACT001|Funcional|Confirmación|ACT_001 - Se envió de nuevo el enlace de…|Se envió de nuevo el enlace de activación al correo institucional.
 ACT_002|ACT002|Funcional|Error|ACT_002 - La cuenta ya está activa; no es…|La cuenta ya está activa; no es necesario enviar el enlace de activación.
 CAL_001|CAL001|Funcional|Error|CAL_001 - El rango de fechas no es válido…|El rango de fechas no es válido: indique inicio y fin, con el fin igual o posterior y máximo 31 días.
-HOR_006|HOR006|Funcional|Error|HOR_006 - Las horas semanales del horario…|Las horas semanales del horario ({} h) no coinciden con las de la materia ({} h). Ajusta las franjas para que sumen exactamente las horas de la materia.
-HOR_007|HOR007|Funcional|Error|HOR_007 - La franja {} debe durar entre {}…|La franja {} debe durar entre {} y {} minutos.
-HOR_008|HOR008|Funcional|Error|HOR_008 - La franja {} debe estar dentro…|La franja {} debe estar dentro del horario permitido ({}).
-HOR_009|HOR009|Funcional|Error|HOR_009 - El nuevo horario se cruza con…|El nuevo horario se cruza con otros grupos de {} estudiante(s) inscrito(s) en la franja {}.
 ASI_009|ASI009|Funcional|Error|ASI_009 - No puedes inactivar la asignatura…|No puedes inactivar la asignatura: tiene grupos en el período vigente o en períodos futuros.
 ASI_010|ASI010|Funcional|Error|ASI_010 - La asignatura está inactiva; actívala…|La asignatura está inactiva; actívala para usarla.
 ASI_011|ASI011|Funcional|Confirmación|ASI_011 - La asignatura quedó activa.|La asignatura quedó activa.
@@ -498,17 +506,6 @@ ASI_012|ASI012|Funcional|Confirmación|ASI_012 - La asignatura quedó inactiva.|
 EST_007|EST007|Funcional|Confirmación|EST_007 - El semestre del estudiante quedó…|El semestre del estudiante quedó actualizado.
 EST_008|EST008|Funcional|Error|EST_008 - El estudiante no está vinculado a este…|El estudiante no está vinculado a este programa académico.
 EST_009|EST009|Funcional|Error|EST_009 - El semestre debe estar entre … y ….|El semestre debe estar entre {} y {}.
-ASI_013|ASI013|Funcional|Error|ASI_013 - Las horas semanales de la materia…|Las horas semanales de la materia deben ser un entero entre 1 y {}.
-ASI_014|ASI014|Funcional|Error|ASI_014 - La asignatura no tiene un vínculo…|La asignatura no tiene un vínculo activo con un plan activo de los programas que coordinas.
-PER_010|PER010|Funcional|Error|PER_010 - El período académico {} no está…|El período académico {} no está vigente: ya terminó, está cerrado o no es de tu institución.
-PER_011|PER011|Funcional|Error|PER_011 - El período debe durar {} semanas:…|El período debe durar {} semanas: la fecha de fin debe ser {}.
-VAL_APP_076|VALAPP076|Funcional|Error|VAL_APP_076 - El horario del grupo es…|El horario del grupo es obligatorio: envía al menos una franja.
-HOR_010|HOR010|Funcional|Error|HOR_010 - El horario programa {} h en el…|El horario programa {} h en el período y la materia espera {} h.
-HOR_011|HOR011|Funcional|Error|HOR_011 - {} h caen en días festivos ({}…|{} h caen en días festivos ({} sesión(es)); esas sesiones quedan canceladas.
-HOR_012|HOR012|Funcional|Error|HOR_012 - {} h ya no se pueden programar…|{} h ya no se pueden programar porque el período ya inició; las sesiones se programan desde {}.
-HOR_013|HOR013|Funcional|Error|HOR_013 - La materia aún no tiene horas…|La materia aún no tiene horas semanales cargadas: no se valida el total del horario.
-HOR_014|HOR014|Funcional|Error|HOR_014 - Se conservan {} sesión(es) ya…|Se conservan {} sesión(es) ya dictadas o con asistencia ({} h).
-ERR_BD_NO_DISPONIBLE|ERR122|Técnico|Error|ERR_BD_NO_DISPONIBLE|El servicio no está disponible en este momento. Intenta de nuevo en unos minutos.
 REC_001|REC001|Funcional|Confirmación|REC_001 - Se registró el receso académico del ……|Se registró el receso académico del {}; se cancelaron {} clases.
 REC_002|REC002|Funcional|Confirmación|REC_002 - Se retiró el receso académico del ….|Se retiró el receso académico del {}.
 REC_003|REC003|Funcional|Error|REC_003 - La fecha del receso debe estar dentro…|La fecha del receso debe estar dentro del período académico, del {} al {}.
@@ -522,4 +519,26 @@ REC_010|REC010|Funcional|Error|REC_010 - Este día de receso ya canceló … cla
 REC_011|REC011|Funcional|Información|REC_011 - … h caen en días de receso académico…|{} h caen en días de receso académico ({} sesión(es)); esas sesiones quedan canceladas.
 PER_012|PER012|Funcional|Error|PER_012 - Las fechas del período se cruzan con…|Las fechas del período se cruzan con el período {}; los períodos de la institución no pueden solaparse.
 EST_010|EST010|Funcional|Error|EST_010 - El estudiante no pertenece a ningún…|El estudiante no pertenece a ningún programa de este grupo; solo puedes matricular estudiantes de los programas del grupo.
-EST_011|EST011|Funcional|Error|EST_011 - El programa indicado no es uno de…|El programa indicado no es uno de los programas del estudiante; elige uno de sus programas del grupo.
+EST_011|EST011|Funcional|Error|EST_011 - El programa indicado no es uno de los…|El programa indicado no es uno de los programas del estudiante; elige uno de sus programas del grupo.
+ERR_NOTIFICACIONES_NO_DISPONIBLE|ERR123|Técnico|Error|ERR_NOTIFICACIONES_NO_DISPONIBLE|El servicio de notificaciones no está disponible en este momento. Intenta de nuevo en unos minutos.
+OK_ADMIN_001|OKADMIN001|Funcional|Confirmación|OK_ADMIN_001 - Cierre masivo solicitado…|Cierre masivo solicitado correctamente.
+OK_ASISTENCIA_001|SUC004|Funcional|Confirmación|OK_ASISTENCIA_001 - Solicitud de revisión…|Solicitud de revisión registrada correctamente.
+OK_ASISTENCIA_002|SUC005|Funcional|Confirmación|OK_ASISTENCIA_002 - Asistencias de la sesión…|Asistencias de la sesión registradas correctamente.
+OK_SESION_001|SUC006|Funcional|Confirmación|OK_SESION_001 - Sesión cerrada correctamente.|Sesión cerrada correctamente.
+OK_SESION_002|SUC007|Funcional|Confirmación|OK_SESION_002 - Sesión creada correctamente.|Sesión creada correctamente.
+OK_SESION_003|SUC008|Funcional|Confirmación|OK_SESION_003 - Sesiones del grupo generadas…|Sesiones del grupo generadas correctamente.
+OK_REALTIME_001|SUC009|Funcional|Confirmación|OK_REALTIME_001 - Evento reactivo emitido a ……|Evento reactivo emitido a {0} suscriptores.
+RPT_ASISTENCIA_CODIGO_GRUPO|INF001|Funcional|Información|RPT_ASISTENCIA_CODIGO_GRUPO - Código del grupo|Código del grupo
+RPT_ASISTENCIA_GRUPO|INF002|Funcional|Información|RPT_ASISTENCIA_GRUPO - Grupo|Grupo
+RPT_ASISTENCIA_NUMERO_SESION|INF003|Funcional|Información|RPT_ASISTENCIA_NUMERO_SESION - Número de sesión|Número de sesión
+RPT_ASISTENCIA_SESION|INF004|Funcional|Información|RPT_ASISTENCIA_SESION - Sesión|Sesión
+RPT_ASISTENCIA_INICIO|INF005|Funcional|Información|RPT_ASISTENCIA_INICIO - Inicio|Inicio
+RPT_ASISTENCIA_FIN|INF006|Funcional|Información|RPT_ASISTENCIA_FIN - Fin|Fin
+RPT_ASISTENCIA_DOCUMENTO|INF007|Funcional|Información|RPT_ASISTENCIA_DOCUMENTO - Documento|Documento
+RPT_ASISTENCIA_ESTUDIANTE|INF008|Funcional|Información|RPT_ASISTENCIA_ESTUDIANTE - Estudiante|Estudiante
+RPT_ASISTENCIA_CORREO|INF009|Funcional|Información|RPT_ASISTENCIA_CORREO - Correo|Correo
+RPT_ASISTENCIA_ESTADO|INF010|Funcional|Información|RPT_ASISTENCIA_ESTADO - Estado de asistencia|Estado de asistencia
+RPT_ASISTENCIA_OBSERVACION|INF011|Funcional|Información|RPT_ASISTENCIA_OBSERVACION - Observación|Observación
+RPT_ASISTENCIA_ESTADO_SIN_REGISTRO|INF012|Funcional|Información|RPT_ASISTENCIA_ESTADO_SIN_REGISTRO|SIN REGISTRO
+RPT_ASISTENCIA_ESTADO_ASISTIO|INF013|Funcional|Información|RPT_ASISTENCIA_ESTADO_ASISTIO - ASISTIÓ|ASISTIÓ
+RPT_ASISTENCIA_ESTADO_NO_ASISTIO|INF014|Funcional|Información|RPT_ASISTENCIA_ESTADO_NO_ASISTIO|NO ASISTIÓ
