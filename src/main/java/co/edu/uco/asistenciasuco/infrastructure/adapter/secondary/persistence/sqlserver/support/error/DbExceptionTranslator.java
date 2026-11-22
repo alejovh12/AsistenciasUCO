@@ -150,6 +150,7 @@ public final class DbExceptionTranslator {
             // SES-GEN-01: reglas del horario del grupo, asignatura/periodo no disponibles y hora local inexistente.
             MensajeUsuarioErrorCode.HOR_006,
             MensajeUsuarioErrorCode.HOR_009,
+            MensajeUsuarioErrorCode.ASI_014,
             MensajeUsuarioErrorCode.PER_010,
             MensajeUsuarioErrorCode.SES_005,
             // DEC-081: receso academico (festivo, repetido, periodo cerrado y dia ya aplicado).
@@ -239,6 +240,7 @@ public final class DbExceptionTranslator {
             MensajeUsuarioErrorCode.HOR_009,
             CatalogoErrorCode.ASI_010,
             MensajeUsuarioErrorCode.ASI_013,
+            MensajeUsuarioErrorCode.ASI_014,
             MensajeUsuarioErrorCode.PER_010,
             MensajeUsuarioErrorCode.PER_011,
             MensajeUsuarioErrorCode.SES_005,

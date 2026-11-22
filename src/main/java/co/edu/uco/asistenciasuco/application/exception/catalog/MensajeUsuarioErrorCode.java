@@ -135,6 +135,10 @@ public enum MensajeUsuarioErrorCode implements ErrorDefinition {
     HOR_008("HOR_008", ErrorKind.VALIDATION, "La franja {} debe estar dentro del horario permitido ({})."),
     HOR_009("HOR_009", ErrorKind.CONFLICT,
             "El nuevo horario se cruza con otros grupos de {} estudiante(s) inscrito(s) en la franja {}."),
+    // Revision final BE-1: la asignatura no tiene vinculo activo con un plan activo de los programas del coordinador (usp_crear_grupo y
+    // usp_previsualizar_horario_grupo); antes llegaba sin clasificar como un 500.
+    ASI_014("ASI_014", ErrorKind.CONFLICT,
+            "La asignatura no tiene un vínculo activo con un plan activo de los programas que coordinas."),
     ASI_013("ASI_013", ErrorKind.VALIDATION, "Las horas semanales de la materia deben ser un entero entre 1 y {}."),
     // DEC-076 + SES-GEN-01: periodo no vigente (terminado, cerrado o de otra institucion); un solo codigo, con el nombre del periodo.
     PER_010("PER_010", ErrorKind.CONFLICT,

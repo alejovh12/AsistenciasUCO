@@ -217,6 +217,8 @@ final class DbFailureClassifier {
             case "HOR_008" -> MensajeUsuarioErrorCode.HOR_008;
             case "HOR_009" -> MensajeUsuarioErrorCode.HOR_009;
             case "ASI_013" -> MensajeUsuarioErrorCode.ASI_013;
+            // Revision final BE-1: asignatura sin vinculo activo a un plan activo de los programas del coordinador (409).
+            case "ASI_014" -> MensajeUsuarioErrorCode.ASI_014;
             case "PER_011" -> MensajeUsuarioErrorCode.PER_011;
             // DEC-081: receso academico (migracion 68). 400 fecha/motivo invalidos, 404 inexistente, 409 festivo/repetido/cerrado/aplicado.
             case "REC_003" -> MensajeUsuarioErrorCode.REC_003;
