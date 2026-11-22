@@ -132,7 +132,10 @@ final class DbFailureClassifier {
             // parametro (IDENTIDAD.PERMITIR_CORREGIR_DOCUMENTO) es una regla de negocio en conflicto.
             // NTF-002B: administracion de plantillas y cola outbox (marcadores invalidos, version inexistente,
             // notificacion fuera de un estado reintentable).
-            case "NTF_004" -> CommonErrorCode.VALIDATION_ERROR;
+            // F4: NTF_001 (datos de la notificacion invalidos) y NTF_003 (ya no esta reservada) los emiten los SP del outbox que el backend
+            // conserva; se clasifican en lugar de caer como 500 generico.
+            case "NTF_001", "NTF_004" -> CommonErrorCode.VALIDATION_ERROR;
+            case "NTF_003" -> CommonErrorCode.CONFLICT;
             // CULM-001 A.2-6: NTF_002 notificacion inexistente al reintentar desde la cola (antes ERR_DB_UNCLASSIFIED, 500).
             case "NTF_002", "NTF_005" -> CommonErrorCode.RESOURCE_NOT_FOUND;
             // CULM-001 D.9-a (F-ADM-027): NTF_020 reintento de una notificacion inexistente y NTF_021 vista previa de un tipo de plantilla

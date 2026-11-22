@@ -36,13 +36,13 @@ class DbFailureClassifierA02Test {
     /**
      * Codigos que a proposito no tienen clasificacion de negocio en el clasificador de comandos:
      * GEN_001, SYS_001 y VAL_007 son genericos o dependen de la operacion (quedan tecnicos sin ella);
-     * NTF_001 y NTF_003 son del subsistema de notificaciones, que se extrae a otro servicio;
+     * (NTF_001 y NTF_003 ya se clasifican: F4 los emiten solo los SP del outbox que el backend conserva);
      * EST_002, GRUP_002 y SES_002 son codigos historicos que los SP ya no lanzan (los reemplazan ERR_MATRICULA_DUPLICADA,
      * ERR_CUPO_SUPERADO y AQR_*); MQR_002/003, AQR_011 e IAM_001 los resuelve la aplicacion (red, limite de intentos, cuenta);
      * FES_010, ALR_002 y VCE_009 son avisos que no cortan la operacion; HOR_010..014 son informativos del horario.
      */
     private static final Set<String> SIN_CLASIFICAR_A_PROPOSITO = Set.of(
-            "GEN_001", "SYS_001", "VAL_007", "NTF_001", "NTF_003",
+            "GEN_001", "SYS_001", "VAL_007",
             "EST_002", "GRUP_002", "SES_002", "MQR_002", "MQR_003", "AQR_011", "IAM_001",
             "FES_010", "ALR_002", "VCE_009", "HOR_010", "HOR_011", "HOR_012", "HOR_013", "HOR_014");
 
