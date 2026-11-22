@@ -147,7 +147,8 @@ public final class AdministracionNotificacionServicioAdapter implements Administ
         final int numeroPagina = Math.max(1, pagina);
         final int tamanoPagina = tamano <= 0 || tamano > 100 ? 20 : tamano;
         final Map<String, String> consulta = new LinkedHashMap<>();
-        consulta.put("aplicacion", properties.aplicacion());
+        // Sin filtro de aplicacion: los correos de prueba del administrador quedan en la cola del servicio con su propia aplicacion
+        // ("notificaciones-admin") y deben verse junto a los avisos de Asistencias, como antes con la cola del backend.
         if (estado != null && !estado.isBlank()) {
             consulta.put("estado", estado.strip());
         }

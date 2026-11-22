@@ -139,7 +139,7 @@ class AdministracionNotificacionServicioAdapterTest {
     }
 
     @Test
-    void consulta_la_cola_de_la_aplicacion_con_filtros_paginacion_y_resumen() {
+    void consulta_la_cola_con_filtros_paginacion_y_resumen() {
         final String id = UUID.randomUUID().toString();
         final String correlacion = UUID.randomUUID().toString();
         servidor.responder(200, """
@@ -153,7 +153,7 @@ class AdministracionNotificacionServicioAdapterTest {
 
         final PaginaColaNotificacionProjection pagina = adapter.consultarCola("FALLIDA_DEFINITIVA", "SESION_CANCELADA", 2, 10, admin);
 
-        assertEquals("aplicacion=asistencias&estado=FALLIDA_DEFINITIVA&tipo=SESION_CANCELADA&pagina=2&tamano=10",
+        assertEquals("estado=FALLIDA_DEFINITIVA&tipo=SESION_CANCELADA&pagina=2&tamano=10",
                 servidor.peticiones.getFirst().consulta());
         assertEquals(11, pagina.totalElementos());
         assertEquals(2, pagina.totalPaginas());
@@ -174,7 +174,7 @@ class AdministracionNotificacionServicioAdapterTest {
 
         adapter.consultarCola(null, " ", 0, 500, admin);
 
-        assertEquals("aplicacion=asistencias&pagina=1&tamano=20", servidor.peticiones.getFirst().consulta());
+        assertEquals("pagina=1&tamano=20", servidor.peticiones.getFirst().consulta());
     }
 
     @Test
