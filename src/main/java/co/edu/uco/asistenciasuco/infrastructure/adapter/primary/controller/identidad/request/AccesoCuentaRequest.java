@@ -10,7 +10,7 @@ import jakarta.validation.constraints.Size;
 public final class AccesoCuentaRequest {
 
     @NotBlank(message = "El correo es obligatorio.")
-    @Size(max = 100, message = "El correo puede tener maximo 100 caracteres.")
+    @Size(max = 100, message = "El correo puede tener máximo 100 caracteres.")
     @Pattern(regexp = BeanValidationPatterns.EMAIL_OR_BLANK, message = HttpValidationMessages.INVALID_EMAIL)
     private String correo;
 

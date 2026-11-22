@@ -12,7 +12,7 @@ public final class CrearGrupoRequest {
     private UUID asignaturaId;
     private UUID idPeriodoAcademico;
     private UUID periodoAcademicoId;
-    @Positive(message = "El codigo del grupo debe ser un entero positivo.")
+    @Positive(message = "El código del grupo debe ser un entero positivo.")
     private Integer codigo;
     @TextoSeguro
     @Size(max = 50, message = "El campo nombre no puede superar 50 caracteres.")

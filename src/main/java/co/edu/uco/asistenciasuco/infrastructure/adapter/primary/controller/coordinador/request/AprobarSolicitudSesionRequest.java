@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Size;
 /** DEC-065 (2): cuerpo de {@code POST /api/v1/coordinador/sesiones/{sesionId}/aprobacion}; la observacion es opcional. */
 public final class AprobarSolicitudSesionRequest {
 
-    @Size(max = 500, message = "La observacion no puede superar 500 caracteres.")
+    @Size(max = 500, message = "La observación no puede superar 500 caracteres.")
     private String observacion;
 
     public String getObservacion() {

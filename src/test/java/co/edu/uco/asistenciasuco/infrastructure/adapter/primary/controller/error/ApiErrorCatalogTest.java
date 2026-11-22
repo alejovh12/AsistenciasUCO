@@ -25,7 +25,7 @@ class ApiErrorCatalogTest {
 
         assertEquals("ERR_NOMBRE_PERSONA_INVALIDO", descriptor.code());
         assertEquals(HttpStatus.BAD_REQUEST, descriptor.status());
-        assertEquals("Los nombres y apellidos solo pueden contener letras, espacios, apostrofes y guiones.", descriptor.message());
+        assertEquals("Los nombres y apellidos solo pueden contener letras, espacios, apóstrofes y guiones.", descriptor.message());
     }
 
     @Test
@@ -46,7 +46,7 @@ class ApiErrorCatalogTest {
 
         assertEquals("ERR_MATRICULA_DUPLICADA", descriptor.code());
         assertEquals(HttpStatus.CONFLICT, descriptor.status());
-        assertEquals("La matricula ya se encuentra registrada para este grupo.", descriptor.message());
+        assertEquals("Usted ya se encuentra registrado o matriculado en este grupo.", descriptor.message());
     }
 
     @Test

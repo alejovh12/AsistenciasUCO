@@ -11,13 +11,13 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.valid
 
 /** Cuerpo de {@code POST /api/v1/coordinador/docentes}. El programa NO viaja: sale del ambito del coordinador. */
 public final class VincularDocenteProgramaRequest {
-    @NonEmptyUuid(message = "El identificador idDocente no es valido.")
+    @NonEmptyUuid(message = "El identificador idDocente no es válido.")
     private UUID idDocente;
-    @NonEmptyUuid(message = "El identificador idUsuario no es valido.")
+    @NonEmptyUuid(message = "El identificador idUsuario no es válido.")
     private UUID idUsuario;
-    @NonEmptyUuid(message = "El identificador idTipoIdentificacion no es valido.")
+    @NonEmptyUuid(message = "El identificador idTipoIdentificacion no es válido.")
     private UUID idTipoIdentificacion;
-    @Pattern(regexp = BeanValidationPatterns.DIGITS_OR_BLANK, message = "El numero de identificacion debe ser numerico.")
+    @Pattern(regexp = BeanValidationPatterns.DIGITS_OR_BLANK, message = "El número de identificación debe ser numerico.")
     @NumeroIdentificacionTexto
     private String numeroIdentificacion;
     @LongitudTrasTrim(max = 50, message = "El campo primerNombre excede la longitud permitida.",

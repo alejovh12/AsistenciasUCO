@@ -17,6 +17,6 @@ public record AsociarAsignaturaPlanRequest(
         @NotNull(message = "La asignatura es obligatoria.") UUID idAsignatura,
         @NotNull(message = "El semestre es obligatorio.")
         @Positive(message = "El semestre debe ser un entero positivo.") Integer semestreNumero,
-        @Size(max = 3, message = "El codigo del caracter no puede superar 3 caracteres.") String codigoCaracter
+        @Size(max = 3, message = "El código del carácter no puede superar 3 caracteres.") String codigoCaracter
 ) {
 }

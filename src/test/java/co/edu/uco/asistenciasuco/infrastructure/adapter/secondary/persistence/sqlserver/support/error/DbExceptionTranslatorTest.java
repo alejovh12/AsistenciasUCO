@@ -308,11 +308,11 @@ class DbExceptionTranslatorTest {
 
     @ParameterizedTest
     @CsvSource({
-            "La matricula ya se encuentra registrada para este grupo., ERR_MATRICULA_DUPLICADA",
+            "Usted ya se encuentra registrado o matriculado en este grupo., ERR_MATRICULA_DUPLICADA",
             "No hay cupos disponibles para el grupo., ERR_CUPO_SUPERADO",
             "Existe cruce de horario para el estudiante., ERR_CRUCE_HORARIO_ESTUDIANTE",
             "Existe cruce de horario para el docente., ERR_CRUCE_HORARIO_DOCENTE",
-            "El correo ya se encuentra registrado., ERR_UNICIDAD_CORREO",
+            "El correo electronico ya se encuentra registrado., ERR_UNICIDAD_CORREO",
             "El numero de identificacion ya existe., ERR_UNICIDAD_DOCUMENTO"
     })
     void mensajes_conocidos_de_conflicto_lanzan_conflictException_con_codigo_especifico(
@@ -590,7 +590,7 @@ class DbExceptionTranslatorTest {
     @ParameterizedTest
     @CsvSource({
             "TPR_001, El tipo de programa especificado no existe en el sistema.",
-            "ARE_001, El area de conocimiento especificada no existe en el sistema."
+            "ARE_001, El área de conocimiento especificada no existe en el sistema."
     })
     void dbcode_de_tipo_programa_o_area_inexistente_lanza_resource_not_found_con_mensaje_propio(
             final String dbCode, final String mensaje) {
@@ -605,8 +605,8 @@ class DbExceptionTranslatorTest {
 
     @ParameterizedTest
     @CsvSource({
-            "TPR_002, Ya existe un tipo de programa con el mismo codigo o nombre.",
-            "ARE_002, Ya existe un area de conocimiento con el mismo codigo o nombre."
+            "TPR_002, Ya existe un tipo de programa con el mismo código o nombre.",
+            "ARE_002, Ya existe un área de conocimiento con el mismo código o nombre."
     })
     void dbcode_de_tipo_programa_o_area_duplicado_lanza_conflict_con_mensaje_propio(
             final String dbCode, final String mensaje) {

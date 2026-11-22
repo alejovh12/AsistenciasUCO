@@ -8,26 +8,26 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 public final class GuardarAsignaturaRequest {
-    @Size(max = 50, message = "El codigo de la asignatura no puede superar 50 caracteres.")
+    @Size(max = 50, message = "El código de la asignatura no puede superar 50 caracteres.")
     @TextoSeguro
     private String codigo;
     @Size(max = 50, message = "El nombre de la asignatura no puede superar 50 caracteres.")
     @TextoSeguro
     private String nombre;
-    @Positive(message = "Los creditos deben ser un entero positivo.")
-    @Max(value = 10, message = "Los creditos de la asignatura deben estar entre 1 y 10.")
+    @Positive(message = "Los créditos deben ser un entero positivo.")
+    @Max(value = 10, message = "Los créditos de la asignatura deben estar entre 1 y 10.")
     private Integer creditos;
-    @Positive(message = "El numero de semestre debe ser un entero positivo.")
+    @Positive(message = "El número de semestre debe ser un entero positivo.")
     @NotNull(message = "El semestre de la asignatura es obligatorio.")
     private Integer semestreNumero;
-    @Size(max = 50, message = "El nombre del area no puede superar 50 caracteres.")
-    @NotBlank(message = "El area de conocimiento de la asignatura es obligatoria.")
+    @Size(max = 50, message = "El nombre del área no puede superar 50 caracteres.")
+    @NotBlank(message = "El área de conocimiento de la asignatura es obligatoria.")
     @TextoSeguro
     private String nombreArea;
     @Size(max = 50, message = "El nombre del componente no puede superar 50 caracteres.")
     @TextoSeguro
     private String nombreComponente;
-    @Size(max = 3, message = "El codigo del caracter no puede superar 3 caracteres.")
+    @Size(max = 3, message = "El código del carácter no puede superar 3 caracteres.")
     @TextoSeguro
     private String codigoCaracter;
     @Positive(message = "Las horas semanales deben ser un entero positivo.")

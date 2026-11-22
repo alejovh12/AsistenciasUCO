@@ -44,7 +44,7 @@ class ConsultasAuditoriaRangoParametrizadoTest {
 
         final ValidationException error = assertThrows(ValidationException.class,
                 () -> useCase.consultarAuditoria(USUARIO, filtro31, 1, 10));
-        assertTrue(error.getMessage().contains("30 dias"), error.getMessage());
+        assertTrue(error.getMessage().contains("30 días"), error.getMessage());
     }
 
     @Test

@@ -7,9 +7,9 @@ import jakarta.validation.constraints.Size;
 public final class CancelarSesionCoordinadorRequest {
 
     @NotBlank(message = "El motivo de cancelacion es obligatorio.")
-    @Size(max = 50, message = "El codigo del motivo no puede superar 50 caracteres.")
+    @Size(max = 50, message = "El código del motivo no puede superar 50 caracteres.")
     private String codigoMotivo;
-    @Size(max = 500, message = "La observacion no puede superar 500 caracteres.")
+    @Size(max = 500, message = "La observación no puede superar 500 caracteres.")
     private String observacion;
 
     public String getCodigoMotivo() {

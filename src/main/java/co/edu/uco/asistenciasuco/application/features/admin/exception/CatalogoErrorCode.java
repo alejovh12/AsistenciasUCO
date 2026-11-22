@@ -19,9 +19,9 @@ public enum CatalogoErrorCode implements ErrorDefinition {
     ASI_009("ASI_009", "No puedes inactivar la asignatura: tiene grupos en el período vigente o en períodos futuros.", ErrorKind.CONFLICT),
     /** HU074 (migración 57): una asignatura inactiva no se usa para crear grupos ni para asociarla a un plan (409). */
     ASI_010("ASI_010", "La asignatura está inactiva; actívala para usarla.", ErrorKind.CONFLICT),
-    TPR_002("TPR_002", "Ya existe un tipo de programa con el mismo codigo o nombre.", ErrorKind.CONFLICT),
-    ARE_001("ARE_001", "El area de conocimiento especificada no existe en el sistema.", ErrorKind.NOT_FOUND),
-    ARE_002("ARE_002", "Ya existe un area de conocimiento con el mismo codigo o nombre.", ErrorKind.CONFLICT);
+    TPR_002("TPR_002", "Ya existe un tipo de programa con el mismo código o nombre.", ErrorKind.CONFLICT),
+    ARE_001("ARE_001", "El área de conocimiento especificada no existe en el sistema.", ErrorKind.NOT_FOUND),
+    ARE_002("ARE_002", "Ya existe un área de conocimiento con el mismo código o nombre.", ErrorKind.CONFLICT);
 
     private final String code;
     private final String defaultMessage;

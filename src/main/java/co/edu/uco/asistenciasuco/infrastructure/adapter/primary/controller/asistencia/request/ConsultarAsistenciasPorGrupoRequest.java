@@ -6,10 +6,10 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.valid
 
 public final class ConsultarAsistenciasPorGrupoRequest {
 
-    @NonEmptyUuid(message = "El identificador del grupo no es valido.")
+    @NonEmptyUuid(message = "El identificador del grupo no es válido.")
     @NotNull(message = "El grupo es obligatorio.")
     private UUID grupo;
-    @NonEmptyUuid(message = "El identificador de la sesion no es valido.")
+    @NonEmptyUuid(message = "El identificador de la sesión no es válido.")
     private UUID sesion;
 
     public UUID getGrupo() {
