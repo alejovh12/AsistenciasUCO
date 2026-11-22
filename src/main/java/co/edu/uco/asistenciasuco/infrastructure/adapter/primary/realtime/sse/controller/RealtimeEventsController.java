@@ -1,11 +1,8 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.controller;
 
-import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationErrorType;
-import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationIssue;
-import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationResult;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.RealtimeAudienciaPolicy;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.MensajesExitoHttp;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.validation.RealtimeEmitValidator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.response.RealtimeEventResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.contract.RealtimeStreamGateway;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
@@ -21,10 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -43,13 +36,8 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/realtime")
 public class RealtimeEventsController {
-    private static final String CLAVE_AUDIENCIA = "audiencia";
-    private static final String CLAVE_PAYLOAD = "payload";
-
     static final Duration HEARTBEAT_INTERVAL = Duration.ofSeconds(25);
     static final String COMENTARIO_CONECTADO = " conectado"; // Spring antepone ":" sin espacio: el wire queda ": conectado"
-
-    private static final RealtimeAudienciaPolicy POLITICA = RealtimeAudienciaPolicy.porDefecto();
 
     private final RealtimeStreamGateway realtimeStreamGateway;
     private final AuthenticatedUserResolver authenticatedUserResolver;
@@ -117,78 +105,14 @@ public class RealtimeEventsController {
     public ResponseEntity<ApiDataResponse<Map<String, Object>>> emitCustomEvent(
             @RequestBody(required = false) final Map<String, Object> cuerpo
     ) {
-        final List<ValidationIssue> issues = new ArrayList<>();
-        final Map<String, Object> body = cuerpo == null ? Map.of() : cuerpo;
-        final String tipo = validarTipo(body.get("tipo"), issues);
-        validarAudiencia(tipo, body.get(CLAVE_AUDIENCIA), issues);
-        final Map<String, Object> payload = validarPayload(body.get(CLAVE_PAYLOAD), issues);
-        RequestValidationGuard.validate(ValidationResult.of(issues));
+        final RealtimeEmitValidator.EventoEmitido evento = RealtimeEmitValidator.validar(cuerpo);
 
-        realtimeStreamGateway.emit(tipo, payload);
+        realtimeStreamGateway.emit(evento.tipo(), evento.payload());
 
         return ResponseEntity.ok(new ApiDataResponse<>(true, Map.of(
                 "mensajeUsuario",
-                "Evento reactivo emitido a "
-                        + realtimeStreamGateway.activeSubscribersCount()
-                        + " suscriptores."
+                String.format(MensajesExitoHttp.EVENTO_EMITIDO, realtimeStreamGateway.activeSubscribersCount())
         )));
-    }
-
-    private static String validarTipo(final Object valor, final List<ValidationIssue> issues) {
-        if (valor == null) {
-            issues.add(new ValidationIssue("tipo", ValidationErrorType.REQUIRED, "El tipo de evento es obligatorio."));
-            return null;
-        }
-        if (!(valor instanceof String tipo)) {
-            issues.add(new ValidationIssue("tipo", ValidationErrorType.INVALID_TYPE, "El tipo de evento debe ser texto."));
-            return null;
-        }
-        if (!POLITICA.tiposConocidos().contains(tipo)) {
-            issues.add(new ValidationIssue("tipo", ValidationErrorType.INVALID_VALUE, "El tipo de evento no pertenece al catalogo de eventos."));
-            return null;
-        }
-        return tipo;
-    }
-
-    private static void validarAudiencia(final String tipo, final Object valor, final List<ValidationIssue> issues) {
-        if (valor == null) {
-            issues.add(new ValidationIssue(CLAVE_AUDIENCIA, ValidationErrorType.REQUIRED, "La audiencia es obligatoria."));
-            return;
-        }
-        if (!(valor instanceof String texto)) {
-            issues.add(new ValidationIssue(CLAVE_AUDIENCIA, ValidationErrorType.INVALID_TYPE, "La audiencia debe ser texto."));
-            return;
-        }
-        final RealtimeAudienciaPolicy.Audiencia audiencia = Arrays.stream(RealtimeAudienciaPolicy.Audiencia.values())
-                .filter(candidata -> candidata.name().equals(texto))
-                .findFirst()
-                .orElse(null);
-        if (audiencia == null) {
-            issues.add(new ValidationIssue(CLAVE_AUDIENCIA, ValidationErrorType.INVALID_VALUE, "La audiencia no existe."));
-        } else if (tipo != null && !POLITICA.entregaA(tipo, audiencia)) {
-            issues.add(new ValidationIssue(CLAVE_AUDIENCIA, ValidationErrorType.INVALID_VALUE,
-                    "La politica de audiencia del tipo de evento no autoriza esa audiencia."));
-        }
-    }
-
-    private static Map<String, Object> validarPayload(final Object valor, final List<ValidationIssue> issues) {
-        if (valor == null) {
-            issues.add(new ValidationIssue(CLAVE_PAYLOAD, ValidationErrorType.REQUIRED, "El payload es obligatorio."));
-            return Map.of();
-        }
-        if (!(valor instanceof Map<?, ?> mapa)) {
-            issues.add(new ValidationIssue(CLAVE_PAYLOAD, ValidationErrorType.INVALID_TYPE, "El payload debe ser un objeto JSON."));
-            return Map.of();
-        }
-        final Map<String, Object> payload = new LinkedHashMap<>();
-        for (final Map.Entry<?, ?> entry : mapa.entrySet()) {
-            if (!(entry.getKey() instanceof String clave)) {
-                issues.add(new ValidationIssue(CLAVE_PAYLOAD, ValidationErrorType.INVALID_TYPE, "Las claves del payload deben ser texto."));
-                return Map.of();
-            }
-            payload.put(clave, entry.getValue());
-        }
-        return Map.copyOf(payload);
     }
 
     private static ServerSentEvent<RealtimeEventResponse> toServerSentEvent(final RealtimeEventResponse event) {

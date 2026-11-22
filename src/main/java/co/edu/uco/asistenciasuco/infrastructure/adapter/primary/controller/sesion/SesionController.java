@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesion;
 
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.MensajesExitoHttp;
 import co.edu.uco.asistenciasuco.application.features.sesion.actualizarsesion.primaryports.ActualizarSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.sesion.actualizarsesion.primaryports.dto.ActualizarSesionDTO;
 import co.edu.uco.asistenciasuco.application.features.sesion.cerrarsesion.primaryports.CerrarSesionInputPort;
@@ -86,7 +87,7 @@ public final class SesionController {
 
     /** El mensaje del SP (p. ej. {@code SES_022}); si no llega, el texto historico de la creacion directa. */
     static String mensajeCreacion(final String mensajeUsuario) {
-        return mensajeUsuario == null || mensajeUsuario.isBlank() ? "Sesion creada correctamente." : mensajeUsuario;
+        return mensajeUsuario == null || mensajeUsuario.isBlank() ? MensajesExitoHttp.SESION_CREADA : mensajeUsuario;
     }
 
     @PostMapping
@@ -119,7 +120,7 @@ public final class SesionController {
         final int canceladas = generacion == null ? 0 : generacion.sesionesCanceladasPorFestivo();
         final int conAsistencia = generacion == null ? 0 : generacion.sesionesFestivoConAsistencia();
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new GeneracionSesionesGrupoResponse(true, "Sesiones de grupo generadas correctamente.",
+                .body(new GeneracionSesionesGrupoResponse(true, MensajesExitoHttp.SESIONES_GRUPO_GENERADAS,
                         canceladas, conAsistencia));
     }
 
@@ -150,7 +151,7 @@ public final class SesionController {
         final CerrarSesionDTO dto = SesionHttpMapper.toApplicationDTO(request, authenticatedUserResolver.requireAuthenticatedUserId());
         cerrarSesionInputPort.execute(dto);
 
-        return ResponseEntity.ok(new ApiMessageResponse(true, "Sesion cerrada correctamente."));
+        return ResponseEntity.ok(new ApiMessageResponse(true, MensajesExitoHttp.SESION_CERRADA));
     }
 
     @PatchMapping("/{sesionId}")

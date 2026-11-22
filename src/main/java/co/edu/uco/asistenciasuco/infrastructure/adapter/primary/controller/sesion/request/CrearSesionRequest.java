@@ -9,7 +9,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.valid
 
 public final class CrearSesionRequest {
 
-    @NonEmptyUuid(message = "El identificador del grupo no es valido.")
+    @NonEmptyUuid(message = "El identificador del grupo no es válido.")
     @NotNull(message = "El grupo es obligatorio.")
     private UUID grupo;
     @NotBlank(message = "El nombre es obligatorio.")

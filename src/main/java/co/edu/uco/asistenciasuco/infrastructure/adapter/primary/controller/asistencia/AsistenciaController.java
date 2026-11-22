@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia;
 
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.MensajesExitoHttp;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.RegistrarAsistenciasSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.dto.RegistrarAsistenciasSesionDTO;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.primaryports.SolicitarRevisionAsistenciaInputPort;
@@ -64,7 +65,7 @@ public final class AsistenciaController {
         solicitarRevisionAsistenciaInputPort.execute(dto);
 
         return ResponseEntity.status(HttpStatus.ACCEPTED)
-                .body(new ApiMessageResponse(true, "Solicitud de revisión registrada correctamente."));
+                .body(new ApiMessageResponse(true, MensajesExitoHttp.SOLICITUD_REVISION_REGISTRADA));
     }
 
     @PostMapping("/lote")
@@ -78,6 +79,6 @@ public final class AsistenciaController {
         );
         registrarAsistenciasSesionInputPort.execute(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ApiMessageResponse(true, "Asistencias de sesion registradas correctamente."));
+                .body(new ApiMessageResponse(true, MensajesExitoHttp.ASISTENCIAS_SESION_REGISTRADAS));
     }
 }

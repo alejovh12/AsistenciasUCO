@@ -67,9 +67,9 @@ class SesionSolicitudMensajeYEstadoTest {
         mvc.perform(post("/api/v2/sesiones").contentType("application/json").content(cuerpo))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.mensaje").value(SES_022));
         mvc.perform(post("/api/v2/sesiones").contentType("application/json").content(cuerpo))
-                .andExpect(status().isCreated()).andExpect(jsonPath("$.mensaje").value("Sesion creada correctamente."));
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.mensaje").value("Sesión creada correctamente."));
         mvc.perform(post("/api/v2/sesiones").contentType("application/json").content(cuerpo))
-                .andExpect(status().isCreated()).andExpect(jsonPath("$.mensaje").value("Sesion creada correctamente."));
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.mensaje").value("Sesión creada correctamente."));
     }
 
     @Test
@@ -85,7 +85,7 @@ class SesionSolicitudMensajeYEstadoTest {
         mvc.perform(post("/api/v1/sesiones").contentType("application/json").content(cuerpo))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.mensaje").value(SES_022));
         mvc.perform(post("/api/v1/sesiones").contentType("application/json").content(cuerpo))
-                .andExpect(status().isCreated()).andExpect(jsonPath("$.mensaje").value("Sesion creada correctamente."));
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.mensaje").value("Sesión creada correctamente."));
     }
 
     @Test

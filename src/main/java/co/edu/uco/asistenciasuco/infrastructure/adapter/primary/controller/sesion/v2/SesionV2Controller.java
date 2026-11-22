@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesion.v2;
 
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.MensajesExitoHttp;
 import co.edu.uco.asistenciasuco.application.features.sesion.actualizarsesion.primaryports.ActualizarSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.sesion.actualizarsesion.primaryports.dto.ActualizarSesionDTO;
 import co.edu.uco.asistenciasuco.application.features.sesion.common.ContratoHorarioSesion;
@@ -61,7 +62,7 @@ public final class SesionV2Controller {
         ));
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiMessageResponse(true,
-                        mensajeUsuario == null || mensajeUsuario.isBlank() ? "Sesion creada correctamente." : mensajeUsuario));
+                        mensajeUsuario == null || mensajeUsuario.isBlank() ? MensajesExitoHttp.SESION_CREADA : mensajeUsuario));
     }
 
     /** Reemplazo completo de nombre y ambos instantes (sin PUT en v2, UTC-D09). */

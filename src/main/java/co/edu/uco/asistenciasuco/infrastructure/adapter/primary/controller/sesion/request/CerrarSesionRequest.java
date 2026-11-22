@@ -7,10 +7,10 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.valid
 
 public final class CerrarSesionRequest {
 
-    @NonEmptyUuid(message = "El identificador de la sesion no es valido.")
-    @NotNull(message = "La sesion es obligatoria.")
+    @NonEmptyUuid(message = "El identificador de la sesión no es válido.")
+    @NotNull(message = "La sesión es obligatoria.")
     private UUID sesion;
-    @NotBlank(message = "La observacion de cierre es obligatoria.")
+    @NotBlank(message = "La observación de cierre es obligatoria.")
     private String observacionCierre;
 
     public UUID getSesion() {

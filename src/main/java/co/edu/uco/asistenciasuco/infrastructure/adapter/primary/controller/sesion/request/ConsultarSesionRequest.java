@@ -6,8 +6,8 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.valid
 
 public final class ConsultarSesionRequest {
 
-    @NonEmptyUuid(message = "El identificador de la sesion no es valido.")
-    @NotNull(message = "La sesion es obligatoria.")
+    @NonEmptyUuid(message = "El identificador de la sesión no es válido.")
+    @NotNull(message = "La sesión es obligatoria.")
     private UUID sesion;
 
     public UUID getSesion() {
