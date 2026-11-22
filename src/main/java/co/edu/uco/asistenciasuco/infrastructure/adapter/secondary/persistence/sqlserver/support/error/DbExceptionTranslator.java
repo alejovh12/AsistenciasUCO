@@ -52,6 +52,9 @@ public final class DbExceptionTranslator {
             AsistenciaQrErrorCode.AQR_004,
             ParametroErrorCode.PRM_003,
             AdmisionEstudianteErrorCode.ADS_003,
+            MensajeUsuarioErrorCode.KPI_001,
+            MensajeUsuarioErrorCode.KPI_003,
+            MensajeUsuarioErrorCode.KPI_004,
             // DEC-065 (1): el decano no resuelve la revision de cancelacion.
             RevisionCancelacionErrorCode.RCN_016
     );
@@ -61,6 +64,9 @@ public final class DbExceptionTranslator {
             EstudianteErrorCode.ERR_ESTUDIANTE_NO_EXISTE,
             MensajeUsuarioErrorCode.EST_008,
             MensajeUsuarioErrorCode.REC_009,
+            MensajeUsuarioErrorCode.GRUP_001,
+            MensajeUsuarioErrorCode.VCE_004,
+            MatriculaQrErrorCode.MQR_001,
             DocenteErrorCode.ERR_DOCENTE_NO_EXISTE,
             DocenteErrorCode.ERR_DOCENTE_NO_VINCULADO_PROGRAMA,
             GrupoErrorCode.ERR_GRUPO_NO_EXISTE,
@@ -154,6 +160,11 @@ public final class DbExceptionTranslator {
             MensajeUsuarioErrorCode.HOR_006,
             MensajeUsuarioErrorCode.HOR_009,
             MensajeUsuarioErrorCode.ASI_014,
+            MensajeUsuarioErrorCode.GRUP_003,
+            MensajeUsuarioErrorCode.SES_006,
+            MensajeUsuarioErrorCode.EST_003,
+            MensajeUsuarioErrorCode.VCE_003,
+            MensajeUsuarioErrorCode.ACT_002,
             MensajeUsuarioErrorCode.PER_012,
             MensajeUsuarioErrorCode.PER_010,
             MensajeUsuarioErrorCode.SES_005,
@@ -210,6 +221,8 @@ public final class DbExceptionTranslator {
             MensajeUsuarioErrorCode.EST_009,
             MensajeUsuarioErrorCode.EST_010,
             MensajeUsuarioErrorCode.EST_011,
+            MensajeUsuarioErrorCode.INST_001,
+            MatriculaQrErrorCode.MQR_007,
             // SES-GEN-01: duracion y ventana de la franja, horas de la materia y duracion del periodo (400).
             MensajeUsuarioErrorCode.HOR_007,
             MensajeUsuarioErrorCode.HOR_008,

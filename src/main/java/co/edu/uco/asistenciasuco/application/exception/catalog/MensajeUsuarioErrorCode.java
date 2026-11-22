@@ -104,7 +104,15 @@ public enum MensajeUsuarioErrorCode implements ErrorDefinition {
     ACC_APP_008(SecurityErrorCode.FORBIDDEN, "El plan de estudio solicitado no pertenece al ambito del usuario autenticado."),
     ACC_APP_009(SecurityErrorCode.FORBIDDEN, "La asignatura no pertenece al programa del coordinador autenticado."),
     ACC_APP_010(SecurityErrorCode.FORBIDDEN, "El plan de estudio no pertenece al programa del coordinador autenticado."),
-    KPI_001(SecurityErrorCode.FORBIDDEN, "No tiene un programa academico a su cargo para consultar estos indicadores."),
+    // Los KPI_00x conservan su codigo publico: el frontend decide por el codigo si el usuario no tiene ambito (HU178).
+    KPI_001("KPI_001", ErrorKind.FORBIDDEN, "No tiene un programa académico a su cargo para consultar estos indicadores."),
+    SEC_001("SEC_001", ErrorKind.FORBIDDEN, "No tiene permisos suficientes para realizar esta operación."),
+    KPI_003("KPI_003", ErrorKind.FORBIDDEN, "No tiene una facultad a su cargo para consultar estos indicadores."),
+    KPI_004("KPI_004", ErrorKind.FORBIDDEN, "No tiene una institución a su cargo para consultar estos indicadores."),
+    // IDENT-001/IDENT-002: reenvio del enlace de verificacion o de activacion.
+    VCE_003("VCE_003", ErrorKind.CONFLICT, "Debe esperar unos minutos antes de volver a enviar el enlace de verificación."),
+    VCE_004("VCE_004", ErrorKind.NOT_FOUND, "El estudiante no pertenece a un grupo a su cargo."),
+    ACT_002("ACT_002", ErrorKind.CONFLICT, "La cuenta ya está activa; no es necesario enviar el enlace de activación."),
     ACC_APP_011(SecurityErrorCode.FORBIDDEN, "No fue posible resolver la facultad del decano autenticado."),
     ACC_APP_012(SecurityErrorCode.FORBIDDEN, "El usuario autenticado no puede gestionar cuentas de acceso."),
     ACC_APP_013(SecurityErrorCode.FORBIDDEN, "La cuenta indicada esta fuera del alcance del usuario autenticado."),
@@ -147,6 +155,13 @@ public enum MensajeUsuarioErrorCode implements ErrorDefinition {
             "El programa indicado no es uno de los programas del estudiante; elige uno de sus programas del grupo."),
     ASI_014("ASI_014", ErrorKind.CONFLICT,
             "La asignatura no tiene un vínculo activo con un plan activo de los programas que coordinas."),
+    // A-02 (auditoria backend 2026-11-22): codigos de negocio de la BD que no tenian clasificacion y salian como 500.
+    GRUP_001("GRUP_001", ErrorKind.NOT_FOUND, "El grupo seleccionado no existe o no se encuentra habilitado."),
+    GRUP_003("GRUP_003", ErrorKind.CONFLICT, "No se encontró un programa académico asociado a este grupo."),
+    SES_006("SES_006", ErrorKind.CONFLICT,
+            "La sesión no coincide con el manifiesto de clasificación aprobado; no se modificó."),
+    EST_003("EST_003", ErrorKind.CONFLICT, "El estudiante ya pertenece a este programa académico."),
+    INST_001("INST_001", ErrorKind.VALIDATION, "El estudiante, programa y facultad deben pertenecer a la misma institución."),
     ASI_013("ASI_013", ErrorKind.VALIDATION, "Las horas semanales de la materia deben ser un entero entre 1 y {}."),
     // DEC-076 + SES-GEN-01: periodo no vigente (terminado, cerrado o de otra institucion); un solo codigo, con el nombre del periodo.
     PER_010("PER_010", ErrorKind.CONFLICT,

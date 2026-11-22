@@ -145,6 +145,19 @@ final class DbFailureClassifier {
             // cualquier token invalido); VCE_005 ya verificado es conflicto; VCE_007 usuario inexistente o inactivo es no encontrado.
             // HU176B: matricula por QR/PIN. MQR_001 es generico para cualquier token invalido (anti-enumeracion).
             case "MQR_001" -> MatriculaQrErrorCode.MQR_001;
+            case "VCE_003" -> MensajeUsuarioErrorCode.VCE_003;
+            case "VCE_004" -> MensajeUsuarioErrorCode.VCE_004;
+            case "ACT_002" -> MensajeUsuarioErrorCode.ACT_002;
+            // HU178: indicadores sin ambito; conservan su codigo publico (KPI_001/003/004) para que el frontend muestre el aviso de ambito.
+            case "KPI_001" -> MensajeUsuarioErrorCode.KPI_001;
+            case "KPI_003" -> MensajeUsuarioErrorCode.KPI_003;
+            case "KPI_004" -> MensajeUsuarioErrorCode.KPI_004;
+            // A-02 (auditoria 2026-11-22): codigos de negocio de la BD que caian en ERR_DB_UNCLASSIFIED (500).
+            case "GRUP_001" -> MensajeUsuarioErrorCode.GRUP_001;
+            case "GRUP_003" -> MensajeUsuarioErrorCode.GRUP_003;
+            case "SES_006" -> MensajeUsuarioErrorCode.SES_006;
+            case "EST_003" -> MensajeUsuarioErrorCode.EST_003;
+            case "INST_001" -> MensajeUsuarioErrorCode.INST_001;
             case "MQR_004" -> MatriculaQrErrorCode.MQR_004;
             case "MQR_005" -> MatriculaQrErrorCode.MQR_005;
             case "MQR_006" -> MatriculaQrErrorCode.MQR_006;
@@ -349,7 +362,9 @@ final class DbFailureClassifier {
             case "ARC_005" -> SecurityErrorCode.FORBIDDEN;
             // CAT_001: inconsistencia interna de catalogo DB (p. ej. dbo.Estado sin un codigo esperado).
             // Fallo tecnico conocido, no se reclasifica como 4xx.
-            case "CAT_001" -> DatabaseErrorCode.ERR_DB_CATALOG_INCONSISTENT;
+            // CORR_001 (correlacion ausente) y KPI_002 (umbrales de asistencia sin configurar) son fallos tecnicos de
+            // configuracion: 500 explicito con el mismo tratamiento que CAT_001.
+            case "CAT_001", "CORR_001", "KPI_002" -> DatabaseErrorCode.ERR_DB_CATALOG_INCONSISTENT;
             // SYS_001: catch-all tecnico de los SP publicos. Caso explicito para que quede clasificado
             // (no caido por el default) aunque su tratamiento sea el mismo que lo no clasificado.
             case "SYS_001" -> DatabaseErrorCode.ERR_DB_UNCLASSIFIED;
