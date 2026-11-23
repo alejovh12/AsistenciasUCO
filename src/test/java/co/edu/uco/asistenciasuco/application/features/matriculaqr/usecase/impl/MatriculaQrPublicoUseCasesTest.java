@@ -313,6 +313,19 @@ class MatriculaQrPublicoUseCasesTest {
     }
 
     @Test
+    void T29b_un_conflicto_de_identidad_es_409_con_el_codigo_de_cuenta_ya_registrada_y_no_500() {
+        final var useCase = registro();
+        doThrow(IdentityProviderPort.IdentityProviderException.conflicto("usuario huerfano en el proveedor")).when(identidad).crearCuenta(any());
+        final var comando = comandoRegistro(IP_CAMPUS);
+
+        final var error = assertThrows(co.edu.uco.asistenciasuco.application.exception.business.ConflictException.class,
+                () -> useCase.execute(comando));
+
+        assertEquals("MQR_005", error.getCode());
+        verify(identidad, never()).eliminarCuenta(anyString());
+    }
+
+    @Test
     void T29_si_el_proveedor_de_identidad_falla_la_matricula_ya_esta_guardada_y_el_error_es_controlado() {
         final var useCase = registro();
         doThrow(new IdentityProviderPort.IdentityProviderException("keycloak caido")).when(identidad).crearCuenta(any());

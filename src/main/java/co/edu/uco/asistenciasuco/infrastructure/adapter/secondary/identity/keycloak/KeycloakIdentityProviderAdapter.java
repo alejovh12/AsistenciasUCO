@@ -461,8 +461,16 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
                     .addKeyValue(CLAVE_OPERATION, OPERACION_IDENTITY_CREATE_ACCOUNT)
                     .addKeyValue(CLAVE_STAGE, "CONFLICT_VERIFYING_EXISTING")
                     .log("Keycloak reporto conflicto de usuario existente; verificando identidad exacta.");
-            return new UserResolution(buscarUsuarioPorIdUsuarioVerificado(adminToken, dto).orElseThrow(() ->
-                    new IdentityProviderException("El conflicto de identidad no pudo resolverse por vinculo institucional.")), false);
+            try {
+                return new UserResolution(buscarUsuarioPorIdUsuarioVerificado(adminToken, dto).orElseThrow(() ->
+                        IdentityProviderException.conflicto("El conflicto de identidad no pudo resolverse por vinculo institucional.")), false);
+            } catch (final IdentityProviderException exception) {
+                if (exception.esConflicto()) {
+                    throw exception;
+                }
+                // Usuario o correo ya usados por otra cuenta (vinculo ausente, distinto o ambiguo): es un conflicto de identidad.
+                throw IdentityProviderException.conflicto(exception.getMessage());
+            }
         }
 
         throw new IdentityProviderException("Error al crear usuario en Keycloak. HTTP " + response.statusCode());

@@ -104,6 +104,9 @@ public final class CrearCoordinadorUseCaseImpl implements CrearCoordinadorUseCas
                         InstitutionalRole.COORDINADOR
                 ).conVerificacionCorreo());
             } catch (final IdentityProviderPort.IdentityProviderException exception) {
+                if (exception.esConflicto()) {
+                    throw new ConflictException(UsuarioErrorCode.ERR_UNICIDAD_CORREO);
+                }
                 throw new InternalApplicationException(
                         "No fue posible completar el aprovisionamiento de identidad del coordinador registrado.", exception
                 );

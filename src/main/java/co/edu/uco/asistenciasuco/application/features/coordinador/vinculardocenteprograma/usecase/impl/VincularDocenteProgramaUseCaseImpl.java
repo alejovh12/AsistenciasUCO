@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.vinculardocenteprograma.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
@@ -136,6 +137,9 @@ public final class VincularDocenteProgramaUseCaseImpl implements VincularDocente
                     null,
                     InstitutionalRole.DOCENTE).conVerificacionCorreo());
         } catch (final IdentityProviderPort.IdentityProviderException exception) {
+            if (exception.esConflicto()) {
+                throw new ConflictException(UsuarioErrorCode.ERR_UNICIDAD_CORREO);
+            }
             throw new InternalApplicationException(
                     "El docente quedo vinculado, pero no fue posible completar el aprovisionamiento de su identidad.", exception);
         }

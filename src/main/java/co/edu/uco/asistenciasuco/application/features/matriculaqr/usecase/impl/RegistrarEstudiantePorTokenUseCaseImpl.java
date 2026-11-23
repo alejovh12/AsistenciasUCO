@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.matriculaqr.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.features.matriculaqr.exception.MatriculaQrErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
@@ -93,6 +95,10 @@ public final class RegistrarEstudiantePorTokenUseCaseImpl implements RegistrarEs
                     comando.primerNombre(), comando.primerApellido(), comando.password(),
                     InstitutionalRole.ESTUDIANTE).conVerificacionCorreo());
         } catch (final IdentityProviderPort.IdentityProviderException exception) {
+            if (exception.esConflicto()) {
+                // La persona ya tiene una cuenta en el proveedor que no es la de este registro: 409 de negocio (catalogo MQR_005), no 500.
+                throw new ConflictException(MatriculaQrErrorCode.MQR_005);
+            }
             throw new InternalApplicationException(
                     "No fue posible completar el aprovisionamiento de identidad del estudiante matriculado por QR.", exception);
         }

@@ -268,6 +268,32 @@ class CrearCoordinadorUseCaseImplTest {
                 () -> useCaseConIam.execute(domain));
     }
 
+    @Test
+    void execute_responde_409_unicidad_de_correo_cuando_el_proveedor_reporta_conflicto_de_identidad() {
+        final UsuarioRepositoryPort usuarioRepositoryPort = mock(UsuarioRepositoryPort.class);
+        final ActivacionCuentaService activacion = mock(ActivacionCuentaService.class);
+        final IdentityProviderPort identityProviderPort = mock(IdentityProviderPort.class);
+        final CrearCoordinadorUseCaseImpl useCaseConIam = new CrearCoordinadorUseCaseImpl(
+                commandPort, scopePort, usuarioRepositoryPort, activacion, identityProviderPort);
+
+        final UUID actorDecano = UUID.randomUUID();
+        final UUID facultad = UUID.randomUUID();
+        final UUID usuarioCreadoId = UUID.randomUUID();
+        final CrearCoordinadorDomain domain = new CrearCoordinadorDomain(
+                "1017555444", "JORGE", null, "HENAO", null, "jorge.henao@uco.edu.co", null, actorDecano);
+
+        when(scopePort.findFacultadIdByDecanoUsuario(actorDecano)).thenReturn(Optional.of(facultad));
+        when(usuarioRepositoryPort.consultarUsuarioPorCorreo("jorge.henao@uco.edu.co"))
+                .thenReturn(Optional.empty())
+                .thenReturn(Optional.of(new UsuarioIdentidadRepositoryProjection(
+                        usuarioCreadoId, UUID.randomUUID(), 1017555444, "JORGE", "HENAO", "jorge.henao@uco.edu.co")));
+        when(identityProviderPort.crearCuenta(any()))
+                .thenThrow(IdentityProviderPort.IdentityProviderException.conflicto("usuario huerfano"));
+
+        assertEquals("ERR_UNICIDAD_CORREO", assertThrows(co.edu.uco.asistenciasuco.application.exception.business.ConflictException.class,
+                () -> useCaseConIam.execute(domain)).getCode());
+    }
+
     // IDENT-002 (antes HU121-HU122 D5): el alta ya no exige contrasena; sin clave se registra y se avisa la activacion.
     @Test
     void execute_alta_nueva_sin_contrasena_no_falla_y_no_usa_credencial_recibida() {

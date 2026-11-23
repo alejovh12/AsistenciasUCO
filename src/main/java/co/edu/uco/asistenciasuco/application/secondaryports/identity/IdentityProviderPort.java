@@ -140,12 +140,29 @@ public interface IdentityProviderPort {
      */
     final class IdentityProviderException extends RuntimeException {
 
+        private final boolean conflicto;
+
         public IdentityProviderException(final String message) {
+            this(message, false);
+        }
+
+        private IdentityProviderException(final String message, final boolean conflicto) {
             super(message);
+            this.conflicto = conflicto;
+        }
+
+        /** El proveedor ya tiene una cuenta con ese usuario o correo que no es la de esta persona (conflicto de identidad, no falla tecnica). */
+        public static IdentityProviderException conflicto(final String message) {
+            return new IdentityProviderException(message, true);
+        }
+
+        public boolean esConflicto() {
+            return conflicto;
         }
 
         public IdentityProviderException(final String message, final Throwable cause) {
             super(message, cause);
+            this.conflicto = false;
         }
     }
 }

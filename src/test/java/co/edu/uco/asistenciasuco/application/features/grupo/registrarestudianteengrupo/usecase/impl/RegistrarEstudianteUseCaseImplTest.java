@@ -283,6 +283,25 @@ class RegistrarEstudianteUseCaseImplTest {
         assertNotEquals(null, exception.getCause());
     }
 
+    @Test
+    void conflicto_de_identidad_en_cuenta_nueva_es_409_con_unicidad_de_correo_y_no_500() {
+        final FakeIdentityProviderPort identityProviderPort = new FakeIdentityProviderPort(() -> {
+            throw IdentityProviderPort.IdentityProviderException.conflicto("usuario huerfano en el proveedor");
+        });
+        final RegistrarEstudianteUseCaseImpl useCase = useCase(
+                grupoRepositoryPort(dto -> new RegistrarEstudianteRepositoryProjection("Estudiante registrado.")),
+                usuarioRepositoryPort(null, Arrays.asList(null, USUARIO_NUEVO_ID)),
+                identityProviderPort
+        );
+
+        final var domainValido = domainValido();
+        final var exception = assertThrows(co.edu.uco.asistenciasuco.application.exception.business.ConflictException.class,
+                () -> useCase.execute(domainValido));
+
+        assertEquals("ERR_UNICIDAD_CORREO", exception.getCode());
+        assertEquals(0, identityProviderPort.eliminarCuentaCount.get());
+    }
+
     /**
      * CULM-001 A (suite E2E): matricular a un estudiante que YA tiene cuenta (Carlos, uco-estudiante) respondia 500 porque
      * el proveedor no pudo reconciliar la cuenta existente, aunque la matricula ya estaba confirmada en BD. La persona ya

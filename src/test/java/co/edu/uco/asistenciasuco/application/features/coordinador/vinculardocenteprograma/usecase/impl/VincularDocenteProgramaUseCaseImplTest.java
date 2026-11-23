@@ -192,6 +192,19 @@ class VincularDocenteProgramaUseCaseImplTest {
     }
 
     @Test
+    void T_091_16b_conflicto_de_identidad_en_keycloak_es_409_con_unicidad_de_correo() {
+        when(queryPort.consultar(eq(ACTOR), any())).thenReturn(pagina(fila()));
+        when(identityProviderPort.crearCuenta(any())).thenThrow(IdentityProviderPort.IdentityProviderException.conflicto("usuario huerfano"));
+
+        final var dominioDocente2 = dominioDocente(ID_DOCENTE);
+        final var error = assertThrows(co.edu.uco.asistenciasuco.application.exception.business.ConflictException.class,
+                () -> useCase.execute(dominioDocente2));
+
+        assertEquals("ERR_UNICIDAD_CORREO", error.getCode());
+        verify(commandPort, times(1)).vincular(any());
+    }
+
+    @Test
     void T_091_17_reintento_tras_fallo_iam_con_misma_persona_ya_vinculada_solo_reintenta_el_aprovisionamiento() {
         when(usuarioRepositoryPort.consultarUsuarioPorCorreo(CORREO)).thenReturn(Optional.of(usuario()));
         when(queryPort.consultar(eq(ACTOR), any())).thenReturn(pagina(fila()));
