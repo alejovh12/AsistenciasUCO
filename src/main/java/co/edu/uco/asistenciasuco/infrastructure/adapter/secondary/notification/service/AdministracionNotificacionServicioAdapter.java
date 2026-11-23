@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.service;
 
+import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.EstadoCanalNotificacionProjection;
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.MarcadorPlantillaProjection;
@@ -200,7 +201,12 @@ public final class AdministracionNotificacionServicioAdapter implements Administ
         if (tipo != null && !tipo.isBlank()) {
             solicitud.put("tipo", tipo.strip());
         }
-        if (idUsuarioEjecutor != null) {
+        // El servicio guarda este campo como idCorrelacion de la prueba: se envia la correlacion de la solicitud (X-Correlation-Id) y,
+        // solo si no hay contexto, el administrador que la pidio.
+        final UUID correlacion = CorrelationIdContext.get();
+        if (correlacion != null) {
+            solicitud.put("solicitadoPor", correlacion.toString());
+        } else if (idUsuarioEjecutor != null) {
             solicitud.put("solicitadoPor", idUsuarioEjecutor.toString());
         }
         llamar(() -> cliente.post(BASE + "/correos-prueba", solicitud));

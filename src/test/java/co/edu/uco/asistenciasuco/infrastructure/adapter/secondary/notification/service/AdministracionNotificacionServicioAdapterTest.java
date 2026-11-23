@@ -266,6 +266,21 @@ class AdministracionNotificacionServicioAdapterTest {
     }
 
     @Test
+    void el_correo_de_prueba_lleva_la_correlacion_de_la_solicitud_y_no_un_valor_fijo() throws Exception {
+        final UUID correlacion = UUID.fromString("f7c16a61-3c64-4598-ab40-7ba3be13ddd4");
+        co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext.set(correlacion);
+        try {
+            servidor.responder(202, "{\"id\":\"1\"}");
+
+            adapter.enviarCorreoPrueba(admin, "SESION_CANCELADA", "ana@uco.edu.co");
+
+            assertEquals(correlacion.toString(), cuerpoEnviado().get("solicitadoPor").asText());
+        } finally {
+            co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext.clear();
+        }
+    }
+
+    @Test
     void el_estado_del_canal_responde_no_disponible_si_el_servicio_no_contesta() {
         final String urlCerrada = servidor.url();
         servidor.close();
