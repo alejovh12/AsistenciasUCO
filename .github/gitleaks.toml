@@ -48,3 +48,13 @@ condition = "AND"
 paths = ['''(^|/)docs/baseline/DEFINITION_OF_DONE\.md$''']
 regexTarget = "line"
 regexes = ['''^\| Alcance y contrato \|''']
+
+# UUID de ejemplo del campo idempotencyKey en la guia de integracion del servicio de notificaciones (commit que
+# trajo el servicio a servicios/). Es un identificador inventado para el ejemplo JSON, no una credencial; la guia
+# ya usa un UUID evidentemente ficticio, pero el valor anterior queda en el historial del PR.
+[[allowlists]]
+description = "Example idempotencyKey UUID in the notifications integration guide"
+condition = "AND"
+paths = ['''(^|/)servicios/notificaciones/.*\.md$''']
+regexTarget = "secret"
+regexes = ['''^7b0e2c1a-3a52-4cf3-9c7f-0d6f3d3b5a10$''']
