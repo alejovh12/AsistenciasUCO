@@ -42,8 +42,14 @@ public final class MatriculaQrPublicaController {
             String nombreDocente,
             Instant fechaExpiracionUtc,
             int cupoDisponible,
-            List<TipoIdentificacionDTO> tiposIdentificacion
+            List<TipoIdentificacionDTO> tiposIdentificacion,
+            // DEC-078: vacio si el estudiante no debe elegir programa; si no, los programas del grupo compartido.
+            List<ProgramaElegibleResponse> programasElegibles
     ) {
+    }
+
+    /** DEC-078: programa del grupo compartido que el estudiante puede elegir al matricularse. */
+    public record ProgramaElegibleResponse(UUID idPrograma, String nombre) {
     }
 
     /** {@code usuario} es el numero de identificacion con el que inicia sesion; no se devuelve ningun token de sesion. */
@@ -81,7 +87,10 @@ public final class MatriculaQrPublicaController {
                 curso.idGrupo(), curso.nombreAsignatura(), curso.nombreGrupo(), curso.nombreDocente(),
                 curso.fechaExpiracionUtc(), curso.cupoDisponible(),
                 // El catalogo de tipos de documento es autenticado; el formulario publico lo necesita para el alta.
-                tiposIdentificacion.execute())));
+                tiposIdentificacion.execute(),
+                curso.programasElegibles().stream()
+                        .map(p -> new ProgramaElegibleResponse(p.idPrograma(), p.nombre()))
+                        .toList())));
     }
 
     @PostMapping("/registro")
@@ -94,7 +103,7 @@ public final class MatriculaQrPublicaController {
                 request.token(), request.pin(), ipResolver.resolve(http),
                 request.idTipoIdentificacion(), request.numeroIdentificacion().intValue(),
                 request.primerNombre(), request.segundoNombre(), request.primerApellido(), request.segundoApellido(),
-                request.correo(), request.password()));
+                request.correo(), request.password(), request.idPrograma()));
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiDataResponse<>(
                 true, new MatriculaQrResultadoResponse(resultado.idGrupo(), resultado.usuario())));
     }

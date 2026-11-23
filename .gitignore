@@ -98,3 +98,8 @@ target-e2e-*
 # Python helper caches are generated artifacts, never source
 **/__pycache__/
 *.py[cod]
+
+# Respaldos de base de datos (posible PII)
+*.bak
+*.mdf
+*.ldf

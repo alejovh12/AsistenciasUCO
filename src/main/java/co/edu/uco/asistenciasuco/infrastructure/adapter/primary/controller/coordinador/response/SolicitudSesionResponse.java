@@ -8,7 +8,8 @@ import java.util.UUID;
 
 /**
  * DEC-065 (2): fila de {@code GET /api/v1/coordinador/sesiones/solicitudes}. Las horas son ISO-8601 UTC con {@code Z}; los textos de
- * estado ({@code nombreEstadoSolicitud}) los entrega la DB.
+ * estado ({@code nombreEstadoSolicitud}) los entrega la DB. {@code nombreProgramaResponsable} y {@code nombreCoordinadorResolutor}
+ * (DEC-077) los llena solo {@code GET /api/v1/docente/sesiones/solicitudes}; en la bandeja del coordinador van en {@code null}.
  */
 @JsonInclude(JsonInclude.Include.ALWAYS)
 public record SolicitudSesionResponse(
@@ -28,14 +29,17 @@ public record SolicitudSesionResponse(
         String nombreEstadoSolicitud,
         String fechaSolicitudUtc,
         String fechaResolucionUtc,
-        String observacion
+        String observacion,
+        String nombreProgramaResponsable,
+        String nombreCoordinadorResolutor
 ) {
 
     public static SolicitudSesionResponse from(final Solicitud s) {
         return new SolicitudSesionResponse(s.idSesion(), s.nombreSesion(), s.codigoSesion(), s.idGrupo(), s.nombreGrupo(),
                 s.nombreAsignatura(), s.idPrograma(), s.nombrePrograma(), s.idDocente(), s.nombreDocente(), texto(s.fechaHoraInicio()),
                 texto(s.fechaHoraFin()), s.estadoSolicitud(), s.nombreEstadoSolicitud(), texto(s.fechaSolicitudUtc()),
-                texto(s.fechaResolucionUtc()), s.observacion());
+                texto(s.fechaResolucionUtc()), s.observacion(), s.nombreProgramaResponsable(),
+                s.nombreCoordinadorResolutor());
     }
 
     private static String texto(final Instant instante) {

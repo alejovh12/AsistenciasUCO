@@ -21,6 +21,9 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.PeriodoAcad
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.PlanEstudioCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.PlanEstudioQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
+import co.edu.uco.asistenciasuco.application.features.coordinador.actualizarsemestreestudiante.primaryports.interactor.ActualizarSemestreEstudianteInteractor;
+import co.edu.uco.asistenciasuco.application.features.coordinador.actualizarsemestreestudiante.usecase.impl.ActualizarSemestreEstudianteUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.EstudianteSemestreCommandPort;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -52,6 +55,10 @@ class CoordinadorWiringConfigurationTest {
         assertInstanceOf(ConsultarPeriodosAcademicosUseCaseImpl.class, consultarPeriodosAcademicosUseCase);
         assertInstanceOf(ConsultarPeriodosAcademicosInteractor.class,
                 config.consultarPeriodosAcademicosInputPort(consultarPeriodosAcademicosUseCase));
+
+        final var actualizarSemestreUseCase = config.actualizarSemestreEstudianteUseCase(mock(EstudianteSemestreCommandPort.class));
+        assertInstanceOf(ActualizarSemestreEstudianteUseCaseImpl.class, actualizarSemestreUseCase);
+        assertInstanceOf(ActualizarSemestreEstudianteInteractor.class, config.actualizarSemestreEstudianteInputPort(actualizarSemestreUseCase));
 
         final var consultarEstudiantesProgramaUseCase =
                 config.consultarEstudiantesProgramaUseCase(mock(EstudianteProgramaQueryPort.class));

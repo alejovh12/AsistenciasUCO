@@ -31,7 +31,6 @@ public final class RegistrarEstudianteHttpMapper {
                 request.getPrimerNombre(),
                 request.getSegundoNombre(),
                 request.getCorreo(),
-                null, // IDENT-002: sin contrasena; el estudiante la define al activar su cuenta
                 grupoId,
                 usuarioEjecutor
         );

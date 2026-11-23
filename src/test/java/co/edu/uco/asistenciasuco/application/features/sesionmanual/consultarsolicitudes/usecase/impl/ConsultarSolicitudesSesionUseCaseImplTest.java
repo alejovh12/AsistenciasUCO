@@ -36,9 +36,9 @@ class ConsultarSolicitudesSesionUseCaseImplTest {
         when(repositorio.consultarSolicitudes(COORDINADOR, false, PROGRAMA, GRUPO, 2, 5)).thenReturn(new PaginaSolicitudesSesion(List.of(
                 new SolicitudSesion(sesion, "Repaso", "S-9", GRUPO, "G01", "Calculo", PROGRAMA, "Ingenieria", docente, "Maria Docente",
                         LocalDateTime.of(2026, 11, 10, 13, 0), LocalDateTime.of(2026, 11, 10, 15, 0), "APROBADA", "Aprobada",
-                        LocalDateTime.of(2026, 11, 9, 14, 0), LocalDateTime.of(2026, 11, 9, 15, 0), "Adelante"),
+                        LocalDateTime.of(2026, 11, 9, 14, 0), LocalDateTime.of(2026, 11, 9, 15, 0), "Adelante", null, null),
                 new SolicitudSesion(UUID.randomUUID(), "Otra", "S-10", GRUPO, "G01", "Calculo", PROGRAMA, "Ingenieria", docente, "Maria Docente",
-                        null, null, "PENDIENTE", "Pendiente", null, null, null)), 7));
+                        null, null, "PENDIENTE", "Pendiente", null, null, null, null, null)), 7));
 
         final Resultado resultado = useCase.execute(new Comando(COORDINADOR, false, PROGRAMA, GRUPO, 2, 5));
 

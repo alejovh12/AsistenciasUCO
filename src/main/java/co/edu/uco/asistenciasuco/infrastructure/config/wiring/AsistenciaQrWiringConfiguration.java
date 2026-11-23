@@ -124,7 +124,7 @@ public class AsistenciaQrWiringConfiguration {
     @Bean
     public AvisarFaltasSesionInputPort avisarFaltasSesionInputPort(
             final AvisoFaltaSesionRepositoryPort repositorio, final NotificacionPort notificaciones, final RealtimePublisherPort realtime,
-            @Value("${app.providers.smtp-notification.platform-url:}") final String urlPlataforma) {
+            @Value("${asistencias.notificaciones.service.platform-url:}") final String urlPlataforma) {
         return new AvisarFaltasSesionUseCaseImpl(repositorio, notificaciones, realtime, urlPlataforma);
     }
 
@@ -132,7 +132,7 @@ public class AsistenciaQrWiringConfiguration {
     @Bean
     public AvisarSesionesSinTomaInputPort avisarSesionesSinTomaInputPort(
             final AvisoSesionSinTomaRepositoryPort repositorio, final NotificacionPort notificaciones,
-            @Value("${app.providers.smtp-notification.platform-url:}") final String urlPlataforma) {
+            @Value("${asistencias.notificaciones.service.platform-url:}") final String urlPlataforma) {
         return new AvisarSesionesSinTomaUseCaseImpl(repositorio, notificaciones, urlPlataforma);
     }
 

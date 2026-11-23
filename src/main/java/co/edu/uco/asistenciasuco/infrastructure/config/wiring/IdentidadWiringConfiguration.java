@@ -7,7 +7,6 @@ import co.edu.uco.asistenciasuco.application.features.identidad.activacioncuenta
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.VerificacionCorreoRepositoryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import co.edu.uco.asistenciasuco.application.features.identidad.asegurarcuenta.AsegurarCuentaIdentidadService;
 import co.edu.uco.asistenciasuco.application.features.identidad.correccionidentidad.CorreccionIdentidadService;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort;
@@ -24,7 +23,6 @@ import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.security.SecureRandom;
 
 /**
  * Composition Root de la sincronizacion de cuentas de identidad. Es independiente del proveedor activo
@@ -66,13 +64,10 @@ public class IdentidadWiringConfiguration {
                 usuarioSincronizacionIdentidadPort, externalIdentityLinkPort);
     }
 
-    /** IDENT-002: piezas comunes de las altas sin contrasena (credencial legada inutilizable y aviso de activacion). */
+    /** IDENT-002: piezas comunes de las altas sin contrasena (aviso de activacion). */
     @Bean
-    ActivacionCuentaService activacionCuentaService(
-            final NotificacionPort notificacionPort,
-            final PasswordEncoderPort passwordEncoderPort
-    ) {
-        return new ActivacionCuentaService(notificacionPort, passwordEncoderPort, new SecureRandom());
+    ActivacionCuentaService activacionCuentaService(final NotificacionPort notificacionPort) {
+        return new ActivacionCuentaService(notificacionPort);
     }
 
     /** IDENT-002: reenvio del enlace de activacion por quien puede gestionar la cuenta. */

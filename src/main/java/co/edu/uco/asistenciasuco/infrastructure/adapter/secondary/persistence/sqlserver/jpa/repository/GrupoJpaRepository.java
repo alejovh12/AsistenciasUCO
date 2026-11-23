@@ -96,7 +96,10 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
                  @tamanoPagina = :tamanoPagina
             """;
     static final int TAMANO_PAGINA_GRUPOS = 100;
-    static final int COLUMNAS_GRUPOS = 13;
+    // 12 columnas de datos + totalRegistros + idProgramaResponsable, nombreProgramaResponsable y esResponsable (DEC-077, al final)
+    // + nombreDocente (BD-9, al final). Este listado no las usa, pero el conteo exacto detecta un cambio no aditivo del SP.
+    static final int COLUMNAS_GRUPOS = 17;
+    static final int COLUMNA_TOTAL_GRUPOS = 12;
     static final String HQL_GRUPOS_POR_FACULTAD = """
             select g
             from UvGrupoEntity g
@@ -246,7 +249,7 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
             for (final Object[] fila : filas) {
                 grupos.add(toGrupo(fila));
             }
-            total = entero(filas.getFirst()[COLUMNAS_GRUPOS - 1]);
+            total = entero(filas.getFirst()[COLUMNA_TOTAL_GRUPOS]);
         }
         return grupos;
     }
@@ -417,7 +420,7 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
         parametros.put("primerApellido", dto.getPrimerApellido());
         parametros.put("segundoApellido", dto.getSegundoApellido());
         parametros.put("correo", dto.getCorreo());
-        parametros.put("password", dto.getPassword());
+        parametros.put("password", null); // SEG-11: parametro obsoleto del SP; la BD lo ignora y Usuario ya no guarda clave
         parametros.put(P_CORRELACION, correlationId);
         parametros.put(P_USUARIO, dto.getUsuarioEjecutor());
         parametros.put("idTipoIdIdentificacion", dto.getTipoIdentificacionId());

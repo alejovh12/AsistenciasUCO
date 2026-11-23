@@ -2,8 +2,8 @@ package co.edu.uco.asistenciasuco.infrastructure.config.properties.providers;
 
 import org.junit.jupiter.api.Test;
 
+import java.net.URI;
 import java.time.Duration;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -11,13 +11,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class CatalogoParametrosProviderPropertiesTest {
 
-    private static final UUID TOKEN = UUID.fromString("11111111-2222-3333-4444-555555555555");
+    private static final URI TOKEN = URI.create("http://localhost:19090/token");
     private static final String SECRETO = "valor-secreto-de-prueba";
 
-    private static CatalogoParametrosProviderProperties con(final String baseUrl, final UUID token, final String secreto,
+    private static CatalogoParametrosProviderProperties con(final String baseUrl, final URI token, final String secreto,
                                                             final Duration timeout, final Duration ttl,
                                                             final String separador) {
-        return new CatalogoParametrosProviderProperties(baseUrl, token, secreto, null, null, timeout, ttl, separador);
+        return new CatalogoParametrosProviderProperties(baseUrl, token, "svc-asistencias", secreto, null, null, timeout, ttl, separador);
     }
 
     @Test
@@ -53,15 +53,22 @@ class CatalogoParametrosProviderPropertiesTest {
     }
 
     @Test
-    void rechaza_token_id_nulo() {
+    void rechaza_token_uri_nula() {
         final var e = assertThrows(IllegalStateException.class, () -> con("http://h", null, SECRETO, null, null, null));
-        assertEquals("app.providers.catalogo-parametros.token-id es obligatorio.", e.getMessage());
+        assertEquals("app.providers.catalogo-parametros.token-uri es obligatorio.", e.getMessage());
     }
 
     @Test
-    void rechaza_secreto_vacio_sin_exponer_valores() {
+    void rechaza_client_id_vacio() {
+        final var e = assertThrows(IllegalStateException.class, () -> new CatalogoParametrosProviderProperties(
+                "http://h", TOKEN, " ", SECRETO, null, null, null, null, null));
+        assertEquals("app.providers.catalogo-parametros.client-id es obligatorio.", e.getMessage());
+    }
+
+    @Test
+    void rechaza_client_secret_vacio_sin_exponer_valores() {
         final var e = assertThrows(IllegalStateException.class, () -> con("http://h", TOKEN, " ", null, null, null));
-        assertEquals("app.providers.catalogo-parametros.secreto es obligatorio.", e.getMessage());
+        assertEquals("app.providers.catalogo-parametros.client-secret es obligatorio.", e.getMessage());
         assertThrows(IllegalStateException.class, () -> con("http://h", TOKEN, null, null, null, null));
     }
 

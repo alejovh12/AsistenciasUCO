@@ -39,7 +39,7 @@ public final class MatricularEstudianteAutenticadoUseCaseImpl implements Matricu
         ValidarTokenMatriculaUseCaseImpl.exigirUnaSolaCredencial(comando.token(), comando.pin());
         final MatriculaQrRepositoryPort.MatriculaRealizada matricula = repositorio.matricularAutenticado(
                 new MatriculaQrRepositoryPort.CredencialMatricula(comando.token(), comando.pin()),
-                comando.usuarioEjecutor());
+                comando.usuarioEjecutor(), comando.programaId());
         realtime.publish(RealtimeEvent.of(EVENTO_MATRICULADO, Map.of("grupo", matricula.idGrupo().toString(), "origen", "QR")));
         return new Resultado(matricula.idGrupo());
     }

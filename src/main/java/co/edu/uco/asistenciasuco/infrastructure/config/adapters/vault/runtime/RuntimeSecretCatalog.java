@@ -30,10 +30,11 @@ public final class RuntimeSecretCatalog {
                 "asistencias-pep-application-credential");
         catalogo.put("app.providers.minio.access-key", "asistencias-minio-access-key");
         catalogo.put("app.providers.minio.secret-key", "asistencias-minio-secret-key");
-        catalogo.put("app.providers.smtp-notification.username", "asistencias-smtp-username");
-        catalogo.put("app.providers.smtp-notification.password", "asistencias-smtp-password");
+        // F4: el SMTP vive en el Servicio de Notificaciones; el backend solo guarda la clave de API con que lo llama.
+        catalogo.put("asistencias.notificaciones.service.api-key", "asistencias-notificaciones-api-key");
         catalogo.put("app.security.azure-events.webhook-token", "asistencias-eventgrid-webhook-token");
-        catalogo.put("app.providers.catalogo-parametros.secreto", "asistencias-catalogo-parametros-secreto");
+        // INT-004: secreto de la identidad de servicio M2M con que el backend lee el Catalogo de Parametros (reemplaza al token interno).
+        catalogo.put("app.providers.catalogo-parametros.client-secret", "asistencias-catalogo-parametros-client-secret");
         // INT-003: secreto de la identidad de servicio con que el backend lee MessageUcoLab 0.3.0.
         catalogo.put("app.providers.messageucolab.service-identity.client-secret", "asistencias-messageucolab-client-secret");
         PROPIEDAD_A_SECRETO = Collections.unmodifiableMap(catalogo);

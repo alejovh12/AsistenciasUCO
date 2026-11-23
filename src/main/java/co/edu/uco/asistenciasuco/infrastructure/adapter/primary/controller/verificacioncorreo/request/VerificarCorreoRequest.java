@@ -8,10 +8,10 @@ import jakarta.validation.constraints.Size;
  */
 public class VerificarCorreoRequest {
 
-    @Size(max = 256, message = "El enlace de verificacion no es valido.")
+    @Size(max = 256, message = "El enlace de verificación no es válido.")
     private String token;
 
-    @Size(max = 255, message = "La contrasena no puede superar 255 caracteres.")
+    @Size(max = 255, message = "La contraseña no puede superar 255 caracteres.")
     private String password;
 
     public String getToken() {

@@ -60,16 +60,6 @@ class PasswordRegistroRuleTest {
         assertEquals("ERR_PASSWORD_NUMERO_IDENTIFICACION_REQUERIDO", exception.getCode());
     }
 
-    @Test
-    void resolverCredencialNueva_rechaza_password_null() {
-        final ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> PasswordRegistroRule.resolverCredencialNueva(null, numeroIdentificacion)
-        );
-
-        assertEquals("ERR_PASSWORD_REQUERIDO", exception.getCode());
-    }
-
     private void assertPasswordInvalido(final String password, final String expectedCode) {
         final ValidationException exception = assertThrows(
                 ValidationException.class,

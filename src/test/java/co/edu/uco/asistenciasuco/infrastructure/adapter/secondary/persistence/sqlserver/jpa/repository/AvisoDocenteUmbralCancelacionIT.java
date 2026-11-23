@@ -133,9 +133,9 @@ class AvisoDocenteUmbralCancelacionIT {
                 DECLARE @hoy DATE = CAST(SYSUTCDATETIME() AS DATE);
                 DECLARE @base INT = 1500000000 + ABS(CHECKSUM(NEWID()) % 400000000);
                 INSERT INTO dbo.Usuario (id, tipoIdIdentificacion, numeroIdentificacion, primerApellido, segundoApellido, primerNombre,
-                                         segundoNombre, correo, correoConfirmado, estado, password)
-                VALUES (@uD, @tipoCC, @base, N'Aviso', N'IT', N'Doc', N'IT', CONCAT(@tag, N'.d@it.invalid'), 1, 1, N'sin-credencial'),
-                       (@uE, @tipoCC, @base + 1, N'Aviso', N'IT', N'Est', N'IT', CONCAT(@tag, N'.e@it.invalid'), 1, 1, N'sin-credencial');
+                                         segundoNombre, correo, correoConfirmado, estado)
+                VALUES (@uD, @tipoCC, @base, N'Aviso', N'IT', N'Doc', N'IT', CONCAT(@tag, N'.d@it.invalid'), 1, 1),
+                       (@uE, @tipoCC, @base + 1, N'Aviso', N'IT', N'Est', N'IT', CONCAT(@tag, N'.e@it.invalid'), 1, 1);
                 INSERT INTO dbo.Docente (id, usuario) VALUES (@d, @uD);
                 INSERT INTO dbo.Estudiante (id, usuario) VALUES (@e, @uE);
                 INSERT INTO dbo.PeriodoAcademico (id, institucion, nombre, codigo, fechaInicio, fechaFin, anio)

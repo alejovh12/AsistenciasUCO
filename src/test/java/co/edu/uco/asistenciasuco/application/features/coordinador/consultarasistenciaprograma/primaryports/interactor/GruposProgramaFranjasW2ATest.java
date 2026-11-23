@@ -48,6 +48,23 @@ class GruposProgramaFranjasW2ATest {
     }
 
     @Test
+    void DEC077_el_programa_responsable_y_es_responsable_pasan_al_dto() {
+        final UUID programa = UUID.randomUUID();
+        final var responsable = new GrupoProgramaProjection(GRUPO, 1, "G1", UUID.randomUUID(), "Calculo", UUID.randomUUID(), 30,
+                20, 10, true, LocalDate.of(2026, 1, 20), LocalDate.of(2026, 6, 5), List.of(), programa, "Sistemas", true);
+        when(useCase.consultarGrupos(USUARIO, null, null, null, null))
+                .thenReturn(new Pagina<>(List.of(responsable, grupo(UUID.randomUUID(), List.of())), 2));
+
+        final var elementos = interactor.consultarGrupos(USUARIO, null, null, null, null).elementos();
+
+        assertEquals(programa, elementos.get(0).idProgramaResponsable());
+        assertEquals("Sistemas", elementos.get(0).nombreProgramaResponsable());
+        assertTrue(elementos.get(0).esResponsable());
+        assertEquals(null, elementos.get(1).idProgramaResponsable());
+        assertEquals(false, elementos.get(1).esResponsable());
+    }
+
+    @Test
     void un_grupo_sin_horario_entrega_lista_vacia_y_los_valores_por_defecto_de_pagina() {
         when(useCase.consultarGrupos(USUARIO, null, null, null, null)).thenReturn(new Pagina<>(List.of(grupo(GRUPO, null)), 1));
 

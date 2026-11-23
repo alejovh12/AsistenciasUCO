@@ -79,10 +79,7 @@ final class DbFailureClassifier {
         return switch (code) {
             case "SEC_001", "SEC_002", "EST_004", "COO_003" -> SecurityErrorCode.FORBIDDEN;
             // CULM-001 B2NM (DEC-019/DEC-020, CONTRACT 2.8.1): asignaturas por plan, matricula con programa y ambito de coordinacion.
-            case "ASI_002", "ASI_003", "ASI_005", "MQR_008" -> CommonErrorCode.CONFLICT;
-            // HU074 (migracion 58): ASI_006 (asignatura compartida con programas ajenos), ASI_009 (inactivar con grupos en el
-            // periodo vigente o futuro) y ASI_010 (asignatura inactiva al crear grupo o asociarla a un plan) son 409 con su propio
-            // codigo, para que el usuario reciba el texto del catalogo y no el generico de CONFLICT.
+            case "ASI_002", "ASI_003", "ASI_005" -> CommonErrorCode.CONFLICT;
             case "ASI_006" -> CatalogoErrorCode.ASI_006;
             case "ASI_009" -> CatalogoErrorCode.ASI_009;
             case "ASI_010" -> CatalogoErrorCode.ASI_010;
@@ -121,6 +118,11 @@ final class DbFailureClassifier {
             // VAL-pendientes-john PRU-15: toma, lote o reclamo de un periodo cerrado (PER_008) y segundo cierre (PER_009): 409.
             case "PER_008" -> MensajeUsuarioErrorCode.PER_008;
             case "PER_009" -> MensajeUsuarioErrorCode.PER_009;
+            // DEC-076: grupo nuevo en un periodo que ya termino: 409 con el nombre del periodo que arma la DB.
+            case "PER_010" -> MensajeUsuarioErrorCode.PER_010;
+            // Migracion 63: semestre actual del estudiante en el programa (404 sin vinculo; 400 fuera del rango, con el texto de la DB).
+            case "EST_008" -> MensajeUsuarioErrorCode.EST_008;
+            case "EST_009" -> MensajeUsuarioErrorCode.EST_009;
             // HU051: retiro de un estudiante por el docente titular. RET_001 (grupo inexistente o ajeno) y RET_002
             // (sin matricula activa) son no encontrado; periodo terminado es conflicto; motivo invalido es validacion.
             case "RET_001", "RET_002" -> CommonErrorCode.RESOURCE_NOT_FOUND;
@@ -130,7 +132,10 @@ final class DbFailureClassifier {
             // parametro (IDENTIDAD.PERMITIR_CORREGIR_DOCUMENTO) es una regla de negocio en conflicto.
             // NTF-002B: administracion de plantillas y cola outbox (marcadores invalidos, version inexistente,
             // notificacion fuera de un estado reintentable).
-            case "NTF_004" -> CommonErrorCode.VALIDATION_ERROR;
+            // F4: NTF_001 (datos de la notificacion invalidos) y NTF_003 (ya no esta reservada) los emiten los SP del outbox que el backend
+            // conserva; se clasifican en lugar de caer como 500 generico.
+            case "NTF_001", "NTF_004" -> CommonErrorCode.VALIDATION_ERROR;
+            case "NTF_003" -> CommonErrorCode.CONFLICT;
             // CULM-001 A.2-6: NTF_002 notificacion inexistente al reintentar desde la cola (antes ERR_DB_UNCLASSIFIED, 500).
             case "NTF_002", "NTF_005" -> CommonErrorCode.RESOURCE_NOT_FOUND;
             // CULM-001 D.9-a (F-ADM-027): NTF_020 reintento de una notificacion inexistente y NTF_021 vista previa de un tipo de plantilla
@@ -143,10 +148,25 @@ final class DbFailureClassifier {
             // cualquier token invalido); VCE_005 ya verificado es conflicto; VCE_007 usuario inexistente o inactivo es no encontrado.
             // HU176B: matricula por QR/PIN. MQR_001 es generico para cualquier token invalido (anti-enumeracion).
             case "MQR_001" -> MatriculaQrErrorCode.MQR_001;
+            case "VCE_003" -> MensajeUsuarioErrorCode.VCE_003;
+            case "VCE_004" -> MensajeUsuarioErrorCode.VCE_004;
+            case "ACT_002" -> MensajeUsuarioErrorCode.ACT_002;
+            // HU178: indicadores sin ambito; conservan su codigo publico (KPI_001/003/004) para que el frontend muestre el aviso de ambito.
+            case "KPI_001" -> MensajeUsuarioErrorCode.KPI_001;
+            case "KPI_003" -> MensajeUsuarioErrorCode.KPI_003;
+            case "KPI_004" -> MensajeUsuarioErrorCode.KPI_004;
+            // A-02 (auditoria 2026-11-22): codigos de negocio de la BD que caian en ERR_DB_UNCLASSIFIED (500).
+            case "GRUP_001" -> MensajeUsuarioErrorCode.GRUP_001;
+            case "GRUP_003" -> MensajeUsuarioErrorCode.GRUP_003;
+            case "SES_006" -> MensajeUsuarioErrorCode.SES_006;
+            case "EST_003" -> MensajeUsuarioErrorCode.EST_003;
+            case "INST_001" -> MensajeUsuarioErrorCode.INST_001;
             case "MQR_004" -> MatriculaQrErrorCode.MQR_004;
             case "MQR_005" -> MatriculaQrErrorCode.MQR_005;
             case "MQR_006" -> MatriculaQrErrorCode.MQR_006;
             case "MQR_007" -> MatriculaQrErrorCode.MQR_007;
+            // DEC-078: grupo compartido sin programa elegido; conserva su codigo para que el frontend muestre el selector (antes CONFLICT generico).
+            case "MQR_008" -> MatriculaQrErrorCode.MQR_008;
             case "VCE_001" -> VerificacionCorreoErrorCode.VCE_001;
             // DEC-073: correo institucional del personal nuevo (decano, coordinador, docente).
             case "VCE_008" -> VerificacionCorreoErrorCode.VCE_008;
@@ -208,6 +228,31 @@ final class DbFailureClassifier {
             case "HOR_003", "HOR_004" -> CommonErrorCode.VALIDATION_ERROR;
             // F3: el docente titular ya definio el horario inicial; los cambios los hace el coordinador (usp_guardar_horarios_grupo).
             case "HOR_005" -> CommonErrorCode.CONFLICT;
+            // SES-GEN-01: B5 (horas de las franjas frente a las de la materia), B7 (duracion y ventana), B9 (estudiantes inscritos),
+            // B1 (asignatura no disponible), B2 (periodo no vigente o de otra institucion), duracion del periodo y horas de la materia.
+            case "HOR_006" -> MensajeUsuarioErrorCode.HOR_006;
+            case "HOR_007" -> MensajeUsuarioErrorCode.HOR_007;
+            case "HOR_008" -> MensajeUsuarioErrorCode.HOR_008;
+            case "HOR_009" -> MensajeUsuarioErrorCode.HOR_009;
+            case "ASI_013" -> MensajeUsuarioErrorCode.ASI_013;
+            // Revision final BE-1: asignatura sin vinculo activo a un plan activo de los programas del coordinador (409).
+            case "ASI_014" -> MensajeUsuarioErrorCode.ASI_014;
+            // Revision final BE-4: periodos solapados (BD-3, 409) y matricula manual sin programa comun (BD-4, 400).
+            case "PER_012" -> MensajeUsuarioErrorCode.PER_012;
+            case "EST_010" -> MensajeUsuarioErrorCode.EST_010;
+            case "EST_011" -> MensajeUsuarioErrorCode.EST_011;
+            case "PER_011" -> MensajeUsuarioErrorCode.PER_011;
+            // DEC-081: receso academico (migracion 68). 400 fecha/motivo invalidos, 404 inexistente, 409 festivo/repetido/cerrado/aplicado.
+            case "REC_003" -> MensajeUsuarioErrorCode.REC_003;
+            case "REC_004" -> MensajeUsuarioErrorCode.REC_004;
+            case "REC_005" -> MensajeUsuarioErrorCode.REC_005;
+            case "REC_006" -> MensajeUsuarioErrorCode.REC_006;
+            case "REC_007" -> MensajeUsuarioErrorCode.REC_007;
+            case "REC_008" -> MensajeUsuarioErrorCode.REC_008;
+            case "REC_009" -> MensajeUsuarioErrorCode.REC_009;
+            case "REC_010" -> MensajeUsuarioErrorCode.REC_010;
+            // SES_005: hora local inexistente por cambio de horario al precargar las sesiones (antes caia en ERR_DB_UNCLASSIFIED).
+            case "SES_005" -> MensajeUsuarioErrorCode.SES_005;
             case "SES_001", "PROG_001", "PER_001", "FAC_001", "DEC_001" -> CommonErrorCode.RESOURCE_NOT_FOUND;
             // Catalogos administrativos (HU154/HU151): codigos propios con mensaje institucional.
             case "TPR_001" -> CatalogoErrorCode.TPR_001;
@@ -320,7 +365,9 @@ final class DbFailureClassifier {
             case "ARC_005" -> SecurityErrorCode.FORBIDDEN;
             // CAT_001: inconsistencia interna de catalogo DB (p. ej. dbo.Estado sin un codigo esperado).
             // Fallo tecnico conocido, no se reclasifica como 4xx.
-            case "CAT_001" -> DatabaseErrorCode.ERR_DB_CATALOG_INCONSISTENT;
+            // CORR_001 (correlacion ausente) y KPI_002 (umbrales de asistencia sin configurar) son fallos tecnicos de
+            // configuracion: 500 explicito con el mismo tratamiento que CAT_001.
+            case "CAT_001", "CORR_001", "KPI_002" -> DatabaseErrorCode.ERR_DB_CATALOG_INCONSISTENT;
             // SYS_001: catch-all tecnico de los SP publicos. Caso explicito para que quede clasificado
             // (no caido por el default) aunque su tratamiento sea el mismo que lo no clasificado.
             case "SYS_001" -> DatabaseErrorCode.ERR_DB_UNCLASSIFIED;

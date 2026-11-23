@@ -32,6 +32,8 @@ public class UvSesionEstadoEntity {
     /** DEC-065 (2): NULL si la sesion no nacio como solicitud; PENDIENTE, APROBADA o RECHAZADA. */
     @Column(name = "estadoSolicitud") private String estadoSolicitud;
     @Column(name = "pendienteAprobacion") private Boolean pendienteAprobacion;
+    /** BD-6: la solicitud de sesion extraordinaria fue rechazada; la sesion nunca existio como clase. */
+    @Column(name = "solicitudRechazada") private Boolean solicitudRechazada;
 
     protected UvSesionEstadoEntity() { }
 
@@ -65,6 +67,10 @@ public class UvSesionEstadoEntity {
 
     public String estadoSolicitud() {
         return estadoSolicitud;
+    }
+
+    public boolean solicitudRechazada() {
+        return Boolean.TRUE.equals(solicitudRechazada);
     }
 
     public boolean pendienteAprobacion() {

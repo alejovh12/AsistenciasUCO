@@ -37,10 +37,10 @@ COPY --from=build /workspace/extraido/dependencies/ ./
 COPY --from=build /workspace/extraido/spring-boot-loader/ ./
 COPY --from=build /workspace/extraido/snapshot-dependencies/ ./
 COPY --from=build /workspace/extraido/application/ ./
-# SEC-002: Alpine CVE-2026-46675 (libpng), CVE-2026-85091 (zlib).
+# SEC-002: Alpine CVE-2026-46675 (libpng), CVE-2026-85091 (zlib), CVE-2026-109908 (libfontenc).
 # Update OS packages in the runtime stage, never merely in the builder stage.
 # /app/cache: unico directorio donde el usuario sin privilegios escribe la cache de clases (ver ENTRYPOINT).
-RUN apk upgrade --no-cache libpng zlib     && mkdir -p /app/cache && chown 10001:10001 /app/cache
+RUN apk upgrade --no-cache libpng zlib libfontenc     && mkdir -p /app/cache && chown 10001:10001 /app/cache
 # SEC-002 defense-in-depth: production JVM runs without root privileges.
 # JAR is copied as world-readable and Java can use /tmp on Alpine.
 USER 10001:10001

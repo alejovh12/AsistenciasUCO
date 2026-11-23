@@ -14,7 +14,10 @@ public enum MatriculaQrErrorCode implements ErrorDefinition {
     MQR_004("MQR_004", "Ya estás matriculado en este grupo.", ErrorKind.CONFLICT),
     MQR_005("MQR_005", "Ya tienes una cuenta registrada. Inicia sesión para completar tu matrícula.", ErrorKind.CONFLICT),
     MQR_006("MQR_006", "No fue posible generar un código único. Inténtalo de nuevo.", ErrorKind.CONFLICT),
-    MQR_007("MQR_007", "Debes indicar el código QR o el PIN, pero no ambos.", ErrorKind.VALIDATION);
+    MQR_007("MQR_007", "Debes indicar el código QR o el PIN, pero no ambos.", ErrorKind.VALIDATION),
+    // DEC-078: grupo compartido por varios programas y el estudiante no eligio el suyo; el frontend muestra el selector con los
+    // programasElegibles que entrega la validacion publica del token y reenvia con idPrograma.
+    MQR_008("MQR_008", "Este grupo lo comparten varios programas: elige el programa al que perteneces para matricularte.", ErrorKind.CONFLICT);
 
     private final String code;
     private final String defaultMessage;

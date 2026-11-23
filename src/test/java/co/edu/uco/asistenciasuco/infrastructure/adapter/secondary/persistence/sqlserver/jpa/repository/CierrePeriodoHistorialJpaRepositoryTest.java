@@ -43,6 +43,21 @@ class CierrePeriodoHistorialJpaRepositoryTest {
         assertThrows(NullPointerException.class, () -> new CierrePeriodoJpaRepository(null, manager));
     }
 
+    /**
+     * Revision final BE-3: la auditoria HTTP tambien deja una fila CIERRE_MASIVO_PERIODO por cada intento (los rechazados con
+     * result FAILURE, sin periodo ni conteos) y por cada exito (sin los conteos del SP). El historial solo lista el cierre que
+     * el SP registro: resultado exitoso y con los conteos en la metadata.
+     */
+    @Test
+    void el_historial_solo_lee_los_cierres_exitosos_del_sp_y_no_los_intentos_fallidos() {
+        final String sql = CierrePeriodoJpaRepository.SQL_CONSULTAR_HISTORIAL;
+
+        assertTrue(sql.contains("a.result = 'SUCCESS'"), "debe excluir los intentos fallidos");
+        assertTrue(sql.contains("JSON_VALUE(a.metadata, '$.procesados') IS NOT NULL"),
+                "debe excluir las filas de la auditoria HTTP, que no traen los conteos del cierre");
+        assertTrue(sql.contains("uv_periodo_academico"), "el periodo se resuelve por su nombre");
+    }
+
     @Test
     void mapea_metadata_resultado_y_actor_de_cada_fila() {
         final UUID id = UUID.randomUUID();

@@ -17,6 +17,7 @@ public record NotificacionSalienteAdminProjection(
         Instant entregadoEn,
         String codigoError,
         String detalleError,
-        UUID referenciaTraza
+        UUID referenciaTraza,
+        String aplicacion
 ) {
 }

@@ -222,7 +222,7 @@ class JpaQueryAdapterContractTest {
 
     private static Object[] grupoFila(final UUID id, final int total) {
         return new Object[]{id, 508, "Grupo", UUID.randomUUID(), "Backend", UUID.randomUUID(), 30, 10, 20, 1,
-                java.time.LocalDate.of(2026, 1, 20), java.time.LocalDate.of(2026, 5, 30), total};
+                java.time.LocalDate.of(2026, 1, 20), java.time.LocalDate.of(2026, 5, 30), total, UUID.randomUUID(), "Programa", true, "Docente Titular"};
     }
 
     @Test

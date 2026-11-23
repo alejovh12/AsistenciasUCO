@@ -67,6 +67,17 @@ class AsistenciaControllerContractTest {
     }
 
     @Test
+    void reviewResponseMessageIsWrittenWithTheAccent() throws Exception {
+        // Revision final BD-10: el mensaje de exito decia "revision" sin tilde.
+        mvc.perform(post("/api/v1/asistencias/revisiones").contentType("application/json")
+                        .content("""
+                                {"sesion":"%s","categoria":"SALUD","motivo":"Cita médica"}
+                                """.formatted(SESSION)))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.mensaje").value("Solicitud de revisión registrada correctamente."));
+    }
+
+    @Test
     void reviewAcceptsLegacyAliasesAndUsesAuthenticatedActor() throws Exception {
         mvc.perform(post("/api/v1/asistencias/revisiones").contentType("application/json")
                         .content("""

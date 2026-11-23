@@ -106,12 +106,47 @@ class AdministrarNotificacionesUseCaseImplTest {
     }
 
     @Test
+    void estadoCanalPublico_responde_sin_historial_cuando_la_cola_del_servicio_no_esta_disponible() {
+        when(port.consultarEstadoCanal()).thenReturn(estado(true, true));
+        when(port.consultarCola(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.eq(1), org.mockito.ArgumentMatchers.eq(1), org.mockito.ArgumentMatchers.eq(admin)))
+                .thenThrow(new co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException("caido"));
+
+        final var publico = interactor.consultarEstadoCanalPublico(admin);
+
+        assertEquals(true, publico.canalActivo());
+        assertEquals(null, publico.ultimoEnvioUtc());
+        assertEquals(null, publico.ultimoError());
+    }
+
+    @Test
+    void estadoCanalPublico_prefiere_el_ultimo_envio_y_error_que_informa_el_servicio_sin_consultar_la_cola() {
+        final java.time.Instant envio = java.time.Instant.parse("2026-11-23T00:53:35Z");
+        when(port.consultarEstadoCanal()).thenReturn(estado(true, true, envio, "SMTP_TIMEOUT"));
+
+        final var publico = interactor.consultarEstadoCanalPublico(admin);
+
+        assertEquals(envio, publico.ultimoEnvioUtc());
+        assertEquals("SMTP_TIMEOUT", publico.ultimoError());
+        org.mockito.Mockito.verify(port, org.mockito.Mockito.never()).consultarCola(
+                org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyInt(),
+                org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
     void estadoCanalPublico_con_despachador_apagado_no_esta_activo() {
         when(port.consultarEstadoCanal()).thenReturn(estado(false, true));
         when(port.consultarCola(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.isNull(),
                 org.mockito.ArgumentMatchers.eq(1), org.mockito.ArgumentMatchers.eq(1), org.mockito.ArgumentMatchers.eq(admin))).thenReturn(pagina());
 
         assertEquals(false, interactor.consultarEstadoCanalPublico(admin).canalActivo());
+    }
+
+    private static co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.EstadoCanalNotificacionProjection estado(
+            final boolean despachador, final boolean disponible, final java.time.Instant ultimoEnvio, final String ultimoError) {
+        return new co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.EstadoCanalNotificacionProjection(
+                "outbox", "smtp", despachador, disponible, "smtp.uco.edu.co", 587, "cuenta@uco.edu.co", true, "no-reply@uco.edu.co",
+                "UCO", true, false, 50, 60, 500, false, "https://x", false, 0, ultimoEnvio, ultimoError);
     }
 
     private static co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.EstadoCanalNotificacionProjection estado(
@@ -124,7 +159,7 @@ class AdministrarNotificacionesUseCaseImplTest {
     private static co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.NotificacionSalienteAdminProjection cola(
             final String estado, final java.time.Instant creado, final java.time.Instant entregado, final String codigoError) {
         return new co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.NotificacionSalienteAdminProjection(
-                UUID.randomUUID(), "T", "a", estado, estado, false, 1, 1, creado, null, entregado, codigoError, null, null);
+                UUID.randomUUID(), "T", "a", estado, estado, false, 1, 1, creado, null, entregado, codigoError, null, null, "asistencias");
     }
 
     private static co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.PaginaColaNotificacionProjection pagina(

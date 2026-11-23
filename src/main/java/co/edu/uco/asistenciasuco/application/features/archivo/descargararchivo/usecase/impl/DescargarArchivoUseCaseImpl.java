@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.application.features.archivo.descargararchivo.
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
+import co.edu.uco.asistenciasuco.application.features.archivo.exception.ArchivoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.archivo.shared.contentsecurity.ChecksumCalculator;
 import co.edu.uco.asistenciasuco.application.features.archivo.descargararchivo.usecase.DescargarArchivoUseCase;
 import co.edu.uco.asistenciasuco.application.features.archivo.descargararchivo.usecase.domain.DescargarArchivoDomain;
@@ -94,6 +95,10 @@ public final class DescargarArchivoUseCaseImpl implements DescargarArchivoUseCas
             // La fila SQL autoriza el acceso pero el objeto no existe: incidente de integridad, no un 404 del usuario.
             throw new InternalApplicationException(
                     "La verificacion de integridad del archivo almacenado no fue satisfactoria.", exception);
+        } catch (final FileStoragePort.StorageUnavailableException exception) {
+            // REA-02 (revision final P3): MinIO caido o breaker fileStorage abierto. No se disfraza de archivo inexistente: 503
+            // ERR_ALMACENAMIENTO_NO_DISPONIBLE, igual que al subir.
+            throw InternalApplicationException.servicioNoDisponible(ArchivoErrorCode.ERR_ALMACENAMIENTO_NO_DISPONIBLE, exception);
         }
     }
 }

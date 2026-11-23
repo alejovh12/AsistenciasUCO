@@ -16,8 +16,7 @@ public final class CrearDecanoRepositoryMapper {
 
     public static DecanoCommandPort.CrearDecanoConFacultadCommand toCommandConFacultad(
             final CrearDecanoDomain domain,
-            final UUID idDecano,
-            final String passwordParaPersistir
+            final UUID idDecano
     ) {
         final var facultadNueva = domain.getFacultadNueva();
         return new DecanoCommandPort.CrearDecanoConFacultadCommand(
@@ -29,7 +28,6 @@ public final class CrearDecanoRepositoryMapper {
                 domain.getPrimerApellido(),
                 domain.getSegundoApellido(),
                 domain.getCorreo(),
-                passwordParaPersistir,
                 facultadNueva.nombre(),
                 facultadNueva.codigo(),
                 facultadNueva.idInstitucion(),
@@ -40,8 +38,7 @@ public final class CrearDecanoRepositoryMapper {
     public static DecanoCommandPort.CrearDecanoCommand toCommand(
             final CrearDecanoDomain domain,
             final UUID idDecano,
-            final FacultadProjection facultad,
-            final String passwordParaPersistir
+            final FacultadProjection facultad
     ) {
         return new DecanoCommandPort.CrearDecanoCommand(
                 idDecano,
@@ -54,7 +51,6 @@ public final class CrearDecanoRepositoryMapper {
                 domain.getCorreo(),
                 domain.getIdFacultad(),
                 facultad != null ? facultad.nombreFacultad() : null,
-                passwordParaPersistir,
                 domain.getUsuarioEjecutor()
         );
     }

@@ -8,6 +8,16 @@ last-reviewed: 2026-10-30
 
 # Integración del componente de correo (NOTIF-001 + NOTIF-002A) y plan de retiro
 
+> **F4 (2026-11-22): este plan de retiro ya se ejecutó.** El renderizado de plantillas, la administración de plantillas, el
+> tope de envíos y el canal SMTP salieron del backend y viven en el Servicio de Notificaciones UCO
+> (`Complementos/Notificaciones`, contrato `openapi-notificaciones.yaml`). El backend conserva el outbox
+> (`NotificacionSaliente`), la resolución de destinatarios (`contact/`), el token de verificación (`verificacion/`) y el cliente
+> HTTP (`notification.service`). Configuración: `NOTIFICACIONES_SERVICE_URL`, `NOTIFICACIONES_API_KEY`
+> (`asistencias.notificaciones.service.*`); `OUTBOX_NOTIFICATION_SENDER` acepta `servicio` (o vacío con URL), `log`, y `smtp` como
+> alias heredado de `servicio`. Las variables `SMTP_NOTIFICATION_*` ya no las lee el backend (solo `PLATFORM_URL` y
+> `REQUIRE_CONFIRMED_EMAIL`, como alias de `NOTIFICACIONES_PLATFORM_URL` y `NOTIFICACIONES_REQUIRE_CONFIRMED_EMAIL`); el resto
+> pertenece al `.env` del servicio. El resto de esta guía es histórico.
+
 Esta guía explica **cómo está integrado** el envío de correo, **cómo se usa** y **qué hay que retirar** cuando se reemplace por el componente de notificaciones/correo de otro equipo.
 
 - Decisión de arquitectura: [ADR-005](../adr/ADR-005-notification-provider-switch.md) y [ADR-006](../adr/ADR-006-notification-email-and-templates.md).

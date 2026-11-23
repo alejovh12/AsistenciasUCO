@@ -81,7 +81,8 @@ class AsistenciaProgramaJpaRepositoryTest {
                 Map.entry("estudiantesActivos", 25), Map.entry("cuposDisponibles", 5),
                 Map.entry("grupoEstaHablitado", true),
                 Map.entry("fechaInicioPeriodoAcademico", LocalDate.of(2026, 1, 20)),
-                Map.entry("totalRegistros", 14)))));
+                Map.entry("totalRegistros", 14), Map.entry("idProgramaResponsable", PERIODO),
+                Map.entry("nombreProgramaResponsable", "Sistemas"), Map.entry("esResponsable", true)))));
 
         final var pagina = repository.consultarGrupos(EJECUTOR, PERIODO, "calc", 2, 5);
 
@@ -100,6 +101,21 @@ class AsistenciaProgramaJpaRepositoryTest {
         assertEquals(5, grupo.cuposDisponibles());
         assertTrue(grupo.habilitado());
         assertEquals(LocalDate.of(2026, 1, 20), grupo.inicioPeriodo());
+        assertEquals(PERIODO, grupo.idProgramaResponsable());
+        assertEquals("Sistemas", grupo.nombreProgramaResponsable());
+        assertTrue(grupo.esResponsable());
+    }
+
+    @Test
+    void DEC077_grupo_sin_programa_responsable_mapea_es_responsable_falso() {
+        when(query.getResultList()).thenReturn(List.of(
+                entidad(SpGrupoProgramaPaginadoEntity.class, Map.of("id", GRUPO, "codigo", 1, "totalRegistros", 1))));
+
+        final var grupo = repository.consultarGrupos(EJECUTOR, null, null, 1, 10).elementos().getFirst();
+
+        assertNull(grupo.idProgramaResponsable());
+        assertNull(grupo.nombreProgramaResponsable());
+        assertFalse(grupo.esResponsable());
     }
 
     @Test

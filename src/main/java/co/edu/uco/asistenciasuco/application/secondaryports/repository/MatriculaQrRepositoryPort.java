@@ -24,14 +24,31 @@ public interface MatriculaQrRepositoryPort {
     record VentanaPorRotar(UUID idGrupo, UUID idDocenteEmisor) {
     }
 
+    /** DEC-078: programa del grupo que el estudiante puede elegir al matricularse por QR en un grupo compartido. */
+    record ProgramaElegible(UUID idPrograma, String nombre) {
+    }
+
+    /**
+     * {@code programasElegibles}: DEC-078. Vacio si el grupo tiene un solo programa o si el docente fijo el programa de la
+     * ventana; si no, los programas del grupo entre los que elige el estudiante nuevo (o el que aun no pertenece a ninguno).
+     */
     record CursoMatricula(
             UUID idGrupo,
             String nombreAsignatura,
             String nombreGrupo,
             String nombreDocente,
             Instant fechaExpiracionUtc,
-            int cupoDisponible
+            int cupoDisponible,
+            List<ProgramaElegible> programasElegibles
     ) {
+        public CursoMatricula {
+            programasElegibles = programasElegibles == null ? List.of() : List.copyOf(programasElegibles);
+        }
+
+        public CursoMatricula(final UUID idGrupo, final String nombreAsignatura, final String nombreGrupo,
+                              final String nombreDocente, final Instant fechaExpiracionUtc, final int cupoDisponible) {
+            this(idGrupo, nombreAsignatura, nombreGrupo, nombreDocente, fechaExpiracionUtc, cupoDisponible, List.of());
+        }
     }
 
     record MatriculaRealizada(UUID idEstudiante, UUID idUsuario, UUID idGrupo) {
@@ -46,8 +63,15 @@ public interface MatriculaQrRepositoryPort {
             String primerApellido,
             String segundoApellido,
             String correo,
-            String passwordCodificada
+            UUID programaId
     ) {
+        /** Sin programa elegido: el de la ventana o, en un grupo de un solo programa, ese programa (lo resuelve la BD). */
+        public RegistroPublico(final CredencialMatricula credencial, final UUID tipoIdentificacionId,
+                               final int numeroIdentificacion, final String primerNombre, final String segundoNombre,
+                               final String primerApellido, final String segundoApellido, final String correo) {
+            this(credencial, tipoIdentificacionId, numeroIdentificacion, primerNombre, segundoNombre, primerApellido,
+                    segundoApellido, correo, null);
+        }
     }
 
     default VentanaAbierta abrirVentana(UUID grupoId, String token, String pin, UUID usuarioEjecutor) {
@@ -68,7 +92,23 @@ public interface MatriculaQrRepositoryPort {
 
     CursoMatricula validar(CredencialMatricula credencial);
 
+    /**
+     * Revision final P3: con el estudiante conocido ({@code usuarioEjecutor} no nulo), {@link CursoMatricula#programasElegibles()} es la
+     * interseccion entre sus programas y los del grupo; {@code null} equivale a {@link #validar(CredencialMatricula)}.
+     */
+    default CursoMatricula validar(final CredencialMatricula credencial, final UUID usuarioEjecutor) {
+        return validar(credencial);
+    }
+
     MatriculaRealizada registrarPublico(RegistroPublico datos);
 
-    MatriculaRealizada matricularAutenticado(CredencialMatricula credencial, UUID usuarioEjecutor);
+    default MatriculaRealizada matricularAutenticado(final CredencialMatricula credencial, final UUID usuarioEjecutor) {
+        return matricularAutenticado(credencial, usuarioEjecutor, null);
+    }
+
+    /**
+     * DEC-078: matricula autenticada con el programa que eligio el estudiante ({@code programaId}, uno de los
+     * {@link CursoMatricula#programasElegibles()}); {@code null} equivale a {@link #matricularAutenticado(CredencialMatricula, UUID)}.
+     */
+    MatriculaRealizada matricularAutenticado(CredencialMatricula credencial, UUID usuarioEjecutor, UUID programaId);
 }

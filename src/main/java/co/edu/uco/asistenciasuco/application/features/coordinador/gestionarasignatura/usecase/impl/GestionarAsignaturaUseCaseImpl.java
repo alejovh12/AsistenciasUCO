@@ -48,7 +48,8 @@ public final class GestionarAsignaturaUseCaseImpl implements GestionarAsignatura
         final UUID programa = resolverPrograma(domain.usuarioEjecutor());
         validarPlanDelPrograma(domain.idPlanEstudio(), programa);
         commandPort.crearAsignatura(UUID.randomUUID(), domain.codigo(), domain.nombre(), domain.creditos(), domain.idPlanEstudio(),
-                domain.semestreNumero(), domain.nombreArea(), domain.nombreComponente(), domain.codigoCaracter(), domain.usuarioEjecutor());
+                domain.semestreNumero(), domain.nombreArea(), domain.nombreComponente(), domain.codigoCaracter(), domain.horasSemanales(),
+                domain.usuarioEjecutor());
     }
 
     @Override
@@ -63,7 +64,8 @@ public final class GestionarAsignaturaUseCaseImpl implements GestionarAsignatura
             throw new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_009);
         }
         commandPort.actualizarAsignatura(domain.idAsignatura(), domain.codigo(), domain.nombre(), domain.creditos(), domain.idPlanEstudio(),
-                domain.semestreNumero(), domain.nombreArea(), domain.nombreComponente(), domain.codigoCaracter(), domain.usuarioEjecutor());
+                domain.semestreNumero(), domain.nombreArea(), domain.nombreComponente(), domain.codigoCaracter(), domain.horasSemanales(),
+                domain.usuarioEjecutor());
     }
 
     @Override
@@ -77,9 +79,8 @@ public final class GestionarAsignaturaUseCaseImpl implements GestionarAsignatura
                         && programa.equals(asignatura.idPrograma()))
                 .findFirst()
                 .orElseThrow(() -> new ForbiddenException(MensajeUsuarioErrorCode.ACC_APP_009));
-        // HU074: si el SP rechaza (ASI_009, ASI_006...) la excepcion sale antes de aqui. El estado en que quedo lo dice el codigo
-        // de exito del SP (ASI_011 / ASI_012); sin codigo (SP anterior), el estado pedido y, si se pidio alternar, el contrario
-        // al leido en la validacion de ambito.
+        // El código de éxito del SP confirma el resultado. Si el provider aún no devuelve ese código,
+        // conserva el estado pedido o calcula el alterno a partir de la lectura usada para validar ámbito.
         final ResultadoEstadoAsignaturaProjection resultado =
                 commandPort.toggleEstadoAsignatura(asignaturaId, estaActivaDeseada, usuarioEjecutor);
         final boolean quedaActiva = Optional.ofNullable(resultado.estaActivaResultante())
@@ -87,7 +88,7 @@ public final class GestionarAsignaturaUseCaseImpl implements GestionarAsignatura
         return new EstadoAsignaturaDomain(asignaturaId, quedaActiva, mensajeConfirmacion(resultado.mensajeUsuario(), quedaActiva));
     }
 
-    /** Mensaje del SP; si llega vacio, el del catalogo (ASI_011/ASI_012) y, sin catalogo, el respaldo del codigo. */
+    /** Mensaje del SP; si llega vacío, se consulta el catálogo y se usa el respaldo del código si falta. */
     private String mensajeConfirmacion(final String mensajeDb, final boolean quedaActiva) {
         if (!TextHelper.isNullOrBlank(mensajeDb)) {
             return mensajeDb.strip();

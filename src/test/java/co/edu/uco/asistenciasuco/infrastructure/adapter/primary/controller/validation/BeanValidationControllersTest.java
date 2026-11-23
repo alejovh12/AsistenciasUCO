@@ -189,7 +189,7 @@ class BeanValidationControllersTest {
                         .content("{\"token\":\"" + "t".repeat(300) + "\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.details[0].field").value("token"))
-                .andExpect(jsonPath("$.details[0].message").value("El enlace de verificacion no es valido."));
+                .andExpect(jsonPath("$.details[0].message").value("El enlace de verificación no es válido."));
         verifyNoInteractions(verificarCorreo);
     }
 
@@ -201,7 +201,7 @@ class BeanValidationControllersTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.details[0].field").value("numeroIdentificacion"))
                 .andExpect(jsonPath("$.details[0].code").value("FIELD_INVALID_FORMAT"))
-                .andExpect(jsonPath("$.details[0].message").value("El numero de identificacion es obligatorio y debe ser positivo."))
+                .andExpect(jsonPath("$.details[0].message").value("El número de identificación es obligatorio y debe ser positivo."))
                 .andExpect(jsonPath("$.details[?(@.message =~ /.*must.*/)]").isEmpty());
         verifyNoInteractions(admitir);
     }

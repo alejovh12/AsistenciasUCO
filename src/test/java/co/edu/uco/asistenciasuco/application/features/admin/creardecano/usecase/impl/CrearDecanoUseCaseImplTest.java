@@ -63,7 +63,6 @@ class CrearDecanoUseCaseImplTest {
         command = mock(DecanoCommandPort.class);
         usuarios = mock(UsuarioRepositoryPort.class);
         activacion = mock(ActivacionCuentaService.class);
-        when(activacion.credencialLegadaInutilizable()).thenReturn(HASH);
         identity = mock(IdentityProviderPort.class);
         when(facultad.consultarFacultadPorId(FACULTAD_ID)).thenReturn(Optional.of(new FacultadProjection(
                 FACULTAD_ID, "Facultad", null, null, null, null, true, "Activa"
@@ -89,7 +88,6 @@ class CrearDecanoUseCaseImplTest {
         orden.verify(command).crearDecano(db.capture());
         orden.verify(usuarios).consultarUsuarioPorIdentificacion(TIPO_ID, 123456789);
         orden.verify(identity).crearCuenta(idp.capture());
-        assertEquals(HASH, db.getValue().password());
         assertEquals(TIPO_ID, db.getValue().tipoIdentificacionId());
         assertEquals(USUARIO_EJECUTOR, db.getValue().usuarioEjecutor());
         // IDENT-002: la BD guarda el secreto inutilizable; la cuenta nace sin credencial y pendiente de activacion.
@@ -184,7 +182,6 @@ class CrearDecanoUseCaseImplTest {
         final ArgumentCaptor<CrearCuentaIdentidadDTO> idp = ArgumentCaptor.forClass(CrearCuentaIdentidadDTO.class);
         verify(command).crearDecano(db.capture());
         verify(identity).crearCuenta(idp.capture());
-        assertEquals(null, db.getValue().password());
         assertEquals("111111111", idp.getValue().username());
         assertEquals("JOSE", idp.getValue().primerNombre());
         assertEquals("PEREZ", idp.getValue().primerApellido());
@@ -192,7 +189,6 @@ class CrearDecanoUseCaseImplTest {
         assertNull(idp.getValue().passwordInicial());
         assertEquals(InstitutionalRole.DECANO, idp.getValue().rolInstitucional());
         verify(usuarios).consultarUsuarioPorId(USUARIO_ID);
-        verify(activacion, never()).credencialLegadaInutilizable();
     }
 
     @Test

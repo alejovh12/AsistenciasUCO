@@ -77,10 +77,8 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
         if (!usuarioExistente) {
             dominioCorreoPolicy.exigir(domain.getCorreo());
         }
-        final String passwordParaPersistir = resolverPasswordParaPersistir(usuarioExistente);
-
         final RegistrarEstudianteRepositoryProjection resultado = grupoRepositoryPort.registrarEstudianteEnGrupo(
-                RegistrarEstudianteRepositoryMapper.toRepositoryDTO(domain, passwordParaPersistir)
+                RegistrarEstudianteRepositoryMapper.toRepositoryDTO(domain)
         );
 
         // DB SUCCESS a partir de aqui: Identity nunca se invoca antes de este punto.
@@ -151,6 +149,10 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
             return identityProviderPort.crearCuenta(RegistrarEstudianteIdentityMapper
                     .toCrearCuentaIdentidadDTO(domain, usuarioCanonico, ROL_ESTUDIANTE).conVerificacionCorreo());
         } catch (final IdentityProviderPort.IdentityProviderException exception) {
+            if (exception.esConflicto() && requiereVerificacionCorreo) {
+                // Correo o usuario ya usados por otra cuenta del proveedor: 409 de negocio, no 500.
+                throw new ConflictException(UsuarioErrorCode.ERR_UNICIDAD_CORREO);
+            }
             if (!requiereVerificacionCorreo) {
                 // CULM-001 A (E2E): la persona ya existia en BD con su cuenta y sus credenciales; que el proveedor no
                 // reconcilie esa cuenta no invalida la matricula ya confirmada. Se registra el desfase y se responde como
@@ -191,12 +193,5 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
             throw new ConflictException(UsuarioErrorCode.ERR_IDENTIDAD_USUARIO_CONFLICTO);
         }
         return existePorCorreo;
-    }
-
-    private String resolverPasswordParaPersistir(final boolean usuarioExistente) {
-        if (usuarioExistente) {
-            return null;
-        }
-        return activacion.credencialLegadaInutilizable();
     }
 }

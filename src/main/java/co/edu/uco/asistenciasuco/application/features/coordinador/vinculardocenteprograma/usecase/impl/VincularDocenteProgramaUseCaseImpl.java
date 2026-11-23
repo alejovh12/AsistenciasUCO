@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.vinculardocenteprograma.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
@@ -93,7 +94,7 @@ public final class VincularDocenteProgramaUseCaseImpl implements VincularDocente
         }
         commandPort.vincular(new VincularDocenteProgramaCommand(null, null, domain.idTipoIdentificacion(),
                 domain.numeroIdentificacion(), domain.primerNombre(), domain.segundoNombre(), domain.primerApellido(),
-                domain.segundoApellido(), correo, activacion.credencialLegadaInutilizable(),
+                domain.segundoApellido(), correo,
                 idPrograma, domain.actorUsuarioId()));
         final UsuarioIdentidadRepositoryProjection usuario = usuarioRepositoryPort.consultarUsuarioPorCorreo(correo)
                 .orElseThrow(() -> new InternalApplicationException(
@@ -112,7 +113,7 @@ public final class VincularDocenteProgramaUseCaseImpl implements VincularDocente
 
     private DocenteProgramaProjection vincularExistente(final VincularDocenteProgramaDomain domain, final UUID idPrograma) {
         commandPort.vincular(new VincularDocenteProgramaCommand(domain.idDocente(), domain.idUsuario(), null, null, null,
-                null, null, null, null, null, idPrograma, domain.actorUsuarioId()));
+                null, null, null, null, idPrograma, domain.actorUsuarioId()));
         return releer(domain.actorUsuarioId(), idPrograma, domain.idDocente(), domain.idUsuario())
                 .orElseThrow(this::vinculoNoEncontrado);
     }
@@ -136,6 +137,9 @@ public final class VincularDocenteProgramaUseCaseImpl implements VincularDocente
                     null,
                     InstitutionalRole.DOCENTE).conVerificacionCorreo());
         } catch (final IdentityProviderPort.IdentityProviderException exception) {
+            if (exception.esConflicto()) {
+                throw new ConflictException(UsuarioErrorCode.ERR_UNICIDAD_CORREO);
+            }
             throw new InternalApplicationException(
                     "El docente quedo vinculado, pero no fue posible completar el aprovisionamiento de su identidad.", exception);
         }

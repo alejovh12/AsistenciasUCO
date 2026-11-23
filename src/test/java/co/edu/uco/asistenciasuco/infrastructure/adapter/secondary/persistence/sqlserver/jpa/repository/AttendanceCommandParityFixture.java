@@ -299,7 +299,6 @@ final class AttendanceCommandParityFixture {
         usuario.put("correo", IT_PREFIX + sufijo + "@it.invalid");
         usuario.put("correoConfirmado", true);
         usuario.put("estado", true);
-        usuario.put("password", IT_PREFIX + "sin-credencial");
         insertar("Usuario", usuario);
         return id;
     }

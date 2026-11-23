@@ -172,9 +172,9 @@ public class EstudianteJpaRepository implements EstudianteRepositoryPort {
     }
 
     private static Object[] validarListado(final Object[] fila) {
-        if (fila.length != COLUMNAS_LISTADO) {
+        if (fila.length < COLUMNAS_LISTADO) {
             throw new IllegalStateException("El directorio de estudiantes devolvio " + fila.length
-                    + " columnas; se esperaban " + COLUMNAS_LISTADO + ".");
+                    + " columnas; se esperaban al menos " + COLUMNAS_LISTADO + ".");
         }
         return fila;
     }

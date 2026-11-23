@@ -76,7 +76,7 @@ class GlobalExceptionHandlerMensajeCatalogoTest {
         final ResponseEntity<ApiErrorResponse> respuesta = sinCatalogo.handleApplication(
                 ValidationException.conParametros(MensajeUsuarioErrorCode.VAL_APP_039, 50), request());
 
-        assertEquals("El tamano de pagina debe estar entre 1 y 50.", respuesta.getBody().message());
+        assertEquals("El tamaño de página debe estar entre 1 y 50.", respuesta.getBody().message());
     }
 
     @Test

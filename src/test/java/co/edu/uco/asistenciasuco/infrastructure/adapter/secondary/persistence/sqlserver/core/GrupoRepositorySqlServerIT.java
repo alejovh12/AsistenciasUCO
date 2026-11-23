@@ -74,7 +74,6 @@ class GrupoRepositorySqlServerIT {
                         "ANA",
                         "MARIA",
                         identity.correo(),
-                        "Clave123!",
                         UUID.randomUUID(),
                         ejecutorAutorizado.get()
                 );
@@ -133,7 +132,6 @@ class GrupoRepositorySqlServerIT {
                     "ANA",
                     "MARIA",
                     identity.correo(),
-                    "Clave123!",
                     grupo,
                     titular
             )));

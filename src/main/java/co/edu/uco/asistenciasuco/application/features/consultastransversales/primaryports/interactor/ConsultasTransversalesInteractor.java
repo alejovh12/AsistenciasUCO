@@ -123,7 +123,7 @@ public final class ConsultasTransversalesInteractor implements ConsultasTransver
                         c.nombreAsignatura(), c.idDocente(), c.nombreDocente(), c.estudiantesActivos(),
                         c.sesionesEjecutadas(), c.asistencias(), c.faltasSinJustaCausa(), c.excusas(),
                         c.porcentajeAsistencia(), c.porcentajeInasistencia(), c.estudiantesRiesgo(),
-                        c.estudiantesPerdida(), c.horasDictadas(), c.porcentajeExcusa(), c.porcentajeSinRegistro(), c.codigoPermanencia()));
+                        c.estudiantesPerdida(), c.horasDictadas(), c.porcentajeExcusa(), c.porcentajeSinRegistro(), c.codigoPermanencia(), c.porcentajePorDictar()));
     }
 
     @Override

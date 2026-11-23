@@ -205,7 +205,7 @@ class GrupoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(bodyValido().replace("ana.perez@uco.edu.co", "correo-invalido")))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Hay campos con informacion invalida. Revise los datos enviados."));
+                .andExpect(jsonPath("$.message").value("Hay campos con información inválida. Revise los datos enviados."));
     }
 
     @Test
@@ -225,7 +225,7 @@ class GrupoControllerTest {
                                 }
                                 """.formatted(TIPO_IDENTIFICACION)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Hay campos con informacion invalida. Revise los datos enviados."));
+                .andExpect(jsonPath("$.message").value("Hay campos con información inválida. Revise los datos enviados."));
     }
 
     private MockMvc mockMvc(

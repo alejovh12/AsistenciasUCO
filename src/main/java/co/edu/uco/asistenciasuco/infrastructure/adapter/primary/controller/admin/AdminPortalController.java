@@ -1,5 +1,8 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin;
 
+import co.edu.uco.asistenciasuco.application.features.catalogo.resolvermensajeusuario.primaryports.ResolverMensajeUsuarioInputPort;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.MensajesExito;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.MensajesExitoHttp;
 import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
 import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadodecano.primaryports.dto.CambiarEstadoDecanoDTO;
@@ -80,6 +83,7 @@ public final class AdminPortalController {
     private final CambiarEstadoDecanoInputPort cambiarEstadoDecanoInputPort;
     private final AuthenticatedUserResolver authenticatedUserResolver;
     private final ConsultarHistorialCierresMasivosInputPort consultarHistorialCierresMasivosInputPort;
+    private final MensajesExito mensajes;
 
     public AdminPortalController(
             final ConsultarDecanosInputPort consultarDecanosInputPort,
@@ -97,10 +101,9 @@ public final class AdminPortalController {
         this(consultarDecanosInputPort, crearDecanoInputPort, ejecutarCierreMasivoInputPort,
                 consultarInstitucionesInputPort, consultarFacultadesInputPort, crearFacultadInputPort,
                 actualizarFacultadInputPort, cambiarEstadoFacultadInputPort, consultarAreasInputPort,
-                cambiarEstadoDecanoInputPort, authenticatedUserResolver, null);
+                cambiarEstadoDecanoInputPort, authenticatedUserResolver, null, null);
     }
 
-    @Autowired // dos constructores publicos (el corto lo usan las pruebas): Spring debe usar el completo
     public AdminPortalController(
             final ConsultarDecanosInputPort consultarDecanosInputPort,
             final CrearDecanoInputPort crearDecanoInputPort,
@@ -115,6 +118,29 @@ public final class AdminPortalController {
             final AuthenticatedUserResolver authenticatedUserResolver,
             final ConsultarHistorialCierresMasivosInputPort consultarHistorialCierresMasivosInputPort
     ) {
+        this(consultarDecanosInputPort, crearDecanoInputPort, ejecutarCierreMasivoInputPort,
+                consultarInstitucionesInputPort, consultarFacultadesInputPort, crearFacultadInputPort,
+                actualizarFacultadInputPort, cambiarEstadoFacultadInputPort, consultarAreasInputPort,
+                cambiarEstadoDecanoInputPort, authenticatedUserResolver, consultarHistorialCierresMasivosInputPort, null);
+    }
+
+    @Autowired // varios constructores publicos (los cortos los usan las pruebas): Spring debe usar el completo
+    public AdminPortalController(
+            final ConsultarDecanosInputPort consultarDecanosInputPort,
+            final CrearDecanoInputPort crearDecanoInputPort,
+            final EjecutarCierreMasivoInputPort ejecutarCierreMasivoInputPort,
+            final ConsultarInstitucionesInputPort consultarInstitucionesInputPort,
+            final ConsultarFacultadesInputPort consultarFacultadesInputPort,
+            final CrearFacultadInputPort crearFacultadInputPort,
+            final ActualizarFacultadInputPort actualizarFacultadInputPort,
+            final CambiarEstadoFacultadInputPort cambiarEstadoFacultadInputPort,
+            final ConsultarAreasInputPort consultarAreasInputPort,
+            final CambiarEstadoDecanoInputPort cambiarEstadoDecanoInputPort,
+            final AuthenticatedUserResolver authenticatedUserResolver,
+            final ConsultarHistorialCierresMasivosInputPort consultarHistorialCierresMasivosInputPort,
+            final ResolverMensajeUsuarioInputPort resolverMensajeUsuario
+    ) {
+        this.mensajes = new MensajesExito(resolverMensajeUsuario);
         this.consultarDecanosInputPort = consultarDecanosInputPort;
         this.crearDecanoInputPort = crearDecanoInputPort;
         this.ejecutarCierreMasivoInputPort = ejecutarCierreMasivoInputPort;
@@ -172,7 +198,7 @@ public final class AdminPortalController {
                 request.idPeriodoAcademico(),
                 authenticatedUserResolver.requireAuthenticatedUserId()
         ));
-        return ResponseEntity.ok(new ApiMessageResponse(true, "Cierre masivo solicitado correctamente."));
+        return ResponseEntity.ok(new ApiMessageResponse(true, mensajes.de(MensajesExitoHttp.CIERRE_MASIVO_SOLICITADO)));
     }
 
     /** F-ADM-006: historial de reportes de cierre masivo de periodo academico. */
@@ -272,13 +298,13 @@ public final class AdminPortalController {
     }
 
     public record CrearDecanoRequest(
-            @NotNull(message = "El tipo de identificacion es obligatorio.") @NonEmptyUuid(message = "El tipo de identificacion es obligatorio.", payload = BeanValidationCodes.Required.class) UUID tipoIdentificacionId,
-            @NotNull(message = "El numero de identificacion es obligatorio y debe ser positivo.") @Positive(message = "El numero de identificacion es obligatorio y debe ser positivo.", payload = BeanValidationCodes.InvalidFormat.class) Integer numeroIdentificacion,
+            @NotNull(message = "El tipo de identificación es obligatorio.") @NonEmptyUuid(message = "El tipo de identificación es obligatorio.", payload = BeanValidationCodes.Required.class) UUID tipoIdentificacionId,
+            @NotNull(message = "El número de identificación es obligatorio y debe ser positivo.") @Positive(message = "El número de identificación es obligatorio y debe ser positivo.", payload = BeanValidationCodes.InvalidFormat.class) Integer numeroIdentificacion,
             @NotBlank(message = "El campo primerNombre es obligatorio.") @LongitudTrasTrim(max = 50, message = "El campo primerNombre no puede superar 50 caracteres.", payload = BeanValidationCodes.InvalidLength.class) String primerNombre,
             @LongitudTrasTrim(max = 50, message = "El campo segundoNombre no puede superar 50 caracteres.", payload = BeanValidationCodes.InvalidLength.class) String segundoNombre,
             @NotBlank(message = "El campo primerApellido es obligatorio.") @LongitudTrasTrim(max = 50, message = "El campo primerApellido no puede superar 50 caracteres.", payload = BeanValidationCodes.InvalidLength.class) String primerApellido,
             @LongitudTrasTrim(max = 50, message = "El campo segundoApellido no puede superar 50 caracteres.", payload = BeanValidationCodes.InvalidLength.class) String segundoApellido,
-            @NotBlank(message = "El correo es obligatorio.") @LongitudTrasTrim(max = 255, message = "El correo no puede superar 255 caracteres.", payload = BeanValidationCodes.InvalidLength.class) @Pattern(regexp = BeanValidationPatterns.EMAIL_OR_BLANK, message = "El correo no tiene un formato valido.") String correo,
+            @NotBlank(message = "El correo es obligatorio.") @LongitudTrasTrim(max = 255, message = "El correo no puede superar 255 caracteres.", payload = BeanValidationCodes.InvalidLength.class) @Pattern(regexp = BeanValidationPatterns.EMAIL_OR_BLANK, message = "El correo no tiene un formato válido.") String correo,
             UUID idFacultad,
             @Valid FacultadNuevaRequest facultadNueva
     ) {
@@ -288,14 +314,14 @@ public final class AdminPortalController {
     public record FacultadNuevaRequest(
             @NotBlank(message = "El nombre de la facultad debe tener entre 3 y 50 caracteres.", payload = BeanValidationCodes.InvalidLength.class)
             @Size(min = 3, max = 50, message = "El nombre de la facultad debe tener entre 3 y 50 caracteres.") String nombre,
-            @Size(max = 20, message = "El codigo de la facultad no puede superar 20 caracteres.") String codigo,
-            @NotNull(message = "La institucion de la facultad es obligatoria.") @NonEmptyUuid(message = "La institucion de la facultad es obligatoria.", payload = BeanValidationCodes.Required.class) UUID idInstitucion
+            @Size(max = 20, message = "El código de la facultad no puede superar 20 caracteres.") String codigo,
+            @NotNull(message = "La institución de la facultad es obligatoria.") @NonEmptyUuid(message = "La institución de la facultad es obligatoria.", payload = BeanValidationCodes.Required.class) UUID idInstitucion
     ) {
     }
 
     public record CrearFacultadRequest(
             @NotBlank(message = "El nombre de la facultad es obligatorio.") @Size(min = 3, max = 50, message = "El nombre de la facultad debe tener entre 3 y 50 caracteres.") @TextoSeguro String nombre,
-            @TextoSeguro @Size(max = 50, message = "El codigo de la facultad no puede superar 50 caracteres.") String codigo,
+            @TextoSeguro @Size(max = 50, message = "El código de la facultad no puede superar 50 caracteres.") String codigo,
             UUID idInstitucion,
             @NotNull(message = "El decano titular de la facultad es obligatorio.") @NonEmptyUuid(message = "El decano titular de la facultad es obligatorio.", payload = BeanValidationCodes.Required.class) UUID idDecano
     ) {
@@ -311,7 +337,7 @@ public final class AdminPortalController {
     }
 
     public record CierreMasivoRequest(
-            @NotNull(message = "El periodo academico es obligatorio.") @NonEmptyUuid(message = "El periodo academico es obligatorio.", payload = BeanValidationCodes.Required.class) UUID idPeriodoAcademico
+            @NotNull(message = "El período académico es obligatorio.") @NonEmptyUuid(message = "El período académico es obligatorio.", payload = BeanValidationCodes.Required.class) UUID idPeriodoAcademico
     ) {
     }
 }

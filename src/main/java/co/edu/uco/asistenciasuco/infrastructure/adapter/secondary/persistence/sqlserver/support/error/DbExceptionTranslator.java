@@ -16,6 +16,7 @@ import co.edu.uco.asistenciasuco.application.features.sesioncalendario.exception
 import co.edu.uco.asistenciasuco.application.features.asistenciaqr.exception.AsistenciaQrErrorCode;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.exception.TomaAsistenciaErrorCode;
 import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
+import co.edu.uco.asistenciasuco.application.features.matriculaqr.exception.MatriculaQrErrorCode;
 import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.exception.TipoIdentificacionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
@@ -51,6 +52,9 @@ public final class DbExceptionTranslator {
             AsistenciaQrErrorCode.AQR_004,
             ParametroErrorCode.PRM_003,
             AdmisionEstudianteErrorCode.ADS_003,
+            MensajeUsuarioErrorCode.KPI_001,
+            MensajeUsuarioErrorCode.KPI_003,
+            MensajeUsuarioErrorCode.KPI_004,
             // DEC-065 (1): el decano no resuelve la revision de cancelacion.
             RevisionCancelacionErrorCode.RCN_016
     );
@@ -58,6 +62,11 @@ public final class DbExceptionTranslator {
             UsuarioErrorCode.ERR_USUARIO_NO_EXISTE,
             VerificacionCorreoErrorCode.VCE_007,
             EstudianteErrorCode.ERR_ESTUDIANTE_NO_EXISTE,
+            MensajeUsuarioErrorCode.EST_008,
+            MensajeUsuarioErrorCode.REC_009,
+            MensajeUsuarioErrorCode.GRUP_001,
+            MensajeUsuarioErrorCode.VCE_004,
+            MatriculaQrErrorCode.MQR_001,
             DocenteErrorCode.ERR_DOCENTE_NO_EXISTE,
             DocenteErrorCode.ERR_DOCENTE_NO_VINCULADO_PROGRAMA,
             GrupoErrorCode.ERR_GRUPO_NO_EXISTE,
@@ -100,7 +109,7 @@ public final class DbExceptionTranslator {
             FacultadErrorCode.FAC_002,
             CatalogoErrorCode.TPR_002,
             CatalogoErrorCode.ARE_002,
-            // HU074 (migracion 58): asignatura compartida, inactivar con grupos vigentes o futuros y asignatura inactiva.
+            // HU074: conservar los códigos y el 409 de asignatura compartida, inactivación y uso inactivo.
             CatalogoErrorCode.ASI_006,
             CatalogoErrorCode.ASI_009,
             CatalogoErrorCode.ASI_010,
@@ -142,9 +151,28 @@ public final class DbExceptionTranslator {
             RevisionCancelacionErrorCode.RCN_014,
             // FIX-CIERRE-002: cierre masivo de un periodo que aun no termino.
             MensajeUsuarioErrorCode.PER_007,
+            // DEC-078: grupo compartido por varios programas, el estudiante debe elegir el suyo.
+            MatriculaQrErrorCode.MQR_008,
             // VAL-pendientes-john PRU-15: operacion sobre un periodo cerrado y segundo cierre.
             MensajeUsuarioErrorCode.PER_008,
             MensajeUsuarioErrorCode.PER_009,
+            // SES-GEN-01: reglas del horario del grupo, asignatura/periodo no disponibles y hora local inexistente.
+            MensajeUsuarioErrorCode.HOR_006,
+            MensajeUsuarioErrorCode.HOR_009,
+            MensajeUsuarioErrorCode.ASI_014,
+            MensajeUsuarioErrorCode.GRUP_003,
+            MensajeUsuarioErrorCode.SES_006,
+            MensajeUsuarioErrorCode.EST_003,
+            MensajeUsuarioErrorCode.VCE_003,
+            MensajeUsuarioErrorCode.ACT_002,
+            MensajeUsuarioErrorCode.PER_012,
+            MensajeUsuarioErrorCode.PER_010,
+            MensajeUsuarioErrorCode.SES_005,
+            // DEC-081: receso academico (festivo, repetido, periodo cerrado y dia ya aplicado).
+            MensajeUsuarioErrorCode.REC_005,
+            MensajeUsuarioErrorCode.REC_006,
+            MensajeUsuarioErrorCode.REC_007,
+            MensajeUsuarioErrorCode.REC_010,
             CommonErrorCode.CONFLICT
     );
     private static final Set<ErrorDefinition> VALIDATION_CODES = Set.of(
@@ -190,6 +218,20 @@ public final class DbExceptionTranslator {
             ParametroErrorCode.AUD_002,
             AdmisionEstudianteErrorCode.ADS_005,
             AdmisionEstudianteErrorCode.ADS_006,
+            MensajeUsuarioErrorCode.EST_009,
+            MensajeUsuarioErrorCode.EST_010,
+            MensajeUsuarioErrorCode.EST_011,
+            MensajeUsuarioErrorCode.INST_001,
+            MatriculaQrErrorCode.MQR_007,
+            // SES-GEN-01: duracion y ventana de la franja, horas de la materia y duracion del periodo (400).
+            MensajeUsuarioErrorCode.HOR_007,
+            MensajeUsuarioErrorCode.HOR_008,
+            MensajeUsuarioErrorCode.ASI_013,
+            MensajeUsuarioErrorCode.PER_011,
+            // DEC-081: fecha fuera del periodo, no futura y motivo invalido.
+            MensajeUsuarioErrorCode.REC_003,
+            MensajeUsuarioErrorCode.REC_004,
+            MensajeUsuarioErrorCode.REC_008,
             CommonErrorCode.VALIDATION_ERROR
     );
 
@@ -204,10 +246,32 @@ public final class DbExceptionTranslator {
             // VAL-pendientes-john PRU-15: la BD sustituye el nombre del periodo (PER_008) y la fecha del primer cierre (PER_009).
             MensajeUsuarioErrorCode.PER_008,
             MensajeUsuarioErrorCode.PER_009,
+            // Migracion 63: la BD sustituye el minimo y el maximo del catalogo de semestres (EST_009).
+            MensajeUsuarioErrorCode.EST_009,
             // DEC-073: la BD sustituye el dominio, los limites del parametro y el maximo de creditos vigentes.
             VerificacionCorreoErrorCode.VCE_008,
             AsistenciaErrorCode.ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA,
-            CatalogoErrorCode.ASI_008
+            CatalogoErrorCode.ASI_008,
+            // SES-GEN-01: la BD sustituye horas, franja, estudiantes, tope, nombre del periodo y fecha de fin calculada.
+            MensajeUsuarioErrorCode.HOR_006,
+            MensajeUsuarioErrorCode.HOR_007,
+            MensajeUsuarioErrorCode.HOR_008,
+            MensajeUsuarioErrorCode.HOR_009,
+            CatalogoErrorCode.ASI_010,
+            MensajeUsuarioErrorCode.ASI_013,
+            MensajeUsuarioErrorCode.ASI_014,
+            MensajeUsuarioErrorCode.PER_012,
+            MensajeUsuarioErrorCode.EST_010,
+            MensajeUsuarioErrorCode.EST_011,
+            MensajeUsuarioErrorCode.PER_010,
+            MensajeUsuarioErrorCode.PER_011,
+            MensajeUsuarioErrorCode.SES_005,
+            // DEC-081: la BD sustituye fechas, nombre del periodo, longitud maxima, festivo y clases canceladas.
+            MensajeUsuarioErrorCode.REC_003,
+            MensajeUsuarioErrorCode.REC_005,
+            MensajeUsuarioErrorCode.REC_007,
+            MensajeUsuarioErrorCode.REC_008,
+            MensajeUsuarioErrorCode.REC_010
     );
 
     private static final Map<Set<ErrorDefinition>, ExceptionFactory> EXCEPTION_BY_CODES = Map.of(
@@ -220,10 +284,7 @@ public final class DbExceptionTranslator {
     private DbExceptionTranslator() {
     }
 
-    /**
-     * HU074: codigo del canal tecnico {@code DBCODE=<codigo>|<detalle>} que publica un SP, tambien en el exito (ASI_011...).
-     * Vacio si el mensaje no trae el canal (SP anterior al codigo o mensaje libre).
-     */
+    /** HU074: extrae el DBCODE que un SP publica también en su resultado exitoso. */
     public static Optional<String> dbCodeOf(final String technicalMessage) {
         return DbTechnicalError.parse(technicalMessage).map(DbTechnicalError::codigo);
     }

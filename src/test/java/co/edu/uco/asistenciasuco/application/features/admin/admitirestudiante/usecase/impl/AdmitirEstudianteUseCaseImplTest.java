@@ -66,7 +66,6 @@ class AdmitirEstudianteUseCaseImplTest {
     AdmitirEstudianteUseCaseImplTest() {
         when(parametros.getRequiredParameter("REGISTRO", "DOMINIO_CORREO_ESTUDIANTE")).thenReturn("@uco.edu.co");
         when(mensajes.getUserMessage(any(), any())).thenReturn("El correo debe ser institucional (@uco.edu.co).");
-        when(activacion.credencialLegadaInutilizable()).thenReturn(HASH);
         when(usuarios.consultarUsuarioPorCorreo(any())).thenReturn(Optional.empty());
         when(usuarios.consultarUsuarioPorIdentificacion(any(), any())).thenReturn(Optional.empty());
         useCase = new AdmitirEstudianteUseCaseImpl(comando, usuarios,
@@ -101,7 +100,6 @@ class AdmitirEstudianteUseCaseImplTest {
 
         final ArgumentCaptor<AdmisionEstudianteCommand> orden = ArgumentCaptor.forClass(AdmisionEstudianteCommand.class);
         verify(comando).admitir(orden.capture());
-        assertEquals(HASH, orden.getValue().passwordHash());
         assertEquals(PROGRAMA, orden.getValue().idPrograma());
         assertEquals(ADMIN, orden.getValue().usuarioEjecutor());
         assertEquals(CORREO, orden.getValue().correo());
@@ -146,8 +144,6 @@ class AdmitirEstudianteUseCaseImplTest {
         assertFalse(resultado.esUsuarioNuevo());
         final ArgumentCaptor<AdmisionEstudianteCommand> orden = ArgumentCaptor.forClass(AdmisionEstudianteCommand.class);
         verify(comando).admitir(orden.capture());
-        assertEquals(null, orden.getValue().passwordHash());
-        verify(activacion, never()).credencialLegadaInutilizable();
         final ArgumentCaptor<SolicitudCuentaIdentidad> solicitud = ArgumentCaptor.forClass(SolicitudCuentaIdentidad.class);
         verify(cuentas).asegurar(solicitud.capture());
         // IDENT-002: sin contrasena, si faltara la cuenta nace pendiente; una cuenta existente no cambia.
@@ -264,9 +260,9 @@ class AdmitirEstudianteUseCaseImplTest {
 
     /** OBS-12: la credencial nunca aparece en la representacion de texto de la orden (logs, metadata). */
     @Test
-    void la_credencial_no_aparece_en_to_string() {
+    void los_datos_personales_no_aparecen_en_to_string() {
         assertFalse(domain(CORREO).toString().contains(CORREO));
-        assertFalse(new AdmisionEstudianteCommand(TIPO, 1, "Ana", null, "Perez", null, CORREO, HASH, PROGRAMA, ADMIN).toString().contains(HASH));
+        assertFalse(new AdmisionEstudianteCommand(TIPO, 1, "Ana", null, "Perez", null, CORREO, PROGRAMA, ADMIN).toString().contains(CORREO));
         assertNotNull(domain(CORREO).toString());
     }
 }

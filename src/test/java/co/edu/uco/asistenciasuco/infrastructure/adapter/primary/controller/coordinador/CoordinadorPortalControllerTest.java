@@ -90,7 +90,7 @@ class CoordinadorPortalControllerTest {
                 "UCO", "2026-1", "2026-1", LocalDate.of(2026, 1, 1), LocalDate.of(2026, 6, 1), 2026, "CERRADO")));
         final UUID programa = UUID.randomUUID();
         when(students.execute(any())).thenReturn(new PaginaEstudiantesProgramaDTO(List.of(new EstudianteProgramaDTO(
-                UUID.randomUUID(), UUID.randomUUID(), "123456", "Ana", "ana@example.com", programa, "Ingeniería")), 41));
+                UUID.randomUUID(), UUID.randomUUID(), "123456", "Ana", "ana@example.com", programa, "Ingeniería", 5)), 41));
 
         mvc.perform(get("/api/v1/coordinador/periodos-academicos"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.datos[0].nombre").value("2026-1"))

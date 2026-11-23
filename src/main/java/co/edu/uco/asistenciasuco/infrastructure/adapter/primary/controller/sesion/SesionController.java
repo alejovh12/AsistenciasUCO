@@ -1,5 +1,9 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesion;
 
+import co.edu.uco.asistenciasuco.application.features.catalogo.resolvermensajeusuario.primaryports.ResolverMensajeUsuarioInputPort;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.MensajesExito;
+import org.springframework.beans.factory.annotation.Autowired;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.MensajesExitoHttp;
 import co.edu.uco.asistenciasuco.application.features.sesion.actualizarsesion.primaryports.ActualizarSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.sesion.actualizarsesion.primaryports.dto.ActualizarSesionDTO;
 import co.edu.uco.asistenciasuco.application.features.sesion.cerrarsesion.primaryports.CerrarSesionInputPort;
@@ -62,6 +66,7 @@ public final class SesionController {
     private final ActualizarSesionInputPort actualizarSesionInputPort;
     private final GenerarSesionesGrupoInputPort generarSesionesGrupoInputPort;
     private final AuthenticatedUserResolver authenticatedUserResolver;
+    private final MensajesExito mensajes;
 
     public SesionController(
             final CrearSesionInputPort crearSesionInputPort,
@@ -72,6 +77,22 @@ public final class SesionController {
             final GenerarSesionesGrupoInputPort generarSesionesGrupoInputPort,
             final AuthenticatedUserResolver authenticatedUserResolver
     ) {
+        this(crearSesionInputPort, consultarSesionInputPort, consultarSesionesPorGrupoInputPort, cerrarSesionInputPort,
+                actualizarSesionInputPort, generarSesionesGrupoInputPort, authenticatedUserResolver, null);
+    }
+
+    @Autowired // dos constructores publicos (el corto lo usan las pruebas): Spring debe usar el que resuelve las confirmaciones por catalogo
+    public SesionController(
+            final CrearSesionInputPort crearSesionInputPort,
+            final ConsultarSesionInputPort consultarSesionInputPort,
+            final ConsultarSesionesPorGrupoInputPort consultarSesionesPorGrupoInputPort,
+            final CerrarSesionInputPort cerrarSesionInputPort,
+            final ActualizarSesionInputPort actualizarSesionInputPort,
+            final GenerarSesionesGrupoInputPort generarSesionesGrupoInputPort,
+            final AuthenticatedUserResolver authenticatedUserResolver,
+            final ResolverMensajeUsuarioInputPort resolverMensajeUsuario
+    ) {
+        this.mensajes = new MensajesExito(resolverMensajeUsuario);
         this.crearSesionInputPort = Objects.requireNonNull(crearSesionInputPort, "CrearSesionInputPort es obligatorio.");
         this.consultarSesionInputPort = Objects.requireNonNull(consultarSesionInputPort, "ConsultarSesionInputPort es obligatorio.");
         this.consultarSesionesPorGrupoInputPort = Objects.requireNonNull(
@@ -85,8 +106,8 @@ public final class SesionController {
     }
 
     /** El mensaje del SP (p. ej. {@code SES_022}); si no llega, el texto historico de la creacion directa. */
-    static String mensajeCreacion(final String mensajeUsuario) {
-        return mensajeUsuario == null || mensajeUsuario.isBlank() ? "Sesion creada correctamente." : mensajeUsuario;
+    String mensajeCreacion(final String mensajeUsuario) {
+        return mensajeUsuario == null || mensajeUsuario.isBlank() ? mensajes.de(MensajesExitoHttp.SESION_CREADA) : mensajeUsuario;
     }
 
     @PostMapping
@@ -119,7 +140,7 @@ public final class SesionController {
         final int canceladas = generacion == null ? 0 : generacion.sesionesCanceladasPorFestivo();
         final int conAsistencia = generacion == null ? 0 : generacion.sesionesFestivoConAsistencia();
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new GeneracionSesionesGrupoResponse(true, "Sesiones de grupo generadas correctamente.",
+                .body(new GeneracionSesionesGrupoResponse(true, mensajes.de(MensajesExitoHttp.SESIONES_GRUPO_GENERADAS),
                         canceladas, conAsistencia));
     }
 
@@ -150,7 +171,7 @@ public final class SesionController {
         final CerrarSesionDTO dto = SesionHttpMapper.toApplicationDTO(request, authenticatedUserResolver.requireAuthenticatedUserId());
         cerrarSesionInputPort.execute(dto);
 
-        return ResponseEntity.ok(new ApiMessageResponse(true, "Sesion cerrada correctamente."));
+        return ResponseEntity.ok(new ApiMessageResponse(true, mensajes.de(MensajesExitoHttp.SESION_CERRADA)));
     }
 
     @PatchMapping("/{sesionId}")

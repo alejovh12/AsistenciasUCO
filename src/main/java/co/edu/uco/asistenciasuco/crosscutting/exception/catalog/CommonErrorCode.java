@@ -4,7 +4,7 @@ import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorDefinition;
 import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorKind;
 
 public enum CommonErrorCode implements ErrorDefinition {
-    VALIDATION_ERROR("VALIDATION_ERROR", "Hay campos con informacion invalida. Revise los datos enviados.", ErrorKind.VALIDATION),
+    VALIDATION_ERROR("VALIDATION_ERROR", "Hay campos con información inválida. Revise los datos enviados.", ErrorKind.VALIDATION),
     INVALID_REQUEST("INVALID_REQUEST", "No fue posible interpretar la solicitud. Revise el formato y el tipo de los campos enviados.", ErrorKind.VALIDATION),
     BUSINESS_ERROR("BUSINESS_ERROR", "No fue posible completar la operacion solicitada.", ErrorKind.BUSINESS),
     RESOURCE_NOT_FOUND("RESOURCE_NOT_FOUND", "El recurso solicitado no existe.", ErrorKind.NOT_FOUND),

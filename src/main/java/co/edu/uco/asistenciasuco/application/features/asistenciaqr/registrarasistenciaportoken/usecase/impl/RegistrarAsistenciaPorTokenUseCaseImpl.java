@@ -14,6 +14,9 @@ import co.edu.uco.asistenciasuco.application.secondaryports.security.Institution
 import co.edu.uco.asistenciasuco.application.secondaryports.security.LimitadorIntentosPort;
 import co.edu.uco.asistenciasuco.crosscutting.util.TokenHashHelper;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -25,12 +28,15 @@ import java.util.UUID;
  * ({@code AQR_010}) -> red del campus ({@code AQR_002}) -> limite por estudiante -> credencial unica ({@code AQR_007}) ->
  * limite por hash del token o por PIN -> {@code usp_registrar_asistencia_por_token}. El limite por IP (solo rechazos) lo
  * aplica el filtro HTTP. Los limites de este caso de uso cuentan todos los intentos y responden 429 {@code AQR_011}.
- * Ante un interbloqueo (SQL 1205) reintenta hasta {@link #MAX_REINTENTOS} veces con espera aleatoria de 20-80 ms (la
- * operacion es idempotente). Publica {@code ASISTENCIA_QR_REGISTRADA} solo si el registro es nuevo.
+ * Ante un interbloqueo (SQL 1205) reintenta hasta {@link #MAX_REINTENTOS} veces con retroceso exponencial y jitter (20-250
+ * ms por espera, 1,5 s acumulados como maximo; la operacion es idempotente: un reintento tras ROLLBACK del SP no duplica y,
+ * si el intento anterior alcanzo a confirmar, responde {@code yaRegistrado}). Solo se reintenta el interbloqueo; los
+ * errores de negocio se propagan al primer intento. Publica {@code ASISTENCIA_QR_REGISTRADA} solo si el registro es nuevo.
  */
 public final class RegistrarAsistenciaPorTokenUseCaseImpl implements RegistrarAsistenciaPorTokenUseCase {
 
-    public static final int MAX_REINTENTOS = 3;
+    private static final Logger LOGGER = LoggerFactory.getLogger(RegistrarAsistenciaPorTokenUseCaseImpl.class);
+    public static final int MAX_REINTENTOS = 8;
     static final String CLAVE_ESTUDIANTE = "asistencia-qr:estudiante:";
     static final String CLAVE_TOKEN = "asistencia-qr:token:";
     static final String CLAVE_PIN = "asistencia-qr:pin:";
@@ -92,10 +98,13 @@ public final class RegistrarAsistenciaPorTokenUseCaseImpl implements RegistrarAs
                 return repositorio.registrarPorToken(token, pin, usuario);
             } catch (final AsistenciaQrRepositoryPort.ConflictoConcurrenciaException exception) {
                 if (reintentos >= MAX_REINTENTOS) {
+                    LOGGER.warn("Registro por QR sin resolver tras {} reintentos por interbloqueo.",
+                            reintentos);
                     throw exception;
                 }
                 reintentos++;
-                espera.esperarAleatorio();
+                LOGGER.debug("Interbloqueo en registro por QR; reintento {} de {}.", reintentos, MAX_REINTENTOS);
+                espera.esperarReintento(reintentos);
             }
         }
     }

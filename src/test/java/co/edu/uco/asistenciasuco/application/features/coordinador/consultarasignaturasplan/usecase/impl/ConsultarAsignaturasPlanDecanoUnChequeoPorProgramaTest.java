@@ -92,7 +92,7 @@ class ConsultarAsignaturasPlanDecanoUnChequeoPorProgramaTest {
 
         final ForbiddenException error = assertThrows(ForbiddenException.class, () -> useCase.execute(ACTOR, PLAN));
 
-        assertEquals("El plan de estudio solicitado no pertenece al ambito del usuario autenticado.", error.getMessage());
+        assertEquals("El plan de estudio solicitado no pertenece al ámbito del usuario autenticado.", error.getMessage());
         verify(scopePort, times(1)).canDecanoAccessPrograma(ACTOR, AJENO);
     }
 

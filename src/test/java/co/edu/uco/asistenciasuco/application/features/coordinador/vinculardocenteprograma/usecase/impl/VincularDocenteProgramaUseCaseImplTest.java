@@ -66,7 +66,6 @@ class VincularDocenteProgramaUseCaseImplTest {
         useCase = new VincularDocenteProgramaUseCaseImpl(scopePort, commandPort, queryPort,
                 usuarioRepositoryPort, activacion, identityProviderPort);
         when(scopePort.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.of(PROGRAMA));
-        when(activacion.credencialLegadaInutilizable()).thenReturn("HASH_GENERADO");
         when(identityProviderPort.crearCuenta(any())).thenReturn(new CuentaIdentidadDTO("kc-1", true));
     }
 
@@ -113,7 +112,6 @@ class VincularDocenteProgramaUseCaseImplTest {
 
         final ArgumentCaptor<VincularDocenteProgramaCommand> comando = ArgumentCaptor.forClass(VincularDocenteProgramaCommand.class);
         verify(commandPort).vincular(comando.capture());
-        assertEquals("HASH_GENERADO", comando.getValue().passwordHash());
         assertNull(comando.getValue().idDocente());
         assertEquals(PROGRAMA, comando.getValue().idPrograma());
         assertEquals(1017555444, comando.getValue().numeroIdentificacion());
@@ -151,8 +149,6 @@ class VincularDocenteProgramaUseCaseImplTest {
         final ArgumentCaptor<VincularDocenteProgramaCommand> comando = ArgumentCaptor.forClass(VincularDocenteProgramaCommand.class);
         verify(commandPort).vincular(comando.capture());
         assertEquals(ID_DOCENTE, comando.getValue().idDocente());
-        assertNull(comando.getValue().passwordHash());
-        verify(activacion, never()).credencialLegadaInutilizable();
 
         final ArgumentCaptor<DocentesProgramaFiltro> filtro = ArgumentCaptor.forClass(DocentesProgramaFiltro.class);
         verify(queryPort).consultar(eq(ACTOR), filtro.capture());
@@ -193,6 +189,19 @@ class VincularDocenteProgramaUseCaseImplTest {
 
         verify(commandPort, times(1)).vincular(any());
         assertTrue(error.getCause() instanceof IdentityProviderPort.IdentityProviderException);
+    }
+
+    @Test
+    void T_091_16b_conflicto_de_identidad_en_keycloak_es_409_con_unicidad_de_correo() {
+        when(queryPort.consultar(eq(ACTOR), any())).thenReturn(pagina(fila()));
+        when(identityProviderPort.crearCuenta(any())).thenThrow(IdentityProviderPort.IdentityProviderException.conflicto("usuario huerfano"));
+
+        final var dominioDocente2 = dominioDocente(ID_DOCENTE);
+        final var error = assertThrows(co.edu.uco.asistenciasuco.application.exception.business.ConflictException.class,
+                () -> useCase.execute(dominioDocente2));
+
+        assertEquals("ERR_UNICIDAD_CORREO", error.getCode());
+        verify(commandPort, times(1)).vincular(any());
     }
 
     @Test

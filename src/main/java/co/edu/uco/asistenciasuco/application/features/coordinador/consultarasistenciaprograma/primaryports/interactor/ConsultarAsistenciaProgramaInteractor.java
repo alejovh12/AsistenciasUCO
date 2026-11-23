@@ -31,7 +31,8 @@ public final class ConsultarAsistenciaProgramaInteractor implements ConsultarAsi
                 g -> new GrupoProgramaDTO(g.id(), g.codigo(), g.nombre(), g.idAsignatura(), g.nombreAsignatura(),
                         g.idDocente(), g.capacidadMaxima(), g.estudiantesActivos(), g.cuposDisponibles(),
                         g.habilitado(), g.inicioPeriodo(), g.finPeriodo(),
-                        FranjaHorarioMapper.toDTOs(FranjaHorarioMapper.fromProjections(g.franjas()))));
+                        FranjaHorarioMapper.toDTOs(FranjaHorarioMapper.fromProjections(g.franjas())),
+                        g.idProgramaResponsable(), g.nombreProgramaResponsable(), g.esResponsable(), g.nombreDocente()));
     }
 
     @Override

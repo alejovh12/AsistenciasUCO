@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.matriculaqr.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.features.matriculaqr.exception.MatriculaQrErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
@@ -13,7 +15,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notific
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimeEvent;
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.MatriculaQrRepositoryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,6 @@ public final class RegistrarEstudiantePorTokenUseCaseImpl implements RegistrarEs
 
     private final MatriculaQrAccesoPolicy acceso;
     private final CorreoInstitucionalPolicy correoPolicy;
-    private final PasswordEncoderPort passwordEncoder;
     private final MatriculaQrRepositoryPort repositorio;
     private final IdentityProviderPort identityProvider;
     private final NotificacionPort notificacionPort;
@@ -44,7 +44,6 @@ public final class RegistrarEstudiantePorTokenUseCaseImpl implements RegistrarEs
     public RegistrarEstudiantePorTokenUseCaseImpl(
             final MatriculaQrAccesoPolicy acceso,
             final CorreoInstitucionalPolicy correoPolicy,
-            final PasswordEncoderPort passwordEncoder,
             final MatriculaQrRepositoryPort repositorio,
             final IdentityProviderPort identityProvider,
             final NotificacionPort notificacionPort,
@@ -52,7 +51,6 @@ public final class RegistrarEstudiantePorTokenUseCaseImpl implements RegistrarEs
     ) {
         this.acceso = Objects.requireNonNull(acceso, "MatriculaQrAccesoPolicy es obligatoria.");
         this.correoPolicy = Objects.requireNonNull(correoPolicy, "CorreoInstitucionalPolicy es obligatoria.");
-        this.passwordEncoder = Objects.requireNonNull(passwordEncoder, "PasswordEncoderPort es obligatorio.");
         this.repositorio = Objects.requireNonNull(repositorio, "MatriculaQrRepositoryPort es obligatorio.");
         this.identityProvider = Objects.requireNonNull(identityProvider, "IdentityProviderPort es obligatorio.");
         this.notificacionPort = Objects.requireNonNull(notificacionPort, "NotificacionPort es obligatorio.");
@@ -75,7 +73,7 @@ public final class RegistrarEstudiantePorTokenUseCaseImpl implements RegistrarEs
                         comando.tipoIdentificacionId(), comando.numeroIdentificacion(),
                         comando.primerNombre(), vacioSiNulo(comando.segundoNombre()),
                         comando.primerApellido(), vacioSiNulo(comando.segundoApellido()),
-                        comando.correo(), passwordEncoder.encode(comando.password())));
+                        comando.correo(), comando.programaId()));
 
         // DB SUCCESS a partir de aqui: el IdP nunca se invoca antes.
         provisionarIdentidad(comando, matricula);
@@ -97,6 +95,10 @@ public final class RegistrarEstudiantePorTokenUseCaseImpl implements RegistrarEs
                     comando.primerNombre(), comando.primerApellido(), comando.password(),
                     InstitutionalRole.ESTUDIANTE).conVerificacionCorreo());
         } catch (final IdentityProviderPort.IdentityProviderException exception) {
+            if (exception.esConflicto()) {
+                // La persona ya tiene una cuenta en el proveedor que no es la de este registro: 409 de negocio (catalogo MQR_005), no 500.
+                throw new ConflictException(MatriculaQrErrorCode.MQR_005);
+            }
             throw new InternalApplicationException(
                     "No fue posible completar el aprovisionamiento de identidad del estudiante matriculado por QR.", exception);
         }

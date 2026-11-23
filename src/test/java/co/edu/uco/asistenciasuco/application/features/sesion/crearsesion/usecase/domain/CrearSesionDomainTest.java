@@ -70,7 +70,7 @@ class CrearSesionDomainTest {
         final var textoLargo = "X".repeat(51);
         final ValidationException ex = assertThrows(ValidationException.class, () -> new CrearSesionDomain(GRUPO, textoLargo, INICIO, FIN, USUARIO_EJECUTOR));
         assertEquals("ERR_NOMBRE_SESION_LONGITUD_INVALIDA", ex.getCode());
-        assertEquals("El nombre de la sesion debe tener entre 1 y 50 caracteres.", ex.getMessage());
+        assertEquals("El nombre de la sesión debe tener entre 1 y 50 caracteres.", ex.getMessage());
     }
 
     private static void assertCode(final String code, final Executable action) {

@@ -10,13 +10,13 @@ public interface CoordinadorCommandPort {
 
     void crearCoordinador(UUID idCoordinador, String numeroIdentificacion, String primerNombre, String segundoNombre,
                           String primerApellido, String segundoApellido, String correo, UUID idPrograma,
-                          UUID idFacultad, String password, UUID usuarioEjecutor, UUID idTipoIdIdentificacion);
+                          UUID idFacultad, UUID usuarioEjecutor, UUID idTipoIdIdentificacion);
 
     default void crearCoordinador(UUID idCoordinador, String numeroIdentificacion, String primerNombre, String segundoNombre,
                                   String primerApellido, String segundoApellido, String correo, UUID idPrograma,
-                                  UUID idFacultad, String password, UUID usuarioEjecutor) {
+                                  UUID idFacultad, UUID usuarioEjecutor) {
         crearCoordinador(idCoordinador, numeroIdentificacion, primerNombre, segundoNombre, primerApellido, segundoApellido,
-                correo, idPrograma, idFacultad, password, usuarioEjecutor, null);
+                correo, idPrograma, idFacultad, usuarioEjecutor, null);
     }
 
     /**
@@ -39,7 +39,6 @@ public interface CoordinadorCommandPort {
             String primerApellido,
             String segundoApellido,
             String correo,
-            String password,
             String nombrePrograma,
             UUID idTipoPrograma,
             UUID idModalidad,

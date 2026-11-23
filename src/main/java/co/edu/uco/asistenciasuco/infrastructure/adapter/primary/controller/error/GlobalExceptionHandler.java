@@ -8,6 +8,7 @@ import co.edu.uco.asistenciasuco.crosscutting.sanitization.SensitiveDataSanitize
 import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationIssue;
 import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditRequestAttributes;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
+import co.edu.uco.asistenciasuco.infrastructure.failure.DatabaseUnavailableDetector;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,8 +34,6 @@ import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -227,6 +226,9 @@ public final class GlobalExceptionHandler {
             final HttpServletRequest request
     ) {
         final ApiErrorDescriptor descriptor = ApiErrorCatalog.fromApplicationException(exception);
+        if (descriptor.status() == HttpStatus.INTERNAL_SERVER_ERROR && DatabaseUnavailableDetector.isConnectionFailure(exception)) {
+            return databaseUnavailable(exception, request);
+        }
         if (descriptor.status().is5xxServerError()) {
             logInternal(descriptor, exception, request);
         } else {
@@ -246,6 +248,9 @@ public final class GlobalExceptionHandler {
             final TechnicalException exception,
             final HttpServletRequest request
     ) {
+        if (DatabaseUnavailableDetector.isConnectionFailure(exception)) {
+            return databaseUnavailable(exception, request);
+        }
         final ApiErrorDescriptor descriptor = ApiErrorCatalog.fromTechnicalException(exception);
         logInternal(descriptor, exception, request);
         return buildResponse(descriptor, request);
@@ -256,9 +261,34 @@ public final class GlobalExceptionHandler {
             final Exception exception,
             final HttpServletRequest request
     ) {
+        if (DatabaseUnavailableDetector.isConnectionFailure(exception)) {
+            return databaseUnavailable(exception, request);
+        }
         final ApiErrorDescriptor descriptor = ApiErrorCatalog.internalError();
         logInternal(descriptor, exception, request);
         return buildResponse(descriptor, request);
+    }
+
+    /**
+     * REA-02 (revision final P3): SQL Server sin conexion responde 503 {@code ERR_BD_NO_DISPONIBLE} con {@code Retry-After}, no un
+     * 500 generico. Se registra una sola linea WARN con la clase de la causa y el correlationId, sin la traza, para no inundar el
+     * log mientras dura la caida (cada peticion repite el mismo fallo). El texto del catalogo (que vive en la propia BD) puede no
+     * resolverse: se usa el respaldo del enum.
+     */
+    private ResponseEntity<ApiErrorResponse> databaseUnavailable(final Exception exception, final HttpServletRequest request) {
+        final ApiErrorDescriptor descriptor = ApiErrorCatalog.databaseUnavailable();
+        final Throwable causa = DatabaseUnavailableDetector.find(exception);
+        LOGGER.warn(
+                "Base de datos no disponible. status={}, code={}, path={}, correlationId={}, causa={}",
+                descriptor.status().value(),
+                descriptor.code(),
+                safePath(request),
+                CorrelationIdContext.getAsString(),
+                (causa == null ? exception : causa).getClass().getName()
+        );
+        final ResponseEntity<ApiErrorResponse> respuesta = buildResponse(descriptor, request);
+        return ResponseEntity.status(respuesta.getStatusCode()).headers(respuesta.getHeaders())
+                .header(HttpHeaders.RETRY_AFTER, RETRY_AFTER_SEGUNDOS).body(respuesta.getBody());
     }
 
     private ResponseEntity<ApiErrorResponse> buildResponse(final ApiErrorDescriptor descriptor, final HttpServletRequest request) {
@@ -427,12 +457,12 @@ public final class GlobalExceptionHandler {
             final HttpServletRequest request
     ) {
         LOGGER.error(
-                "Handled internal exception. status={}, code={}, path={}, correlationId={}, stackTrace={}",
+                "Handled internal exception. status={}, code={}, path={}, correlationId={}",
                 descriptor.status().value(),
                 descriptor.code(),
                 safePath(request),
                 CorrelationIdContext.getAsString(),
-                safeStackTrace(exception)
+                sanitizedCopy(exception)
         );
     }
 
@@ -440,9 +470,32 @@ public final class GlobalExceptionHandler {
         return SensitiveDataSanitizer.sanitizeForLog(request.getRequestURI(), 240);
     }
 
-    private String safeStackTrace(final Exception exception) {
-        final StringWriter writer = new StringWriter();
-        exception.printStackTrace(new PrintWriter(writer));
-        return SensitiveDataSanitizer.sanitizeForLog(writer.toString(), 8_000);
+    /**
+     * La traza viaja como throwable (ultimo argumento del logger) para que el encoder JSON la emita como {@code stack_trace}
+     * estructurado y no incrustada en el mensaje. Se copia con el mensaje saneado (sin credenciales ni datos sensibles) y la
+     * misma pila.
+     */
+    static Throwable sanitizedCopy(final Throwable original) {
+        return sanitizedCopy(original, java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>()));
+    }
+
+    /** Las causas ciclicas se cortan al volver a un throwable ya copiado. */
+    private static Throwable sanitizedCopy(final Throwable original, final java.util.Set<Throwable> vistos) {
+        vistos.add(original);
+        final Throwable causa = original.getCause();
+        final SanitizedThrowable copy = new SanitizedThrowable(original,
+                causa == null || vistos.contains(causa) ? null : sanitizedCopy(causa, vistos));
+        copy.setStackTrace(original.getStackTrace());
+        return copy;
+    }
+
+    /** Copia saneada de una excepcion: conserva el tipo original en el texto y la pila. */
+    static final class SanitizedThrowable extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+
+        SanitizedThrowable(final Throwable original, final Throwable cause) {
+            super(original.getClass().getName() + ": "
+                    + SensitiveDataSanitizer.sanitizeForLog(original.getMessage(), 2_000), cause, true, true);
+        }
     }
 }

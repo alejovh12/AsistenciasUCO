@@ -58,7 +58,7 @@ class CoordinadorSesionSolicitudControllerTest {
                         new ConsultarSolicitudesSesionInputPort.Solicitud(sesion, "Repaso", "S-9", grupo, "G01 de Calculo", "Calculo",
                                 programa, "Ingenieria", docente, "Maria Docente", Instant.parse("2026-11-10T13:00:00Z"),
                                 Instant.parse("2026-11-10T15:00:00Z"), "PENDIENTE", "Pendiente de aprobación",
-                                Instant.parse("2026-11-09T14:00:00Z"), null, null)), 11, 2, 5));
+                                Instant.parse("2026-11-09T14:00:00Z"), null, null, null, null)), 11, 2, 5));
 
         mvc.perform(get("/api/v1/coordinador/sesiones/solicitudes")
                         .param("soloPendientes", "false").param("programaId", programa.toString())
@@ -85,7 +85,9 @@ class CoordinadorSesionSolicitudControllerTest {
                 .andExpect(jsonPath("$.elementos[0].nombreEstadoSolicitud").value("Pendiente de aprobación"))
                 .andExpect(jsonPath("$.elementos[0].fechaSolicitudUtc").value("2026-11-09T14:00:00Z"))
                 .andExpect(jsonPath("$.elementos[0].fechaResolucionUtc").value(nullValue()))
-                .andExpect(jsonPath("$.elementos[0].observacion").value(nullValue()));
+                .andExpect(jsonPath("$.elementos[0].observacion").value(nullValue()))
+                .andExpect(jsonPath("$.elementos[0].nombreProgramaResponsable").value(nullValue()))
+                .andExpect(jsonPath("$.elementos[0].nombreCoordinadorResolutor").value(nullValue()));
     }
 
     @Test

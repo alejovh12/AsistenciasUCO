@@ -62,7 +62,7 @@ class ActualizarSesionDomainTest {
         final ValidationException ex = assertThrows(ValidationException.class,
                 () -> create(SESSION, textoLargo, START, finEsperado, USUARIO_EJECUTOR));
         assertEquals("ERR_NOMBRE_SESION_LONGITUD_INVALIDA", ex.getCode());
-        assertEquals("El nombre de la sesion debe tener entre 1 y 50 caracteres.", ex.getMessage());
+        assertEquals("El nombre de la sesión debe tener entre 1 y 50 caracteres.", ex.getMessage());
     }
 
     private static ActualizarSesionDomain create(final UUID session, final String name, final LocalDateTime start,

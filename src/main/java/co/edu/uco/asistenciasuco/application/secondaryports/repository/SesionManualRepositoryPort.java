@@ -65,12 +65,15 @@ public interface SesionManualRepositoryPort {
                               String mensajeUsuario) {
     }
 
-    /** Fila de {@code uv_solicitud_sesion}; las horas son DATETIME2 en UTC sin zona. */
+    /**
+     * Fila de {@code uv_solicitud_sesion}; las horas son DATETIME2 en UTC sin zona. {@code nombreProgramaResponsable} y
+     * {@code nombreCoordinadorResolutor} (DEC-077) solo los entrega el SP del docente; en la bandeja del coordinador son nulos.
+     */
     record SolicitudSesion(UUID idSesion, String nombreSesion, String codigoSesion, UUID idGrupo, String nombreGrupo,
                            String nombreAsignatura, UUID idPrograma, String nombrePrograma, UUID idDocente, String nombreDocente,
                            LocalDateTime fechaHoraInicio, LocalDateTime fechaHoraFin, String estadoSolicitud,
                            String nombreEstadoSolicitud, LocalDateTime fechaSolicitudUtc, LocalDateTime fechaResolucionUtc,
-                           String observacion) {
+                           String observacion, String nombreProgramaResponsable, String nombreCoordinadorResolutor) {
     }
 
     record PaginaSolicitudesSesion(List<SolicitudSesion> elementos, long total) {

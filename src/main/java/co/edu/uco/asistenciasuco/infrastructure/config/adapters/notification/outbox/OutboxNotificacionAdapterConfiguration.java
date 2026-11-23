@@ -6,11 +6,11 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.o
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.outbox.NotificacionOutboxRepository;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.outbox.OutboxNotificacionAdapter;
 import co.edu.uco.asistenciasuco.infrastructure.config.adapters.notification.condition.OutboxAdapterCondition;
+import co.edu.uco.asistenciasuco.infrastructure.config.adapters.notification.condition.OutboxSenderLogCondition;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.adapters.NotificationAdapterProperties;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.OutboxNotificationProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -49,14 +49,9 @@ public class OutboxNotificacionAdapterConfiguration {
         return new NotificacionOutboxDispatcher(repository, senderProvider.getObject(), properties, meterRegistry, Clock.systemUTC());
     }
 
+    /** Canal de log: sender=log explicito o, sin sender, sin URL del Servicio de Notificaciones (pruebas y desarrollo aislado). */
     @Bean
-    @Conditional(OutboxAdapterCondition.class)
-    @ConditionalOnProperty(
-            prefix = "app.providers.outbox-notification",
-            name = "sender",
-            havingValue = "log",
-            matchIfMissing = true
-    )
+    @Conditional({OutboxAdapterCondition.class, OutboxSenderLogCondition.class})
     public NotificacionChannelSender logNotificacionChannelSender() {
         return new LogNotificacionChannelSender();
     }

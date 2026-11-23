@@ -22,7 +22,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.qr.CodigoQrGenerator
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimeEvent;
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.MatriculaQrRepositoryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.TokenGeneratorPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
@@ -132,6 +132,46 @@ class MatriculaQrPublicoUseCasesTest {
     }
 
     @Test
+    void validar_con_estudiante_conocido_consulta_con_su_usuario() {
+        final java.util.UUID estudiante = java.util.UUID.fromString("55555555-5555-5555-5555-555555555555");
+        when(repositorio.validar(new MatriculaQrRepositoryPort.CredencialMatricula(TOKEN, null), estudiante))
+                .thenReturn(new MatriculaQrRepositoryPort.CursoMatricula(GRUPO, "Calculo", "G1", "Maria Perez", FIN, 7));
+
+        final var resultado = new ValidarTokenMatriculaUseCaseImpl(acceso, repositorio)
+                .execute(new ValidarTokenMatriculaInputPort.Comando(TOKEN, null, IP_CAMPUS, estudiante));
+
+        assertEquals(new ValidarTokenMatriculaInputPort.Resultado(GRUPO, "Calculo", "G1", "Maria Perez", FIN, 7), resultado);
+    }
+
+    @Test
+    void DEC078_validar_entrega_los_programas_entre_los_que_elige_el_estudiante() {
+        final UUID programaA = UUID.randomUUID();
+        final UUID programaB = UUID.randomUUID();
+        when(repositorio.validar(new MatriculaQrRepositoryPort.CredencialMatricula(TOKEN, null)))
+                .thenReturn(new MatriculaQrRepositoryPort.CursoMatricula(GRUPO, "Constitucion", "G1", "Maria Perez", FIN, 7,
+                        java.util.List.of(new MatriculaQrRepositoryPort.ProgramaElegible(programaA, "Administracion"),
+                                new MatriculaQrRepositoryPort.ProgramaElegible(programaB, "Sistemas"))));
+
+        final var resultado = new ValidarTokenMatriculaUseCaseImpl(acceso, repositorio)
+                .execute(new ValidarTokenMatriculaInputPort.Comando(TOKEN, null, IP_CAMPUS));
+
+        assertEquals(java.util.List.of(new ValidarTokenMatriculaInputPort.ProgramaElegible(programaA, "Administracion"),
+                new ValidarTokenMatriculaInputPort.ProgramaElegible(programaB, "Sistemas")), resultado.programasElegibles());
+    }
+
+    @Test
+    void DEC078_el_estudiante_autenticado_envia_el_programa_que_eligio() {
+        final UUID programa = UUID.randomUUID();
+        when(repositorio.matricularAutenticado(new MatriculaQrRepositoryPort.CredencialMatricula(null, "123456"), USUARIO, programa))
+                .thenReturn(new MatriculaQrRepositoryPort.MatriculaRealizada(ESTUDIANTE, USUARIO, GRUPO));
+
+        final var resultado = new MatricularEstudianteAutenticadoUseCaseImpl(acceso, repositorio, realtime)
+                .execute(new MatricularEstudianteAutenticadoInputPort.Comando(null, "123456", IP_CAMPUS, USUARIO, programa));
+
+        assertEquals(GRUPO, resultado.idGrupo());
+    }
+
+    @Test
     void validar_propaga_el_error_generico_mqr_001_de_la_db() {
         when(repositorio.validar(any())).thenThrow(new ResourceNotFoundException(MatriculaQrErrorCode.MQR_001));
         final var useCase = new ValidarTokenMatriculaUseCaseImpl(acceso, repositorio);
@@ -146,7 +186,8 @@ class MatriculaQrPublicoUseCasesTest {
 
     @Test
     void T16_el_estudiante_autenticado_se_matricula_y_se_publica_el_evento_sin_datos_personales() {
-        when(repositorio.matricularAutenticado(new MatriculaQrRepositoryPort.CredencialMatricula(null, "123456"), USUARIO))
+        // DEC-078: el caso de uso pasa siempre el programa elegido (null si el estudiante no eligio).
+        when(repositorio.matricularAutenticado(new MatriculaQrRepositoryPort.CredencialMatricula(null, "123456"), USUARIO, null))
                 .thenReturn(new MatriculaQrRepositoryPort.MatriculaRealizada(ESTUDIANTE, USUARIO, GRUPO));
 
         final var resultado = new MatricularEstudianteAutenticadoUseCaseImpl(acceso, repositorio, realtime)
@@ -172,7 +213,7 @@ class MatriculaQrPublicoUseCasesTest {
 
     @Test
     void T12_un_conflicto_de_la_db_no_publica_ningun_evento() {
-        when(repositorio.matricularAutenticado(any(), eq(USUARIO))).thenThrow(new ConflictException(MatriculaQrErrorCode.MQR_004));
+        when(repositorio.matricularAutenticado(any(), eq(USUARIO), isNull())).thenThrow(new ConflictException(MatriculaQrErrorCode.MQR_004));
         final var useCase = new MatricularEstudianteAutenticadoUseCaseImpl(acceso, repositorio, realtime);
         final var comando = new MatricularEstudianteAutenticadoInputPort.Comando(TOKEN, null, IP_CAMPUS, USUARIO);
 
@@ -183,21 +224,18 @@ class MatriculaQrPublicoUseCasesTest {
 
     // ---------------------------------------------------------------- registro publico
 
-    private PasswordEncoderPort encoder;
     private IdentityProviderPort identidad;
     private NotificacionPort notificaciones;
     private CorreoInstitucionalPolicy correoPolicy;
 
     private RegistrarEstudiantePorTokenUseCaseImpl registro() {
-        encoder = mock(PasswordEncoderPort.class);
         identidad = mock(IdentityProviderPort.class);
         notificaciones = mock(NotificacionPort.class);
         correoPolicy = mock(CorreoInstitucionalPolicy.class);
-        when(encoder.encode("Clave-segura-1")).thenReturn("HASH");
         when(repositorio.registrarPublico(any()))
                 .thenReturn(new MatriculaQrRepositoryPort.MatriculaRealizada(ESTUDIANTE, USUARIO, GRUPO));
         return new RegistrarEstudiantePorTokenUseCaseImpl(
-                acceso, correoPolicy, encoder, repositorio, identidad, notificaciones, realtime);
+                acceso, correoPolicy, repositorio, identidad, notificaciones, realtime);
     }
 
     private static RegistrarEstudiantePorTokenInputPort.Comando comandoRegistro(final String ip) {
@@ -212,9 +250,8 @@ class MatriculaQrPublicoUseCasesTest {
         final var resultado = useCase.execute(comandoRegistro(IP_CAMPUS));
 
         assertEquals(new RegistrarEstudiantePorTokenInputPort.Resultado(GRUPO, "1017555444"), resultado);
-        final InOrder orden = inOrder(correoPolicy, encoder, repositorio, identidad, realtime);
+        final InOrder orden = inOrder(correoPolicy, repositorio, identidad, realtime);
         orden.verify(correoPolicy).exigir("ana@uco.edu.co");
-        orden.verify(encoder).encode("Clave-segura-1");
         orden.verify(repositorio).registrarPublico(any());
         orden.verify(identidad).crearCuenta(any());
         orden.verify(realtime).publish(any());
@@ -228,17 +265,30 @@ class MatriculaQrPublicoUseCasesTest {
     }
 
     @Test
-    void T10_la_db_recibe_la_contrasena_codificada_nunca_en_claro_y_vacios_en_los_segundos_nombres() {
+    void T10_la_db_recibe_vacios_en_los_segundos_nombres_y_ninguna_clave() {
         final var useCase = registro();
 
         useCase.execute(comandoRegistro(IP_CAMPUS));
 
         final ArgumentCaptor<MatriculaQrRepositoryPort.RegistroPublico> datos = ArgumentCaptor.forClass(MatriculaQrRepositoryPort.RegistroPublico.class);
         verify(repositorio).registrarPublico(datos.capture());
-        assertEquals("HASH", datos.getValue().passwordCodificada());
         assertEquals("", datos.getValue().segundoNombre());
         assertEquals("", datos.getValue().segundoApellido());
         assertEquals(TOKEN, datos.getValue().credencial().token());
+        assertEquals(null, datos.getValue().programaId());
+    }
+
+    @Test
+    void DEC078_el_registro_publico_envia_a_la_db_el_programa_que_eligio_el_estudiante() {
+        final var useCase = registro();
+        final UUID programa = UUID.randomUUID();
+
+        useCase.execute(new RegistrarEstudiantePorTokenInputPort.Comando(
+                TOKEN, null, IP_CAMPUS, TIPO_DOC, 1017555444, "Ana", null, "Gomez", null, "ana@uco.edu.co", "Clave-segura-1", programa));
+
+        final ArgumentCaptor<MatriculaQrRepositoryPort.RegistroPublico> datos = ArgumentCaptor.forClass(MatriculaQrRepositoryPort.RegistroPublico.class);
+        verify(repositorio).registrarPublico(datos.capture());
+        assertEquals(programa, datos.getValue().programaId());
     }
 
     @Test
@@ -260,6 +310,19 @@ class MatriculaQrPublicoUseCasesTest {
 
         verifyNoInteractions(repositorio);
         verifyNoInteractions(identidad);
+    }
+
+    @Test
+    void T29b_un_conflicto_de_identidad_es_409_con_el_codigo_de_cuenta_ya_registrada_y_no_500() {
+        final var useCase = registro();
+        doThrow(IdentityProviderPort.IdentityProviderException.conflicto("usuario huerfano en el proveedor")).when(identidad).crearCuenta(any());
+        final var comando = comandoRegistro(IP_CAMPUS);
+
+        final var error = assertThrows(co.edu.uco.asistenciasuco.application.exception.business.ConflictException.class,
+                () -> useCase.execute(comando));
+
+        assertEquals("MQR_005", error.getCode());
+        verify(identidad, never()).eliminarCuenta(anyString());
     }
 
     @Test

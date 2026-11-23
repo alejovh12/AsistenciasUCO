@@ -572,7 +572,7 @@ src/main/java/co/edu/uco/asistenciasuco/application/features/coordinador/common/
 | Catalog/Vault invalidation | `CatalogInvalidationPort` | `CompositeCatalogInvalidationAdapter` | input Event Grid | Invalida parámetros, mensajes, secretos o todo; Event Grid entra por InputPort | Decisión Azure→realtime DR-AZ-001; aislamiento cloud test LB-001D.2 |
 | Identity Provisioning | `IdentityProviderPort` | `KeycloakIdentityProviderAdapter` | `app.adapters.identity.provider=keycloak` | Reemplazable por provider; solo Keycloak | E2E y completar integración de roles/flujos institucionales pendientes |
 | Runtime Security | `JwtClaimsExtractor` | `KeycloakJwtClaimsExtractor` | `app.adapters.security.provider=keycloak` | Reemplazable por SPI; solo Keycloak | E2E y authorization hardening contextual |
-| Password Encoding | `PasswordEncoderPort` | Spring password adapter | configuración existente | Desacoplado | Sin deuda de provider relevante en esta fase |
+| Password Encoding | (retirado, SEG-11) | (retirado) | n/a | `Usuario.password` ya no existe; la clave vive en la identidad externa | Ninguna |
 | Storage | `FileStoragePort` pendiente | filesystem dentro de `ArchivoController` | `app.adapters.storage.provider=local` preparado | Todavía no reemplazable | Extraer InputPort/UseCase/Port antes de MinIO |
 | Realtime | `RealtimePublisherPort` | `ReactorRealtimeAdapter` + SSE gateway | `app.adapters.realtime.provider=local-sse` | Provider seleccionado por Composition Root; solo `local-sse` | Angular SSE autenticado, API First, distribución/durabilidad con proveedor por decidir en ADR |
 | Audit | `AuditEventPublisher` | logging + soporte SQL existente | `app.adapters.audit.provider=logging` | Parcialmente desacoplado | Durable provider si se requiere |

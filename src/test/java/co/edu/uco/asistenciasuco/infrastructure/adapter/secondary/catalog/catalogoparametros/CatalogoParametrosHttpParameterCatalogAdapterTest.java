@@ -12,7 +12,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
 import java.time.Duration;
-import java.util.UUID;
+import java.net.URI;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
@@ -29,7 +30,7 @@ import static org.mockito.Mockito.when;
 @SuppressWarnings("unchecked")
 class CatalogoParametrosHttpParameterCatalogAdapterTest {
 
-    private static final UUID TOKEN = UUID.fromString("11111111-2222-3333-4444-555555555555");
+    private static final String TOKEN_M2M = "token-m2m-de-prueba";
     private static final String SECRETO = "valor-secreto-de-prueba";
     private static final String JSON = """
             {"mensajes":[],"ambiente":{"id":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa","nombre":"Develop"},"parametros":[
@@ -54,14 +55,45 @@ class CatalogoParametrosHttpParameterCatalogAdapterTest {
              {"parametro":{"nombre":"N.BOOL","activo":true},"metadatos":[{"metadato":{"valor":"false"}}]}]}""";
 
     private final HttpClient http = mock(HttpClient.class);
+    private final CatalogoParametrosTokenProvider tokens = mock(CatalogoParametrosTokenProvider.class);
+
+    @org.junit.jupiter.api.BeforeEach
+    void tokenVigente() {
+        when(tokens.token()).thenReturn(TOKEN_M2M);
+        when(tokens.tokenEnCache()).thenReturn(Optional.of(TOKEN_M2M));
+    }
 
     private static CatalogoParametrosProviderProperties props(final Duration ttl) {
-        return new CatalogoParametrosProviderProperties("http://localhost:8081/catalogo-parametros/api/v1/", TOKEN,
-                SECRETO, null, null, Duration.ofSeconds(2), ttl, ".");
+        return new CatalogoParametrosProviderProperties("http://localhost:8081/catalogo-parametros/api/v1/",
+                URI.create("http://localhost:19090/token"), "svc-asistencias", SECRETO, null, null, Duration.ofSeconds(2), ttl, ".");
     }
 
     private CatalogoParametrosHttpParameterCatalogAdapter adaptor(final Duration ttl) {
-        return new CatalogoParametrosHttpParameterCatalogAdapter(http, props(ttl));
+        return new CatalogoParametrosHttpParameterCatalogAdapter(http, props(ttl), tokens);
+    }
+
+    /** Reloj mutable: el TTL y la gracia se prueban sin depender del tiempo real. */
+    private static final class RelojMutable extends java.time.Clock {
+        private java.time.Instant ahora = java.time.Instant.parse("2026-01-01T00:00:00Z");
+
+        void avanzar(final Duration lapso) {
+            ahora = ahora.plus(lapso);
+        }
+
+        @Override
+        public java.time.ZoneId getZone() {
+            return java.time.ZoneOffset.UTC;
+        }
+
+        @Override
+        public java.time.Clock withZone(final java.time.ZoneId zone) {
+            return this;
+        }
+
+        @Override
+        public java.time.Instant instant() {
+            return ahora;
+        }
     }
 
     private static HttpResponse<String> respuesta(final int status, final String body) {
@@ -229,17 +261,18 @@ class CatalogoParametrosHttpParameterCatalogAdapterTest {
     @Test
     void refresco_fallido_conserva_los_valores_vencidos_sin_propagar_y_respeta_la_gracia() throws Exception {
         responde(200, JSON);
-        final var a = adaptor(Duration.ofMillis(1));
+        final var reloj = new RelojMutable();
+        final var a = new CatalogoParametrosHttpParameterCatalogAdapter(http, props(Duration.ofMillis(1)), tokens, reloj);
         a.getParameter("G", "SINACTIVO");
-        Thread.sleep(10);
+        reloj.avanzar(Duration.ofMillis(10));
         respondeAsincrono(CompletableFuture.failedFuture(new HttpTimeoutException("el catalogo tardo demasiado")));
 
         assertEquals("presente", a.getParameter("G", "SINACTIVO").orElseThrow());
         assertEquals("presente", a.getParameter("G", "SINACTIVO").orElseThrow());
 
-        // Con TTL 1 ms la gracia es 1 ms: sin esperar no se reintenta; tras esperar, si.
+        // Con TTL 1 ms la gracia es 1 ms: sin avanzar el reloj no se reintenta; tras avanzarlo, si.
         verify(http, times(1)).sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
-        Thread.sleep(10);
+        reloj.avanzar(Duration.ofMillis(10));
         assertEquals("presente", a.getParameter("G", "SINACTIVO").orElseThrow());
         verify(http, times(2)).sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
     }
@@ -382,10 +415,10 @@ class CatalogoParametrosHttpParameterCatalogAdapterTest {
         final ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
         verify(http).sendAsync(captor.capture(), any(HttpResponse.BodyHandler.class));
         final HttpRequest request = captor.getValue();
-        assertEquals("Bearer " + SECRETO, request.headers().firstValue("Authorization").orElseThrow());
+        assertEquals("Bearer " + TOKEN_M2M, request.headers().firstValue("Authorization").orElseThrow());
         assertEquals("application/json", request.headers().firstValue("Accept").orElseThrow());
         assertEquals("GET", request.method());
-        assertEquals("http://localhost:8081/catalogo-parametros/api/v1/tokens/" + TOKEN + "/parametros",
+        assertEquals("http://localhost:8081/catalogo-parametros/api/v1/parametros/consulta/m2m",
                 request.uri().toString());
         assertEquals(Duration.ofSeconds(2), request.timeout().orElseThrow());
     }
@@ -396,17 +429,17 @@ class CatalogoParametrosHttpParameterCatalogAdapterTest {
     }
 
     @Test
-    void la_peticion_lleva_bearer_accept_y_url_del_token() throws Exception {
+    void la_peticion_lleva_el_bearer_m2m_accept_y_la_url_de_consulta_m2m() throws Exception {
         responde(200, JSON);
         adaptor(Duration.ofMinutes(5)).getParameter("G", "SINACTIVO");
 
         final ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
         verify(http).send(captor.capture(), any(HttpResponse.BodyHandler.class));
         final HttpRequest request = captor.getValue();
-        assertEquals("Bearer " + SECRETO, request.headers().firstValue("Authorization").orElseThrow());
+        assertEquals("Bearer " + TOKEN_M2M, request.headers().firstValue("Authorization").orElseThrow());
         assertEquals("application/json", request.headers().firstValue("Accept").orElseThrow());
         assertEquals("GET", request.method());
-        assertEquals("http://localhost:8081/catalogo-parametros/api/v1/tokens/" + TOKEN + "/parametros",
+        assertEquals("http://localhost:8081/catalogo-parametros/api/v1/parametros/consulta/m2m",
                 request.uri().toString());
         assertEquals(Duration.ofSeconds(2), request.timeout().orElseThrow());
     }
@@ -518,5 +551,88 @@ class CatalogoParametrosHttpParameterCatalogAdapterTest {
             soltar.countDown();
             pool.shutdownNow();
         }
+    }
+
+    @Test
+    void un_401_descarta_el_token_y_reintenta_una_vez_con_el_nuevo() throws Exception {
+        final HttpResponse<String> noAutorizado = respuesta(401, "{}");
+        final HttpResponse<String> ok = respuesta(200, JSON);
+        when(http.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(noAutorizado).thenReturn(ok);
+
+        assertEquals("presente", adaptor(Duration.ofMinutes(5)).getParameter("G", "SINACTIVO").orElseThrow());
+
+        verify(tokens).invalidar();
+        verify(http, times(2)).send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
+    }
+
+    @Test
+    void sin_token_en_cache_el_refresco_pide_el_token_en_otro_hilo_y_envia() throws Exception {
+        responde(200, JSON);
+        final var a = adaptor(Duration.ofMillis(1));
+        a.getParameter("G", "SINACTIVO");
+        Thread.sleep(10);
+        when(tokens.tokenEnCache()).thenReturn(Optional.empty());
+        respondeAsincrono(CompletableFuture.completedFuture(respuesta(200, JSON_NUEVO)));
+
+        assertEquals("presente", a.getParameter("G", "SINACTIVO").orElseThrow());
+        org.awaitility.Awaitility.await().untilAsserted(
+                () -> assertEquals("nuevo", a.getParameter("G", "SINACTIVO").orElseThrow()));
+        // Con TTL de 1 ms cada lectura posterior vuelve a vencer la cache: basta comprobar que el refresco pidio el token.
+        verify(tokens, org.mockito.Mockito.atLeast(2)).token();
+    }
+
+    @Test
+    void sin_token_en_cache_y_keycloak_caido_el_refresco_conserva_los_valores() throws Exception {
+        responde(200, JSON);
+        final var a = adaptor(Duration.ofMillis(1));
+        a.getParameter("G", "SINACTIVO");
+        Thread.sleep(10);
+        when(tokens.tokenEnCache()).thenReturn(Optional.empty());
+        when(tokens.token()).thenThrow(new ParameterCatalogException("keycloak caido"));
+
+        assertEquals("presente", a.getParameter("G", "SINACTIVO").orElseThrow());
+        Thread.sleep(50);
+        assertEquals("presente", a.getParameter("G", "SINACTIVO").orElseThrow());
+        verify(http, times(0)).sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
+    }
+
+    @Test
+    void no_sirve_el_valor_que_la_bd_rechazo_y_sirve_el_ultimo_valido() throws Exception {
+        responde(200, JSON);
+        final var a = adaptor(Duration.ofMinutes(5));
+        assertEquals("20", a.getParameter("asistencias", "limite").orElseThrow());
+
+        a.retenerValorValido("asistencias", "limite", "20", "15");
+
+        assertEquals("15", a.getParameter("asistencias", "limite").orElseThrow());
+        // sobrevive a la invalidacion: la cache recargada vuelve a traer el mismo valor rechazado
+        a.invalidateAll();
+        assertEquals("15", a.getParameter("asistencias", "limite").orElseThrow());
+        assertEquals("15", a.getRequiredParameter("asistencias", "limite"));
+        // no afecta a otros parametros
+        assertEquals("si", a.getParameter("asistencias", "exacto").orElseThrow());
+    }
+
+    @Test
+    void sin_valor_valido_retenido_la_lectura_queda_vacia_para_que_aplique_el_valor_por_defecto() throws Exception {
+        responde(200, JSON);
+        final var a = adaptor(Duration.ofMinutes(5));
+
+        a.retenerValorValido("asistencias", "limite", "20", null);
+
+        assertTrue(a.getParameter("asistencias", "limite").isEmpty());
+    }
+
+    @Test
+    void un_valor_nuevo_del_catalogo_distinto_del_rechazado_se_sirve_y_liberar_retoma_el_catalogo() throws Exception {
+        responde(200, JSON);
+        final var a = adaptor(Duration.ofMinutes(5));
+        a.retenerValorValido("asistencias", "limite", "otro-valor", "15");
+        assertEquals("20", a.getParameter("asistencias", "limite").orElseThrow());
+
+        a.retenerValorValido("asistencias", "limite", "20", "15");
+        assertEquals("15", a.getParameter("asistencias", "limite").orElseThrow());
+        a.liberar(" asistencias ", " limite ");
+        assertEquals("20", a.getParameter("asistencias", "limite").orElseThrow());
     }
 }

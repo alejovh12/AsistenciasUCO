@@ -26,9 +26,9 @@ public final class ActualizarCoordinadorRequest extends CorreccionDocumentoReque
     @Size(max = 50, message = "El campo segundoApellido no puede superar 50 caracteres.")
     @NombrePersona
     private String segundoApellido;
-    @NotBlank(message = "El correo electronico es obligatorio.")
-    @Pattern(regexp = BeanValidationPatterns.EMAIL_OR_BLANK, message = "El correo electronico no tiene un formato valido.")
-    @Size(max = 100, message = "El correo electronico no puede superar 100 caracteres.")
+    @NotBlank(message = "El correo electrónico es obligatorio.")
+    @Pattern(regexp = BeanValidationPatterns.EMAIL_OR_BLANK, message = "El correo electrónico no tiene un formato válido.")
+    @Size(max = 100, message = "El correo electrónico no puede superar 100 caracteres.")
     private String correo;
 
     public String getPrimerNombre() { return primerNombre; }

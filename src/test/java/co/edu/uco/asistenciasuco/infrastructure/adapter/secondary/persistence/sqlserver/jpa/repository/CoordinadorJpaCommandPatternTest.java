@@ -61,7 +61,7 @@ class CoordinadorJpaCommandPatternTest {
     @Test
     void COO_PAT_001_crear_coordinador_usa_native_query_exec_con_binding_nombrado() {
         command.crearCoordinador(COORDINADOR, "1001", "ANA", "MARIA", "PEREZ", "GOMEZ", "ana@example.test",
-                PROGRAMA, FACULTAD, "Clave123!", EJECUTOR);
+                PROGRAMA, FACULTAD, EJECUTOR);
 
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_crear_coordinador"));
         verify(query).setParameter("idCoordinador", COORDINADOR);
@@ -73,7 +73,7 @@ class CoordinadorJpaCommandPatternTest {
         verify(query).setParameter("correo", "ana@example.test");
         verify(query).setParameter("idPrograma", PROGRAMA);
         verify(query).setParameter("idFacultad", FACULTAD);
-        verify(query).setParameter("password", "Clave123!");
+        verify(query).setParameter("password", (Object) null);
         verify(query).setParameter("idCorrelacion", CORRELATION);
         verify(query).setParameter("idUsuarioEjecutor", EJECUTOR);
         verify(query).getResultList();
@@ -86,7 +86,7 @@ class CoordinadorJpaCommandPatternTest {
 
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
                 () -> command.crearCoordinador(COORDINADOR, "1001", "ANA", null, "PEREZ", null, "ana@example.test",
-                        PROGRAMA, FACULTAD, "Clave123!", EJECUTOR));
+                        PROGRAMA, FACULTAD, EJECUTOR));
 
         assertEquals(DatabaseErrorCode.DATABASE_OPERATION_ERROR.code(), exception.getCode());
         assertTrue(exception.getCause() instanceof PersistenceException);
@@ -98,7 +98,7 @@ class CoordinadorJpaCommandPatternTest {
 
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
                 () -> command.crearCoordinador(COORDINADOR, "1001", "ANA", null, "PEREZ", null, "ana@example.test",
-                        PROGRAMA, FACULTAD, "Clave123!", EJECUTOR));
+                        PROGRAMA, FACULTAD, EJECUTOR));
 
         assertEquals(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT.code(), exception.getCode());
     }

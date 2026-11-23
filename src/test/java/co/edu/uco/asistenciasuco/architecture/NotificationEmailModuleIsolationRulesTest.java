@@ -14,15 +14,17 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 /**
- * TEST_PLAN §3 (AR-07..AR-10): guardrails de removibilidad y aislamiento del modulo de plantillas,
- * contacto y canal SMTP (NOTIF-002A).
+ * TEST_PLAN AR-07..AR-10 (F4): guardrails de removibilidad y aislamiento del modulo de notificaciones. El renderizado y el
+ * SMTP viven en el Servicio de Notificaciones; el backend conserva el cliente HTTP ({@code service}), la resolucion de
+ * contactos ({@code contact}) y el token de verificacion ({@code verificacion}).
  */
 class NotificationEmailModuleIsolationRulesTest {
 
     private static final String BASE_PACKAGE = "co.edu.uco.asistenciasuco";
-    private static final String TEMPLATE_PKG = "..infrastructure.adapter.secondary.notification.template..";
+    private static final String SERVICE_PKG = "..infrastructure.adapter.secondary.notification.service..";
     private static final String CONTACT_PKG = "..infrastructure.adapter.secondary.notification.contact..";
-    private static final String SMTP_PKG = "..infrastructure.adapter.secondary.notification.channel.smtp..";
+    private static final String VERIFICACION_PKG = "..infrastructure.adapter.secondary.notification.verificacion..";
+    private static final String NOTIF_ADAPTER_PKG = "..infrastructure.adapter.secondary.notification..";
     private static final String NOTIF_CONFIG_PKG = "..infrastructure.config.adapters.notification..";
 
     private static JavaClasses importedClasses() {
@@ -32,49 +34,53 @@ class NotificationEmailModuleIsolationRulesTest {
     }
 
     @Test
-    @DisplayName("AR-07: solo config.adapters.notification y el propio paquete notification referencian clases de template/contact/channel.smtp")
-    void AR07_solo_config_y_notification_referencian_el_modulo() {
+    @DisplayName("AR-07: solo el paquete notification.service y la configuracion de notificaciones referencian el cliente del servicio")
+    void AR07_solo_el_adaptador_del_servicio_referencia_el_cliente() {
         noClasses()
-                .that().resideOutsideOfPackages(
-                        TEMPLATE_PKG,
-                        CONTACT_PKG,
-                        SMTP_PKG,
-                        NOTIF_CONFIG_PKG
-                )
-                .should().dependOnClassesThat().resideInAnyPackage(TEMPLATE_PKG, CONTACT_PKG, SMTP_PKG)
+                .that().resideOutsideOfPackages(SERVICE_PKG, NOTIF_CONFIG_PKG)
+                .should().dependOnClassesThat().resideInAnyPackage(SERVICE_PKG)
                 .check(importedClasses());
     }
 
     @Test
-    @DisplayName("AR-08: application.. y controladores no dependen de notification.template, contact ni channel.smtp")
+    @DisplayName("AR-07b: contact y verificacion solo los usan el paquete notification y la configuracion de notificaciones")
+    void AR07b_contact_y_verificacion_son_internos_del_modulo() {
+        noClasses()
+                .that().resideOutsideOfPackages(NOTIF_ADAPTER_PKG, NOTIF_CONFIG_PKG)
+                .should().dependOnClassesThat().resideInAnyPackage(CONTACT_PKG, VERIFICACION_PKG)
+                .check(importedClasses());
+    }
+
+    @Test
+    @DisplayName("AR-08: application.. y controladores no dependen de notification.service, contact ni verificacion")
     void AR08_application_y_controladores_no_dependen_del_modulo() {
         noClasses()
                 .that().resideInAnyPackage("..application..", "..infrastructure.adapter.primary..")
-                .should().dependOnClassesThat().resideInAnyPackage(TEMPLATE_PKG, CONTACT_PKG, SMTP_PKG)
+                .should().dependOnClassesThat().resideInAnyPackage(SERVICE_PKG, CONTACT_PKG, VERIFICACION_PKG)
                 .check(importedClasses());
     }
 
     @Test
-    @DisplayName("AR-09: notification.template y notification.contact no dependen de channel.smtp (dependencia en un solo sentido)")
-    void AR09_template_y_contact_no_dependen_de_channel_smtp() {
+    @DisplayName("AR-09: contact y verificacion no dependen del cliente del servicio (dependencia en un solo sentido)")
+    void AR09_contact_y_verificacion_no_dependen_del_servicio() {
         noClasses()
-                .that().resideInAnyPackage(TEMPLATE_PKG, CONTACT_PKG)
-                .should().dependOnClassesThat().resideInAnyPackage(SMTP_PKG)
+                .that().resideInAnyPackage(CONTACT_PKG, VERIFICACION_PKG)
+                .should().dependOnClassesThat().resideInAnyPackage(SERVICE_PKG)
                 .check(importedClasses());
     }
 
     @Test
-    @DisplayName("AR-10: sin @Component/@Service/@Repository en clases de template/contact/channel.smtp y sin JdbcTemplate")
+    @DisplayName("AR-10: sin @Component/@Service/@Repository en service/contact/verificacion y sin JdbcTemplate")
     void AR10_sin_estereotipos_spring_ni_jdbc_template_en_modulo() {
         classes()
-                .that().resideInAnyPackage(TEMPLATE_PKG, CONTACT_PKG, SMTP_PKG)
+                .that().resideInAnyPackage(SERVICE_PKG, CONTACT_PKG, VERIFICACION_PKG)
                 .should().notBeAnnotatedWith(Component.class)
                 .andShould().notBeAnnotatedWith(Service.class)
                 .andShould().notBeAnnotatedWith(Repository.class)
                 .check(importedClasses());
 
         noClasses()
-                .that().resideInAnyPackage(TEMPLATE_PKG, CONTACT_PKG, SMTP_PKG)
+                .that().resideInAnyPackage(SERVICE_PKG, CONTACT_PKG, VERIFICACION_PKG)
                 .should().dependOnClassesThat().areAssignableTo(JdbcTemplate.class)
                 .check(importedClasses());
     }

@@ -67,9 +67,9 @@ class SesionSolicitudMensajeYEstadoTest {
         mvc.perform(post("/api/v2/sesiones").contentType("application/json").content(cuerpo))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.mensaje").value(SES_022));
         mvc.perform(post("/api/v2/sesiones").contentType("application/json").content(cuerpo))
-                .andExpect(status().isCreated()).andExpect(jsonPath("$.mensaje").value("Sesion creada correctamente."));
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.mensaje").value("Sesión creada correctamente."));
         mvc.perform(post("/api/v2/sesiones").contentType("application/json").content(cuerpo))
-                .andExpect(status().isCreated()).andExpect(jsonPath("$.mensaje").value("Sesion creada correctamente."));
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.mensaje").value("Sesión creada correctamente."));
     }
 
     @Test
@@ -85,7 +85,31 @@ class SesionSolicitudMensajeYEstadoTest {
         mvc.perform(post("/api/v1/sesiones").contentType("application/json").content(cuerpo))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.mensaje").value(SES_022));
         mvc.perform(post("/api/v1/sesiones").contentType("application/json").content(cuerpo))
-                .andExpect(status().isCreated()).andExpect(jsonPath("$.mensaje").value("Sesion creada correctamente."));
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.mensaje").value("Sesión creada correctamente."));
+    }
+
+    @Test
+    void las_confirmaciones_de_sesion_salen_del_catalogo_por_su_codigo_ok() throws Exception {
+        final co.edu.uco.asistenciasuco.application.features.catalogo.resolvermensajeusuario.primaryports.ResolverMensajeUsuarioInputPort catalogo =
+                codigo -> java.util.Optional.of("[" + codigo + "]");
+        final CerrarSesionInputPort cerrar = mock(CerrarSesionInputPort.class);
+        final MockMvc v1 = MockMvcBuilders.standaloneSetup(new SesionController(crear, mock(ConsultarSesionInputPort.class),
+                        mock(ConsultarSesionesPorGrupoInputPort.class), cerrar, mock(ActualizarSesionInputPort.class),
+                        mock(GenerarSesionesGrupoInputPort.class), identity, catalogo))
+                .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
+        final MockMvc v2 = MockMvcBuilders.standaloneSetup(new SesionV2Controller(crear, mock(ActualizarSesionInputPort.class), identity, catalogo))
+                .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
+        when(crear.execute(any(CrearSesionDTO.class))).thenReturn((String) null);
+
+        v1.perform(post("/api/v1/sesiones").contentType("application/json").content("{\"grupo\":\"" + GRUPO
+                        + "\",\"nombre\":\"Repaso\",\"fechaHoraInicio\":\"2026-11-10T08:00\",\"fechaHoraFin\":\"2026-11-10T10:00\"}"))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.mensaje").value("[OK_SESION_002]"));
+        v2.perform(post("/api/v2/sesiones").contentType("application/json").content("{\"grupo\":\"" + GRUPO
+                        + "\",\"nombre\":\"Repaso\",\"fechaHoraInicio\":\"2026-11-10T13:00:00Z\",\"fechaHoraFin\":\"2026-11-10T15:00:00Z\"}"))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.mensaje").value("[OK_SESION_002]"));
+        v1.perform(post("/api/v1/sesiones/cierres").contentType("application/json")
+                        .content("{\"sesion\":\"" + SESION + "\",\"observacionCierre\":\"Finalizada\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.mensaje").value("[OK_SESION_001]"));
     }
 
     @Test

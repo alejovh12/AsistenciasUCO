@@ -40,9 +40,9 @@ class ConsultarSolicitudesSesionDocenteUseCaseImplTest {
         when(repositorio.consultarSolicitudesDocente(DOCENTE, false, GRUPO, 2, 5)).thenReturn(new PaginaSolicitudesSesion(List.of(
                 new SolicitudSesion(sesion, "Repaso", "S-9", GRUPO, "G01", "Calculo", programa, "Ingenieria", UUID.randomUUID(), "Maria Docente",
                         LocalDateTime.of(2026, 11, 10, 13, 0), LocalDateTime.of(2026, 11, 10, 15, 0), "RECHAZADA", "Rechazada",
-                        LocalDateTime.of(2026, 11, 9, 14, 0), LocalDateTime.of(2026, 11, 9, 15, 0), "Ya existe"),
+                        LocalDateTime.of(2026, 11, 9, 14, 0), LocalDateTime.of(2026, 11, 9, 15, 0), "Ya existe", "Ingenieria", "Carlos Coordinador"),
                 new SolicitudSesion(UUID.randomUUID(), "Otra", "S-10", GRUPO, "G01", "Calculo", programa, "Ingenieria", UUID.randomUUID(),
-                        "Maria Docente", null, null, "PENDIENTE", "Pendiente", null, null, null)), 7));
+                        "Maria Docente", null, null, "PENDIENTE", "Pendiente", null, null, null, null, null)), 7));
 
         final Resultado resultado = useCase.execute(new Comando(DOCENTE, false, GRUPO, 2, 5));
 
@@ -55,6 +55,8 @@ class ConsultarSolicitudesSesionDocenteUseCaseImplTest {
         assertEquals(Instant.parse("2026-11-10T15:00:00Z"), primera.fechaHoraFin());
         assertEquals(Instant.parse("2026-11-09T14:00:00Z"), primera.fechaSolicitudUtc());
         assertEquals(Instant.parse("2026-11-09T15:00:00Z"), primera.fechaResolucionUtc());
+        assertEquals("Ingenieria", primera.nombreProgramaResponsable());
+        assertEquals("Carlos Coordinador", primera.nombreCoordinadorResolutor());
         assertEquals("RECHAZADA", primera.estadoSolicitud());
         assertEquals("Ya existe", primera.observacion());
         assertNull(resultado.elementos().get(1).fechaHoraInicio());

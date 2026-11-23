@@ -46,7 +46,6 @@ infrastructure/
           procedure/                 # CanonicalStoredProcedureExecutor (ejecución de usp_*)
       identity/keycloak/             # KeycloakIdentityProviderAdapter
       realtime/localsse/             # ReactorRealtimeAdapter
-      cryptography/password/spring/  # SpringPasswordEncoderAdapter
       catalog/
         azure/                       # App Configuration: mensajes y parámetros
         sqlserver/                   # providers SQL Server de catálogos
@@ -68,8 +67,7 @@ infrastructure/
       persistence/sqlserver/         # SqlServer*AdapterConfiguration (core, academic, reporting,
                                       # security scope, procedure support, audit support)
       identity/keycloak/             # KeycloakIdentityAdapterConfiguration
-      security/{keycloak,password}/  # KeycloakSecurityAdapterConfiguration,
-                                      # PasswordEncoderAdapterConfiguration
+      security/keycloak/             # KeycloakSecurityAdapterConfiguration
       realtime/localsse/             # LocalSseRealtimeAdapterConfiguration
       audit/                         # AuditAdapterConfiguration
       catalog/{azure,invalidation}/  # App Configuration e invalidación
@@ -116,7 +114,7 @@ reorganiza la capability existente.
   garantiza.
 - **Secondary Adapter** (`infrastructure/adapter/secondary`): puntos de salida. Implementan un
   Application secondary port (`*RepositoryPort`, `*QueryPort`, `IdentityProviderPort`,
-  `RealtimePublisherPort`, `PasswordEncoderPort`, `InstitutionalScopePort`) contra una tecnología
+  `RealtimePublisherPort`, `InstitutionalScopePort`) contra una tecnología
   concreta.
 
 El webhook Azure es un Primary Adapter: `AzureEventGridWebhookController → ProcesarEventoAzureInputPort → CatalogInvalidationPort`. Nunca llama directamente a `AzureKeyVaultAdapter` ni a los adapters de App Configuration.
@@ -128,7 +126,7 @@ Dos categorías de interfaz, deliberadamente distintas:
 - **Application Port** (`application/primaryports/*`, `application/secondaryports/*`): el
   contrato que Application expone o necesita. Vive siempre en Application, nunca se mueve a
   Infrastructure. Ejemplos: `AsistenciaRepositoryPort`, `IdentityProviderPort`,
-  `RealtimePublisherPort`, `InstitutionalScopePort`, `PasswordEncoderPort`.
+  `RealtimePublisherPort`, `InstitutionalScopePort`.
 - **Contrato interno de Infrastructure** (`contract/` o `spi/` dentro de un paquete de
   Infrastructure): coordina colaboración *dentro* de Infrastructure, sin que Application lo
   conozca. Ejemplos: `RealtimeStreamGateway` (primary.realtime.sse.contract - conecta el
@@ -141,7 +139,7 @@ Dos categorías de interfaz, deliberadamente distintas:
 | Sufijo | Significado | Uso |
 |---|---|---|
 | `Port` | Contrato de Application | `AsistenciaRepositoryPort`, `IdentityProviderPort` |
-| `Adapter` | Implementación técnica concreta de un Port o contrato interno | `AsistenciaJpaRepository`, `KeycloakIdentityProviderAdapter`, `SpringPasswordEncoderAdapter`. **Nunca** como sufijo de interfaz (ver `InfrastructureStructureRulesTest.ninguna_interfaz_productiva_termina_en_adapter`) |
+| `Adapter` | Implementación técnica concreta de un Port o contrato interno | `AsistenciaJpaRepository`, `KeycloakIdentityProviderAdapter`, `MinioFileStorageAdapter`. **Nunca** como sufijo de interfaz (ver `InfrastructureStructureRulesTest.ninguna_interfaz_productiva_termina_en_adapter`) |
 | `Gateway` | Frontera interna entre un primary adapter y el resto de Infrastructure | `RealtimeStreamGateway` |
 | `Resolver` | Resuelve contexto/información a partir del entorno de ejecución | `AuthenticatedUserResolver`, `SecurityContextAuthenticatedUserResolver`, `RequestActorResolver` |
 | `Extractor` | Extrae/interpreta datos de una estructura externa | `JwtClaimsExtractor`, `KeycloakJwtClaimsExtractor` |

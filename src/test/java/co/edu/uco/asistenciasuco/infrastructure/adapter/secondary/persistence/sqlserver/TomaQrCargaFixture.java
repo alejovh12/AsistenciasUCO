@@ -66,13 +66,13 @@ public final class TomaQrCargaFixture {
                 CROSS JOIN (SELECT TOP (%3$d) n = ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) FROM sys.all_objects) v;
                 BEGIN TRANSACTION;
                 INSERT INTO dbo.Usuario (id, tipoIdIdentificacion, numeroIdentificacion, primerApellido, segundoApellido, primerNombre,
-                                         segundoNombre, correo, correoConfirmado, estado, password)
-                VALUES (@uD, @tipoCC, @base, N'Carga', N'CulmB2', N'Doc', N'IT', CONCAT(@tag, N'.d@it.invalid'), 1, 1, N'sin-credencial');
+                                         segundoNombre, correo, correoConfirmado, estado)
+                VALUES (@uD, @tipoCC, @base, N'Carga', N'CulmB2', N'Doc', N'IT', CONCAT(@tag, N'.d@it.invalid'), 1, 1);
                 INSERT INTO dbo.Docente (id, usuario) VALUES (@d, @uD);
                 INSERT INTO dbo.Usuario (id, tipoIdIdentificacion, numeroIdentificacion, primerApellido, segundoApellido, primerNombre,
-                                         segundoNombre, correo, correoConfirmado, estado, password)
+                                         segundoNombre, correo, correoConfirmado, estado)
                 SELECT u, @tipoCC, @base + g * 1000 + n, CONCAT(N'Carga', g, N'-', n), N'CulmB2', N'Est', N'IT',
-                       CONCAT(@tag, N'.g', g, N'e', n, N'@it.invalid'), 1, 1, N'sin-credencial' FROM @e;
+                       CONCAT(@tag, N'.g', g, N'e', n, N'@it.invalid'), 1, 1 FROM @e;
                 INSERT INTO dbo.Estudiante (id, usuario) SELECT e, u FROM @e;
                 INSERT INTO dbo.PeriodoAcademico (id, institucion, nombre, codigo, fechaInicio, fechaFin, anio)
                 VALUES (@per, @idInst, @tag, 3600000 + ABS(CHECKSUM(NEWID()) %% 300000), DATEADD(DAY, -30, @hoy), DATEADD(DAY, 30, @hoy), YEAR(@hoy));

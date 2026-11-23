@@ -70,7 +70,7 @@ class DocenteProgramaJpaRepositoryTest {
         when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{CORRELATION, "ok", "", true}));
 
         repository.vincular(new VincularDocenteProgramaCommand(null, null, TIPO, 1017555444, "Jorge", null, "Henao", null,
-                "jorge@uco.edu.co", "HASH", PROGRAMA, EJECUTOR));
+                "jorge@uco.edu.co", PROGRAMA, EJECUTOR));
 
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_vincular_docente_programa"));
         verify(query).setParameter("idDocente", null);
@@ -80,7 +80,7 @@ class DocenteProgramaJpaRepositoryTest {
         verify(query).setParameter("primerNombre", "Jorge");
         verify(query).setParameter("primerApellido", "Henao");
         verify(query).setParameter("correo", "jorge@uco.edu.co");
-        verify(query).setParameter("password", "HASH");
+        verify(query, never()).setParameter(org.mockito.ArgumentMatchers.eq("password"), org.mockito.ArgumentMatchers.any());
         verify(query).setParameter("idPrograma", PROGRAMA);
         verify(query).setParameter("idCorrelacion", CORRELATION);
         verify(query).setParameter("idUsuarioEjecutor", EJECUTOR);
@@ -207,6 +207,6 @@ class DocenteProgramaJpaRepositoryTest {
 
     private static VincularDocenteProgramaCommand comando() {
         return new VincularDocenteProgramaCommand(UUID.randomUUID(), null, null, null, null, null, null, null, null,
-                null, PROGRAMA, EJECUTOR);
+                PROGRAMA, EJECUTOR);
     }
 }

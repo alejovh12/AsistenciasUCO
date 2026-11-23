@@ -49,6 +49,8 @@ public class AsistenciaQrJpaRepository implements AsistenciaQrRepositoryPort {
     private static final String P_USUARIO = "idUsuarioEjecutor";
     private static final String CODIGO_TOMA_CERRADA = "AQR_005";
     static final String OP_REGISTRAR = "registrarAsistenciaPorToken";
+    /** Mensaje tecnico (no llega al usuario): el caso de uso reintenta y, agotados los intentos, responde con el error generico. */
+    private static final String MENSAJE_INTERBLOQUEO = "La base de datos eligió el registro como víctima de un interbloqueo.";
     static final String MARCA_INTERBLOQUEO = "[NUMBER=1205]";
 
     static final String SQL_ABRIR = """
@@ -168,7 +170,7 @@ public class AsistenciaQrJpaRepository implements AsistenciaQrRepositoryPort {
         parametros.put(P_USUARIO, usuarioEjecutor);
         final ProcedureRow fila = ejecutarDetectandoInterbloqueo(porToken ? SQL_REGISTRAR_TOKEN : SQL_REGISTRAR_PIN, parametros);
         if (!fila.result().getEstadoResultado() && contieneInterbloqueo(fila.result().getMensajeTecnicoResultado())) {
-            throw new ConflictoConcurrenciaException("La base de datos eligio el registro como victima de un interbloqueo.");
+            throw new ConflictoConcurrenciaException(MENSAJE_INTERBLOQUEO);
         }
         ProcedureResultValidator.validate(fila.result(), correlacion, OP_REGISTRAR);
         // idToma, idSesion, idGrupo, nombreAsignatura, nombreGrupo, numeroSesion, numeroToma, yaRegistrado, fechaRegistroUtc
@@ -186,7 +188,7 @@ public class AsistenciaQrJpaRepository implements AsistenciaQrRepositoryPort {
             return ProcedureResultMapper.mapSingleWithExtras(consulta.getResultList(), 9);
         } catch (PersistenceException | IllegalStateException | IllegalArgumentException exception) {
             if (esInterbloqueo(exception)) {
-                throw new ConflictoConcurrenciaException("La base de datos eligio el registro como victima de un interbloqueo.");
+                throw new ConflictoConcurrenciaException(MENSAJE_INTERBLOQUEO);
             }
             LOGGER.error("SQL operation failed. operation={}, correlationId={}", OP_REGISTRAR, CorrelationIdContext.getAsString());
             throw new DatabaseOperationException(DatabaseErrorCode.DATABASE_OPERATION_ERROR,

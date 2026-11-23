@@ -17,11 +17,11 @@ import jakarta.validation.constraints.Positive;
  * datos personales (OBS-12).
  */
 public final class AdmitirEstudianteRequest {
-    @NonEmptyUuid(message = "El tipo de identificacion es obligatorio.", payload = BeanValidationCodes.Required.class)
-    @NotNull(message = "El tipo de identificacion es obligatorio.")
+    @NonEmptyUuid(message = "El tipo de identificación es obligatorio.", payload = BeanValidationCodes.Required.class)
+    @NotNull(message = "El tipo de identificación es obligatorio.")
     private UUID tipoIdentificacionId;
-    @NotNull(message = "El numero de identificacion es obligatorio y debe ser positivo.")
-    @Positive(message = "El numero de identificacion es obligatorio y debe ser positivo.", payload = BeanValidationCodes.InvalidFormat.class)
+    @NotNull(message = "El número de identificación es obligatorio y debe ser positivo.")
+    @Positive(message = "El número de identificación es obligatorio y debe ser positivo.", payload = BeanValidationCodes.InvalidFormat.class)
     private Integer numeroIdentificacion;
     @NotBlank(message = "El campo primerNombre es obligatorio.")
     @LongitudTrasTrim(max = 50, message = "El campo primerNombre no puede superar 50 caracteres.",
@@ -40,7 +40,7 @@ public final class AdmitirEstudianteRequest {
     @NotBlank(message = "El correo es obligatorio.")
     @LongitudTrasTrim(max = 255, message = "El correo no puede superar 255 caracteres.",
             payload = BeanValidationCodes.InvalidLength.class)
-    @Pattern(regexp = BeanValidationPatterns.EMAIL_OR_BLANK, message = "El correo no tiene un formato valido.")
+    @Pattern(regexp = BeanValidationPatterns.EMAIL_OR_BLANK, message = "El correo no tiene un formato válido.")
     private String correo;
     @NonEmptyUuid(message = "El programa es obligatorio.", payload = BeanValidationCodes.Required.class)
     @NotNull(message = "El programa es obligatorio.")

@@ -65,7 +65,7 @@ class EstudianteProgramaJpaRepositoryTest {
         final List<EstudianteProgramaProjection> resultado = persistence.consultarEstudiantesPorPrograma(PROGRAMA);
 
         assertEquals(List.of(new EstudianteProgramaProjection(
-                EP_ID, USUARIO, "12345", "Ana Perez", "ana@uco.edu.co", PROGRAMA, "Ingenieria")), resultado);
+                EP_ID, USUARIO, "12345", "Ana Perez", "ana@uco.edu.co", PROGRAMA, "Ingenieria", null)), resultado);
     }
 
     @Test

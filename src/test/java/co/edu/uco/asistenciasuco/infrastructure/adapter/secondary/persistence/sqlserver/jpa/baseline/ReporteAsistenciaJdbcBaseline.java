@@ -32,8 +32,11 @@ public final class ReporteAsistenciaJdbcBaseline implements ReporteAsistenciaQue
                 ei.nombreCompleto AS nombreEstudiante,
                 u.correo AS correoEstudiante,
                 da.asistio,
-                da.nombreRazonCausa AS razonCausa
+                da.nombreRazonCausa AS razonCausa,
+                CAST(ISNULL(se.estaCancelada, 0) AS BIT) AS sesionCancelada
             FROM dbo.uv_sesion s
+            LEFT JOIN dbo.uv_sesion_estado se
+                    ON se.idSesion = s.id
             INNER JOIN dbo.uv_estudiante_grupo eg
                     ON eg.idGrupo = s.idGrupo
             INNER JOIN dbo.uv_estudiante_identidad ei
@@ -46,6 +49,7 @@ public final class ReporteAsistenciaJdbcBaseline implements ReporteAsistenciaQue
             LEFT JOIN dbo.uv_detalle_asistencia da
                     ON da.idAsistencia = a.id
             WHERE s.idGrupo = :idGrupo
+              AND ISNULL(se.solicitudRechazada, 0) = 0
             ORDER BY s.numero, s.fechaHoraInicio, ei.nombreCompleto, ei.id, eg.id
             """;
 
@@ -77,7 +81,8 @@ public final class ReporteAsistenciaJdbcBaseline implements ReporteAsistenciaQue
                             JdbcBaselineValueMapper.toString(rs.getObject("nombreEstudiante")),
                             JdbcBaselineValueMapper.toString(rs.getObject("correoEstudiante")),
                             rs.getObject("asistio") == null ? null : rs.getBoolean("asistio"),
-                            JdbcBaselineValueMapper.toString(rs.getObject("razonCausa"))
+                            JdbcBaselineValueMapper.toString(rs.getObject("razonCausa")),
+                            rs.getBoolean("sesionCancelada")
                     )
             );
         } catch (DataAccessException exception) {

@@ -11,7 +11,7 @@ public final class SolicitarRevisionAsistenciaRequest {
     private UUID sesion;
     /** PC (puntos de control): toma que se reclama; opcional. Con toma se radica por toma (v4); sin toma, el reclamo de la sesion (legado). */
     private UUID tomaId;
-    @NotBlank(message = "La categoria es obligatoria.")
+    @NotBlank(message = "La categoría es obligatoria.")
     private String categoria;
     private String justificacion;
     private String motivo;
@@ -53,8 +53,8 @@ public final class SolicitarRevisionAsistenciaRequest {
     }
 
     /** ROL-06: la restriccion va en el getter porque {@code motivo} es el alias legado de {@code justificacion}. */
-    @NotBlank(message = "La justificacion es obligatoria.")
-    @Size(max = 300, message = "La justificacion debe tener entre 1 y 300 caracteres.")
+    @NotBlank(message = "La justificación es obligatoria.")
+    @Size(max = 300, message = "La justificación debe tener entre 1 y 300 caracteres.")
     public String getJustificacion() {
         return justificacion == null ? motivo : justificacion;
     }

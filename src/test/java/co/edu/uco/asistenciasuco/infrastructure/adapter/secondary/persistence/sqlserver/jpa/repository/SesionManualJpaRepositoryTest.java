@@ -236,7 +236,7 @@ class SesionManualJpaRepositoryTest {
 
         assertEquals(7, pagina.total());
         assertEquals(new SolicitudSesion(SESION, "Repaso", "S-9", GRUPO, "G01", "Calculo", programa, "Ingenieria", docente, "Maria Docente",
-                inicio, inicio.plusHours(2), "PENDIENTE", "Pendiente", solicitada, null, null), pagina.elementos().getFirst());
+                inicio, inicio.plusHours(2), "PENDIENTE", "Pendiente", solicitada, null, null, null, null), pagina.elementos().getFirst());
         assertNull(pagina.elementos().get(1).nombreSesion());
         verify(entityManager).createNativeQuery(
                 "EXEC dbo.usp_consultar_solicitudes_sesion_coordinador_paginado @idUsuario = :idUsuario, @soloPendientes = :soloPendientes, "
@@ -269,13 +269,13 @@ class SesionManualJpaRepositoryTest {
         when(query.getResultList()).thenReturn(List.<Object>of((Object)
                 new Object[]{SESION, "Repaso", "S-9", GRUPO, "G01", "Calculo", programa, "Ingenieria", USUARIO, "Maria Docente",
                         inicio, inicio.plusHours(2), "RECHAZADA", "Rechazada", inicio.minusDays(1), inicio.minusHours(20), "Ya existe", "maria",
-                        false, true, 4}));
+                        false, true, 4, "Ingenieria", "Carlos Coordinador"}));
 
         final PaginaSolicitudesSesion pagina = repository.consultarSolicitudesDocente(USUARIO, false, GRUPO, 2, 5);
 
         assertEquals(4, pagina.total());
         assertEquals(new SolicitudSesion(SESION, "Repaso", "S-9", GRUPO, "G01", "Calculo", programa, "Ingenieria", USUARIO, "Maria Docente",
-                inicio, inicio.plusHours(2), "RECHAZADA", "Rechazada", inicio.minusDays(1), inicio.minusHours(20), "Ya existe"),
+                inicio, inicio.plusHours(2), "RECHAZADA", "Rechazada", inicio.minusDays(1), inicio.minusHours(20), "Ya existe", "Ingenieria", "Carlos Coordinador"),
                 pagina.elementos().getFirst());
         verify(entityManager).createNativeQuery(
                 "EXEC dbo.usp_consultar_solicitudes_sesion_docente_paginado @idUsuario = :idUsuario, @soloPendientes = :soloPendientes, "

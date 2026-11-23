@@ -93,6 +93,30 @@ class RbacSecurityFilterChainTest {
     @Autowired
     private MockMvc mockMvc;
 
+    /** DEC-081: el receso academico lo gestiona solo el ADMINISTRADOR; DECANO y COORDINADOR solo consultan por la ruta del coordinador. */
+    @Test
+    void receso_academico_lo_gestiona_el_administrador_y_lo_consultan_decano_y_coordinador() throws Exception {
+        final String admin = "/api/v1/admin/periodos-academicos/00000000-0000-0000-0000-000000000001/recesos";
+        final String consulta = "/api/v1/coordinador/periodos-academicos/00000000-0000-0000-0000-000000000001/recesos";
+        mockMvc.perform(get(admin).header(HttpHeaders.AUTHORIZATION, bearer("ADMINISTRADOR"))).andExpect(status().isOk());
+        mockMvc.perform(post(admin).header(HttpHeaders.AUTHORIZATION, bearer("ADMINISTRADOR"))).andExpect(status().isOk());
+        mockMvc.perform(delete(admin + "/00000000-0000-0000-0000-000000000002").header(HttpHeaders.AUTHORIZATION, bearer("ADMINISTRADOR")))
+                .andExpect(status().isOk());
+        for (final String rol : List.of("DECANO", "COORDINADOR", "DOCENTE", "ESTUDIANTE")) {
+            mockMvc.perform(get(admin).header(HttpHeaders.AUTHORIZATION, bearer(rol))).andExpect(status().isForbidden());
+            mockMvc.perform(post(admin).header(HttpHeaders.AUTHORIZATION, bearer(rol))).andExpect(status().isForbidden());
+            mockMvc.perform(delete(admin + "/00000000-0000-0000-0000-000000000002").header(HttpHeaders.AUTHORIZATION, bearer(rol)))
+                    .andExpect(status().isForbidden());
+        }
+        for (final String rol : List.of("DECANO", "COORDINADOR")) {
+            mockMvc.perform(get(consulta).header(HttpHeaders.AUTHORIZATION, bearer(rol))).andExpect(status().isOk());
+        }
+        for (final String rol : List.of("ADMINISTRADOR", "DOCENTE", "ESTUDIANTE")) {
+            mockMvc.perform(get(consulta).header(HttpHeaders.AUTHORIZATION, bearer(rol))).andExpect(status().isForbidden());
+        }
+        mockMvc.perform(get(consulta)).andExpect(status().isUnauthorized());
+    }
+
     @Test
     void swaggerUiAndCanonicalOpenApiArePublicButBusinessApiRemainsProtected() throws Exception {
         mockMvc.perform(get("/swagger-ui/index.html"))
@@ -878,6 +902,16 @@ class RbacSecurityFilterChainTest {
                         org.springframework.web.bind.annotation.RequestMethod.PUT,
                         org.springframework.web.bind.annotation.RequestMethod.DELETE})
         String gestionarPeriodoAcademico() {
+            return "ok";
+        }
+
+        @org.springframework.web.bind.annotation.RequestMapping(
+                path = {"/api/v1/admin/periodos-academicos/{id}/recesos", "/api/v1/admin/periodos-academicos/{id}/recesos/{idReceso}",
+                        "/api/v1/coordinador/periodos-academicos/{id}/recesos"},
+                method = {org.springframework.web.bind.annotation.RequestMethod.GET,
+                        org.springframework.web.bind.annotation.RequestMethod.POST,
+                        org.springframework.web.bind.annotation.RequestMethod.DELETE})
+        String recesosAcademicos() {
             return "ok";
         }
 

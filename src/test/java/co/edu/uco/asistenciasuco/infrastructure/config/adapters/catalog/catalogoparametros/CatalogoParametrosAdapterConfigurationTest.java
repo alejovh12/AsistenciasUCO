@@ -1,7 +1,9 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.adapters.catalog.catalogoparametros;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogSourcePort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.catalogoparametros.CatalogoParametrosHttpParameterCatalogAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.catalogoparametros.CatalogoParametrosTokenProvider;
 import co.edu.uco.asistenciasuco.infrastructure.config.adapters.catalog.composite.ParametroConValorPorDefectoConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -22,13 +24,16 @@ class CatalogoParametrosAdapterConfigurationTest {
         runner.withPropertyValues(
                 "app.adapters.parameter-catalog.provider=catalogoparametros",
                 "app.providers.catalogo-parametros.base-url=http://localhost:8081/catalogo-parametros/api/v1/",
-                "app.providers.catalogo-parametros.token-id=11111111-2222-3333-4444-555555555555",
-                "app.providers.catalogo-parametros.secreto=valor-secreto-de-prueba",
+                "app.providers.catalogo-parametros.token-uri=http://localhost:19090/token",
+                "app.providers.catalogo-parametros.client-id=svc-asistencias",
+                "app.providers.catalogo-parametros.client-secret=valor-secreto-de-prueba",
                 "app.providers.catalogo-parametros.application-id=",
                 "app.providers.catalogo-parametros.environment-id="
         ).run(context -> {
             assertEquals(null, context.getStartupFailure());
             assertTrue(context.containsBean(ParametroConValorPorDefectoConfiguration.DELEGADO));
+            assertNotNull(context.getBean(CatalogoParametrosTokenProvider.class));
+            assertNotNull(context.getBean(ParameterCatalogSourcePort.class));
             assertInstanceOf(CatalogoParametrosHttpParameterCatalogAdapter.class,
                     context.getBean(ParametroConValorPorDefectoConfiguration.DELEGADO, ParameterCatalogPort.class));
         });
@@ -38,8 +43,8 @@ class CatalogoParametrosAdapterConfigurationTest {
     void con_otro_proveedor_la_configuracion_no_aporta_el_bean_aunque_los_valores_esten_vacios() {
         runner.withPropertyValues(
                 "app.adapters.parameter-catalog.provider=sqlserver",
-                "app.providers.catalogo-parametros.token-id=",
-                "app.providers.catalogo-parametros.secreto="
+                "app.providers.catalogo-parametros.client-id=",
+                "app.providers.catalogo-parametros.client-secret="
         ).run(context -> {
             assertEquals(null, context.getStartupFailure());
             assertFalse(context.containsBean(ParametroConValorPorDefectoConfiguration.DELEGADO));
@@ -51,8 +56,9 @@ class CatalogoParametrosAdapterConfigurationTest {
         runner.withPropertyValues(
                 "app.adapters.parameter-catalog.provider=catalogoparametros",
                 "app.providers.catalogo-parametros.base-url=http://localhost:8081/x",
-                "app.providers.catalogo-parametros.token-id=11111111-2222-3333-4444-555555555555",
-                "app.providers.catalogo-parametros.secreto="
+                "app.providers.catalogo-parametros.token-uri=http://localhost:19090/token",
+                "app.providers.catalogo-parametros.client-id=svc-asistencias",
+                "app.providers.catalogo-parametros.client-secret="
         ).run(context -> assertNotNull(context.getStartupFailure()));
     }
 }

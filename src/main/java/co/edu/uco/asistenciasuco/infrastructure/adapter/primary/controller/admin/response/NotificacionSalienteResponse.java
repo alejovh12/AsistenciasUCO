@@ -17,6 +17,7 @@ public record NotificacionSalienteResponse(
         Instant entregadoEn,
         String codigoError,
         String detalleError,
-        UUID idCorrelacion
+        UUID idCorrelacion,
+        String aplicacion
 ) {
 }

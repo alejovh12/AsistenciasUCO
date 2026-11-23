@@ -151,7 +151,7 @@ class GrupoJpaCommandPatternTest {
     void GRP_PAT_003_registrar_estudiante_usa_el_provider_publico_y_propaga_ejecutor_y_tipo_identificacion() {
         command.registrarEstudianteEnGrupo(new RegistrarEstudianteRepositoryDTO(
                 TIPO_IDENTIFICACION, 123456, "PEREZ", "GOMEZ", "ANA", "MARIA",
-                "ana@example.test", "Clave123!", GRUPO, EJECUTOR));
+                "ana@example.test", GRUPO, EJECUTOR));
 
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_registrar_estudiante_en_grupo"));
         verify(query).setParameter("idTipoIdIdentificacion", TIPO_IDENTIFICACION);
@@ -161,7 +161,7 @@ class GrupoJpaCommandPatternTest {
         verify(query).setParameter("primerNombre", "ANA");
         verify(query).setParameter("segundoNombre", "MARIA");
         verify(query).setParameter("correo", "ana@example.test");
-        verify(query).setParameter("password", "Clave123!");
+        verify(query).setParameter("password", (Object) null);
         verify(query).setParameter("idGrupo", GRUPO);
         verify(query).setParameter("idCorrelacion", CORRELATION);
         verify(query).setParameter("idUsuarioEjecutor", EJECUTOR);
@@ -174,7 +174,7 @@ class GrupoJpaCommandPatternTest {
 
         final var registrarEstudianteRepositoryDTO = new RegistrarEstudianteRepositoryDTO(
                         TIPO_IDENTIFICACION, 123456, "PEREZ", "GOMEZ", "ANA", "MARIA",
-                        "ana@example.test", "Clave123!", GRUPO, EJECUTOR);
+                        "ana@example.test", GRUPO, EJECUTOR);
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
                 () -> command.registrarEstudianteEnGrupo(registrarEstudianteRepositoryDTO));
 

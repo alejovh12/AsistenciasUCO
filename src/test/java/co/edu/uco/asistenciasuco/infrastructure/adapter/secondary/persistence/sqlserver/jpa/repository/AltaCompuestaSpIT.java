@@ -38,7 +38,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @MockitoBean(types = JwtDecoder.class)
 class AltaCompuestaSpIT {
 
-    private static final String HASH = "$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ0123456";
 
     @Autowired
     private JdbcTemplate jdbc;
@@ -194,7 +193,7 @@ class AltaCompuestaSpIT {
     void coordinador_con_programa_de_tipo_inexistente_es_validacion_y_no_deja_persona() {
         final String correo = correoUnico();
         final var comando = new CrearCoordinadorConProgramaCommand(UUID.randomUUID(), null, String.valueOf(numero()), "Ana", null, "Perez", null, correo,
-                HASH, "Programa IT " + sufijo(), UUID.randomUUID(), null, null, facultad, decanoEjecutor);
+                "Programa IT " + sufijo(), UUID.randomUUID(), null, null, facultad, decanoEjecutor);
 
         assertThrows(ValidationException.class, () -> coordinadores.crearCoordinadorConPrograma(comando));
 
@@ -205,14 +204,14 @@ class AltaCompuestaSpIT {
 
     private CrearDecanoConFacultadCommand decano(final String correo, final String nombreFacultad, final UUID idInstitucion,
                                                  final UUID ejecutor) {
-        return new CrearDecanoConFacultadCommand(UUID.randomUUID(), null, numero(), "Ana", null, "Perez", null, correo, HASH,
+        return new CrearDecanoConFacultadCommand(UUID.randomUUID(), null, numero(), "Ana", null, "Perez", null, correo,
                 nombreFacultad, null, idInstitucion, ejecutor);
     }
 
     private CrearCoordinadorConProgramaCommand coordinador(final String correo, final String nombrePrograma, final UUID idFacultad,
                                                            final UUID ejecutor) {
         return new CrearCoordinadorConProgramaCommand(UUID.randomUUID(), null, String.valueOf(numero()), "Ana", null, "Perez", null,
-                correo, HASH, nombrePrograma, tipoPrograma, null, null, idFacultad, ejecutor);
+                correo, nombrePrograma, tipoPrograma, null, null, idFacultad, ejecutor);
     }
 
     private UUID uuid(final String sql, final Object... argumentos) {

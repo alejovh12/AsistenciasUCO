@@ -189,7 +189,8 @@ class AdminNotificacionControllerTest {
                         null,
                         null,
                         null,
-                        idTraza
+                        idTraza,
+                        "asistencias"
                 )),
                 0,
                 20,
@@ -205,7 +206,8 @@ class AdminNotificacionControllerTest {
                 .andExpect(jsonPath("$.datos.totalElementos").value(1))
                 .andExpect(jsonPath("$.datos.resumen.pendientes").value(1))
                 .andExpect(jsonPath("$.datos.elementos[0].id").value(idNotif.toString()))
-                .andExpect(jsonPath("$.datos.elementos[0].idCorrelacion").value(idTraza.toString()));
+                .andExpect(jsonPath("$.datos.elementos[0].idCorrelacion").value(idTraza.toString()))
+                .andExpect(jsonPath("$.datos.elementos[0].aplicacion").value("asistencias"));
     }
 
     @Test

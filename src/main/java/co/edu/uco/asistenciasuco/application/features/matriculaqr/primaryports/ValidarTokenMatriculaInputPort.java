@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.application.features.matriculaqr.primaryports;
 import co.edu.uco.asistenciasuco.application.primaryports.InteractorWithReturn;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 /** HU176B (CA-03/CA-05): validacion PUBLICA de un token o PIN; solo devuelve los datos minimos del curso. */
@@ -10,7 +11,15 @@ public interface ValidarTokenMatriculaInputPort
         extends InteractorWithReturn<ValidarTokenMatriculaInputPort.Comando, ValidarTokenMatriculaInputPort.Resultado> {
 
     /** Exactamente uno de {@code token} o {@code pin}. {@code direccionIp} ya viene resuelta por la infraestructura. */
-    record Comando(String token, String pin, String direccionIp) {
+    record Comando(String token, String pin, String direccionIp, UUID idUsuario) {
+        /** Validacion anonima: la lista de programas es la del grupo. */
+        public Comando(final String token, final String pin, final String direccionIp) {
+            this(token, pin, direccionIp, null);
+        }
+    }
+
+    /** DEC-078: programa del grupo que el estudiante puede elegir al matricularse en un grupo compartido. */
+    record ProgramaElegible(UUID idPrograma, String nombre) {
     }
 
     record Resultado(
@@ -19,7 +28,16 @@ public interface ValidarTokenMatriculaInputPort
             String nombreGrupo,
             String nombreDocente,
             Instant fechaExpiracionUtc,
-            int cupoDisponible
+            int cupoDisponible,
+            List<ProgramaElegible> programasElegibles
     ) {
+        public Resultado {
+            programasElegibles = programasElegibles == null ? List.of() : List.copyOf(programasElegibles);
+        }
+
+        public Resultado(final UUID idGrupo, final String nombreAsignatura, final String nombreGrupo,
+                         final String nombreDocente, final Instant fechaExpiracionUtc, final int cupoDisponible) {
+            this(idGrupo, nombreAsignatura, nombreGrupo, nombreDocente, fechaExpiracionUtc, cupoDisponible, List.of());
+        }
     }
 }

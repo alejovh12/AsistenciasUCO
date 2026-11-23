@@ -2,7 +2,7 @@ package co.edu.uco.asistenciasuco.application.secondaryports.academic.command;
 
 import java.util.UUID;
 
-/** Comando de vinculo docente-programa. Exactamente uno de los tres modos viene poblado. {@code passwordHash} nunca es texto plano. */
+/** Comando de vinculo docente-programa. Exactamente uno de los tres modos viene poblado. */
 public record VincularDocenteProgramaCommand(
         UUID idDocente,
         UUID idUsuario,
@@ -13,7 +13,6 @@ public record VincularDocenteProgramaCommand(
         String primerApellido,
         String segundoApellido,
         String correo,
-        String passwordHash,
         UUID idPrograma,
         UUID usuarioEjecutor
 ) {

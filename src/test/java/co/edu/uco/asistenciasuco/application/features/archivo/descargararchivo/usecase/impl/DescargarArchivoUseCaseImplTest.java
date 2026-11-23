@@ -145,10 +145,12 @@ class DescargarArchivoUseCaseImplTest {
                 new FileStoragePort.StorageUnavailableException("minio down", new RuntimeException());
         when(storage.read(anyString())).thenThrow(unavailable);
 
-        final FileStoragePort.StorageUnavailableException thrown = assertThrows(
-                FileStoragePort.StorageUnavailableException.class,
+        // REA-02 (revision final P3): se traduce a la excepcion tipada 503, conservando la causa; no es un 404 ni un 500.
+        final InternalApplicationException thrown = assertThrows(
+                InternalApplicationException.class,
                 () -> useCase.execute(new DescargarArchivoDomain(fileId, owner)));
-        assertEquals(unavailable, thrown);
+        assertEquals("ERR_ALMACENAMIENTO_NO_DISPONIBLE", thrown.getCode());
+        assertEquals(unavailable, thrown.getCause());
     }
 
     @Test

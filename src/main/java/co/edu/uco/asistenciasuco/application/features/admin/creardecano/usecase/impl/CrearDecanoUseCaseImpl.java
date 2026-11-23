@@ -63,21 +63,16 @@ public final class CrearDecanoUseCaseImpl implements CrearDecanoUseCase {
                 : facultadQueryPort.consultarFacultadPorId(domain.getIdFacultad())
                         .orElseThrow(() -> new ResourceNotFoundException(MensajeUsuarioErrorCode.NOF_APP_002));
         final Optional<UUID> idUsuarioPreexistente = resolverUsuarioPreexistente(domain);
-        // IDENT-002: el alta no recibe contrasena; la columna legada guarda un secreto inutilizable.
-        final String passwordParaPersistir = idUsuarioPreexistente.isPresent()
-                ? null
-                : activacion.credencialLegadaInutilizable();
-
         final UUID idDecano = UUID.randomUUID();
         final CrearDecanoResultado resultado;
         if (domain.getFacultadNueva() != null) {
             final var creado = decanoCommandPort.crearDecanoConFacultad(CrearDecanoRepositoryMapper.toCommandConFacultad(
-                    domain, idDecano, passwordParaPersistir
+                    domain, idDecano
             ));
             resultado = new CrearDecanoResultado(creado.idDecano(), creado.idFacultad(), creado.nombreFacultad());
         } else {
             decanoCommandPort.crearDecano(CrearDecanoRepositoryMapper.toCommand(
-                    domain, idDecano, facultad, passwordParaPersistir
+                    domain, idDecano, facultad
             ));
             resultado = new CrearDecanoResultado(idDecano, domain.getIdFacultad(),
                     facultad == null ? null : facultad.nombreFacultad());

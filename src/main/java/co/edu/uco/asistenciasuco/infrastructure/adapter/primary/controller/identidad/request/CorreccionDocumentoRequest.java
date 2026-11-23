@@ -12,7 +12,7 @@ import jakarta.validation.constraints.Positive;
  */
 public abstract class CorreccionDocumentoRequest {
     private UUID idTipoIdentificacion;
-    @Positive(message = "El numero de documento debe ser un numero positivo.", payload = BeanValidationCodes.InvalidFormat.class)
+    @Positive(message = "El número de documento debe ser un número positivo.", payload = BeanValidationCodes.InvalidFormat.class)
     private Integer numeroIdentificacion;
     @Size(max = 500, message = "El motivo no puede superar 500 caracteres.")
     private String motivo;

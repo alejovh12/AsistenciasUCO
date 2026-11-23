@@ -66,6 +66,13 @@ public final class GestionarPeriodoAcademicoUseCaseImpl implements GestionarPeri
         commandPort.eliminarPeriodoAcademico(idPeriodo, usuario);
     }
 
+    @Override
+    public java.time.LocalDate consultarFechaFin(final UUID idPeriodo) {
+        return queryPort.consultarPeriodoAcademicoPorId(idPeriodo)
+                .map(co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PeriodoAcademicoProjection::fechaFin)
+                .orElse(null);
+    }
+
     private static void validar(final PeriodoAcademicoDomain domain) {
         if (ObjectHelper.isNull(domain)) {
             throw new CrosscuttingException("El dominio para guardar periodo academico es obligatorio.");
@@ -73,8 +80,10 @@ public final class GestionarPeriodoAcademicoUseCaseImpl implements GestionarPeri
         if (ObjectHelper.isNull(domain.nombre()) || domain.nombre().isBlank()) {
             throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_019);
         }
-        if (ObjectHelper.isNull(domain.fechaInicio()) || ObjectHelper.isNull(domain.fechaFin())
-                || !domain.fechaInicio().isBefore(domain.fechaFin())) {
+        // SES-GEN-01 B2: el semestre dura siempre 16 semanas; la fecha de fin es opcional y, si falta, la DB la calcula desde el inicio.
+        //   La duracion exacta (PER_011) la valida la DB (fuente unica); aqui solo la forma: inicio obligatorio y, si hay fin, posterior.
+        if (ObjectHelper.isNull(domain.fechaInicio())
+                || (!ObjectHelper.isNull(domain.fechaFin()) && !domain.fechaInicio().isBefore(domain.fechaFin()))) {
             throw new ValidationException(MensajeUsuarioErrorCode.VAL_APP_020);
         }
     }

@@ -29,9 +29,7 @@ class RegistrarEstudianteDomainTest {
                 "",
                 "  ana ",
                 "",
-                " ANA.PEREZ@UCO.EDU.CO ",
-                "Clave123!"
-        );
+                " ANA.PEREZ@UCO.EDU.CO ");
 
         assertEquals(TIPO_IDENTIFICACION, domain.getTipoIdentificacionId());
         assertEquals(123456789, domain.getNumeroIdentificacion());
@@ -47,7 +45,6 @@ class RegistrarEstudianteDomainTest {
         assertEquals(usuario.getPrimerNombre(), domain.getPrimerNombre());
         assertEquals(usuario.getSegundoNombre(), domain.getSegundoNombre());
         assertEquals(usuario.getCorreo(), domain.getCorreo());
-        assertEquals(usuario.getPassword(), domain.getPassword());
         assertFalse(domain.esPendienteDeResolverPorDocumento());
     }
 
@@ -56,7 +53,6 @@ class RegistrarEstudianteDomainTest {
         final RegistrarEstudianteDomain pendiente = RegistrarEstudianteDomain.pendienteDeResolverPorDocumento(
                 TIPO_IDENTIFICACION,
                 123456789,
-                "Clave123!",
                 GRUPO,
                 USUARIO_EJECUTOR
         );
@@ -64,7 +60,6 @@ class RegistrarEstudianteDomainTest {
         assertTrue(pendiente.esPendienteDeResolverPorDocumento());
         assertEquals(TIPO_IDENTIFICACION, pendiente.getTipoIdentificacionId());
         assertEquals(123456789, pendiente.getNumeroIdentificacion());
-        assertEquals("Clave123!", pendiente.getPassword());
         assertEquals(GRUPO, pendiente.getGrupoId());
         assertEquals(USUARIO_EJECUTOR, pendiente.getUsuarioEjecutor());
         assertNull(pendiente.getPrimerApellido());
@@ -98,7 +93,6 @@ class RegistrarEstudianteDomainTest {
                 "Ana",
                 "",
                 "ana.perez@uco.edu.co",
-                "Clave123!",
                 GRUPO,
                 USUARIO_EJECUTOR
         ));
@@ -110,7 +104,6 @@ class RegistrarEstudianteDomainTest {
                 "Ana",
                 "",
                 "ana.perez@uco.edu.co",
-                "Clave123!",
                 GRUPO,
                 USUARIO_EJECUTOR
         ));
@@ -126,7 +119,6 @@ class RegistrarEstudianteDomainTest {
                 "Ana",
                 "",
                 "correo-invalido",
-                "Clave123!",
                 GRUPO,
                 USUARIO_EJECUTOR
         ));
@@ -138,20 +130,18 @@ class RegistrarEstudianteDomainTest {
                 "Ana",
                 "",
                 "ana.perez@uco.edu.co",
-                "Clave123!",
                 null,
                 USUARIO_EJECUTOR
         ));
     }
 
     @Test
-    void rechaza_numero_identificacion_nombres_correo_y_password_igual_que_crear_usuario() {
-        assertMismaValidacionUsuario(TIPO_IDENTIFICACION, 12345, "Perez", "", "Ana", "", "ana.perez@uco.edu.co", "Clave123!");
-        assertMismaValidacionUsuario(TIPO_IDENTIFICACION, 0, "Perez", "", "Ana", "", "ana.perez@uco.edu.co", "Clave123!");
-        assertMismaValidacionUsuario(TIPO_IDENTIFICACION, 123456789, "A".repeat(51), "", "Ana", "", "ana.perez@uco.edu.co", "Clave123!");
-        assertMismaValidacionUsuario(TIPO_IDENTIFICACION, 123456789, "Perez", "", "Ana", "", "correo-invalido", "Clave123!");
-        assertMismaValidacionUsuario(TIPO_IDENTIFICACION, 123456789, "Perez", "", "Ana", "", "ana.perez@uco.edu.co", "sinreglas");
-        assertMismaValidacionUsuario(EMPTY_UUID, 123456789, "Perez", "", "Ana", "", "ana.perez@uco.edu.co", "Clave123!");
+    void rechaza_numero_identificacion_nombres_y_correo_igual_que_crear_usuario() {
+        assertMismaValidacionUsuario(TIPO_IDENTIFICACION, 12345, "Perez", "", "Ana", "", "ana.perez@uco.edu.co");
+        assertMismaValidacionUsuario(TIPO_IDENTIFICACION, 0, "Perez", "", "Ana", "", "ana.perez@uco.edu.co");
+        assertMismaValidacionUsuario(TIPO_IDENTIFICACION, 123456789, "A".repeat(51), "", "Ana", "", "ana.perez@uco.edu.co");
+        assertMismaValidacionUsuario(TIPO_IDENTIFICACION, 123456789, "Perez", "", "Ana", "", "correo-invalido");
+        assertMismaValidacionUsuario(EMPTY_UUID, 123456789, "Perez", "", "Ana", "", "ana.perez@uco.edu.co");
     }
 
     private RegistrarEstudianteDomain domainValido() {
@@ -163,7 +153,6 @@ class RegistrarEstudianteDomainTest {
                 "  ana ",
                 "",
                 " ANA.PEREZ@UCO.EDU.CO ",
-                "Clave123!",
                 GRUPO,
                 USUARIO_EJECUTOR
         );
@@ -176,8 +165,7 @@ class RegistrarEstudianteDomainTest {
             final String segundoApellido,
             final String primerNombre,
             final String segundoNombre,
-            final String correo,
-            final String password
+            final String correo
     ) {
         final ValidationException crearUsuarioException = assertThrows(
                 ValidationException.class,
@@ -188,9 +176,7 @@ class RegistrarEstudianteDomainTest {
                         segundoApellido,
                         primerNombre,
                         segundoNombre,
-                        correo,
-                        password
-                )
+                        correo)
         );
         final ValidationException registrarEstudianteException = assertThrows(
                 ValidationException.class,
@@ -202,7 +188,6 @@ class RegistrarEstudianteDomainTest {
                         primerNombre,
                         segundoNombre,
                         correo,
-                        password,
                         GRUPO,
                         USUARIO_EJECUTOR
                 )

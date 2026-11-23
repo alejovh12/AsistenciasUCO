@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.SmartLifecycle;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,7 @@ public class NotificacionOutboxDispatcher implements SmartLifecycle {
     private final Counter retryCounter;
     private final Counter deadCounter;
     private final Counter lostLeaseCounter;
+    private final Counter skippedLeaseCounter;
     private final Counter purgedCounter;
     private final Timer dispatchTimer;
 
@@ -74,6 +76,9 @@ public class NotificacionOutboxDispatcher implements SmartLifecycle {
                 .register(meterRegistry);
         this.lostLeaseCounter = Counter.builder(METRIC_DISPATCH_TOTAL)
                 .tag(TAG_OUTCOME, "lost_lease")
+                .register(meterRegistry);
+        this.skippedLeaseCounter = Counter.builder(METRIC_DISPATCH_TOTAL)
+                .tag(TAG_OUTCOME, "skipped_lease")
                 .register(meterRegistry);
         this.purgedCounter = Counter.builder("notification.outbox.purged.total")
                 .register(meterRegistry);
@@ -172,6 +177,9 @@ public class NotificacionOutboxDispatcher implements SmartLifecycle {
         }
         try {
             List<NotificacionReservada> lote;
+            // Instante tomado ANTES de reservar: el SP fija el vencimiento despues, por lo que
+            // este calculo es conservador (nunca sobreestima el lease restante).
+            final Instant reservadoEn = clock.instant();
             try {
                 lote = repository.reservar(properties.batchSize(), properties.lease(), instanceId());
             } catch (final Exception e) {
@@ -183,17 +191,46 @@ public class NotificacionOutboxDispatcher implements SmartLifecycle {
                 return;
             }
 
-            for (final NotificacionReservada reservada : lote) {
+            final Instant venceEn = reservadoEn.plus(properties.lease());
+            Duration maxEnvio = Duration.ZERO;
+            for (int i = 0; i < lote.size(); i++) {
                 if (!running.get() && workerThread != null && Thread.currentThread() == workerThread) {
                     break;
                 }
-                procesarNotificacion(reservada);
+                final Duration margen = margenSeguridad(maxEnvio);
+                final Duration restante = Duration.between(clock.instant(), venceEn);
+                if (restante.compareTo(margen) < 0) {
+                    final int omitidas = lote.size() - i;
+                    skippedLeaseCounter.increment(omitidas);
+                    LOGGER.warn("Lease del lote por agotarse (restante={}ms, margen={}ms): se omiten {} notificaciones "
+                                    + "reservadas; se reenviaran en el siguiente ciclo sin contar intento.",
+                            restante.toMillis(), margen.toMillis(), omitidas);
+                    break;
+                }
+                final long t0 = clock.millis();
+                procesarNotificacion(lote.get(i));
+                final Duration duracion = Duration.ofMillis(Math.max(0, clock.millis() - t0));
+                if (duracion.compareTo(maxEnvio) > 0) {
+                    maxEnvio = duracion;
+                }
             }
         } finally {
             if (establishedCorrelation) {
                 CorrelationIdContext.clear();
             }
         }
+    }
+
+    /**
+     * Margen minimo de lease que debe quedar antes de enviar: el mayor entre 5 s (acotado a lease/4)
+     * y dos veces el envio mas lento observado en el lote, para que envio + marcarEntregada quepan.
+     */
+    private Duration margenSeguridad(final Duration maxEnvio) {
+        final Duration base = Duration.ofSeconds(5).compareTo(properties.lease().dividedBy(4)) < 0
+                ? Duration.ofSeconds(5)
+                : properties.lease().dividedBy(4);
+        final Duration adaptativo = maxEnvio.multipliedBy(2);
+        return adaptativo.compareTo(base) > 0 ? adaptativo : base;
     }
 
     private void procesarNotificacion(final NotificacionReservada reservada) {

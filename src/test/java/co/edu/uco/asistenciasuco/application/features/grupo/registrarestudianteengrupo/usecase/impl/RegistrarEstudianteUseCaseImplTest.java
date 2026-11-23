@@ -24,11 +24,9 @@ import co.edu.uco.asistenciasuco.application.secondaryports.repository.projectio
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.GrupoRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.RegistrarEstudianteRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.UsuarioIdentidadRepositoryProjection;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
 import org.junit.jupiter.api.Test;
 
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -68,10 +66,9 @@ class RegistrarEstudianteUseCaseImplTest {
     // -------------------------------------------------------------------------
 
     @Test
-    void caso_A_F_usuario_nuevo_persiste_un_secreto_inutilizable_e_identity_no_recibe_contrasena() {
+    void caso_A_F_usuario_nuevo_crea_la_cuenta_e_identity_no_recibe_contrasena() {
         final AtomicReference<RegistrarEstudianteRepositoryDTO> dtoCapturado = new AtomicReference<>();
         final AtomicInteger spLlamadas = new AtomicInteger();
-        final FakePasswordEncoderPort passwordEncoderPort = new FakePasswordEncoderPort();
         final FakeIdentityProviderPort identityProviderPort = FakeIdentityProviderPort.exitoso(USUARIO_NUEVO_ID, true);
         final RegistrarEstudianteUseCaseImpl useCase = useCase(
                 grupoRepositoryPort(dto -> {
@@ -80,7 +77,6 @@ class RegistrarEstudianteUseCaseImplTest {
                     return new RegistrarEstudianteRepositoryProjection("Estudiante registrado.");
                 }),
                 usuarioRepositoryPort(null, Arrays.asList(null, USUARIO_NUEVO_ID)),
-                passwordEncoderPort,
                 identityProviderPort
         );
 
@@ -93,11 +89,6 @@ class RegistrarEstudianteUseCaseImplTest {
         assertEquals(GRUPO, dtoCapturado.get().getGrupoId());
         assertEquals("ana.perez@uco.edu.co", dtoCapturado.get().getCorreo());
 
-        // DB recibe el hash de un secreto aleatorio, nunca la clave que un cliente anterior pudiera enviar.
-        assertEquals(1, passwordEncoderPort.encodeCount.get());
-        assertNotEquals("Clave123!", passwordEncoderPort.rawPassword.get());
-        assertTrue(passwordEncoderPort.rawPassword.get().length() >= 40);
-        assertEquals("HASH_CONTROLADO", dtoCapturado.get().getPassword());
 
         // Identity llamado exactamente una vez, sin credencial y con la cuenta pendiente de activacion.
         assertEquals(1, identityProviderPort.crearCuentaCount.get());
@@ -117,7 +108,6 @@ class RegistrarEstudianteUseCaseImplTest {
         final RegistrarEstudianteUseCaseImpl useCase = useCase(
                 grupoRepositoryPort(dto -> new RegistrarEstudianteRepositoryProjection("Estudiante registrado.")),
                 usuarioRepositoryPort(null, Arrays.asList(null, USUARIO_NUEVO_ID)),
-                new FakePasswordEncoderPort(),
                 identityProviderPort
         );
 
@@ -141,7 +131,6 @@ class RegistrarEstudianteUseCaseImplTest {
                     throw new ConflictException("Matricula duplicada.");
                 }),
                 usuarioRepositoryPort(null, Arrays.asList((UUID) null)),
-                new FakePasswordEncoderPort(),
                 identityProviderPort
         );
 
@@ -157,9 +146,8 @@ class RegistrarEstudianteUseCaseImplTest {
     // -------------------------------------------------------------------------
 
     @Test
-    void caso_C_conflicto_identidad_pre_command_no_llama_sp_ni_encoder_ni_identity() {
+    void caso_C_conflicto_identidad_pre_command_no_llama_sp_ni_identity() {
         final AtomicBoolean spEjecutado = new AtomicBoolean(false);
-        final FakePasswordEncoderPort passwordEncoderPort = new FakePasswordEncoderPort();
         final FakeIdentityProviderPort identityProviderPort = FakeIdentityProviderPort.exitoso(USUARIO_NUEVO_ID, true);
         final UUID usuarioCorreo = UUID.fromString("aaaaaaaa-e3cd-485c-b275-47e7b731e18c");
         final UUID usuarioDocumento = UUID.fromString("bbbbbbbb-e3cd-485c-b275-47e7b731e18c");
@@ -169,7 +157,6 @@ class RegistrarEstudianteUseCaseImplTest {
                     return new RegistrarEstudianteRepositoryProjection("Estudiante registrado.");
                 }),
                 usuarioRepositoryPort(usuarioCorreo, List.of(usuarioDocumento)),
-                passwordEncoderPort,
                 identityProviderPort
         );
 
@@ -178,23 +165,21 @@ class RegistrarEstudianteUseCaseImplTest {
 
         assertEquals("ERR_IDENTIDAD_USUARIO_CONFLICTO", exception.getCode());
         assertFalse(spEjecutado.get());
-        assertEquals(0, passwordEncoderPort.encodeCount.get());
         assertEquals(0, identityProviderPort.crearCuentaCount.get());
     }
 
     @Test
-    void conflicto_identidad_solo_correo_presente_no_llama_sp_ni_encoder_ni_identity() {
+    void conflicto_identidad_solo_correo_presente_no_llama_sp_ni_identity() {
         assertConflictoIdentidadSinEfectos(UUID.fromString("aaaaaaaa-e3cd-485c-b275-47e7b731e18c"), Arrays.asList((UUID) null));
     }
 
     @Test
-    void conflicto_identidad_solo_documento_presente_no_llama_sp_ni_encoder_ni_identity() {
+    void conflicto_identidad_solo_documento_presente_no_llama_sp_ni_identity() {
         assertConflictoIdentidadSinEfectos(null, List.of(UUID.fromString("bbbbbbbb-e3cd-485c-b275-47e7b731e18c")));
     }
 
     private void assertConflictoIdentidadSinEfectos(final UUID usuarioPorCorreo, final List<UUID> porIdentificacion) {
         final AtomicBoolean spEjecutado = new AtomicBoolean(false);
-        final FakePasswordEncoderPort passwordEncoderPort = new FakePasswordEncoderPort();
         final FakeIdentityProviderPort identityProviderPort = FakeIdentityProviderPort.exitoso(USUARIO_NUEVO_ID, true);
         final RegistrarEstudianteUseCaseImpl useCase = useCase(
                 grupoRepositoryPort(dto -> {
@@ -202,7 +187,6 @@ class RegistrarEstudianteUseCaseImplTest {
                     return new RegistrarEstudianteRepositoryProjection("Estudiante registrado.");
                 }),
                 usuarioRepositoryPort(usuarioPorCorreo, porIdentificacion),
-                passwordEncoderPort,
                 identityProviderPort
         );
 
@@ -211,18 +195,16 @@ class RegistrarEstudianteUseCaseImplTest {
 
         assertEquals("ERR_IDENTIDAD_USUARIO_CONFLICTO", exception.getCode());
         assertFalse(spEjecutado.get());
-        assertEquals(0, passwordEncoderPort.encodeCount.get());
         assertEquals(0, identityProviderPort.crearCuentaCount.get());
     }
 
     // -------------------------------------------------------------------------
-    // Caso G: usuario DB existente — encoder no invocado, password DB null, Identity sin contrasena
+    // Caso G: usuario DB existente — Identity sin contrasena
     // -------------------------------------------------------------------------
 
     @Test
-    void caso_G_usuario_existente_no_invoca_encoder_password_db_null_e_identity_no_recibe_contrasena() {
+    void caso_G_usuario_existente_e_identity_no_recibe_contrasena() {
         final AtomicReference<RegistrarEstudianteRepositoryDTO> dtoCapturado = new AtomicReference<>();
-        final FakePasswordEncoderPort passwordEncoderPort = new FakePasswordEncoderPort();
         final FakeIdentityProviderPort identityProviderPort = FakeIdentityProviderPort.exitoso(USUARIO_NUEVO_ID, false);
         final UUID usuarioExistente = UUID.fromString("aaaaaaaa-e3cd-485c-b275-47e7b731e18c");
         final RegistrarEstudianteUseCaseImpl useCase = useCase(
@@ -231,14 +213,10 @@ class RegistrarEstudianteUseCaseImplTest {
                     return new RegistrarEstudianteRepositoryProjection("Estudiante registrado.");
                 }),
                 usuarioRepositoryPort(usuarioExistente, List.of(usuarioExistente, usuarioExistente)),
-                passwordEncoderPort,
                 identityProviderPort
         );
 
         useCase.execute(domainValido());
-
-        assertEquals(0, passwordEncoderPort.encodeCount.get());
-        assertNull(dtoCapturado.get().getPassword());
         // IDENT-002: la clave que traiga el dominio (cliente anterior) se ignora; una cuenta existente no cambia.
         assertNull(identityProviderPort.dtoCapturado.get().passwordInicial());
         assertEquals(1, identityProviderPort.crearCuentaCount.get());
@@ -252,7 +230,7 @@ class RegistrarEstudianteUseCaseImplTest {
         final RegistrarEstudianteUseCaseImpl useCase = useCase(
                 grupoRepositoryPort(dto -> new RegistrarEstudianteRepositoryProjection("Estudiante registrado.")),
                 usuarioRepositoryPort(existente, List.of(existente, existente), "viejo@uco.edu.co"),
-                new FakePasswordEncoderPort(), identity
+                identity
         );
 
         useCase.execute(request);
@@ -269,7 +247,7 @@ class RegistrarEstudianteUseCaseImplTest {
         final RegistrarEstudianteUseCaseImpl useCase = useCase(
                 grupoRepositoryPort(dto -> new RegistrarEstudianteRepositoryProjection("Estudiante registrado.")),
                 usuarioRepositoryPort(null, Arrays.asList(null, USUARIO_NUEVO_ID), "ana.perez@uco.edu.co"),
-                new FakePasswordEncoderPort(), identity
+                identity
         );
 
         useCase.execute(domainValido());
@@ -291,7 +269,6 @@ class RegistrarEstudianteUseCaseImplTest {
                     return new RegistrarEstudianteRepositoryProjection("Estudiante registrado.");
                 }),
                 usuarioRepositoryPort(null, Arrays.asList(null, USUARIO_NUEVO_ID)),
-                new FakePasswordEncoderPort(),
                 identityProviderPort
         );
 
@@ -304,6 +281,25 @@ class RegistrarEstudianteUseCaseImplTest {
         assertEquals(1, identityProviderPort.crearCuentaCount.get());
         assertEquals(0, identityProviderPort.eliminarCuentaCount.get());
         assertNotEquals(null, exception.getCause());
+    }
+
+    @Test
+    void conflicto_de_identidad_en_cuenta_nueva_es_409_con_unicidad_de_correo_y_no_500() {
+        final FakeIdentityProviderPort identityProviderPort = new FakeIdentityProviderPort(() -> {
+            throw IdentityProviderPort.IdentityProviderException.conflicto("usuario huerfano en el proveedor");
+        });
+        final RegistrarEstudianteUseCaseImpl useCase = useCase(
+                grupoRepositoryPort(dto -> new RegistrarEstudianteRepositoryProjection("Estudiante registrado.")),
+                usuarioRepositoryPort(null, Arrays.asList(null, USUARIO_NUEVO_ID)),
+                identityProviderPort
+        );
+
+        final var domainValido = domainValido();
+        final var exception = assertThrows(co.edu.uco.asistenciasuco.application.exception.business.ConflictException.class,
+                () -> useCase.execute(domainValido));
+
+        assertEquals("ERR_UNICIDAD_CORREO", exception.getCode());
+        assertEquals(0, identityProviderPort.eliminarCuentaCount.get());
     }
 
     /**
@@ -322,7 +318,6 @@ class RegistrarEstudianteUseCaseImplTest {
                     return new RegistrarEstudianteRepositoryProjection("Estudiante registrado.");
                 }),
                 usuarioRepositoryPort(existente, List.of(existente, existente)),
-                new FakePasswordEncoderPort(),
                 identityProviderPort
         );
 
@@ -348,7 +343,6 @@ class RegistrarEstudianteUseCaseImplTest {
                     return new RegistrarEstudianteRepositoryProjection("Estudiante registrado.");
                 }),
                 usuarioRepositoryPort(null, Arrays.asList(null, null)),
-                new FakePasswordEncoderPort(),
                 identityProviderPort
         );
 
@@ -368,7 +362,6 @@ class RegistrarEstudianteUseCaseImplTest {
         final RegistrarEstudianteUseCaseImpl useCase = useCase(
                 grupoRepositoryPort(dto -> new RegistrarEstudianteRepositoryProjection("Estudiante registrado.")),
                 usuarioRepositoryPort(null, Arrays.asList(null, USUARIO_NUEVO_ID)),
-                new FakePasswordEncoderPort(),
                 FakeIdentityProviderPort.exitoso(USUARIO_NUEVO_ID, true)
         );
 
@@ -395,7 +388,6 @@ class RegistrarEstudianteUseCaseImplTest {
                     return new RegistrarEstudianteRepositoryProjection("Estudiante registrado.");
                 }),
                 usuarioRepositoryPort(null, Arrays.asList(null, USUARIO_NUEVO_ID)),
-                new FakePasswordEncoderPort(),
                 identityProviderPort,
                 avisos::add
         );
@@ -417,7 +409,6 @@ class RegistrarEstudianteUseCaseImplTest {
         final RegistrarEstudianteUseCaseImpl useCase = useCase(
                 grupoRepositoryPort(dto -> new RegistrarEstudianteRepositoryProjection("Estudiante registrado.")),
                 usuarioRepositoryPort(null, Arrays.asList(null, USUARIO_NUEVO_ID)),
-                new FakePasswordEncoderPort(),
                 identityProviderPort,
                 avisos::add
         );
@@ -447,7 +438,6 @@ class RegistrarEstudianteUseCaseImplTest {
         final RegistrarEstudianteUseCaseImpl useCase = useCase(
                 grupoRepositoryPort(dto -> new RegistrarEstudianteRepositoryProjection("Estudiante registrado.")),
                 usuarioRepositoryPort(USUARIO_NUEVO_ID, Arrays.asList(USUARIO_NUEVO_ID, USUARIO_NUEVO_ID), "ana.perez@gmail.com"),
-                new FakePasswordEncoderPort(),
                 identityProviderPort,
                 avisos::add
         );
@@ -464,18 +454,14 @@ class RegistrarEstudianteUseCaseImplTest {
     void IDENT002_usuario_existente_sin_cuenta_en_el_proveedor_recibe_el_aviso_de_activacion() {
         final FakeIdentityProviderPort identityProviderPort = FakeIdentityProviderPort.exitoso(USUARIO_NUEVO_ID, true);
         final List<Notificacion> avisos = new ArrayList<>();
-        final FakePasswordEncoderPort passwordEncoderPort = new FakePasswordEncoderPort();
         final RegistrarEstudianteUseCaseImpl useCase = useCase(
                 grupoRepositoryPort(dto -> new RegistrarEstudianteRepositoryProjection("Estudiante registrado.")),
                 usuarioRepositoryPort(USUARIO_NUEVO_ID, Arrays.asList(USUARIO_NUEVO_ID, USUARIO_NUEVO_ID)),
-                passwordEncoderPort,
                 identityProviderPort,
                 avisos::add
         );
 
         useCase.execute(domainValido());
-
-        assertEquals(0, passwordEncoderPort.encodeCount.get());
         assertEquals(1, avisos.size());
         assertEquals(Notificacion.TIPO_ACTIVACION_CUENTA, avisos.getFirst().tipo());
         assertEquals(USUARIO_NUEVO_ID, avisos.getFirst().destinatarios().getFirst().idUsuario());
@@ -487,7 +473,6 @@ class RegistrarEstudianteUseCaseImplTest {
         final RegistrarEstudianteUseCaseImpl useCase = useCase(
                 grupoRepositoryPort(dto -> new RegistrarEstudianteRepositoryProjection("Estudiante registrado.")),
                 usuarioRepositoryPort(null, Arrays.asList(null, USUARIO_NUEVO_ID)),
-                new FakePasswordEncoderPort(),
                 identityProviderPort,
                 aviso -> {
                     throw new IllegalStateException("Cola de notificaciones caida.");
@@ -506,7 +491,6 @@ class RegistrarEstudianteUseCaseImplTest {
         final RegistrarEstudianteUseCaseImpl useCase = useCase(
                 grupoRepositoryPort(dto -> new RegistrarEstudianteRepositoryProjection("Estudiante registrado.")),
                 usuarioRepositoryPort(null, Arrays.asList(null, USUARIO_NUEVO_ID)),
-                new FakePasswordEncoderPort(),
                 FakeIdentityProviderPort.fallido(),
                 avisos::add
         );
@@ -521,16 +505,14 @@ class RegistrarEstudianteUseCaseImplTest {
     private static RegistrarEstudianteUseCaseImpl useCase(
             final GrupoRepositoryPort grupoRepositoryPort,
             final UsuarioRepositoryPort usuarioRepositoryPort,
-            final PasswordEncoderPort passwordEncoderPort,
             final IdentityProviderPort identityProviderPort
     ) {
-        return useCase(grupoRepositoryPort, usuarioRepositoryPort, passwordEncoderPort, identityProviderPort, aviso -> { });
+        return useCase(grupoRepositoryPort, usuarioRepositoryPort, identityProviderPort, aviso -> { });
     }
 
     private static RegistrarEstudianteUseCaseImpl useCase(
             final GrupoRepositoryPort grupoRepositoryPort,
             final UsuarioRepositoryPort usuarioRepositoryPort,
-            final PasswordEncoderPort passwordEncoderPort,
             final IdentityProviderPort identityProviderPort,
             final NotificacionPort notificacionPort
     ) {
@@ -569,7 +551,7 @@ class RegistrarEstudianteUseCaseImplTest {
         return new RegistrarEstudianteUseCaseImpl(
                 grupoRepositoryPort, usuarioRepositoryPort, identityProviderPort,
                 new CorreoInstitucionalPolicy(parametros, mensajes),
-                new ActivacionCuentaService(notificacionPort, passwordEncoderPort, new SecureRandom())
+                new ActivacionCuentaService(notificacionPort)
         );
     }
 
@@ -586,7 +568,6 @@ class RegistrarEstudianteUseCaseImplTest {
                 "Ana",
                 "Maria",
                 correo,
-                "Clave123!",
                 GRUPO,
                 USUARIO_EJECUTOR
         );
@@ -686,24 +667,6 @@ class RegistrarEstudianteUseCaseImplTest {
     private interface RegistrarEstudianteExecutor {
 
         RegistrarEstudianteRepositoryProjection registrarEstudiante(RegistrarEstudianteRepositoryDTO dto);
-    }
-
-    private static final class FakePasswordEncoderPort implements PasswordEncoderPort {
-
-        private final AtomicInteger encodeCount = new AtomicInteger();
-        private final AtomicReference<String> rawPassword = new AtomicReference<>();
-
-        @Override
-        public String encode(final String rawPassword) {
-            encodeCount.incrementAndGet();
-            this.rawPassword.set(rawPassword);
-            return "HASH_CONTROLADO";
-        }
-
-        @Override
-        public boolean matches(final String rawPassword, final String encodedPassword) {
-            return "Clave123!".equals(rawPassword) && "HASH_CONTROLADO".equals(encodedPassword);
-        }
     }
 
     private static final class FakeIdentityProviderPort implements IdentityProviderPort {

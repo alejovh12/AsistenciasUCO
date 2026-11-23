@@ -32,7 +32,7 @@ public class EstudianteProgramaJpaRepository implements EstudianteProgramaQueryP
             order by ei.nombreCompleto, ep.id
             """;
 
-    /** CULM-001 B2NM: columnas del SP en modo listado: id, idUsuario, tipoIdentificacionId, numeroIdentificacion, primerApellido, segundoApellido, primerNombre, segundoNombre, nombreCompleto, correo, estaActivoUsuario, totalRegistros. */
+    /** CULM-001 B2NM: columnas del SP en modo listado: id, idUsuario, tipoIdentificacionId, numeroIdentificacion, primerApellido, segundoApellido, primerNombre, segundoNombre, nombreCompleto, correo, estaActivoUsuario, totalRegistros y, desde la migracion 63, idPrograma, nombrePrograma y semestreActual. */
     static final String SQL_DIRECTORIO = """
             EXEC dbo.usp_consultar_directorio_estudiantes_paginado
                  @idUsuarioEjecutor = :idUsuarioEjecutor,
@@ -43,7 +43,7 @@ public class EstudianteProgramaJpaRepository implements EstudianteProgramaQueryP
                  @numeroPagina = :numeroPagina,
                  @tamanoPagina = :tamanoPagina
             """;
-    static final int COLUMNAS_DIRECTORIO = 12;
+    static final int COLUMNAS_DIRECTORIO = 15;
 
     private final EntityManager entityManager;
 
@@ -87,11 +87,20 @@ public class EstudianteProgramaJpaRepository implements EstudianteProgramaQueryP
                     throw new IllegalStateException("usp_consultar_directorio_estudiantes_paginado debe devolver " + COLUMNAS_DIRECTORIO + " columnas.");
                 }
                 lista.add(new EstudianteProgramaProjection(uuid(f[0]), uuid(f[1]), f[3] == null ? null : String.valueOf(f[3]), f[8] == null ? null : f[8].toString(),
-                        f[9] == null ? null : f[9].toString(), idPrograma, null));
+                        f[9] == null ? null : f[9].toString(), uuid(f[12]), f[13] == null ? null : f[13].toString(),
+                        f[14] == null ? null : ((Number) f[14]).intValue(),
+                        booleano(f[10])));
                 total = ((Number) f[11]).longValue();
             }
             return new PaginaEstudiantesProgramaProjection(lista, total);
         });
+    }
+
+    private static Boolean booleano(final Object valor) {
+        if (valor == null) {
+            return null;
+        }
+        return valor instanceof Boolean b ? b : ((Number) valor).intValue() != 0;
     }
 
     private static UUID uuid(final Object valor) {
@@ -109,6 +118,7 @@ public class EstudianteProgramaJpaRepository implements EstudianteProgramaQueryP
                 row.nombreCompleto(),
                 row.correo(),
                 row.idPrograma(),
-                row.nombrePrograma());
+                row.nombrePrograma(),
+                null);
     }
 }

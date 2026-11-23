@@ -57,7 +57,6 @@ class RegistrarEstudianteInteractorTest {
                 "Carlos",
                 "Andres",
                 "carlos.perez@uco.edu.co",
-                "Temporal2026*",
                 GRUPO_ID,
                 USUARIO_EJECUTOR
         );

@@ -32,16 +32,6 @@ public final class PasswordRegistroRule {
         return password;
     }
 
-    public static String resolverCredencialNueva(
-            final String password,
-            final Integer numeroIdentificacion
-    ) {
-        if (password == null) {
-            throw new ValidationException(UsuarioErrorCode.ERR_PASSWORD_REQUERIDO);
-        }
-        return resolver(password, numeroIdentificacion);
-    }
-
     private static void validarPasswordExplicito(final String valor) {
         validarLongitud(valor);
         if (TextHelper.isNullOrBlank(valor) || TextHelper.containsWhitespace(valor) || !cumplePolitica(valor)) {

@@ -15,4 +15,6 @@ public interface GestionarPeriodoAcademicoUseCase {
     void actualizar(PeriodoAcademicoDomain domain);
 
     void eliminar(UUID idPeriodo, UUID usuario);
+
+    java.time.LocalDate consultarFechaFin(UUID idPeriodo);
 }

@@ -79,7 +79,7 @@ class GlobalExceptionHandlerTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("ERR_CORREO_FORMATO_INVALIDO", response.getBody().code());
-        assertEquals("Ingrese un correo valido, por ejemplo nombre@dominio.com.", response.getBody().message());
+        assertEquals("Ingrese un correo válido, por ejemplo nombre@dominio.com.", response.getBody().message());
         assertEquals("/api/prueba", response.getBody().path());
         assertEquals(CORRELATION_ID, response.getBody().correlationId());
     }
@@ -95,7 +95,7 @@ class GlobalExceptionHandlerTest {
 
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
         assertEquals("ERR_UNICIDAD_CORREO", response.getBody().code());
-        assertEquals("El correo ya se encuentra registrado.", response.getBody().message());
+        assertEquals("El correo electronico ya se encuentra registrado.", response.getBody().message());
         assertEquals(CORRELATION_ID, response.getBody().correlationId());
     }
 
@@ -110,7 +110,7 @@ class GlobalExceptionHandlerTest {
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertEquals("ERR_ESTUDIANTE_NO_EXISTE", response.getBody().code());
-        assertEquals("El estudiante consultado no existe.", response.getBody().message());
+        assertEquals("El estudiante especificado no existe.", response.getBody().message());
         assertEquals(CORRELATION_ID, response.getBody().correlationId());
         assertFalse(response.getBody().message().contains("Detalle tecnico"));
     }
@@ -268,7 +268,7 @@ class GlobalExceptionHandlerTest {
                 request()
         );
 
-        assertEquals("Ingrese un correo valido, por ejemplo nombre@dominio.com.", response.getBody().message());
+        assertEquals("Ingrese un correo válido, por ejemplo nombre@dominio.com.", response.getBody().message());
     }
 
     @Test
@@ -282,7 +282,7 @@ class GlobalExceptionHandlerTest {
         );
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Ingrese un correo valido, por ejemplo nombre@dominio.com.", response.getBody().message());
+        assertEquals("Ingrese un correo válido, por ejemplo nombre@dominio.com.", response.getBody().message());
     }
 
     @Test

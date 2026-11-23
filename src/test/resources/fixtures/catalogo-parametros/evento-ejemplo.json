@@ -1,0 +1,15 @@
+{
+  "source": "catalogo-parametros",
+  "eventType": "MetadataUpdated",
+  "resource": "metadatos",
+  "operation": "UPDATED",
+  "resourceName": "RECLAMO.ESTADO_RETIRADO",
+  "resourceValue": "X-int004",
+  "resourceId": "0ddead3e-4b6e-410a-ba19-d5876b33263f",
+  "parentId": "ea967d05-3e7e-4ce0-ae83-8f0970fad3bc",
+  "applicationId": "0d24a3a4-8c9d-4ac3-9b1a-a97ef16ea186",
+  "environmentId": "00000000-0000-0000-0000-000000000011",
+  "eventId": "355f30cf-be31-4833-be7d-5667b0345601",
+  "schemaVersion": 3,
+  "occurredAt": "2026-11-23T03:50:12.246789882Z"
+}

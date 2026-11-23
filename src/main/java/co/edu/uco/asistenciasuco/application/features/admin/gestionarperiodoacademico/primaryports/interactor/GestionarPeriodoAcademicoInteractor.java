@@ -41,4 +41,9 @@ public final class GestionarPeriodoAcademicoInteractor implements GestionarPerio
     public void eliminar(final UUID idPeriodo, final UUID usuario) {
         useCase.eliminar(idPeriodo, usuario);
     }
+
+    @Override
+    public java.time.LocalDate consultarFechaFin(final UUID idPeriodo) {
+        return useCase.consultarFechaFin(idPeriodo);
+    }
 }

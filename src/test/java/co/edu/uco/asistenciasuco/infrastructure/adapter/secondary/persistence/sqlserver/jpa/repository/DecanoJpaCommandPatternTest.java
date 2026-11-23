@@ -68,7 +68,7 @@ class DecanoJpaCommandPatternTest {
         verify(query).setParameter("numeroIdentificacion", 7);
         verify(query).setParameter("idFacultad", FACULTAD);
         verify(query).setParameter("nombreFacultad", "FACULTAD PRUEBA");
-        verify(query).setParameter("password", "Clave123!");
+        verify(query).setParameter("password", (Object) null);
         verify(query).setParameter("idCorrelacion", CORRELATION);
         verify(query).setParameter("idUsuarioEjecutor", EJECUTOR);
         verify(query).setParameter(org.mockito.ArgumentMatchers.eq("idTipoIdIdentificacion"), any());
@@ -101,7 +101,7 @@ class DecanoJpaCommandPatternTest {
 
     private static CrearDecanoCommand comando() {
         return new CrearDecanoCommand(DECANO, TIPO_IDENTIFICACION, 7, "ANA", null, "PEREZ", null,
-                "ana@example.test", FACULTAD, "FACULTAD PRUEBA", "Clave123!", EJECUTOR);
+                "ana@example.test", FACULTAD, "FACULTAD PRUEBA", EJECUTOR);
     }
 }
 

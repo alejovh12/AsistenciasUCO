@@ -12,7 +12,12 @@ spring:
     hikari:
       maximum-pool-size: ${SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE:10}
       minimum-idle: ${SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE:10}
-      connection-timeout: ${SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT:30000}
+      # Con SQL Server caido la API debe responder 503 ERR_BD_NO_DISPONIBLE pronto: espera maxima de una conexion del pool
+      # (ms, minimo 250) y tiempo de login del driver (s) acotados a 5; configurables por variable. Ver
+      # docs/architecture/degradacion-por-dependencia.md.
+      connection-timeout: ${SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT:5000}
+      data-source-properties:
+        loginTimeout: ${SPRING_DATASOURCE_LOGIN_TIMEOUT_SECONDS:5}
   # LB-008 / JPA-02A: bootstrap JPA estandar de Spring Boot. Hibernate no administra el schema;
   # ddl-auto permanece deshabilitado y el acceso a metadata JDBC se controla desde la configuracion JPA.
   jpa:
@@ -74,6 +79,20 @@ server:
 asistencias:
   swagger-ui:
     enabled: ${ASISTENCIAS_SWAGGER_UI_ENABLED:false}
+  # F4: Servicio de Notificaciones UCO (plantillas, cola y envio SMTP viven alla; ver Complementos/Notificaciones). Sin URL el
+  # canal del outbox es el de log y la administracion de plantillas responde 503. La clave es un secreto: nunca en el repositorio.
+  notificaciones:
+    service:
+      url: ${NOTIFICACIONES_SERVICE_URL:}
+      api-key: ${NOTIFICACIONES_API_KEY:}
+      connect-timeout: ${NOTIFICACIONES_SERVICE_CONNECT_TIMEOUT:2s}
+      read-timeout: ${NOTIFICACIONES_SERVICE_READ_TIMEOUT:10s}
+      aplicacion: ${NOTIFICACIONES_APLICACION:asistencias}
+      idioma: ${NOTIFICACIONES_IDIOMA:es}
+      # Solo se envia a correos confirmados (verificacion y activacion son la excepcion). Alias heredado: SMTP_NOTIFICATION_*.
+      require-confirmed-email: ${NOTIFICACIONES_REQUIRE_CONFIRMED_EMAIL:${SMTP_NOTIFICATION_REQUIRE_CONFIRMED_EMAIL:false}}
+      # URL publica del frontend para armar los enlaces de verificacion y activacion (vacio => sin enlace).
+      platform-url: ${NOTIFICACIONES_PLATFORM_URL:${SMTP_NOTIFICATION_PLATFORM_URL:}}
 
 management:
   # CULM-001 D.9-a (F-TRX-020): Actuator y Prometheus salen por un puerto de gestion propio, solo en loopback; el puerto de la
@@ -119,7 +138,7 @@ management:
         enabled: false
   tracing:
     sampling:
-      probability: ${MANAGEMENT_TRACING_SAMPLING_PROBABILITY:1.0}
+      probability: ${MANAGEMENT_TRACING_SAMPLING_PROBABILITY:0.1}
     export:
       otlp:
         enabled: true
@@ -195,6 +214,12 @@ resilience4j:
         base-config: default
         wait-duration-in-open-state: ${RESILIENCE_CB_STORAGE_WAIT_DURATION_IN_OPEN_STATE:30s}
         slow-call-duration-threshold: ${RESILIENCE_CB_STORAGE_SLOW_CALL_DURATION_THRESHOLD:10s}
+      # F4: llamadas al Servicio de Notificaciones. Con el breaker abierto el canal informa no disponible (el despachador no
+      # consume intentos) y la administracion responde 503. Un 4xx no cuenta como falla.
+      notificacionesServicio:
+        base-config: default
+        wait-duration-in-open-state: ${RESILIENCE_CB_NOTIFICACIONES_WAIT_DURATION_IN_OPEN_STATE:30s}
+        slow-call-duration-threshold: ${RESILIENCE_CB_NOTIFICACIONES_SLOW_CALL_DURATION_THRESHOLD:8s}
       malwareScan:
         base-config: default
         wait-duration-in-open-state: ${RESILIENCE_CB_MALWARE_SCAN_WAIT_DURATION_IN_OPEN_STATE:30s}
@@ -266,13 +291,25 @@ app:
     # Solo aplica con app.adapters.parameter-catalog.provider=catalogoparametros.
     catalogo-parametros:
       base-url: ${CATALOGO_PARAMETROS_BASE_URL:http://localhost:8081/catalogo-parametros/api/v1}
-      token-id: ${CATALOGO_PARAMETROS_TOKEN_ID:}
-      secreto: ${CATALOGO_PARAMETROS_SECRETO:}
+      # INT-004: lectura M2M (client_credentials contra Security Baseline). El Catalogo resuelve aplicacion y ambiente desde el
+      # client_id; el secreto sale del baul (asistencias-catalogo-parametros-client-secret) o del .env local; nunca de Git.
+      token-uri: ${CATALOGO_PARAMETROS_M2M_TOKEN_URI:http://localhost:19090/realms/security-baseline/protocol/openid-connect/token}
+      client-id: ${CATALOGO_PARAMETROS_M2M_CLIENT_ID:}
+      client-secret: ${CATALOGO_PARAMETROS_M2M_CLIENT_SECRET:}
       application-id: ${CATALOGO_PARAMETROS_APPLICATION_ID:}
       environment-id: ${CATALOGO_PARAMETROS_ENVIRONMENT_ID:}
       timeout: ${CATALOGO_PARAMETROS_TIMEOUT:10s}  # la lectura fria del componente tarda varios segundos
       cache-ttl: ${CATALOGO_PARAMETROS_CACHE_TTL:5m}   # 0 desactiva la cache; vencida se sirve y se refresca en segundo plano
       separador: ${CATALOGO_PARAMETROS_SEPARADOR:.}    # entre grupo y clave dentro de parametro.nombre
+      # INT-004: eventos de cambio por Pulsar -> cache y dbo.CatalogoParametro (usp_sincronizar_parametro_catalogo_externo).
+      # Una sola bandera gobierna la suscripcion y la reconciliacion de arranque (una lectura M2M, sin sondeo).
+      events:
+        enabled: ${CATALOGO_PARAMETROS_EVENTS_ENABLED:true}
+        service-url: ${CATALOGO_PARAMETROS_PULSAR_URL:pulsar://localhost:6652}
+        topic: ${CATALOGO_PARAMETROS_EVENTS_TOPIC:}   # vacio = <topic-prefix>-<client-id>
+        topic-prefix: ${CATALOGO_PARAMETROS_EVENTS_TOPIC_PREFIX:persistent://public/default/catalogo-parametros-events}
+        subscription-name: ${CATALOGO_PARAMETROS_EVENTS_SUBSCRIPTION:asistencias-uco-backend-parametros}
+        reconcile-on-startup: ${CATALOGO_PARAMETROS_RECONCILE_ON_STARTUP:true}
     # Solo aplica con app.adapters.message-catalog.provider=messageucolab (la conexion va en `messageucolab.*`).
     messageucolab:
       timeout: ${MESSAGEUCOLAB_TIMEOUT:3s}
@@ -416,8 +453,31 @@ app:
         "[ERR_CORREO_REQUERIDO_MATRICULA]": ERR117
         "[ERR_ANTIVIRUS_NO_DISPONIBLE]": ERR118
         "[ERR_ALMACENAMIENTO_NO_DISPONIBLE]": ERR121
+        "[ERR_BD_NO_DISPONIBLE]": ERR122
         "[ERR_CODIGO_GRUPO_INVALIDO]": ERR119
         "[ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA]": ERR120
+        "[ERR_NOTIFICACIONES_NO_DISPONIBLE]": ERR123
+        "[OK_ASISTENCIA_001]": SUC004
+        "[OK_ASISTENCIA_002]": SUC005
+        "[OK_SESION_001]": SUC006
+        "[OK_SESION_002]": SUC007
+        "[OK_SESION_003]": SUC008
+        "[OK_REALTIME_001]": SUC009
+        "[RPT_ASISTENCIA_CODIGO_GRUPO]": INF001
+        "[RPT_ASISTENCIA_GRUPO]": INF002
+        "[RPT_ASISTENCIA_NUMERO_SESION]": INF003
+        "[RPT_ASISTENCIA_SESION]": INF004
+        "[RPT_ASISTENCIA_INICIO]": INF005
+        "[RPT_ASISTENCIA_FIN]": INF006
+        "[RPT_ASISTENCIA_DOCUMENTO]": INF007
+        "[RPT_ASISTENCIA_ESTUDIANTE]": INF008
+        "[RPT_ASISTENCIA_CORREO]": INF009
+        "[RPT_ASISTENCIA_ESTADO]": INF010
+        "[RPT_ASISTENCIA_OBSERVACION]": INF011
+        "[RPT_ASISTENCIA_ESTADO_SIN_REGISTRO]": INF012
+        "[RPT_ASISTENCIA_ESTADO_ASISTIO]": INF013
+        "[RPT_ASISTENCIA_ESTADO_NO_ASISTIO]": INF014
+        "[RPT_ASISTENCIA_ESTADO_CANCELADA]": INF015
     # Azure Key Vault y App Configuration (autenticacion por DefaultAzureCredential con Azure CLI).
     # SEC-12: sin nombres de recursos reales por defecto. Con un proveedor Azure activo y el endpoint vacio, el arranque
     # falla con un mensaje claro; los perfiles local/dev usan proveedores sin Azure salvo que se definan las variables.
@@ -514,7 +574,7 @@ app:
       connect-timeout-millis: ${CLAMAV_CONNECT_TIMEOUT_MILLIS:5000}
       read-timeout-millis: ${CLAMAV_READ_TIMEOUT_MILLIS:15000}
     outbox-notification:
-      sender: ${OUTBOX_NOTIFICATION_SENDER:log}               # log | smtp
+      sender: ${OUTBOX_NOTIFICATION_SENDER:}                  # vacio (automatico: servicio si hay NOTIFICACIONES_SERVICE_URL, si no log) | servicio | log; smtp es alias heredado de servicio
       dispatcher-enabled: ${OUTBOX_NOTIFICATION_DISPATCHER_ENABLED:true}
       batch-size: ${OUTBOX_NOTIFICATION_BATCH_SIZE:50}        # 1..500
       lease: ${OUTBOX_NOTIFICATION_LEASE:60s}                 # 5s..1h
@@ -525,29 +585,9 @@ app:
       retention-days: ${OUTBOX_NOTIFICATION_RETENTION_DAYS:30}   # 1..3650
       retention-interval: ${OUTBOX_NOTIFICATION_RETENTION_INTERVAL:6h}
       instance-id: ${OUTBOX_NOTIFICATION_INSTANCE_ID:}        # vacío => <hostname>-<8 hex aleatorios>
-    smtp-notification:
-      host: ${SMTP_NOTIFICATION_HOST:}
-      port: ${SMTP_NOTIFICATION_PORT:587}
-      username: ${SMTP_NOTIFICATION_USERNAME:}
-      password: ${SMTP_NOTIFICATION_PASSWORD:}                # nunca en el repositorio
-      starttls: ${SMTP_NOTIFICATION_STARTTLS:true}
-      ssl: ${SMTP_NOTIFICATION_SSL:false}
-      from-address: ${SMTP_NOTIFICATION_FROM_ADDRESS:}
-      from-name: ${SMTP_NOTIFICATION_FROM_NAME:Asistencia UCO}
-      connect-timeout: ${SMTP_NOTIFICATION_CONNECT_TIMEOUT:10s}
-      read-timeout: ${SMTP_NOTIFICATION_READ_TIMEOUT:20s}
-      max-bcc: ${SMTP_NOTIFICATION_MAX_BCC:50}                # 1..100
-      rate-per-minute: ${SMTP_NOTIFICATION_RATE_PER_MINUTE:60}     # 1..10000
-      rate-per-day: ${SMTP_NOTIFICATION_RATE_PER_DAY:500}          # >= rate-per-minute
-      require-confirmed-email: ${SMTP_NOTIFICATION_REQUIRE_CONFIRMED_EMAIL:false}
-      platform-url: ${SMTP_NOTIFICATION_PLATFORM_URL:}        # vacío => el correo no incluye enlace (si se define: http:// o https://)
-      template-cache-ttl: ${SMTP_NOTIFICATION_TEMPLATE_CACHE_TTL:60s}
-      test-mode:
-        enabled: ${SMTP_NOTIFICATION_TEST_MODE_ENABLED:false} # D15: true => redirige TODO a redirect-to
-        redirect-to: ${SMTP_NOTIFICATION_TEST_MODE_REDIRECT_TO:} # 1..5 direcciones separadas por coma; obligatorio si enabled=true
 
   # SEC-02 (VAL-oleada3-baul-secretos): con app.adapters.vault.provider=azure_keyvault los secretos de ejecucion
-  # (BD, Keycloak, PDP/PEP, MinIO, SMTP, webhook Event Grid) se leen del baul al arrancar; un secreto ausente en el baul
+  # (BD, Keycloak, PDP/PEP, MinIO, notificaciones, webhook Event Grid) se leen del baul al arrancar; un secreto ausente en el baul
   # cae a su variable de entorno. Inventario: docs/security/SECRETS_INVENTORY.md. false desactiva solo esta carga.
   secrets:
     runtime-from-vault:

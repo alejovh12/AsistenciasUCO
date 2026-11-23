@@ -70,7 +70,6 @@ class CrearCoordinadorConProgramaUseCaseImplTest {
         activacion = mock(ActivacionCuentaService.class);
         identity = mock(IdentityProviderPort.class);
         when(scopePort.findFacultadIdByDecanoUsuario(DECANO)).thenReturn(Optional.of(FACULTAD));
-        when(activacion.credencialLegadaInutilizable()).thenReturn("HASH");
         when(identity.crearCuenta(any())).thenReturn(new CuentaIdentidadDTO("kc-1", true));
         useCase = new CrearCoordinadorUseCaseImpl(commandPort, scopePort, usuarios, activacion, identity);
     }
@@ -98,7 +97,6 @@ class CrearCoordinadorConProgramaUseCaseImplTest {
         assertEquals("HENAO", db.getValue().primerApellido());
         assertEquals("PEREZ", db.getValue().segundoApellido());
         assertEquals(CORREO, db.getValue().correo());
-        assertEquals("HASH", db.getValue().password());
         assertEquals("Ingenieria de Sistemas", db.getValue().nombrePrograma());
         assertEquals(TIPO_PROGRAMA, db.getValue().idTipoPrograma());
         assertEquals(MODALIDAD, db.getValue().idModalidad());
@@ -109,8 +107,8 @@ class CrearCoordinadorConProgramaUseCaseImplTest {
         verify(identity).crearCuenta(cuenta.capture());
         assertEquals(USUARIO, cuenta.getValue().idUsuario());
         assertEquals(InstitutionalRole.COORDINADOR, cuenta.getValue().rolInstitucional());
+        verify(commandPort, never()).crearCoordinador(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
         verify(commandPort, never()).crearCoordinador(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
-        verify(commandPort, never()).crearCoordinador(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -191,7 +189,7 @@ class CrearCoordinadorConProgramaUseCaseImplTest {
         assertNull(resultado.idPrograma());
         assertNull(resultado.nombrePrograma());
         verify(commandPort).crearCoordinador(any(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(),
-                any(), any(), any(), any());
+                any(), any(), any());
     }
 
     @Test

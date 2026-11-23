@@ -232,6 +232,26 @@ class KeycloakIdentityProviderAdapterTest {
             assertEquals(2, server.callCount("GET", SEARCH_PATH));
             assertEquals(0, server.callCount("DELETE", DELETE_PATH));
         }
+
+        @Test
+        void conflicto_409_sin_vinculo_institucional_se_marca_como_conflicto_de_identidad() {
+            server.stubNoContent("POST", USERS_PATH, 409);
+
+            final IdentityProviderPort.IdentityProviderException error = assertThrows(IdentityProviderPort.IdentityProviderException.class,
+                    () -> adapter.crearCuenta(nuevoUsuarioDto()));
+
+            assertTrue(error.esConflicto(), "un 409 sin cuenta del mismo usuario es un conflicto de identidad, no una falla tecnica");
+        }
+
+        @Test
+        void una_falla_tecnica_del_proveedor_no_es_conflicto() {
+            server.stubNoContent("POST", USERS_PATH, 500);
+
+            final IdentityProviderPort.IdentityProviderException error = assertThrows(IdentityProviderPort.IdentityProviderException.class,
+                    () -> adapter.crearCuenta(nuevoUsuarioDto()));
+
+            assertFalse(error.esConflicto());
+        }
     }
 
     // -------------------------------------------------------------------------

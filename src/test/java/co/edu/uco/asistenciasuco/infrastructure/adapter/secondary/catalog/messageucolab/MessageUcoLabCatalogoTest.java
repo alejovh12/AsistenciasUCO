@@ -58,7 +58,9 @@ class MessageUcoLabCatalogoTest {
     }
 
     @Test
-    void el_catalogo_trae_los_490_codigos_de_usuario_de_los_seeds() throws Exception {
+    void el_catalogo_trae_los_544_codigos_de_usuario_de_los_seeds() throws Exception {
+        // SES-GEN-01: + HOR_006..HOR_014, ASI_013, ASI_014, PER_010, PER_011 y VAL_APP_076 (migraciones 57 y 59 de BD).
+        // HU074: + ASI_011 y ASI_012 de confirmacion; ASI_009/ASI_010 conservan el codigo con el significado de migracion 58.
         // CULM-001 A.1: - SIG_001..SIG_015 y ERR_SOLICITUD_MATRICULA_NO_IMPLEMENTADA (seeds 23 y 04 retirados).
         // CULM-001 A.2: + SES_017, REV_006, REV_007, REV_008, DEC_002 y DEC_003 (seed 33_culm001_a_mensajes).
         // VAL-oleada3 MSG-03: regenerado desde todos los seeds (291 que ya estaban en la BD) + 107 de MSG-05 (seed 62).
@@ -72,7 +74,16 @@ class MessageUcoLabCatalogoTest {
         // ATA D7: + CAL_001 (seed 68 / migracion 52 de BD: rango invalido del calendario de sesiones).
         // MEJORAS-SERGIO-2026-11-18: - DOC_004 y ERR_TIPO_VINCULACION_INVALIDO (se retiro el tipo de vinculacion, migracion 56 de BD).
         // HU074: + ASI_009, ASI_010, ASI_011 y ASI_012 (migracion 58 de BD; filas con el formato de build-message-catalog.py).
-        assertEquals(492, catalogo().size());
+        // DEC-076: + PER_010 (seed 17 / migracion 61 de BD: grupo nuevo en un periodo que ya termino).
+        // Migracion 63 de BD: + EST_007, EST_008 y EST_009 (semestre actual del estudiante en el programa).
+        // SES-GEN-01 (migracion 64 de BD): + ASI_013, ASI_014, PER_011, VAL_APP_076 y HOR_006 a HOR_014; PER_010 sigue siendo un solo codigo.
+        // REA-02 (revision final P3, migracion 67 de BD): + ERR_BD_NO_DISPONIBLE (ERR122).
+        // DEC-081 (migracion 68 de BD): + REC_001..REC_011 (receso academico; todos caben en 10 caracteres, sin alias).
+        // Revision final P3 (seed 73 de BD): + PER_012 (periodos solapados), EST_010 y EST_011 (matricula manual con programa comun).
+        // P3 F5 (migracion 71 y seed 74 de BD): - NTF_006, NTF_007 y NTF_009 (plantillas y cola salen al Servicio de Notificaciones);
+        // + ERR_NOTIFICACIONES_NO_DISPONIBLE (ERR123), OK_* de confirmacion y RPT_ASISTENCIA_* (rotulos del Excel).
+        // Ademas el fixture quedo al dia con los seeds: MQR_008 (DEC-078), HOR_* y ERR_BD_NO_DISPONIBLE ya existian en la BD.
+        assertEquals(544, catalogo().size());
     }
 
     @Test
@@ -106,7 +117,10 @@ class MessageUcoLabCatalogoTest {
         // DEC-073: + ERR_CODIGO_GRUPO_INVALIDO (ERR119) y ERR_RESPUESTA_RECLAMO_LONGITUD_INVALIDA (ERR120).
         // VAL-oleada9 REA-02: + ERR_ALMACENAMIENTO_NO_DISPONIBLE (ERR121).
         // MEJORAS-SERGIO-2026-11-18: - ERR_TIPO_VINCULACION_INVALIDO (ERR109 queda libre, no se renumera).
-        assertEquals(122, esperados.size());
+        // REA-02 (revision final P3): + ERR_BD_NO_DISPONIBLE (ERR122).
+        // P3 F5 (seed 74): + ERR_NOTIFICACIONES_NO_DISPONIBLE (ERR123), OK_* con codigo largo (SUC004..SUC009) y RPT_ASISTENCIA_* (INF001..INF014).
+        // P3 regresion D2 (seed 74, migracion 72): + RPT_ASISTENCIA_ESTADO_CANCELADA (INF015).
+        assertEquals(145, esperados.size());
         assertEquals(esperados, aliasesDeApplicationYml());
     }
 

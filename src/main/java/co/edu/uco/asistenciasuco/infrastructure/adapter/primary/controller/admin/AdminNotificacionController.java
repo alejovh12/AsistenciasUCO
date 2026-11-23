@@ -213,7 +213,8 @@ public class AdminNotificacionController {
                 p.cuerpoActivo(),
                 p.actualizadoEn(),
                 marcadores,
-                versiones
+                versiones,
+                p.descripcion()
         );
     }
 
@@ -245,7 +246,8 @@ public class AdminNotificacionController {
                 n.entregadoEn(),
                 n.codigoError(),
                 n.detalleError(),
-                n.referenciaTraza()
+                n.referenciaTraza(),
+                n.aplicacion()
         );
     }
 }

@@ -137,6 +137,19 @@ class RealtimeEventsControllerTest {
     }
 
     @Test
+    void emitCustomEvent_resuelve_la_confirmacion_por_el_catalogo_con_el_numero_de_suscriptores() {
+        when(gateway.activeSubscribersCount()).thenReturn(5);
+        final RealtimeEventsController conCatalogo = new RealtimeEventsController(gateway, authenticatedUserResolver,
+                codigo -> "OK_REALTIME_001".equals(codigo)
+                        ? java.util.Optional.of("Emitido a {0} (catálogo).") : java.util.Optional.empty());
+
+        final var result = conCatalogo.emitCustomEvent(Map.of(
+                "tipo", "SESION_CANCELADA", "audiencia", "ESTUDIANTE_GRUPO", "payload", Map.of("grupo", GRUPO.toString())));
+
+        assertEquals("Emitido a 5 (catálogo).", result.getBody().datos().get("mensajeUsuario"));
+    }
+
+    @Test
     void emitCustomEvent_acepta_el_tipo_parameter_updated_para_el_administrador() {
         controller.emitCustomEvent(Map.of("tipo", "PARAMETER_UPDATED", "audiencia", "ADMINISTRADOR", "payload", Map.of()));
 

@@ -1,42 +1,42 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.reporte;
 
-import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.primaryports.GenerarReporteAsistenciaInputPort;
-import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.primaryports.dto.ReporteAsistenciaDTO;
+import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.primaryports.GenerarReporteAsistenciaExcelInputPort;
 import co.edu.uco.asistenciasuco.application.features.reporte.generarreporteasistencia.primaryports.dto.GenerarReporteAsistenciaDTO;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.io.ByteArrayInputStream;
-import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/** El contenido del libro se verifica en {@code PoiReporteExcelAdapterTest}; aqui solo el contrato HTTP del controlador. */
 class ReporteAsistenciaControllerTest {
 
     @Test
-    void exportsWorkbookWithExpectedColumnsRowsAndAttendanceStates() throws Exception {
+    void entrega_el_libro_del_puerto_con_su_tipo_nombre_y_el_ejecutor_autenticado() {
         final UUID grupoId = UUID.randomUUID();
         final UUID actorId = UUID.randomUUID();
+        final byte[] libro = {1, 2, 3};
         final AtomicReference<GenerarReporteAsistenciaDTO> request = new AtomicReference<>();
-        final GenerarReporteAsistenciaInputPort port = input -> {
+        final GenerarReporteAsistenciaExcelInputPort port = input -> {
             request.set(input);
-            return List.of(
-                    row(Boolean.TRUE, null),
-                    row(Boolean.FALSE, "Excusa médica"),
-                    row(null, null),
-                    row(Boolean.FALSE, null)
-            );
+            return libro;
         };
-
         final AuthenticatedUserResolver resolver = () -> actorId;
+
         final ResponseEntity<byte[]> response = new ReporteAsistenciaController(port, resolver).generarReporteExcel(grupoId);
 
         assertEquals(grupoId, request.get().grupoId());
@@ -45,89 +45,23 @@ class ReporteAsistenciaControllerTest {
         assertEquals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 response.getHeaders().getContentType().toString());
         assertTrue(response.getHeaders().getContentDisposition().getFilename().contains(grupoId.toString()));
-        assertNotNull(response.getBody());
-        try (var workbook = new XSSFWorkbook(new ByteArrayInputStream(response.getBody()))) {
-            final var sheet = workbook.getSheet("Asistencia");
-            assertNotNull(sheet);
-            assertEquals(5, sheet.getPhysicalNumberOfRows());
-            assertArrayEquals(new String[] {"Codigo grupo", "Grupo", "Numero sesion", "Sesion", "Inicio", "Fin",
-                    "Documento", "Estudiante", "Correo", "Estado asistencia", "Observacion"},
-                    java.util.stream.IntStream.range(0, 11)
-                            .mapToObj(index -> sheet.getRow(0).getCell(index).getStringCellValue())
-                            .toArray(String[]::new));
-            assertEquals("G01", sheet.getRow(1).getCell(0).getStringCellValue());
-            assertEquals("1", sheet.getRow(1).getCell(2).getStringCellValue());
-            assertEquals("ASISTIO", sheet.getRow(1).getCell(9).getStringCellValue());
-            assertEquals("Excusa médica", sheet.getRow(2).getCell(9).getStringCellValue());
-            assertEquals("SIN REGISTRO", sheet.getRow(3).getCell(9).getStringCellValue());
-            assertEquals("NO ASISTIO", sheet.getRow(4).getCell(9).getStringCellValue());
-            assertEquals("", sheet.getRow(3).getCell(10).getStringCellValue());
-        }
-    }
-
-    @Test
-    void exportsHeaderForEmptyReport() throws Exception {
-        final ResponseEntity<byte[]> response = new ReporteAsistenciaController(input -> List.of(), UUID::randomUUID    )
-                .generarReporteExcel(UUID.randomUUID());
-        assertNotNull(response.getBody());
-        try (var workbook = new XSSFWorkbook(new ByteArrayInputStream(response.getBody()))) {
-            assertEquals(1, workbook.getSheet("Asistencia").getPhysicalNumberOfRows());
-        }
-    }
-
-    @Test
-    void exportsValidWorkbookWithNullValuesAndAllElevenColumns() throws Exception {
-        final UUID grupoId = UUID.randomUUID();
-        final ReporteAsistenciaDTO nullValues = new ReporteAsistenciaDTO(
-                null, null, null, null, null, null, null, null, null, null, null);
-        final ResponseEntity<byte[]> response = new ReporteAsistenciaController(
-                input -> List.of(nullValues), UUID::randomUUID).generarReporteExcel(grupoId);
-
-        assertEquals(200, response.getStatusCode().value());
-        assertEquals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                response.getHeaders().getContentType().toString());
-        assertNotNull(response.getBody());
-        assertTrue(response.getBody().length > 0);
-
-        try (var workbook = new XSSFWorkbook(new ByteArrayInputStream(response.getBody()))) {
-            final var sheet = workbook.getSheet("Asistencia");
-            assertNotNull(sheet);
-            assertEquals(2, sheet.getPhysicalNumberOfRows());
-            assertEquals(11, sheet.getRow(0).getPhysicalNumberOfCells());
-            assertEquals(11, sheet.getRow(1).getPhysicalNumberOfCells());
-            assertArrayEquals(new String[] {"Codigo grupo", "Grupo", "Numero sesion", "Sesion", "Inicio", "Fin",
-                    "Documento", "Estudiante", "Correo", "Estado asistencia", "Observacion"},
-                    java.util.stream.IntStream.range(0, 11)
-                            .mapToObj(index -> sheet.getRow(0).getCell(index).getStringCellValue())
-                            .toArray(String[]::new));
-            for (int column = 0; column < 11; column++) {
-                assertNotNull(sheet.getRow(1).getCell(column));
-                assertEquals(column == 9 ? "SIN REGISTRO" : "",
-                        sheet.getRow(1).getCell(column).getStringCellValue());
-            }
-        }
-    }
-
-    private static ReporteAsistenciaDTO row(final Boolean asistio, final String reason) {
-        return new ReporteAsistenciaDTO("G01", "Grupo 01", 1, "Sesión 1",
-                LocalDateTime.of(2026, 1, 1, 8, 0), LocalDateTime.of(2026, 1, 1, 9, 0),
-                "12345678", "Persona", "persona@example.com", asistio, reason);
+        assertArrayEquals(libro, response.getBody());
     }
 
     /** CULM-001 D.9-a (F-TRX-021): grupo inexistente o fuera de ambito responde 403 y no se genera ningun .xlsx. */
     @Test
     void culm001_d9_grupo_inexistente_o_ajeno_responde_403_sin_archivo() throws Exception {
-        final GenerarReporteAsistenciaInputPort port = input -> {
+        final GenerarReporteAsistenciaExcelInputPort port = input -> {
             throw new co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException("SEC_002", "Sin autorizacion.");
         };
-        final org.springframework.test.web.servlet.MockMvc mvc = org.springframework.test.web.servlet.setup.MockMvcBuilders
+        final MockMvc mvc = MockMvcBuilders
                 .standaloneSetup(new ReporteAsistenciaController(port, UUID::randomUUID))
-                .setControllerAdvice(new co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler(codigo -> java.util.Optional.empty()))
+                .setControllerAdvice(new GlobalExceptionHandler(codigo -> Optional.empty()))
                 .build();
 
-        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/v1/grupos/{id}/reportes/asistencia-excel", UUID.randomUUID()))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isForbidden())
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().contentTypeCompatibleWith(org.springframework.http.MediaType.APPLICATION_JSON))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.status").value(403));
+        mvc.perform(get("/api/v1/grupos/{id}/reportes/asistencia-excel", UUID.randomUUID()))
+                .andExpect(status().isForbidden())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(403));
     }
 }

@@ -1,27 +1,27 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.catalogoparametros;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterValueRetentionPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.InvalidableParameterCatalog;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.CatalogoParametrosProviderProperties;
+import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
 
-import java.io.IOException;
-import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.time.Duration;
-import java.util.HashMap;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
@@ -29,45 +29,65 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * Proveedor de {@link ParameterCatalogPort} sobre el componente externo "Catalogo de Parametros".
  *
- * <p>Una sola llamada {@code GET {baseUrl}/tokens/{tokenId}/parametros} trae todos los parametros y se conserva en
+ * <p>INT-004: lee por M2M ({@code client_credentials} contra Security Baseline y luego {@code GET {baseUrl}/parametros/consulta/m2m}).
+ * Una sola llamada trae todos los parametros del alcance de la identidad y se conserva en
  * memoria mientras no venza {@code cacheTtl}. La primera carga es sincrona (si falla, propaga
  * {@link ParameterCatalogException} y el decorador DEC-018 aplica el valor por defecto; durante la misma gracia que el
  * refresco, las lecturas siguientes fallan al instante sin volver a llamar). Cuando la cache vence se siguen
  * sirviendo los valores vencidos y se refresca en segundo plano con una sola peticion en vuelo: una lectura nunca espera
  * por el componente despues de la primera carga. Si el refresco falla se conservan los valores vencidos, se escribe un
  * WARN y no se reintenta hasta pasada una gracia ({@link #GRACIA_MAXIMA_TRAS_FALLO}, acotada por el TTL), de modo que un
- * Catalogo lento o caido no degrada cada lectura a los valores por defecto del codigo ni llena el log. Con
+ * Catalogo lento o caido no degrada cada lectura a los valores por defecto del codigo ni llena el log. El refresco en segundo plano
+ * no espera a Keycloak: si no hay token guardado lo pide en otro hilo. Con
  * {@code cacheTtl = 0} cada lectura consulta al componente. {@link #invalidateAll()} descarta la cache y la siguiente
- * lectura vuelve a cargar de forma sincrona. El secreto y la cabecera Authorization nunca se registran ni viajan en
+ * lectura vuelve a cargar de forma sincrona. El secreto, el token y la cabecera Authorization nunca se registran ni viajan en
  * mensajes de error.</p>
+ *
+ * <p>{@link ParameterValueRetentionPort}: si la BD rechaza el valor que trae el Catalogo (p. ej. una lista CIDR mal formada), la
+ * lectura no lo sirve mientras el Catalogo siga devolviendolo; sirve el ultimo valor valido que guarda la BD. La retencion sobrevive
+ * a {@link #invalidateAll()} porque la cache recargada vuelve a traer el mismo valor rechazado.</p>
  */
 public final class CatalogoParametrosHttpParameterCatalogAdapter
-        implements ParameterCatalogPort, InvalidableParameterCatalog {
+        implements ParameterCatalogPort, InvalidableParameterCatalog, ParameterValueRetentionPort {
 
     /** Tras un refresco fallido no se vuelve a intentar antes de este lapso (o del TTL, si es menor). */
     static final Duration GRACIA_MAXIMA_TRAS_FALLO = Duration.ofSeconds(30);
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CatalogoParametrosHttpParameterCatalogAdapter.class);
-    private static final ObjectMapper JSON = JsonMapper.builder().build();
+    private static final Executor HILOS_VIRTUALES = Executors.newVirtualThreadPerTaskExecutor();
 
     private final HttpClient httpClient;
+    private final Clock clock;
     private final CatalogoParametrosProviderProperties properties;
-    private final URI uri;
+    private final CatalogoParametrosM2mClient cliente;
     private final long ttlNanos;
     private final long graciaNanos;
     private final ReentrantLock lock = new ReentrantLock();
+    private final CatalogoParametrosTokenProvider tokenProvider;
     private final AtomicBoolean refrescando = new AtomicBoolean();
     private final AtomicReference<Snapshot> snapshot = new AtomicReference<>();
+    private final Map<String, Retenido> retenidos = new ConcurrentHashMap<>();
     private volatile long reintentarDesde;
 
     public CatalogoParametrosHttpParameterCatalogAdapter(final HttpClient httpClient,
-                                                         final CatalogoParametrosProviderProperties properties) {
+                                                         final CatalogoParametrosProviderProperties properties,
+                                                         final CatalogoParametrosTokenProvider tokenProvider) {
+        this(httpClient, properties, tokenProvider, Clock.systemUTC());
+    }
+
+    /** Constructor con fuente de tiempo inyectable (pruebas deterministas del TTL y la gracia). */
+    public CatalogoParametrosHttpParameterCatalogAdapter(final HttpClient httpClient,
+                                                         final CatalogoParametrosProviderProperties properties,
+                                                         final CatalogoParametrosTokenProvider tokenProvider,
+                                                         final Clock clock) {
+        this.clock = Objects.requireNonNull(clock, "El reloj es obligatorio.");
         this.httpClient = Objects.requireNonNull(httpClient, "El HttpClient es obligatorio.");
         this.properties = Objects.requireNonNull(properties, "Las propiedades del catalogo son obligatorias.");
-        this.uri = URI.create(properties.baseUrl() + "/tokens/" + properties.tokenId() + "/parametros");
+        this.cliente = new CatalogoParametrosM2mClient(httpClient, properties, tokenProvider);
+        this.tokenProvider = Objects.requireNonNull(tokenProvider, "El proveedor de token es obligatorio.");
         this.ttlNanos = properties.cacheTtl().toNanos();
         this.graciaNanos = Math.min(ttlNanos, GRACIA_MAXIMA_TRAS_FALLO.toNanos());
-        this.reintentarDesde = System.nanoTime();
+        this.reintentarDesde = ahora();
     }
 
     @Override
@@ -78,10 +98,28 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
         final Map<String, String> valores = valores();
         final String nombre = group.trim() + properties.separador() + key.trim();
         final String exacto = valores.get(nombre);
-        if (exacto != null) {
-            return Optional.of(exacto);
+        final Optional<String> encontrado = exacto != null ? Optional.of(exacto) : Optional.ofNullable(valores.get(nombre.toUpperCase()));
+        final Retenido retenido = retenidos.get(nombre.toUpperCase());
+        if (retenido != null && encontrado.isPresent() && encontrado.get().equals(retenido.rechazado())) {
+            return Optional.ofNullable(retenido.valido());
         }
-        return Optional.ofNullable(valores.get(nombre.toUpperCase()));
+        return encontrado;
+    }
+
+    @Override
+    public void retenerValorValido(final String grupo, final String clave, final String valorRechazado, final String valorVigente) {
+        retenidos.put(nombreCanonico(grupo, clave), new Retenido(valorRechazado, valorVigente));
+        LOGGER.warn("Valor del Catalogo de Parametros rechazado por la BD; se sirve el ultimo valor valido. parametro={}:{}, correlationId={}",
+                grupo, clave, CorrelationIdContext.getAsString());
+    }
+
+    @Override
+    public void liberar(final String grupo, final String clave) {
+        retenidos.remove(nombreCanonico(grupo, clave));
+    }
+
+    private String nombreCanonico(final String grupo, final String clave) {
+        return (grupo.trim() + properties.separador() + clave.trim()).toUpperCase();
     }
 
     @Override
@@ -122,6 +160,11 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
         snapshot.set(null);
     }
 
+    private long ahora() {
+        final Instant instante = clock.instant();
+        return instante.getEpochSecond() * 1_000_000_000L + instante.getNano();
+    }
+
     private Map<String, String> valores() {
         final Snapshot actual = snapshot.get();
         if (vigente(actual)) {
@@ -135,7 +178,7 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
     }
 
     private boolean vigente(final Snapshot candidato) {
-        return ttlNanos > 0 && candidato != null && System.nanoTime() - candidato.cargadoEn() < ttlNanos;
+        return ttlNanos > 0 && candidato != null && ahora() - candidato.cargadoEn() < ttlNanos;
     }
 
     /**
@@ -150,13 +193,13 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
             if (vigente(recheck)) {
                 return recheck.valores();
             }
-            if (System.nanoTime() - reintentarDesde < 0) {
+            if (ahora() - reintentarDesde < 0) {
                 throw new ParameterCatalogException(
                         "Catalogo de Parametros no disponible; la carga se reintentara al terminar la gracia.");
             }
             try {
-                final Map<String, String> cargados = interpretarRespuesta(enviar());
-                snapshot.set(new Snapshot(cargados, System.nanoTime()));
+                final Map<String, String> cargados = cliente.interpretar(cliente.enviar(null));
+                snapshot.set(new Snapshot(cargados, ahora()));
                 return cargados;
             } catch (final ParameterCatalogException exception) {
                 registrarFalloDeCarga(exception.getMessage());
@@ -168,19 +211,19 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
     }
 
     private void registrarFalloDeCarga(final String detalle) {
-        reintentarDesde = System.nanoTime() + graciaNanos;
+        reintentarDesde = ahora() + graciaNanos;
         LOGGER.warn("Catalogo de Parametros no disponible en la carga inicial; se aplican los valores por defecto y no se "
                 + "reintenta durante {} s. causa={}", graciaNanos / 1_000_000_000L, detalle);
     }
 
     /** Cache vencida: un solo refresco en vuelo; mientras tanto (y si falla) se sirven los valores vencidos. */
     private void refrescarEnSegundoPlano() {
-        if (System.nanoTime() - reintentarDesde < 0 || !refrescando.compareAndSet(false, true)) {
+        if (ahora() - reintentarDesde < 0 || !refrescando.compareAndSet(false, true)) {
             return;
         }
         final CompletableFuture<HttpResponse<String>> envio;
         try {
-            envio = httpClient.sendAsync(peticion(), HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            envio = enviarAsincrono();
         } catch (final RuntimeException exception) {
             registrarFalloDeRefresco(exception.getClass().getSimpleName());
             refrescando.set(false);
@@ -192,7 +235,7 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
                     registrarFalloDeRefresco(causa(error).getClass().getSimpleName());
                     return;
                 }
-                snapshot.set(new Snapshot(interpretarRespuesta(response), System.nanoTime()));
+                snapshot.set(new Snapshot(cliente.interpretar(response), ahora()));
             } catch (final ParameterCatalogException exception) {
                 registrarFalloDeRefresco(exception.getMessage());
             } finally {
@@ -202,7 +245,7 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
     }
 
     private void registrarFalloDeRefresco(final String detalle) {
-        reintentarDesde = System.nanoTime() + graciaNanos;
+        reintentarDesde = ahora() + graciaNanos;
         LOGGER.warn("Catalogo de Parametros no disponible; se conservan los valores vencidos y no se reintenta "
                 + "durante {} s. causa={}", graciaNanos / 1_000_000_000L, detalle);
     }
@@ -211,61 +254,18 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
         return error instanceof CompletionException && error.getCause() != null ? error.getCause() : error;
     }
 
-    private HttpRequest peticion() {
-        return HttpRequest.newBuilder(uri)
-                .timeout(properties.timeout())
-                .header("Accept", "application/json")
-                .header("Authorization", "Bearer " + properties.secreto())
-                .GET()
-                .build();
+    /** Con token guardado envia al instante; sin el, lo pide en un hilo virtual para que la lectura no espere a Keycloak. */
+    private CompletableFuture<HttpResponse<String>> enviarAsincrono() {
+        final var handler = HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8);
+        final Optional<String> token = tokenProvider.tokenEnCache();
+        if (token.isPresent()) {
+            return httpClient.sendAsync(cliente.peticion(null, token.get()), handler);
+        }
+        return CompletableFuture.supplyAsync(() -> cliente.peticion(null), HILOS_VIRTUALES)
+                .thenCompose(peticion -> httpClient.sendAsync(peticion, handler));
     }
 
-    private HttpResponse<String> enviar() {
-        try {
-            return httpClient.send(peticion(), HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-        } catch (final IOException exception) {
-            throw new ParameterCatalogException("No fue posible consultar el Catalogo de Parametros.", exception);
-        } catch (final InterruptedException exception) {
-            Thread.currentThread().interrupt();
-            throw new ParameterCatalogException("Consulta al Catalogo de Parametros interrumpida.", exception);
-        }
-    }
-
-    private static Map<String, String> interpretarRespuesta(final HttpResponse<String> response) {
-        final int status = response.statusCode();
-        if (status < 200 || status >= 300) {
-            throw new ParameterCatalogException("El Catalogo de Parametros respondio HTTP " + status + ".");
-        }
-        return interpretar(response.body());
-    }
-
-    private static Map<String, String> interpretar(final String body) {
-        final JsonNode raiz;
-        try {
-            raiz = JSON.readTree(body);
-        } catch (final RuntimeException exception) {
-            throw new ParameterCatalogException("Respuesta invalida del Catalogo de Parametros.", exception);
-        }
-        final Map<String, String> resultado = new HashMap<>();
-        final JsonNode parametros = raiz.path("parametros");
-        if (!parametros.isArray()) {
-            return Map.of();
-        }
-        for (final JsonNode item : parametros) {
-            final JsonNode parametro = item.path("parametro");
-            final String nombre = parametro.path("nombre").asString("").trim();
-            if (nombre.isEmpty() || !parametro.path("activo").asBoolean(true)) {
-                continue;
-            }
-            for (final JsonNode metadato : item.path("metadatos")) {
-                final JsonNode valor = metadato.path("metadato").path("valor");
-                if (!valor.isMissingNode() && !valor.isNull()) {
-                    resultado.putIfAbsent(nombre, valor.asString());
-                    break;
-                }
-            }
-        }
-        return Map.copyOf(resultado);
+    private record Retenido(String rechazado, String valido) {
     }
 
     private record Snapshot(Map<String, String> valores, long cargadoEn) {

@@ -18,7 +18,6 @@ public final class RegistrarEstudianteDomain {
     private UUID idPrograma;   // CULM-001 B2NM (S3)
     private final UUID tipoIdentificacionPendiente;
     private final Integer numeroIdentificacionPendiente;
-    private final String passwordPendiente;
 
     /**
      * CULM-001 A.2-15: matricula de un estudiante ya registrado sin correo en la solicitud (el modal solo recibe el correo
@@ -28,24 +27,21 @@ public final class RegistrarEstudianteDomain {
     public static RegistrarEstudianteDomain pendienteDeResolverPorDocumento(
             final UUID tipoIdentificacionId,
             final Integer numeroIdentificacion,
-            final String password,
             final UUID grupoId,
             final UUID usuarioEjecutor
     ) {
-        return new RegistrarEstudianteDomain(tipoIdentificacionId, numeroIdentificacion, password, grupoId, usuarioEjecutor);
+        return new RegistrarEstudianteDomain(tipoIdentificacionId, numeroIdentificacion, grupoId, usuarioEjecutor);
     }
 
     private RegistrarEstudianteDomain(
             final UUID tipoIdentificacionId,
             final Integer numeroIdentificacion,
-            final String password,
             final UUID grupoId,
             final UUID usuarioEjecutor
     ) {
         this.usuarioRegistro = null;
         this.tipoIdentificacionPendiente = tipoIdentificacionId;
         this.numeroIdentificacionPendiente = numeroIdentificacion;
-        this.passwordPendiente = password;
         this.grupoId = validarGrupo(grupoId);
         this.usuarioEjecutor = usuarioEjecutor;
     }
@@ -64,7 +60,7 @@ public final class RegistrarEstudianteDomain {
             final String segundoNombre
     ) {
         return new RegistrarEstudianteDomain(getTipoIdentificacionId(), getNumeroIdentificacion(), primerApellido, segundoApellido,
-                primerNombre, segundoNombre, correo, getPassword(), grupoId, usuarioEjecutor).conIdPrograma(idPrograma);
+                primerNombre, segundoNombre, correo, grupoId, usuarioEjecutor).conIdPrograma(idPrograma);
     }
 
     public RegistrarEstudianteDomain(
@@ -75,7 +71,6 @@ public final class RegistrarEstudianteDomain {
             final String primerNombre,
             final String segundoNombre,
             final String correo,
-            final String password,
             final UUID grupoId,
             final UUID usuarioEjecutor
     ) {
@@ -86,14 +81,12 @@ public final class RegistrarEstudianteDomain {
                 segundoApellido,
                 primerNombre,
                 segundoNombre,
-                correo,
-                password
+                correo
         );
         this.grupoId = validarGrupo(grupoId);
         this.usuarioEjecutor = usuarioEjecutor;
         this.tipoIdentificacionPendiente = null;
         this.numeroIdentificacionPendiente = null;
-        this.passwordPendiente = null;
     }
 
     private static UUID validarGrupo(final UUID grupoId) {
@@ -132,10 +125,6 @@ public final class RegistrarEstudianteDomain {
 
     public String getCorreo() {
         return usuarioRegistro == null ? null : usuarioRegistro.getCorreo();
-    }
-
-    public String getPassword() {
-        return usuarioRegistro == null ? passwordPendiente : usuarioRegistro.getPassword();
     }
 
     public UUID getGrupoId() {

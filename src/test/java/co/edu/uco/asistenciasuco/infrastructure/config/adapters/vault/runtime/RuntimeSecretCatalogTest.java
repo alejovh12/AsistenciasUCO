@@ -24,7 +24,7 @@ class RuntimeSecretCatalogTest {
     private static final Path INVENTARIO = Path.of("docs", "security", "SECRETS_INVENTORY.md");
 
     @Test
-    void cubre_bd_keycloak_pdp_minio_smtp_y_webhook() {
+    void cubre_bd_keycloak_pdp_minio_notificaciones_y_webhook() {
         final List<String> requeridas = List.of(
                 "spring.datasource.password",
                 "app.providers.keycloak-identity.admin-client-secret",
@@ -33,9 +33,9 @@ class RuntimeSecretCatalogTest {
                 "app.providers.security-baseline-pep.application-credential",
                 "app.providers.minio.access-key",
                 "app.providers.minio.secret-key",
-                "app.providers.smtp-notification.password",
+                "asistencias.notificaciones.service.api-key",
                 "app.security.azure-events.webhook-token",
-                "app.providers.catalogo-parametros.secreto",
+                "app.providers.catalogo-parametros.client-secret",
                 "app.providers.messageucolab.service-identity.client-secret");
 
         assertTrue(RuntimeSecretCatalog.PROPIEDAD_A_SECRETO.keySet().containsAll(requeridas));

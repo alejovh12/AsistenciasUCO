@@ -220,7 +220,7 @@ class RadicarReclamoConVariosSoportesAntivirusTest {
                 }
             }
             if (!noDisponibles.isEmpty()) {
-                throw new ResourceNotFoundException("El soporte indicado no esta disponible para esta solicitud.");
+                throw new ResourceNotFoundException("El soporte indicado no está disponible para esta solicitud.");
             }
             dto.soportes().forEach(metadata.borradores::remove);
             ultimaSolicitud = dto;

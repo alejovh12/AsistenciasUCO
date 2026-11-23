@@ -2,14 +2,11 @@ package co.edu.uco.asistenciasuco.application.features.identidad.activacioncuent
 
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notificacion;
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
 import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.security.SecureRandom;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -17,7 +14,7 @@ import java.util.UUID;
 
 /**
  * IDENT-002: piezas comunes de la activacion de cuentas registradas por otra persona (decano, coordinador, docente o
- * estudiante). El registro ya no recibe contrasena: la cuenta nace sin credencial en el proveedor de identidad y su
+ * estudiante). El registro ya no recibe contrasena (ni guarda credencial en la BD: SEG-11): la cuenta nace sin credencial en el proveedor de identidad y su
  * titular la define con el enlace del aviso {@code ACTIVACION_CUENTA}.
  *
  * <p>POJO sin anotaciones de framework: se cablea con {@code @Bean} en la configuracion de infraestructura.</p>
@@ -25,32 +22,13 @@ import java.util.UUID;
 public final class ActivacionCuentaService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ActivacionCuentaService.class);
-    private static final int BYTES_SECRETO = 32;
     static final String ASUNTO = "Active su cuenta en la plataforma de asistencia";
     static final String MENSAJE = "Se registro una cuenta a su nombre en la plataforma de asistencia. Active su cuenta y defina su contrasena.";
 
     private final NotificacionPort notificacionPort;
-    private final PasswordEncoderPort passwordEncoderPort;
-    private final SecureRandom random;
 
-    public ActivacionCuentaService(
-            final NotificacionPort notificacionPort,
-            final PasswordEncoderPort passwordEncoderPort,
-            final SecureRandom random
-    ) {
+    public ActivacionCuentaService(final NotificacionPort notificacionPort) {
         this.notificacionPort = Objects.requireNonNull(notificacionPort, "NotificacionPort es obligatorio.");
-        this.passwordEncoderPort = Objects.requireNonNull(passwordEncoderPort, "PasswordEncoderPort es obligatorio.");
-        this.random = Objects.requireNonNull(random, "SecureRandom es obligatorio.");
-    }
-
-    /**
-     * Valor para la columna legada {@code Usuario.password} de un alta sin contrasena: el hash de un secreto aleatorio que
-     * nadie conoce (la autenticacion vive en el proveedor de identidad).
-     */
-    public String credencialLegadaInutilizable() {
-        final byte[] secreto = new byte[BYTES_SECRETO];
-        random.nextBytes(secreto);
-        return passwordEncoderPort.encode(Base64.getUrlEncoder().withoutPadding().encodeToString(secreto));
     }
 
     /**

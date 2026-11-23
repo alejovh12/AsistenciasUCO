@@ -17,11 +17,12 @@ public interface ConsultarSolicitudesSesionInputPort
     record Comando(UUID usuarioId, boolean soloPendientes, UUID programaId, UUID grupoId, Integer pagina, Integer tamano) {
     }
 
-    /** Las horas son instantes UTC. */
+    /** Las horas son instantes UTC. Programa responsable y coordinador resolutor (DEC-077): solo en la lista del docente, nulos en la bandeja. */
     record Solicitud(UUID idSesion, String nombreSesion, String codigoSesion, UUID idGrupo, String nombreGrupo, String nombreAsignatura,
                      UUID idPrograma, String nombrePrograma, UUID idDocente, String nombreDocente, Instant fechaHoraInicio,
                      Instant fechaHoraFin, String estadoSolicitud, String nombreEstadoSolicitud, Instant fechaSolicitudUtc,
-                     Instant fechaResolucionUtc, String observacion) {
+                     Instant fechaResolucionUtc, String observacion, String nombreProgramaResponsable,
+                     String nombreCoordinadorResolutor) {
     }
 
     record Resultado(List<Solicitud> elementos, long total, int pagina, int tamano) {
