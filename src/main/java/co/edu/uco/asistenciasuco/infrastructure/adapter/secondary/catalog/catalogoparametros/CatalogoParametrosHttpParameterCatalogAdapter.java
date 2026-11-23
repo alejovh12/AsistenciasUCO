@@ -1,8 +1,10 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.catalogoparametros;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterValueRetentionPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.InvalidableParameterCatalog;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.CatalogoParametrosProviderProperties;
+import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,6 +18,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -39,9 +42,13 @@ import java.util.concurrent.locks.ReentrantLock;
  * {@code cacheTtl = 0} cada lectura consulta al componente. {@link #invalidateAll()} descarta la cache y la siguiente
  * lectura vuelve a cargar de forma sincrona. El secreto, el token y la cabecera Authorization nunca se registran ni viajan en
  * mensajes de error.</p>
+ *
+ * <p>{@link ParameterValueRetentionPort}: si la BD rechaza el valor que trae el Catalogo (p. ej. una lista CIDR mal formada), la
+ * lectura no lo sirve mientras el Catalogo siga devolviendolo; sirve el ultimo valor valido que guarda la BD. La retencion sobrevive
+ * a {@link #invalidateAll()} porque la cache recargada vuelve a traer el mismo valor rechazado.</p>
  */
 public final class CatalogoParametrosHttpParameterCatalogAdapter
-        implements ParameterCatalogPort, InvalidableParameterCatalog {
+        implements ParameterCatalogPort, InvalidableParameterCatalog, ParameterValueRetentionPort {
 
     /** Tras un refresco fallido no se vuelve a intentar antes de este lapso (o del TTL, si es menor). */
     static final Duration GRACIA_MAXIMA_TRAS_FALLO = Duration.ofSeconds(30);
@@ -59,6 +66,7 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
     private final CatalogoParametrosTokenProvider tokenProvider;
     private final AtomicBoolean refrescando = new AtomicBoolean();
     private final AtomicReference<Snapshot> snapshot = new AtomicReference<>();
+    private final Map<String, Retenido> retenidos = new ConcurrentHashMap<>();
     private volatile long reintentarDesde;
 
     public CatalogoParametrosHttpParameterCatalogAdapter(final HttpClient httpClient,
@@ -90,10 +98,28 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
         final Map<String, String> valores = valores();
         final String nombre = group.trim() + properties.separador() + key.trim();
         final String exacto = valores.get(nombre);
-        if (exacto != null) {
-            return Optional.of(exacto);
+        final Optional<String> encontrado = exacto != null ? Optional.of(exacto) : Optional.ofNullable(valores.get(nombre.toUpperCase()));
+        final Retenido retenido = retenidos.get(nombre.toUpperCase());
+        if (retenido != null && encontrado.isPresent() && encontrado.get().equals(retenido.rechazado())) {
+            return Optional.ofNullable(retenido.valido());
         }
-        return Optional.ofNullable(valores.get(nombre.toUpperCase()));
+        return encontrado;
+    }
+
+    @Override
+    public void retenerValorValido(final String grupo, final String clave, final String valorRechazado, final String valorVigente) {
+        retenidos.put(nombreCanonico(grupo, clave), new Retenido(valorRechazado, valorVigente));
+        LOGGER.warn("Valor del Catalogo de Parametros rechazado por la BD; se sirve el ultimo valor valido. parametro={}:{}, correlationId={}",
+                grupo, clave, CorrelationIdContext.getAsString());
+    }
+
+    @Override
+    public void liberar(final String grupo, final String clave) {
+        retenidos.remove(nombreCanonico(grupo, clave));
+    }
+
+    private String nombreCanonico(final String grupo, final String clave) {
+        return (grupo.trim() + properties.separador() + clave.trim()).toUpperCase();
     }
 
     @Override
@@ -237,6 +263,9 @@ public final class CatalogoParametrosHttpParameterCatalogAdapter
         }
         return CompletableFuture.supplyAsync(() -> cliente.peticion(null), HILOS_VIRTUALES)
                 .thenCompose(peticion -> httpClient.sendAsync(peticion, handler));
+    }
+
+    private record Retenido(String rechazado, String valido) {
     }
 
     private record Snapshot(Map<String, String> valores, long cargadoEn) {

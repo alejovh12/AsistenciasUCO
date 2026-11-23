@@ -97,4 +97,22 @@ class ParametroCatalogoJpaRepositoryTest {
         assertThrows(RuntimeException.class,
                 () -> repositorio.sincronizarParametroExterno("G", "K", "v", Operacion.UPSERT, null, OCURRIDO));
     }
+
+    @Test
+    void obtiene_el_valor_vigente_de_la_vista_o_vacio() {
+        when(consulta.getResultList()).thenReturn(List.<Object>of("10.0.0.0/8"));
+        assertEquals(java.util.Optional.of("10.0.0.0/8"), repositorio.obtenerValor("RED", "CIDRS_CAMPUS"));
+        verify(consulta).setParameter("grupo", "RED");
+        verify(consulta).setParameter("clave", "CIDRS_CAMPUS");
+
+        when(consulta.getResultList()).thenReturn(List.of());
+        assertEquals(java.util.Optional.empty(), repositorio.obtenerValor("RED", "NO_EXISTE"));
+    }
+
+    @Test
+    void un_error_al_leer_el_valor_vigente_se_traduce_a_error_de_base_de_datos() {
+        when(consulta.getResultList()).thenThrow(new PersistenceException("sql caido"));
+
+        assertThrows(RuntimeException.class, () -> repositorio.obtenerValor("RED", "CIDRS_CAMPUS"));
+    }
 }

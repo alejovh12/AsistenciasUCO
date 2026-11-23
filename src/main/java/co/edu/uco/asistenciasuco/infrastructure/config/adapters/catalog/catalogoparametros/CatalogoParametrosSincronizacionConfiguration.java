@@ -4,6 +4,7 @@ import co.edu.uco.asistenciasuco.application.features.catalogo.sincronizarparame
 import co.edu.uco.asistenciasuco.application.features.catalogo.sincronizarparametros.usecase.impl.SincronizarParametrosCatalogoUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.CatalogInvalidationPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogSourcePort;
+import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterValueRetentionPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.ParametroCatalogoRepositoryPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.messaging.catalogoparametros.CatalogoParametrosEventListener;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.CatalogoParametrosEventsProperties;
@@ -43,11 +44,12 @@ public class CatalogoParametrosSincronizacionConfiguration {
             final ParameterCatalogSourcePort fuente,
             final ParametroCatalogoRepositoryPort repositorio,
             final CatalogInvalidationPort invalidacion,
+            final ParameterValueRetentionPort retencion,
             final CatalogoParametrosProviderProperties properties,
             final ObjectProvider<Clock> clockProvider
     ) {
         return new SincronizarParametrosCatalogoUseCaseImpl(fuente, repositorio, invalidacion, properties.separador(),
-                properties.applicationId(), properties.environmentId(), clockProvider.getIfAvailable(Clock::systemUTC));
+                properties.applicationId(), properties.environmentId(), clockProvider.getIfAvailable(Clock::systemUTC), retencion);
     }
 
     /**

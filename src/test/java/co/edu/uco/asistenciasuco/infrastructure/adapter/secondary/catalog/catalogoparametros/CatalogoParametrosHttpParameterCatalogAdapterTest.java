@@ -595,4 +595,44 @@ class CatalogoParametrosHttpParameterCatalogAdapterTest {
         assertEquals("presente", a.getParameter("G", "SINACTIVO").orElseThrow());
         verify(http, times(0)).sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
     }
+
+    @Test
+    void no_sirve_el_valor_que_la_bd_rechazo_y_sirve_el_ultimo_valido() throws Exception {
+        responde(200, JSON);
+        final var a = adaptor(Duration.ofMinutes(5));
+        assertEquals("20", a.getParameter("asistencias", "limite").orElseThrow());
+
+        a.retenerValorValido("asistencias", "limite", "20", "15");
+
+        assertEquals("15", a.getParameter("asistencias", "limite").orElseThrow());
+        // sobrevive a la invalidacion: la cache recargada vuelve a traer el mismo valor rechazado
+        a.invalidateAll();
+        assertEquals("15", a.getParameter("asistencias", "limite").orElseThrow());
+        assertEquals("15", a.getRequiredParameter("asistencias", "limite"));
+        // no afecta a otros parametros
+        assertEquals("si", a.getParameter("asistencias", "exacto").orElseThrow());
+    }
+
+    @Test
+    void sin_valor_valido_retenido_la_lectura_queda_vacia_para_que_aplique_el_valor_por_defecto() throws Exception {
+        responde(200, JSON);
+        final var a = adaptor(Duration.ofMinutes(5));
+
+        a.retenerValorValido("asistencias", "limite", "20", null);
+
+        assertTrue(a.getParameter("asistencias", "limite").isEmpty());
+    }
+
+    @Test
+    void un_valor_nuevo_del_catalogo_distinto_del_rechazado_se_sirve_y_liberar_retoma_el_catalogo() throws Exception {
+        responde(200, JSON);
+        final var a = adaptor(Duration.ofMinutes(5));
+        a.retenerValorValido("asistencias", "limite", "otro-valor", "15");
+        assertEquals("20", a.getParameter("asistencias", "limite").orElseThrow());
+
+        a.retenerValorValido("asistencias", "limite", "20", "15");
+        assertEquals("15", a.getParameter("asistencias", "limite").orElseThrow());
+        a.liberar(" asistencias ", " limite ");
+        assertEquals("20", a.getParameter("asistencias", "limite").orElseThrow());
+    }
 }

@@ -1,6 +1,5 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.adapters.catalog.catalogoparametros;
 
-import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogSourcePort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.catalogoparametros.CatalogoParametrosHttpParameterCatalogAdapter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.catalogoparametros.CatalogoParametrosM2mSourceAdapter;
@@ -41,8 +40,9 @@ public class CatalogoParametrosAdapterConfiguration {
                 clockProvider.getIfAvailable(Clock::systemUTC));
     }
 
+    /** Tambien es el unico {@code ParameterValueRetentionPort}: retiene el ultimo valor valido si la BD rechaza el del Catalogo. */
     @Bean(ParametroConValorPorDefectoConfiguration.DELEGADO)
-    public ParameterCatalogPort parameterCatalogPort(final CatalogoParametrosProviderProperties properties,
+    public CatalogoParametrosHttpParameterCatalogAdapter parameterCatalogPort(final CatalogoParametrosProviderProperties properties,
                                                      final CatalogoParametrosTokenProvider tokenProvider,
                                                      final ObjectProvider<Clock> clockProvider) {
         LOGGER.info("Catalogo de parametros: proveedor catalogoparametros por M2M (baseUrl={}, cacheTtl={}).",

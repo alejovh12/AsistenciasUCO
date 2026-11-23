@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.catalogo.sincronizarparametros.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterValueRetentionPort;
 import co.edu.uco.asistenciasuco.application.features.catalogo.sincronizarparametros.primaryports.SincronizarParametrosCatalogoInputPort.AvisoCambioParametro;
 import co.edu.uco.asistenciasuco.application.features.catalogo.sincronizarparametros.primaryports.SincronizarParametrosCatalogoInputPort.ResumenSincronizacion;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.CatalogInvalidationPort;
@@ -269,5 +270,63 @@ class SincronizarParametrosCatalogoUseCaseImplTest {
         useCase.procesarAviso(aviso("n" + ultimo, "ParameterUpdated", "G.K"));
 
         verify(fuente, times(SincronizarParametrosCatalogoUseCaseImpl.MAX_AVISOS_RECORDADOS + 6)).obtener("G.K");
+    }
+
+    private SincronizarParametrosCatalogoUseCaseImpl conRetencion(final ParameterValueRetentionPort retencion) {
+        return new SincronizarParametrosCatalogoUseCaseImpl(fuente, repositorio, invalidacion, ".", null, null,
+                Clock.fixed(AHORA, ZoneOffset.UTC), retencion);
+    }
+
+    @Test
+    void un_valor_rechazado_por_la_bd_retiene_el_ultimo_valor_valido_del_evento() {
+        final var retencion = mock(ParameterValueRetentionPort.class);
+        when(fuente.obtener("RED.CIDRS_CAMPUS")).thenReturn(Optional.of(new ParametroExterno("RED", "CIDRS_CAMPUS", "no-es-un-cidr")));
+        repositorioResponde(ResultadoSincronizacion.RECHAZADO);
+        when(repositorio.obtenerValor("RED", "CIDRS_CAMPUS")).thenReturn(Optional.of("10.0.0.0/8"));
+
+        final var resumen = conRetencion(retencion).procesarAviso(aviso("rj1", "ParameterUpdated", "RED.CIDRS_CAMPUS"));
+
+        assertEquals(new ResumenSincronizacion(1, 0, 0, 0, 0, 1, 0), resumen);
+        verify(retencion).retenerValorValido("RED", "CIDRS_CAMPUS", "no-es-un-cidr", "10.0.0.0/8");
+        verify(retencion, never()).liberar(anyString(), anyString());
+    }
+
+    @Test
+    void un_rechazo_sin_valor_en_la_bd_retiene_sin_valor_vigente() {
+        final var retencion = mock(ParameterValueRetentionPort.class);
+        when(fuente.obtener("RED.CIDRS_CAMPUS")).thenReturn(Optional.of(new ParametroExterno("RED", "CIDRS_CAMPUS", "x")));
+        repositorioResponde(ResultadoSincronizacion.RECHAZADO);
+        when(repositorio.obtenerValor("RED", "CIDRS_CAMPUS")).thenReturn(Optional.empty());
+
+        conRetencion(retencion).procesarAviso(aviso("rj2", "ParameterUpdated", "RED.CIDRS_CAMPUS"));
+
+        verify(retencion).retenerValorValido("RED", "CIDRS_CAMPUS", "x", null);
+    }
+
+    @Test
+    void un_valor_aplicado_o_sin_cambios_libera_la_retencion() {
+        final var retencion = mock(ParameterValueRetentionPort.class);
+        when(fuente.obtener("RED.CIDRS_CAMPUS")).thenReturn(Optional.of(new ParametroExterno("RED", "CIDRS_CAMPUS", "10.0.0.0/8")));
+        repositorioResponde(ResultadoSincronizacion.APLICADO);
+        conRetencion(retencion).procesarAviso(aviso("ok1", "ParameterUpdated", "RED.CIDRS_CAMPUS"));
+        repositorioResponde(ResultadoSincronizacion.SIN_CAMBIOS);
+        conRetencion(retencion).procesarAviso(aviso("ok2", "ParameterUpdated", "RED.CIDRS_CAMPUS"));
+        repositorioResponde(ResultadoSincronizacion.OBSOLETO);
+        conRetencion(retencion).procesarAviso(aviso("ok3", "ParameterUpdated", "RED.CIDRS_CAMPUS"));
+
+        verify(retencion, times(2)).liberar("RED", "CIDRS_CAMPUS");
+        verify(retencion, never()).retenerValorValido(anyString(), anyString(), any(), any());
+    }
+
+    @Test
+    void la_reconciliacion_tambien_retiene_el_valor_valido_de_lo_rechazado() {
+        final var retencion = mock(ParameterValueRetentionPort.class);
+        when(fuente.listar()).thenReturn(List.of(new ParametroExterno("RED", "CIDRS_CAMPUS", "no-es-un-cidr")));
+        repositorioResponde(ResultadoSincronizacion.RECHAZADO);
+        when(repositorio.obtenerValor("RED", "CIDRS_CAMPUS")).thenReturn(Optional.of("127.0.0.1/32"));
+
+        assertEquals(new ResumenSincronizacion(1, 0, 0, 0, 0, 1, 0), conRetencion(retencion).reconciliarTodo());
+
+        verify(retencion).retenerValorValido("RED", "CIDRS_CAMPUS", "no-es-un-cidr", "127.0.0.1/32");
     }
 }

@@ -20,6 +20,7 @@ import java.time.ZoneOffset;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -41,6 +42,7 @@ public class ParametroCatalogoJpaRepository implements ParametroCatalogoReposito
                  @grupo = :grupo, @clave = :clave, @valor = :valor, @operacion = :operacion,
                  @idEvento = :idEvento, @ocurridoEnUtc = :ocurridoEnUtc, @idCorrelacion = :idCorrelacion
             """;
+    static final String SQL_OBTENER_VALOR = "SELECT valor FROM dbo.uv_parametro WHERE grupo = :grupo AND clave = :clave";
     /** resultado, grupo, clave, huboCambio, fechaModificacion. */
     static final int COLUMNAS_EXTRA = 5;
 
@@ -77,6 +79,20 @@ public class ParametroCatalogoJpaRepository implements ParametroCatalogoReposito
                     "El procedimiento de sincronizacion de parametros devolvio un resultado desconocido.");
         }
         return rechazado;
+    }
+
+    @Override
+    public Optional<String> obtenerValor(final String grupo, final String clave) {
+        try {
+            final Query consulta = entityManager.createNativeQuery(SQL_OBTENER_VALOR);
+            consulta.setParameter("grupo", grupo);
+            consulta.setParameter("clave", clave);
+            return consulta.getResultList().stream().findFirst().map(Object::toString);
+        } catch (PersistenceException | IllegalStateException | IllegalArgumentException exception) {
+            LOGGER.error("SQL operation failed. operation=obtenerValorParametro, correlationId={}", CorrelationIdContext.getAsString());
+            throw new DatabaseOperationException(DatabaseErrorCode.DATABASE_OPERATION_ERROR,
+                    "No fue posible leer el parametro.", exception);
+        }
     }
 
     private static ResultadoSincronizacion tryResultado(final String texto) {

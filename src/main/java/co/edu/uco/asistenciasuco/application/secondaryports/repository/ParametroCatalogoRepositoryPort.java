@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.secondaryports.repository;
 
 import java.time.Instant;
+import java.util.Optional;
 
 /**
  * INT-004: copia en la BD ({@code dbo.CatalogoParametro}) el valor vigente de un parametro del Catalogo de Parametros externo.
@@ -21,6 +22,9 @@ public interface ParametroCatalogoRepositoryPort {
      */
     ResultadoSincronizacion sincronizarParametroExterno(String grupo, String clave, String valor, Operacion operacion,
                                                         String idEvento, Instant ocurridoEn);
+
+    /** Valor que guarda la BD para un parametro activo (el ultimo valido); vacio si no existe. Solo lectura. */
+    Optional<String> obtenerValor(String grupo, String clave);
 
     /** Operacion sobre el valor. */
     enum Operacion {

@@ -4,6 +4,7 @@ import co.edu.uco.asistenciasuco.application.features.catalogo.sincronizarparame
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.CatalogInvalidationPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogSourcePort;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogSourcePort.ParametroExterno;
+import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterValueRetentionPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.ParametroCatalogoRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.ParametroCatalogoRepositoryPort.Operacion;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.ParametroCatalogoRepositoryPort.ResultadoSincronizacion;
@@ -31,6 +32,8 @@ import java.util.Set;
  *       local: una lectura vacia no basta para pisarlo. Un metadato sin nombre usable reconcilia el catalogo completo.</li>
  *   <li>Solo {@code ParameterDeleted} con el parametro ausente del Catalogo hace {@code DELETE}: la fila se conserva y vuelve a su
  *       valor por defecto (los SP la leen). Si todavia lo devuelve, manda el Catalogo ({@code UPSERT}).</li>
+ *   <li>Si la BD rechaza el valor ({@code RECHAZADO}: tipo, rango, lista o formato invalido) se escribe un WARN y se retiene el
+ *       ultimo valor valido de la BD ({@link ParameterValueRetentionPort}): la cache no sirve el valor rechazado.</li>
  *   <li>Un evento ajeno (aplicacion o ambiente distintos de los configurados), de un tipo desconocido o sin nombre usable se
  *       ignora. Un evento repetido (mismo {@code eventId}) tambien; se recuerda solo si se proceso sin error, para que el
  *       broker lo reentregue si fallo el Catalogo o la BD. La BD tambien es idempotente por {@code eventId}.</li>
@@ -54,6 +57,7 @@ public class SincronizarParametrosCatalogoUseCaseImpl implements SincronizarPara
     private final String applicationId;
     private final String environmentId;
     private final Clock clock;
+    private final ParameterValueRetentionPort retencion;
     private final Set<String> avisosProcesados = Collections.newSetFromMap(Collections.synchronizedMap(
             new LinkedHashMap<>(16, 0.75f, false) {
                 @Override
@@ -71,6 +75,20 @@ public class SincronizarParametrosCatalogoUseCaseImpl implements SincronizarPara
             final String environmentId,
             final Clock clock
     ) {
+        this(fuente, repositorio, invalidacion, separador, applicationId, environmentId, clock, SinRetencion.INSTANCIA);
+    }
+
+    public SincronizarParametrosCatalogoUseCaseImpl(
+            final ParameterCatalogSourcePort fuente,
+            final ParametroCatalogoRepositoryPort repositorio,
+            final CatalogInvalidationPort invalidacion,
+            final String separador,
+            final String applicationId,
+            final String environmentId,
+            final Clock clock,
+            final ParameterValueRetentionPort retencion
+    ) {
+        this.retencion = Objects.requireNonNull(retencion, "ParameterValueRetentionPort es obligatorio.");
         this.fuente = Objects.requireNonNull(fuente, "ParameterCatalogSourcePort es obligatorio.");
         this.repositorio = Objects.requireNonNull(repositorio, "ParametroCatalogoRepositoryPort es obligatorio.");
         this.invalidacion = Objects.requireNonNull(invalidacion, "CatalogInvalidationPort es obligatorio.");
@@ -115,8 +133,7 @@ public class SincronizarParametrosCatalogoUseCaseImpl implements SincronizarPara
         int fallidos = 0;
         for (final ParametroExterno parametro : parametros) {
             try {
-                switch (repositorio.sincronizarParametroExterno(parametro.grupo(), parametro.clave(), parametro.valor(),
-                        Operacion.UPSERT, null, leidoEn)) {
+                switch (sincronizar(parametro, null, leidoEn)) {
                     case APLICADO -> aplicados++;
                     case SIN_CAMBIOS, DUPLICADO -> sinCambios++;
                     case DESCONOCIDO -> desconocidos++;
@@ -158,8 +175,7 @@ public class SincronizarParametrosCatalogoUseCaseImpl implements SincronizarPara
         final Instant ocurridoEn = aviso.ocurridoEn() == null ? clock.instant() : aviso.ocurridoEn();
         if (vigente.isPresent()) {
             final ParametroExterno parametro = vigente.get();
-            return resumenDe(repositorio.sincronizarParametroExterno(parametro.grupo(), parametro.clave(), parametro.valor(),
-                    Operacion.UPSERT, idAviso, ocurridoEn));
+            return resumenDe(sincronizar(parametro, idAviso, ocurridoEn));
         }
         if (!parametroBorrado) {
             LOGGER.warn("El Catalogo de Parametros ya no devuelve el parametro del evento; solo se invalida la cache. tipo={}, nombre={}",
@@ -169,6 +185,21 @@ public class SincronizarParametrosCatalogoUseCaseImpl implements SincronizarPara
         final String grupo = nombre.substring(0, corte);
         final String clave = nombre.substring(corte + separador.length());
         return resumenDe(repositorio.sincronizarParametroExterno(grupo, clave, null, Operacion.DELETE, idAviso, ocurridoEn));
+    }
+
+    /** UPSERT en la BD; si la BD rechaza el valor, se avisa y se retiene el ultimo valido; si lo acepta, se deja de retener. */
+    private ResultadoSincronizacion sincronizar(final ParametroExterno parametro, final String idAviso, final Instant ocurridoEn) {
+        final ResultadoSincronizacion resultado = repositorio.sincronizarParametroExterno(parametro.grupo(), parametro.clave(),
+                parametro.valor(), Operacion.UPSERT, idAviso, ocurridoEn);
+        if (resultado == ResultadoSincronizacion.RECHAZADO) {
+            final String vigente = repositorio.obtenerValor(parametro.grupo(), parametro.clave()).orElse(null);
+            LOGGER.warn("La BD rechazo el valor del Catalogo de Parametros; se conserva el ultimo valor valido. grupo={}, clave={}, idAviso={}",
+                    parametro.grupo(), parametro.clave(), idAviso);
+            retencion.retenerValorValido(parametro.grupo(), parametro.clave(), parametro.valor(), vigente);
+        } else if (resultado == ResultadoSincronizacion.APLICADO || resultado == ResultadoSincronizacion.SIN_CAMBIOS) {
+            retencion.liberar(parametro.grupo(), parametro.clave());
+        }
+        return resultado;
     }
 
     private ResumenSincronizacion reconciliarPorEvento(final String idAviso) {
@@ -209,6 +240,20 @@ public class SincronizarParametrosCatalogoUseCaseImpl implements SincronizarPara
 
     private static boolean coincide(final String esperado, final String recibido) {
         return esperado == null || vacio(recibido) || esperado.equalsIgnoreCase(recibido.trim());
+    }
+
+    private enum SinRetencion implements ParameterValueRetentionPort {
+        INSTANCIA;
+
+        @Override
+        public void retenerValorValido(final String grupo, final String clave, final String valorRechazado, final String valorVigente) {
+            // sin proveedor que retenga: el valor rechazado no esta en ninguna cache de este proceso
+        }
+
+        @Override
+        public void liberar(final String grupo, final String clave) {
+            // nada que liberar
+        }
     }
 
     private static boolean vacio(final String valor) {
