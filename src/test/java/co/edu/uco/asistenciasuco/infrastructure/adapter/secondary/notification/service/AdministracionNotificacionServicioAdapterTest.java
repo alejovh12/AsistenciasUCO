@@ -266,7 +266,7 @@ class AdministracionNotificacionServicioAdapterTest {
     }
 
     @Test
-    void el_correo_de_prueba_lleva_la_correlacion_de_la_solicitud_y_no_un_valor_fijo() throws Exception {
+    void el_correo_de_prueba_envia_la_correlacion_en_la_cabecera_y_el_administrador_como_solicitante() throws Exception {
         final UUID correlacion = UUID.fromString("f7c16a61-3c64-4598-ab40-7ba3be13ddd4");
         co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext.set(correlacion);
         try {
@@ -274,7 +274,8 @@ class AdministracionNotificacionServicioAdapterTest {
 
             adapter.enviarCorreoPrueba(admin, "SESION_CANCELADA", "ana@uco.edu.co");
 
-            assertEquals(correlacion.toString(), cuerpoEnviado().get("solicitadoPor").asText());
+            assertEquals(correlacion.toString(), servidor.peticiones.getFirst().cabecera("X-Correlation-Id"));
+            assertEquals(admin.toString(), cuerpoEnviado().get("solicitadoPor").asText());
         } finally {
             co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext.clear();
         }
