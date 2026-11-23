@@ -1,0 +1,188 @@
+{
+  "aplicacion": {
+    "activa": true,
+    "fechaFinal": "2031-01-01T04:59:59Z",
+    "fechaInicio": "2026-01-01T05:00:00Z",
+    "id": "0d24a3a4-8c9d-4ac3-9b1a-a97ef16ea186",
+    "idOrganizacion": "39501a2c-bdf6-4fe2-8588-2f6202f68d16",
+    "nombre": "AsistenciasUCO"
+  },
+  "ambiente": {
+    "id": "00000000-0000-0000-0000-000000000011",
+    "nombre": "Desarrollo"
+  },
+  "parametros": [
+    {
+      "parametro": {
+        "activo": true,
+        "id": "8bdf3512-f737-4d22-9f6f-c94cf0056305",
+        "idFuncionalidad": "18a56781-5d15-4914-94f7-15100fc1a641",
+        "idTipoParametro": "00000000-0000-0000-0000-000000000001",
+        "nombre": "ARCHIVOS.LIMITE_SUBIDAS_POR_MINUTO"
+      },
+      "tipoParametro": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "nombre": "Técnico"
+      },
+      "funcionalidad": {
+        "activo": true,
+        "fechaFinal": "2031-01-01T04:59:59Z",
+        "fechaInicio": "2026-01-01T05:00:00Z",
+        "id": "18a56781-5d15-4914-94f7-15100fc1a641",
+        "idModulo": "40b26e0b-da68-4619-b09e-2ffc2544dadb",
+        "nombre": "Parametros de negocio"
+      },
+      "modulo": {
+        "activo": true,
+        "fechaFinal": "2031-01-01T04:59:59Z",
+        "fechaInicio": "2026-01-01T05:00:00Z",
+        "id": "40b26e0b-da68-4619-b09e-2ffc2544dadb",
+        "idAplicacion": "0d24a3a4-8c9d-4ac3-9b1a-a97ef16ea186",
+        "nombre": "Asistencias"
+      },
+      "metadatos": [
+        {
+          "metadato": {
+            "id": "1fefbff2-1e60-458c-a3e1-c8f14db82164",
+            "idAmbiente": "00000000-0000-0000-0000-000000000011",
+            "idParametro": "8bdf3512-f737-4d22-9f6f-c94cf0056305",
+            "idTipoMetadato": "00000000-0000-0000-0000-000000000002",
+            "valor": "10"
+          },
+          "tipoMetadato": {
+            "detalle": "Tipo de datos que contiene tanto letras como números",
+            "id": "00000000-0000-0000-0000-000000000002",
+            "tipo": "alfanumerico"
+          }
+        }
+      ],
+      "configuracionAmbiente": {
+        "asociacion": {
+          "id": "96a7b3ce-7e8f-448f-9d53-c319e1e3fb8c",
+          "idAmbiente": "00000000-0000-0000-0000-000000000011",
+          "idEstadoMetadatoAmbiente": "00000000-0000-0000-0000-000000000020",
+          "idParametro": "8bdf3512-f737-4d22-9f6f-c94cf0056305"
+        },
+        "estado": {
+          "id": "00000000-0000-0000-0000-000000000020",
+          "nombre": "Activo"
+        }
+      }
+    },
+    {
+      "parametro": {
+        "activo": true,
+        "id": "de7e46a7-fd88-4638-9d53-d918a0f5e90d",
+        "idFuncionalidad": "18a56781-5d15-4914-94f7-15100fc1a641",
+        "idTipoParametro": "00000000-0000-0000-0000-000000000001",
+        "nombre": "ASISTENCIA_QR.HABILITADA"
+      },
+      "tipoParametro": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "nombre": "Técnico"
+      },
+      "funcionalidad": {
+        "activo": true,
+        "fechaFinal": "2031-01-01T04:59:59Z",
+        "fechaInicio": "2026-01-01T05:00:00Z",
+        "id": "18a56781-5d15-4914-94f7-15100fc1a641",
+        "idModulo": "40b26e0b-da68-4619-b09e-2ffc2544dadb",
+        "nombre": "Parametros de negocio"
+      },
+      "modulo": {
+        "activo": true,
+        "fechaFinal": "2031-01-01T04:59:59Z",
+        "fechaInicio": "2026-01-01T05:00:00Z",
+        "id": "40b26e0b-da68-4619-b09e-2ffc2544dadb",
+        "idAplicacion": "0d24a3a4-8c9d-4ac3-9b1a-a97ef16ea186",
+        "nombre": "Asistencias"
+      },
+      "metadatos": [
+        {
+          "metadato": {
+            "id": "e71aa600-ec11-444c-bfcb-44fdbeec7c6c",
+            "idAmbiente": "00000000-0000-0000-0000-000000000011",
+            "idParametro": "de7e46a7-fd88-4638-9d53-d918a0f5e90d",
+            "idTipoMetadato": "00000000-0000-0000-0000-000000000002",
+            "valor": "true"
+          },
+          "tipoMetadato": {
+            "detalle": "Tipo de datos que contiene tanto letras como números",
+            "id": "00000000-0000-0000-0000-000000000002",
+            "tipo": "alfanumerico"
+          }
+        }
+      ],
+      "configuracionAmbiente": {
+        "asociacion": {
+          "id": "e3da6bfb-213c-4e1a-9e1a-4c2d441039f7",
+          "idAmbiente": "00000000-0000-0000-0000-000000000011",
+          "idEstadoMetadatoAmbiente": "00000000-0000-0000-0000-000000000020",
+          "idParametro": "de7e46a7-fd88-4638-9d53-d918a0f5e90d"
+        },
+        "estado": {
+          "id": "00000000-0000-0000-0000-000000000020",
+          "nombre": "Activo"
+        }
+      }
+    },
+    {
+      "parametro": {
+        "activo": true,
+        "id": "f5a2c0ce-38dc-48a1-8f77-7b0453ace235",
+        "idFuncionalidad": "18a56781-5d15-4914-94f7-15100fc1a641",
+        "idTipoParametro": "00000000-0000-0000-0000-000000000001",
+        "nombre": "ASISTENCIA_QR.LIMITE_ESTUDIANTE_POR_MINUTO"
+      },
+      "tipoParametro": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "nombre": "Técnico"
+      },
+      "funcionalidad": {
+        "activo": true,
+        "fechaFinal": "2031-01-01T04:59:59Z",
+        "fechaInicio": "2026-01-01T05:00:00Z",
+        "id": "18a56781-5d15-4914-94f7-15100fc1a641",
+        "idModulo": "40b26e0b-da68-4619-b09e-2ffc2544dadb",
+        "nombre": "Parametros de negocio"
+      },
+      "modulo": {
+        "activo": true,
+        "fechaFinal": "2031-01-01T04:59:59Z",
+        "fechaInicio": "2026-01-01T05:00:00Z",
+        "id": "40b26e0b-da68-4619-b09e-2ffc2544dadb",
+        "idAplicacion": "0d24a3a4-8c9d-4ac3-9b1a-a97ef16ea186",
+        "nombre": "Asistencias"
+      },
+      "metadatos": [
+        {
+          "metadato": {
+            "id": "d24c0833-15ce-4305-9ab1-2ae0bcdc3183",
+            "idAmbiente": "00000000-0000-0000-0000-000000000011",
+            "idParametro": "f5a2c0ce-38dc-48a1-8f77-7b0453ace235",
+            "idTipoMetadato": "00000000-0000-0000-0000-000000000002",
+            "valor": "5"
+          },
+          "tipoMetadato": {
+            "detalle": "Tipo de datos que contiene tanto letras como números",
+            "id": "00000000-0000-0000-0000-000000000002",
+            "tipo": "alfanumerico"
+          }
+        }
+      ],
+      "configuracionAmbiente": {
+        "asociacion": {
+          "id": "404e3608-462b-4d63-8ed5-5b2d2f972297",
+          "idAmbiente": "00000000-0000-0000-0000-000000000011",
+          "idEstadoMetadatoAmbiente": "00000000-0000-0000-0000-000000000020",
+          "idParametro": "f5a2c0ce-38dc-48a1-8f77-7b0453ace235"
+        },
+        "estado": {
+          "id": "00000000-0000-0000-0000-000000000020",
+          "nombre": "Activo"
+        }
+      }
+    }
+  ],
+  "mensajes": []
+}
