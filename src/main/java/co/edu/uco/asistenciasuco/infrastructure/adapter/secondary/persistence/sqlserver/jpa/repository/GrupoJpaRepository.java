@@ -96,8 +96,9 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
                  @tamanoPagina = :tamanoPagina
             """;
     static final int TAMANO_PAGINA_GRUPOS = 100;
-    // 12 columnas de datos + totalRegistros + idProgramaResponsable, nombreProgramaResponsable y esResponsable (DEC-077, al final).
-    static final int COLUMNAS_GRUPOS = 16;
+    // 12 columnas de datos + totalRegistros + idProgramaResponsable, nombreProgramaResponsable y esResponsable (DEC-077, al final)
+    // + nombreDocente (BD-9, al final). Este listado no las usa, pero el conteo exacto detecta un cambio no aditivo del SP.
+    static final int COLUMNAS_GRUPOS = 17;
     static final int COLUMNA_TOTAL_GRUPOS = 12;
     static final String HQL_GRUPOS_POR_FACULTAD = """
             select g
