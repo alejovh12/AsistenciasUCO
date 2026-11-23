@@ -1,0 +1,5 @@
+# El .gitignore de la raiz ignora out/ (salida del IDE); en este servicio out/ son los puertos y adaptadores de salida.
+!out/
+target/
+.env
+!.env.example
