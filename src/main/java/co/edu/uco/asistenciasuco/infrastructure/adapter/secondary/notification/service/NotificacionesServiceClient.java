@@ -43,7 +43,7 @@ public final class NotificacionesServiceClient {
      * ({@link #codificar(String)}) y sin {@code .} ni {@code ..} como segmento. Asi un valor del usuario (tipo de plantilla,
      * version, id) no puede cambiar el destino de la peticion (SSRF).
      */
-    private static final Pattern RUTA_PERMITIDA = Pattern.compile("^/api/v1(?!.*/\\.{1,2}(?:/|$))(?:/[A-Za-z0-9._~*%-]+)+$");
+    private static final Pattern RUTA_PERMITIDA = Pattern.compile("^/api/v1(?!.*/\\.{1,2}(?:/|$))(?:/[A-Za-z0-9._~*%-]++)++$");
     /** Consulta ya codificada por {@link #consultaCodificada(Map)}: vacia o {@code ?clave=valor&...}. */
     private static final Pattern CONSULTA_PERMITIDA = Pattern.compile("^(?:\\?[A-Za-z0-9._~*%=&-]*)?$");
 
