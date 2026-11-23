@@ -22,6 +22,7 @@ import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -36,6 +37,15 @@ import java.util.stream.Collectors;
 public final class NotificacionesServiceClient {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NotificacionesServiceClient.class);
+
+    /**
+     * Rutas que el backend puede pedir al servicio: siempre bajo {@code /api/v1}, con segmentos ya codificados
+     * ({@link #codificar(String)}) y sin {@code .} ni {@code ..} como segmento. Asi un valor del usuario (tipo de plantilla,
+     * version, id) no puede cambiar el destino de la peticion (SSRF).
+     */
+    private static final Pattern RUTA_PERMITIDA = Pattern.compile("^/api/v1(?!.*/\\.{1,2}(?:/|$))(?:/[A-Za-z0-9._~*%-]+)+$");
+    /** Consulta ya codificada por {@link #consultaCodificada(Map)}: vacia o {@code ?clave=valor&...}. */
+    private static final Pattern CONSULTA_PERMITIDA = Pattern.compile("^(?:\\?[A-Za-z0-9._~*%=&-]*)?$");
 
     private final HttpClient httpClient;
     private final NotificacionesServiceProperties properties;
@@ -110,7 +120,7 @@ public final class NotificacionesServiceClient {
         if (!properties.configurado()) {
             throw new ServicioNotificacionesNoDisponibleException("El servicio de notificaciones no esta configurado.");
         }
-        final HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create(properties.url() + ruta + consultaCodificada(consulta)))
+        final HttpRequest.Builder builder = HttpRequest.newBuilder(destino(ruta, consultaCodificada(consulta)))
                 .timeout(properties.readTimeout())
                 .header("Accept", "application/json")
                 .header("X-Api-Key", properties.apiKey());
@@ -123,6 +133,18 @@ public final class NotificacionesServiceClient {
             builder.header("traceparent", traceparent);
         }
         return builder;
+    }
+
+    /**
+     * Construye la URI de destino solo con rutas permitidas: la URL base (host y puerto) sale de la configuracion y lo que
+     * llega del usuario queda confinado a segmentos codificados bajo {@code /api/v1}. Otra ruta es un error de programacion
+     * y no llega a la red.
+     */
+    private URI destino(final String ruta, final String consulta) {
+        if (ruta == null || !RUTA_PERMITIDA.matcher(ruta).matches() || !CONSULTA_PERMITIDA.matcher(consulta).matches()) {
+            throw new IllegalArgumentException("Ruta no permitida hacia el servicio de notificaciones.");
+        }
+        return URI.create(properties.url() + ruta + consulta);
     }
 
     private RespuestaServicio ejecutar(final HttpRequest.Builder builder) {

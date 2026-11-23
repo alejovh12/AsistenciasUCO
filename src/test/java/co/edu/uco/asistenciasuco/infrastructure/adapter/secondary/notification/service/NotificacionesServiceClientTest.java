@@ -101,7 +101,7 @@ class NotificacionesServiceClientTest {
         servidor.responder(500, "<html>boom</html>");
 
         final ServicioNotificacionesException e = assertThrows(ServicioNotificacionesException.class,
-                () -> cliente(servidor.url(), Duration.ofSeconds(5)).get("/x", Map.of()));
+                () -> cliente(servidor.url(), Duration.ofSeconds(5)).get("/api/v1/x", Map.of()));
 
         assertEquals(500, e.status());
         assertEquals("", e.code());
@@ -125,11 +125,34 @@ class NotificacionesServiceClientTest {
     }
 
     @Test
+    void un_segmento_con_barra_se_codifica_y_no_sale_de_la_ruta_de_plantillas() {
+        servidor.responder(200, "{}");
+
+        cliente(servidor.url(), Duration.ofSeconds(5))
+                .post("/api/v1/plantillas/" + NotificacionesServiceClient.codificar("../admin") + "/versiones", null);
+
+        assertEquals("/api/v1/plantillas/..%2Fadmin/versiones", servidor.peticiones.getFirst().ruta());
+    }
+
+    @Test
+    void rechaza_rutas_fuera_de_la_api_o_con_segmentos_relativos_sin_llamar_al_servicio() {
+        final NotificacionesServiceClient cliente = cliente(servidor.url(), Duration.ofSeconds(5));
+
+        for (final String ruta : new String[] {
+                "/actuator/env", "/api/v1/../actuator", "/api/v1/plantillas/./x", "/api/v1/plantillas/..",
+                "/api/v1//x", "/api/v1/x@otro-host", "/api/v1/x?y=1", "api/v1/x", "/api/v1"}) {
+            assertThrows(IllegalArgumentException.class, () -> cliente.get(ruta, Map.of()), ruta);
+        }
+        assertThrows(IllegalArgumentException.class, () -> cliente.get(null, Map.of()));
+        assertTrue(servidor.peticiones.isEmpty());
+    }
+
+    @Test
     void sin_url_configurada_no_se_intenta_la_conexion() {
         final NotificacionesServiceClient cliente = cliente("", Duration.ofSeconds(1));
 
         assertFalse(cliente.configurado());
-        assertThrows(ServicioNotificacionesNoDisponibleException.class, () -> cliente.get("/x", Map.of()));
+        assertThrows(ServicioNotificacionesNoDisponibleException.class, () -> cliente.get("/api/v1/x", Map.of()));
         assertTrue(servidor.peticiones.isEmpty());
     }
 
@@ -138,14 +161,14 @@ class NotificacionesServiceClientTest {
         servidor.responder(503, "{\"code\":\"ERROR_INTERNO\",\"message\":\"x\"}");
         final NotificacionesServiceClient cliente = cliente(servidor.url(), Duration.ofSeconds(5));
         for (int i = 0; i < 4; i++) {
-            assertThrows(ServicioNotificacionesException.class, () -> cliente.get("/x", Map.of()));
+            assertThrows(ServicioNotificacionesException.class, () -> cliente.get("/api/v1/x", Map.of()));
         }
         assertEquals(CircuitBreaker.State.OPEN, breaker.getState());
         assertFalse(cliente.disponible());
         final int llamadas = servidor.peticiones.size();
 
         final ServicioNotificacionesNoDisponibleException e = assertThrows(ServicioNotificacionesNoDisponibleException.class,
-                () -> cliente.get("/x", Map.of()));
+                () -> cliente.get("/api/v1/x", Map.of()));
 
         assertTrue(e.getMessage().contains("circuit"));
         assertEquals(llamadas, servidor.peticiones.size());
