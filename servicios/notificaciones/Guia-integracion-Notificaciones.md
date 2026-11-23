@@ -46,7 +46,7 @@ Content-Type: application/json
 
 {
   "aplicacion": "asistencias",
-  "idempotencyKey": "7b0e2c1a-3a52-4cf3-9c7f-0d6f3d3b5a10",
+  "idempotencyKey": "00000000-0000-0000-0000-000000000001",
   "tipo": "SESION_CANCELADA",
   "idioma": "es",
   "destinatarios": [ { "correo": "ana.gomez@uco.edu.co", "nombre": "Ana Gómez" } ],
