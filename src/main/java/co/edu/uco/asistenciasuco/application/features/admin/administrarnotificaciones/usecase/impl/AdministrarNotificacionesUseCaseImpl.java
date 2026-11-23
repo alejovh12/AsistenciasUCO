@@ -38,6 +38,10 @@ public final class AdministrarNotificacionesUseCaseImpl implements AdministrarNo
     @Override
     public EstadoCanalPublicoProjection consultarEstadoCanalPublico(final UUID idUsuarioEjecutor) {
         final EstadoCanalNotificacionProjection estado = port.consultarEstadoCanal();
+        if (estado.ultimoEnvioUtc() != null || estado.ultimoError() != null) {
+            // El Servicio de Notificaciones ya informa su ultimo envio y ultimo error vigente: no se reconstruyen desde la cola.
+            return new EstadoCanalPublicoProjection(estado.dispatcherEnabled() && estado.disponible(), estado.ultimoEnvioUtc(), estado.ultimoError());
+        }
         final Instant ultimoEnvio = masReciente(ESTADO_ENTREGADA, idUsuarioEjecutor).map(NotificacionSalienteAdminProjection::entregadoEn).orElse(null);
         final Optional<NotificacionSalienteAdminProjection> fallida = masReciente(ESTADO_FALLIDA_DEFINITIVA, idUsuarioEjecutor);
         final Optional<NotificacionSalienteAdminProjection> reintentable = masReciente(ESTADO_FALLIDA_REINTENTABLE, idUsuarioEjecutor);

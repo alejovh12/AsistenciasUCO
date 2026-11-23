@@ -244,6 +244,28 @@ class AdministracionNotificacionServicioAdapterTest {
     }
 
     @Test
+    void el_estado_del_canal_mapea_el_ultimo_envio_y_el_ultimo_error_del_servicio() {
+        servidor.responder(200, """
+                {"canalActivo":true,"dispatcherEnabled":true,"disponible":true,"canal":"smtp","ultimoEnvioUtc":"2026-11-23T00:53:35Z",
+                 "ultimoError":"SMTP_TIMEOUT"}""");
+
+        final EstadoCanalNotificacionProjection estado = adapter.consultarEstadoCanal();
+
+        assertEquals(Instant.parse("2026-11-23T00:53:35Z"), estado.ultimoEnvioUtc());
+        assertEquals("SMTP_TIMEOUT", estado.ultimoError());
+    }
+
+    @Test
+    void el_estado_del_canal_sin_ultimo_envio_ni_error_los_deja_nulos() {
+        servidor.responder(200, "{\"canalActivo\":true,\"dispatcherEnabled\":true,\"disponible\":true,\"ultimoEnvioUtc\":null}");
+
+        final EstadoCanalNotificacionProjection estado = adapter.consultarEstadoCanal();
+
+        assertEquals(null, estado.ultimoEnvioUtc());
+        assertEquals(null, estado.ultimoError());
+    }
+
+    @Test
     void el_estado_del_canal_responde_no_disponible_si_el_servicio_no_contesta() {
         final String urlCerrada = servidor.url();
         servidor.close();

@@ -80,7 +80,9 @@ public final class AdministracionNotificacionServicioAdapter implements Administ
                     properties.requireConfirmedEmail(),
                     texto(estado, "platformUrl", properties.platformUrl()),
                     estado.path("testModeEnabled").asBoolean(false),
-                    estado.path("testModeRedirectCount").asInt(0));
+                    estado.path("testModeRedirectCount").asInt(0),
+                    instante(estado.path("ultimoEnvioUtc")),
+                    textoONulo(estado, "ultimoError"));
         } catch (final ServicioNotificacionesNoDisponibleException | ServicioNotificacionesException e) {
             // El estado del canal responde aunque el servicio este caido: el canal simplemente no esta disponible.
             return new EstadoCanalNotificacionProjection("servicio", "servicio", false, false, "", 0, "", false, "", "",
