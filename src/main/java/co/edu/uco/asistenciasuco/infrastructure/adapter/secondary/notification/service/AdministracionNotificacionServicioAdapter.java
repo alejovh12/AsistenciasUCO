@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -313,15 +314,19 @@ public final class AdministracionNotificacionServicioAdapter implements Administ
         }
     }
 
+    /**
+     * Lee un instante del servicio y lo recorta a microsegundos: el servicio serializa {@link Instant} con
+     * nanosegundos (9 decimales) y el contrato {@code UtcInstantResponse} admite como maximo 7.
+     */
     private static Instant instante(final JsonNode nodo) {
         if (nodo.isMissingNode() || nodo.isNull() || nodo.asText().isBlank()) {
             return null;
         }
         try {
-            return Instant.parse(nodo.asText());
+            return Instant.parse(nodo.asText()).truncatedTo(ChronoUnit.MICROS);
         } catch (final DateTimeParseException _) {
             try {
-                return OffsetDateTime.parse(nodo.asText()).toInstant();
+                return OffsetDateTime.parse(nodo.asText()).toInstant().truncatedTo(ChronoUnit.MICROS);
             } catch (final DateTimeParseException _) {
                 return null;
             }

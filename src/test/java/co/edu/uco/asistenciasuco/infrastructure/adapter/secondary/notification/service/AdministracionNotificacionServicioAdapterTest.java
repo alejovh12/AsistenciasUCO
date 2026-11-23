@@ -244,6 +244,20 @@ class AdministracionNotificacionServicioAdapterTest {
     }
 
     @Test
+    void los_instantes_del_servicio_se_recortan_a_lo_que_admite_UtcInstantResponse() {
+        // El servicio serializa Instant con nanosegundos (9 decimales); el contrato UtcInstantResponse admite como
+        // maximo 7 y el frontend rechaza el valor (mostraba «—» en «Último envío»).
+        servidor.responder(200, """
+                {"canalActivo":true,"dispatcherEnabled":true,"disponible":true,"canal":"smtp",
+                 "ultimoEnvioUtc":"2026-11-23T02:24:02.076351200Z","ultimoError":null}""");
+
+        final EstadoCanalNotificacionProjection estado = adapter.consultarEstadoCanal();
+
+        assertEquals(java.time.Instant.parse("2026-11-23T02:24:02.076351Z"), estado.ultimoEnvioUtc());
+        assertEquals(0, estado.ultimoEnvioUtc().getNano() % 1_000, "sin fraccion por debajo del microsegundo");
+    }
+
+    @Test
     void el_estado_del_canal_mapea_el_ultimo_envio_y_el_ultimo_error_del_servicio() {
         servidor.responder(200, """
                 {"canalActivo":true,"dispatcherEnabled":true,"disponible":true,"canal":"smtp","ultimoEnvioUtc":"2026-11-23T00:53:35Z",
