@@ -1,0 +1,110 @@
+spring:
+  application:
+    name: notificaciones-uco
+  datasource:
+    url: ${NOTIFICACIONES_DB_URL:jdbc:sqlserver://localhost:1433;databaseName=notificacionesdb;encrypt=true;trustServerCertificate=true}
+    username: ${NOTIFICACIONES_DB_USER:notificacionesdb}
+    password: ${NOTIFICACIONES_DB_PASSWORD:}
+    hikari:
+      maximum-pool-size: ${NOTIFICACIONES_DB_POOL_SIZE:10}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    encoding: UTF-8
+
+server:
+  port: 8080
+  shutdown: graceful
+
+# Configuracion del servicio. Secretos solo por variables de entorno (nunca en el repositorio).
+notificaciones:
+  api-key: ${NOTIFICACIONES_API_KEY:}                       # obligatoria; el servicio no arranca sin ella
+  canal: ${NOTIFICACIONES_CANAL:log}                          # smtp | log (log no envia, solo registra)
+  smtp:
+    host: ${SMTP_NOTIFICATION_HOST:}
+    port: ${SMTP_NOTIFICATION_PORT:587}
+    username: ${SMTP_NOTIFICATION_USERNAME:}
+    password: ${SMTP_NOTIFICATION_PASSWORD:}
+    starttls: ${SMTP_NOTIFICATION_STARTTLS:true}
+    ssl: ${SMTP_NOTIFICATION_SSL:false}
+    from-address: ${SMTP_NOTIFICATION_FROM_ADDRESS:}
+    from-name: ${SMTP_NOTIFICATION_FROM_NAME:Asistencia UCO}
+    connect-timeout: ${SMTP_NOTIFICATION_CONNECT_TIMEOUT:10s}
+    read-timeout: ${SMTP_NOTIFICATION_READ_TIMEOUT:20s}
+    max-bcc: ${SMTP_NOTIFICATION_MAX_BCC:50}                # 1..100
+    rate-per-minute: ${SMTP_NOTIFICATION_RATE_PER_MINUTE:60} # TopeEnvios, 1..10000
+    rate-per-day: ${SMTP_NOTIFICATION_RATE_PER_DAY:500}      # >= rate-per-minute
+    platform-url: ${SMTP_NOTIFICATION_PLATFORM_URL:}        # vacio => el pie del correo no incluye enlace
+    test-mode:
+      enabled: ${SMTP_NOTIFICATION_TEST_MODE_ENABLED:false}  # true => redirige TODO a redirect-to
+      redirect-to: ${SMTP_NOTIFICATION_TEST_MODE_REDIRECT_TO:} # 1..5 direcciones separadas por coma
+  dispatcher:
+    enabled: ${DISPATCHER_ENABLED:true}
+    batch-size: ${DISPATCHER_BATCH_SIZE:50}                  # 1..500
+    lease: ${DISPATCHER_LEASE:60s}                           # 5s..1h
+    sweeper-interval: ${DISPATCHER_SWEEPER_INTERVAL:30s}     # 1s..1h
+    max-attempts: ${DISPATCHER_MAX_ATTEMPTS:5}               # 1..20
+    backoff-base: ${DISPATCHER_BACKOFF_BASE:30s}
+    backoff-max: ${DISPATCHER_BACKOFF_MAX:15m}
+    retention-days: ${DISPATCHER_RETENTION_DAYS:30}
+    retention-interval: ${DISPATCHER_RETENTION_INTERVAL:6h}
+    instance-id: ${DISPATCHER_INSTANCE_ID:}                  # vacio => <hostname>-<8 hex aleatorios>
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+      group:
+        # La sonda de readiness solo depende de la BD: una caida del SMTP no debe sacar al servicio del trafico.
+        readiness:
+          include: readinessState,db
+  otlp:
+    metrics:
+      export:
+        enabled: false
+  tracing:
+    sampling:
+      probability: ${MANAGEMENT_TRACING_SAMPLING_PROBABILITY:1.0}
+    export:
+      otlp:
+        enabled: ${MANAGEMENT_TRACING_EXPORT_OTLP_ENABLED:false}   # true con un colector OTLP en MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT
+  opentelemetry:
+    resource-attributes:
+      service.name: ${spring.application.name}
+    tracing:
+      export:
+        otlp:
+          endpoint: ${MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+          transport: http
+  logging:
+    export:
+      otlp:
+        enabled: false
+
+# Logs como flujo en stdout: JSON estructurado (logstash) con correlationId, traceId, spanId y service.
+logging:
+  structured:
+    format:
+      console: ${NOTIFICACIONES_LOG_FORMAT:logstash}
+    json:
+      add:
+        service: ${spring.application.name}
+  pattern:
+    correlation: "[${spring.application.name:},%X{traceId:-},%X{spanId:-}] [%X{correlationId:-}] "
+  include-application-name: false

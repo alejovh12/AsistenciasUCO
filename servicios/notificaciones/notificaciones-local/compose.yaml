@@ -1,0 +1,37 @@
+# Kit de laboratorio del Servicio de Notificaciones UCO 0.1.1 (Complementos/Notificaciones).
+# Un solo contenedor: el servicio. La BD (notificacionesdb) vive en el SQL Server del laboratorio (sql_server_asistencias,
+# alias "sqlserver" en la red asis-red); se crea una vez con scripts/crear-bd.ps1.
+#
+#   docker build -t notificaciones-uco:0.1.1 ../notificaciones-uco      (o: docker compose build)
+#   pwsh scripts/crear-bd.ps1                                              (una vez, o al recrear el volumen de SQL Server)
+#   docker compose up -d
+#
+# Los secretos salen de .env (copia de .env.example). Nunca se escriben aqui.
+name: ext-notificaciones
+
+services:
+  servicio:
+    image: notificaciones-uco:0.1.1
+    build:
+      context: ../notificaciones-uco
+    container_name: ext-notificaciones-servicio
+    env_file:
+      - .env
+    ports:
+      # Solo loopback del PC; las demas aplicaciones llegan por la red asis-red (http://ext-notificaciones-servicio:8080).
+      - "127.0.0.1:18090:8080"
+    # Tope de memoria del laboratorio (~300 MB en reposo).
+    mem_limit: 450m
+    networks:
+      asis-red:
+        aliases: [ext-notificaciones-servicio]
+    # Hasta que la BD este lista el servicio reintenta el arranque; con "no" lo gobierna `infra.ps1 stack` como las demas secciones.
+    restart: "no"
+    stop_grace_period: 30s
+    labels:
+      asistencias.seccion: ext-notificaciones
+
+networks:
+  asis-red:
+    name: asis-red
+    external: true

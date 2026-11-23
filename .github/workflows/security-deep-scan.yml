@@ -84,7 +84,10 @@ jobs:
           # Maven Central limita a los runners compartidos (HTTP 429). Sin -U (la cache de setup-java ya
           # trae lo resuelto) y con reintentos con espera; un 429 transitorio no debe tumbar el escaneo.
           for intento in 1 2 3; do
-            if ./mvnw -B -ntp --no-transfer-progress -DskipTests dependency:go-offline dependency:resolve; then
+            # Tambien el pom del servicio de notificaciones (servicios/): Trivy fs escanea todos los pom.xml del repo.
+            if ./mvnw -B -ntp --no-transfer-progress -DskipTests dependency:go-offline dependency:resolve \
+               && ./mvnw -B -ntp --no-transfer-progress -DskipTests -f servicios/notificaciones/notificaciones-uco/pom.xml \
+                    dependency:go-offline dependency:resolve; then
               exit 0
             fi
             if [ "$intento" -lt 3 ]; then
