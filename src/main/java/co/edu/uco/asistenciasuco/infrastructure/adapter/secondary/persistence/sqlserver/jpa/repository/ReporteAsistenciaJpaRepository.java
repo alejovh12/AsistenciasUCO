@@ -28,14 +28,16 @@ public class ReporteAsistenciaJpaRepository implements ReporteAsistenciaQueryPor
     static final String HQL_REPORTE_GRUPO = """
             select new co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.projection.ReporteAsistenciaQueryRow(
                 s.codigoGrupo, s.nombreGrupo, s.numero, s.nombre, s.fechaHoraInicio, s.fechaHoraFin,
-                ei.numeroIdentificacion, ei.nombreCompleto, u.correo, da.asistio, da.nombreRazonCausa)
+                ei.numeroIdentificacion, ei.nombreCompleto, u.correo, da.asistio, da.nombreRazonCausa, se.estaCancelada)
             from UvSesionEntity s
+            left join UvSesionEstadoEntity se on se.idSesion = s.id
             join UvEstudianteGrupoEntity eg on eg.idGrupo = s.idGrupo
             join UvEstudianteIdentidadEntity ei on ei.id = eg.idEstudiante
             join UvUsuarioEntity u on u.id = ei.idUsuario
             left join UvAsistenciaEntity a on a.idSesion = s.id and a.idEstudianteGrupo = eg.id
             left join UvDetalleAsistenciaEntity da on da.idAsistencia = a.id
             where s.idGrupo = :idGrupo
+              and (se.solicitudRechazada is null or se.solicitudRechazada = false)
             order by s.numero, s.fechaHoraInicio, ei.nombreCompleto, ei.id, eg.id
             """;
 

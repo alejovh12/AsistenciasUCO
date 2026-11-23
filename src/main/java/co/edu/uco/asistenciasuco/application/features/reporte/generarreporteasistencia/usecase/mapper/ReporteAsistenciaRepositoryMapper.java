@@ -20,7 +20,8 @@ public final class ReporteAsistenciaRepositoryMapper {
                 row.nombreEstudiante(),
                 row.correoEstudiante(),
                 row.asistio(),
-                row.razonCausa()
+                row.razonCausa(),
+                row.sesionCancelada()
         );
     }
 }

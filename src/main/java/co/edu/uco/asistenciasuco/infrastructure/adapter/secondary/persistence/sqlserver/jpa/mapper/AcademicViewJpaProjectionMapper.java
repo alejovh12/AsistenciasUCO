@@ -151,7 +151,8 @@ public final class AcademicViewJpaProjectionMapper {
                 row.nombreCompleto(),
                 row.correo(),
                 row.asistio(),
-                row.nombreRazonCausa());
+                row.nombreRazonCausa(),
+                Boolean.TRUE.equals(row.sesionCancelada()));
     }
 
     /** Totales de vista: NULL es cero. */

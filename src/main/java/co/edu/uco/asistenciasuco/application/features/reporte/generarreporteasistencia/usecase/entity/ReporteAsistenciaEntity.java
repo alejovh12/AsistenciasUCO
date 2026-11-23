@@ -16,6 +16,14 @@ public record ReporteAsistenciaEntity(
         String nombreEstudiante,
         String correoEstudiante,
         Boolean asistio,
-        String razonCausa
+        String razonCausa,
+        boolean sesionCancelada
 ) {
+    /** Fila de una sesion no cancelada. */
+    public ReporteAsistenciaEntity(String codigoGrupo, String nombreGrupo, Integer numeroSesion, String nombreSesion,
+                                   LocalDateTime fechaHoraInicio, LocalDateTime fechaHoraFin, String documentoEstudiante,
+                                   String nombreEstudiante, String correoEstudiante, Boolean asistio, String razonCausa) {
+        this(codigoGrupo, nombreGrupo, numeroSesion, nombreSesion, fechaHoraInicio, fechaHoraFin, documentoEstudiante,
+                nombreEstudiante, correoEstudiante, asistio, razonCausa, false);
+    }
 }

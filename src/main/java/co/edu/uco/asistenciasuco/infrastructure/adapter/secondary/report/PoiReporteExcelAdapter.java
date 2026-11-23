@@ -11,6 +11,10 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -24,6 +28,9 @@ import java.util.function.Function;
 public final class PoiReporteExcelAdapter implements ReporteExcelPort {
 
     public static final int TOPE_FILAS_POR_DEFECTO = 50_000;
+    /** Zona institucional por defecto (parametro TIEMPO/ZONA_HORARIA_IANA); la base guarda las sesiones en UTC. */
+    public static final ZoneId ZONA_INSTITUCIONAL_POR_DEFECTO = ZoneId.of("America/Bogota");
+    private static final DateTimeFormatter FORMATO_FECHA_HORA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     static final String HOJA = "Asistencia";
     private static final String PREFIJO_CATALOGO = "RPT_ASISTENCIA_";
@@ -36,15 +43,28 @@ public final class PoiReporteExcelAdapter implements ReporteExcelPort {
     private static final String ESTADO_SIN_REGISTRO = "SIN REGISTRO";
     private static final String ESTADO_ASISTIO = "ASISTIÓ";
     private static final String ESTADO_NO_ASISTIO = "NO ASISTIÓ";
+    private static final String ESTADO_CANCELADA = "CANCELADA";
+    private static final int COLUMNA_INICIO = 4;
+    private static final int COLUMNA_FIN = 5;
 
     private final Function<String, Optional<String>> catalogo;
     private final int topeFilas;
+    private final ZoneId zona;
 
     public PoiReporteExcelAdapter(final MessageCatalogPort messageCatalogPort, final int topeFilas) {
-        this(messageCatalogPort == null ? codigo -> Optional.empty() : messageCatalogPort::findUserMessage, topeFilas);
+        this(messageCatalogPort, topeFilas, ZONA_INSTITUCIONAL_POR_DEFECTO);
+    }
+
+    public PoiReporteExcelAdapter(final MessageCatalogPort messageCatalogPort, final int topeFilas, final ZoneId zona) {
+        this(messageCatalogPort == null ? codigo -> Optional.empty() : messageCatalogPort::findUserMessage, topeFilas, zona);
     }
 
     PoiReporteExcelAdapter(final Function<String, Optional<String>> catalogo, final int topeFilas) {
+        this(catalogo, topeFilas, ZONA_INSTITUCIONAL_POR_DEFECTO);
+    }
+
+    PoiReporteExcelAdapter(final Function<String, Optional<String>> catalogo, final int topeFilas, final ZoneId zona) {
+        this.zona = Objects.requireNonNull(zona, "La zona horaria institucional es obligatoria.");
         this.catalogo = Objects.requireNonNull(catalogo, "El catalogo de rotulos es obligatorio.");
         if (topeFilas < 1) {
             throw new IllegalArgumentException("El tope de filas del reporte debe ser positivo.");
@@ -76,7 +96,9 @@ public final class PoiReporteExcelAdapter implements ReporteExcelPort {
 
     private void escribirEncabezado(final Row fila) {
         for (int i = 0; i < ENCABEZADOS.length; i++) {
-            fila.createCell(i).setCellValue(rotulo(ENCABEZADOS[i][0], ENCABEZADOS[i][1]));
+            final String texto = rotulo(ENCABEZADOS[i][0], ENCABEZADOS[i][1]);
+            // Inicio y Fin se escriben en hora institucional: el encabezado dice la zona.
+            fila.createCell(i).setCellValue(i == COLUMNA_INICIO || i == COLUMNA_FIN ? texto + " (" + zona.getId() + ")" : texto);
         }
     }
 
@@ -89,8 +111,8 @@ public final class PoiReporteExcelAdapter implements ReporteExcelPort {
         fila.createCell(1).setCellValue(vacioSiNulo(origen.nombreGrupo()));
         fila.createCell(2).setCellValue(origen.numeroSesion() == null ? "" : origen.numeroSesion().toString());
         fila.createCell(3).setCellValue(vacioSiNulo(origen.nombreSesion()));
-        fila.createCell(4).setCellValue(origen.fechaHoraInicio() == null ? "" : origen.fechaHoraInicio().toString());
-        fila.createCell(5).setCellValue(origen.fechaHoraFin() == null ? "" : origen.fechaHoraFin().toString());
+        fila.createCell(4).setCellValue(local(origen.fechaHoraInicio()));
+        fila.createCell(5).setCellValue(local(origen.fechaHoraFin()));
         fila.createCell(6).setCellValue(vacioSiNulo(origen.documentoEstudiante()));
         fila.createCell(7).setCellValue(vacioSiNulo(origen.nombreEstudiante()));
         fila.createCell(8).setCellValue(vacioSiNulo(origen.correoEstudiante()));
@@ -98,11 +120,19 @@ public final class PoiReporteExcelAdapter implements ReporteExcelPort {
         fila.createCell(10).setCellValue(vacioSiNulo(origen.razonCausa()));
     }
 
+    /** El valor de la base es UTC; se escribe en la zona institucional como dd/MM/yyyy HH:mm. */
+    private String local(final LocalDateTime utc) {
+        return utc == null ? "" : utc.atOffset(ZoneOffset.UTC).atZoneSameInstant(zona).format(FORMATO_FECHA_HORA);
+    }
+
     private static String vacioSiNulo(final String valor) {
         return valor == null ? "" : valor;
     }
 
     private String estado(final ReporteAsistenciaRow origen) {
+        if (origen.sesionCancelada()) {
+            return rotulo("ESTADO_CANCELADA", ESTADO_CANCELADA);
+        }
         if (origen.asistio() == null) {
             return rotulo("ESTADO_SIN_REGISTRO", ESTADO_SIN_REGISTRO);
         }

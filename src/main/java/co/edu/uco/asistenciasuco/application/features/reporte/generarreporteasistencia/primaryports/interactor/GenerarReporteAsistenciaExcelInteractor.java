@@ -28,7 +28,8 @@ public final class GenerarReporteAsistenciaExcelInteractor implements GenerarRep
         final List<ReporteAsistenciaRow> filas = useCase.execute(ReporteAsistenciaMapper.toDomain(dto)).stream()
                 .map(entity -> new ReporteAsistenciaRow(entity.codigoGrupo(), entity.nombreGrupo(), entity.numeroSesion(),
                         entity.nombreSesion(), entity.fechaHoraInicio(), entity.fechaHoraFin(), entity.documentoEstudiante(),
-                        entity.nombreEstudiante(), entity.correoEstudiante(), entity.asistio(), entity.razonCausa()))
+                        entity.nombreEstudiante(), entity.correoEstudiante(), entity.asistio(), entity.razonCausa(),
+                        entity.sesionCancelada()))
                 .toList();
         return reporteExcelPort.generarReporteAsistencia(filas);
     }

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
@@ -23,7 +24,7 @@ import static org.mockito.Mockito.when;
 
 class PoiReporteExcelAdapterTest {
 
-    private static final String[] ENCABEZADOS = {"Código del grupo", "Grupo", "Número de sesión", "Sesión", "Inicio", "Fin",
+    private static final String[] ENCABEZADOS = {"Código del grupo", "Grupo", "Número de sesión", "Sesión", "Inicio (America/Bogota)", "Fin (America/Bogota)",
             "Documento", "Estudiante", "Correo", "Estado de asistencia", "Observación"};
 
     private final PoiReporteExcelAdapter adaptador = new PoiReporteExcelAdapter(codigo -> Optional.empty(), 100);
@@ -50,6 +51,59 @@ class PoiReporteExcelAdapterTest {
             assertEquals("NO ASISTIÓ", sheet.getRow(4).getCell(9).getStringCellValue());
             assertEquals("", sheet.getRow(3).getCell(10).getStringCellValue());
         }
+    }
+
+    @Test
+    void una_sesion_cancelada_sale_como_cancelada_y_no_como_sin_registro() throws Exception {
+        final byte[] libro = adaptador.generarReporteAsistencia(List.of(filaCancelada(null), filaCancelada(Boolean.FALSE)));
+
+        try (var workbook = new XSSFWorkbook(new ByteArrayInputStream(libro))) {
+            final var sheet = workbook.getSheet("Asistencia");
+            assertEquals("CANCELADA", sheet.getRow(1).getCell(9).getStringCellValue());
+            assertEquals("CANCELADA", sheet.getRow(2).getCell(9).getStringCellValue());
+        }
+    }
+
+    @Test
+    void el_rotulo_cancelada_sale_del_catalogo_cuando_existe() throws IOException {
+        final MessageCatalogPort catalogo = mock(MessageCatalogPort.class);
+        when(catalogo.findUserMessage("RPT_ASISTENCIA_ESTADO_CANCELADA")).thenReturn(Optional.of("SESIÓN CANCELADA"));
+        final var conCatalogo = new PoiReporteExcelAdapter(catalogo, 10);
+        try (var workbook = new XSSFWorkbook(new ByteArrayInputStream(conCatalogo.generarReporteAsistencia(List.of(filaCancelada(null)))))) {
+            assertEquals("SESIÓN CANCELADA", workbook.getSheet("Asistencia").getRow(1).getCell(9).getStringCellValue());
+        }
+    }
+
+    @Test
+    void inicio_y_fin_se_escriben_en_hora_institucional_con_formato_dia_mes_anio() throws Exception {
+        // La base guarda UTC: 13:00Z es 08:00 en Bogota (UTC-5, sin horario de verano).
+        final var fila = new ReporteAsistenciaRow("G01", "Grupo 01", 1, "Sesión 1",
+                LocalDateTime.of(2026, 11, 23, 13, 0), LocalDateTime.of(2026, 11, 23, 15, 30),
+                "12345678", "Persona", "persona@example.com", Boolean.TRUE, null);
+        try (var workbook = new XSSFWorkbook(new ByteArrayInputStream(adaptador.generarReporteAsistencia(List.of(fila))))) {
+            final var sheet = workbook.getSheet("Asistencia");
+            assertEquals("23/11/2026 08:00", sheet.getRow(1).getCell(4).getStringCellValue());
+            assertEquals("23/11/2026 10:30", sheet.getRow(1).getCell(5).getStringCellValue());
+        }
+    }
+
+    @Test
+    void la_zona_configurada_define_las_horas_y_se_indica_en_el_encabezado() throws Exception {
+        final var madrid = new PoiReporteExcelAdapter(codigo -> Optional.empty(), 10, ZoneId.of("Europe/Madrid"));
+        final var fila = new ReporteAsistenciaRow("G01", "Grupo 01", 1, "Sesión 1",
+                LocalDateTime.of(2026, 7, 1, 13, 0), LocalDateTime.of(2026, 7, 1, 14, 0),
+                "1", "P", "p@example.com", Boolean.TRUE, null);
+        try (var workbook = new XSSFWorkbook(new ByteArrayInputStream(madrid.generarReporteAsistencia(List.of(fila))))) {
+            final var sheet = workbook.getSheet("Asistencia");
+            assertEquals("Inicio (Europe/Madrid)", sheet.getRow(0).getCell(4).getStringCellValue());
+            assertEquals("Fin (Europe/Madrid)", sheet.getRow(0).getCell(5).getStringCellValue());
+            assertEquals("01/07/2026 15:00", sheet.getRow(1).getCell(4).getStringCellValue());
+        }
+    }
+
+    @Test
+    void la_zona_es_obligatoria() {
+        assertThrows(NullPointerException.class, () -> new PoiReporteExcelAdapter(codigo -> Optional.empty(), 10, (ZoneId) null));
     }
 
     @Test
@@ -116,5 +170,11 @@ class PoiReporteExcelAdapterTest {
         return new ReporteAsistenciaRow("G01", "Grupo 01", 1, "Sesión 1",
                 LocalDateTime.of(2026, 1, 1, 8, 0), LocalDateTime.of(2026, 1, 1, 9, 0),
                 "12345678", "Persona", "persona@example.com", asistio, razon);
+    }
+
+    private static ReporteAsistenciaRow filaCancelada(final Boolean asistio) {
+        return new ReporteAsistenciaRow("G01", "Grupo 01", 1, "Sesión 1",
+                LocalDateTime.of(2026, 1, 1, 8, 0), LocalDateTime.of(2026, 1, 1, 9, 0),
+                "12345678", "Persona", "persona@example.com", asistio, null, true);
     }
 }

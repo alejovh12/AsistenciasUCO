@@ -465,6 +465,7 @@ app:
         "[RPT_ASISTENCIA_ESTADO_SIN_REGISTRO]": INF012
         "[RPT_ASISTENCIA_ESTADO_ASISTIO]": INF013
         "[RPT_ASISTENCIA_ESTADO_NO_ASISTIO]": INF014
+        "[RPT_ASISTENCIA_ESTADO_CANCELADA]": INF015
     # Azure Key Vault y App Configuration (autenticacion por DefaultAzureCredential con Azure CLI).
     # SEC-12: sin nombres de recursos reales por defecto. Con un proveedor Azure activo y el endpoint vacio, el arranque
     # falla con un mensaje claro; los perfiles local/dev usan proveedores sin Azure salvo que se definan las variables.

@@ -9,5 +9,5 @@ import java.time.LocalDateTime;
 public record ReporteAsistenciaQueryRow(Integer codigoGrupo, String nombreGrupo, Integer numero, String nombre,
                                         LocalDateTime fechaHoraInicio, LocalDateTime fechaHoraFin, Integer numeroIdentificacion,
                                         String nombreCompleto, String correo, Boolean asistio,
-                                        String nombreRazonCausa) {
+                                        String nombreRazonCausa, Boolean sesionCancelada) {
 }
