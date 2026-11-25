@@ -12,9 +12,12 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 /**
  * Adaptador local best-effort que implementa {@link RealtimePublisherPort} sobre Project Reactor.
@@ -56,6 +59,7 @@ public final class ReactorRealtimeAdapter implements RealtimePublisherPort {
     private final Counter droppedCounter;
     private final Counter noSubscribersCounter;
     private final MeterRegistry meterRegistry;
+    private final List<Consumer<RealtimeEvent>> observadores = new CopyOnWriteArrayList<>();
 
     public ReactorRealtimeAdapter(final MeterRegistry meterRegistry) {
         Objects.requireNonNull(meterRegistry, "MeterRegistry es obligatorio.");
@@ -99,6 +103,43 @@ public final class ReactorRealtimeAdapter implements RealtimePublisherPort {
                 traceContext.spanId()
         );
 
+        emitir(enriched);
+    }
+
+    /**
+     * REDIS-001: entrega a los clientes SSE de esta replica un evento que otra replica (o esta misma) ya publico y relevo
+     * por Redis. No lo vuelve a contar como hecho de negocio ni reemplaza su contexto de trazabilidad: ambos se fijaron
+     * al publicarlo en la replica de origen.
+     */
+    public void entregarRelevado(final RealtimeEvent event) {
+        if (event == null) {
+            droppedCounter.increment();
+            return;
+        }
+        emitir(event);
+    }
+
+    /**
+     * REDIS-001: fija el contexto de correlacion y trazabilidad del hilo actual y cuenta el hecho de negocio, sin emitir.
+     * Lo usa el relevo Redis antes de enviar el evento a las demas replicas.
+     */
+    public RealtimeEvent prepararParaRelevo(final RealtimeEvent event) {
+        Objects.requireNonNull(event, "El evento realtime es obligatorio.");
+        contarEventoDeNegocio(event.type());
+        final TraceContextSnapshot traceContext = TraceContextSnapshot.current();
+        return event.withObservabilityContext(CorrelationIdContext.getAsString(), traceContext.traceId(), traceContext.spanId());
+    }
+
+    /**
+     * REDIS-001: registra un observador interno que recibe cada evento que esta replica entrega (publicado aqui o relevado
+     * desde otra). No cuenta como cliente SSE. Un fallo del observador se registra y nunca afecta la entrega.
+     */
+    public void alEntregar(final Consumer<RealtimeEvent> observador) {
+        observadores.add(Objects.requireNonNull(observador, "El observador es obligatorio."));
+    }
+
+    private void emitir(final RealtimeEvent enriched) {
+        notificarObservadores(enriched);
         final Sinks.EmitResult result = sink.tryEmitNext(enriched);
         if (result.isSuccess()) {
             publishedCounter.increment();
@@ -110,13 +151,24 @@ public final class ReactorRealtimeAdapter implements RealtimePublisherPort {
             // Sin suscriptores no es un fallo: nadie escucha ese canal. Se cuenta, pero no ensucia el log por cada evento.
             noSubscribersCounter.increment();
             LOGGER.debug("Evento realtime sin suscriptores. type={} eventId={} correlationId={}",
-                    event.type(), event.eventId(), enriched.correlationId());
+                    enriched.type(), enriched.eventId(), enriched.correlationId());
             return;
         }
         LOGGER.warn(
                 "Evento realtime descartado. type={} eventId={} correlationId={} emitResult={}",
-                event.type(), event.eventId(), enriched.correlationId(), result
+                enriched.type(), enriched.eventId(), enriched.correlationId(), result
         );
+    }
+
+    private void notificarObservadores(final RealtimeEvent event) {
+        for (final Consumer<RealtimeEvent> observador : observadores) {
+            try {
+                observador.accept(event);
+            } catch (final RuntimeException exception) {
+                LOGGER.warn("Observador realtime fallo. type={} eventId={} causa={}", event.type(), event.eventId(),
+                        exception.getClass().getSimpleName());
+            }
+        }
     }
 
     private void contarEventoDeNegocio(final String tipo) {

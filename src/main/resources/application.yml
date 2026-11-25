@@ -53,6 +53,17 @@ spring:
   # SEC-BASELINE-020: conexion AMQP al RabbitMQ del lab Security Baseline 0.1.14 (eventos de asignacion del PDP).
   # El starter se autoconfigura aunque app.providers.security-baseline-rabbitmq.enabled sea false (valores inocuos);
   # solo se conecta cuando @RabbitListener se registra (ver AssignmentEventsRabbitConfiguration).
+  # REDIS-001: Redis opcional (cache de consultas y relevo realtime). Solo se conecta si
+  # app.adapters.cache.provider=redis o app.adapters.realtime.provider=redis-sse; Lettuce conecta en el primer uso.
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: ${REDIS_TIMEOUT:500ms}
+      connect-timeout: ${REDIS_CONNECT_TIMEOUT:1s}
+      repositories:
+        enabled: false
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:25672}
@@ -127,6 +138,10 @@ management:
     # asignacion no debe afectar liveness/readiness del backend (el efecto es solo auditoria, no autorizacion).
     rabbit:
       enabled: false
+    # REDIS-001: Redis es opcional (cache y relevo realtime). Su caida degrada a la BD y al SSE local, nunca tumba la
+    # readiness; con REDIS_HEALTH_ENABLED=true se informa en /actuator/health.
+    redis:
+      enabled: ${REDIS_HEALTH_ENABLED:false}
   metrics:
     distribution:
       # OBS (alerta LatenciaP95Alta de Prometheus): histograma de http.server.requests para histogram_quantile(0.95, ...).
@@ -268,7 +283,21 @@ app:
       # fallback local: un valor no soportado falla el arranque (fail-closed).
       provider: ${APP_ADAPTERS_STORAGE_PROVIDER:minio}
     realtime:
+      # local-sse (predeterminado: SSE en memoria de cada replica) | redis-sse (REDIS-001: mismo SSE + relevo de eventos
+      # entre replicas por Redis Pub/Sub; requiere spring.data.redis.*). Guia: docs/architecture/cache-y-tiempo-real.md
       provider: ${APP_ADAPTERS_REALTIME_PROVIDER:local-sse}
+      redis:
+        canal: ${APP_ADAPTERS_REALTIME_REDIS_CANAL:asistencias-uco:realtime:v1}
+    cache:
+      # REDIS-001: cache de consultas (cache-aside). local (predeterminado, Caffeine por replica) | redis (compartida
+      # entre replicas; tambien comparte el limite por minuto del QR) | none (sin cache).
+      provider: ${APP_ADAPTERS_CACHE_PROVIDER:local}
+      prefijo: ${APP_ADAPTERS_CACHE_PREFIJO:asistencias-uco}
+      maximo-por-region: ${APP_ADAPTERS_CACHE_MAXIMO_POR_REGION:10000}
+      ttl:
+        catalogos: ${APP_ADAPTERS_CACHE_TTL_CATALOGOS:30m}
+        indicadores: ${APP_ADAPTERS_CACHE_TTL_INDICADORES:5m}
+        portal: ${APP_ADAPTERS_CACHE_TTL_PORTAL:60s}
     audit:
       provider: ${APP_ADAPTERS_AUDIT_PROVIDER:logging}
       # Job diario de retencion de dbo.AuditoriaEvento (PurgaAuditoriaScheduler): solo corre si hay persistencia

@@ -32,7 +32,7 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 |---|---|---|---|
 | [TD-001](#td-001) | Piloto JDBC → JPA pendiente | CLOSED (LB-002.2) | no |
 | [TD-002](#td-002) | Contrato OpenAPI no consolidado | CLOSED (LB-001C.1) | no |
-| [TD-003](#td-003) | Realtime local efímero y por JVM | ABIERTA | sí, LB-005 |
+| [TD-003](#td-003) | Realtime local efímero y por JVM | MITIGADA con `redis-sse` (REDIS-001, 2026-11-25): distribuye entre réplicas; sin replay | no para varias réplicas con `redis-sse`; replay sigue fuera |
 | [TD-004](#td-004) | Storage local y ownership | PARTIAL (storage foundation resuelta LB-004B.2; docente-read bloqueado por DB) | sí, LB-004 |
 | [TD-005](#td-005) | Política temporal DB/API | CLOSED_FOR_GOLDEN_PATH (wire HTTP congelado en LB-001C.1; política global no cerrada) | no para Golden Path |
 | [TD-006](#td-006) | Identificación numérica | ABIERTA | no, salvo alcance de identificación |
@@ -128,6 +128,7 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 - **Resolución esperada:** Pruebas multi-instancia y recuperación según contrato aprobado.
 - **Bloquea línea base:** sí, LB-005.
 - **Estado:** ABIERTA.
+- **Actualización REDIS-001 (2026-11-25):** **MITIGADA** con el provider `redis-sse` ([ADR-007](../adr/ADR-007-redis-cache-y-relevo-realtime.md)): los casos de uso publican por Redis Pub/Sub y cada réplica entrega a sus clientes SSE; prueba contra Redis real con dos réplicas sin duplicados (`RedisRealIntegrationTest`). Sigue sin replay ni durabilidad (Pub/Sub no guarda mensajes; el cliente rehidrata por REST) y el provider por defecto sigue siendo `local-sse` (una réplica).
 - **Actualización LB-001B.3 (2026-09-23):** hallazgo re-confirmado formalmente por auditoría de LB-001B.3 (`CONTRACT_MATRIX.md#m-24`, `TASK_AUTORIZADA.md` §26 de ese work item — auditoría de "serverless readiness" del Golden Path). Mismo componente, mismo diagnóstico (`Sinks.many().multicast().directBestEffort()`, Javadoc propio ya lo declara "best-effort... efímero"); no se abre un ID nuevo para evitar duplicar deuda. Sin refactor en esa fase, conforme a `TASK_AUTORIZADA.md` §26 ("No implementar infraestructura serverless ahora... registrar hallazgos en deuda técnica").
 
 ## TD-004
@@ -1103,3 +1104,20 @@ GOLDEN PATH EFFECT:         NONE
 - **Impacto:** Si HU176B se implementa sin actualizar su PLAN, el alta por QR no verificaría el correo ni exigiría el dominio.
 - **Resolución esperada:** Reabrir el PLAN/CONTRACT de HU176B (D8) para exigir `CorreoInstitucionalPolicy` y el aviso `VERIFICACION_CORREO` en el alta autónoma.
 - **Bloquea línea base:** No. **Estado:** **OPEN / LOW / DOCS**. **Work items:** [IDENT-001](../work-items/IDENT-001-correo-institucional-verificacion/PLAN.md), [HU176B](../work-items/HU176B-matricula-qr-autonoma/PLAN.md).
+
+## TD-083
+
+- **Fecha / responsable:** 2026-11-25 / backend-team (REDIS-001). **Clasificación:** CACHE_FRESHNESS. **Prioridad:** BAJA.
+- **Descripción:** La caché del portal (materias, horarios, resumen y plan del estudiante; asignaturas y horarios del docente) puede quedar atrasada cuando otro usuario cambia esos datos.
+- **Mitigación aplicada (2026-11-25):** las claves del portal se etiquetan con `grupo:<id>` al cargarse y `InvalidacionCachePorEventos` borra la etiqueta con `ASISTENCIAS_TOMA_ACTUALIZADAS`, `ASISTENCIAS_SESION_ACTUALIZADAS`, `TOMA_CERRADA`, `SESION_CANCELADA`, `SESION_MANUAL_CREADA`, `ESTUDIANTE_MATRICULADO` y `FALTA_SESION_AVISADA`; `ALERTA_INASISTENCIA` borra el portal del destinatario; la matrícula por QR borra el del propio estudiante.
+- **Residual:** casos sin evento de grupo (resolver una solicitud de revisión de asistencia sin cruzar un umbral, cambiar un horario o un plan desde administración) y un resumen cacheado sin sus materias: dato atrasado como máximo el TTL de `portal` (60 s); nunca de otro usuario.
+- **Resolución esperada:** publicar evento de grupo en esos casos (o bajar `APP_ADAPTERS_CACHE_TTL_PORTAL`).
+- **Bloquea línea base:** No. **Estado:** **MITIGADA / LOW / BACKEND**. **Work item:** [REDIS-001](../work-items/REDIS-001-cache-y-tiempo-real/PLAN.md).
+
+## TD-084
+
+- **Fecha / responsable:** 2026-11-25 / backend-team + frontend-team (REDIS-001). **Clasificación:** REALTIME_SCOPE. **Prioridad:** MEDIA.
+- **Descripción:** El canal SSE es por grupo (`/realtime/stream?grupoId=`). Los contadores globales del menú (solicitudes de sesión del coordinador y del docente, faltas reclamables del estudiante) solo se actualizan mientras el usuario está en la página de un grupo.
+- **Impacto:** Contadores atrasados hasta la siguiente recarga cuando el usuario no está en un grupo.
+- **Resolución esperada:** Canal SSE por usuario (audiencias `DESTINATARIO` y rol) consumido una vez por sesión en el frontend. Coordinar con el componente de notificaciones (Sergio) antes de construirlo; también requiere registrar la ruta en el PEP (Infra) y consumirla en el frontend.
+- **Bloquea línea base:** No. **Estado:** **PROPUESTA / MEDIUM / FULLSTACK**. **Work item:** [REDIS-001](../work-items/REDIS-001-cache-y-tiempo-real/PLAN.md).

@@ -53,7 +53,7 @@ Entrada operativa: [AGENTS](../AGENTS.md). **NORMATIVE** significa regla activa;
 
 ## Realtime
 
-- **NORMATIVE:** [arquitectura Reactor/SSE](architecture/reactive-realtime.md), [contrato de eventos](contracts/REALTIME_EVENT_STANDARD.md).
+- **NORMATIVE:** [arquitectura Reactor/SSE](architecture/reactive-realtime.md), [contrato de eventos](contracts/REALTIME_EVENT_STANDARD.md), [caché y tiempo real entre réplicas (REDIS-001, ADR-007)](architecture/cache-y-tiempo-real.md).
 - No se crea docs/realtime vacío: las fuentes actuales se mantienen en esas ubicaciones.
 
 ## Integration

@@ -5,6 +5,7 @@ import co.edu.uco.asistenciasuco.application.exception.catalog.MensajeUsuarioErr
 import co.edu.uco.asistenciasuco.application.features.realtime.resolveraudiencia.AudienciaRealtimeGrupo;
 import co.edu.uco.asistenciasuco.application.features.realtime.resolveraudiencia.primaryports.ResolverAudienciaRealtimeInputPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimeEvent;
+import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.RealtimeAudienciaPolicy;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.RealtimeAudienciaPolicy.Audiencia;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.contract.RealtimeStreamGateway;
@@ -35,6 +36,7 @@ public final class LocalSseRealtimeStreamGateway implements RealtimeStreamGatewa
     private final ReactorRealtimeAdapter realtimeAdapter;
     private final ResolverAudienciaRealtimeInputPort resolverAudiencia;
     private final RealtimeAudienciaPolicy audienciaPolicy;
+    private final RealtimePublisherPort publicador;
 
     public LocalSseRealtimeStreamGateway(
             final ReactorRealtimeAdapter realtimeAdapter,
@@ -48,9 +50,31 @@ public final class LocalSseRealtimeStreamGateway implements RealtimeStreamGatewa
             final ResolverAudienciaRealtimeInputPort resolverAudiencia,
             final RealtimeAudienciaPolicy audienciaPolicy
     ) {
+        this(realtimeAdapter, resolverAudiencia, audienciaPolicy, (RealtimePublisherPort) realtimeAdapter);
+    }
+
+    private LocalSseRealtimeStreamGateway(
+            final ReactorRealtimeAdapter realtimeAdapter,
+            final ResolverAudienciaRealtimeInputPort resolverAudiencia,
+            final RealtimeAudienciaPolicy audienciaPolicy,
+            final RealtimePublisherPort publicador
+    ) {
         this.realtimeAdapter = Objects.requireNonNull(realtimeAdapter, "ReactorRealtimeAdapter es requerido.");
         this.resolverAudiencia = Objects.requireNonNull(resolverAudiencia, "ResolverAudienciaRealtimeInputPort es requerido.");
         this.audienciaPolicy = Objects.requireNonNull(audienciaPolicy, "RealtimeAudienciaPolicy es requerida.");
+        this.publicador = Objects.requireNonNull(publicador, "RealtimePublisherPort es requerido.");
+    }
+
+    /**
+     * REDIS-001: con el relevo Redis, {@link #emit} publica por el relevo para que el evento llegue a todas las replicas;
+     * la suscripcion sigue leyendo del sink local de esta replica.
+     */
+    public static LocalSseRealtimeStreamGateway conRelevo(
+            final ReactorRealtimeAdapter realtimeAdapter,
+            final ResolverAudienciaRealtimeInputPort resolverAudiencia,
+            final RealtimePublisherPort publicador
+    ) {
+        return new LocalSseRealtimeStreamGateway(realtimeAdapter, resolverAudiencia, RealtimeAudienciaPolicy.porDefecto(), publicador);
     }
 
     @Override
@@ -86,6 +110,6 @@ public final class LocalSseRealtimeStreamGateway implements RealtimeStreamGatewa
 
     @Override
     public void emit(final String type, final Map<String, Object> payload) {
-        realtimeAdapter.publish(RealtimeEvent.of(type, payload));
+        publicador.publish(RealtimeEvent.of(type, payload));
     }
 }

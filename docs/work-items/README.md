@@ -80,3 +80,7 @@ Ejemplo de work item técnico cerrado: [TECH-001](TECH-001-restaurar-gate-arquit
 ## FASE 2B — 2026-11-15
 
 - [Certificación integral de sesiones, tomas, asistencia, matrícula y reclamos](FASE-2B-certificacion-integral/PLAN.md): recorrido manual completo en navegador integrado con login real de los 5 roles (ADMINISTRADOR, DECANO, COORDINADOR, DOCENTE, ESTUDIANTE). 15 hallazgos documentados en VALIDATION.md (1 P1 crítico que bloquea el flujo de decisión por inasistencia del docente, varios P1/P2 por un patrón sistémico de errores de backend no mostrados en el frontend, y KPIs de dashboard desincronizados de sus propias pantallas en 3 roles). Escrituras y cambios de comportamiento siguen NOT_READY por falta de fixture seguro y conflictos contractuales documentados.
+
+## REDIS-001 — 2026-11-25
+
+- [Caché de consultas y tiempo real entre réplicas](REDIS-001-cache-y-tiempo-real/PLAN.md): Redis opcional ([ADR-007](../adr/ADR-007-redis-cache-y-relevo-realtime.md)). Caché cache-aside del portal, indicadores y catálogos (`local` por defecto, `redis` o `none`), límite del QR compartido y relevo SSE entre réplicas (`redis-sse`, mitiga TD-003). Análisis por módulo en [cache-y-tiempo-real.md](../architecture/cache-y-tiempo-real.md). Pedido y aprobado por John.

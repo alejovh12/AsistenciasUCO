@@ -498,6 +498,12 @@ un evento publicado en A no aparece automáticamente en B.
 
 **Bloqueo para escalar horizontalmente:** validar un mecanismo distribuido aprobado mediante ADR (LB-005).
 
+**Actualización REDIS-001 (2026-11-25):** el provider `redis-sse` ([ADR-007](../adr/ADR-007-redis-cache-y-relevo-realtime.md))
+resuelve la distribución: `RedisRealtimeRelayAdapter` publica en el canal Redis `asistencias-uco:realtime:v1` y
+`RedisRealtimeSuscriptor` entrega en cada réplica (también en la de origen, sin duplicados). El contrato HTTP, el filtro por
+grupo y audiencia y las garantías (best-effort, sin replay) no cambian. Con Redis caído el evento se entrega solo en la réplica
+de origen (`realtime.relay.fallback`). Guía: [cache-y-tiempo-real.md](cache-y-tiempo-real.md).
+
 ### 13.2 Sin durabilidad
 
 Un usuario desconectado pierde eventos. La UI no debe considerar SSE como fuente de verdad.

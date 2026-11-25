@@ -5,6 +5,9 @@ spring:
 
 app:
   adapters:
+    # REDIS-001: la suite normal no cachea (cada consulta va a su doble de prueba); la cache tiene sus pruebas propias.
+    cache:
+      provider: none
     # Suite normal: contrato legacy explicito y reproducible. El default de runtime (baseline) vive en application.yml.
     security:
       provider: legacy
@@ -24,3 +27,9 @@ app:
     clamav:
       host: 127.0.0.1
       port: 65535
+
+# REDIS-001: Redis no participa en la salud de la suite normal.
+management:
+  health:
+    redis:
+      enabled: false
