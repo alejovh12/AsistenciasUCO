@@ -50,7 +50,9 @@ app:
     storage:
       provider: ${APP_ADAPTERS_STORAGE_PROVIDER:local}
     realtime:
-      provider: ${APP_ADAPTERS_REALTIME_PROVIDER:local-sse}
+      provider: ${APP_ADAPTERS_REALTIME_PROVIDER:local-sse}   # local-sse | redis-sse (REDIS-001)
+    cache:
+      provider: ${APP_ADAPTERS_CACHE_PROVIDER:local}          # local | redis | none (REDIS-001)
     audit:
       provider: ${APP_ADAPTERS_AUDIT_PROVIDER:logging}
     notification:

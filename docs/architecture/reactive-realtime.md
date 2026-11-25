@@ -330,6 +330,7 @@ Controller:
 
 ```text
 GET  /api/v1/realtime/stream
+GET  /api/v1/realtime/stream/usuario
 GET  /api/v1/realtime/status
 POST /api/v1/realtime/emit
 ```
@@ -362,6 +363,15 @@ data: <RealtimeEventResponse JSON>
 
 `traceId` y `spanId` permanecen del lado servidor; no se exponen al navegador como parte del
 contrato actual.
+
+### 8.1b `/stream/usuario` (REDIS-001, TD-084)
+
+Sin parámetros; solo el usuario autenticado. Entrega (i) los eventos cuyo tipo admite la audiencia `DESTINATARIO` y nombran al usuario (`FALTA_SESION_AVISADA`,
+`ALERTA_INASISTENCIA`, `REVISION_CANCELACION_*`) y (ii) a docentes titulares y roles con ámbito, `SESION_SOLICITUD_CREADA`,
+`SESION_SOLICITUD_RECHAZADA` y `SESION_MANUAL_CREADA` de los grupos sobre los que tiene titularidad o ámbito. El ámbito se
+resuelve con el mismo SP de audiencia del canal de grupo, una vez por grupo y conexión, fuera del hilo que publica; si el
+usuario solo tiene rol ESTUDIANTE no se consulta. Nunca entrega eventos del aula (QR, toma, presentes). Mismo formato, comentario inicial y heartbeat que
+`/stream`. El frontend lo abre una vez por sesión para los contadores del menú.
 
 ### 8.2 Heartbeat
 
@@ -497,6 +507,12 @@ backend B -> subscribers de B
 un evento publicado en A no aparece automáticamente en B.
 
 **Bloqueo para escalar horizontalmente:** validar un mecanismo distribuido aprobado mediante ADR (LB-005).
+
+**Actualización REDIS-001 (2026-11-25):** el provider `redis-sse` ([ADR-007](../adr/ADR-007-redis-cache-y-relevo-realtime.md))
+resuelve la distribución: `RedisRealtimeRelayAdapter` publica en el canal Redis `asistencias-uco:realtime:v1` y
+`RedisRealtimeSuscriptor` entrega en cada réplica (también en la de origen, sin duplicados). El contrato HTTP, el filtro por
+grupo y audiencia y las garantías (best-effort, sin replay) no cambian. Con Redis caído el evento se entrega solo en la réplica
+de origen (`realtime.relay.fallback`). Guía: [cache-y-tiempo-real.md](cache-y-tiempo-real.md).
 
 ### 13.2 Sin durabilidad
 

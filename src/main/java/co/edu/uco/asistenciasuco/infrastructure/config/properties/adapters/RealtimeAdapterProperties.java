@@ -12,6 +12,8 @@ public record RealtimeAdapterProperties(Provider provider) {
     }
 
     public enum Provider {
-        LOCAL_SSE
+        LOCAL_SSE,
+        /** REDIS-001: SSE local en cada replica + relevo de eventos entre replicas por Redis Pub/Sub. */
+        REDIS_SSE
     }
 }

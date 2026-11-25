@@ -550,6 +550,7 @@ Estado vigente de las familias revisadas:
 | ~~`POST /api/v1/usuarios`~~ | retirado el 2026-11-12 (VAL ROL-05): creaba usuarios sin ejecutor ni ámbito |
 | `/api/v1/archivos/**` | cualquier usuario autenticado; deuda Storage/ownership pendiente |
 | `GET /api/v1/realtime/stream` | cualquier usuario autenticado |
+| `GET /api/v1/realtime/stream/usuario` | cualquier usuario autenticado (solo su propio canal; REDIS-001) |
 | `GET /api/v1/realtime/status` | cualquier usuario autenticado |
 | `POST /api/v1/realtime/emit` | `ADMINISTRADOR` |
 

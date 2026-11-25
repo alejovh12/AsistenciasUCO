@@ -57,6 +57,24 @@ class RealtimeEventsControllerTest {
     }
 
     @Test
+    void subscribe_usuario_delega_en_el_canal_del_usuario_autenticado_con_el_mismo_formato() {
+        final RealtimeEventResponse response = new RealtimeEventResponse(
+                UUID.randomUUID(), "FALTA_SESION_AVISADA", Instant.now(), "corr-2", Map.of("grupo", "g1"));
+        when(gateway.subscribeUsuario(USUARIO)).thenReturn(Flux.just(response));
+
+        StepVerifier.create(controller.subscribeUsuario())
+                .expectNextMatches(sse -> " conectado".equals(sse.comment()))
+                .assertNext(sse -> {
+                    assertEquals(response.eventId().toString(), sse.id());
+                    assertEquals("FALTA_SESION_AVISADA", sse.event());
+                    assertEquals(response, sse.data());
+                })
+                .thenCancel()
+                .verify();
+        verify(gateway).subscribeUsuario(USUARIO);
+    }
+
+    @Test
     void subscribe_resuelve_usuario_autenticado_y_delega_grupoId_en_el_gateway() {
         when(gateway.subscribe(any(), any())).thenReturn(Flux.never());
 
