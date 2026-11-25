@@ -23,6 +23,8 @@ last-reviewed: 2026-11-25
 | R-02 | La suscripción entrega a los clientes SSE de la réplica sin reemplazar la correlación | `RedisRealtimeRelayTest` |
 | R-03 | Redis caído: entrega solo local, sin excepción al caso de uso; hecho de negocio contado una vez | `RedisRealtimeRelayTest` |
 | R-04 | Mensaje ilegible o de otra versión: se descarta sin cortar la suscripción | `RedisRealtimeRelayTest` |
+| U-01 | Canal por usuario: entrega al destinatario y no a otros; tipos sin audiencia `DESTINATARIO` no; solicitudes de sesión solo a titular/ámbito, una consulta por grupo; estudiante sin consulta; fallo del SP reintenta; mismo formato SSE | `CanalUsuarioRealtimeTest`, `RealtimeEventsControllerTest` |
+| U-02 | `/realtime/stream/usuario` exige autenticación y la admite para cualquier rol; está en el catálogo del PEP | `RbacSecurityFilterChainTest`, `AccessCatalogConsistencyTest`, `test_catalog_tools.py` |
 | W-01 | Selección de proveedor y defaults/validación de propiedades | `CacheAdapterConfigurationTest`, `RedisSseRealtimeAdapterConfigurationTest` |
 | I-01 | Contra Redis real: dos réplicas comparten caché y TTL, invalidación por etiqueta, el límite y los eventos SSE (sin duplicados) | `RedisRealIntegrationTest` (requiere `REDIS_TEST_HOST`; fuera de CI) |
 | A-01 | Reglas de arquitectura sin cambios | `co.edu.uco.asistenciasuco.architecture.*` |

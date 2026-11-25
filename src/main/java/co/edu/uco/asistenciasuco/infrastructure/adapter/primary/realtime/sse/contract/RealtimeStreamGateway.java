@@ -26,6 +26,13 @@ public interface RealtimeStreamGateway {
      */
     Flux<RealtimeEventResponse> subscribe(UUID usuarioId, UUID grupoId);
 
+    /**
+     * REDIS-001 (TD-084): canal del usuario autenticado, sin grupo, para los avisos que le llegan en cualquier pantalla
+     * (contadores del menu). Entrega los eventos de los que es destinatario explicito y, a docentes y roles con ambito,
+     * las solicitudes de sesion de los grupos sobre los que tiene titularidad o ambito (resuelto en la DB una vez por grupo).
+     */
+    Flux<RealtimeEventResponse> subscribeUsuario(UUID usuarioId);
+
     int activeSubscribersCount();
 
     /**

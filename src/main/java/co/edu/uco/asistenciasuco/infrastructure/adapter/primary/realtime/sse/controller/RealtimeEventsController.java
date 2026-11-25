@@ -82,8 +82,22 @@ public class RealtimeEventsController {
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<RealtimeEventResponse>> subscribe(@RequestParam final UUID grupoId) {
         final UUID usuarioId = authenticatedUserResolver.requireAuthenticatedUserId();
-        final Flux<ServerSentEvent<RealtimeEventResponse>> businessEvents =
-                realtimeStreamGateway.subscribe(usuarioId, grupoId).map(RealtimeEventsController::toServerSentEvent);
+        return conHeartbeat(realtimeStreamGateway.subscribe(usuarioId, grupoId));
+    }
+
+    /**
+     * REDIS-001 (TD-084): canal del usuario autenticado, sin grupo. El frontend lo abre una vez por sesion para los
+     * contadores del menu (solicitudes de sesion, faltas avisadas, alertas y revisiones de cancelacion). Mismo formato,
+     * heartbeat y comentario inicial que {@code /stream}; los avisos del aula siguen en el canal del grupo.
+     */
+    @GetMapping(value = "/stream/usuario", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ServerSentEvent<RealtimeEventResponse>> subscribeUsuario() {
+        final UUID usuarioId = authenticatedUserResolver.requireAuthenticatedUserId();
+        return conHeartbeat(realtimeStreamGateway.subscribeUsuario(usuarioId));
+    }
+
+    private static Flux<ServerSentEvent<RealtimeEventResponse>> conHeartbeat(final Flux<RealtimeEventResponse> eventos) {
+        final Flux<ServerSentEvent<RealtimeEventResponse>> businessEvents = eventos.map(RealtimeEventsController::toServerSentEvent);
 
         final Flux<ServerSentEvent<RealtimeEventResponse>> heartbeats =
                 Flux.interval(HEARTBEAT_INTERVAL)

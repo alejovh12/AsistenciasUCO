@@ -1120,4 +1120,5 @@ GOLDEN PATH EFFECT:         NONE
 - **Descripción:** El canal SSE es por grupo (`/realtime/stream?grupoId=`). Los contadores globales del menú (solicitudes de sesión del coordinador y del docente, faltas reclamables del estudiante) solo se actualizan mientras el usuario está en la página de un grupo.
 - **Impacto:** Contadores atrasados hasta la siguiente recarga cuando el usuario no está en un grupo.
 - **Resolución esperada:** Canal SSE por usuario (audiencias `DESTINATARIO` y rol) consumido una vez por sesión en el frontend. Coordinar con el componente de notificaciones (Sergio) antes de construirlo; también requiere registrar la ruta en el PEP (Infra) y consumirla en el frontend.
-- **Bloquea línea base:** No. **Estado:** **PROPUESTA / MEDIUM / FULLSTACK**. **Work item:** [REDIS-001](../work-items/REDIS-001-cache-y-tiempo-real/PLAN.md).
+- **Resolución aplicada (2026-11-25, decisión de John):** `GET /api/v1/realtime/stream/usuario` (backend, catálogo del PEP) y `RealtimeService.startForUser` abierto por `DashboardLayoutComponent` (frontend). Revisado: no hay bandeja in-app de notificaciones; las de Sergio salen por correo, así que no hay duplicidad.
+- **Bloquea línea base:** No. **Estado:** **RESUELTA / MEDIUM / FULLSTACK**. **Work item:** [REDIS-001](../work-items/REDIS-001-cache-y-tiempo-real/PLAN.md).

@@ -781,6 +781,22 @@ class RbacSecurityFilterChainTest {
                 .andExpect(status().isOk());
     }
 
+    // --- GET /api/v1/realtime/stream/usuario : canal del propio usuario (REDIS-001, TD-084) ---
+
+    @Test
+    void realtime_stream_usuario_sin_token_recibe_401() throws Exception {
+        mockMvc.perform(get("/api/v1/realtime/stream/usuario"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void realtime_stream_usuario_cualquier_rol_autenticado_es_permitido() throws Exception {
+        mockMvc.perform(get("/api/v1/realtime/stream/usuario").header(HttpHeaders.AUTHORIZATION, bearer("ESTUDIANTE")))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/realtime/stream/usuario").header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
+                .andExpect(status().isOk());
+    }
+
     // --- POST /api/v1/realtime/emit : utilidad de desarrollo, restringida a ADMINISTRADOR ---
 
     @Test
@@ -1001,6 +1017,11 @@ class RbacSecurityFilterChainTest {
 
         @GetMapping("/api/v1/realtime/stream")
         String realtimeStream() {
+            return "ok";
+        }
+
+        @GetMapping("/api/v1/realtime/stream/usuario")
+        String realtimeStreamUsuario() {
             return "ok";
         }
 

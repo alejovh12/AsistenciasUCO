@@ -55,8 +55,13 @@ Los eventos ya existen (`RealtimeAudienciaPolicy`); la tabla dice cuáles **nece
 
 El navegador abre **un** stream por grupo (`startForGroup`). Los contadores globales del menú (solicitudes del coordinador y del
 docente, faltas reclamables del estudiante) solo se actualizan mientras el usuario está en la página de un grupo. La solución es
-un **canal SSE por usuario** (`/realtime/stream/usuario`, audiencia `DESTINATARIO` y rol). Queda **propuesto, no construido**:
-se cruza con el componente de notificaciones de Sergio, requiere registrar la ruta en el PEP y cambiar el frontend (deuda TD-084).
+un **canal SSE por usuario**, ya construido (TD-084 resuelta): `GET /api/v1/realtime/stream/usuario`, que el layout del
+frontend abre una vez por sesión (`RealtimeService.startForUser`). Entrega (i) los eventos cuyo tipo admite la audiencia `DESTINATARIO` y nombran al usuario (`FALTA_SESION_AVISADA`,
+`ALERTA_INASISTENCIA`, `REVISION_CANCELACION_*`) y (ii) a docentes titulares y roles con ámbito, `SESION_SOLICITUD_CREADA`,
+`SESION_SOLICITUD_RECHAZADA` y `SESION_MANUAL_CREADA` de los grupos sobre los que tiene titularidad o ámbito. El ámbito se
+resuelve con el mismo SP de audiencia del canal de grupo, una vez por grupo y conexión, fuera del hilo que publica; si el
+usuario solo tiene rol ESTUDIANTE no se consulta. Nunca entrega eventos del aula (QR, toma, presentes).
+No hay bandeja in-app de notificaciones (las de Sergio salen por correo), así que el canal no duplica ese componente.
 
 ### 2.4 Varias réplicas (TD-003)
 

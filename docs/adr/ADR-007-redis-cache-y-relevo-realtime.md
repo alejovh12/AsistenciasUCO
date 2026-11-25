@@ -44,7 +44,8 @@ last-reviewed: 2026-11-25
   ya existen (toma actualizada o cerrada, sesión cancelada o creada, matrícula, falta avisada, alerta) invalidan el portal de
   los estudiantes y del docente del grupo mediante etiquetas `grupo:<id>`. Queda un residual de hasta 60 s en cambios sin
   evento de grupo (TD-083).
-- El canal SSE por usuario queda pendiente (TD-084) por cruzarse con notificaciones, el PEP y el frontend.
+- Canal SSE por usuario `GET /api/v1/realtime/stream/usuario` (TD-084, decidido por John el 2026-11-25) para los contadores
+  del menú; registrado en el catálogo del PEP y consumido por el layout del frontend. También pasa por el relevo Redis.
 - Pruebas: dobles para los adaptadores y una prueba con Redis real (`REDIS_TEST_HOST`) que corre fuera de CI.
 
 ## Alternativas descartadas

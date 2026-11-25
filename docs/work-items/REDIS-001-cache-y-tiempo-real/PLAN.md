@@ -31,22 +31,23 @@ caché Redis y con qué estrategia; aprobó las 11 recomendaciones ("ejecuta tod
 | Invalidación por grupo | Etiquetas `grupo:<id>` en `CacheConsultas` (`etiquetar`/`invalidarEtiqueta`; SET en Redis, índice en Caffeine); `InvalidacionCachePorEventos` observa los eventos que entrega la réplica (`ReactorRealtimeAdapter.alEntregar`) y borra el portal del grupo (TD-083) |
 | Límite del QR | `RedisLimitadorIntentosAdapter` (ventana de 1 min compartida) con respaldo en el limitador local |
 | Realtime | Provider `redis-sse`: `RedisRealtimeRelayAdapter` + `RedisRealtimeSuscriptor` + `RedisRealtimeCodec`; `ReactorRealtimeAdapter` gana `prepararParaRelevo` y `entregarRelevado`; `LocalSseRealtimeStreamGateway.conRelevo` |
+| Canal por usuario (TD-084) | `GET /api/v1/realtime/stream/usuario` en `RealtimeEventsController`; `LocalSseRealtimeStreamGateway.subscribeUsuario` (destinatarios + solicitudes de sesión por ámbito); entrada en `infra/security-baseline/access-catalog.json`. Frontend: rama `feat/canal-usuario-realtime` |
 | Config | `spring.data.redis.*`, `app.adapters.cache.*`, `app.adapters.realtime.redis.canal`, `management.health.redis.enabled=false` por defecto; la suite normal usa `cache.provider=none` |
 
 ## Fuera de alcance
 
-- Canal SSE por usuario (contadores globales sin estar en un grupo): TD-084 (cruza con notificaciones de Sergio, el PEP y el frontend; decisión de John pendiente).
 - Cambios sin evento de grupo (p. ej. resolver una solicitud de revisión sin cruzar umbral): acotados por el TTL de 60 s (residual de TD-083).
 - Caché de periodos, festivos, padrón y del PEP: candidatos en la guía (§3.3).
-- Frontend: el contrato SSE no cambia; no hay cambios.
+- Frontend: solo el canal por usuario (rama `feat/canal-usuario-realtime`); el contrato del canal de grupo no cambia.
 
 ## Rutas
 
 Permitidas: `infrastructure/cache/**`, `infrastructure/adapter/secondary/realtime/redis/**`,
 `infrastructure/adapter/secondary/security/RedisLimitadorIntentosAdapter`, `infrastructure/config/adapters/{cache,realtime/redis}/**`,
 `ReactorRealtimeAdapter`, `LocalSseRealtimeStreamGateway`, `CacheAdapterProperties`, `RealtimeAdapterProperties`,
-`AdapterPropertiesConfiguration`, `application.yml` (main y test), `pom.xml`, documentación.
-Prohibidas: Domain, Application, controllers, OpenAPI, SQL.
+`AdapterPropertiesConfiguration`, `application.yml` (main y test), `pom.xml`, documentación; por TD-084 (decisión de John 2026-11-25):
+`RealtimeEventsController`, `RealtimeStreamGateway`, `infra/security-baseline/access-catalog.json`.
+Prohibidas: Domain, Application, OpenAPI golden path, SQL.
 
 ## Riesgos y rollback
 
