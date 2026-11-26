@@ -42,7 +42,7 @@ class InvalidacionCachePorEventosTest {
     private static final UUID OTRO_GRUPO = UUID.fromString("22222222-2222-2222-2222-222222222222");
 
     private final CacheConsultas cache = new CaffeineCacheConsultas(ttl(), 100, new MetricasCache(new SimpleMeterRegistry(), "local"));
-    private final ConsultasCacheadasPostProcessor processor = new ConsultasCacheadasPostProcessor(cache);
+    private final ConsultasCacheadasPostProcessor processor = new ConsultasCacheadasPostProcessor(cache, null, null);
     private final InvalidacionCachePorEventos invalidacion = new InvalidacionCachePorEventos(() -> cache);
 
     private final AtomicInteger cargasMaterias = new AtomicInteger();
@@ -160,7 +160,7 @@ class InvalidacionCachePorEventosTest {
     @Test
     void matricula_sin_usuario_no_toca_la_cache() {
         final CacheConsultas espia = mock(CacheConsultas.class);
-        final ConsultasCacheadasPostProcessor conEspia = new ConsultasCacheadasPostProcessor(espia);
+        final ConsultasCacheadasPostProcessor conEspia = new ConsultasCacheadasPostProcessor(espia, null, null);
         final MatricularEstudianteAutenticadoInputPort matricula = (MatricularEstudianteAutenticadoInputPort) conEspia
                 .postProcessAfterInitialization((MatricularEstudianteAutenticadoInputPort) comando -> null, "bean");
 

@@ -31,12 +31,27 @@ import co.edu.uco.asistenciasuco.application.features.estudiante.consultarplanes
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarplanestudio.primaryports.dto.PlanEstudioEstudianteDTO;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarresumenmaterias.primaryports.ConsultarResumenMateriasEstudianteInputPort;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarresumenmaterias.primaryports.dto.ResumenMateriasEstudianteDTO;
+import co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicitudrevisionasistencia.primaryports.ResolverSolicitudRevisionAsistenciaInputPort;
+import co.edu.uco.asistenciasuco.application.features.docente.retirarestudiantegrupo.primaryports.RetirarEstudianteGrupoInputPort;
+import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.DestinatariosReclamoPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.DestinatarioReclamoProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.primaryports.ConsultarTiposIdentificacionInputPort;
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.primaryports.dto.TipoIdentificacionDTO;
 import co.edu.uco.asistenciasuco.application.features.tipoprograma.consultarcatalogosprograma.primaryports.ConsultarCatalogosProgramaInputPort;
 import co.edu.uco.asistenciasuco.application.features.tipoprograma.consultarcatalogosprograma.primaryports.dto.CatalogoProgramaDTO;
+import co.edu.uco.asistenciasuco.application.features.admin.consultarcomparativafacultades.primaryports.dto.ConsultarComparativaFacultadesDTO;
+import co.edu.uco.asistenciasuco.application.features.admin.consultarkpisinstitucion.primaryports.dto.ConsultarKpisInstitucionDTO;
+import co.edu.uco.asistenciasuco.application.features.admin.consultartendenciaausentismo.primaryports.dto.ConsultarTendenciaAusentismoDTO;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultaralertatemprana.primaryports.dto.ConsultarAlertaTempranaDTO;
+import co.edu.uco.asistenciasuco.application.features.decano.consultaraforogrupos.primaryports.dto.ConsultarAforoGruposDTO;
+import co.edu.uco.asistenciasuco.application.features.decano.consultarcomparativaprogramas.primaryports.dto.ConsultarComparativaProgramasDTO;
+import co.edu.uco.asistenciasuco.application.features.decano.consultarkpisdecano.primaryports.dto.ConsultarKpisDecanoDTO;
 import co.edu.uco.asistenciasuco.infrastructure.cache.CacheConsultas;
 import co.edu.uco.asistenciasuco.infrastructure.cache.RegionCache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import tools.jackson.core.type.TypeReference;
@@ -50,7 +65,9 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -68,6 +85,14 @@ import java.util.function.Supplier;
  *       por QR borra todo el portal del estudiante. Al cargar materias u horarios, las claves del usuario quedan
  *       etiquetadas con {@code grupo:<id>} de cada grupo del resultado; {@link InvalidacionCachePorEventos} borra esa
  *       etiqueta cuando el docente cambia asistencias, cierra una toma, cancela una sesion o se matricula alguien.</li>
+ *   <li>Resumen y plan del estudiante (code review 2026-11-26): al cargarse tambien se etiquetan con los grupos de las
+ *       materias del estudiante, para que un evento del grupo los invalide aunque materias y horarios no se recarguen.</li>
+ *   <li>Ambito en los indicadores (code review 2026-11-26): la clave incluye una huella del ambito vigente del actor
+ *       (roles activos, programa del coordinador, facultad del decano y, si el filtro trae programa, si aun tiene acceso a
+ *       el). Si el ambito cambia, la clave cambia y la consulta vuelve a pasar por el caso de uso y sus validaciones, en
+ *       lugar de servir el resultado guardado hasta el TTL.</li>
+ *   <li>Retiro de un estudiante de un grupo y resolucion de un reclamo de asistencia (code review 2026-11-26): no publican
+ *       evento realtime, asi que el decorador invalida directamente la etiqueta del grupo o el portal del estudiante.</li>
  * </ul>
  *
  * <p>La cache se resuelve en la primera llamada (no al crear el post-processor) para no adelantar la creacion de sus
@@ -87,16 +112,33 @@ public final class ConsultasCacheadasPostProcessor implements BeanPostProcessor 
     /** Consultas del portal del docente que dependen de sus grupos. */
     static final List<String> PORTAL_DOCENTE = List.of(ASIGNATURAS_DOCENTE, HORARIOS_DOCENTE);
 
-    private final Supplier<CacheConsultas> cache;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConsultasCacheadasPostProcessor.class);
+    /** Indicadores cuyo filtro no trae programa. */
+    private static final Function<Object, UUID> SIN_PROGRAMA = filtro -> null;
 
-    public ConsultasCacheadasPostProcessor(final ObjectProvider<CacheConsultas> cache) {
+    private final Supplier<CacheConsultas> cache;
+    private final Supplier<InstitutionalScopePort> ambito;
+    private final Supplier<DestinatariosReclamoPort> destinatariosReclamo;
+    /** Materias del estudiante ya decoradas (se fija al envolver ese bean); sirve para etiquetar resumen y plan. */
+    private final AtomicReference<ConsultarMateriasEstudianteInputPort> materiasEstudiante = new AtomicReference<>();
+
+    public ConsultasCacheadasPostProcessor(final ObjectProvider<CacheConsultas> cache,
+                                           final ObjectProvider<InstitutionalScopePort> ambito,
+                                           final ObjectProvider<DestinatariosReclamoPort> destinatariosReclamo) {
         Objects.requireNonNull(cache, "El proveedor de la cache es obligatorio.");
+        Objects.requireNonNull(ambito, "El proveedor del ambito institucional es obligatorio.");
+        Objects.requireNonNull(destinatariosReclamo, "El proveedor de destinatarios de reclamos es obligatorio.");
         this.cache = cache::getObject;
+        this.ambito = ambito::getIfAvailable;
+        this.destinatariosReclamo = destinatariosReclamo::getIfAvailable;
     }
 
-    ConsultasCacheadasPostProcessor(final CacheConsultas cache) {
+    ConsultasCacheadasPostProcessor(final CacheConsultas cache, final InstitutionalScopePort ambito,
+                                    final DestinatariosReclamoPort destinatariosReclamo) {
         Objects.requireNonNull(cache, "La cache es obligatoria.");
         this.cache = () -> cache;
+        this.ambito = () -> ambito;
+        this.destinatariosReclamo = () -> destinatariosReclamo;
     }
 
     @Override
@@ -104,39 +146,79 @@ public final class ConsultasCacheadasPostProcessor implements BeanPostProcessor 
         if (bean.getClass().getInterfaces().length != 1) {
             return bean;
         }
+        Object envuelto = envolverPortal(bean);
+        if (envuelto == null) {
+            envuelto = envolverIndicador(bean);
+        }
+        if (envuelto == null) {
+            envuelto = envolverCatalogoOEscritura(bean);
+        }
+        return envuelto == null ? bean : envuelto;
+    }
+
+    /** Portal del estudiante y del docente; {@code null} si el bean no es una de esas consultas. */
+    private Object envolverPortal(final Object bean) {
         return switch (bean) {
-            case ConsultarMateriasEstudianteInputPort p -> (ConsultarMateriasEstudianteInputPort) actor ->
-                    portal(actor, MATERIAS_ESTUDIANTE, new TypeReference<List<MateriaEstudianteDTO>>() { }, () -> p.execute(actor),
-                            PORTAL_ESTUDIANTE, MateriaEstudianteDTO::idGrupo);
+            case ConsultarMateriasEstudianteInputPort p -> {
+                final ConsultarMateriasEstudianteInputPort cacheado = actor ->
+                        portal(actor, MATERIAS_ESTUDIANTE, new TypeReference<List<MateriaEstudianteDTO>>() { },
+                                () -> p.execute(actor), PORTAL_ESTUDIANTE, MateriaEstudianteDTO::idGrupo);
+                materiasEstudiante.set(cacheado);
+                yield cacheado;
+            }
             case ConsultarHorariosEstudianteInputPort p -> (ConsultarHorariosEstudianteInputPort) actor ->
                     portal(actor, HORARIOS_ESTUDIANTE, new TypeReference<List<HorarioEstudianteDTO>>() { }, () -> p.execute(actor),
                             PORTAL_ESTUDIANTE, HorarioEstudianteDTO::idGrupo);
             case ConsultarResumenMateriasEstudianteInputPort p -> (ConsultarResumenMateriasEstudianteInputPort) actor ->
-                    portal(actor, RESUMEN_ESTUDIANTE, new TypeReference<ResumenMateriasEstudianteDTO>() { }, () -> p.execute(actor));
+                    portalEstudianteDerivado(actor, RESUMEN_ESTUDIANTE, new TypeReference<ResumenMateriasEstudianteDTO>() { },
+                            () -> p.execute(actor));
             case ConsultarPlanEstudioEstudianteInputPort p -> (ConsultarPlanEstudioEstudianteInputPort) actor ->
-                    portal(actor, PLAN_ESTUDIANTE, new TypeReference<List<PlanEstudioEstudianteDTO>>() { }, () -> p.execute(actor));
+                    portalEstudianteDerivado(actor, PLAN_ESTUDIANTE, new TypeReference<List<PlanEstudioEstudianteDTO>>() { },
+                            () -> p.execute(actor));
             case ConsultarAsignaturasDocenteInputPort p -> (ConsultarAsignaturasDocenteInputPort) actor ->
                     portal(actor, ASIGNATURAS_DOCENTE, new TypeReference<List<AsignaturaDocenteDTO>>() { }, () -> p.execute(actor),
                             PORTAL_DOCENTE, AsignaturaDocenteDTO::idGrupo);
             case ConsultarHorariosDocenteInputPort p -> (ConsultarHorariosDocenteInputPort) actor ->
                     portal(actor, HORARIOS_DOCENTE, new TypeReference<List<HorarioDocenteDTO>>() { }, () -> p.execute(actor),
                             PORTAL_DOCENTE, HorarioDocenteDTO::idGrupo);
+            default -> null;
+        };
+    }
+
+    /** Indicadores de coordinador, decano y administrador; {@code null} si el bean no es uno de ellos. */
+    private Object envolverIndicador(final Object bean) {
+        return switch (bean) {
             case ConsultarKpisCoordinadorInputPort p -> (ConsultarKpisCoordinadorInputPort) dto ->
-                    indicador("kpis-coordinador", dto, new TypeReference<KpisCoordinadorDTO>() { }, () -> p.execute(dto));
+                    indicador("kpis-coordinador", dto, ConsultarKpisCoordinadorDTO::actorUsuarioId,
+                            ConsultarKpisCoordinadorDTO::idPrograma, new TypeReference<KpisCoordinadorDTO>() { }, () -> p.execute(dto));
             case ConsultarAlertaTempranaInputPort p -> (ConsultarAlertaTempranaInputPort) dto ->
-                    indicador("alertas-tempranas", dto, new TypeReference<AlertasPaginaDTO>() { }, () -> p.execute(dto));
+                    indicador("alertas-tempranas", dto, ConsultarAlertaTempranaDTO::actorUsuarioId,
+                            ConsultarAlertaTempranaDTO::idPrograma, new TypeReference<AlertasPaginaDTO>() { }, () -> p.execute(dto));
             case ConsultarKpisDecanoInputPort p -> (ConsultarKpisDecanoInputPort) dto ->
-                    indicador("kpis-decano", dto, new TypeReference<KpisDecanoDTO>() { }, () -> p.execute(dto));
+                    indicador("kpis-decano", dto, ConsultarKpisDecanoDTO::actorUsuarioId, SIN_PROGRAMA,
+                            new TypeReference<KpisDecanoDTO>() { }, () -> p.execute(dto));
             case ConsultarComparativaProgramasInputPort p -> (ConsultarComparativaProgramasInputPort) dto ->
-                    indicador("comparativa-programas", dto, new TypeReference<List<ComparativaProgramaDTO>>() { }, () -> p.execute(dto));
+                    indicador("comparativa-programas", dto, ConsultarComparativaProgramasDTO::actorUsuarioId, SIN_PROGRAMA,
+                            new TypeReference<List<ComparativaProgramaDTO>>() { }, () -> p.execute(dto));
             case ConsultarAforoGruposInputPort p -> (ConsultarAforoGruposInputPort) dto ->
-                    indicador("aforo-grupos", dto, new TypeReference<AforoGruposPaginaDTO>() { }, () -> p.execute(dto));
+                    indicador("aforo-grupos", dto, ConsultarAforoGruposDTO::actorUsuarioId, ConsultarAforoGruposDTO::idPrograma,
+                            new TypeReference<AforoGruposPaginaDTO>() { }, () -> p.execute(dto));
             case ConsultarKpisInstitucionInputPort p -> (ConsultarKpisInstitucionInputPort) dto ->
-                    indicador("kpis-institucion", dto, new TypeReference<KpisInstitucionDTO>() { }, () -> p.execute(dto));
+                    indicador("kpis-institucion", dto, ConsultarKpisInstitucionDTO::actorUsuarioId, SIN_PROGRAMA,
+                            new TypeReference<KpisInstitucionDTO>() { }, () -> p.execute(dto));
             case ConsultarComparativaFacultadesInputPort p -> (ConsultarComparativaFacultadesInputPort) dto ->
-                    indicador("comparativa-facultades", dto, new TypeReference<List<ComparativaFacultadDTO>>() { }, () -> p.execute(dto));
+                    indicador("comparativa-facultades", dto, ConsultarComparativaFacultadesDTO::actorUsuarioId, SIN_PROGRAMA,
+                            new TypeReference<List<ComparativaFacultadDTO>>() { }, () -> p.execute(dto));
             case ConsultarTendenciaAusentismoInputPort p -> (ConsultarTendenciaAusentismoInputPort) dto ->
-                    indicador("tendencia-ausentismo", dto, new TypeReference<List<PuntoTendenciaDTO>>() { }, () -> p.execute(dto));
+                    indicador("tendencia-ausentismo", dto, ConsultarTendenciaAusentismoDTO::actorUsuarioId, SIN_PROGRAMA,
+                            new TypeReference<List<PuntoTendenciaDTO>>() { }, () -> p.execute(dto));
+            default -> null;
+        };
+    }
+
+    /** Catalogos y escrituras que invalidan el portal; {@code null} si el bean no es uno de ellos. */
+    private Object envolverCatalogoOEscritura(final Object bean) {
+        return switch (bean) {
             case ConsultarTiposIdentificacionInputPort p -> (ConsultarTiposIdentificacionInputPort) () ->
                     cache.get().obtener(RegionCache.CATALOGOS, "tipos-identificacion",
                             new TypeReference<List<TipoIdentificacionDTO>>() { }, p::execute);
@@ -155,15 +237,76 @@ public final class ConsultasCacheadasPostProcessor implements BeanPostProcessor 
                 }
                 return resultado;
             };
-            default -> bean;
+            case RetirarEstudianteGrupoInputPort p -> (RetirarEstudianteGrupoInputPort) dto -> {
+                p.execute(dto);
+                if (dto != null && dto.grupoId() != null) {
+                    cache.get().invalidarEtiqueta(RegionCache.PORTAL, etiquetaGrupo(dto.grupoId()));
+                }
+            };
+            case ResolverSolicitudRevisionAsistenciaInputPort p -> (ResolverSolicitudRevisionAsistenciaInputPort) dto -> {
+                p.execute(dto);
+                if (dto != null && dto.getSolicitud() != null) {
+                    invalidarEstudiantesDelReclamo(dto.getSolicitud());
+                }
+            };
+            default -> null;
         };
     }
 
-    private <T> T portal(final UUID actor, final String consulta, final TypeReference<T> tipo, final Supplier<T> cargador) {
+    /**
+     * Resumen y plan del estudiante: sus DTO no traen grupos, asi que antes de consultarlos se obtienen los grupos de las
+     * materias del estudiante (normalmente un acierto de cache) y, si hay que cargar, se etiquetan con ellos. Se calcula
+     * antes de {@code obtener} para no anidar cargas sobre la misma cache.
+     */
+    private <T> T portalEstudianteDerivado(final UUID actor, final String consulta, final TypeReference<T> tipo,
+                                           final Supplier<T> cargador) {
         if (actor == null) {
             return cargador.get();
         }
-        return cache.get().obtener(RegionCache.PORTAL, clavePortal(actor, consulta), tipo, cargador);
+        final Set<String> etiquetas = etiquetasDeMaterias(actor);
+        final CacheConsultas actual = cache.get();
+        return actual.obtener(RegionCache.PORTAL, clavePortal(actor, consulta), tipo, () -> {
+            final T valor = cargador.get();
+            if (!etiquetas.isEmpty()) {
+                actual.etiquetar(RegionCache.PORTAL, etiquetas, claves(actor, PORTAL_ESTUDIANTE));
+            }
+            return valor;
+        });
+    }
+
+    private Set<String> etiquetasDeMaterias(final UUID actor) {
+        final ConsultarMateriasEstudianteInputPort materias = materiasEstudiante.get();
+        if (materias == null) {
+            return Set.of();
+        }
+        try {
+            return etiquetasGrupo(materias.execute(actor), MateriaEstudianteDTO::idGrupo);
+        } catch (final RuntimeException exception) {
+            // Sin grupos conocidos el valor solo vence por TTL; la consulta original decide si el actor puede verla.
+            LOGGER.debug("No se pudieron resolver los grupos del estudiante para etiquetar la cache. causa={}",
+                    exception.getClass().getSimpleName());
+            return Set.of();
+        }
+    }
+
+    private void invalidarEstudiantesDelReclamo(final UUID solicitud) {
+        final DestinatariosReclamoPort puerto = destinatariosReclamo.get();
+        if (puerto == null) {
+            return;
+        }
+        try {
+            final List<DestinatarioReclamoProjection> destinatarios = puerto.consultarDestinatariosPorSolicitud(solicitud);
+            if (destinatarios == null) {
+                return;
+            }
+            for (final DestinatarioReclamoProjection destinatario : destinatarios) {
+                if (destinatario != null && destinatario.idUsuario() != null && "ESTUDIANTE".equalsIgnoreCase(destinatario.rol())) {
+                    invalidarUsuario(cache.get(), destinatario.idUsuario(), PORTAL_ESTUDIANTE);
+                }
+            }
+        } catch (final RuntimeException exception) {
+            LOGGER.debug("No se pudo invalidar el portal tras resolver el reclamo. causa={}", exception.getClass().getSimpleName());
+        }
     }
 
     /**
@@ -214,11 +357,50 @@ public final class ConsultasCacheadasPostProcessor implements BeanPostProcessor 
         return "grupo:" + grupo;
     }
 
-    private <T> T indicador(final String consulta, final Object filtro, final TypeReference<T> tipo, final Supplier<T> cargador) {
-        if (filtro == null) {
+    private <F, T> T indicador(final String consulta, final F filtro, final Function<? super F, UUID> actorDe,
+                               final Function<? super F, UUID> programaDe, final TypeReference<T> tipo, final Supplier<T> cargador) {
+        final UUID actor = filtro == null ? null : actorDe.apply(filtro);
+        if (actor == null) {
             return cargador.get();
         }
-        return cache.get().obtener(RegionCache.INDICADORES, consulta + ":" + huella(filtro), tipo, cargador);
+        final UUID programa = programaDe.apply(filtro);
+        final String ambitoVigente;
+        try {
+            ambitoVigente = huellaAmbito(actor, programa);
+        } catch (final RuntimeException _) {
+            // Sin poder comprobar el ambito no se usa la cache: el caso de uso valida y responde.
+            return cargador.get();
+        }
+        if (ambitoVigente == null) {
+            return cargador.get();
+        }
+        return cache.get().obtener(RegionCache.INDICADORES, consulta + ":" + huella(filtro + "|" + ambitoVigente), tipo, cargador);
+    }
+
+    /**
+     * Huella del ambito vigente del actor: roles activos, programa que coordina, facultad que dirige y, si el filtro trae
+     * un programa, si todavia puede acceder a el. {@code null} si no hay puerto de ambito (no se cachea).
+     */
+    String huellaAmbito(final UUID actor, final UUID programa) {
+        final InstitutionalScopePort puerto = ambito.get();
+        if (puerto == null) {
+            return null;
+        }
+        final Set<InstitutionalRole> roles = puerto.findRolesActivosByUsuario(actor);
+        final StringBuilder huella = new StringBuilder("roles=").append(new TreeSet<>(roles == null ? Set.of() : roles));
+        if (roles != null && roles.contains(InstitutionalRole.COORDINADOR)) {
+            huella.append("|programa=").append(puerto.findProgramaIdByCoordinadorUsuario(actor).orElse(null));
+            if (programa != null) {
+                huella.append("|accedePrograma=").append(puerto.canCoordinadorAccessPrograma(actor, programa));
+            }
+        }
+        if (roles != null && roles.contains(InstitutionalRole.DECANO)) {
+            huella.append("|facultad=").append(puerto.findFacultadIdByDecanoUsuario(actor).orElse(null));
+            if (programa != null) {
+                huella.append("|decanoPrograma=").append(puerto.canDecanoAccessPrograma(actor, programa));
+            }
+        }
+        return huella.toString();
     }
 
     private void invalidarAsistenciaEstudiante(final UUID usuario) {

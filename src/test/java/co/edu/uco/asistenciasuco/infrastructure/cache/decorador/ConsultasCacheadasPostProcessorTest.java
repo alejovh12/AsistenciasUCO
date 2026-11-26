@@ -52,7 +52,11 @@ class ConsultasCacheadasPostProcessorTest {
     private static final UUID ACTOR_B = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
 
     private final CacheConsultas cache = new CaffeineCacheConsultas(ttl(), 100, new MetricasCache(new SimpleMeterRegistry(), "local"));
-    private final ConsultasCacheadasPostProcessor processor = new ConsultasCacheadasPostProcessor(cache);
+    private final co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort ambito =
+            mock(co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort.class);
+    private final co.edu.uco.asistenciasuco.application.secondaryports.academic.DestinatariosReclamoPort destinatarios =
+            mock(co.edu.uco.asistenciasuco.application.secondaryports.academic.DestinatariosReclamoPort.class);
+    private final ConsultasCacheadasPostProcessor processor = new ConsultasCacheadasPostProcessor(cache, ambito, destinatarios);
 
     private static Map<RegionCache, Duration> ttl() {
         final Map<RegionCache, Duration> mapa = new EnumMap<>(RegionCache.class);
@@ -280,7 +284,13 @@ class ConsultasCacheadasPostProcessorTest {
         @SuppressWarnings("unchecked")
         final ObjectProvider<CacheConsultas> proveedor = mock(ObjectProvider.class);
         when(proveedor.getObject()).thenReturn(cache);
-        final ConsultasCacheadasPostProcessor perezoso = new ConsultasCacheadasPostProcessor(proveedor);
+        @SuppressWarnings("unchecked")
+        final ObjectProvider<co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort> sinAmbito =
+                mock(ObjectProvider.class);
+        @SuppressWarnings("unchecked")
+        final ObjectProvider<co.edu.uco.asistenciasuco.application.secondaryports.academic.DestinatariosReclamoPort> sinDestinatarios =
+                mock(ObjectProvider.class);
+        final ConsultasCacheadasPostProcessor perezoso = new ConsultasCacheadasPostProcessor(proveedor, sinAmbito, sinDestinatarios);
         final AtomicInteger cargas = new AtomicInteger();
 
         final ConsultarHorariosEstudianteInputPort horarios = (ConsultarHorariosEstudianteInputPort) perezoso
@@ -301,5 +311,150 @@ class ConsultasCacheadasPostProcessorTest {
         assertNotEquals(a, ConsultasCacheadasPostProcessor.huella(List.of("x", 2)));
         assertEquals(32, a.length());
         assertTrue(ConsultasCacheadasPostProcessor.clavePortal(ACTOR_A, "materias").startsWith(ACTOR_A.toString()));
+    }
+
+    // --- Code review 2026-11-26 ---
+
+    private static final java.util.Set<co.edu.uco.asistenciasuco.application.security.InstitutionalRole> COORDINADOR =
+            java.util.EnumSet.of(co.edu.uco.asistenciasuco.application.security.InstitutionalRole.COORDINADOR);
+
+    @Test
+    void si_el_ambito_del_actor_cambia_el_indicador_vuelve_a_pasar_por_el_caso_de_uso() {
+        final UUID programa = UUID.randomUUID();
+        when(ambito.findRolesActivosByUsuario(ACTOR_A)).thenReturn(COORDINADOR);
+        when(ambito.findProgramaIdByCoordinadorUsuario(ACTOR_A)).thenReturn(java.util.Optional.of(programa));
+        when(ambito.canCoordinadorAccessPrograma(ACTOR_A, programa)).thenReturn(true);
+        final AtomicInteger cargas = new AtomicInteger();
+        final ConsultarAlertaTempranaInputPort alertas = envolver((ConsultarAlertaTempranaInputPort) dto -> {
+            cargas.incrementAndGet();
+            return new co.edu.uco.asistenciasuco.application.features.coordinador.consultaralertatemprana.primaryports.dto
+                    .AlertasPaginaDTO(List.of(), 0);
+        });
+        final var filtro = new co.edu.uco.asistenciasuco.application.features.coordinador.consultaralertatemprana.primaryports
+                .dto.ConsultarAlertaTempranaDTO(ACTOR_A, null, null, null, 1, 10, programa);
+
+        alertas.execute(filtro);
+        alertas.execute(filtro);
+        assertEquals(1, cargas.get(), "con el mismo ambito se usa la cache");
+
+        when(ambito.canCoordinadorAccessPrograma(ACTOR_A, programa)).thenReturn(false);
+        alertas.execute(filtro);
+        assertEquals(2, cargas.get(), "retirado del programa: no se sirve lo guardado");
+
+        when(ambito.findRolesActivosByUsuario(ACTOR_A)).thenReturn(java.util.Set.of());
+        alertas.execute(filtro);
+        assertEquals(3, cargas.get(), "sin el rol: no se sirve lo guardado");
+    }
+
+    @Test
+    void sin_puerto_de_ambito_o_si_falla_los_indicadores_no_usan_la_cache() {
+        final ConsultasCacheadasPostProcessor sinAmbito = new ConsultasCacheadasPostProcessor(cache, null, null);
+        final AtomicInteger cargas = new AtomicInteger();
+        final ConsultarKpisDecanoInputPort kpis = (ConsultarKpisDecanoInputPort) sinAmbito.postProcessAfterInitialization(
+                (ConsultarKpisDecanoInputPort) dto -> {
+                    cargas.incrementAndGet();
+                    return null;
+                }, "kpis");
+        final var filtro = new co.edu.uco.asistenciasuco.application.features.decano.consultarkpisdecano.primaryports.dto
+                .ConsultarKpisDecanoDTO(ACTOR_A, null);
+        kpis.execute(filtro);
+        kpis.execute(filtro);
+        assertEquals(2, cargas.get());
+
+        when(ambito.findRolesActivosByUsuario(ACTOR_A)).thenThrow(new IllegalStateException("bd"));
+        final AtomicInteger cargasDecano = new AtomicInteger();
+        final ConsultarComparativaProgramasInputPort comparativa = envolver((ConsultarComparativaProgramasInputPort) dto -> {
+            cargasDecano.incrementAndGet();
+            return List.of();
+        });
+        final var filtroDecano = new co.edu.uco.asistenciasuco.application.features.decano.consultarcomparativaprogramas
+                .primaryports.dto.ConsultarComparativaProgramasDTO(ACTOR_A, null);
+        comparativa.execute(filtroDecano);
+        comparativa.execute(filtroDecano);
+        assertEquals(2, cargasDecano.get());
+    }
+
+    @Test
+    void la_huella_del_ambito_incluye_la_facultad_del_decano() {
+        final UUID facultad = UUID.randomUUID();
+        final UUID programa = UUID.randomUUID();
+        when(ambito.findRolesActivosByUsuario(ACTOR_A)).thenReturn(
+                java.util.EnumSet.of(co.edu.uco.asistenciasuco.application.security.InstitutionalRole.DECANO));
+        when(ambito.findFacultadIdByDecanoUsuario(ACTOR_A)).thenReturn(java.util.Optional.of(facultad));
+        when(ambito.canDecanoAccessPrograma(ACTOR_A, programa)).thenReturn(true);
+
+        final String huella = processor.huellaAmbito(ACTOR_A, programa);
+
+        assertTrue(huella.contains(facultad.toString()));
+        assertTrue(huella.contains("decanoPrograma=true"));
+    }
+
+    private static co.edu.uco.asistenciasuco.application.features.estudiante.consultarmaterias.primaryports.dto.MateriaEstudianteDTO
+            materiaDelGrupo(final UUID grupo) {
+        return new co.edu.uco.asistenciasuco.application.features.estudiante.consultarmaterias.primaryports.dto
+                .MateriaEstudianteDTO(UUID.randomUUID(), "Calculo", grupo, "G1");
+    }
+
+    @Test
+    void el_resumen_cargado_solo_queda_etiquetado_con_los_grupos_de_las_materias() {
+        final UUID grupo = UUID.randomUUID();
+        final AtomicInteger cargas = new AtomicInteger();
+        final ConsultarMateriasEstudianteInputPort materias = envolver(
+                (ConsultarMateriasEstudianteInputPort) actor -> List.of(materiaDelGrupo(grupo)));
+        final ConsultarResumenMateriasEstudianteInputPort resumen = envolver(
+                (ConsultarResumenMateriasEstudianteInputPort) actor -> new co.edu.uco.asistenciasuco.application.features.estudiante
+                        .consultarresumenmaterias.primaryports.dto.ResumenMateriasEstudianteDTO(cargas.incrementAndGet(), 0, null, 0));
+        materias.execute(ACTOR_A);
+        // Un evento del grupo borra la etiqueta y lo guardado.
+        cache.invalidarEtiqueta(RegionCache.PORTAL, ConsultasCacheadasPostProcessor.etiquetaGrupo(grupo));
+
+        assertEquals(1, resumen.execute(ACTOR_A).totalMaterias());
+        cache.invalidarEtiqueta(RegionCache.PORTAL, ConsultasCacheadasPostProcessor.etiquetaGrupo(grupo));
+
+        assertEquals(2, resumen.execute(ACTOR_A).totalMaterias(), "el siguiente evento del grupo tambien lo invalida");
+    }
+
+    @Test
+    void retirar_un_estudiante_invalida_el_portal_del_grupo() {
+        final UUID grupo = UUID.randomUUID();
+        final AtomicInteger cargas = new AtomicInteger();
+        final ConsultarMateriasEstudianteInputPort materias = envolver(
+                (ConsultarMateriasEstudianteInputPort) actor -> {
+                    cargas.incrementAndGet();
+                    return List.of(materiaDelGrupo(grupo));
+                });
+        final co.edu.uco.asistenciasuco.application.features.docente.retirarestudiantegrupo.primaryports
+                .RetirarEstudianteGrupoInputPort retirar = envolver(
+                (co.edu.uco.asistenciasuco.application.features.docente.retirarestudiantegrupo.primaryports
+                        .RetirarEstudianteGrupoInputPort) dto -> { });
+
+        materias.execute(ACTOR_A);
+        retirar.execute(new co.edu.uco.asistenciasuco.application.features.docente.retirarestudiantegrupo.primaryports.dto
+                .RetirarEstudianteGrupoDTO(ACTOR_B, grupo, UUID.randomUUID(), "motivo"));
+        materias.execute(ACTOR_A);
+
+        assertEquals(2, cargas.get());
+    }
+
+    @Test
+    void resolver_un_reclamo_invalida_el_portal_del_estudiante() {
+        final UUID solicitud = UUID.randomUUID();
+        when(destinatarios.consultarDestinatariosPorSolicitud(solicitud)).thenReturn(List.of(
+                new co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.DestinatarioReclamoProjection(
+                        "ESTUDIANTE", ACTOR_A, "Ana", "ana@uco.edu.co", UUID.randomUUID(), "G1", "2026-11-26")));
+        final AtomicInteger cargas = new AtomicInteger();
+        final ConsultarResumenMateriasEstudianteInputPort resumen = envolver(
+                (ConsultarResumenMateriasEstudianteInputPort) actor -> new co.edu.uco.asistenciasuco.application.features.estudiante
+                        .consultarresumenmaterias.primaryports.dto.ResumenMateriasEstudianteDTO(cargas.incrementAndGet(), 0, null, 0));
+        final co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicitudrevisionasistencia.primaryports
+                .ResolverSolicitudRevisionAsistenciaInputPort resolver = envolver(
+                (co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicitudrevisionasistencia.primaryports
+                        .ResolverSolicitudRevisionAsistenciaInputPort) dto -> { });
+
+        resumen.execute(ACTOR_A);
+        resolver.execute(new co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicitudrevisionasistencia
+                .primaryports.dto.ResolverSolicitudRevisionAsistenciaDTO(solicitud, "APROBADA", "ok", ACTOR_B));
+
+        assertEquals(2, resumen.execute(ACTOR_A).totalMaterias());
     }
 }

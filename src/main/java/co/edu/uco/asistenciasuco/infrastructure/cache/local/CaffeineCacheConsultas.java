@@ -29,6 +29,8 @@ public final class CaffeineCacheConsultas implements CacheConsultas {
     /** Indice etiqueta -> claves por region; vence con el mismo TTL (si sobrevive a sus claves, borrarlas no hace nada). */
     private final Map<RegionCache, Cache<String, Set<String>>> etiquetas = new EnumMap<>(RegionCache.class);
     private final MetricasCache metricas;
+    /** Code review 2026-11-26: cuenta las invalidaciones; una carga que ve cambiar el contador no deja su valor. */
+    private final java.util.concurrent.atomic.AtomicLong generacion = new java.util.concurrent.atomic.AtomicLong();
 
     public CaffeineCacheConsultas(final Map<RegionCache, Duration> ttlPorRegion, final long maximoPorRegion,
                                   final MetricasCache metricas) {
@@ -52,11 +54,18 @@ public final class CaffeineCacheConsultas implements CacheConsultas {
             return (T) presente;
         }
         metricas.fallo(region);
-        return (T) cache.get(clave, ignorada -> cargador.get());
+        final long antes = generacion.get();
+        final Object valor = cache.get(clave, ignorada -> cargador.get());
+        if (generacion.get() != antes) {
+            // Hubo una invalidacion durante la carga: el valor pudo leerse antes del cambio. No se deja en la cache.
+            cache.invalidate(clave);
+        }
+        return (T) valor;
     }
 
     @Override
     public void invalidar(final RegionCache region, final String clave) {
+        generacion.incrementAndGet();
         caches.get(region).invalidate(clave);
     }
 
@@ -82,6 +91,7 @@ public final class CaffeineCacheConsultas implements CacheConsultas {
         if (etiqueta == null) {
             return;
         }
+        generacion.incrementAndGet();
         final Set<String> claves = etiquetas.get(region).asMap().remove(etiqueta);
         if (claves != null) {
             caches.get(region).invalidateAll(claves);

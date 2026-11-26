@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -41,7 +42,8 @@ class RedisRealtimeRelayTest {
     private static final UUID DESTINATARIO = UUID.fromString("33333333-3333-3333-3333-333333333333");
 
     private final SimpleMeterRegistry registry = new SimpleMeterRegistry();
-    private final RedisRealtimeCodec codec = new RedisRealtimeCodec(JsonMapper.builder().build());
+    private final RedisRealtimeCodec codec = new RedisRealtimeCodec(JsonMapper.builder().build(), "replica-a");
+    private final RedisRealtimeCodec codecOtraReplica = new RedisRealtimeCodec(JsonMapper.builder().build(), "replica-b");
     private final StringRedisTemplate redis = mock(StringRedisTemplate.class);
 
     @AfterEach
@@ -73,7 +75,7 @@ class RedisRealtimeRelayTest {
     }
 
     @Test
-    void publicar_envia_al_canal_con_la_correlacion_del_origen_y_sin_emitir_localmente() {
+    void publicar_envia_al_canal_con_la_correlacion_del_origen_y_entrega_localmente() {
         final ReactorRealtimeAdapter local = new ReactorRealtimeAdapter(registry);
         final RedisRealtimeRelayAdapter relevo = new RedisRealtimeRelayAdapter(redis, CANAL, codec, local, registry);
         CorrelationIdContext.set("corr-origen");
@@ -86,7 +88,8 @@ class RedisRealtimeRelayTest {
         assertEquals("corr-origen", enviado.correlationId());
         assertEquals(Set.of(DESTINATARIO), enviado.destinatariosUsuario());
         assertEquals(1.0, registry.get("realtime.relay.published").counter().count());
-        assertEquals(0.0, registry.get("realtime.events.published").counter().count(), "la entrega llega por la suscripcion");
+        assertEquals(1.0, registry.get("realtime.events.no_subscribers").counter().count(),
+                "la replica de origen lo entrega a su sink local (aqui sin clientes conectados)");
     }
 
     @Test
@@ -94,7 +97,7 @@ class RedisRealtimeRelayTest {
         final ReactorRealtimeAdapter local = new ReactorRealtimeAdapter(registry);
         final RedisRealtimeSuscriptor suscriptor = new RedisRealtimeSuscriptor(codec, local);
         final RealtimeEvent original = evento().withObservabilityContext("corr-remota", "trace", "span");
-        final byte[] cuerpo = codec.escribir(original).getBytes(StandardCharsets.UTF_8);
+        final byte[] cuerpo = codecOtraReplica.escribir(original).getBytes(StandardCharsets.UTF_8);
 
         StepVerifier.create(local.events())
                 .then(() -> suscriptor.onMessage(new DefaultMessage(CANAL.getBytes(StandardCharsets.UTF_8), cuerpo), null))
@@ -169,5 +172,50 @@ class RedisRealtimeRelayTest {
 
         assertDoesNotThrow(() -> relevo.publish(evento()));
         verify(redis, never()).convertAndSend(anyString(), anyString());
+    }
+    @Test
+    void el_mensaje_propio_que_vuelve_por_la_suscripcion_no_se_entrega_dos_veces() {
+        final ReactorRealtimeAdapter local = new ReactorRealtimeAdapter(registry);
+        final RedisRealtimeRelayAdapter relevo = new RedisRealtimeRelayAdapter(redis, CANAL, codec, local, registry);
+        final RedisRealtimeSuscriptor suscriptor = new RedisRealtimeSuscriptor(codec, local);
+        final ArgumentCaptor<String> mensaje = ArgumentCaptor.forClass(String.class);
+        final java.util.List<RealtimeEvent> recibidos = new java.util.concurrent.CopyOnWriteArrayList<>();
+        local.events().subscribe(recibidos::add);
+
+        relevo.publish(evento());
+        verify(redis).convertAndSend(eq(CANAL), mensaje.capture());
+        suscriptor.onMessage(new DefaultMessage(CANAL.getBytes(StandardCharsets.UTF_8),
+                mensaje.getValue().getBytes(StandardCharsets.UTF_8)), null);
+
+        assertEquals(1, recibidos.size(), "se entrega al publicar y el eco propio se descarta");
+    }
+
+    @Test
+    void un_timeout_despues_de_que_redis_acepto_el_mensaje_no_duplica_la_entrega() {
+        final ReactorRealtimeAdapter local = new ReactorRealtimeAdapter(registry);
+        final RedisRealtimeRelayAdapter relevo = new RedisRealtimeRelayAdapter(redis, CANAL, codec, local, registry);
+        final RedisRealtimeSuscriptor suscriptor = new RedisRealtimeSuscriptor(codec, local);
+        final ArgumentCaptor<String> mensaje = ArgumentCaptor.forClass(String.class);
+        doThrow(new org.springframework.dao.QueryTimeoutException("timeout")).when(redis).convertAndSend(eq(CANAL), mensaje.capture());
+        final java.util.List<RealtimeEvent> recibidos = new java.util.concurrent.CopyOnWriteArrayList<>();
+        local.events().subscribe(recibidos::add);
+
+        relevo.publish(evento());
+        // Redis si alcanzo a aceptar el mensaje y la suscripcion propia lo recibe despues del timeout.
+        suscriptor.onMessage(new DefaultMessage(CANAL.getBytes(StandardCharsets.UTF_8),
+                mensaje.getValue().getBytes(StandardCharsets.UTF_8)), null);
+
+        assertEquals(1, recibidos.size());
+        assertEquals(1.0, registry.get("realtime.relay.fallback").counter().count());
+    }
+
+    @Test
+    void cada_codec_tiene_su_origen_y_lee_como_ajeno_solo_lo_de_otra_replica() {
+        final String mensaje = codecOtraReplica.escribir(evento());
+
+        assertEquals("replica-a", codec.origen());
+        assertEquals(evento().type(), codec.leerAjeno(mensaje).type());
+        assertNull(codecOtraReplica.leerAjeno(mensaje));
+        assertNotNull(new RedisRealtimeCodec(JsonMapper.builder().build()).origen());
     }
 }

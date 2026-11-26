@@ -194,4 +194,63 @@ class CanalUsuarioRealtimeTest {
                 .verify(Duration.ofSeconds(5));
         verify(resolver, never()).execute(any());
     }
+
+    @Test
+    void el_ambito_recordado_vence_y_quien_lo_pierde_deja_de_recibir_sin_reconectar() {
+        final java.util.concurrent.atomic.AtomicLong nanos = new java.util.concurrent.atomic.AtomicLong();
+        gateway.usarRelojNanos(nanos::get);
+        when(resolver.execute(new ResolverAudienciaRealtimeInputPort.Comando(USUARIO, GRUPO_PROPIO)))
+                .thenReturn(new AudienciaRealtimeGrupo(false, false, true), new AudienciaRealtimeGrupo(false, false, false));
+        final Flux<RealtimeEventResponse> canal = gateway.subscribeUsuario(USUARIO, true);
+        final List<String> llegaron = new CopyOnWriteArrayList<>();
+        final java.util.concurrent.BlockingQueue<String> marcas = new java.util.concurrent.LinkedBlockingQueue<>();
+        final Disposable suscripcion = canal.subscribe(r -> {
+            if ("fin".equals(r.payload().get("grupo"))) {
+                marcas.add("fin");
+            } else {
+                llegaron.add(r.type());
+            }
+        });
+        final RealtimeEvent marca = RealtimeEvent.paraDestinatarios("FALTA_SESION_AVISADA", Map.of("grupo", "fin"), Set.of(USUARIO));
+        try {
+            realtime.publish(grupal("SESION_SOLICITUD_CREADA", GRUPO_PROPIO));
+            realtime.publish(marca);
+            assertEquals("fin", marcas.poll(5, TimeUnit.SECONDS));
+            realtime.publish(grupal("SESION_SOLICITUD_CREADA", GRUPO_PROPIO));
+            realtime.publish(marca);
+            assertEquals("fin", marcas.poll(5, TimeUnit.SECONDS));
+            nanos.addAndGet(LocalSseRealtimeStreamGateway.VIGENCIA_AMBITO.toNanos());
+            realtime.publish(grupal("SESION_SOLICITUD_CREADA", GRUPO_PROPIO));
+            realtime.publish(marca);
+            assertEquals("fin", marcas.poll(5, TimeUnit.SECONDS));
+        } catch (final InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(exception);
+        } finally {
+            suscripcion.dispose();
+        }
+
+        assertEquals(List.of("SESION_SOLICITUD_CREADA", "SESION_SOLICITUD_CREADA"), llegaron,
+                "dentro de la vigencia usa lo recordado; al vencer se vuelve a resolver y ya no tiene ambito");
+        verify(resolver, times(2)).execute(new ResolverAudienciaRealtimeInputPort.Comando(USUARIO, GRUPO_PROPIO));
+    }
+
+    @Test
+    void la_memoria_de_ambitos_por_conexion_esta_acotada() {
+        final int total = LocalSseRealtimeStreamGateway.MAXIMO_AMBITOS_POR_CONEXION + 1;
+        final UUID primero = UUID.randomUUID();
+        final Disposable suscripcion = gateway.subscribeUsuario(USUARIO, true).subscribe();
+        try {
+            for (int i = 0; i < total; i++) {
+                realtime.publish(grupal("SESION_SOLICITUD_CREADA", i == 0 ? primero : UUID.randomUUID()));
+                verify(resolver, org.mockito.Mockito.timeout(2000).times(i + 1)).execute(any());
+            }
+            realtime.publish(grupal("SESION_SOLICITUD_CREADA", primero));
+            // El primer grupo se olvido al superar el maximo, asi que se vuelve a resolver.
+            verify(resolver, org.mockito.Mockito.timeout(2000).times(2))
+                    .execute(new ResolverAudienciaRealtimeInputPort.Comando(USUARIO, primero));
+        } finally {
+            suscripcion.dispose();
+        }
+    }
 }

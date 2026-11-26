@@ -12,8 +12,8 @@ import java.util.Objects;
 
 /**
  * REDIS-001: recibe los eventos del canal Redis del realtime y los entrega a los clientes SSE de esta replica (el filtro
- * por grupo y audiencia sigue en {@code LocalSseRealtimeStreamGateway}). Un mensaje ilegible se descarta sin cortar la
- * suscripcion.
+ * por grupo y audiencia sigue en {@code LocalSseRealtimeStreamGateway}). Los mensajes que publico esta misma replica se
+ * ignoran (ya se entregaron al publicarlos). Un mensaje ilegible se descarta sin cortar la suscripcion.
  */
 public final class RedisRealtimeSuscriptor implements MessageListener {
 
@@ -30,7 +30,7 @@ public final class RedisRealtimeSuscriptor implements MessageListener {
     @Override
     public void onMessage(final Message message, final byte[] pattern) {
         try {
-            final RealtimeEvent event = codec.leer(new String(message.getBody(), StandardCharsets.UTF_8));
+            final RealtimeEvent event = codec.leerAjeno(new String(message.getBody(), StandardCharsets.UTF_8));
             if (event != null) {
                 local.entregarRelevado(event);
             }

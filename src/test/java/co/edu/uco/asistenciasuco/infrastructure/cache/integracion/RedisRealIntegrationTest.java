@@ -134,22 +134,46 @@ class RedisRealIntegrationTest {
         assertTrue(replicaA.permitir("asistencia-qr:estudiante:u1", 2));
         assertTrue(replicaB.permitir("asistencia-qr:estudiante:u1", 2));
         assertFalse(replicaA.permitir("asistencia-qr:estudiante:u1", 2));
+        final Long vence = redis.getExpire(replicaA.claveRedis("asistencia-qr:estudiante:u1"));
+        assertTrue(vence != null && vence > 0 && vence <= 60, "la clave del limitador siempre vence");
+    }
+
+    @Test
+    void la_ventana_es_deslizante_y_no_se_duplica_en_el_cambio_de_minuto() {
+        final LimitadorIntentosPort respaldo = (clave, limite) -> true;
+        final java.util.concurrent.atomic.AtomicLong ms = new java.util.concurrent.atomic.AtomicLong(
+                java.time.Instant.parse("2026-11-25T10:00:59.900Z").toEpochMilli());
+        final Clock reloj = new Clock() {
+            @Override public java.time.ZoneId getZone() { return java.time.ZoneOffset.UTC; }
+            @Override public Clock withZone(final java.time.ZoneId zone) { return this; }
+            @Override public java.time.Instant instant() { return java.time.Instant.ofEpochMilli(ms.get()); }
+        };
+        final RedisLimitadorIntentosAdapter limitador = new RedisLimitadorIntentosAdapter(redis, prefijo, respaldo, reloj);
+
+        assertTrue(limitador.permitir("asistencia-qr:pin:1", 2));
+        assertTrue(limitador.permitir("asistencia-qr:pin:1", 2));
+        ms.addAndGet(200); // 10:01:00.100: otro minuto de reloj, misma ventana de 60 s
+        assertFalse(limitador.permitir("asistencia-qr:pin:1", 2), "no se duplica el limite al cambiar de minuto");
+        ms.addAndGet(60_000); // fuera de la ventana de los dos primeros intentos
+        assertTrue(limitador.permitir("asistencia-qr:pin:1", 2), "los rechazos no extienden el bloqueo");
     }
 
     @Test
     void un_evento_publicado_en_una_replica_llega_a_los_clientes_de_la_otra() throws InterruptedException {
         final String canal = prefijo + ":realtime:v1";
-        final RedisRealtimeCodec codec = new RedisRealtimeCodec(JsonMapper.builder().build());
+        // Cada replica tiene su propio codec (su identidad de origen), como en el Composition Root.
+        final RedisRealtimeCodec codecA = new RedisRealtimeCodec(JsonMapper.builder().build());
+        final RedisRealtimeCodec codecB = new RedisRealtimeCodec(JsonMapper.builder().build());
         final ReactorRealtimeAdapter localA = new ReactorRealtimeAdapter(new SimpleMeterRegistry());
         final ReactorRealtimeAdapter localB = new ReactorRealtimeAdapter(new SimpleMeterRegistry());
-        suscribir(canal, codec, localA);
-        suscribir(canal, codec, localB);
+        suscribir(canal, codecA, localA);
+        suscribir(canal, codecB, localB);
         final List<RealtimeEvent> recibidosA = new CopyOnWriteArrayList<>();
         final List<RealtimeEvent> recibidosB = new CopyOnWriteArrayList<>();
         localA.events().subscribe(recibidosA::add);
         localB.events().subscribe(recibidosB::add);
         Thread.sleep(500);
-        final RedisRealtimeRelayAdapter relevoA = new RedisRealtimeRelayAdapter(redis, canal, codec, localA, new SimpleMeterRegistry());
+        final RedisRealtimeRelayAdapter relevoA = new RedisRealtimeRelayAdapter(redis, canal, codecA, localA, new SimpleMeterRegistry());
         final RealtimeEvent evento = RealtimeEvent.of("TOMA_ABIERTA", Map.of("grupo", "g-1"));
 
         relevoA.publish(evento);
