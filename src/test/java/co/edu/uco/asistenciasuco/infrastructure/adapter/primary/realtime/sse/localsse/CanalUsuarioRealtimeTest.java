@@ -203,10 +203,10 @@ class CanalUsuarioRealtimeTest {
                 .thenReturn(new AudienciaRealtimeGrupo(false, false, true), new AudienciaRealtimeGrupo(false, false, false));
         final Flux<RealtimeEventResponse> canal = gateway.subscribeUsuario(USUARIO, true);
         final List<String> llegaron = new CopyOnWriteArrayList<>();
-        final CountDownLatch fin = new CountDownLatch(3);
+        final java.util.concurrent.BlockingQueue<String> marcas = new java.util.concurrent.LinkedBlockingQueue<>();
         final Disposable suscripcion = canal.subscribe(r -> {
             if ("fin".equals(r.payload().get("grupo"))) {
-                fin.countDown();
+                marcas.add("fin");
             } else {
                 llegaron.add(r.type());
             }
@@ -215,14 +215,14 @@ class CanalUsuarioRealtimeTest {
         try {
             realtime.publish(grupal("SESION_SOLICITUD_CREADA", GRUPO_PROPIO));
             realtime.publish(marca);
-            esperarConteo(fin, 2);
+            assertEquals("fin", marcas.poll(5, TimeUnit.SECONDS));
             realtime.publish(grupal("SESION_SOLICITUD_CREADA", GRUPO_PROPIO));
             realtime.publish(marca);
-            esperarConteo(fin, 1);
+            assertEquals("fin", marcas.poll(5, TimeUnit.SECONDS));
             nanos.addAndGet(LocalSseRealtimeStreamGateway.VIGENCIA_AMBITO.toNanos());
             realtime.publish(grupal("SESION_SOLICITUD_CREADA", GRUPO_PROPIO));
             realtime.publish(marca);
-            assertTrue(fin.await(5, TimeUnit.SECONDS));
+            assertEquals("fin", marcas.poll(5, TimeUnit.SECONDS));
         } catch (final InterruptedException exception) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException(exception);
@@ -235,11 +235,22 @@ class CanalUsuarioRealtimeTest {
         verify(resolver, times(2)).execute(new ResolverAudienciaRealtimeInputPort.Comando(USUARIO, GRUPO_PROPIO));
     }
 
-    private static void esperarConteo(final CountDownLatch latch, final long restante) throws InterruptedException {
-        final long limite = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
-        while (latch.getCount() > restante && System.nanoTime() < limite) {
-            Thread.sleep(10);
+    @Test
+    void la_memoria_de_ambitos_por_conexion_esta_acotada() {
+        final int total = LocalSseRealtimeStreamGateway.MAXIMO_AMBITOS_POR_CONEXION + 1;
+        final UUID primero = UUID.randomUUID();
+        final Disposable suscripcion = gateway.subscribeUsuario(USUARIO, true).subscribe();
+        try {
+            for (int i = 0; i < total; i++) {
+                realtime.publish(grupal("SESION_SOLICITUD_CREADA", i == 0 ? primero : UUID.randomUUID()));
+                verify(resolver, org.mockito.Mockito.timeout(2000).times(i + 1)).execute(any());
+            }
+            realtime.publish(grupal("SESION_SOLICITUD_CREADA", primero));
+            // El primer grupo se olvido al superar el maximo, asi que se vuelve a resolver.
+            verify(resolver, org.mockito.Mockito.timeout(2000).times(2))
+                    .execute(new ResolverAudienciaRealtimeInputPort.Comando(USUARIO, primero));
+        } finally {
+            suscripcion.dispose();
         }
-        assertEquals(restante, latch.getCount());
     }
 }

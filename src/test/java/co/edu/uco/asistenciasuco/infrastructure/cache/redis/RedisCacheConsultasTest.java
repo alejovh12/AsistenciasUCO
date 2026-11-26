@@ -38,6 +38,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -320,7 +321,7 @@ class RedisCacheConsultasTest {
         assertEquals(List.of(FILA), conDisyuntor.obtener(RegionCache.PORTAL, "u1:materias", TIPO, () -> List.of(FILA)));
         conDisyuntor.etiquetar(RegionCache.PORTAL, List.of("grupo:g1"), List.of("u1:materias"));
 
-        verify(valores, org.mockito.Mockito.times(1)).get(CLAVE);
+        verify(valores, times(1)).get(CLAVE);
         verify(conjuntos, never()).add(anyString(), any(String[].class));
         assertEquals(3.0, contador("error"));
     }
@@ -344,7 +345,7 @@ class RedisCacheConsultasTest {
         orden.verify(redis).delete(List.of(CLAVE, "asistencias-uco:cache:v1:portal:etiqueta:grupo:g1"));
         orden.verify(redis).delete(List.of("asistencias-uco:cache:v1:portal:u1:resumen"));
         orden.verify(valores).get(CLAVE);
-        verify(valores, org.mockito.Mockito.times(2)).get(CLAVE);
+        verify(valores, times(2)).get(CLAVE);
     }
 
     @Test
@@ -381,5 +382,42 @@ class RedisCacheConsultasTest {
         cache.obtener(RegionCache.PORTAL, "u1:materias", TIPO, () -> List.of(FILA));
 
         verify(redis, never()).delete(CLAVE);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void si_las_pendientes_se_desbordan_se_borra_toda_la_cache_del_prefijo() {
+        final RelojMovil reloj = new RelojMovil();
+        final RedisCacheConsultas conDisyuntor = cacheConReloj(reloj);
+        when(valores.get(CLAVE)).thenThrow(new RedisConnectionFailureException("caido")).thenReturn(null);
+        conDisyuntor.obtener(RegionCache.PORTAL, "u1:materias", TIPO, () -> List.of(FILA));
+        for (int i = 0; i <= RedisCacheConsultas.MAXIMO_PENDIENTES; i++) {
+            conDisyuntor.invalidar(RegionCache.PORTAL, "u" + i + ":materias");
+        }
+        reloj.avanzar(Duration.ofSeconds(31));
+        final org.springframework.data.redis.core.Cursor<String> cursor = mock(org.springframework.data.redis.core.Cursor.class);
+        final java.util.Iterator<String> claves = java.util.stream.IntStream.range(0, 501)
+                .mapToObj(i -> "asistencias-uco:cache:v1:portal:u" + i + ":materias").iterator();
+        when(cursor.hasNext()).thenAnswer(invocacion -> claves.hasNext());
+        when(cursor.next()).thenAnswer(invocacion -> claves.next());
+        when(redis.scan(any(org.springframework.data.redis.core.ScanOptions.class))).thenReturn(cursor);
+
+        assertEquals(List.of(FILA), conDisyuntor.obtener(RegionCache.PORTAL, "u1:materias", TIPO, () -> List.of(FILA)));
+
+        verify(redis, times(2)).delete(org.mockito.ArgumentMatchers.<java.util.Collection<String>>any());
+        verify(cursor).close();
+        verify(valores, times(2)).get(CLAVE);
+        // Ya aplicadas: la siguiente lectura no vuelve a barrer.
+        conDisyuntor.obtener(RegionCache.PORTAL, "u1:materias", TIPO, () -> List.of(FILA));
+        verify(redis, times(1)).scan(any(org.springframework.data.redis.core.ScanOptions.class));
+    }
+
+    @Test
+    void un_valor_ilegible_que_no_se_puede_borrar_igual_se_recarga() {
+        when(valores.get(CLAVE)).thenReturn("{roto");
+        doThrow(new RedisConnectionFailureException("caido")).when(redis).delete(CLAVE);
+
+        assertEquals(List.of(FILA), cache.obtener(RegionCache.PORTAL, "u1:materias", TIPO, () -> List.of(FILA)));
+        assertTrue(contador("error") >= 1.0);
     }
 }

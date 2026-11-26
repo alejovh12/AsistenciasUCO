@@ -70,3 +70,12 @@ Validación de esta rama: ver la tabla siguiente.
 | Matriz HU → pruebas | `python3 scripts/testing/matriz_hu_pruebas.py` | `MATRIZ_HU_PRUEBAS_PASS` |
 
 Sonar, CodeQL y Trivy los valida el CI al abrir el PR.
+
+### Ajuste por el Quality Gate de Sonar del PR #191 (2026-11-26)
+
+Sonar marcó 79.5 % de cobertura en código nuevo y Reliability B. Se corrigió: campo `volatile` del decorador por
+`AtomicReference` (bug de confiabilidad), método `portal` sin uso eliminado, complejidad cognitiva de
+`postProcessAfterInitialization` reducida (tres métodos por tipo de consulta y extractores de actor/programa), literal repetido
+en `RedisCacheConsultas`, nombre de campo en `DisyuntorRedis`, `Thread.sleep` e imports en pruebas. Pruebas nuevas: desborde de
+invalidaciones pendientes (`SCAN` + `DEL`), valor ilegible sin poder borrarse, origen del codec y tope de ámbitos por conexión.
+`LC_ALL=C.UTF-8 mvn -B verify`: BUILD SUCCESS, 5334 pruebas, 0 fallos; cobertura de líneas nuevas medida con JaCoCo: 91.3 %.

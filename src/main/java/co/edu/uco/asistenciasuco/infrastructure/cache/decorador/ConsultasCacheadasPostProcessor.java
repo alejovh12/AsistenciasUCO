@@ -41,6 +41,13 @@ import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consult
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.consultartiposidentificacion.primaryports.dto.TipoIdentificacionDTO;
 import co.edu.uco.asistenciasuco.application.features.tipoprograma.consultarcatalogosprograma.primaryports.ConsultarCatalogosProgramaInputPort;
 import co.edu.uco.asistenciasuco.application.features.tipoprograma.consultarcatalogosprograma.primaryports.dto.CatalogoProgramaDTO;
+import co.edu.uco.asistenciasuco.application.features.admin.consultarcomparativafacultades.primaryports.dto.ConsultarComparativaFacultadesDTO;
+import co.edu.uco.asistenciasuco.application.features.admin.consultarkpisinstitucion.primaryports.dto.ConsultarKpisInstitucionDTO;
+import co.edu.uco.asistenciasuco.application.features.admin.consultartendenciaausentismo.primaryports.dto.ConsultarTendenciaAusentismoDTO;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultaralertatemprana.primaryports.dto.ConsultarAlertaTempranaDTO;
+import co.edu.uco.asistenciasuco.application.features.decano.consultaraforogrupos.primaryports.dto.ConsultarAforoGruposDTO;
+import co.edu.uco.asistenciasuco.application.features.decano.consultarcomparativaprogramas.primaryports.dto.ConsultarComparativaProgramasDTO;
+import co.edu.uco.asistenciasuco.application.features.decano.consultarkpisdecano.primaryports.dto.ConsultarKpisDecanoDTO;
 import co.edu.uco.asistenciasuco.infrastructure.cache.CacheConsultas;
 import co.edu.uco.asistenciasuco.infrastructure.cache.RegionCache;
 import org.slf4j.Logger;
@@ -60,6 +67,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -105,12 +113,14 @@ public final class ConsultasCacheadasPostProcessor implements BeanPostProcessor 
     static final List<String> PORTAL_DOCENTE = List.of(ASIGNATURAS_DOCENTE, HORARIOS_DOCENTE);
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConsultasCacheadasPostProcessor.class);
+    /** Indicadores cuyo filtro no trae programa. */
+    private static final Function<Object, UUID> SIN_PROGRAMA = filtro -> null;
 
     private final Supplier<CacheConsultas> cache;
     private final Supplier<InstitutionalScopePort> ambito;
     private final Supplier<DestinatariosReclamoPort> destinatariosReclamo;
     /** Materias del estudiante ya decoradas (se fija al envolver ese bean); sirve para etiquetar resumen y plan. */
-    private volatile ConsultarMateriasEstudianteInputPort materiasEstudiante;
+    private final AtomicReference<ConsultarMateriasEstudianteInputPort> materiasEstudiante = new AtomicReference<>();
 
     public ConsultasCacheadasPostProcessor(final ObjectProvider<CacheConsultas> cache,
                                            final ObjectProvider<InstitutionalScopePort> ambito,
@@ -136,12 +146,24 @@ public final class ConsultasCacheadasPostProcessor implements BeanPostProcessor 
         if (bean.getClass().getInterfaces().length != 1) {
             return bean;
         }
+        Object envuelto = envolverPortal(bean);
+        if (envuelto == null) {
+            envuelto = envolverIndicador(bean);
+        }
+        if (envuelto == null) {
+            envuelto = envolverCatalogoOEscritura(bean);
+        }
+        return envuelto == null ? bean : envuelto;
+    }
+
+    /** Portal del estudiante y del docente; {@code null} si el bean no es una de esas consultas. */
+    private Object envolverPortal(final Object bean) {
         return switch (bean) {
             case ConsultarMateriasEstudianteInputPort p -> {
                 final ConsultarMateriasEstudianteInputPort cacheado = actor ->
                         portal(actor, MATERIAS_ESTUDIANTE, new TypeReference<List<MateriaEstudianteDTO>>() { },
                                 () -> p.execute(actor), PORTAL_ESTUDIANTE, MateriaEstudianteDTO::idGrupo);
-                materiasEstudiante = cacheado;
+                materiasEstudiante.set(cacheado);
                 yield cacheado;
             }
             case ConsultarHorariosEstudianteInputPort p -> (ConsultarHorariosEstudianteInputPort) actor ->
@@ -159,30 +181,44 @@ public final class ConsultasCacheadasPostProcessor implements BeanPostProcessor 
             case ConsultarHorariosDocenteInputPort p -> (ConsultarHorariosDocenteInputPort) actor ->
                     portal(actor, HORARIOS_DOCENTE, new TypeReference<List<HorarioDocenteDTO>>() { }, () -> p.execute(actor),
                             PORTAL_DOCENTE, HorarioDocenteDTO::idGrupo);
+            default -> null;
+        };
+    }
+
+    /** Indicadores de coordinador, decano y administrador; {@code null} si el bean no es uno de ellos. */
+    private Object envolverIndicador(final Object bean) {
+        return switch (bean) {
             case ConsultarKpisCoordinadorInputPort p -> (ConsultarKpisCoordinadorInputPort) dto ->
-                    indicador("kpis-coordinador", dto, dto == null ? null : dto.actorUsuarioId(), dto == null ? null : dto.idPrograma(),
-                            new TypeReference<KpisCoordinadorDTO>() { }, () -> p.execute(dto));
+                    indicador("kpis-coordinador", dto, ConsultarKpisCoordinadorDTO::actorUsuarioId,
+                            ConsultarKpisCoordinadorDTO::idPrograma, new TypeReference<KpisCoordinadorDTO>() { }, () -> p.execute(dto));
             case ConsultarAlertaTempranaInputPort p -> (ConsultarAlertaTempranaInputPort) dto ->
-                    indicador("alertas-tempranas", dto, dto == null ? null : dto.actorUsuarioId(), dto == null ? null : dto.idPrograma(),
-                            new TypeReference<AlertasPaginaDTO>() { }, () -> p.execute(dto));
+                    indicador("alertas-tempranas", dto, ConsultarAlertaTempranaDTO::actorUsuarioId,
+                            ConsultarAlertaTempranaDTO::idPrograma, new TypeReference<AlertasPaginaDTO>() { }, () -> p.execute(dto));
             case ConsultarKpisDecanoInputPort p -> (ConsultarKpisDecanoInputPort) dto ->
-                    indicador("kpis-decano", dto, dto == null ? null : dto.actorUsuarioId(), null,
+                    indicador("kpis-decano", dto, ConsultarKpisDecanoDTO::actorUsuarioId, SIN_PROGRAMA,
                             new TypeReference<KpisDecanoDTO>() { }, () -> p.execute(dto));
             case ConsultarComparativaProgramasInputPort p -> (ConsultarComparativaProgramasInputPort) dto ->
-                    indicador("comparativa-programas", dto, dto == null ? null : dto.actorUsuarioId(), null,
+                    indicador("comparativa-programas", dto, ConsultarComparativaProgramasDTO::actorUsuarioId, SIN_PROGRAMA,
                             new TypeReference<List<ComparativaProgramaDTO>>() { }, () -> p.execute(dto));
             case ConsultarAforoGruposInputPort p -> (ConsultarAforoGruposInputPort) dto ->
-                    indicador("aforo-grupos", dto, dto == null ? null : dto.actorUsuarioId(), dto == null ? null : dto.idPrograma(),
+                    indicador("aforo-grupos", dto, ConsultarAforoGruposDTO::actorUsuarioId, ConsultarAforoGruposDTO::idPrograma,
                             new TypeReference<AforoGruposPaginaDTO>() { }, () -> p.execute(dto));
             case ConsultarKpisInstitucionInputPort p -> (ConsultarKpisInstitucionInputPort) dto ->
-                    indicador("kpis-institucion", dto, dto == null ? null : dto.actorUsuarioId(), null,
+                    indicador("kpis-institucion", dto, ConsultarKpisInstitucionDTO::actorUsuarioId, SIN_PROGRAMA,
                             new TypeReference<KpisInstitucionDTO>() { }, () -> p.execute(dto));
             case ConsultarComparativaFacultadesInputPort p -> (ConsultarComparativaFacultadesInputPort) dto ->
-                    indicador("comparativa-facultades", dto, dto == null ? null : dto.actorUsuarioId(), null,
+                    indicador("comparativa-facultades", dto, ConsultarComparativaFacultadesDTO::actorUsuarioId, SIN_PROGRAMA,
                             new TypeReference<List<ComparativaFacultadDTO>>() { }, () -> p.execute(dto));
             case ConsultarTendenciaAusentismoInputPort p -> (ConsultarTendenciaAusentismoInputPort) dto ->
-                    indicador("tendencia-ausentismo", dto, dto == null ? null : dto.actorUsuarioId(), null,
+                    indicador("tendencia-ausentismo", dto, ConsultarTendenciaAusentismoDTO::actorUsuarioId, SIN_PROGRAMA,
                             new TypeReference<List<PuntoTendenciaDTO>>() { }, () -> p.execute(dto));
+            default -> null;
+        };
+    }
+
+    /** Catalogos y escrituras que invalidan el portal; {@code null} si el bean no es uno de ellos. */
+    private Object envolverCatalogoOEscritura(final Object bean) {
+        return switch (bean) {
             case ConsultarTiposIdentificacionInputPort p -> (ConsultarTiposIdentificacionInputPort) () ->
                     cache.get().obtener(RegionCache.CATALOGOS, "tipos-identificacion",
                             new TypeReference<List<TipoIdentificacionDTO>>() { }, p::execute);
@@ -213,7 +249,7 @@ public final class ConsultasCacheadasPostProcessor implements BeanPostProcessor 
                     invalidarEstudiantesDelReclamo(dto.getSolicitud());
                 }
             };
-            default -> bean;
+            default -> null;
         };
     }
 
@@ -239,7 +275,7 @@ public final class ConsultasCacheadasPostProcessor implements BeanPostProcessor 
     }
 
     private Set<String> etiquetasDeMaterias(final UUID actor) {
-        final ConsultarMateriasEstudianteInputPort materias = materiasEstudiante;
+        final ConsultarMateriasEstudianteInputPort materias = materiasEstudiante.get();
         if (materias == null) {
             return Set.of();
         }
@@ -271,13 +307,6 @@ public final class ConsultasCacheadasPostProcessor implements BeanPostProcessor 
         } catch (final RuntimeException exception) {
             LOGGER.debug("No se pudo invalidar el portal tras resolver el reclamo. causa={}", exception.getClass().getSimpleName());
         }
-    }
-
-    private <T> T portal(final UUID actor, final String consulta, final TypeReference<T> tipo, final Supplier<T> cargador) {
-        if (actor == null) {
-            return cargador.get();
-        }
-        return cache.get().obtener(RegionCache.PORTAL, clavePortal(actor, consulta), tipo, cargador);
     }
 
     /**
@@ -328,15 +357,17 @@ public final class ConsultasCacheadasPostProcessor implements BeanPostProcessor 
         return "grupo:" + grupo;
     }
 
-    private <T> T indicador(final String consulta, final Object filtro, final UUID actor, final UUID programa,
-                            final TypeReference<T> tipo, final Supplier<T> cargador) {
-        if (filtro == null || actor == null) {
+    private <F, T> T indicador(final String consulta, final F filtro, final Function<? super F, UUID> actorDe,
+                               final Function<? super F, UUID> programaDe, final TypeReference<T> tipo, final Supplier<T> cargador) {
+        final UUID actor = filtro == null ? null : actorDe.apply(filtro);
+        if (actor == null) {
             return cargador.get();
         }
+        final UUID programa = programaDe.apply(filtro);
         final String ambitoVigente;
         try {
             ambitoVigente = huellaAmbito(actor, programa);
-        } catch (final RuntimeException exception) {
+        } catch (final RuntimeException _) {
             // Sin poder comprobar el ambito no se usa la cache: el caso de uso valida y responde.
             return cargador.get();
         }

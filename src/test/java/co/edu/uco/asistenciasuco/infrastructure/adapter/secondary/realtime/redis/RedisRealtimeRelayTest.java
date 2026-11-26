@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -206,5 +207,15 @@ class RedisRealtimeRelayTest {
 
         assertEquals(1, recibidos.size());
         assertEquals(1.0, registry.get("realtime.relay.fallback").counter().count());
+    }
+
+    @Test
+    void cada_codec_tiene_su_origen_y_lee_como_ajeno_solo_lo_de_otra_replica() {
+        final String mensaje = codecOtraReplica.escribir(evento());
+
+        assertEquals("replica-a", codec.origen());
+        assertEquals(evento().type(), codec.leerAjeno(mensaje).type());
+        assertNull(codecOtraReplica.leerAjeno(mensaje));
+        assertNotNull(new RedisRealtimeCodec(JsonMapper.builder().build()).origen());
     }
 }

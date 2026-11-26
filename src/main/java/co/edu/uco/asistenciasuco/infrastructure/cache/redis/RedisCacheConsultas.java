@@ -56,6 +56,7 @@ public final class RedisCacheConsultas implements CacheConsultas {
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisCacheConsultas.class);
     static final Duration INTERVALO_AVISO = Duration.ofMinutes(1);
     static final int MAXIMO_PENDIENTES = 10_000;
+    private static final String OPERACION_INVALIDAR = "invalidar";
 
     private final StringRedisTemplate redis;
     private final JsonMapper mapper;
@@ -226,7 +227,7 @@ public final class RedisCacheConsultas implements CacheConsultas {
             try {
                 redis.delete(claveRedis);
             } catch (final RuntimeException borrado) {
-                degradar(region, "invalidar", borrado);
+                degradar(region, OPERACION_INVALIDAR, borrado);
             }
             return null;
         }
@@ -259,7 +260,7 @@ public final class RedisCacheConsultas implements CacheConsultas {
             redis.delete(claveRedis);
         } catch (final RuntimeException exception) {
             pendiente(clavesPendientes, claveRedis);
-            degradar(region, "invalidar", exception);
+            degradar(region, OPERACION_INVALIDAR, exception);
         }
     }
 
@@ -302,7 +303,7 @@ public final class RedisCacheConsultas implements CacheConsultas {
             borrarEtiqueta(claveEtiqueta);
         } catch (final RuntimeException exception) {
             pendiente(etiquetasPendientes, claveEtiqueta);
-            degradar(region, "invalidar", exception);
+            degradar(region, OPERACION_INVALIDAR, exception);
         }
     }
 

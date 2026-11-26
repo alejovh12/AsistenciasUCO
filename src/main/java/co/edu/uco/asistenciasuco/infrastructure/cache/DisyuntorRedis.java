@@ -20,7 +20,7 @@ public final class DisyuntorRedis {
     public static final Duration ENFRIAMIENTO = Duration.ofSeconds(30);
 
     private final Clock clock;
-    private final Duration enfriamiento;
+    private final Duration duracionEnfriamiento;
     private volatile Instant abiertoHasta = Instant.EPOCH;
 
     public DisyuntorRedis(final Clock clock) {
@@ -29,7 +29,7 @@ public final class DisyuntorRedis {
 
     public DisyuntorRedis(final Clock clock, final Duration enfriamiento) {
         this.clock = Objects.requireNonNull(clock, "Clock es obligatorio.");
-        this.enfriamiento = Objects.requireNonNull(enfriamiento, "El enfriamiento es obligatorio.");
+        this.duracionEnfriamiento = Objects.requireNonNull(enfriamiento, "El enfriamiento es obligatorio.");
         if (enfriamiento.isNegative()) {
             throw new IllegalArgumentException("El enfriamiento del disyuntor no puede ser negativo.");
         }
@@ -42,7 +42,7 @@ public final class DisyuntorRedis {
 
     /** Registra una falla de Redis: abre el disyuntor durante el enfriamiento. */
     public void registrarFalla() {
-        abiertoHasta = clock.instant().plus(enfriamiento);
+        abiertoHasta = clock.instant().plus(duracionEnfriamiento);
     }
 
     /** Registra una operacion exitosa: cierra el disyuntor. */
