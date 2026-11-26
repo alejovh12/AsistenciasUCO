@@ -19,12 +19,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
+import java.time.Duration;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.LongSupplier;
 
 /**
  * Bridge interno entre el controller SSE y el adapter local seleccionado por el Composition Root.
@@ -50,11 +52,22 @@ public final class LocalSseRealtimeStreamGateway implements RealtimeStreamGatewa
             Set.of("SESION_SOLICITUD_CREADA", "SESION_SOLICITUD_RECHAZADA", "SESION_MANUAL_CREADA");
     private static final Set<Audiencia> AUDIENCIAS_CANAL_USUARIO = EnumSet.of(Audiencia.DOCENTE_TITULAR, Audiencia.AMBITO_GRUPO);
     private static final String ROL_ESTUDIANTE = "ROLE_ESTUDIANTE";
+    /**
+     * Code review 2026-11-26: el ambito resuelto para un grupo en el canal del usuario se recuerda solo este tiempo; asi un
+     * usuario que pierde el ambito deja de recibir los eventos de ese grupo sin tener que reconectarse.
+     */
+    static final Duration VIGENCIA_AMBITO = Duration.ofSeconds(60);
+    /** Maximo de grupos recordados por conexion (al superarlo se olvidan todos y se vuelven a resolver). */
+    static final int MAXIMO_AMBITOS_POR_CONEXION = 256;
+
+    private record AmbitoRecordado(Set<Audiencia> audiencias, long venceNanos) {
+    }
 
     private final ReactorRealtimeAdapter realtimeAdapter;
     private final ResolverAudienciaRealtimeInputPort resolverAudiencia;
     private final RealtimeAudienciaPolicy audienciaPolicy;
     private final RealtimePublisherPort publicador;
+    private LongSupplier relojNanos = System::nanoTime;
 
     public LocalSseRealtimeStreamGateway(
             final ReactorRealtimeAdapter realtimeAdapter,
@@ -128,12 +141,12 @@ public final class LocalSseRealtimeStreamGateway implements RealtimeStreamGatewa
 
     /**
      * {@code porGrupo=false} (usuario que solo es estudiante) evita consultar ambitos: solo recibe lo que le llega como
-     * destinatario. La consulta de ambito corre fuera del hilo que publica el evento y se recuerda por grupo durante la
-     * conexion; si falla, ese evento no se entrega y se reintenta con el siguiente.
+     * destinatario. La consulta de ambito corre fuera del hilo que publica el evento y se recuerda por grupo durante
+     * {@link #VIGENCIA_AMBITO}; si falla, ese evento no se entrega y se reintenta con el siguiente.
      */
     Flux<RealtimeEventResponse> subscribeUsuario(final UUID usuarioId, final boolean porGrupo) {
         Objects.requireNonNull(usuarioId, "El usuario autenticado es obligatorio para suscribirse a realtime.");
-        final Map<UUID, Set<Audiencia>> ambitos = new ConcurrentHashMap<>();
+        final Map<UUID, AmbitoRecordado> ambitos = new ConcurrentHashMap<>();
         return realtimeAdapter.events()
                 .filter(event -> esDestinatario(event, usuarioId) || (porGrupo && grupoParaCanalUsuario(event) != null))
                 .publishOn(Schedulers.boundedElastic())
@@ -160,13 +173,17 @@ public final class LocalSseRealtimeStreamGateway implements RealtimeStreamGatewa
         }
     }
 
-    private boolean entregaPorGrupo(final RealtimeEvent event, final UUID usuarioId, final Map<UUID, Set<Audiencia>> ambitos) {
+    private boolean entregaPorGrupo(final RealtimeEvent event, final UUID usuarioId, final Map<UUID, AmbitoRecordado> ambitos) {
         final UUID grupo = grupoParaCanalUsuario(event);
         if (grupo == null) {
             return false;
         }
-        Set<Audiencia> delSuscriptor = ambitos.get(grupo);
-        if (delSuscriptor == null) {
+        final long ahora = relojNanos.getAsLong();
+        final AmbitoRecordado recordado = ambitos.get(grupo);
+        final Set<Audiencia> delSuscriptor;
+        if (recordado != null && ahora - recordado.venceNanos() < 0) {
+            delSuscriptor = recordado.audiencias();
+        } else {
             try {
                 delSuscriptor = audienciasCanalUsuario(resolverAudiencia.execute(new ResolverAudienciaRealtimeInputPort.Comando(usuarioId, grupo)));
             } catch (final RuntimeException exception) {
@@ -174,7 +191,10 @@ public final class LocalSseRealtimeStreamGateway implements RealtimeStreamGatewa
                         event.type(), exception.getClass().getSimpleName());
                 return false;
             }
-            ambitos.put(grupo, delSuscriptor);
+            if (ambitos.size() >= MAXIMO_AMBITOS_POR_CONEXION) {
+                ambitos.clear();
+            }
+            ambitos.put(grupo, new AmbitoRecordado(delSuscriptor, ahora + VIGENCIA_AMBITO.toNanos()));
         }
         return !delSuscriptor.isEmpty() && audienciaPolicy.entrega(event.type(), delSuscriptor, usuarioId, event.destinatariosUsuario());
     }
@@ -202,6 +222,11 @@ public final class LocalSseRealtimeStreamGateway implements RealtimeStreamGatewa
             }
         }
         return true;
+    }
+
+    /** Solo para pruebas: reloj monotono en nanosegundos que decide el vencimiento del ambito recordado. */
+    void usarRelojNanos(final LongSupplier reloj) {
+        this.relojNanos = Objects.requireNonNull(reloj, "El reloj es obligatorio.");
     }
 
     @Override

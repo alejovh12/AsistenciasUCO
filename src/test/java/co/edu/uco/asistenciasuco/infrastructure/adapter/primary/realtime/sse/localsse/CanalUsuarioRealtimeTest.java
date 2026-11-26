@@ -194,4 +194,52 @@ class CanalUsuarioRealtimeTest {
                 .verify(Duration.ofSeconds(5));
         verify(resolver, never()).execute(any());
     }
+
+    @Test
+    void el_ambito_recordado_vence_y_quien_lo_pierde_deja_de_recibir_sin_reconectar() {
+        final java.util.concurrent.atomic.AtomicLong nanos = new java.util.concurrent.atomic.AtomicLong();
+        gateway.usarRelojNanos(nanos::get);
+        when(resolver.execute(new ResolverAudienciaRealtimeInputPort.Comando(USUARIO, GRUPO_PROPIO)))
+                .thenReturn(new AudienciaRealtimeGrupo(false, false, true), new AudienciaRealtimeGrupo(false, false, false));
+        final Flux<RealtimeEventResponse> canal = gateway.subscribeUsuario(USUARIO, true);
+        final List<String> llegaron = new CopyOnWriteArrayList<>();
+        final CountDownLatch fin = new CountDownLatch(3);
+        final Disposable suscripcion = canal.subscribe(r -> {
+            if ("fin".equals(r.payload().get("grupo"))) {
+                fin.countDown();
+            } else {
+                llegaron.add(r.type());
+            }
+        });
+        final RealtimeEvent marca = RealtimeEvent.paraDestinatarios("FALTA_SESION_AVISADA", Map.of("grupo", "fin"), Set.of(USUARIO));
+        try {
+            realtime.publish(grupal("SESION_SOLICITUD_CREADA", GRUPO_PROPIO));
+            realtime.publish(marca);
+            esperarConteo(fin, 2);
+            realtime.publish(grupal("SESION_SOLICITUD_CREADA", GRUPO_PROPIO));
+            realtime.publish(marca);
+            esperarConteo(fin, 1);
+            nanos.addAndGet(LocalSseRealtimeStreamGateway.VIGENCIA_AMBITO.toNanos());
+            realtime.publish(grupal("SESION_SOLICITUD_CREADA", GRUPO_PROPIO));
+            realtime.publish(marca);
+            assertTrue(fin.await(5, TimeUnit.SECONDS));
+        } catch (final InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(exception);
+        } finally {
+            suscripcion.dispose();
+        }
+
+        assertEquals(List.of("SESION_SOLICITUD_CREADA", "SESION_SOLICITUD_CREADA"), llegaron,
+                "dentro de la vigencia usa lo recordado; al vencer se vuelve a resolver y ya no tiene ambito");
+        verify(resolver, times(2)).execute(new ResolverAudienciaRealtimeInputPort.Comando(USUARIO, GRUPO_PROPIO));
+    }
+
+    private static void esperarConteo(final CountDownLatch latch, final long restante) throws InterruptedException {
+        final long limite = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        while (latch.getCount() > restante && System.nanoTime() < limite) {
+            Thread.sleep(10);
+        }
+        assertEquals(restante, latch.getCount());
+    }
 }

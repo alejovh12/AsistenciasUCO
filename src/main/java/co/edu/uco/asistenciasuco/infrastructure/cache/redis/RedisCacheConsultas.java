@@ -1,10 +1,13 @@
 package co.edu.uco.asistenciasuco.infrastructure.cache.redis;
 
 import co.edu.uco.asistenciasuco.infrastructure.cache.CacheConsultas;
+import co.edu.uco.asistenciasuco.infrastructure.cache.DisyuntorRedis;
 import co.edu.uco.asistenciasuco.infrastructure.cache.MetricasCache;
 import co.edu.uco.asistenciasuco.infrastructure.cache.RegionCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.json.JsonMapper;
@@ -22,6 +25,8 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
@@ -38,12 +43,19 @@ import java.util.function.Supplier;
  *   <li>Degradacion: si Redis no responde (caido, timeout) o el valor guardado no se puede leer, la consulta se atiende
  *       desde la BD y se cuenta como {@code error}; la peticion nunca falla por la cache. El aviso en el log se limita a
  *       uno por minuto para no inundarlo con Redis caido.</li>
+ *   <li>Disyuntor (code review 2026-11-26): tras una falla, durante el enfriamiento de {@link DisyuntorRedis} no se llama
+ *       a Redis: las lecturas van directo a la BD sin esperar el timeout. Las invalidaciones de ese lapso se guardan (hasta
+ *       {@link #MAXIMO_PENDIENTES}) y se aplican antes de volver a leer de Redis; si se desbordan, se borra toda la cache
+ *       de consultas del prefijo. Asi Redis nunca entrega un valor que se debio invalidar mientras estuvo caido.</li>
+ *   <li>Carrera carga/invalidacion (code review 2026-11-26): si llega una invalidacion mientras una clave se esta cargando
+ *       de la BD, el valor recien guardado se borra de nuevo, porque pudo leerse antes del cambio.</li>
  * </ul>
  */
 public final class RedisCacheConsultas implements CacheConsultas {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisCacheConsultas.class);
     static final Duration INTERVALO_AVISO = Duration.ofMinutes(1);
+    static final int MAXIMO_PENDIENTES = 10_000;
 
     private final StringRedisTemplate redis;
     private final JsonMapper mapper;
@@ -53,9 +65,22 @@ public final class RedisCacheConsultas implements CacheConsultas {
     private final Clock clock;
     private final ConcurrentHashMap<String, CompletableFuture<Object>> cargasEnCurso = new ConcurrentHashMap<>();
     private final AtomicReference<Instant> ultimoAviso = new AtomicReference<>(Instant.EPOCH);
+    private final DisyuntorRedis disyuntor;
+    /** Cuenta las invalidaciones de esta replica; una carga que ve cambiar el contador borra lo que acaba de guardar. */
+    private final AtomicLong generacion = new AtomicLong();
+    /** Claves y etiquetas (claves Redis) que no se pudieron borrar con Redis caido o con el disyuntor abierto. */
+    private final Set<String> clavesPendientes = ConcurrentHashMap.newKeySet();
+    private final Set<String> etiquetasPendientes = ConcurrentHashMap.newKeySet();
+    private final AtomicBoolean pendientesDesbordados = new AtomicBoolean();
 
     public RedisCacheConsultas(final StringRedisTemplate redis, final JsonMapper mapper, final String prefijo,
                                final Map<RegionCache, Duration> ttlPorRegion, final MetricasCache metricas, final Clock clock) {
+        this(redis, mapper, prefijo, ttlPorRegion, metricas, clock, new DisyuntorRedis(clock));
+    }
+
+    public RedisCacheConsultas(final StringRedisTemplate redis, final JsonMapper mapper, final String prefijo,
+                               final Map<RegionCache, Duration> ttlPorRegion, final MetricasCache metricas, final Clock clock,
+                               final DisyuntorRedis disyuntor) {
         this.redis = Objects.requireNonNull(redis, "StringRedisTemplate es obligatorio.");
         this.mapper = Objects.requireNonNull(mapper, "JsonMapper es obligatorio.");
         this.prefijo = Objects.requireNonNull(prefijo, "El prefijo de claves es obligatorio.");
@@ -65,15 +90,86 @@ public final class RedisCacheConsultas implements CacheConsultas {
         }
         this.metricas = Objects.requireNonNull(metricas, "MetricasCache es obligatorio.");
         this.clock = Objects.requireNonNull(clock, "Clock es obligatorio.");
+        this.disyuntor = Objects.requireNonNull(disyuntor, "DisyuntorRedis es obligatorio.");
+    }
+
+    /**
+     * {@code true} si se puede usar Redis: el disyuntor lo permite y las invalidaciones pendientes ya se aplicaron. Si no,
+     * la operacion degrada sin llamar a Redis.
+     */
+    private boolean redisUsable(final RegionCache region) {
+        if (!disyuntor.permite()) {
+            metricas.error(region);
+            return false;
+        }
+        return aplicarPendientes(region);
+    }
+
+    private boolean aplicarPendientes(final RegionCache region) {
+        if (clavesPendientes.isEmpty() && etiquetasPendientes.isEmpty() && !pendientesDesbordados.get()) {
+            return true;
+        }
+        try {
+            if (pendientesDesbordados.get()) {
+                borrarTodaLaCache();
+                pendientesDesbordados.set(false);
+                clavesPendientes.clear();
+                etiquetasPendientes.clear();
+                disyuntor.registrarExito();
+                return true;
+            }
+            for (final String claveEtiqueta : List.copyOf(etiquetasPendientes)) {
+                borrarEtiqueta(claveEtiqueta);
+                etiquetasPendientes.remove(claveEtiqueta);
+            }
+            final List<String> claves = List.copyOf(clavesPendientes);
+            if (!claves.isEmpty()) {
+                redis.delete(claves);
+                claves.forEach(clavesPendientes::remove);
+            }
+            disyuntor.registrarExito();
+            return true;
+        } catch (final RuntimeException exception) {
+            degradar(region, "aplicar invalidaciones pendientes", exception);
+            return false;
+        }
+    }
+
+    private void borrarTodaLaCache() {
+        final List<String> lote = new ArrayList<>();
+        try (Cursor<String> cursor = redis.scan(ScanOptions.scanOptions().match(prefijo + ":cache:v1:*").count(500).build())) {
+            while (cursor.hasNext()) {
+                lote.add(cursor.next());
+                if (lote.size() >= 500) {
+                    redis.delete(lote);
+                    lote.clear();
+                }
+            }
+        }
+        if (!lote.isEmpty()) {
+            redis.delete(lote);
+        }
+    }
+
+    private void pendiente(final Set<String> destino, final String claveRedis) {
+        if (clavesPendientes.size() + etiquetasPendientes.size() >= MAXIMO_PENDIENTES) {
+            pendientesDesbordados.set(true);
+            return;
+        }
+        destino.add(claveRedis);
     }
 
     @Override
     public <T> T obtener(final RegionCache region, final String clave, final TypeReference<T> tipo, final Supplier<T> cargador) {
         Objects.requireNonNull(cargador, "El cargador es obligatorio.");
         final String claveRedis = claveRedis(region, clave);
+        if (!redisUsable(region)) {
+            return cargador.get();
+        }
         final String guardado;
         try {
             guardado = redis.opsForValue().get(claveRedis);
+            disyuntor.registrarExito();
         } catch (final RuntimeException exception) {
             degradar(region, "leer", exception);
             return cargador.get();
@@ -104,8 +200,13 @@ public final class RedisCacheConsultas implements CacheConsultas {
             }
         }
         try {
+            final long antes = generacion.get();
             final T valor = cargador.get();
             guardar(region, claveRedis, valor);
+            if (generacion.get() != antes) {
+                // Hubo una invalidacion durante la carga: el valor pudo leerse antes del cambio. No se deja en la cache.
+                invalidarClave(region, claveRedis);
+            }
             propia.complete(valor);
             return valor;
         } catch (final RuntimeException exception) {
@@ -122,13 +223,17 @@ public final class RedisCacheConsultas implements CacheConsultas {
         } catch (final RuntimeException exception) {
             // Valor de una version anterior del DTO o corrupto: se descarta y se recarga desde la BD.
             LOGGER.debug("Valor de cache ilegible en la region {}; se descarta.", region.nombre());
-            invalidarClave(region, claveRedis);
+            try {
+                redis.delete(claveRedis);
+            } catch (final RuntimeException borrado) {
+                degradar(region, "invalidar", borrado);
+            }
             return null;
         }
     }
 
     private void guardar(final RegionCache region, final String claveRedis, final Object valor) {
-        if (valor == null) {
+        if (valor == null || !disyuntor.permite()) {
             return;
         }
         try {
@@ -144,9 +249,16 @@ public final class RedisCacheConsultas implements CacheConsultas {
     }
 
     private void invalidarClave(final RegionCache region, final String claveRedis) {
+        generacion.incrementAndGet();
+        if (!disyuntor.permite()) {
+            metricas.error(region);
+            pendiente(clavesPendientes, claveRedis);
+            return;
+        }
         try {
             redis.delete(claveRedis);
         } catch (final RuntimeException exception) {
+            pendiente(clavesPendientes, claveRedis);
             degradar(region, "invalidar", exception);
         }
     }
@@ -157,6 +269,10 @@ public final class RedisCacheConsultas implements CacheConsultas {
             return;
         }
         final String[] miembros = claves.stream().map(clave -> claveRedis(region, clave)).toArray(String[]::new);
+        if (!disyuntor.permite()) {
+            metricas.error(region);
+            return;
+        }
         try {
             for (final String etiqueta : etiquetas) {
                 if (etiqueta != null) {
@@ -176,20 +292,32 @@ public final class RedisCacheConsultas implements CacheConsultas {
             return;
         }
         final String claveEtiqueta = claveEtiqueta(region, etiqueta);
+        generacion.incrementAndGet();
+        if (!disyuntor.permite()) {
+            metricas.error(region);
+            pendiente(etiquetasPendientes, claveEtiqueta);
+            return;
+        }
         try {
-            final Set<String> miembros = redis.opsForSet().members(claveEtiqueta);
-            final List<String> borrar = new ArrayList<>();
-            if (miembros != null) {
-                borrar.addAll(miembros);
-            }
-            borrar.add(claveEtiqueta);
-            redis.delete(borrar);
+            borrarEtiqueta(claveEtiqueta);
         } catch (final RuntimeException exception) {
+            pendiente(etiquetasPendientes, claveEtiqueta);
             degradar(region, "invalidar", exception);
         }
     }
 
+    private void borrarEtiqueta(final String claveEtiqueta) {
+        final Set<String> miembros = redis.opsForSet().members(claveEtiqueta);
+        final List<String> borrar = new ArrayList<>();
+        if (miembros != null) {
+            borrar.addAll(miembros);
+        }
+        borrar.add(claveEtiqueta);
+        redis.delete(borrar);
+    }
+
     private void degradar(final RegionCache region, final String operacion, final RuntimeException exception) {
+        disyuntor.registrarFalla();
         metricas.error(region);
         final Instant ahora = clock.instant();
         final Instant anterior = ultimoAviso.get();

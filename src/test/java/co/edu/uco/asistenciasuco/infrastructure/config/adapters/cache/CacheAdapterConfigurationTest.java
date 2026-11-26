@@ -28,6 +28,19 @@ class CacheAdapterConfigurationTest {
     @SuppressWarnings("unchecked")
     private final ObjectProvider<StringRedisTemplate> redis = mock(ObjectProvider.class);
 
+    private static final co.edu.uco.asistenciasuco.infrastructure.cache.DisyuntorRedis DISYUNTOR =
+            new co.edu.uco.asistenciasuco.infrastructure.cache.DisyuntorRedis(java.time.Clock.systemUTC());
+
+    @Test
+    void con_cache_local_y_realtime_redis_sse_no_hay_advertencia_y_el_disyuntor_existe() {
+        final org.springframework.mock.env.MockEnvironment entorno = new org.springframework.mock.env.MockEnvironment()
+                .withProperty("app.adapters.realtime.provider", "redis-sse");
+        assertInstanceOf(CaffeineCacheConsultas.class,
+                config.cacheConsultas(propiedades(CacheAdapterProperties.Provider.LOCAL), new SimpleMeterRegistry(), redis,
+                        DISYUNTOR, entorno));
+        assertNotNull(config.disyuntorRedis());
+    }
+
     private static CacheAdapterProperties propiedades(final CacheAdapterProperties.Provider provider) {
         return new CacheAdapterProperties(provider, null, null, null);
     }
@@ -37,21 +50,26 @@ class CacheAdapterConfigurationTest {
         when(redis.getObject()).thenReturn(mock(StringRedisTemplate.class));
 
         assertInstanceOf(CaffeineCacheConsultas.class,
-                config.cacheConsultas(propiedades(CacheAdapterProperties.Provider.LOCAL), new SimpleMeterRegistry(), redis));
+                config.cacheConsultas(propiedades(CacheAdapterProperties.Provider.LOCAL), new SimpleMeterRegistry(), redis,
+                        DISYUNTOR, new org.springframework.mock.env.MockEnvironment()));
         assertInstanceOf(RedisCacheConsultas.class,
-                config.cacheConsultas(propiedades(CacheAdapterProperties.Provider.REDIS), new SimpleMeterRegistry(), redis));
+                config.cacheConsultas(propiedades(CacheAdapterProperties.Provider.REDIS), new SimpleMeterRegistry(), redis,
+                        DISYUNTOR, new org.springframework.mock.env.MockEnvironment()));
         assertInstanceOf(SinCacheConsultas.class,
-                config.cacheConsultas(propiedades(CacheAdapterProperties.Provider.NONE), new SimpleMeterRegistry(), redis));
+                config.cacheConsultas(propiedades(CacheAdapterProperties.Provider.NONE), new SimpleMeterRegistry(), redis,
+                        DISYUNTOR, new org.springframework.mock.env.MockEnvironment()));
     }
 
     @Test
     void el_post_processor_y_el_limitador_redis_se_registran() {
         @SuppressWarnings("unchecked")
         final ObjectProvider<co.edu.uco.asistenciasuco.infrastructure.cache.CacheConsultas> cache = mock(ObjectProvider.class);
-        assertNotNull(CacheAdapterConfiguration.consultasCacheadasPostProcessor(cache));
-        assertInstanceOf(ConsultasCacheadasPostProcessor.class, CacheAdapterConfiguration.consultasCacheadasPostProcessor(cache));
+        assertNotNull(CacheAdapterConfiguration.consultasCacheadasPostProcessor(cache,
+                mock(ObjectProvider.class), mock(ObjectProvider.class)));
+        assertInstanceOf(ConsultasCacheadasPostProcessor.class, CacheAdapterConfiguration.consultasCacheadasPostProcessor(cache,
+                mock(ObjectProvider.class), mock(ObjectProvider.class)));
         assertInstanceOf(RedisLimitadorIntentosAdapter.class, config.redisLimitadorIntentosPort(mock(StringRedisTemplate.class),
-                propiedades(CacheAdapterProperties.Provider.REDIS), mock(LimitadorIntentosPort.class)));
+                propiedades(CacheAdapterProperties.Provider.REDIS), mock(LimitadorIntentosPort.class), DISYUNTOR));
     }
 
     @Test

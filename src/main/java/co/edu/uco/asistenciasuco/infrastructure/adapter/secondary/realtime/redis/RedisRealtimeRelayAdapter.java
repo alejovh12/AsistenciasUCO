@@ -12,11 +12,16 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import java.util.Objects;
 
 /**
- * REDIS-001 (TD-003): publica los eventos realtime en un canal Redis Pub/Sub para que TODAS las replicas los entreguen a
- * sus clientes SSE. La replica de origen tambien los recibe por la suscripcion, asi que nunca se entregan dos veces.
+ * REDIS-001 (TD-003): publica los eventos realtime en un canal Redis Pub/Sub para que las DEMAS replicas los entreguen a
+ * sus clientes SSE.
+ *
+ * <p>La replica de origen entrega el evento a sus propios clientes directamente y luego lo envia al canal; cuando el
+ * mensaje vuelve por su suscripcion lo descarta (mismo {@code origen} en el codec). Asi un timeout de Redis despues de
+ * aceptar el mensaje no produce una entrega doble, y una suscripcion propia que aun no esta lista (arranque,
+ * reconexion) no hace perder el evento en esta replica (code review 2026-11-26).</p>
  *
  * <p>Mismas garantias que el SSE local: best-effort, sin replay ni durabilidad (Pub/Sub no guarda mensajes; el cliente
- * recupera el estado por la API al reconectar). Si Redis no responde, el evento se entrega solo en esta replica
+ * recupera el estado por la API al reconectar). Si Redis no responde, el evento queda entregado solo en esta replica
  * (degradacion al comportamiento previo) y se cuenta en {@code realtime.relay.fallback}. Nunca lanza excepciones al caso
  * de uso (contrato de {@link RealtimePublisherPort}).</p>
  */
@@ -59,14 +64,14 @@ public final class RedisRealtimeRelayAdapter implements RealtimePublisherPort {
             LOGGER.warn("No se pudo preparar el evento realtime {} para el relevo; se descarta.", event.type());
             return;
         }
+        local.entregarRelevado(preparado);
         try {
             redis.convertAndSend(canal, codec.escribir(preparado));
             relevados.increment();
         } catch (final RuntimeException exception) {
             respaldos.increment();
-            LOGGER.warn("Relevo Redis del realtime no disponible; el evento {} se entrega solo en esta replica. causa={}",
+            LOGGER.warn("Relevo Redis del realtime no disponible; el evento {} se entrego solo en esta replica. causa={}",
                     preparado.type(), exception.getClass().getSimpleName());
-            local.entregarRelevado(preparado);
         }
     }
 }

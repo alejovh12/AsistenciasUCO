@@ -21,7 +21,13 @@ Complementa [reactive-realtime.md](reactive-realtime.md) (SSE) y [adapter-compos
 
 Redis es **opcional**: sin él, el Backend funciona como antes (caché en memoria y SSE local). Si Redis se cae con `redis`
 activo, las consultas van a la BD, el límite lo decide la réplica y los eventos se entregan en la réplica de origen; ninguna
-petición falla por Redis y la readiness no depende de él (`REDIS_HEALTH_ENABLED=false` por defecto).
+petición falla por Redis y la readiness no depende de él (`REDIS_HEALTH_ENABLED=false` por defecto). Tras la primera falla, un
+disyuntor (`DisyuntorRedis`, 30 s) evita volver a esperar el timeout de Redis en cada petición (code review 2026-11-26).
+
+**Varias réplicas:** con la caché `local` (predeterminada) y el realtime `local-sse`, una invalidación solo llega a la réplica
+donde ocurrió el cambio; las demás sirven datos viejos hasta el TTL. Esa combinación es válida **solo con una réplica** y el
+arranque lo advierte en el log. Con varias réplicas use `APP_ADAPTERS_CACHE_PROVIDER=redis` (o `none`) o
+`APP_ADAPTERS_REALTIME_PROVIDER=redis-sse`.
 
 ## 2. Tiempo real: qué casos lo necesitan y con qué tecnología
 
@@ -59,14 +65,18 @@ un **canal SSE por usuario**, ya construido (TD-084 resuelta): `GET /api/v1/real
 frontend abre una vez por sesión (`RealtimeService.startForUser`). Entrega (i) los eventos cuyo tipo admite la audiencia `DESTINATARIO` y nombran al usuario (`FALTA_SESION_AVISADA`,
 `ALERTA_INASISTENCIA`, `REVISION_CANCELACION_*`) y (ii) a docentes titulares y roles con ámbito, `SESION_SOLICITUD_CREADA`,
 `SESION_SOLICITUD_RECHAZADA` y `SESION_MANUAL_CREADA` de los grupos sobre los que tiene titularidad o ámbito. El ámbito se
-resuelve con el mismo SP de audiencia del canal de grupo, una vez por grupo y conexión, fuera del hilo que publica; si el
+resuelve con el mismo SP de audiencia del canal de grupo, fuera del hilo que publica, y se recuerda por grupo y conexión
+durante 60 s (máximo 256 grupos): quien pierde el ámbito deja de recibir esos eventos sin reconectarse; si el
 usuario solo tiene rol ESTUDIANTE no se consulta. Nunca entrega eventos del aula (QR, toma, presentes).
 No hay bandeja in-app de notificaciones (las de Sergio salen por correo), así que el canal no duplica ese componente.
 
 ### 2.4 Varias réplicas (TD-003)
 
-Con `redis-sse`, `RedisRealtimeRelayAdapter` publica cada evento en el canal `asistencias-uco:realtime:v1`; cada réplica lo
-recibe con `RedisRealtimeSuscriptor` y lo entrega a sus clientes SSE (incluida la de origen, así nunca hay duplicados). Contrato
+Con `redis-sse`, `RedisRealtimeRelayAdapter` entrega cada evento a los clientes SSE de la réplica de origen y lo publica en el
+canal `asistencias-uco:realtime:v1`; las demás réplicas lo reciben con `RedisRealtimeSuscriptor` y lo entregan a sus clientes.
+El mensaje lleva el `origen` (identidad de la réplica, en `RedisRealtimeCodec`) y la réplica de origen descarta su propio eco:
+un timeout de Redis después de aceptar el mensaje no duplica la entrega y una suscripción propia aún no lista (arranque,
+reconexión) no la pierde (code review 2026-11-26). Un mensaje sin `origen` (réplica con la versión anterior) se trata como ajeno. Contrato
 HTTP, filtro por grupo y audiencias, heartbeat y métricas no cambian. Garantías: las mismas del SSE local (best-effort, sin
 replay). Métricas nuevas: `realtime.relay.published` y `realtime.relay.fallback`.
 
@@ -89,14 +99,22 @@ TTL e invalidación: cada región tiene un TTL y además:
 | Matrícula por QR del estudiante | Todo su portal |
 | Evento del grupo: `ASISTENCIAS_TOMA_ACTUALIZADAS`, `ASISTENCIAS_SESION_ACTUALIZADAS`, `TOMA_CERRADA`, `SESION_CANCELADA`, `SESION_MANUAL_CREADA`, `ESTUDIANTE_MATRICULADO`, `FALTA_SESION_AVISADA` | Portal de cada estudiante y del docente con ese grupo en caché (etiqueta `grupo:<id>`) |
 | `ALERTA_INASISTENCIA` | Portal del estudiante destinatario |
+| Retiro de un estudiante del grupo (HU051, sin evento realtime) | Etiqueta `grupo:<id>` (lo invalida el decorador del caso de uso) |
+| Resolución de un reclamo de asistencia (sin evento realtime) | Portal del estudiante del reclamo (lo invalida el decorador del caso de uso) |
 
 Las etiquetas se asocian al cargar materias u horarios (estudiante) y asignaturas u horarios (docente): cada `idGrupo` del
-resultado etiqueta todas las claves del portal de ese usuario. En Redis la etiqueta es un SET
+resultado etiqueta todas las claves del portal de ese usuario. El resumen y el plan del estudiante no traen grupos: antes de
+consultarlos se obtienen los grupos de sus materias (normalmente un acierto de caché) y, al cargarlos, se etiquetan con ellos. En Redis la etiqueta es un SET
 `<prefijo>:cache:v1:portal:etiqueta:grupo:<id>` con el TTL de la región; en `local`, un índice Caffeine. La invalidación la hace
 `InvalidacionCachePorEventos`, que observa cada evento que la réplica entrega (`ReactorRealtimeAdapter.alEntregar`), sea propio
 o relevado por Redis, así también funciona con caché `local` y varias réplicas. `ASISTENCIA_QR_REGISTRADA` no invalida el grupo
 (sería borrar la caché 200 veces por toma). Residual (TD-083): cambios sin evento de grupo esperan el TTL de 60 s. Anti-estampida: Caffeine carga una vez por clave; en Redis, una sola carga por clave y
 réplica (las demás peticiones esperan ese resultado).
+
+Carrera carga/invalidación (code review 2026-11-26): si llega una invalidación mientras una clave se carga de la BD, el valor
+recién guardado se borra otra vez (contador de invalidaciones en ambos proveedores). Con el disyuntor abierto, las
+invalidaciones de Redis se guardan (hasta 10 000) y se aplican antes de volver a leer de Redis; si se desbordan se borra toda la
+caché de consultas del prefijo (`SCAN` + `DEL`).
 
 ### 3.2 Qué se cachea (implementado)
 
@@ -110,6 +128,10 @@ réplica (las demás peticiones esperan ese resultado).
 Nunca se cachea: la toma en curso, el registro por QR, los faltantes, la sábana del docente, reclamos y cualquier escritura.
 La clave del portal siempre incluye al usuario y la de indicadores al actor: un usuario nunca ve el resultado de otro ni se
 salta el alcance institucional (la autorización sigue en el caso de uso, que se ejecuta en cada fallo de caché con el actor).
+Además, la clave de indicadores incluye una huella del ámbito **vigente** del actor (roles activos, programa del coordinador,
+facultad del decano y, si el filtro trae programa, si aún tiene acceso a él): si al actor le quitan el programa o el rol, la
+clave cambia y la consulta vuelve a pasar por el caso de uso en lugar de servirse hasta el TTL (code review 2026-11-26). Son
+1 a 3 lecturas de ámbito por consulta, mucho más baratas que el KPI. Si no se puede calcular la huella, no se usa la caché.
 
 ### 3.3 Candidatos para una fase siguiente
 
@@ -149,7 +171,8 @@ Laboratorio: sección `asis-cache` o escenario `cache` de `infra.ps1 stack` (Asi
 | Decoradores de InputPorts | `infrastructure/cache/decorador/ConsultasCacheadasPostProcessor` (no toca Application ni los `*WiringConfiguration`) |
 | Invalidación por eventos | `infrastructure/cache/decorador/InvalidacionCachePorEventos` (registrada en `CacheAdapterConfiguration`) |
 | Composition Root | `infrastructure/config/adapters/cache/CacheAdapterConfiguration`, `config/properties/adapters/CacheAdapterProperties` |
-| Límite del QR | `adapter/secondary/security/RedisLimitadorIntentosAdapter` |
+| Límite del QR | `adapter/secondary/security/RedisLimitadorIntentosAdapter`: ventana deslizante de 60 s en un sorted set (`<prefijo>:limite:v2:<hash>`), script Lua atómico (poda, conteo, registro y `PEXPIRE`); solo cuentan los intentos aceptados, igual que el limitador en memoria |
+| Disyuntor de Redis | `infrastructure/cache/DisyuntorRedis` (uno por réplica, compartido por la caché y el límite) |
 | Relevo realtime | `adapter/secondary/realtime/redis/*`, `config/adapters/realtime/redis/RedisSseRealtimeAdapterConfiguration` |
 
 Métrica de la caché: `asistencias_cache_consultas_total{proveedor,region,resultado=acierto|fallo|error}`.

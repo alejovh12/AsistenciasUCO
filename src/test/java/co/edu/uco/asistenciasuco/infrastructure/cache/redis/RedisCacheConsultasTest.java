@@ -15,6 +15,7 @@ import tools.jackson.databind.json.JsonMapper;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.EnumMap;
 import java.util.List;
@@ -278,5 +279,107 @@ class RedisCacheConsultasTest {
         cache.invalidarEtiqueta(RegionCache.PORTAL, "grupo:g1");
 
         assertEquals(2.0, contador("error"));
+    }
+    // --- Code review 2026-11-26: disyuntor, invalidaciones pendientes y carrera carga/invalidacion ---
+
+    private static final class RelojMovil extends Clock {
+        private Instant ahora = Instant.parse("2026-11-26T12:00:00Z");
+
+        @Override
+        public java.time.ZoneId getZone() {
+            return java.time.ZoneOffset.UTC;
+        }
+
+        @Override
+        public Clock withZone(final java.time.ZoneId zone) {
+            return this;
+        }
+
+        @Override
+        public Instant instant() {
+            return ahora;
+        }
+
+        void avanzar(final Duration duracion) {
+            ahora = ahora.plus(duracion);
+        }
+    }
+
+    private RedisCacheConsultas cacheConReloj(final RelojMovil reloj) {
+        return new RedisCacheConsultas(redis, mapper, "asistencias-uco", ttl(), new MetricasCache(registry, "redis"), reloj,
+                new co.edu.uco.asistenciasuco.infrastructure.cache.DisyuntorRedis(reloj, Duration.ofSeconds(30)));
+    }
+
+    @Test
+    void tras_una_falla_no_se_llama_a_redis_durante_el_enfriamiento() {
+        final RelojMovil reloj = new RelojMovil();
+        final RedisCacheConsultas conDisyuntor = cacheConReloj(reloj);
+        when(valores.get(CLAVE)).thenThrow(new RedisConnectionFailureException("caido"));
+
+        assertEquals(List.of(FILA), conDisyuntor.obtener(RegionCache.PORTAL, "u1:materias", TIPO, () -> List.of(FILA)));
+        assertEquals(List.of(FILA), conDisyuntor.obtener(RegionCache.PORTAL, "u1:materias", TIPO, () -> List.of(FILA)));
+        conDisyuntor.etiquetar(RegionCache.PORTAL, List.of("grupo:g1"), List.of("u1:materias"));
+
+        verify(valores, org.mockito.Mockito.times(1)).get(CLAVE);
+        verify(conjuntos, never()).add(anyString(), any(String[].class));
+        assertEquals(3.0, contador("error"));
+    }
+
+    @Test
+    void las_invalidaciones_con_el_disyuntor_abierto_se_aplican_antes_de_volver_a_leer() {
+        final RelojMovil reloj = new RelojMovil();
+        final RedisCacheConsultas conDisyuntor = cacheConReloj(reloj);
+        when(valores.get(CLAVE)).thenThrow(new RedisConnectionFailureException("caido")).thenReturn(null);
+        conDisyuntor.obtener(RegionCache.PORTAL, "u1:materias", TIPO, () -> List.of(FILA));
+
+        conDisyuntor.invalidar(RegionCache.PORTAL, "u1:resumen");
+        conDisyuntor.invalidarEtiqueta(RegionCache.PORTAL, "grupo:g1");
+        verify(redis, never()).delete(anyString());
+        reloj.avanzar(Duration.ofSeconds(31));
+        when(conjuntos.members("asistencias-uco:cache:v1:portal:etiqueta:grupo:g1")).thenReturn(Set.of(CLAVE));
+
+        conDisyuntor.obtener(RegionCache.PORTAL, "u1:materias", TIPO, () -> List.of(FILA));
+
+        final org.mockito.InOrder orden = org.mockito.Mockito.inOrder(redis, valores);
+        orden.verify(redis).delete(List.of(CLAVE, "asistencias-uco:cache:v1:portal:etiqueta:grupo:g1"));
+        orden.verify(redis).delete(List.of("asistencias-uco:cache:v1:portal:u1:resumen"));
+        orden.verify(valores).get(CLAVE);
+        verify(valores, org.mockito.Mockito.times(2)).get(CLAVE);
+    }
+
+    @Test
+    void si_las_pendientes_no_se_pueden_aplicar_la_lectura_va_a_la_fuente() {
+        final RelojMovil reloj = new RelojMovil();
+        final RedisCacheConsultas conDisyuntor = cacheConReloj(reloj);
+        doThrow(new RedisConnectionFailureException("caido")).when(redis).delete(anyString());
+        conDisyuntor.invalidar(RegionCache.PORTAL, "u1:materias");
+        reloj.avanzar(Duration.ofSeconds(31));
+        doThrow(new RedisConnectionFailureException("caido")).when(redis).delete(org.mockito.ArgumentMatchers.<java.util.Collection<String>>any());
+
+        assertEquals(List.of(FILA), conDisyuntor.obtener(RegionCache.PORTAL, "u1:materias", TIPO, () -> List.of(FILA)));
+        verify(valores, never()).get(anyString());
+    }
+
+    @Test
+    void una_invalidacion_durante_la_carga_borra_el_valor_recien_guardado() {
+        when(valores.get(CLAVE)).thenReturn(null);
+
+        cache.obtener(RegionCache.PORTAL, "u1:materias", TIPO, () -> {
+            cache.invalidarEtiqueta(RegionCache.PORTAL, "grupo:g1"); // llega el evento mientras se lee la BD
+            return List.of(FILA);
+        });
+
+        final org.mockito.InOrder orden = org.mockito.Mockito.inOrder(valores, redis);
+        orden.verify(valores).set(org.mockito.ArgumentMatchers.eq(CLAVE), anyString(), org.mockito.ArgumentMatchers.eq(Duration.ofSeconds(60)));
+        orden.verify(redis).delete(CLAVE);
+    }
+
+    @Test
+    void sin_invalidaciones_durante_la_carga_el_valor_se_conserva() {
+        when(valores.get(CLAVE)).thenReturn(null);
+
+        cache.obtener(RegionCache.PORTAL, "u1:materias", TIPO, () -> List.of(FILA));
+
+        verify(redis, never()).delete(CLAVE);
     }
 }

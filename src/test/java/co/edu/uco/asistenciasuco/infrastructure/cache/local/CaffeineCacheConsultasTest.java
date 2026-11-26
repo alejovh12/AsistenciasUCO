@@ -153,4 +153,20 @@ class CaffeineCacheConsultasTest {
 
         assertEquals(5, cargas.get());
     }
+
+    @Test
+    void una_invalidacion_durante_la_carga_no_deja_el_valor_en_la_cache() {
+        final AtomicInteger cargas = new AtomicInteger();
+
+        cache.obtener(RegionCache.PORTAL, "u1:resumen", TIPO, () -> {
+            // Llega el evento del grupo mientras se lee la BD (la etiqueta aun no incluye esta clave).
+            cache.invalidarEtiqueta(RegionCache.PORTAL, "grupo:g1");
+            return List.of("viejo" + cargas.incrementAndGet());
+        });
+
+        assertEquals(List.of("nuevo2"), cache.obtener(RegionCache.PORTAL, "u1:resumen", TIPO,
+                () -> List.of("nuevo" + cargas.incrementAndGet())));
+        assertEquals(List.of("nuevo2"), cache.obtener(RegionCache.PORTAL, "u1:resumen", TIPO,
+                () -> List.of("otro" + cargas.incrementAndGet())), "sin invalidaciones el valor se conserva");
+    }
 }
